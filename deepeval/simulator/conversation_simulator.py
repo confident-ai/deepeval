@@ -58,6 +58,7 @@ from deepeval.voice.recording import CallRecorder, RecordingConnector
 from deepeval.dataset import ConversationalGolden
 
 if TYPE_CHECKING:
+    from deepeval.voice.recorded_speech import RecordedSpeechTTS
     from deepeval.dataset import Persona
     from deepeval.models.base_model import DeepEvalBaseSTT, DeepEvalBaseTTS
     from deepeval.test_case import Audio
@@ -178,11 +179,22 @@ class _VoiceSession:
     recorder: Optional[CallRecorder] = None
     # How the caller sounds, worked out from the persona's characteristics.
     delivery: Optional[str] = None
+    # Plays the lines a simulation graph node returned a recording for.
+    recorded: Optional["RecordedSpeechTTS"] = None
 
     @property
     def is_duplex(self) -> bool:
-        """A barge policy or a full-duplex line both take the duplex path."""
-        return self.policy is not None or self.connector.supports_duplex
+        """A barge policy, backchannels, echo or a full-duplex line all take
+        the duplex path: each needs the caller heard while the agent talks."""
+        persona = self.persona
+        patterns = persona.speech_patterns if persona is not None else None
+        line = persona.line if persona is not None else None
+        return (
+            self.policy is not None
+            or self.connector.supports_duplex
+            or (patterns is not None and patterns.backchannels is not None)
+            or (line is not None and line.echo)
+        )
 
 
 @dataclass
@@ -223,17 +235,25 @@ class _VoiceRun:
         recorder = CallRecorder() if self.config.record_call else None
         if recorder is not None:
             connector = RecordingConnector(connector, recorder)
+        from deepeval.voice.recorded_speech import RecordedSpeechTTS
+
+        # A persona with a TTS model of its own speaks through that one, which
+        # leaves nowhere to play a recording from.
+        own_voice = persona is not None and persona.tts_model is not None
+        recorded = None if own_voice else RecordedSpeechTTS(self.tts_model)
+        tts_model = recorded or self.tts_model
         return _VoiceSession(
             connector=connector,
             persona=persona,
             tts_model=(
-                persona.caller_tts_model(self.tts_model)
+                persona.caller_tts_model(tts_model)
                 if persona is not None
-                else self.tts_model
+                else tts_model
             ),
             policy=policy,
             floor=floor or FloorController(),
             recorder=recorder,
+            recorded=recorded,
         )
 
     @property
@@ -704,6 +724,7 @@ class ConversationSimulator:
             additional_metadata={
                 **(golden.additional_metadata or {}),
                 **additional_metadata,
+                **self._graph_runner.summary(graph_state),
             },
             comments=golden.comments,
         )
@@ -929,6 +950,10 @@ class ConversationSimulator:
                         break
                     agent_catch_ups = 0
                     turns.append(emission.turn)
+                    if session is not None:
+                        await self._prepare_recorded(
+                            session, emission.turn, emission.events
+                        )
                     user_input = emission.turn.content
                     logger.debug("Simulated user turn: %r", user_input)
                     update_pbar(progress, pbar_max_user_simluations_id)
@@ -1036,6 +1061,7 @@ class ConversationSimulator:
             additional_metadata={
                 **(golden.additional_metadata or {}),
                 **additional_metadata,
+                **self._graph_runner.summary(graph_state),
             },
             comments=golden.comments,
         )
@@ -1195,6 +1221,37 @@ class ConversationSimulator:
             (result.first_frame_at or tts_started) - tts_started,
         )
         return result.audio, result.first_frame_at or time.perf_counter()
+
+    async def _prepare_recorded(
+        self, session: _VoiceSession, turn: Turn, events: List[Any]
+    ) -> None:
+        """Ready the audio for a turn a node gave a recording or voice events
+        for, so the caller's voice plays it in place of synthesizing the text.
+
+        The recording goes out through the same line and background as any
+        other line, and each event is written back onto the turn with where it
+        fell in the audio.
+        """
+        from deepeval.voice.recorded_speech import assemble_utterance
+
+        recorded = session.recorded
+        if recorded is None or (turn.audio is None and not events):
+            return
+
+        async def _synthesize(text: str) -> "Audio":
+            audio, cost = await recorded.inner.a_synthesize(
+                text, **self._persona_tts_kwargs(session)
+            )
+            if cost is not None:
+                self._voice.tts_cost += cost
+            return audio
+
+        audio, records = await assemble_utterance(
+            turn.content, turn.audio, events, recorded.sample_rate, _synthesize
+        )
+        recorded.clips[turn.content] = audio
+        if records:
+            turn.metadata = {**(turn.metadata or {}), "events": records}
 
     @staticmethod
     def _silence_audio(session: _VoiceSession, seconds: float) -> "Audio":

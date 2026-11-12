@@ -1,0 +1,502 @@
+{
+  "id": "21-airline-delayed-bag",
+  "domain": "Airline",
+  "name": "Trace a delayed bag",
+  "blurb": "Pauses mid-number, vague delivery day",
+  "tts": "elevenlabs",
+  "title": "Trace a bag that never arrived and send it to the house",
+  "skills": [
+    "entity_extraction",
+    "mid_utterance_pauses",
+    "tool_latency",
+    "low_confidence_confirmation",
+    "ambiguity_resolution",
+    "numeric_read_back"
+  ],
+  "summary": "A Belfast shift worker reports a case that did not come off the belt. He pauses twice while reading the tag off a sticker, the trace takes a while, his street needs spelling and he only says 'the end of the week' for delivery. If the agent mishears the tag or postcode, or picks a day for him, he corrects it once or twice and then gives up.",
+  "golden": {
+    "scenario": "Caller's hold bag did not arrive last night. They want it traced and delivered to their home.",
+    "expected_outcome": "Bag tag XJ407716 is captured across both pauses and traced on booking H9W3LP. The agent confirms the spelling of Cregagh Mews and the postcode BT6 9EQ before saving the address. The agent pins 'the end of the week' down to Friday 14 August, after midday, instead of choosing a day. The agent reads the report reference BHD20618 back character by character."
+  },
+  "outcome_checks": [
+    "Bag tag XJ407716 is captured across both pauses and traced on booking H9W3LP.",
+    "The agent confirms the spelling of Cregagh Mews and the postcode BT6 9EQ before saving the address.",
+    "The agent pins 'the end of the week' down to Friday 14 August, after midday, instead of choosing a day.",
+    "The agent reads the report reference BHD20618 back character by character."
+  ],
+  "caller": {
+    "description": "Night-shift porter, dry, just off a late flight.",
+    "accent": "Belfast",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "trace_bag": {
+        "latency_seconds": 7,
+        "returns": {
+          "status": "located",
+          "location": "FAO",
+          "arrives": "2026-08-13T21:40"
+        }
+      },
+      "file_delayed_bag_report": {
+        "returns": {
+          "reference": "BHD20618"
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Bout ye. My case never came off the belt last night at Belfast City. I need it found and sent out to me.",
+        "audio": "21-airline-delayed-bag/open.wav"
+      },
+      {
+        "id": "ref",
+        "say": "It's H, nine, W, three, L, P.",
+        "audio": "21-airline-delayed-bag/ref.wav",
+        "when": "The agent asks for the booking reference"
+      },
+      {
+        "id": "surname",
+        "say": "Donnelly. D, O, double N, E, double L, Y.",
+        "audio": "21-airline-delayed-bag/surname.wav",
+        "when": "The agent asks for the surname"
+      },
+      {
+        "id": "tag",
+        "say": "The number on the wee sticker is X J, four zero seven, seven one six.",
+        "audio": "21-airline-delayed-bag/tag.wav",
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2.5,
+            "after_words": 12
+          },
+          {
+            "type": "MidSentencePause",
+            "seconds": 2,
+            "after_words": 14
+          }
+        ]
+      },
+      {
+        "id": "tag_wrong",
+        "say": "No. X J, four zero seven, seven one six.",
+        "audio": "21-airline-delayed-bag/tag_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "addr",
+        "say": "Send it to the house. Fourteen Cregagh Mews, Belfast, B T six, nine E Q.",
+        "audio": "21-airline-delayed-bag/addr.wav"
+      },
+      {
+        "id": "spell",
+        "say": "Cregagh. C, R, E, G, A, G, H. Mews, M, E, W, S. B T six, nine E Q.",
+        "audio": "21-airline-delayed-bag/spell.wav"
+      },
+      {
+        "id": "addr_wrong",
+        "say": "No, B T six, nine E Q. E for egg, Q for queen.",
+        "audio": "21-airline-delayed-bag/addr_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "when",
+        "say": "Ach, the end of the week sometime, when I'm about.",
+        "audio": "21-airline-delayed-bag/when.wav"
+      },
+      {
+        "id": "assumed",
+        "say": "Hold on, what day did ye put down? I never said a day.",
+        "audio": "21-airline-delayed-bag/assumed.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "which",
+        "say": "Friday. After twelve but, I'm on nights.",
+        "audio": "21-airline-delayed-bag/which.wav"
+      },
+      {
+        "id": "ref_q",
+        "say": "Right. And what's the reference for that, in case I have to ring back?",
+        "audio": "21-airline-delayed-bag/ref_q.wav"
+      },
+      {
+        "id": "slower",
+        "say": "Say that again, slower, I'm writing it down.",
+        "audio": "21-airline-delayed-bag/slower.wav",
+        "events": [
+          {
+            "type": "AsksToRepeat"
+          }
+        ]
+      },
+      {
+        "id": "done",
+        "say": "Dead on. Cheers now.",
+        "audio": "21-airline-delayed-bag/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "bag_traced_and_delivery_booked",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Ach, forget it. I'll go back out to the airport desk.",
+        "audio": "21-airline-delayed-bag/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "tag",
+        "when": "The agent asks for the bag tag number"
+      },
+      {
+        "from": "tag",
+        "to": "addr",
+        "when": "The agent says where the bag is and asks where to deliver it"
+      },
+      {
+        "from": "tag",
+        "to": "tag_wrong",
+        "when": "The agent reads back a tag number other than XJ407716"
+      },
+      {
+        "from": "tag_wrong",
+        "to": "addr",
+        "when": "The agent says where the bag is and asks where to deliver it"
+      },
+      {
+        "from": "tag_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong tag number"
+      },
+      {
+        "from": "addr",
+        "to": "spell",
+        "when": "The agent asks for the spelling of the street or reads the street back wrongly"
+      },
+      {
+        "from": "addr",
+        "to": "when",
+        "when": "The agent reads the address back correctly and asks when to deliver"
+      },
+      {
+        "from": "addr",
+        "to": "addr_wrong",
+        "when": "The agent reads back a postcode other than BT6 9EQ"
+      },
+      {
+        "from": "spell",
+        "to": "when",
+        "when": "The agent reads the address back correctly and asks when to deliver"
+      },
+      {
+        "from": "spell",
+        "to": "addr_wrong",
+        "when": "The agent reads back a postcode other than BT6 9EQ"
+      },
+      {
+        "from": "addr_wrong",
+        "to": "when",
+        "when": "The agent reads the postcode back correctly and asks when to deliver"
+      },
+      {
+        "from": "addr_wrong",
+        "to": "gave_up",
+        "when": "The agent reads the wrong postcode again"
+      },
+      {
+        "from": "when",
+        "to": "which",
+        "when": "The agent asks which day he means"
+      },
+      {
+        "from": "when",
+        "to": "assumed",
+        "when": "The agent books a delivery day without asking which day"
+      },
+      {
+        "from": "assumed",
+        "to": "which",
+        "when": "The agent asks which day he wants"
+      },
+      {
+        "from": "assumed",
+        "to": "gave_up",
+        "when": "The agent insists on the day it chose"
+      },
+      {
+        "from": "which",
+        "to": "ref_q",
+        "when": "The agent confirms delivery on Friday the fourteenth in the afternoon"
+      },
+      {
+        "from": "ref_q",
+        "to": "slower",
+        "when": "The agent gives the report reference"
+      },
+      {
+        "from": "slower",
+        "to": "done",
+        "when": "The agent repeats the reference slowly"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "ref",
+          "surname"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I gave ye that already. H, nine, W, three, L, P. Donnelly.",
+        "audio": "21-airline-delayed-bag/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      },
+      {
+        "id": "silence",
+        "when": "The agent says nothing for more than five seconds",
+        "say": "Hello? Are ye still there?",
+        "audio": "21-airline-delayed-bag/reaction-silence.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 20,
+    "endings": 2,
+    "shortest_path": 10,
+    "branch_points": 7
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_booking",
+      "input_parameters": {
+        "booking_reference": "H9W3LP",
+        "surname": "Donnelly"
+      }
+    },
+    {
+      "name": "trace_bag",
+      "input_parameters": {
+        "tag_number": "XJ407716"
+      }
+    },
+    {
+      "name": "file_delayed_bag_report",
+      "input_parameters": {
+        "booking_reference": "H9W3LP",
+        "tag_number": "XJ407716"
+      }
+    },
+    {
+      "name": "schedule_bag_delivery",
+      "input_parameters": {
+        "tag_number": "XJ407716",
+        "postcode": "BT6 9EQ",
+        "date": "2026-08-14",
+        "window": "afternoon"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "schedule_bag_delivery",
+      "input_parameters": {
+        "date": "2026-08-13"
+      }
+    },
+    {
+      "name": "schedule_bag_delivery",
+      "input_parameters": {
+        "window": "morning"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "mid_utterance_pauses",
+          "measures": "agent talks into a MidSentencePause",
+          "exists": false
+        },
+        {
+          "skill": "tool_latency",
+          "measures": "longest silence while a tool call runs",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_booking",
+          "input_parameters": {
+            "booking_reference": "H9W3LP",
+            "surname": "Donnelly"
+          }
+        },
+        {
+          "name": "trace_bag",
+          "input_parameters": {
+            "tag_number": "XJ407716"
+          }
+        },
+        {
+          "name": "file_delayed_bag_report",
+          "input_parameters": {
+            "booking_reference": "H9W3LP",
+            "tag_number": "XJ407716"
+          }
+        },
+        {
+          "name": "schedule_bag_delivery",
+          "input_parameters": {
+            "tag_number": "XJ407716",
+            "postcode": "BT6 9EQ",
+            "date": "2026-08-14",
+            "window": "afternoon"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "schedule_bag_delivery",
+          "input_parameters": {
+            "date": "2026-08-13"
+          }
+        },
+        {
+          "name": "schedule_bag_delivery",
+          "input_parameters": {
+            "window": "morning"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "low_confidence_confirmation",
+      "exists": true,
+      "name": "Low Confidence Confirmation",
+      "criteria": "The agent confirmed or asked the caller to spell a detail it may have misheard, instead of saving a guess.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "ambiguity_resolution",
+      "exists": true,
+      "name": "Ambiguity Resolution",
+      "criteria": "The agent asked a clarifying question to pin down a vague or conflicting detail instead of assuming.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

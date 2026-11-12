@@ -1,0 +1,516 @@
+{
+  "id": "89-roadside-breakdown-abroad-in-polish",
+  "domain": "Roadside assistance",
+  "name": "Breakdown abroad in Polish",
+  "blurb": "Switches to Polish, roaming line drops",
+  "tts": "elevenlabs",
+  "title": "Overheated on a German motorway, continued in Polish",
+  "skills": [
+    "language_switching",
+    "degraded_line",
+    "multi_task",
+    "backchannel_vs_barge_in",
+    "entity_extraction"
+  ],
+  "summary": "A UK member driving home to Poland has broken down at a German motorway services on a roaming line that keeps dropping. He switches to Polish and gives up if the agent stays in English. The motorway and rest area must be repeated rather than guessed, he murmurs through the cover explanation, and he needs a hire car as well as the tow. Restarting the explanation or getting the return date wrong sends him to a German recovery firm.",
+  "golden": {
+    "scenario": "Caller's car has overheated at a motorway services in Germany and he needs to reach Poznań for a wedding on Saturday.",
+    "expected_outcome": "After the switch the agent speaks Polish for the rest of the call. The agent asks him to repeat when the line breaks up, and records Raststätte Eichenhain on the A2 towards Berlin. The agent keeps talking through both acknowledgements while it explains the European cover. Recovery is sent for an overheated engine and a hire car is booked until Monday 17 August."
+  },
+  "outcome_checks": [
+    "After the switch the agent speaks Polish for the rest of the call.",
+    "The agent asks him to repeat when the line breaks up, and records Raststätte Eichenhain on the A2 towards Berlin.",
+    "The agent keeps talking through both acknowledgements while it explains the European cover.",
+    "Recovery is sent for an overheated engine and a hire car is booked until Monday 17 August."
+  ],
+  "caller": {
+    "description": "Lorry mechanic driving home for a wedding, practical.",
+    "accent": "Polish",
+    "voice": "male",
+    "languages": [
+      "en",
+      "pl"
+    ]
+  },
+  "line": {
+    "quality": "mobile",
+    "dropouts": "frequent",
+    "garbled": "normal",
+    "delay_ms": 400
+  },
+  "background": {
+    "audio": "motorway-services.wav",
+    "volume": 0.5
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "knowledge": "European cover: tow to the nearest approved garage. Hire car up to 7 days. Repairs abroad are paid by the member and claimed back.",
+    "tools": {
+      "dispatch_european_recovery": {
+        "returns": {
+          "eta_minutes": 50
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello, good morning. My car is broken. I am in Germany, on the way to Poland.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/open.wav"
+      },
+      {
+        "id": "switch",
+        "say": "Yes, safe, I am at the services. Przepraszam, czy mogę mówić po polsku? Tak będzie mi łatwiej.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/switch.wav",
+        "events": [
+          {
+            "type": "SwitchesLanguage",
+            "language": "pl"
+          }
+        ]
+      },
+      {
+        "id": "english",
+        "say": "Po polsku, proszę. Nie wszystko rozumiem po angielsku.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/english.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "policy",
+        "say": "Numer polisy to E U, cztery cztery, zero siedem, dwa dziewięć.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/policy.wav",
+        "when": "The agent asks for the policy number"
+      },
+      {
+        "id": "reg",
+        "say": "Rejestracja: Y, D, sześć siedem, P, K, M.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/reg.wav",
+        "when": "The agent asks for the registration"
+      },
+      {
+        "id": "where",
+        "say": "Stoję na parkingu Raststätte Eichenhain, autostrada A dwa, kierunek Berlin, niedaleko Magdeburga.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/where.wav"
+      },
+      {
+        "id": "repeat",
+        "say": "A dwa. Kierunek Berlin. Parking Eichenhain.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/repeat.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "where_wrong",
+        "say": "Nie, nie. A dwa. Dwa. Parking Eichenhain.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/where_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "what",
+        "say": "Silnik się przegrzał. Kontrolka temperatury świeci na czerwono i wyciekł płyn chłodniczy.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/what.wav"
+      },
+      {
+        "id": "cover",
+        "say": "Rozumiem. A ile to potrwa, zanim przyjedzie laweta?",
+        "audio": "89-roadside-breakdown-abroad-in-polish/cover.wav",
+        "events": [
+          {
+            "type": "Backchannel",
+            "after_seconds": 4,
+            "text": "Mhm.",
+            "audio": "89-roadside-breakdown-abroad-in-polish/cover-e1.wav"
+          },
+          {
+            "type": "Backchannel",
+            "after_seconds": 9,
+            "text": "Tak, tak.",
+            "audio": "89-roadside-breakdown-abroad-in-polish/cover-e2.wav"
+          }
+        ]
+      },
+      {
+        "id": "restart",
+        "say": "Słyszałem, proszę nie zaczynać od początku. Ile to potrwa?",
+        "audio": "89-roadside-breakdown-abroad-in-polish/restart.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "hire",
+        "say": "Dobrze. I druga sprawa: potrzebuję samochodu zastępczego, żeby dojechać do Poznania. W sobotę jest wesele mojej siostry.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/hire.wav"
+      },
+      {
+        "id": "until",
+        "say": "Do poniedziałku, siedemnastego sierpnia.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/until.wav"
+      },
+      {
+        "id": "hire_wrong",
+        "say": "Nie. Do poniedziałku. Siedemnastego.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/hire_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "done",
+        "say": "Bardzo dziękuję. Do widzenia.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "tow_and_hire_car_arranged",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Dziękuję, zadzwonię po niemiecką pomoc drogową.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "switch",
+        "when": "The agent asks whether he is safe or where he is"
+      },
+      {
+        "from": "switch",
+        "to": "ident",
+        "when": "The agent agrees in Polish"
+      },
+      {
+        "from": "switch",
+        "to": "english",
+        "when": "The agent carries on in English"
+      },
+      {
+        "from": "english",
+        "to": "ident",
+        "when": "The agent switches to Polish"
+      },
+      {
+        "from": "english",
+        "to": "gave_up",
+        "when": "The agent still speaks English"
+      },
+      {
+        "from": "ident",
+        "to": "where",
+        "when": "The agent asks exactly where he is"
+      },
+      {
+        "from": "where",
+        "to": "what",
+        "when": "The agent reads the location back correctly and asks what happened"
+      },
+      {
+        "from": "where",
+        "to": "repeat",
+        "when": "The agent asks him to repeat the location"
+      },
+      {
+        "from": "where",
+        "to": "where_wrong",
+        "when": "The agent reads back a different motorway or rest area"
+      },
+      {
+        "from": "repeat",
+        "to": "what",
+        "when": "The agent reads the location back correctly and asks what happened"
+      },
+      {
+        "from": "repeat",
+        "to": "where_wrong",
+        "when": "The agent reads back a different motorway or rest area"
+      },
+      {
+        "from": "repeat",
+        "to": "gave_up",
+        "when": "The agent still cannot get the location"
+      },
+      {
+        "from": "where_wrong",
+        "to": "what",
+        "when": "The agent reads the location back correctly and asks what happened"
+      },
+      {
+        "from": "where_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong location"
+      },
+      {
+        "from": "what",
+        "to": "cover",
+        "when": "The agent explains what the European cover includes and says a tow truck is being sent"
+      },
+      {
+        "from": "cover",
+        "to": "hire",
+        "when": "The agent gives an arrival time"
+      },
+      {
+        "from": "cover",
+        "to": "restart",
+        "when": "The agent stops and starts the explanation again"
+      },
+      {
+        "from": "restart",
+        "to": "hire",
+        "when": "The agent gives an arrival time"
+      },
+      {
+        "from": "restart",
+        "to": "gave_up",
+        "when": "The agent starts the explanation again"
+      },
+      {
+        "from": "hire",
+        "to": "until",
+        "when": "The agent says a hire car is covered and asks until when"
+      },
+      {
+        "from": "until",
+        "to": "done",
+        "when": "The agent confirms the hire car until Monday the seventeenth of August"
+      },
+      {
+        "from": "until",
+        "to": "hire_wrong",
+        "when": "The agent reads back a different return date"
+      },
+      {
+        "from": "hire_wrong",
+        "to": "done",
+        "when": "The agent confirms the hire car until Monday the seventeenth of August"
+      },
+      {
+        "from": "hire_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong date"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "policy",
+          "reg"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "back_to_english",
+        "when": "The agent goes back to English after the switch",
+        "say": "Po polsku, proszę.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/reaction-back_to_english.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      },
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "Już to podawałem. E U, cztery cztery, zero siedem, dwa dziewięć.",
+        "audio": "89-roadside-breakdown-abroad-in-polish/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 24,
+    "endings": 2,
+    "shortest_path": 10,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_policy",
+      "input_parameters": {
+        "policy_number": "EU440729",
+        "registration": "YD67PKM"
+      }
+    },
+    {
+      "name": "dispatch_european_recovery",
+      "input_parameters": {
+        "country": "DE",
+        "location": "Raststätte Eichenhain, A2 towards Berlin, near Magdeburg",
+        "fault": "overheating"
+      }
+    },
+    {
+      "name": "book_hire_car",
+      "input_parameters": {
+        "country": "DE",
+        "return_date": "2026-08-17"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "book_hire_car",
+      "input_parameters": {
+        "return_date": "2026-08-15"
+      }
+    },
+    {
+      "name": "dispatch_european_recovery",
+      "input_parameters": {
+        "country": "PL"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "backchannel_vs_barge_in",
+          "measures": "agent stops after a Backchannel",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_policy",
+          "input_parameters": {
+            "policy_number": "EU440729",
+            "registration": "YD67PKM"
+          }
+        },
+        {
+          "name": "dispatch_european_recovery",
+          "input_parameters": {
+            "country": "DE",
+            "location": "Raststätte Eichenhain, A2 towards Berlin, near Magdeburg",
+            "fault": "overheating"
+          }
+        },
+        {
+          "name": "book_hire_car",
+          "input_parameters": {
+            "country": "DE",
+            "return_date": "2026-08-17"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "book_hire_car",
+          "input_parameters": {
+            "return_date": "2026-08-15"
+          }
+        },
+        {
+          "name": "dispatch_european_recovery",
+          "input_parameters": {
+            "country": "PL"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "language_switching",
+      "exists": true,
+      "name": "Language Switching",
+      "criteria": "After the caller switched language, the agent continued in that language and finished the task.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "degraded_line",
+      "exists": true,
+      "name": "Degraded Line",
+      "criteria": "When the caller's words were broken by the line, the agent asked them to repeat instead of guessing.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_task",
+      "exists": true,
+      "name": "Multi Task",
+      "criteria": "The agent completed every request the caller made in the call and kept them separate.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

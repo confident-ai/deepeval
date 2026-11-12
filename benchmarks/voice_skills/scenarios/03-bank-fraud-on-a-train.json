@@ -1,0 +1,539 @@
+{
+  "id": "03-bank-fraud-on-a-train",
+  "domain": "Retail bank",
+  "name": "Card fraud on a train",
+  "blurb": "Bad line, panicking caller",
+  "tts": "elevenlabs",
+  "title": "Card fraud reported from a moving train",
+  "skills": [
+    "required_disclosure",
+    "degraded_line",
+    "emotion_recognition",
+    "entity_extraction",
+    "overlapping_speech",
+    "multi_task"
+  ],
+  "summary": "A frightened caller cuts into the greeting from a train with a breaking-up line. If the agent talks about payments before freezing the card, mishears the digits, or tries to dispute his own train ticket, he corrects it with rising panic, and abandons the call for a branch if it keeps going wrong.",
+  "golden": {
+    "scenario": "Caller sees card payments he didn't make and wants the card stopped and replaced.",
+    "expected_outcome": "The agent gives the recording notice before taking any details, despite being interrupted. The card ending 4417 is frozen before anything else. Only the £312.40 and £59.99 payments are disputed; the £18.60 train ticket is not. The address is updated and a replacement card ordered."
+  },
+  "outcome_checks": [
+    "The agent gives the recording notice before taking any details, despite being interrupted.",
+    "The card ending 4417 is frozen before anything else.",
+    "Only the £312.40 and £59.99 payments are disputed; the £18.60 train ticket is not.",
+    "The address is updated and a replacement card ordered."
+  ],
+  "caller": {
+    "description": "Commuter, shaky and speaking fast.",
+    "accent": "Indian (Tamil)",
+    "pace": "fast",
+    "voice": "male",
+    "emotion": "anxious"
+  },
+  "line": {
+    "quality": "mobile",
+    "dropouts": "frequent",
+    "garbled": "normal",
+    "delay_ms": 500
+  },
+  "background": {
+    "audio": "train-carriage.wav",
+    "volume": 0.5
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "Say the call is recorded before taking any details. Freeze a card before discussing payments.",
+    "tool_order": [
+      "freeze_card",
+      "raise_dispute"
+    ]
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello? Hello, someone is using my card, please, I need to stop it now!",
+        "audio": "03-bank-fraud-on-a-train/open.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 4,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "name",
+        "say": "Karthik Subramanian.",
+        "audio": "03-bank-fraud-on-a-train/name.wav",
+        "when": "The agent asks for the caller's name"
+      },
+      {
+        "id": "dob",
+        "say": "Ninth of April, nineteen eighty-eight.",
+        "audio": "03-bank-fraud-on-a-train/dob.wav",
+        "when": "The agent asks for the date of birth"
+      },
+      {
+        "id": "digits",
+        "say": "Four four one seven.",
+        "audio": "03-bank-fraud-on-a-train/digits.wav"
+      },
+      {
+        "id": "repeat",
+        "say": "Four. Four. One. Seven.",
+        "audio": "03-bank-fraud-on-a-train/repeat.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "digits_wrong",
+        "say": "No! Four four one seven. Please, quickly.",
+        "audio": "03-bank-fraud-on-a-train/digits_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "freeze_first",
+        "say": "Wait, is the card stopped? Please stop the card first!",
+        "audio": "03-bank-fraud-on-a-train/freeze_first.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "which",
+        "say": "Two payments today I did not make. One is three hundred and twelve pounds forty at an electronics shop, one is fifty-nine ninety-nine online.",
+        "audio": "03-bank-fraud-on-a-train/which.wav"
+      },
+      {
+        "id": "ticket",
+        "say": "Yes, the train ticket is mine, the eighteen pounds sixty. Only those two are not mine.",
+        "audio": "03-bank-fraud-on-a-train/ticket.wav"
+      },
+      {
+        "id": "all_three",
+        "say": "No, not the train ticket! That one is mine.",
+        "audio": "03-bank-fraud-on-a-train/all_three.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "newcard",
+        "say": "Yes please, send a new card. But I have moved, the address is different.",
+        "audio": "03-bank-fraud-on-a-train/newcard.wav"
+      },
+      {
+        "id": "address",
+        "say": "Flat six, forty-one Canal Street, Manchester, M one, three H E.",
+        "audio": "03-bank-fraud-on-a-train/address.wav"
+      },
+      {
+        "id": "addr_wrong",
+        "say": "No. Flat six. Forty-one. Canal Street. M one, three H E.",
+        "audio": "03-bank-fraud-on-a-train/addr_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "addr_ok",
+        "say": "Yes, correct.",
+        "audio": "03-bank-fraud-on-a-train/addr_ok.wav"
+      },
+      {
+        "id": "money",
+        "say": "When will I get the money back?",
+        "audio": "03-bank-fraud-on-a-train/money.wav"
+      },
+      {
+        "id": "done",
+        "say": "Okay. Okay, thank you. I was so worried.",
+        "audio": "03-bank-fraud-on-a-train/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "frozen_disputed_replaced",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "branch",
+        "say": "I can't hear you properly. I will go to the branch.",
+        "audio": "03-bank-fraud-on-a-train/branch.wav",
+        "terminal": true,
+        "ending": {
+          "name": "abandoned_for_branch",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "digits",
+        "when": "The agent asks for the last four digits of the card"
+      },
+      {
+        "from": "digits",
+        "to": "repeat",
+        "when": "The agent asks the caller to repeat the digits"
+      },
+      {
+        "from": "digits",
+        "to": "digits_wrong",
+        "when": "The agent reads back digits other than 4417"
+      },
+      {
+        "from": "digits",
+        "to": "which",
+        "when": "The agent says the card is frozen and asks which payments are not his"
+      },
+      {
+        "from": "digits",
+        "to": "freeze_first",
+        "when": "The agent asks about the payments before saying the card is frozen"
+      },
+      {
+        "from": "repeat",
+        "to": "which",
+        "when": "The agent says the card is frozen and asks which payments are not his"
+      },
+      {
+        "from": "repeat",
+        "to": "digits_wrong",
+        "when": "The agent reads back digits other than 4417"
+      },
+      {
+        "from": "repeat",
+        "to": "branch",
+        "when": "The agent still cannot get the digits"
+      },
+      {
+        "from": "digits_wrong",
+        "to": "which",
+        "when": "The agent says the card is frozen and asks which payments are not his"
+      },
+      {
+        "from": "digits_wrong",
+        "to": "branch",
+        "when": "The agent still has the wrong digits"
+      },
+      {
+        "from": "freeze_first",
+        "to": "which",
+        "when": "The agent says the card is frozen and asks which payments are not his"
+      },
+      {
+        "from": "freeze_first",
+        "to": "branch",
+        "when": "The agent carries on without freezing the card"
+      },
+      {
+        "from": "which",
+        "to": "ticket",
+        "when": "The agent reads the recent payments and asks about the others"
+      },
+      {
+        "from": "which",
+        "to": "newcard",
+        "when": "The agent confirms the two payments are disputed and offers a replacement card"
+      },
+      {
+        "from": "which",
+        "to": "all_three",
+        "when": "The agent says it will dispute all three payments"
+      },
+      {
+        "from": "ticket",
+        "to": "newcard",
+        "when": "The agent confirms the two payments are disputed and offers a replacement card"
+      },
+      {
+        "from": "ticket",
+        "to": "all_three",
+        "when": "The agent says it will dispute all three payments"
+      },
+      {
+        "from": "all_three",
+        "to": "newcard",
+        "when": "The agent confirms only the two payments are disputed and offers a replacement card"
+      },
+      {
+        "from": "newcard",
+        "to": "address",
+        "when": "The agent asks for the new address"
+      },
+      {
+        "from": "address",
+        "to": "addr_ok",
+        "when": "The agent reads the address back correctly"
+      },
+      {
+        "from": "address",
+        "to": "addr_wrong",
+        "when": "The agent reads the address back incorrectly"
+      },
+      {
+        "from": "address",
+        "to": "money",
+        "when": "The agent confirms the card is ordered"
+      },
+      {
+        "from": "addr_wrong",
+        "to": "addr_ok",
+        "when": "The agent reads the address back correctly"
+      },
+      {
+        "from": "addr_wrong",
+        "to": "branch",
+        "when": "The agent still has the wrong address"
+      },
+      {
+        "from": "addr_ok",
+        "to": "money",
+        "when": "The agent confirms the card is ordered"
+      },
+      {
+        "from": "money",
+        "to": "done",
+        "when": "The agent explains the refund timing"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "name",
+          "dob"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I already told you! Please, just stop the card!",
+        "audio": "03-bank-fraud-on-a-train/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "branch"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 27,
+    "endings": 2,
+    "shortest_path": 9,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "verify_identity",
+      "input_parameters": {
+        "name": "Karthik Subramanian",
+        "date_of_birth": "1988-04-09"
+      }
+    },
+    {
+      "name": "freeze_card",
+      "input_parameters": {
+        "last_four": "4417"
+      }
+    },
+    {
+      "name": "raise_dispute",
+      "input_parameters": {
+        "last_four": "4417",
+        "amounts": [
+          "312.40",
+          "59.99"
+        ]
+      }
+    },
+    {
+      "name": "update_address",
+      "input_parameters": {
+        "address": "Flat 6, 41 Canal Street, Manchester, M1 3HE"
+      }
+    },
+    {
+      "name": "order_replacement_card",
+      "input_parameters": {
+        "last_four": "4417"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "raise_dispute",
+      "input_parameters": {
+        "amounts": [
+          "18.60"
+        ]
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "verify_identity",
+          "input_parameters": {
+            "name": "Karthik Subramanian",
+            "date_of_birth": "1988-04-09"
+          }
+        },
+        {
+          "name": "freeze_card",
+          "input_parameters": {
+            "last_four": "4417"
+          }
+        },
+        {
+          "name": "raise_dispute",
+          "input_parameters": {
+            "last_four": "4417",
+            "amounts": [
+              "312.40",
+              "59.99"
+            ]
+          }
+        },
+        {
+          "name": "update_address",
+          "input_parameters": {
+            "address": "Flat 6, 41 Canal Street, Manchester, M1 3HE"
+          }
+        },
+        {
+          "name": "order_replacement_card",
+          "input_parameters": {
+            "last_four": "4417"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "raise_dispute",
+          "input_parameters": {
+            "amounts": [
+              "18.60"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "abandoned_for_branch"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "required_disclosure",
+      "exists": true,
+      "name": "Required Disclosure",
+      "criteria": "The agent delivered the required disclosure before taking details, even when the caller interrupted it.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "degraded_line",
+      "exists": true,
+      "name": "Degraded Line",
+      "criteria": "When the caller's words were broken by the line, the agent asked them to repeat instead of guessing.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emotion_recognition",
+      "exists": true,
+      "name": "Emotion Recognition",
+      "criteria": "The agent acknowledged how the caller felt and reassured them before routine questions.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_task",
+      "exists": true,
+      "name": "Multi Task",
+      "criteria": "The agent completed every request the caller made in the call and kept them separate.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

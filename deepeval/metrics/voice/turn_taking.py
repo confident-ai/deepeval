@@ -1,7 +1,8 @@
 import math
 from statistics import mean, pstdev
-from typing import Dict, List
+from typing import Dict, List, Optional
 
+from deepeval.metrics.voice._turn_taking_sub_scores import SUB_SCORES
 from deepeval.metrics.voice.base_metric import (
     BaseVoiceMetric,
     VoiceMetricResult,
@@ -18,6 +19,16 @@ RESPONSE_DELAY_WEIGHT = 0.2
 
 
 class TurnTakingNaturalnessMetric(BaseVoiceMetric):
+    def __init__(self, sub_scores: Optional[List[str]] = None, **kwargs):
+        super().__init__(**kwargs)
+        unknown = set(sub_scores or []) - set(SUB_SCORES)
+        if unknown:
+            raise ValueError(
+                f"Unknown sub-scores: {', '.join(sorted(unknown))}. "
+                f"Choose from: {', '.join(SUB_SCORES)}."
+            )
+        self.sub_scores = sub_scores
+
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
         audio_turns = [
             turn for turn in test_case.turns if turn.audio is not None
@@ -103,11 +114,29 @@ class TurnTakingNaturalnessMetric(BaseVoiceMetric):
                 f"delay varied by ±{spread:.2f}s across "
                 f"{len(response_delay_seconds)} replies."
             )
-        return (
-            score,
-            reason,
-            {"transitions": transitions, "response_delays": response_delays},
-        )
+        breakdown: Dict = {
+            "transitions": transitions,
+            "response_delays": response_delays,
+        }
+        if self.sub_scores:
+            results = {}
+            for name in self.sub_scores:
+                sub_score, detail = SUB_SCORES[name](test_case, timeline)
+                results[name] = {"score": sub_score, **detail}
+            breakdown["sub_scores"] = results
+            tested = {
+                name: result["score"]
+                for name, result in results.items()
+                if result["score"] is not None
+            }
+            if tested:
+                weakest = min(tested, key=tested.get)
+                score = tested[weakest]
+                reason = (
+                    f"The weakest of {len(tested)} turn-taking sub-score(s) "
+                    f"was {weakest.replace('_', ' ')} at {score:.2f}."
+                )
+        return score, reason, breakdown
 
     @property
     def __name__(self):

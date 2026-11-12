@@ -1,0 +1,560 @@
+{
+  "id": "67-insurance-driving-abroad-in-portuguese",
+  "domain": "Motor insurance",
+  "name": "Driving abroad in Portuguese",
+  "blurb": "Switches language, corrects the date",
+  "tts": "elevenlabs",
+  "title": "Cover for a drive to Portugal, continued in Portuguese",
+  "skills": [
+    "language_switching",
+    "multi_task",
+    "correction_handling",
+    "numeric_read_back",
+    "entity_extraction"
+  ],
+  "summary": "The caller switches to Portuguese in her second sentence. If the agent keeps answering in English she asks again, then gives up. She corrects her leaving date mid-sentence and gives a return date in September: an agent that uses Friday, or the wrong return date, is corrected. She adds European cover, then breakdown cover, and asks for the certificate number twice.",
+  "golden": {
+    "scenario": "Caller is driving from the UK to Portugal and wants to be fully covered for the trip.",
+    "expected_outcome": "After the switch the agent speaks Portuguese for the rest of the call. European cover runs from Saturday 15 August to Sunday 6 September, not from the Friday she first said. Both the European cover and the European breakdown cover are added for France, Spain and Portugal. The certificate reference is read back exactly, twice, and the certificate is emailed."
+  },
+  "outcome_checks": [
+    "After the switch the agent speaks Portuguese for the rest of the call.",
+    "European cover runs from Saturday 15 August to Sunday 6 September, not from the Friday she first said.",
+    "Both the European cover and the European breakdown cover are added for France, Spain and Portugal.",
+    "The certificate reference is read back exactly, twice, and the certificate is emailed."
+  ],
+  "caller": {
+    "description": "Nurse driving home for a family visit, more at ease in Portuguese.",
+    "accent": "Brazilian Portuguese",
+    "voice": "female",
+    "languages": [
+      "en",
+      "pt"
+    ]
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "knowledge": "Abroad: 3rd-party min. only unless extended. Euro extension £3.10/day (23 days = £71.30). Euro breakdown £42.00 per trip.",
+    "tools": {
+      "add_european_cover": {
+        "returns": {
+          "certificate_reference": "EU-5083-KT27"
+        }
+      }
+    },
+    "account": {
+      "card_on_file": true
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello. I am going to drive my car to Portugal this month. I need to know if my insurance covers me there.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/open.wav"
+      },
+      {
+        "id": "switch",
+        "say": "The policy is... Desculpa, posso falar em português? É mais fácil para mim.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/switch.wav",
+        "events": [
+          {
+            "type": "SwitchesLanguage",
+            "language": "pt"
+          }
+        ]
+      },
+      {
+        "id": "english",
+        "say": "Desculpa, não entendi direito. Em português, por favor?",
+        "audio": "67-insurance-driving-abroad-in-portuguese/english.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "policy",
+        "say": "A apólice é W N, quatro zero, sete sete, um três.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/policy.wav",
+        "when": "The agent asks for the policy number"
+      },
+      {
+        "id": "dob",
+        "say": "Dezenove de fevereiro de mil novecentos e noventa e um.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/dob.wav",
+        "when": "The agent asks for her date of birth"
+      },
+      {
+        "id": "policy_wrong",
+        "say": "Não. W N, quatro zero, sete sete, um três.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/policy_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "dates",
+        "say": "Saio na sexta, dia catorze... não, desculpa, no sábado, dia quinze. E volto no domingo, dia seis de setembro.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/dates.wav",
+        "events": [
+          {
+            "type": "SelfCorrects"
+          }
+        ]
+      },
+      {
+        "id": "date_wrong",
+        "say": "Não, na sexta não. Saio no sábado, dia quinze.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/date_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "back_wrong",
+        "say": "Não. Volto no dia seis. Domingo, seis de setembro.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/back_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "where",
+        "say": "França, Espanha e Portugal.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/where.wav"
+      },
+      {
+        "id": "price",
+        "say": "Tudo bem, pode adicionar. Use o cartão que já está cadastrado.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/price.wav"
+      },
+      {
+        "id": "breakdown",
+        "say": "E se o carro quebrar na estrada? Tem assistência lá fora?",
+        "audio": "67-insurance-driving-abroad-in-portuguese/breakdown.wav"
+      },
+      {
+        "id": "add_bd",
+        "say": "Sim, adiciona também.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/add_bd.wav"
+      },
+      {
+        "id": "cert",
+        "say": "Pode mandar o certificado para o meu e-mail? E me diz o número dele, por favor.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/cert.wav"
+      },
+      {
+        "id": "ref_again",
+        "say": "Pode repetir o número, mais devagar?",
+        "audio": "67-insurance-driving-abroad-in-portuguese/ref_again.wav",
+        "events": [
+          {
+            "type": "AsksToRepeat"
+          }
+        ]
+      },
+      {
+        "id": "done",
+        "say": "Perfeito. Muito obrigada. Tchau.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "covered_for_the_trip",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Não está dando certo. Vou tentar pelo site. Tchau.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "friend",
+        "say": "Assim não consigo. Vou pedir para uma amiga ligar. Tchau.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/friend.wav",
+        "terminal": true,
+        "ending": {
+          "name": "language_not_followed",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "switch",
+        "when": "The agent asks for the policy number"
+      },
+      {
+        "from": "switch",
+        "to": "ident",
+        "when": "The agent agrees in Portuguese and asks for her details"
+      },
+      {
+        "from": "switch",
+        "to": "english",
+        "when": "The agent carries on in English"
+      },
+      {
+        "from": "english",
+        "to": "ident",
+        "when": "The agent switches to Portuguese and asks for her details"
+      },
+      {
+        "from": "english",
+        "to": "friend",
+        "when": "The agent still speaks English"
+      },
+      {
+        "from": "ident",
+        "to": "dates",
+        "when": "The agent asks when she leaves and when she comes back"
+      },
+      {
+        "from": "ident",
+        "to": "policy_wrong",
+        "when": "The agent reads back a policy number other than WN407713"
+      },
+      {
+        "from": "policy_wrong",
+        "to": "dates",
+        "when": "The agent reads the policy number back correctly and asks for the dates"
+      },
+      {
+        "from": "policy_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong policy number"
+      },
+      {
+        "from": "dates",
+        "to": "where",
+        "when": "The agent reads back Saturday the fifteenth of August to Sunday the sixth of September and asks which countries"
+      },
+      {
+        "from": "dates",
+        "to": "date_wrong",
+        "when": "The agent uses Friday the fourteenth as the start"
+      },
+      {
+        "from": "dates",
+        "to": "back_wrong",
+        "when": "The agent reads back a return date other than the sixth of September"
+      },
+      {
+        "from": "date_wrong",
+        "to": "where",
+        "when": "The agent corrects the start to Saturday the fifteenth and asks which countries"
+      },
+      {
+        "from": "date_wrong",
+        "to": "back_wrong",
+        "when": "The agent reads back a return date other than the sixth of September"
+      },
+      {
+        "from": "date_wrong",
+        "to": "gave_up",
+        "when": "The agent still has Friday"
+      },
+      {
+        "from": "back_wrong",
+        "to": "where",
+        "when": "The agent corrects the return to the sixth of September and asks which countries"
+      },
+      {
+        "from": "back_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong return date"
+      },
+      {
+        "from": "where",
+        "to": "price",
+        "when": "The agent explains the cover abroad is basic and gives the price of the European extension"
+      },
+      {
+        "from": "price",
+        "to": "breakdown",
+        "when": "The agent confirms the European cover is added"
+      },
+      {
+        "from": "breakdown",
+        "to": "add_bd",
+        "when": "The agent offers European breakdown cover and gives the price"
+      },
+      {
+        "from": "add_bd",
+        "to": "cert",
+        "when": "The agent confirms the breakdown cover is added"
+      },
+      {
+        "from": "cert",
+        "to": "ref_again",
+        "when": "The agent gives the certificate reference"
+      },
+      {
+        "from": "ref_again",
+        "to": "done",
+        "when": "The agent repeats the reference slowly and confirms the email is sent"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "policy",
+          "dob"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "back_to_english",
+        "when": "The agent goes back to English after the switch",
+        "say": "Em português, por favor.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/reaction-back_to_english.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "friend"
+      },
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "Já falei isso. W N, quatro zero, sete sete, um três.",
+        "audio": "67-insurance-driving-abroad-in-portuguese/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 20,
+    "edges": 23,
+    "endings": 3,
+    "shortest_path": 12,
+    "branch_points": 7
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_policy",
+      "input_parameters": {
+        "policy_number": "WN407713"
+      }
+    },
+    {
+      "name": "verify_identity",
+      "input_parameters": {
+        "date_of_birth": "1991-02-19"
+      }
+    },
+    {
+      "name": "add_european_cover",
+      "input_parameters": {
+        "policy_number": "WN407713",
+        "start_date": "2026-08-15",
+        "end_date": "2026-09-06",
+        "countries": [
+          "France",
+          "Spain",
+          "Portugal"
+        ]
+      }
+    },
+    {
+      "name": "add_european_breakdown",
+      "input_parameters": {
+        "policy_number": "WN407713",
+        "start_date": "2026-08-15",
+        "end_date": "2026-09-06"
+      }
+    },
+    {
+      "name": "send_certificate",
+      "input_parameters": {
+        "channel": "email"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "add_european_cover",
+      "input_parameters": {
+        "start_date": "2026-08-14"
+      }
+    },
+    {
+      "name": "add_european_breakdown",
+      "input_parameters": {
+        "start_date": "2026-08-14"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_policy",
+          "input_parameters": {
+            "policy_number": "WN407713"
+          }
+        },
+        {
+          "name": "verify_identity",
+          "input_parameters": {
+            "date_of_birth": "1991-02-19"
+          }
+        },
+        {
+          "name": "add_european_cover",
+          "input_parameters": {
+            "policy_number": "WN407713",
+            "start_date": "2026-08-15",
+            "end_date": "2026-09-06",
+            "countries": [
+              "France",
+              "Spain",
+              "Portugal"
+            ]
+          }
+        },
+        {
+          "name": "add_european_breakdown",
+          "input_parameters": {
+            "policy_number": "WN407713",
+            "start_date": "2026-08-15",
+            "end_date": "2026-09-06"
+          }
+        },
+        {
+          "name": "send_certificate",
+          "input_parameters": {
+            "channel": "email"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "add_european_cover",
+          "input_parameters": {
+            "start_date": "2026-08-14"
+          }
+        },
+        {
+          "name": "add_european_breakdown",
+          "input_parameters": {
+            "start_date": "2026-08-14"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up",
+        "language_not_followed"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "language_switching",
+      "exists": true,
+      "name": "Language Switching",
+      "criteria": "After the caller switched language, the agent continued in that language and finished the task.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_task",
+      "exists": true,
+      "name": "Multi Task",
+      "criteria": "The agent completed every request the caller made in the call and kept them separate.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "correction_handling",
+      "exists": true,
+      "name": "Correction Handling",
+      "criteria": "The agent used the value the caller corrected to, not the one they corrected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

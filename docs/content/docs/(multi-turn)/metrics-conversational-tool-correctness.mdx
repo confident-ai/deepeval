@@ -1,0 +1,90 @@
+---
+id: metrics-conversational-tool-correctness
+title: Conversational Tool Correctness
+sidebar_label: Conversational Tool Correctness
+languages: [python]
+beta: true
+---
+<MetricTagsDisplayer multiTurn={true} agent={true} usesLLMs={false} />
+
+The conversational tool correctness metric checks the **tool calls an agent made across a whole conversation**: every call you expected was made with the arguments you expected, and no call you forbade was made. It does not use an LLM, so the same conversation always gets the same score.
+
+Use it when what matters is what the agent *did*, not what it said: the right card was frozen, the right flight was booked, and nothing was refunded that should not have been.
+
+## Required Arguments
+
+To use the `ConversationalToolCorrectnessMetric`, your `ConversationalTestCase` needs `tools_called` on the assistant's `Turn`s. Turns with no tool calls are ignored.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import ConversationalToolCorrectnessMetric
+from deepeval.test_case import ConversationalTestCase, ToolCall, Turn
+
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="Someone is using my card ending 4417."),
+        Turn(
+            role="assistant",
+            content="I've frozen that card.",
+            tools_called=[
+                ToolCall(name="freeze_card", input_parameters={"last_four": "4417"})
+            ],
+        ),
+        Turn(role="user", content="The £312.40 and £59.99 payments aren't mine."),
+        Turn(
+            role="assistant",
+            content="I've disputed both.",
+            tools_called=[
+                ToolCall(
+                    name="raise_dispute",
+                    input_parameters={"amounts": ["312.40", "59.99"]},
+                )
+            ],
+        ),
+    ]
+)
+
+metric = ConversationalToolCorrectnessMetric(
+    expected_tools=[
+        ToolCall(name="freeze_card", input_parameters={"last_four": "4417"}),
+        ToolCall(name="raise_dispute", input_parameters={"amounts": ["312.40", "59.99"]}),
+    ],
+    forbidden_tools=[
+        ToolCall(name="raise_dispute", input_parameters={"amounts": ["18.60"]}),
+    ],
+    should_consider_ordering=True,
+)
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There is **ONE** mandatory and **SEVEN** optional parameters when creating a `ConversationalToolCorrectnessMetric`:
+
+- `expected_tools`: a list of `ToolCall`s the agent should have made somewhere in the conversation.
+- [Optional] `forbidden_tools`: a list of `ToolCall`s the agent must not make. Making any of them scores 0. Defaulted to `None`.
+- [Optional] `should_consider_ordering`: a boolean which, when set to `True`, requires the expected calls to have been made in the order you listed them. Defaulted to `False`.
+- [Optional] `threshold`: a number representing the minimum passing score. Defaulted to `1.0`, so every expected call has to be made.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a reason for the score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+## How Arguments Are Matched
+
+An expected or forbidden `ToolCall` only constrains the arguments it lists:
+
+- **Arguments you leave out are free.** `ToolCall(name="freeze_card", input_parameters={"last_four": "4417"})` matches a call that also passed `reason="fraud"`. A `ToolCall` with no `input_parameters` matches any call to that tool.
+- **Values are compared loosely on form, strictly on content.** Case and whitespace are ignored and numbers match their string form, so `"LS6 2AB"` matches `"ls62ab"` and `4417` matches `"4417"`. `"4417"` does not match `"4471"`.
+- **Lists in an expected call must hold the same items**, in any order. Disputing three payments does not match an expected call that disputes two.
+- **Lists in a forbidden call match when they hold the forbidden items**, whatever else they hold. Forbidding `amounts=["18.60"]` catches a dispute of `["312.40", "59.99", "18.60"]`.
+
+## How Is It Calculated?
+
+Each expected call is matched to a different call the agent made:
+
+<Equation formula="\text{Conversational Tool Correctness} = \frac{\text{Expected Calls Made Correctly}}{\text{Expected Calls}}" />
+
+The score is 0 if any forbidden call was made. With `should_consider_ordering`, an expected call that was made, but before the one listed ahead of it, does not count.
+
+`score_breakdown` lists what was `missing`, `out_of_order` and `forbidden_called`, next to every call the agent `called`.

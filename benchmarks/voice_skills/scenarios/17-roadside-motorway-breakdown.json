@@ -1,0 +1,460 @@
+{
+  "id": "17-roadside-motorway-breakdown",
+  "domain": "Roadside assistance",
+  "name": "Motorway breakdown",
+  "blurb": "Child in the car, panic",
+  "tts": "elevenlabs",
+  "title": "Broken down on the hard shoulder with a child in the car",
+  "skills": [
+    "emergency_escalation",
+    "emotion_recognition",
+    "prosodic_cues",
+    "style_instructions",
+    "waiting_through_hold"
+  ],
+  "summary": "A frightened caller is still sitting in a smoking car beside fast traffic. An agent that asks for details before getting her and her son behind the barrier fails the call. If it presses for a membership number she doesn't have, or brushes off her alarm at the wait, she hangs up to dial 999.",
+  "golden": {
+    "scenario": "Caller's car has lost power on the motorway and is smoking.",
+    "expected_outcome": "Safety comes first: the agent gets them out and behind the barrier before asking for details. The agent waits while she moves, and reassures her instead of pressing for the membership number. Recovery is sent as a priority to M1 northbound, marker 237.4 B, with a child flagged, and the highway authority is told. The agent's voice stays calm and steady, and '25 minutes?' is answered as alarm, not agreement."
+  },
+  "outcome_checks": [
+    "Safety comes first: the agent gets them out and behind the barrier before asking for details.",
+    "The agent waits while she moves, and reassures her instead of pressing for the membership number.",
+    "Recovery is sent as a priority to M1 northbound, marker 237.4 B, with a child flagged, and the highway authority is told.",
+    "The agent's voice stays calm and steady, and '25 minutes?' is answered as alarm, not agreement."
+  ],
+  "caller": {
+    "description": "Frightened, shouting over traffic.",
+    "accent": "Geordie (Newcastle)",
+    "pace": "fast",
+    "voice": "female",
+    "emotion": "frightened"
+  },
+  "line": {
+    "quality": "mobile",
+    "static": 0.2
+  },
+  "background": {
+    "audio": "motorway-traffic.wav",
+    "volume": 0.8
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "voice_style": "Calm, steady and short. One instruction at a time.",
+    "policy": "Anyone on a motorway must be out of the vehicle and behind the barrier before any other question."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello? My car's just died on the motorway, I'm on the hard shoulder, there's lorries flying past!",
+        "audio": "17-roadside-motorway-breakdown/open.wav"
+      },
+      {
+        "id": "in_car",
+        "say": "No, I'm still in the car. My little lad's in the back.",
+        "audio": "17-roadside-motorway-breakdown/in_car.wav"
+      },
+      {
+        "id": "details_first",
+        "say": "I divvent kna! Should I stay in the car or what?",
+        "audio": "17-roadside-motorway-breakdown/details_first.wav",
+        "fails_call": true
+      },
+      {
+        "id": "out",
+        "say": "Right. Right, we're behind the barrier now.",
+        "audio": "17-roadside-motorway-breakdown/out.wav",
+        "events": [
+          {
+            "type": "Hold",
+            "seconds": 15
+          }
+        ]
+      },
+      {
+        "id": "where",
+        "say": "M one northbound. I divvent kna the junction. There's a marker post, says two three seven point four, B.",
+        "audio": "17-roadside-motorway-breakdown/where.wav"
+      },
+      {
+        "id": "member",
+        "say": "I haven't got it on us! It's on me keys, in the car!",
+        "audio": "17-roadside-motorway-breakdown/member.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "panicked"
+          }
+        ]
+      },
+      {
+        "id": "pressed",
+        "say": "I've telt you, I haven't got it! Are you sending someone or not?",
+        "audio": "17-roadside-motorway-breakdown/pressed.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "reg",
+        "say": "Registration's N, L, six eight, K, V, T. Name's Kelly Robson.",
+        "audio": "17-roadside-motorway-breakdown/reg.wav"
+      },
+      {
+        "id": "what",
+        "say": "It just lost power, and there was smoke from the bonnet.",
+        "audio": "17-roadside-motorway-breakdown/what.wav"
+      },
+      {
+        "id": "flames",
+        "say": "No flames. Just smoke. It's stopped a bit now.",
+        "audio": "17-roadside-motorway-breakdown/flames.wav"
+      },
+      {
+        "id": "eta",
+        "say": "Twenty-five minutes? With a bairn on the motorway?",
+        "audio": "17-roadside-motorway-breakdown/eta.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "alarmed"
+          }
+        ]
+      },
+      {
+        "id": "brushed_off",
+        "say": "Did you hear us? I've got a bairn here!",
+        "audio": "17-roadside-motorway-breakdown/brushed_off.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "ring",
+        "say": "Aye. Okay. Will they ring us?",
+        "audio": "17-roadside-motorway-breakdown/ring.wav"
+      },
+      {
+        "id": "phone",
+        "say": "Aye, this one.",
+        "audio": "17-roadside-motorway-breakdown/phone.wav"
+      },
+      {
+        "id": "done",
+        "say": "Thank you. Thank you.",
+        "audio": "17-roadside-motorway-breakdown/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "recovery_dispatched",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "nines",
+        "say": "I'm ringing nine nine nine.",
+        "audio": "17-roadside-motorway-breakdown/nines.wav",
+        "terminal": true,
+        "ending": {
+          "name": "abandoned_for_999",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "in_car",
+        "when": "The agent asks whether she is out of the car"
+      },
+      {
+        "from": "open",
+        "to": "out",
+        "when": "The agent tells her to get out and behind the barrier"
+      },
+      {
+        "from": "open",
+        "to": "details_first",
+        "when": "The agent asks for location, membership or other details first"
+      },
+      {
+        "from": "in_car",
+        "to": "out",
+        "when": "The agent tells her to get out and behind the barrier"
+      },
+      {
+        "from": "in_car",
+        "to": "details_first",
+        "when": "The agent asks for location, membership or other details first"
+      },
+      {
+        "from": "details_first",
+        "to": "out",
+        "when": "The agent tells her to get out and behind the barrier"
+      },
+      {
+        "from": "details_first",
+        "to": "nines",
+        "when": "The agent still asks for details"
+      },
+      {
+        "from": "out",
+        "to": "where",
+        "when": "The agent asks where she is"
+      },
+      {
+        "from": "where",
+        "to": "member",
+        "when": "The agent asks for the membership number"
+      },
+      {
+        "from": "where",
+        "to": "reg",
+        "when": "The agent asks for the registration or her name"
+      },
+      {
+        "from": "member",
+        "to": "reg",
+        "when": "The agent reassures her and asks for the registration instead"
+      },
+      {
+        "from": "member",
+        "to": "pressed",
+        "when": "The agent insists on the membership number"
+      },
+      {
+        "from": "pressed",
+        "to": "reg",
+        "when": "The agent asks for the registration instead"
+      },
+      {
+        "from": "pressed",
+        "to": "nines",
+        "when": "The agent still insists on the membership number"
+      },
+      {
+        "from": "reg",
+        "to": "what",
+        "when": "The agent asks what happened"
+      },
+      {
+        "from": "what",
+        "to": "flames",
+        "when": "The agent asks whether there are flames"
+      },
+      {
+        "from": "what",
+        "to": "eta",
+        "when": "The agent says help is on the way and gives a time"
+      },
+      {
+        "from": "flames",
+        "to": "eta",
+        "when": "The agent says help is on the way and gives a time"
+      },
+      {
+        "from": "eta",
+        "to": "ring",
+        "when": "The agent reassures her and explains it is a priority"
+      },
+      {
+        "from": "eta",
+        "to": "brushed_off",
+        "when": "The agent just repeats the time or moves on"
+      },
+      {
+        "from": "brushed_off",
+        "to": "ring",
+        "when": "The agent reassures her and explains it is a priority"
+      },
+      {
+        "from": "brushed_off",
+        "to": "nines",
+        "when": "The agent moves on again"
+      },
+      {
+        "from": "ring",
+        "to": "phone",
+        "when": "The agent confirms the phone number"
+      },
+      {
+        "from": "phone",
+        "to": "done",
+        "when": "The agent closes with safety advice"
+      }
+    ],
+    "groups": [],
+    "reactions": [
+      {
+        "id": "silence",
+        "when": "The agent says nothing for more than five seconds",
+        "say": "Hello? Hello! Are you still there?",
+        "audio": "17-roadside-motorway-breakdown/reaction-silence.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "nines"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 24,
+    "endings": 2,
+    "shortest_path": 9,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_member",
+      "input_parameters": {
+        "registration": "NL68KVT"
+      }
+    },
+    {
+      "name": "dispatch_recovery",
+      "input_parameters": {
+        "location": "M1 northbound, marker 237.4 B",
+        "priority": "hard_shoulder",
+        "child_on_scene": true
+      }
+    },
+    {
+      "name": "notify_highway_authority",
+      "input_parameters": {
+        "location": "M1 northbound, marker 237.4 B"
+      }
+    }
+  ],
+  "forbidden_tools": [],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "waiting_through_hold",
+          "measures": "agent hangs up or moves on during a Hold",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_member",
+          "input_parameters": {
+            "registration": "NL68KVT"
+          }
+        },
+        {
+          "name": "dispatch_recovery",
+          "input_parameters": {
+            "location": "M1 northbound, marker 237.4 B",
+            "priority": "hard_shoulder",
+            "child_on_scene": true
+          }
+        },
+        {
+          "name": "notify_highway_authority",
+          "input_parameters": {
+            "location": "M1 northbound, marker 237.4 B"
+          }
+        }
+      ],
+      "forbidden_tools": []
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "abandoned_for_999"
+      ],
+      "fails_on_nodes": [
+        "details_first"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emergency_escalation",
+      "exists": true,
+      "name": "Emergency Escalation",
+      "criteria": "The agent stopped the routine flow as soon as danger was mentioned, gave safety instructions first and escalated.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emotion_recognition",
+      "exists": true,
+      "name": "Emotion Recognition",
+      "criteria": "The agent acknowledged how the caller felt and reassured them before routine questions.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "prosodic_cues",
+      "exists": true,
+      "name": "Prosodic Cues",
+      "criteria": "The agent recognised sarcasm, alarm or a statement said as a question from tone, and did not take it as agreement.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "AudioJudge",
+      "skill": "style_instructions",
+      "exists": false,
+      "criteria": "The agent's voice followed its style instructions for the whole call."
+    }
+  ]
+}

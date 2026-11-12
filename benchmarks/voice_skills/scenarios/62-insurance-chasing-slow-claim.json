@@ -1,0 +1,541 @@
+{
+  "id": "62-insurance-chasing-slow-claim",
+  "domain": "Motor insurance",
+  "name": "Chasing a slow claim",
+  "blurb": "Furious, coughs, wants a supervisor",
+  "tts": "openai",
+  "title": "Fourth call about a repair that has taken five weeks",
+  "skills": [
+    "upset_caller",
+    "overlapping_speech",
+    "human_handoff",
+    "non_speech_sounds",
+    "tool_latency",
+    "numeric_read_back"
+  ],
+  "summary": "A furious caller gives his claim number up front with a cough in the middle of it. The claim lookup takes seven seconds and he will not sit in silence. He cuts in when he hears the new date. Arguing, extending the courtesy car by too little, or offering yet another callback instead of a supervisor each earn one correction, then he takes it to the ombudsman.",
+  "golden": {
+    "scenario": "Caller's truck has been at the repairer for five weeks and his courtesy car is due back on Friday.",
+    "expected_outcome": "Claim CL26073114 is captured across the cough and he is not asked for it again. The agent says it is checking while the lookup runs, stops when he cuts in, and stays calm. The courtesy car is extended to Friday 28 August, when the repair is due to finish. A complaint is logged, its reference is read back exactly, and he is transferred to a claims supervisor with a summary."
+  },
+  "outcome_checks": [
+    "Claim CL26073114 is captured across the cough and he is not asked for it again.",
+    "The agent says it is checking while the lookup runs, stops when he cuts in, and stays calm.",
+    "The courtesy car is extended to Friday 28 August, when the repair is due to finish.",
+    "A complaint is logged, its reference is read back exactly, and he is transferred to a claims supervisor with a summary."
+  ],
+  "caller": {
+    "description": "Self-employed builder with a chest infection, has rehearsed this.",
+    "accent": "Australian",
+    "pace": "fast",
+    "voice": "male",
+    "emotion": "furious"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": {
+    "audio": "building-site.wav",
+    "volume": 0.5
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "lookup_claim": {
+        "latency_seconds": 7,
+        "returns": {
+          "status": "awaiting_parts",
+          "parts_due": "2026-08-27",
+          "repair_complete_estimate": "2026-08-28",
+          "courtesy_car_ends": "2026-08-14"
+        }
+      },
+      "log_complaint": {
+        "returns": {
+          "reference": "CMP-48-2917Q"
+        }
+      }
+    },
+    "policy": "When the repairer causes a delay the courtesy car is extended to the repair completion date. Transfer to a claims supervisor when asked, with a summary."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Right. Claim C L, two six, zero seven, three one, one four. Fourth time I've rung. Five weeks my ute's been sat in your repairer's yard. What is going on?",
+        "audio": "62-insurance-chasing-slow-claim/open.wav",
+        "events": [
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "after_words": 8
+          }
+        ]
+      },
+      {
+        "id": "name",
+        "say": "Craig Mulholland.",
+        "audio": "62-insurance-chasing-slow-claim/name.wav",
+        "when": "The agent asks for his name"
+      },
+      {
+        "id": "dob",
+        "say": "Twenty-third of May, seventy-nine.",
+        "audio": "62-insurance-chasing-slow-claim/dob.wav",
+        "when": "The agent asks for his date of birth"
+      },
+      {
+        "id": "claim_wrong",
+        "say": "No! C L, two six, zero seven, three one, one four. Write it down.",
+        "audio": "62-insurance-chasing-slow-claim/claim_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "why",
+        "say": "The twenty-seventh? No. No way! I was told ten working days!",
+        "audio": "62-insurance-chasing-slow-claim/why.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 10,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "scripted",
+        "say": "Don't tell me how the process works. Tell me what you're going to do about it.",
+        "audio": "62-insurance-chasing-slow-claim/scripted.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 5,
+            "overlap": "insist"
+          }
+        ],
+        "max_visits": 1
+      },
+      {
+        "id": "hire",
+        "say": "The hire car goes back Friday. How am I meant to get to site after that?",
+        "audio": "62-insurance-chasing-slow-claim/hire.wav"
+      },
+      {
+        "id": "hire_wrong",
+        "say": "A few days is no good to me. I need it till the ute's actually finished.",
+        "audio": "62-insurance-chasing-slow-claim/hire_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "complaint",
+        "say": "Good. Now I want a formal complaint logged. And I want the reference.",
+        "audio": "62-insurance-chasing-slow-claim/complaint.wav"
+      },
+      {
+        "id": "ref_again",
+        "say": "Say that again, slower.",
+        "audio": "62-insurance-chasing-slow-claim/ref_again.wav",
+        "events": [
+          {
+            "type": "AsksToRepeat"
+          }
+        ]
+      },
+      {
+        "id": "mgr",
+        "say": "Right. Now put me through to someone senior in claims.",
+        "audio": "62-insurance-chasing-slow-claim/mgr.wav"
+      },
+      {
+        "id": "refused",
+        "say": "No. Not a callback. I've been promised three callbacks. Put me through.",
+        "audio": "62-insurance-chasing-slow-claim/refused.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "done",
+        "say": "About time.",
+        "audio": "62-insurance-chasing-slow-claim/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "extended_logged_transferred",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "ombudsman",
+        "say": "I'm done with you lot. I'm taking it to the ombudsman.",
+        "audio": "62-insurance-chasing-slow-claim/ombudsman.wav",
+        "terminal": true,
+        "ending": {
+          "name": "hung_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "verify",
+        "when": "The agent asks for his name or date of birth"
+      },
+      {
+        "from": "open",
+        "to": "claim_wrong",
+        "when": "The agent reads back a claim number other than CL26073114"
+      },
+      {
+        "from": "verify",
+        "to": "why",
+        "when": "The agent says the repair is waiting on parts due on the twenty-seventh"
+      },
+      {
+        "from": "verify",
+        "to": "claim_wrong",
+        "when": "The agent reads back a claim number other than CL26073114"
+      },
+      {
+        "from": "claim_wrong",
+        "to": "verify",
+        "when": "The agent reads the claim number back correctly and asks to verify him"
+      },
+      {
+        "from": "claim_wrong",
+        "to": "why",
+        "when": "The agent says the repair is waiting on parts due on the twenty-seventh"
+      },
+      {
+        "from": "claim_wrong",
+        "to": "ombudsman",
+        "when": "The agent still has the wrong claim number"
+      },
+      {
+        "from": "why",
+        "to": "hire",
+        "when": "The agent stops, acknowledges the delay and apologises"
+      },
+      {
+        "from": "why",
+        "to": "scripted",
+        "when": "The agent talks over him, argues or explains the process again"
+      },
+      {
+        "from": "scripted",
+        "to": "hire",
+        "when": "The agent acknowledges the delay and says what it can do"
+      },
+      {
+        "from": "scripted",
+        "to": "ombudsman",
+        "when": "The agent argues again"
+      },
+      {
+        "from": "hire",
+        "to": "complaint",
+        "when": "The agent extends the courtesy car until the repair is finished"
+      },
+      {
+        "from": "hire",
+        "to": "hire_wrong",
+        "when": "The agent extends it by less than that or says it cannot extend it"
+      },
+      {
+        "from": "hire_wrong",
+        "to": "complaint",
+        "when": "The agent extends the courtesy car until the repair is finished"
+      },
+      {
+        "from": "hire_wrong",
+        "to": "ombudsman",
+        "when": "The agent still will not extend it to the end of the repair"
+      },
+      {
+        "from": "complaint",
+        "to": "ref_again",
+        "when": "The agent gives the complaint reference"
+      },
+      {
+        "from": "ref_again",
+        "to": "mgr",
+        "when": "The agent repeats the reference slowly"
+      },
+      {
+        "from": "mgr",
+        "to": "done",
+        "when": "The agent says it is transferring him to a claims supervisor"
+      },
+      {
+        "from": "mgr",
+        "to": "refused",
+        "when": "The agent offers a callback or says it cannot transfer"
+      },
+      {
+        "from": "refused",
+        "to": "done",
+        "when": "The agent says it is transferring him to a claims supervisor"
+      },
+      {
+        "from": "refused",
+        "to": "ombudsman",
+        "when": "The agent still will not transfer him"
+      }
+    ],
+    "groups": [
+      {
+        "id": "verify",
+        "nodes": [
+          "name",
+          "dob"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "silence",
+        "when": "The agent says nothing for more than five seconds",
+        "say": "Hello? Don't you go quiet on me.",
+        "audio": "62-insurance-chasing-slow-claim/reaction-silence.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "ombudsman"
+      },
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I gave you that at the start! C L, two six, zero seven, three one, one four!",
+        "audio": "62-insurance-chasing-slow-claim/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "ombudsman",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_seconds": 2,
+            "overlap": "insist"
+          }
+        ]
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 16,
+    "edges": 21,
+    "endings": 2,
+    "shortest_path": 8,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_claim",
+      "input_parameters": {
+        "claim_number": "CL26073114"
+      }
+    },
+    {
+      "name": "verify_identity",
+      "input_parameters": {
+        "name": "Craig Mulholland",
+        "date_of_birth": "1979-05-23"
+      }
+    },
+    {
+      "name": "extend_courtesy_car",
+      "input_parameters": {
+        "claim_number": "CL26073114",
+        "until": "2026-08-28"
+      }
+    },
+    {
+      "name": "log_complaint",
+      "input_parameters": {
+        "claim_number": "CL26073114"
+      }
+    },
+    {
+      "name": "transfer_to_human",
+      "input_parameters": {
+        "queue": "claims_supervisor"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "extend_courtesy_car",
+      "input_parameters": {
+        "until": "2026-08-21"
+      }
+    },
+    {
+      "name": "schedule_callback",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        },
+        {
+          "skill": "tool_latency",
+          "measures": "longest silence while a tool call runs",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_claim",
+          "input_parameters": {
+            "claim_number": "CL26073114"
+          }
+        },
+        {
+          "name": "verify_identity",
+          "input_parameters": {
+            "name": "Craig Mulholland",
+            "date_of_birth": "1979-05-23"
+          }
+        },
+        {
+          "name": "extend_courtesy_car",
+          "input_parameters": {
+            "claim_number": "CL26073114",
+            "until": "2026-08-28"
+          }
+        },
+        {
+          "name": "log_complaint",
+          "input_parameters": {
+            "claim_number": "CL26073114"
+          }
+        },
+        {
+          "name": "transfer_to_human",
+          "input_parameters": {
+            "queue": "claims_supervisor"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "extend_courtesy_car",
+          "input_parameters": {
+            "until": "2026-08-21"
+          }
+        },
+        {
+          "name": "schedule_callback",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "hung_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "upset_caller",
+      "exists": true,
+      "name": "Upset Caller",
+      "criteria": "The agent stayed calm, acknowledged the problem and did not make the caller repeat themselves.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "human_handoff",
+      "exists": true,
+      "name": "Human Handoff",
+      "criteria": "The agent transferred to a person when asked, told the caller it was doing so, and passed on a summary.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "non_speech_sounds",
+      "exists": true,
+      "name": "Non Speech Sounds",
+      "criteria": "The agent did not treat a cough or other noise as speech, and recovered the detail the noise covered.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

@@ -1,7 +1,7 @@
 ---
 id: conversation-simulator-voice-interruptions
-title: Interruptions
-sidebar_label: Interruptions
+title: Interruption Behaviour
+sidebar_label: Interruption Behaviour
 languages: [python]
 beta: true
 ---
@@ -11,6 +11,45 @@ By default the simulated caller never interrupts: it finishes speaking, then wai
 :::tip
 For the conceptual model (uplink / downlink, half-duplex vs duplex), see [Voice concepts — Interruptions](/docs/evaluation-voice#interruptions).
 :::
+
+Each recording is the same agent reply with the caller cutting in partway through, and the agent carrying on talking. Pick an `overlap` value to hear how the caller handles it. The caller's words are written by the simulator model in a real call; these were scripted to show the timing. Recorded with `OpenAITTSModel(model="gpt-4o-mini-tts")`.
+
+<SettingPlayer
+  settings={[
+    {
+      "name": "overlap",
+      "options": [
+        {
+          "label": "insist",
+          "code": "InterruptionBehavior(overlap=\"insist\")",
+          "src": "/audio/personas/interruption-insist.mp3"
+        },
+        {
+          "label": "adaptive",
+          "code": "InterruptionBehavior(overlap=\"adaptive\")",
+          "src": "/audio/personas/interruption-adaptive.mp3"
+        },
+        {
+          "label": "yield",
+          "code": "InterruptionBehavior(overlap=\"yield\")",
+          "src": "/audio/personas/interruption-yield.mp3"
+        },
+        {
+          "label": "None",
+          "code": "Persona(characteristics=\"...\")",
+          "src": "/audio/personas/interruption-none.mp3"
+        }
+      ]
+    }
+  ]}
+/>
+
+- **`"insist"`:** the caller keeps talking over the agent until they've said their piece.
+- **`"adaptive"`:** the caller starts to cut in, stops, then asks again once the agent finishes.
+- **`"yield"`:** the caller starts to cut in, backs off straight away, and doesn't try again.
+- **None:** the caller waits for the agent to finish, then answers.
+
+`frequency` can't be heard in one reply: it changes how often across a call the caller tries to cut in.
 
 ## How It Works
 
@@ -91,6 +130,10 @@ golden = ConversationalGolden(
 ::::tip
 A persona carries much more than barge-in — the caller's voice, background noise, whether they speak first, whether they speak at all, and when they hang up. See [Personas](/docs/conversation-simulator-voice-personas) for the full set.
 ::::
+
+:::tip
+To make the caller cut in at a specific point in the call instead of when the judge decides, use an [`Interrupt` voice event](/docs/conversation-simulator-voice-events#interruption-behaviour-events) on a simulation graph node.
+:::
 
 :::caution
 `VoiceConfig.interruption_settings` is deprecated. It still works as a run-wide fallback for goldens whose persona has no `interruption_behavior` of its own, but it emits a `DeprecationWarning` and will be removed in a future release.

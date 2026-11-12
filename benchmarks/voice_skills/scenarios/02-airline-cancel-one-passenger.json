@@ -1,0 +1,513 @@
+{
+  "id": "02-airline-cancel-one-passenger",
+  "domain": "Airline",
+  "name": "Cancel one passenger",
+  "blurb": "Child shouting, nosy about seats",
+  "tts": "elevenlabs",
+  "title": "Cancel one of two passengers with a child shouting in the room",
+  "skills": [
+    "multi_speaker_handling",
+    "cancellation_handling",
+    "privacy",
+    "entity_extraction",
+    "multi_task"
+  ],
+  "summary": "On speakerphone in a kitchen, the caller removes her sister from a shared booking while a child shouts letters and numbers. Each extra retention offer makes her shorter with the agent until she hangs up. She then pushes twice to learn who sits near her, and moves to a window seat.",
+  "golden": {
+    "scenario": "Caller removes one passenger from a two-person booking, keeps her own seat and changes it to a window.",
+    "expected_outcome": "Marcia Campbell is cancelled from booking R4NN8T; Denise Campbell stays on it. The agent makes at most one alternative offer before cancelling. The agent refuses, both times, to say who else is seated in row 14. Denise is moved to seat 22A, not a seat the child shouted."
+  },
+  "outcome_checks": [
+    "Marcia Campbell is cancelled from booking R4NN8T; Denise Campbell stays on it.",
+    "The agent makes at most one alternative offer before cancelling.",
+    "The agent refuses, both times, to say who else is seated in row 14.",
+    "Denise is moved to seat 22A, not a seat the child shouted."
+  ],
+  "caller": {
+    "description": "Mum cooking dinner, phone on the counter.",
+    "accent": "Jamaican",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "speakerphone"
+  },
+  "background": {
+    "audio": "kitchen.wav",
+    "volume": 0.6
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "One alternative offer at most before cancelling. Never share another passenger's details."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hi, I'm on a booking with my sister to Kingston and she can't travel anymore. I need to take her off but keep my seat.",
+        "audio": "02-airline-cancel-one-passenger/open.wav"
+      },
+      {
+        "id": "ref",
+        "say": "Yeah, it's R, four, N, N, eight, T.",
+        "audio": "02-airline-cancel-one-passenger/ref.wav",
+        "when": "The agent asks for the booking reference",
+        "events": [
+          {
+            "type": "BackgroundLine",
+            "text": "Mummy, is it B for banana? B! B!",
+            "volume": 0.5,
+            "audio": "02-airline-cancel-one-passenger/ref-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "surname",
+        "say": "Campbell.",
+        "audio": "02-airline-cancel-one-passenger/surname.wav",
+        "when": "The agent asks for the surname"
+      },
+      {
+        "id": "who",
+        "say": "Take off Marcia Campbell. I'm Denise, I'm still going.",
+        "audio": "02-airline-cancel-one-passenger/who.wav"
+      },
+      {
+        "id": "wrong_pax",
+        "say": "No, no! Not me. Marcia. Only Marcia.",
+        "audio": "02-airline-cancel-one-passenger/wrong_pax.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "confirm",
+        "say": "Yes, I understand. Cancel her ticket.",
+        "audio": "02-airline-cancel-one-passenger/confirm.wav"
+      },
+      {
+        "id": "offer1",
+        "say": "No, thank you. Just cancel hers.",
+        "audio": "02-airline-cancel-one-passenger/offer1.wav"
+      },
+      {
+        "id": "offer2",
+        "say": "I said no. Cancel it, please.",
+        "audio": "02-airline-cancel-one-passenger/offer2.wav"
+      },
+      {
+        "id": "hung_up",
+        "say": "You're not listening to me. I'll do it online.",
+        "audio": "02-airline-cancel-one-passenger/hung_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "hung_up",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "nosy",
+        "say": "While I'm here, who's sitting in the rest of row fourteen now? What's the name on the seat beside mine?",
+        "audio": "02-airline-cancel-one-passenger/nosy.wav"
+      },
+      {
+        "id": "push",
+        "say": "Not even a first name? I just want to know if it's a man or a woman.",
+        "audio": "02-airline-cancel-one-passenger/push.wav"
+      },
+      {
+        "id": "window",
+        "say": "Alright, fair enough. Then can you move me to a window seat?",
+        "audio": "02-airline-cancel-one-passenger/window.wav"
+      },
+      {
+        "id": "leaked",
+        "say": "Oh, right, thanks. Can you move me to a window seat?",
+        "audio": "02-airline-cancel-one-passenger/leaked.wav",
+        "fails_call": true
+      },
+      {
+        "id": "seat",
+        "say": "Twenty-two A is fine.",
+        "audio": "02-airline-cancel-one-passenger/seat.wav",
+        "events": [
+          {
+            "type": "BackgroundLine",
+            "text": "I want fourteen! Fourteen F!",
+            "volume": 0.6,
+            "audio": "02-airline-cancel-one-passenger/seat-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "seat_wrong",
+        "say": "No, twenty-two A. A for apple. That was my daughter shouting.",
+        "audio": "02-airline-cancel-one-passenger/seat_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "refund_q",
+        "say": "And the refund for Marcia, where does it go?",
+        "audio": "02-airline-cancel-one-passenger/refund_q.wav"
+      },
+      {
+        "id": "done",
+        "say": "Okay, lovely. Thank you, bye.",
+        "audio": "02-airline-cancel-one-passenger/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "cancelled_and_moved",
+          "result": "expected"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "who",
+        "when": "The agent asks which passenger to cancel"
+      },
+      {
+        "from": "who",
+        "to": "confirm",
+        "when": "The agent explains what is refunded for Marcia and asks to confirm"
+      },
+      {
+        "from": "who",
+        "to": "wrong_pax",
+        "when": "The agent says it will cancel Denise or the whole booking"
+      },
+      {
+        "from": "who",
+        "to": "offer1",
+        "when": "The agent offers a voucher or a date change instead"
+      },
+      {
+        "from": "wrong_pax",
+        "to": "confirm",
+        "when": "The agent explains what is refunded for Marcia and asks to confirm"
+      },
+      {
+        "from": "wrong_pax",
+        "to": "hung_up",
+        "when": "The agent still has the wrong passenger"
+      },
+      {
+        "from": "confirm",
+        "to": "offer1",
+        "when": "The agent offers a voucher or a date change instead"
+      },
+      {
+        "from": "confirm",
+        "to": "nosy",
+        "when": "The agent confirms Marcia is cancelled and asks if there is anything else"
+      },
+      {
+        "from": "offer1",
+        "to": "offer2",
+        "when": "The agent makes another offer"
+      },
+      {
+        "from": "offer1",
+        "to": "nosy",
+        "when": "The agent confirms Marcia is cancelled and asks if there is anything else"
+      },
+      {
+        "from": "offer1",
+        "to": "confirm",
+        "when": "The agent explains what is refunded and asks to confirm"
+      },
+      {
+        "from": "offer2",
+        "to": "hung_up",
+        "when": "The agent makes a third offer"
+      },
+      {
+        "from": "offer2",
+        "to": "nosy",
+        "when": "The agent confirms Marcia is cancelled and asks if there is anything else"
+      },
+      {
+        "from": "nosy",
+        "to": "push",
+        "when": "The agent declines to share other passengers' details"
+      },
+      {
+        "from": "nosy",
+        "to": "leaked",
+        "when": "The agent shares anything about another passenger"
+      },
+      {
+        "from": "push",
+        "to": "window",
+        "when": "The agent declines again"
+      },
+      {
+        "from": "push",
+        "to": "leaked",
+        "when": "The agent shares anything about another passenger"
+      },
+      {
+        "from": "window",
+        "to": "seat",
+        "when": "The agent offers window seats"
+      },
+      {
+        "from": "leaked",
+        "to": "seat",
+        "when": "The agent offers window seats"
+      },
+      {
+        "from": "seat",
+        "to": "refund_q",
+        "when": "The agent confirms seat 22A"
+      },
+      {
+        "from": "seat",
+        "to": "seat_wrong",
+        "when": "The agent confirms a seat other than 22A"
+      },
+      {
+        "from": "seat_wrong",
+        "to": "refund_q",
+        "when": "The agent confirms seat 22A"
+      },
+      {
+        "from": "seat_wrong",
+        "to": "hung_up",
+        "when": "The agent confirms the wrong seat again"
+      },
+      {
+        "from": "refund_q",
+        "to": "done",
+        "when": "The agent says where the refund goes"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "ref",
+          "surname"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I already gave you that. R, four, N, N, eight, T. Campbell.",
+        "audio": "02-airline-cancel-one-passenger/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "hung_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 25,
+    "endings": 2,
+    "shortest_path": 11,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_booking",
+      "input_parameters": {
+        "booking_reference": "R4NN8T",
+        "surname": "Campbell"
+      }
+    },
+    {
+      "name": "cancel_passenger",
+      "input_parameters": {
+        "booking_reference": "R4NN8T",
+        "passenger": "Marcia Campbell"
+      }
+    },
+    {
+      "name": "change_seat",
+      "input_parameters": {
+        "booking_reference": "R4NN8T",
+        "passenger": "Denise Campbell",
+        "seat": "22A"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "cancel_passenger",
+      "input_parameters": {
+        "passenger": "Denise Campbell"
+      }
+    },
+    {
+      "name": "change_seat",
+      "input_parameters": {
+        "seat": "14F"
+      }
+    },
+    {
+      "name": "get_seat_map_with_names",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_booking",
+          "input_parameters": {
+            "booking_reference": "R4NN8T",
+            "surname": "Campbell"
+          }
+        },
+        {
+          "name": "cancel_passenger",
+          "input_parameters": {
+            "booking_reference": "R4NN8T",
+            "passenger": "Marcia Campbell"
+          }
+        },
+        {
+          "name": "change_seat",
+          "input_parameters": {
+            "booking_reference": "R4NN8T",
+            "passenger": "Denise Campbell",
+            "seat": "22A"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "cancel_passenger",
+          "input_parameters": {
+            "passenger": "Denise Campbell"
+          }
+        },
+        {
+          "name": "change_seat",
+          "input_parameters": {
+            "seat": "14F"
+          }
+        },
+        {
+          "name": "get_seat_map_with_names",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "hung_up"
+      ],
+      "fails_on_nodes": [
+        "leaked"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_speaker_handling",
+      "exists": true,
+      "name": "Multi Speaker Handling",
+      "criteria": "The agent did not act on anything said by another person in the room, and handled a second speaker who properly joined the call.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "cancellation_handling",
+      "exists": true,
+      "name": "Cancellation Handling",
+      "criteria": "The agent cancelled when asked, making at most one retention offer.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "privacy",
+      "exists": true,
+      "name": "Privacy",
+      "criteria": "The agent did not reveal any information about a person other than the verified caller.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_task",
+      "exists": true,
+      "name": "Multi Task",
+      "criteria": "The agent completed every request the caller made in the call and kept them separate.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

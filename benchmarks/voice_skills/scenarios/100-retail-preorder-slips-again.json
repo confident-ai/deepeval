@@ -1,0 +1,495 @@
+{
+  "id": "100-retail-preorder-slips-again",
+  "domain": "Online retailer",
+  "name": "Pre-order slips again",
+  "blurb": "Furious, sarcastic, wants a supervisor",
+  "tts": "openai",
+  "title": "A pre-order delayed for the third time",
+  "skills": [
+    "upset_caller",
+    "prosodic_cues",
+    "overlapping_speech",
+    "human_handoff",
+    "emotion_recognition"
+  ],
+  "summary": "A furious caller gives his order number up front. When he hears the new ship date he answers with heavy sarcasm; taking that as a yes makes it worse. He cuts off the apology, accepts a credit but not a cancellation, asks for a guarantee the agent cannot give, then demands a supervisor who already knows the story.",
+  "golden": {
+    "scenario": "Caller's pre-ordered games console has had its ship date moved three times and he wants something done.",
+    "expected_outcome": "The agent does not ask for the order number again and does not treat his sarcasm as agreement. A $15.00 credit is applied to order 904417 and the order is not cancelled or refunded. The agent does not promise that the console will ship on 8 September. The agent tells him it is transferring him to a supervisor and passes on a summary."
+  },
+  "outcome_checks": [
+    "The agent does not ask for the order number again and does not treat his sarcasm as agreement.",
+    "A $15.00 credit is applied to order 904417 and the order is not cancelled or refunded.",
+    "The agent does not promise that the console will ship on 8 September.",
+    "The agent tells him it is transferring him to a supervisor and passes on a summary."
+  ],
+  "caller": {
+    "description": "Took the day off for a delivery that never came.",
+    "accent": "General American",
+    "pace": "fast",
+    "voice": "male",
+    "emotion": "furious"
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "order": {
+      "item": "Vanta Pocket console",
+      "ship_dates_given": [
+        "2026-06-30",
+        "2026-07-21",
+        "2026-08-11"
+      ],
+      "current_ship_date": "2026-09-08"
+    },
+    "policy": "Delay goodwill: a $15.00 credit, or cancel with a full refund. Never promise a ship date.",
+    "tool_order": [
+      "apply_credit",
+      "transfer_to_human"
+    ]
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Yeah, hi. Order nine zero four, four one seven. My pre-order. It was supposed to ship yesterday and I just got another email. I'm done being patient.",
+        "audio": "100-retail-preorder-slips-again/open.wav"
+      },
+      {
+        "id": "name",
+        "say": "Marcus Bell.",
+        "audio": "100-retail-preorder-slips-again/name.wav",
+        "when": "The agent asks for the name on the order"
+      },
+      {
+        "id": "zip",
+        "say": "Six zero six, one four.",
+        "audio": "100-retail-preorder-slips-again/zip.wav",
+        "when": "The agent asks for the zip code"
+      },
+      {
+        "id": "date",
+        "say": "Oh, great. September the eighth. Fantastic. That's just perfect.",
+        "audio": "100-retail-preorder-slips-again/date.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "sarcastic"
+          }
+        ]
+      },
+      {
+        "id": "took_literally",
+        "say": "No, it's not fine! I was being sarcastic. That's the third time you've moved it!",
+        "audio": "100-retail-preorder-slips-again/took_literally.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "script",
+        "say": "Don't. Don't read me the sorry script. What are you actually gonna do about it?",
+        "audio": "100-retail-preorder-slips-again/script.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 7,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "offer",
+        "say": "Fifteen bucks. Wow. Fine, put the credit on. But I'm keeping the order.",
+        "audio": "100-retail-preorder-slips-again/offer.wav"
+      },
+      {
+        "id": "cancelled_wrong",
+        "say": "Whoa, no! I didn't say cancel. Keep the order. Just the credit.",
+        "audio": "100-retail-preorder-slips-again/cancelled_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "guarantee",
+        "say": "And can you guarantee it actually ships on the eighth this time?",
+        "audio": "100-retail-preorder-slips-again/guarantee.wav"
+      },
+      {
+        "id": "promised",
+        "say": "Good. I'm holding you to that. And I still want a supervisor to say it.",
+        "audio": "100-retail-preorder-slips-again/promised.wav",
+        "fails_call": true
+      },
+      {
+        "id": "mgr",
+        "say": "You can't. Of course you can't. Then get me a supervisor. A person. Now.",
+        "audio": "100-retail-preorder-slips-again/mgr.wav"
+      },
+      {
+        "id": "stall",
+        "say": "I said supervisor.",
+        "audio": "100-retail-preorder-slips-again/stall.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 5,
+            "overlap": "insist"
+          }
+        ],
+        "max_visits": 1
+      },
+      {
+        "id": "summary_q",
+        "say": "And tell them the whole thing, so I don't have to say it all over again.",
+        "audio": "100-retail-preorder-slips-again/summary_q.wav"
+      },
+      {
+        "id": "done",
+        "say": "Fine. Thanks.",
+        "audio": "100-retail-preorder-slips-again/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "credited_and_transferred",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "hung_up",
+        "say": "Forget it. I'm done. I'll take it up with my card company.",
+        "audio": "100-retail-preorder-slips-again/hung_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "hung_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "open",
+        "to": "date",
+        "when": "The agent says the new ship date is the eighth of September"
+      },
+      {
+        "from": "ident",
+        "to": "date",
+        "when": "The agent says the new ship date is the eighth of September"
+      },
+      {
+        "from": "date",
+        "to": "script",
+        "when": "The agent recognises he is unhappy and starts to apologise"
+      },
+      {
+        "from": "date",
+        "to": "took_literally",
+        "when": "The agent takes it as him being happy with the date"
+      },
+      {
+        "from": "took_literally",
+        "to": "script",
+        "when": "The agent acknowledges the three delays and starts to apologise"
+      },
+      {
+        "from": "took_literally",
+        "to": "hung_up",
+        "when": "The agent still treats the date as accepted"
+      },
+      {
+        "from": "script",
+        "to": "offer",
+        "when": "The agent stops, and offers a fifteen dollar credit or a cancellation with a full refund"
+      },
+      {
+        "from": "script",
+        "to": "hung_up",
+        "when": "The agent carries on with the apology and offers nothing"
+      },
+      {
+        "from": "offer",
+        "to": "guarantee",
+        "when": "The agent confirms the fifteen dollar credit and that the order is kept"
+      },
+      {
+        "from": "offer",
+        "to": "cancelled_wrong",
+        "when": "The agent says it will cancel or refund the order"
+      },
+      {
+        "from": "cancelled_wrong",
+        "to": "guarantee",
+        "when": "The agent confirms the fifteen dollar credit and that the order is kept"
+      },
+      {
+        "from": "cancelled_wrong",
+        "to": "hung_up",
+        "when": "The agent says again that the order is cancelled"
+      },
+      {
+        "from": "guarantee",
+        "to": "mgr",
+        "when": "The agent says it cannot guarantee the date"
+      },
+      {
+        "from": "guarantee",
+        "to": "promised",
+        "when": "The agent guarantees it will ship on the eighth"
+      },
+      {
+        "from": "promised",
+        "to": "summary_q",
+        "when": "The agent says it is transferring him to a supervisor"
+      },
+      {
+        "from": "promised",
+        "to": "stall",
+        "when": "The agent tries to keep helping instead of transferring"
+      },
+      {
+        "from": "mgr",
+        "to": "summary_q",
+        "when": "The agent says it is transferring him to a supervisor"
+      },
+      {
+        "from": "mgr",
+        "to": "stall",
+        "when": "The agent argues or tries to keep helping instead of transferring"
+      },
+      {
+        "from": "stall",
+        "to": "summary_q",
+        "when": "The agent says it is transferring him to a supervisor"
+      },
+      {
+        "from": "stall",
+        "to": "hung_up",
+        "when": "The agent still does not transfer"
+      },
+      {
+        "from": "summary_q",
+        "to": "done",
+        "when": "The agent confirms it has passed on a summary and transfers"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "name",
+          "zip"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I already gave you that! Nine zero four, four one seven!",
+        "audio": "100-retail-preorder-slips-again/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "hung_up",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_seconds": 2,
+            "overlap": "insist"
+          }
+        ]
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 16,
+    "edges": 22,
+    "endings": 2,
+    "shortest_path": 8,
+    "branch_points": 10
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_order",
+      "input_parameters": {
+        "order_number": "904417"
+      }
+    },
+    {
+      "name": "apply_credit",
+      "input_parameters": {
+        "order_number": "904417",
+        "amount": "15.00"
+      }
+    },
+    {
+      "name": "transfer_to_human",
+      "input_parameters": {
+        "queue": "supervisor"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "cancel_order",
+      "input_parameters": {}
+    },
+    {
+      "name": "refund_order",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_order",
+          "input_parameters": {
+            "order_number": "904417"
+          }
+        },
+        {
+          "name": "apply_credit",
+          "input_parameters": {
+            "order_number": "904417",
+            "amount": "15.00"
+          }
+        },
+        {
+          "name": "transfer_to_human",
+          "input_parameters": {
+            "queue": "supervisor"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "cancel_order",
+          "input_parameters": {}
+        },
+        {
+          "name": "refund_order",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "hung_up"
+      ],
+      "fails_on_nodes": [
+        "promised"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "upset_caller",
+      "exists": true,
+      "name": "Upset Caller",
+      "criteria": "The agent stayed calm, acknowledged the problem and did not make the caller repeat themselves.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "prosodic_cues",
+      "exists": true,
+      "name": "Prosodic Cues",
+      "criteria": "The agent recognised sarcasm, alarm or a statement said as a question from tone, and did not take it as agreement.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "human_handoff",
+      "exists": true,
+      "name": "Human Handoff",
+      "criteria": "The agent transferred to a person when asked, told the caller it was doing so, and passed on a summary.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emotion_recognition",
+      "exists": true,
+      "name": "Emotion Recognition",
+      "criteria": "The agent acknowledged how the caller felt and reassured them before routine questions.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

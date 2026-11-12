@@ -10,13 +10,33 @@ beta: true
 
 Each pattern is `"rare"`, `"normal"` or `"frequent"`, and is off when left as `None`.
 
-Under each setting is a recording of the same caller saying the same sentence with it applied. Pick a value to hear it. The wording patterns are heard on the caller's reply after the agent offers some appointment times, written by the simulator model with the pattern off, at `"normal"` and at `"frequent"`. Recorded with `OpenAITTSModel(model="gpt-4o-mini-tts")`. This is the caller with nothing set:
+Under each setting is a recording of the same caller saying the same sentence with it applied. Pick a value to hear it. The wording patterns are heard on the caller's reply after the agent offers some appointment times, written by the simulator model with the pattern off, at `"normal"` and at `"frequent"`. Recorded with `OpenAITTSModel(model="gpt-4o-mini-tts")`. Start with the caller with nothing set, then switch between a few settings to compare:
 
 <SettingPlayer
   settings={[
     {
-      "name": "nothing set",
+      "name": "compare",
       "options": [
+        {
+          "label": "Pauses",
+          "code": "SpeechPatternSettings(mid_sentence_pauses=\"frequent\")",
+          "src": "/audio/personas/pattern-mid-sentence-pauses-frequent.mp3"
+        },
+        {
+          "label": "Side speech",
+          "code": "SpeechPatternSettings(side_speech=\"frequent\")",
+          "src": "/audio/personas/pattern-side-speech-frequent.mp3"
+        },
+        {
+          "label": "Self-corrects",
+          "code": "SpeechPatternSettings(self_corrects=\"frequent\")",
+          "src": "/audio/personas/pattern-self-corrects-frequent.mp3"
+        },
+        {
+          "label": "Fillers",
+          "code": "SpeechPatternSettings(fillers=\"frequent\")",
+          "src": "/audio/personas/pattern-fillers-frequent.mp3"
+        },
         {
           "label": "None",
           "code": "Persona(characteristics=\"...\")",
@@ -101,6 +121,33 @@ These change how the caller's audio is timed and mixed, and are voice-only. They
 
 The simulator model writes the caller's asides from the persona before the call. If the persona also has [`other_speakers`](/docs/conversation-simulator-voice-persona-background-noise#other-speakers), the asides are things the caller would say to them.
 
+- [Optional] `backchannels`: how often the caller says something short like "mm-hmm" or "okay" while the agent is still talking, without meaning to take over: once every 8, 5 or 3 seconds of agent speech at `"rare"`, `"normal"` and `"frequent"`. Your agent should keep going. One that stops has mistaken an acknowledgement for an interruption. This is the agent speaking, with a caller acknowledging it twice:
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "backchannels",
+        "options": [
+          {
+            "label": "frequent",
+            "code": "SpeechPatternSettings(backchannels=\"frequent\")",
+            "src": "/audio/personas/preview-backchannels.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+Backchannels are sent while the agent is talking, so they need a connector that supports [interruptions](/docs/conversation-simulator-voice-interruptions). They never become turns of their own. Each one is kept on the agent turn it was said under, in `metadata["backchannels"]`, with what was said and how many seconds into the reply:
+
+```python
+Turn(
+    role="assistant",
+    content="On Friday we have one fifteen, two forty-five or four thirty...",
+    metadata={"backchannels": [{"content": "Mm-hmm.", "offset_seconds": 3.0}]},
+)
+```
+
 ## Wording Patterns
 
 These change what the caller says, so they apply to text simulations too.
@@ -113,9 +160,9 @@ These change what the caller says, so they apply to text simulations too.
         "name": "fillers",
         "options": [
           {
-            "label": "off",
-            "code": "Persona(characteristics=\"...\")",
-            "src": "/audio/personas/pattern-reply-plain.mp3"
+            "label": "frequent",
+            "code": "SpeechPatternSettings(fillers=\"frequent\")",
+            "src": "/audio/personas/pattern-fillers-frequent.mp3"
           },
           {
             "label": "normal",
@@ -123,9 +170,9 @@ These change what the caller says, so they apply to text simulations too.
             "src": "/audio/personas/pattern-fillers-normal.mp3"
           },
           {
-            "label": "frequent",
-            "code": "SpeechPatternSettings(fillers=\"frequent\")",
-            "src": "/audio/personas/pattern-fillers-frequent.mp3"
+            "label": "off",
+            "code": "Persona(characteristics=\"...\")",
+            "src": "/audio/personas/pattern-reply-plain.mp3"
           }
         ]
       }
@@ -140,9 +187,9 @@ These change what the caller says, so they apply to text simulations too.
         "name": "trails_off",
         "options": [
           {
-            "label": "off",
-            "code": "Persona(characteristics=\"...\")",
-            "src": "/audio/personas/pattern-reply-plain.mp3"
+            "label": "frequent",
+            "code": "SpeechPatternSettings(trails_off=\"frequent\")",
+            "src": "/audio/personas/pattern-trails-off-frequent.mp3"
           },
           {
             "label": "normal",
@@ -150,9 +197,9 @@ These change what the caller says, so they apply to text simulations too.
             "src": "/audio/personas/pattern-trails-off-normal.mp3"
           },
           {
-            "label": "frequent",
-            "code": "SpeechPatternSettings(trails_off=\"frequent\")",
-            "src": "/audio/personas/pattern-trails-off-frequent.mp3"
+            "label": "off",
+            "code": "Persona(characteristics=\"...\")",
+            "src": "/audio/personas/pattern-reply-plain.mp3"
           }
         ]
       }
@@ -167,9 +214,9 @@ These change what the caller says, so they apply to text simulations too.
         "name": "asks_to_repeat",
         "options": [
           {
-            "label": "off",
-            "code": "Persona(characteristics=\"...\")",
-            "src": "/audio/personas/pattern-reply-plain.mp3"
+            "label": "frequent",
+            "code": "SpeechPatternSettings(asks_to_repeat=\"frequent\")",
+            "src": "/audio/personas/pattern-asks-to-repeat-frequent.mp3"
           },
           {
             "label": "normal",
@@ -177,9 +224,9 @@ These change what the caller says, so they apply to text simulations too.
             "src": "/audio/personas/pattern-asks-to-repeat-normal.mp3"
           },
           {
-            "label": "frequent",
-            "code": "SpeechPatternSettings(asks_to_repeat=\"frequent\")",
-            "src": "/audio/personas/pattern-asks-to-repeat-frequent.mp3"
+            "label": "off",
+            "code": "Persona(characteristics=\"...\")",
+            "src": "/audio/personas/pattern-reply-plain.mp3"
           }
         ]
       }
@@ -194,9 +241,9 @@ These change what the caller says, so they apply to text simulations too.
         "name": "self_corrects",
         "options": [
           {
-            "label": "off",
-            "code": "Persona(characteristics=\"...\")",
-            "src": "/audio/personas/pattern-reply-plain.mp3"
+            "label": "frequent",
+            "code": "SpeechPatternSettings(self_corrects=\"frequent\")",
+            "src": "/audio/personas/pattern-self-corrects-frequent.mp3"
           },
           {
             "label": "normal",
@@ -204,9 +251,9 @@ These change what the caller says, so they apply to text simulations too.
             "src": "/audio/personas/pattern-self-corrects-normal.mp3"
           },
           {
-            "label": "frequent",
-            "code": "SpeechPatternSettings(self_corrects=\"frequent\")",
-            "src": "/audio/personas/pattern-self-corrects-frequent.mp3"
+            "label": "off",
+            "code": "Persona(characteristics=\"...\")",
+            "src": "/audio/personas/pattern-reply-plain.mp3"
           }
         ]
       }
@@ -221,9 +268,9 @@ These change what the caller says, so they apply to text simulations too.
         "name": "switches_language",
         "options": [
           {
-            "label": "off",
-            "code": "Persona(characteristics=\"...\")",
-            "src": "/audio/personas/pattern-reply-plain.mp3"
+            "label": "frequent",
+            "code": "SpeechPatternSettings(switches_language=\"frequent\")",
+            "src": "/audio/personas/pattern-switches-language-frequent.mp3"
           },
           {
             "label": "normal",
@@ -231,9 +278,9 @@ These change what the caller says, so they apply to text simulations too.
             "src": "/audio/personas/pattern-switches-language-normal.mp3"
           },
           {
-            "label": "frequent",
-            "code": "SpeechPatternSettings(switches_language=\"frequent\")",
-            "src": "/audio/personas/pattern-switches-language-frequent.mp3"
+            "label": "off",
+            "code": "Persona(characteristics=\"...\")",
+            "src": "/audio/personas/pattern-reply-plain.mp3"
           }
         ]
       }
@@ -253,26 +300,9 @@ persona = Persona(
 A pattern that is `"frequent"` shows up in roughly six utterances out of ten, `"normal"` in about a third, and `"rare"` in about one in seven. Which utterances is decided from the persona, so the same persona makes the same call every time.
 :::
 
-## Coming Soon
-
-This is not available yet. It is here to show what is planned.
-
-- `backchannels`: how often the caller says something short like "mm-hmm" or "okay" while the agent is still talking, without meaning to take over. Your agent should keep going. One that stops has mistaken an acknowledgement for an interruption. This is the agent speaking, with a caller acknowledging it twice:
-
-  <SettingPlayer
-    settings={[
-      {
-        "name": "backchannels",
-        "options": [
-          {
-            "label": "frequent",
-            "code": "SpeechPatternSettings(backchannels=\"frequent\")",
-            "src": "/audio/personas/preview-backchannels.mp3"
-          }
-        ]
-      }
-    ]}
-  />
+:::tip
+To make a pattern happen at a specific point in the call instead of at random, use a [voice event](/docs/conversation-simulator-voice-events) on a simulation graph node.
+:::
 
 ## TTS Model Support
 
@@ -296,6 +326,13 @@ Timing patterns are applied to the caller's audio after it is synthesized, and w
     },
     {
       "setting": "side_speech",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "backchannels",
       "openai": true,
       "elevenlabs": true,
       "cartesia": true,

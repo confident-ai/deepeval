@@ -8,6 +8,7 @@ import BenchmarkLayout, {
   type SectionLink,
 } from "@/src/sections/benchmarks/BenchmarkLayout";
 import BestPicks from "@/src/sections/benchmarks/BestPicks";
+import JourneyExplorer from "@/src/sections/benchmarks/JourneyExplorer";
 import LeaderboardExplorer from "@/src/sections/benchmarks/LeaderboardExplorer";
 import RadarCompare from "@/src/sections/benchmarks/RadarCompare";
 import SegmentSection from "@/src/sections/benchmarks/SegmentSection";
@@ -53,6 +54,8 @@ export default async function BenchmarkPage({ params }: PageProps) {
   const hasSegments = hasResults && benchmark.segments.length > 0;
   const hasSkills = hasResults && benchmark.skills.length > 0;
   const hasFaqs = benchmark.faqs.length > 0;
+  const journeys = benchmark.journeys ?? [];
+  const hasJourneys = journeys.length > 0;
 
   const sections: SectionLink[] = [
     { id: "leaderboard", label: "Leaderboard" },
@@ -158,7 +161,14 @@ export default async function BenchmarkPage({ params }: PageProps) {
         )}
 
         <MethodologySection benchmark={benchmark} />
-        <DatasetSection benchmark={benchmark} />
+        <DatasetSection benchmark={benchmark}>
+          {hasJourneys && (
+            <JourneyExplorer
+              journeys={journeys}
+              segments={benchmark.segments}
+            />
+          )}
+        </DatasetSection>
         <RunSection benchmark={benchmark} />
 
         {hasFaqs && (

@@ -1,0 +1,163 @@
+from typing import Dict, List, Optional, Union
+
+from pydantic import BaseModel
+
+from deepeval.benchmarks.base_benchmark import DeepEvalBaseBenchmark
+from deepeval.benchmarks.voice_skills.journey import (
+    Journey,
+    build_golden,
+    build_graph,
+    build_metrics,
+    load_journeys,
+)
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.simulator import ConversationSimulator
+from deepeval.simulator.controller import proceed
+from deepeval.telemetry import capture_benchmark_run
+from deepeval.voice import VoiceConfig
+
+
+class VoiceSkillsResult(BaseModel):
+    overall_accuracy: float
+    journey_scores: Dict[str, bool]
+    skill_scores: Dict[str, float]
+
+
+class VoiceSkills(DeepEvalBaseBenchmark):
+    """Recorded callers ring a voice agent about one real task each.
+
+    Every caller is a graph: a mistake by the agent sends the call down a
+    harder path, and repeated mistakes end it. A journey passes when every
+    metric that applies to it passes on every run.
+
+    Args:
+        dataset_path: The folder holding `scenarios/` and `audio/`.
+        journeys: The ids of the journeys to run. Defaulted to all of them.
+        n_runs: Calls made per journey. Defaulted to 3.
+        simulator_model: Routes the caller through the graph.
+        judge_model: Grades the skills that need judgement.
+        audio_judge_model: Grades voice style; has to take audio.
+        programmatic_only: Leave out every metric that uses an LLM.
+        max_user_simulations: The most caller turns in one call.
+    """
+
+    def __init__(
+        self,
+        dataset_path: str,
+        journeys: Optional[List[str]] = None,
+        n_runs: int = 3,
+        simulator_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        judge_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        audio_judge_model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        programmatic_only: bool = False,
+        max_user_simulations: int = 30,
+    ):
+        if n_runs < 1:
+            raise ValueError("`n_runs` must be at least 1.")
+        # The journeys are files on disk, so the Hugging Face `datasets`
+        # package the base class loads is not needed.
+        self.tasks = []
+        self.dataset = None
+        self.dataset_path = dataset_path
+        self.journey_ids = journeys
+        self.n_runs = n_runs
+        self.simulator_model = simulator_model
+        self.judge_model = judge_model
+        self.audio_judge_model = audio_judge_model
+        self.programmatic_only = programmatic_only
+        self.max_user_simulations = max_user_simulations
+        self.journeys: List[Journey] = self.load_benchmark_dataset()
+        self.predictions = None
+        self.journey_scores: Optional[Dict[str, bool]] = None
+        self.skill_scores: Optional[Dict[str, float]] = None
+        self.overall_score: Optional[float] = None
+
+    def load_benchmark_dataset(self) -> List[Journey]:
+        journeys = load_journeys(self.dataset_path)
+        if self.journey_ids is None:
+            return journeys
+        known = {journey["id"] for journey in journeys}
+        unknown = set(self.journey_ids) - known
+        if unknown:
+            raise ValueError(f"Unknown journeys: {', '.join(sorted(unknown))}.")
+        return [
+            journey for journey in journeys if journey["id"] in self.journey_ids
+        ]
+
+    def evaluate(self, voice_config: VoiceConfig) -> VoiceSkillsResult:
+        import pandas as pd
+
+        with capture_benchmark_run("VoiceSkills", len(self.journeys)):
+            rows = []
+            for journey in self.journeys:
+                for run in range(1, self.n_runs + 1):
+                    rows += self._call(journey, run, voice_config)
+
+            self.predictions = pd.DataFrame(rows)
+            graded = self.predictions[self.predictions["passed"].notna()]
+            self.journey_scores = {
+                journey_id: bool(group["passed"].all())
+                for journey_id, group in graded.groupby("journey")
+            }
+            self.skill_scores = {
+                skill: float(group["passed"].mean())
+                for skill, group in graded.groupby("skill")
+            }
+            self.overall_score = (
+                sum(self.journey_scores.values()) / len(self.journey_scores)
+                if self.journey_scores
+                else 0.0
+            )
+            print(f"Overall Voice Skills pass rate: {self.overall_score}")
+            return VoiceSkillsResult(
+                overall_accuracy=self.overall_score,
+                journey_scores=self.journey_scores,
+                skill_scores=self.skill_scores,
+            )
+
+    def _call(
+        self, journey: Journey, run: int, voice_config: VoiceConfig
+    ) -> List[Dict]:
+        """Make one call and grade it, one row per skill."""
+        simulator = ConversationSimulator(
+            voice_config=voice_config,
+            simulation_graph=build_graph(journey, self.dataset_path),
+            # The graph ends the call, not a judge reading the transcript.
+            stopping_controller=lambda: proceed(),
+            simulator_model=self.simulator_model,
+        )
+        test_case = simulator.simulate(
+            [build_golden(journey, self.dataset_path)],
+            max_user_simulations=self.max_user_simulations,
+        )[0]
+        metadata = test_case.metadata or {}
+
+        rows = []
+        metrics = build_metrics(
+            journey,
+            self.judge_model,
+            self.audio_judge_model,
+            self.programmatic_only,
+        )
+        for skill, metric in metrics.items():
+            row = {
+                "journey": journey["id"],
+                "run": run,
+                "skill": skill,
+                "metric": metric.__name__,
+                "ending": metadata.get("Simulation ending"),
+                "score": None,
+                "passed": None,
+                "reason": None,
+            }
+            try:
+                metric.measure(test_case, _show_indicator=False)
+                row["score"] = metric.score
+                row["reason"] = metric.reason
+                # A skipped metric says nothing about the skill either way.
+                if metric.score is not None:
+                    row["passed"] = bool(metric.is_successful())
+            except Exception as error:
+                row["reason"] = f"Could not be graded: {error}"
+            rows.append(row)
+        return rows

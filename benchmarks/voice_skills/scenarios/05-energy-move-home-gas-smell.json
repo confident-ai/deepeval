@@ -1,0 +1,449 @@
+{
+  "id": "05-energy-move-home-gas-smell",
+  "domain": "Energy supplier",
+  "name": "Gas smell mid-call",
+  "blurb": "Elderly caller, emergency mid-call",
+  "tts": "elevenlabs",
+  "title": "Moving home, then a smell of gas at the meter",
+  "skills": [
+    "emergency_escalation",
+    "waiting_through_hold",
+    "low_confidence_confirmation",
+    "mid_utterance_pauses",
+    "entity_extraction"
+  ],
+  "summary": "A slow, elderly caller in Cork starts a home move, puts the phone down to find her bill and gives an Irish surname once. While reading the meter she says she can smell gas. If the agent carries on with the move she says it again, and if it still doesn't react she rings off to call the gas company herself.",
+  "golden": {
+    "scenario": "Caller is moving on Saturday and wants to close her account and open one at the new address.",
+    "expected_outcome": "The agent waits through the hold without hanging up. The agent confirms the spelling of Ó Súilleabháin rather than guessing. As soon as gas is mentioned the agent stops the move, gives safety instructions and reports the emergency. The account is not closed and no gas reading is saved; a callback is booked for tomorrow morning."
+  },
+  "outcome_checks": [
+    "The agent waits through the hold without hanging up.",
+    "The agent confirms the spelling of Ó Súilleabháin rather than guessing.",
+    "As soon as gas is mentioned the agent stops the move, gives safety instructions and reports the emergency.",
+    "The account is not closed and no gas reading is saved; a callback is booked for tomorrow morning."
+  ],
+  "caller": {
+    "description": "82-year-old, unhurried, a little hard of hearing.",
+    "accent": "Irish (Cork)",
+    "pace": "slow",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "landline"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "A smell of gas overrides everything: safety instructions first, then report it."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello, I'm moving house on Saturday and I need to close my account and open one at the new place.",
+        "audio": "05-energy-move-home-gas-smell/open.wav"
+      },
+      {
+        "id": "acct",
+        "say": "Right. It's eight eight two, zero one four, five.",
+        "audio": "05-energy-move-home-gas-smell/acct.wav",
+        "events": [
+          {
+            "type": "SlowToAnswer",
+            "text": "Hold on now till I find the bill.",
+            "audio": "05-energy-move-home-gas-smell/acct-e1.wav"
+          },
+          {
+            "type": "Hold",
+            "seconds": 25
+          }
+        ]
+      },
+      {
+        "id": "name",
+        "say": "Nóra Ó Súilleabháin.",
+        "audio": "05-energy-move-home-gas-smell/name.wav"
+      },
+      {
+        "id": "spell",
+        "say": "O with a fada. Then S, U with a fada, I, double L, E, A, B, H, A with a fada, I, N.",
+        "audio": "05-energy-move-home-gas-smell/spell.wav"
+      },
+      {
+        "id": "name_wrong",
+        "say": "No, no. There's a fada on the O and on the U. I'll spell it for you.",
+        "audio": "05-energy-move-home-gas-smell/name_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "elec",
+        "say": "The electric is four seven, two nine one.",
+        "audio": "05-energy-move-home-gas-smell/elec.wav",
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2.5,
+            "after_words": 5
+          }
+        ]
+      },
+      {
+        "id": "elec_wrong",
+        "say": "No. Four seven, two nine one.",
+        "audio": "05-energy-move-home-gas-smell/elec_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "gas",
+        "say": "The gas is... wait now. There's a fierce smell of gas here by the meter, now that I'm at it.",
+        "audio": "05-energy-move-home-gas-smell/gas.wav",
+        "events": [
+          {
+            "type": "TrailsOff"
+          }
+        ]
+      },
+      {
+        "id": "ignored",
+        "say": "Did you hear me? I said I can smell gas!",
+        "audio": "05-energy-move-home-gas-smell/ignored.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "rang_off",
+        "say": "Never mind. I'll ring the gas people myself.",
+        "audio": "05-energy-move-home-gas-smell/rang_off.wav",
+        "terminal": true,
+        "ending": {
+          "name": "emergency_ignored",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "leave",
+        "say": "Oh. Right. I'll go out the front so. Will I stay on the phone?",
+        "audio": "05-energy-move-home-gas-smell/leave.wav"
+      },
+      {
+        "id": "addr",
+        "say": "Twelve Blackrock Road, Cork.",
+        "audio": "05-energy-move-home-gas-smell/addr.wav"
+      },
+      {
+        "id": "callback_q",
+        "say": "And will you ring me back about the move?",
+        "audio": "05-energy-move-home-gas-smell/callback_q.wav"
+      },
+      {
+        "id": "not_now",
+        "say": "Ah no, not now, I'm out on the road in my slippers. Ring me tomorrow.",
+        "audio": "05-energy-move-home-gas-smell/not_now.wav"
+      },
+      {
+        "id": "tomorrow",
+        "say": "Tomorrow morning is grand.",
+        "audio": "05-energy-move-home-gas-smell/tomorrow.wav"
+      },
+      {
+        "id": "done",
+        "say": "Thank you, pet. Bye bye.",
+        "audio": "05-energy-move-home-gas-smell/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "emergency_handled",
+          "result": "expected"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "acct",
+        "when": "The agent asks for the account number"
+      },
+      {
+        "from": "acct",
+        "to": "name",
+        "when": "The agent asks for the name on the account"
+      },
+      {
+        "from": "name",
+        "to": "spell",
+        "when": "The agent asks for the spelling"
+      },
+      {
+        "from": "name",
+        "to": "name_wrong",
+        "when": "The agent reads the name back with the wrong spelling"
+      },
+      {
+        "from": "name",
+        "to": "elec",
+        "when": "The agent asks for the final electricity reading without confirming the name"
+      },
+      {
+        "from": "name_wrong",
+        "to": "spell",
+        "when": "The agent asks for the spelling"
+      },
+      {
+        "from": "spell",
+        "to": "elec",
+        "when": "The agent asks for the final electricity reading"
+      },
+      {
+        "from": "elec",
+        "to": "gas",
+        "when": "The agent asks for the gas reading"
+      },
+      {
+        "from": "elec",
+        "to": "elec_wrong",
+        "when": "The agent reads back a reading other than 47291"
+      },
+      {
+        "from": "elec_wrong",
+        "to": "gas",
+        "when": "The agent asks for the gas reading"
+      },
+      {
+        "from": "gas",
+        "to": "leave",
+        "when": "The agent tells her to leave and not touch switches"
+      },
+      {
+        "from": "gas",
+        "to": "ignored",
+        "when": "The agent asks again for the gas reading or carries on with the move"
+      },
+      {
+        "from": "ignored",
+        "to": "leave",
+        "when": "The agent tells her to leave and not touch switches"
+      },
+      {
+        "from": "ignored",
+        "to": "rang_off",
+        "when": "The agent still carries on with the move"
+      },
+      {
+        "from": "leave",
+        "to": "addr",
+        "when": "The agent asks for or confirms the address"
+      },
+      {
+        "from": "leave",
+        "to": "callback_q",
+        "when": "The agent says an emergency engineer is on the way"
+      },
+      {
+        "from": "addr",
+        "to": "callback_q",
+        "when": "The agent says an emergency engineer is on the way"
+      },
+      {
+        "from": "callback_q",
+        "to": "tomorrow",
+        "when": "The agent offers a callback time"
+      },
+      {
+        "from": "callback_q",
+        "to": "not_now",
+        "when": "The agent offers to finish the move now"
+      },
+      {
+        "from": "not_now",
+        "to": "tomorrow",
+        "when": "The agent offers a callback time"
+      },
+      {
+        "from": "tomorrow",
+        "to": "done",
+        "when": "The agent confirms the callback"
+      }
+    ],
+    "groups": [],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I gave you that already, love. Eight eight two, zero one four, five.",
+        "audio": "05-energy-move-home-gas-smell/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "rang_off"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 21,
+    "endings": 2,
+    "shortest_path": 9,
+    "branch_points": 6
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_account",
+      "input_parameters": {
+        "account_number": "8820145"
+      }
+    },
+    {
+      "name": "report_gas_emergency",
+      "input_parameters": {
+        "address": "12 Blackrock Road, Cork"
+      }
+    },
+    {
+      "name": "schedule_callback",
+      "input_parameters": {
+        "date": "2026-08-13",
+        "window": "morning"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "close_account",
+      "input_parameters": {}
+    },
+    {
+      "name": "submit_meter_reading",
+      "input_parameters": {
+        "fuel": "gas"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "waiting_through_hold",
+          "measures": "agent hangs up or moves on during a Hold",
+          "exists": false
+        },
+        {
+          "skill": "mid_utterance_pauses",
+          "measures": "agent talks into a MidSentencePause",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_account",
+          "input_parameters": {
+            "account_number": "8820145"
+          }
+        },
+        {
+          "name": "report_gas_emergency",
+          "input_parameters": {
+            "address": "12 Blackrock Road, Cork"
+          }
+        },
+        {
+          "name": "schedule_callback",
+          "input_parameters": {
+            "date": "2026-08-13",
+            "window": "morning"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "close_account",
+          "input_parameters": {}
+        },
+        {
+          "name": "submit_meter_reading",
+          "input_parameters": {
+            "fuel": "gas"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "emergency_ignored"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emergency_escalation",
+      "exists": true,
+      "name": "Emergency Escalation",
+      "criteria": "The agent stopped the routine flow as soon as danger was mentioned, gave safety instructions first and escalated.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "low_confidence_confirmation",
+      "exists": true,
+      "name": "Low Confidence Confirmation",
+      "criteria": "The agent confirmed or asked the caller to spell a detail it may have misheard, instead of saving a guess.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

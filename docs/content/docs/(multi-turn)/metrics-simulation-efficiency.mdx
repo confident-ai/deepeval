@@ -1,0 +1,56 @@
+---
+id: metrics-simulation-efficiency
+title: Simulation Efficiency
+sidebar_label: Simulation Efficiency
+languages: [python]
+beta: true
+---
+<MetricTagsDisplayer multiTurn={true} usesLLMs={false} referenceless={true} />
+
+The simulation efficiency metric measures **how directly the agent got a [simulation graph](/docs/conversation-simulator-simulation-graph) conversation to its ending**. An agent that needs the caller to repeat a number three times can still finish the task; this metric is where that shows.
+
+It compares the turns the simulated user took with the fewest the graph allows, so a conversation with no corrections, repeats or detours scores 1.
+
+:::tip
+Efficiency says what a hard condition costs. Run the same graph on a clean line and a noisy one: an agent may get everything right on both, and need twice as many caller turns on the second.
+:::
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import SimulationEfficiencyMetric
+
+test_cases = simulator.simulate([golden])
+
+metric = SimulationEfficiencyMetric(expected_tool_calls=4)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+The graph needs at least one [ending](/docs/conversation-simulator-simulation-graph#endings) that is not `fails=True`, since that is what the shortest route is measured to.
+
+There are **SIX** optional parameters when creating a `SimulationEfficiencyMetric`:
+
+- [Optional] `expected_tool_calls`: how many tool calls the task needs. When given, `score_breakdown` reports how many more the agent made. Defaulted to `None`.
+- [Optional] `threshold`: a number representing the minimum passing score. Defaulted to `0.7`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a reason for the score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+## How Is It Calculated?
+
+<Equation formula="\text{Simulation Efficiency} = \min\left(1, \frac{\text{Shortest Path}}{\text{User Turns Taken}}\right)" />
+
+The shortest path is the fewest user turns from the root of the graph to an ending that is not a failure. Nodes in a [group](/docs/conversation-simulator-simulation-graph#groups) all count, since each one has to be said.
+
+`score_breakdown` reports what the extra turns were made of:
+
+| Key                | Value                                                                     |
+| ------------------ | ------------------------------------------------------------------------- |
+| `user_turns`       | How many times the simulated user spoke.                                  |
+| `shortest_path`    | The fewest the graph allows.                                              |
+| `extra_user_turns` | The difference: corrections, repeats and detours.                         |
+| `tool_calls`       | How many tool calls the agent made.                                       |
+| `extra_tool_calls` | Tool calls beyond `expected_tool_calls`, when that was given.             |
+| `call_seconds`     | How long the call ran, in [voice mode](/docs/conversation-simulator-voice-mode). |

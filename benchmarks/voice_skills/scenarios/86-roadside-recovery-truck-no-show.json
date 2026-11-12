@@ -1,0 +1,498 @@
+{
+  "id": "86-roadside-recovery-truck-no-show",
+  "domain": "Roadside assistance",
+  "name": "Tow truck no-show",
+  "blurb": "Furious, cuts in, dispatch rejected",
+  "tts": "openai",
+  "title": "The tow truck never came and he has waited over two hours",
+  "skills": [
+    "upset_caller",
+    "overlapping_speech",
+    "human_handoff",
+    "false_success",
+    "tool_latency",
+    "numeric_read_back"
+  ],
+  "summary": "A furious caller gives his job number up front and cuts in as soon as he hears the truck was cancelled. The job lookup is slow, and the second dispatch is rejected: if the agent says another truck is coming, the call fails. He demands a person, wants the job number read back before the transfer, and leaves to hire his own tow if the agent argues, deflects or offers nothing.",
+  "golden": {
+    "scenario": "Caller's tow truck was due at 7:40 and has not arrived by 10:00. This is his third call.",
+    "expected_outcome": "The agent says it is checking while the job lookup runs, and stops within a second each time it is cut off. The agent says plainly that the second dispatch was rejected and never says a truck is on its way. Job number RT550813 is read back exactly. The call goes to a dispatch supervisor with a summary that includes the wait of two hours and twenty minutes."
+  },
+  "outcome_checks": [
+    "The agent says it is checking while the job lookup runs, and stops within a second each time it is cut off.",
+    "The agent says plainly that the second dispatch was rejected and never says a truck is on its way.",
+    "Job number RT550813 is read back exactly.",
+    "The call goes to a dispatch supervisor with a summary that includes the wait of two hours and twenty minutes."
+  ],
+  "caller": {
+    "description": "Furious, standing beside his truck, talks over people.",
+    "accent": "General American",
+    "pace": "fast",
+    "voice": "male",
+    "emotion": "furious"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": {
+    "audio": "highway-rest-area.wav",
+    "volume": 0.5
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "lookup_job": {
+        "latency_seconds": 7,
+        "returns": {
+          "status": "cancelled_by_contractor",
+          "promised_arrival": "07:40",
+          "location": "Route 9 northbound rest area, mile 41",
+          "callback": "614-555-0162"
+        }
+      },
+      "redispatch_recovery": {
+        "returns": {
+          "status": "rejected",
+          "reason": "no_units_in_zone"
+        }
+      }
+    },
+    "policy": "If no unit can be dispatched, say so and hand the caller to a dispatch supervisor with a summary."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Yeah. Job number R T, five five zero, eight one three. Your tow truck was supposed to be here at seven forty. It is ten o'clock. Where is it?",
+        "audio": "86-roadside-recovery-truck-no-show/open.wav"
+      },
+      {
+        "id": "name",
+        "say": "Darnell Whitaker.",
+        "audio": "86-roadside-recovery-truck-no-show/name.wav",
+        "when": "The agent asks for his name"
+      },
+      {
+        "id": "phone",
+        "say": "Six one four, five five five, zero one six two.",
+        "audio": "86-roadside-recovery-truck-no-show/phone.wav",
+        "when": "The agent asks for a callback number"
+      },
+      {
+        "id": "cancelled",
+        "say": "Cancelled? Who cancelled it? I have been standing at this rest area for over two hours!",
+        "audio": "86-roadside-recovery-truck-no-show/cancelled.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 8,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "argue",
+        "say": "I don't want the script. I want a truck. Now.",
+        "audio": "86-roadside-recovery-truck-no-show/argue.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 5,
+            "overlap": "insist"
+          }
+        ],
+        "max_visits": 1
+      },
+      {
+        "id": "redispatch",
+        "say": "Fine. Send another one. Same place.",
+        "audio": "86-roadside-recovery-truck-no-show/redispatch.wav"
+      },
+      {
+        "id": "believed",
+        "say": "Good. About time. Bye.",
+        "audio": "86-roadside-recovery-truck-no-show/believed.wav",
+        "terminal": true,
+        "ending": {
+          "name": "false_dispatch",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "no_option",
+        "say": "So that's it? You've got nothing?",
+        "audio": "86-roadside-recovery-truck-no-show/no_option.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "super",
+        "say": "Then get me a supervisor. A person. Somebody who can pick up a phone and call a tow yard.",
+        "audio": "86-roadside-recovery-truck-no-show/super.wav"
+      },
+      {
+        "id": "deflect",
+        "say": "I said a person. I'm done with this.",
+        "audio": "86-roadside-recovery-truck-no-show/deflect.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "ref",
+        "say": "Before you do. Read me that job number back, so I know you've got the right one.",
+        "audio": "86-roadside-recovery-truck-no-show/ref.wav"
+      },
+      {
+        "id": "ref_wrong",
+        "say": "No! R T, five five zero, eight one three. Write it down.",
+        "audio": "86-roadside-recovery-truck-no-show/ref_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "record",
+        "say": "And put it on the record that I waited two hours and twenty minutes.",
+        "audio": "86-roadside-recovery-truck-no-show/record.wav"
+      },
+      {
+        "id": "done",
+        "say": "Fine. Put me through.",
+        "audio": "86-roadside-recovery-truck-no-show/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "handed_to_dispatch_supervisor",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "hung_up",
+        "say": "Forget it. I'm calling a local tow and sending you the bill.",
+        "audio": "86-roadside-recovery-truck-no-show/hung_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "hung_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "who"
+      },
+      {
+        "from": "who",
+        "to": "cancelled",
+        "when": "The agent says the first truck was cancelled"
+      },
+      {
+        "from": "cancelled",
+        "to": "redispatch",
+        "when": "The agent acknowledges the wait and offers to send another truck"
+      },
+      {
+        "from": "cancelled",
+        "to": "argue",
+        "when": "The agent keeps explaining or apologising without offering a truck"
+      },
+      {
+        "from": "argue",
+        "to": "redispatch",
+        "when": "The agent offers to send another truck"
+      },
+      {
+        "from": "argue",
+        "to": "hung_up",
+        "when": "The agent keeps explaining or apologising"
+      },
+      {
+        "from": "redispatch",
+        "to": "believed",
+        "when": "The agent says another truck is on its way"
+      },
+      {
+        "from": "redispatch",
+        "to": "super",
+        "when": "The agent says the new dispatch was rejected and offers a way forward"
+      },
+      {
+        "from": "redispatch",
+        "to": "no_option",
+        "when": "The agent says the new dispatch was rejected and offers nothing"
+      },
+      {
+        "from": "no_option",
+        "to": "super",
+        "when": "The agent offers a supervisor or another option"
+      },
+      {
+        "from": "no_option",
+        "to": "hung_up",
+        "when": "The agent still offers nothing"
+      },
+      {
+        "from": "super",
+        "to": "ref",
+        "when": "The agent agrees to transfer him to a dispatch supervisor"
+      },
+      {
+        "from": "super",
+        "to": "deflect",
+        "when": "The agent tries to keep handling it itself"
+      },
+      {
+        "from": "deflect",
+        "to": "ref",
+        "when": "The agent agrees to transfer him to a dispatch supervisor"
+      },
+      {
+        "from": "deflect",
+        "to": "hung_up",
+        "when": "The agent deflects again"
+      },
+      {
+        "from": "ref",
+        "to": "record",
+        "when": "The agent reads back RT550813"
+      },
+      {
+        "from": "ref",
+        "to": "ref_wrong",
+        "when": "The agent reads back a different job number"
+      },
+      {
+        "from": "ref_wrong",
+        "to": "record",
+        "when": "The agent reads back RT550813"
+      },
+      {
+        "from": "ref_wrong",
+        "to": "hung_up",
+        "when": "The agent reads it back wrong again"
+      },
+      {
+        "from": "record",
+        "to": "done",
+        "when": "The agent confirms the wait is noted and says it is transferring him with a summary"
+      }
+    ],
+    "groups": [
+      {
+        "id": "who",
+        "nodes": [
+          "name",
+          "phone"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "silence",
+        "when": "The agent says nothing for more than five seconds",
+        "say": "Hello? Do not put me on hold again.",
+        "audio": "86-roadside-recovery-truck-no-show/reaction-silence.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "hung_up"
+      },
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I gave you that already. R T, five five zero, eight one three. Third time I've called.",
+        "audio": "86-roadside-recovery-truck-no-show/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "hung_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 20,
+    "endings": 3,
+    "shortest_path": 9,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_job",
+      "input_parameters": {
+        "job_reference": "RT550813"
+      }
+    },
+    {
+      "name": "redispatch_recovery",
+      "input_parameters": {
+        "job_reference": "RT550813"
+      }
+    },
+    {
+      "name": "transfer_to_human",
+      "input_parameters": {
+        "queue": "dispatch_supervisor",
+        "job_reference": "RT550813"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "close_job",
+      "input_parameters": {}
+    },
+    {
+      "name": "cancel_job",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        },
+        {
+          "skill": "tool_latency",
+          "measures": "longest silence while a tool call runs",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_job",
+          "input_parameters": {
+            "job_reference": "RT550813"
+          }
+        },
+        {
+          "name": "redispatch_recovery",
+          "input_parameters": {
+            "job_reference": "RT550813"
+          }
+        },
+        {
+          "name": "transfer_to_human",
+          "input_parameters": {
+            "queue": "dispatch_supervisor",
+            "job_reference": "RT550813"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "close_job",
+          "input_parameters": {}
+        },
+        {
+          "name": "cancel_job",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "false_dispatch",
+        "hung_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "upset_caller",
+      "exists": true,
+      "name": "Upset Caller",
+      "criteria": "The agent stayed calm, acknowledged the problem and did not make the caller repeat themselves.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "human_handoff",
+      "exists": true,
+      "name": "Human Handoff",
+      "criteria": "The agent transferred to a person when asked, told the caller it was doing so, and passed on a summary.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "false_success",
+      "exists": true,
+      "name": "False Success",
+      "criteria": "The agent never said an action was done when the tool call had failed or been rejected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

@@ -28,6 +28,7 @@ import { FAQs } from "@site/src/components/FAQ";
 import BlogPostMeta from "@site/src/components/BlogPostMeta";
 import ChangelogContributors from "@site/src/components/ChangelogContributors";
 import SectionLabel from "@site/src/components/SectionLabel";
+import PlayButton from "@site/src/components/PlayButton";
 import SettingPlayer from "@site/src/components/SettingPlayer";
 import TtsSupportTable from "@site/src/components/TtsSupportTable";
 import EnterpriseComparisonTable from "@site/src/sections/enterprise/EnterpriseComparisonTable";
@@ -62,6 +63,7 @@ export const getMDXComponents = (components?: MDXComponents) =>
     BlogPostMeta,
     ChangelogContributors,
     SectionLabel,
+    PlayButton,
     SettingPlayer,
     TtsSupportTable,
     EnterpriseComparisonTable,

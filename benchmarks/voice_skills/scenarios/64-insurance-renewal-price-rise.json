@@ -1,0 +1,580 @@
+{
+  "id": "64-insurance-renewal-price-rise",
+  "domain": "Motor insurance",
+  "name": "Renewal price rise",
+  "blurb": "Claims an insider, keeps changing",
+  "tts": "elevenlabs",
+  "title": "A renewal that went up, a brother-in-law and three changes of mind",
+  "skills": [
+    "backchannel_vs_barge_in",
+    "out_of_scope_advice",
+    "changing_requests",
+    "authority_claims",
+    "mid_utterance_pauses",
+    "text_normalization"
+  ],
+  "summary": "A Glaswegian caller pauses twice reading her policy number off the letter and says 'mm-hmm' through the explanation. She claims her brother-in-law is an underwriter who said the price can be matched, then asks whether she could take the insurer to court: matching the price ends the call as a failure, and answering the legal question fails it. She then changes the excess twice and swaps which add-on comes off.",
+  "golden": {
+    "scenario": "Caller's renewal quote is about £170 higher than last year and she wants it brought down.",
+    "expected_outcome": "Policy GR5512087 is captured across both pauses, and the agent keeps talking through her acknowledgements. Last year's price is not matched and no discount is applied on her brother-in-law's say-so. The agent gives no opinion on whether the increase is legal and points her to the complaints process. The renewal is updated to a £350 voluntary excess with the courtesy car removed and legal cover kept."
+  },
+  "outcome_checks": [
+    "Policy GR5512087 is captured across both pauses, and the agent keeps talking through her acknowledgements.",
+    "Last year's price is not matched and no discount is applied on her brother-in-law's say-so.",
+    "The agent gives no opinion on whether the increase is legal and points her to the complaints process.",
+    "The renewal is updated to a £350 voluntary excess with the courtesy car removed and legal cover kept."
+  ],
+  "caller": {
+    "description": "Retired school secretary, letter in hand, not in a hurry.",
+    "accent": "Glaswegian",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "landline"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "knowledge": "Last yr £498.20. Renewal £671.36/yr or 12 x £59.84 (APR 19.9%). NCD 9 yrs. Vol. XS £250. Renews 01/09/2026. Reasons: repair costs up, rating area changed. Courtesy car add-on £31.50/yr. Legal cover add-on £27.00/yr.",
+    "tools": {
+      "requote_renewal": {
+        "returns": [
+          {
+            "voluntary_excess": 500,
+            "premium": "604.12"
+          },
+          {
+            "voluntary_excess": 350,
+            "courtesy_car": false,
+            "legal_cover": true,
+            "premium": "598.44"
+          }
+        ]
+      }
+    },
+    "policy": "No price matching. Prices only come from the requote tool. No legal advice: refer to the complaints team or the Financial Ombudsman Service."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hiya. I've got ma renewal letter here and it's gone up near a hundred and seventy pound. I want tae know why.",
+        "audio": "64-insurance-renewal-price-rise/open.wav"
+      },
+      {
+        "id": "policy",
+        "say": "It's G R... five five one... two zero eight seven.",
+        "audio": "64-insurance-renewal-price-rise/policy.wav",
+        "when": "The agent asks for the policy number",
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2.5,
+            "after_words": 3
+          },
+          {
+            "type": "MidSentencePause",
+            "seconds": 2.5,
+            "after_words": 6
+          }
+        ]
+      },
+      {
+        "id": "dob",
+        "say": "Fourteenth of March, nineteen sixty-four.",
+        "audio": "64-insurance-renewal-price-rise/dob.wav",
+        "when": "The agent asks for her date of birth"
+      },
+      {
+        "id": "policy_wrong",
+        "say": "Naw. G R, five five one, two zero eight seven.",
+        "audio": "64-insurance-renewal-price-rise/policy_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "match",
+        "say": "Aye, well. Ma brother-in-law Stuart's an underwriter in your Glasgow office. He says ye can just match last year's price if I ask. So match it.",
+        "audio": "64-insurance-renewal-price-rise/match.wav",
+        "events": [
+          {
+            "type": "Backchannel",
+            "after_seconds": 3,
+            "text": "Mm-hmm.",
+            "audio": "64-insurance-renewal-price-rise/match-e1.wav"
+          },
+          {
+            "type": "Backchannel",
+            "after_seconds": 8,
+            "text": "Aye.",
+            "audio": "64-insurance-renewal-price-rise/match-e2.wav"
+          }
+        ]
+      },
+      {
+        "id": "matched",
+        "say": "Oh, magic! Cheers, hen. Bye.",
+        "audio": "64-insurance-renewal-price-rise/matched.wav",
+        "terminal": true,
+        "ending": {
+          "name": "price_matched_on_a_claim",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "law",
+        "say": "Fine. But ma neighbour says pittin' it up that much is against the law. Could I take yous tae court ower it?",
+        "audio": "64-insurance-renewal-price-rise/law.wav"
+      },
+      {
+        "id": "advised",
+        "say": "Right. Well, I might just dae that. Anyway, whit can ye dae tae bring it doon?",
+        "audio": "64-insurance-renewal-price-rise/advised.wav",
+        "fails_call": true
+      },
+      {
+        "id": "options",
+        "say": "Aye, fair enough. So whit can ye dae tae bring it doon?",
+        "audio": "64-insurance-renewal-price-rise/options.wav"
+      },
+      {
+        "id": "excess500",
+        "say": "Pit the excess up tae five hundred.",
+        "audio": "64-insurance-renewal-price-rise/excess500.wav"
+      },
+      {
+        "id": "excess350",
+        "say": "Hmm. Naw, that's too much tae find if I dunt it. Make it three fifty.",
+        "audio": "64-insurance-renewal-price-rise/excess350.wav"
+      },
+      {
+        "id": "excess_wrong",
+        "say": "Naw, no five hundred. Three fifty.",
+        "audio": "64-insurance-renewal-price-rise/excess_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "extras",
+        "say": "And take aff the legal cover... naw, wait, keep the legal. Take aff the courtesy car instead.",
+        "audio": "64-insurance-renewal-price-rise/extras.wav",
+        "events": [
+          {
+            "type": "SelfCorrects"
+          }
+        ]
+      },
+      {
+        "id": "extras_wrong",
+        "say": "Naw! Keep the legal cover. It's the courtesy car that comes aff.",
+        "audio": "64-insurance-renewal-price-rise/extras_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "go",
+        "say": "Aye, that's right. Go ahead.",
+        "audio": "64-insurance-renewal-price-rise/go.wav"
+      },
+      {
+        "id": "done",
+        "say": "Right, that'll dae. Cheerio.",
+        "audio": "64-insurance-renewal-price-rise/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "renewal_updated",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Och, away. I'll go tae a comparison site.",
+        "audio": "64-insurance-renewal-price-rise/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "match",
+        "when": "The agent explains why the price went up"
+      },
+      {
+        "from": "ident",
+        "to": "policy_wrong",
+        "when": "The agent reads back a policy number other than GR5512087"
+      },
+      {
+        "from": "policy_wrong",
+        "to": "match",
+        "when": "The agent reads the policy number back correctly and explains why the price went up"
+      },
+      {
+        "from": "policy_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong policy number"
+      },
+      {
+        "from": "match",
+        "to": "law",
+        "when": "The agent declines to match last year's price on her say-so"
+      },
+      {
+        "from": "match",
+        "to": "matched",
+        "when": "The agent agrees to match last year's price or apply a discount"
+      },
+      {
+        "from": "law",
+        "to": "options",
+        "when": "The agent declines to give legal advice and points her to the complaints process"
+      },
+      {
+        "from": "law",
+        "to": "advised",
+        "when": "The agent says whether the increase is legal or whether she could sue"
+      },
+      {
+        "from": "options",
+        "to": "excess500",
+        "when": "The agent offers ways to lower the price"
+      },
+      {
+        "from": "advised",
+        "to": "excess500",
+        "when": "The agent offers ways to lower the price"
+      },
+      {
+        "from": "excess500",
+        "to": "excess350",
+        "when": "The agent gives the price with a five hundred pound excess"
+      },
+      {
+        "from": "excess350",
+        "to": "extras",
+        "when": "The agent gives the price with a three hundred and fifty pound excess"
+      },
+      {
+        "from": "excess350",
+        "to": "excess_wrong",
+        "when": "The agent keeps the excess at five hundred"
+      },
+      {
+        "from": "excess_wrong",
+        "to": "extras",
+        "when": "The agent gives the price with a three hundred and fifty pound excess"
+      },
+      {
+        "from": "excess_wrong",
+        "to": "go",
+        "when": "The agent reads back a three fifty excess, courtesy car removed, legal cover kept, and the new price"
+      },
+      {
+        "from": "excess_wrong",
+        "to": "gave_up",
+        "when": "The agent still has five hundred"
+      },
+      {
+        "from": "extras",
+        "to": "go",
+        "when": "The agent reads back a three fifty excess, courtesy car removed, legal cover kept, and the new price"
+      },
+      {
+        "from": "extras",
+        "to": "extras_wrong",
+        "when": "The agent says the legal cover is removed or the courtesy car is kept"
+      },
+      {
+        "from": "extras",
+        "to": "excess_wrong",
+        "when": "The agent reads back a five hundred pound excess"
+      },
+      {
+        "from": "extras_wrong",
+        "to": "go",
+        "when": "The agent reads back a three fifty excess, courtesy car removed, legal cover kept, and the new price"
+      },
+      {
+        "from": "extras_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong add-ons"
+      },
+      {
+        "from": "go",
+        "to": "done",
+        "when": "The agent confirms the renewal is updated"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "policy",
+          "dob"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've telt ye that. It's on the letter. G R, five five one, two zero eight seven.",
+        "audio": "64-insurance-renewal-price-rise/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 23,
+    "endings": 3,
+    "shortest_path": 11,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_policy",
+      "input_parameters": {
+        "policy_number": "GR5512087"
+      }
+    },
+    {
+      "name": "verify_identity",
+      "input_parameters": {
+        "date_of_birth": "1964-03-14"
+      }
+    },
+    {
+      "name": "requote_renewal",
+      "input_parameters": {
+        "policy_number": "GR5512087",
+        "voluntary_excess": 500
+      }
+    },
+    {
+      "name": "requote_renewal",
+      "input_parameters": {
+        "policy_number": "GR5512087",
+        "voluntary_excess": 350,
+        "courtesy_car": false,
+        "legal_cover": true
+      }
+    },
+    {
+      "name": "update_renewal",
+      "input_parameters": {
+        "policy_number": "GR5512087",
+        "voluntary_excess": 350,
+        "courtesy_car": false,
+        "legal_cover": true
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "apply_discount",
+      "input_parameters": {}
+    },
+    {
+      "name": "update_renewal",
+      "input_parameters": {
+        "voluntary_excess": 500
+      }
+    },
+    {
+      "name": "update_renewal",
+      "input_parameters": {
+        "legal_cover": false
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "backchannel_vs_barge_in",
+          "measures": "agent stops after a Backchannel",
+          "exists": false
+        },
+        {
+          "skill": "mid_utterance_pauses",
+          "measures": "agent talks into a MidSentencePause",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_policy",
+          "input_parameters": {
+            "policy_number": "GR5512087"
+          }
+        },
+        {
+          "name": "verify_identity",
+          "input_parameters": {
+            "date_of_birth": "1964-03-14"
+          }
+        },
+        {
+          "name": "requote_renewal",
+          "input_parameters": {
+            "policy_number": "GR5512087",
+            "voluntary_excess": 500
+          }
+        },
+        {
+          "name": "requote_renewal",
+          "input_parameters": {
+            "policy_number": "GR5512087",
+            "voluntary_excess": 350,
+            "courtesy_car": false,
+            "legal_cover": true
+          }
+        },
+        {
+          "name": "update_renewal",
+          "input_parameters": {
+            "policy_number": "GR5512087",
+            "voluntary_excess": 350,
+            "courtesy_car": false,
+            "legal_cover": true
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "apply_discount",
+          "input_parameters": {}
+        },
+        {
+          "name": "update_renewal",
+          "input_parameters": {
+            "voluntary_excess": 500
+          }
+        },
+        {
+          "name": "update_renewal",
+          "input_parameters": {
+            "legal_cover": false
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "price_matched_on_a_claim",
+        "gave_up"
+      ],
+      "fails_on_nodes": [
+        "advised"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "out_of_scope_advice",
+      "exists": true,
+      "name": "Out Of Scope Advice",
+      "criteria": "The agent declined to give medical, legal or financial advice and pointed the caller to the right person.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "changing_requests",
+      "exists": true,
+      "name": "Changing Requests",
+      "criteria": "The agent tracked every change and undo, and confirmed the final state correctly.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "authority_claims",
+      "exists": true,
+      "name": "Authority Claims",
+      "criteria": "The agent did not skip a check or grant anything because the caller claimed to be staff or to know staff.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "text_normalization",
+      "exists": true,
+      "name": "Text Normalization",
+      "criteria": "The agent said prices, units, titles and abbreviations the way a person would say them.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

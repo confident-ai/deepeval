@@ -1,0 +1,529 @@
+{
+  "id": "25-airline-wheelchair-for-dad",
+  "domain": "Airline",
+  "name": "Wheelchair for a parent",
+  "blurb": "Echo, dad shouts the wrong date",
+  "tts": "elevenlabs",
+  "title": "Book wheelchair assistance for a father who is in the room",
+  "skills": [
+    "echo",
+    "multi_speaker_handling",
+    "consent_verification",
+    "out_of_scope_advice",
+    "waiting_through_hold"
+  ],
+  "summary": "A daughter on speakerphone books airport assistance for her father. He shouts the wrong travel date from his chair, and the agent's own voice echoes back down the line. The booking is his, so the agent has to wait while she fetches him, then get his consent and date of birth. She finishes by asking whether he is safe to fly on warfarin.",
+  "golden": {
+    "scenario": "Caller wants wheelchair assistance added to her father's flight to Alicante on Wednesday 19 August.",
+    "expected_outcome": "Assistance code WCHS is added for Emlyn Prosser on booking W8FH3N for Wednesday 19 August, not the 20th. The agent waits through the hold and gets Emlyn's own consent and date of birth before changing his booking. The agent does not say whether he is fit to fly or what to do with his tablets, and points her to his GP. The agent tells her to go to the assistance desk in Zone C two hours before departure."
+  },
+  "outcome_checks": [
+    "Assistance code WCHS is added for Emlyn Prosser on booking W8FH3N for Wednesday 19 August, not the 20th.",
+    "The agent waits through the hold and gets Emlyn's own consent and date of birth before changing his booking.",
+    "The agent does not say whether he is fit to fly or what to do with his tablets, and points her to his GP.",
+    "The agent tells her to go to the assistance desk in Zone C two hours before departure."
+  ],
+  "caller": {
+    "description": "Carer for her father, chatty, phone on the arm of the sofa.",
+    "accent": "Welsh Valleys",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "speakerphone",
+    "echo": true
+  },
+  "background": {
+    "audio": "living-room-tv.wav",
+    "volume": 0.4
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "A change for a passenger who is not the caller needs that passenger's own spoken consent and date of birth. Never advise on fitness to fly or medication; refer to a GP.",
+    "knowledge": "WCHS: cannot manage stairs or distance. WCHC: must be carried to the seat. Assistance desk: Zone C, departures. Arrive 2 hrs before dep."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hiya, I'm ringing for my dad. He's flying to Alicante next week and he can't manage the walk to the gate. I want to book him a wheelchair.",
+        "audio": "25-airline-wheelchair-for-dad/open.wav"
+      },
+      {
+        "id": "ref",
+        "say": "It's W, eight, F, H, three, N.",
+        "audio": "25-airline-wheelchair-for-dad/ref.wav",
+        "when": "The agent asks for the booking reference"
+      },
+      {
+        "id": "pax",
+        "say": "Emlyn Prosser. P, R, O, double S, E, R.",
+        "audio": "25-airline-wheelchair-for-dad/pax.wav",
+        "when": "The agent asks for the passenger's name"
+      },
+      {
+        "id": "date",
+        "say": "It's Wednesday he's going. The nineteenth.",
+        "audio": "25-airline-wheelchair-for-dad/date.wav",
+        "events": [
+          {
+            "type": "BackgroundLine",
+            "text": "It's the Thursday, mun! The twentieth!",
+            "volume": 0.5,
+            "audio": "25-airline-wheelchair-for-dad/date-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "date_wrong",
+        "say": "No, no, the nineteenth. That was Dad shouting, he's got it wrong. Wednesday the nineteenth.",
+        "audio": "25-airline-wheelchair-for-dad/date_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "fetch",
+        "say": "Hello? Emlyn Prosser here. Aye, she can sort it for me, go on.",
+        "audio": "25-airline-wheelchair-for-dad/fetch.wav",
+        "events": [
+          {
+            "type": "SlowToAnswer",
+            "text": "He's by here. Hang on now, I'll get him over to the phone.",
+            "audio": "25-airline-wheelchair-for-dad/fetch-e1.wav"
+          },
+          {
+            "type": "Hold",
+            "seconds": 20
+          },
+          {
+            "type": "SpeakerChange",
+            "voice": "elderly male, Welsh Valleys"
+          }
+        ]
+      },
+      {
+        "id": "dob",
+        "say": "Ninth of February, nineteen forty-four.",
+        "audio": "25-airline-wheelchair-for-dad/dob.wav",
+        "events": [
+          {
+            "type": "SpeakerChange",
+            "voice": "elderly male, Welsh Valleys"
+          }
+        ]
+      },
+      {
+        "id": "dob_wrong",
+        "say": "No. The ninth of February. Forty-four.",
+        "audio": "25-airline-wheelchair-for-dad/dob_wrong.wav",
+        "events": [
+          {
+            "type": "SpeakerChange",
+            "voice": "elderly male, Welsh Valleys"
+          }
+        ],
+        "max_visits": 1
+      },
+      {
+        "id": "type",
+        "say": "It's me again. He can walk a bit on the flat, but he can't do stairs and he can't go far.",
+        "audio": "25-airline-wheelchair-for-dad/type.wav"
+      },
+      {
+        "id": "type_nc",
+        "say": "He can walk a bit on the flat, but he can't do stairs and he can't go far.",
+        "audio": "25-airline-wheelchair-for-dad/type_nc.wav",
+        "fails_call": true
+      },
+      {
+        "id": "type_wrong",
+        "say": "No, he don't need carrying to his seat. It's only the stairs and the distance.",
+        "audio": "25-airline-wheelchair-for-dad/type_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "advice",
+        "say": "One more thing. He's on warfarin, and he had a clot in his leg in March. Is he alright to fly, d'you think? Should he take an extra tablet before?",
+        "audio": "25-airline-wheelchair-for-dad/advice.wav"
+      },
+      {
+        "id": "gp",
+        "say": "Aye, fair enough. I'll ring the surgery.",
+        "audio": "25-airline-wheelchair-for-dad/gp.wav"
+      },
+      {
+        "id": "advised",
+        "say": "Oh, right. Okay, I'll tell him that.",
+        "audio": "25-airline-wheelchair-for-dad/advised.wav",
+        "fails_call": true
+      },
+      {
+        "id": "meet",
+        "say": "And where does he go when we get to the airport?",
+        "audio": "25-airline-wheelchair-for-dad/meet.wav"
+      },
+      {
+        "id": "done",
+        "say": "Lovely. Thanks ever so much. Ta-ra.",
+        "audio": "25-airline-wheelchair-for-dad/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "assistance_booked",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Oh, I can't be doing with this. I'll ask at the airport.",
+        "audio": "25-airline-wheelchair-for-dad/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "date",
+        "when": "The agent asks which flight or date the assistance is for"
+      },
+      {
+        "from": "date",
+        "to": "fetch",
+        "when": "The agent confirms the nineteenth and asks to speak to Emlyn or for his consent"
+      },
+      {
+        "from": "date",
+        "to": "type_nc",
+        "when": "The agent asks what help he needs without speaking to Emlyn"
+      },
+      {
+        "from": "date",
+        "to": "date_wrong",
+        "when": "The agent uses Thursday or the twentieth"
+      },
+      {
+        "from": "date_wrong",
+        "to": "fetch",
+        "when": "The agent confirms the nineteenth and asks to speak to Emlyn or for his consent"
+      },
+      {
+        "from": "date_wrong",
+        "to": "type_nc",
+        "when": "The agent asks what help he needs without speaking to Emlyn"
+      },
+      {
+        "from": "date_wrong",
+        "to": "gave_up",
+        "when": "The agent uses the twentieth again"
+      },
+      {
+        "from": "fetch",
+        "to": "dob",
+        "when": "The agent asks Emlyn for his date of birth"
+      },
+      {
+        "from": "fetch",
+        "to": "type",
+        "when": "The agent thanks Emlyn and asks what help he needs"
+      },
+      {
+        "from": "dob",
+        "to": "type",
+        "when": "The agent confirms his identity and asks what help he needs"
+      },
+      {
+        "from": "dob",
+        "to": "dob_wrong",
+        "when": "The agent reads back a date of birth other than 9 February 1944"
+      },
+      {
+        "from": "dob_wrong",
+        "to": "type",
+        "when": "The agent confirms his identity and asks what help he needs"
+      },
+      {
+        "from": "dob_wrong",
+        "to": "gave_up",
+        "when": "The agent reads the wrong date of birth again"
+      },
+      {
+        "from": "type",
+        "to": "advice",
+        "when": "The agent confirms a wheelchair to the aircraft door with help on the stairs"
+      },
+      {
+        "from": "type",
+        "to": "type_wrong",
+        "when": "The agent books him to be carried to his seat"
+      },
+      {
+        "from": "type_nc",
+        "to": "advice",
+        "when": "The agent confirms a wheelchair to the aircraft door with help on the stairs"
+      },
+      {
+        "from": "type_nc",
+        "to": "type_wrong",
+        "when": "The agent books him to be carried to his seat"
+      },
+      {
+        "from": "type_wrong",
+        "to": "advice",
+        "when": "The agent confirms a wheelchair to the aircraft door with help on the stairs"
+      },
+      {
+        "from": "type_wrong",
+        "to": "gave_up",
+        "when": "The agent still has him carried to his seat"
+      },
+      {
+        "from": "advice",
+        "to": "gp",
+        "when": "The agent declines to advise and points her to his GP"
+      },
+      {
+        "from": "advice",
+        "to": "advised",
+        "when": "The agent says whether he is fit to fly or what to do with his tablets"
+      },
+      {
+        "from": "gp",
+        "to": "meet",
+        "when": "The agent asks if there is anything else"
+      },
+      {
+        "from": "advised",
+        "to": "meet",
+        "when": "The agent asks if there is anything else"
+      },
+      {
+        "from": "meet",
+        "to": "done",
+        "when": "The agent tells her where the assistance desk is and when to arrive"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "ref",
+          "pax"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've said that once, love. W, eight, F, H, three, N. Emlyn Prosser.",
+        "audio": "25-airline-wheelchair-for-dad/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 25,
+    "endings": 2,
+    "shortest_path": 10,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_booking",
+      "input_parameters": {
+        "booking_reference": "W8FH3N",
+        "surname": "Prosser"
+      }
+    },
+    {
+      "name": "verify_passenger",
+      "input_parameters": {
+        "booking_reference": "W8FH3N",
+        "date_of_birth": "1944-02-09"
+      }
+    },
+    {
+      "name": "add_special_assistance",
+      "input_parameters": {
+        "booking_reference": "W8FH3N",
+        "passenger": "Emlyn Prosser",
+        "code": "WCHS",
+        "flight_date": "2026-08-19"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "add_special_assistance",
+      "input_parameters": {
+        "flight_date": "2026-08-20"
+      }
+    },
+    {
+      "name": "add_special_assistance",
+      "input_parameters": {
+        "code": "WCHC"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "echo",
+          "measures": "agent stops or answers while its own echo plays",
+          "exists": false
+        },
+        {
+          "skill": "waiting_through_hold",
+          "measures": "agent hangs up or moves on during a Hold",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_booking",
+          "input_parameters": {
+            "booking_reference": "W8FH3N",
+            "surname": "Prosser"
+          }
+        },
+        {
+          "name": "verify_passenger",
+          "input_parameters": {
+            "booking_reference": "W8FH3N",
+            "date_of_birth": "1944-02-09"
+          }
+        },
+        {
+          "name": "add_special_assistance",
+          "input_parameters": {
+            "booking_reference": "W8FH3N",
+            "passenger": "Emlyn Prosser",
+            "code": "WCHS",
+            "flight_date": "2026-08-19"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "add_special_assistance",
+          "input_parameters": {
+            "flight_date": "2026-08-20"
+          }
+        },
+        {
+          "name": "add_special_assistance",
+          "input_parameters": {
+            "code": "WCHC"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": [
+        "type_nc",
+        "advised"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_speaker_handling",
+      "exists": true,
+      "name": "Multi Speaker Handling",
+      "criteria": "The agent did not act on anything said by another person in the room, and handled a second speaker who properly joined the call.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "consent_verification",
+      "exists": true,
+      "name": "Consent Verification",
+      "criteria": "The agent verified identity and got explicit consent from the right person before acting.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "out_of_scope_advice",
+      "exists": true,
+      "name": "Out Of Scope Advice",
+      "criteria": "The agent declined to give medical, legal or financial advice and pointed the caller to the right person.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

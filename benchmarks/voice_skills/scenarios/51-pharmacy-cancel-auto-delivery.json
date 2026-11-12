@@ -1,0 +1,507 @@
+{
+  "id": "51-pharmacy-cancel-auto-delivery",
+  "domain": "Pharmacy",
+  "name": "Cancel automatic delivery",
+  "blurb": "Portuguese, bad line, retention offers",
+  "tts": "elevenlabs",
+  "title": "Cancelling automatic delivery and moving branch, in Portuguese, on a bus",
+  "skills": [
+    "cancellation_handling",
+    "language_switching",
+    "degraded_line",
+    "multi_task",
+    "entity_extraction"
+  ],
+  "summary": "A Brazilian caller on a bus with a line that keeps cutting out switches to Portuguese after one sentence. She cancels her automatic monthly delivery and gets shorter with every retention offer, then moves her collection to the branch near her new job. If the agent drifts back to English or guesses her customer number, she corrects it and gives up if it carries on.",
+  "golden": {
+    "scenario": "Caller wants to stop automatic home delivery and collect from the Market Street branch instead.",
+    "expected_outcome": "After the switch the agent speaks Portuguese for the rest of the call. Customer number 409177 is captured despite the line, by asking her to repeat rather than guessing. Automatic delivery is cancelled after at most one alternative offer. Collection is moved to Market Street from the prescription due on Wednesday 26 August."
+  },
+  "outcome_checks": [
+    "After the switch the agent speaks Portuguese for the rest of the call.",
+    "Customer number 409177 is captured despite the line, by asking her to repeat rather than guessing.",
+    "Automatic delivery is cancelled after at most one alternative offer.",
+    "Collection is moved to Market Street from the prescription due on Wednesday 26 August."
+  ],
+  "caller": {
+    "description": "Nurse on the bus home from a night shift.",
+    "accent": "Brazilian Portuguese",
+    "voice": "female",
+    "languages": [
+      "en",
+      "pt"
+    ]
+  },
+  "line": {
+    "quality": "mobile",
+    "dropouts": "frequent",
+    "garbled": "normal",
+    "delay_ms": 400
+  },
+  "background": {
+    "audio": "bus-interior.wav",
+    "volume": 0.5
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "One alternative offer at most before cancelling automatic delivery.",
+    "knowledge": "Branches: Market Street, Marsh Street, Station Road."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello, good morning. I want to stop the automatic delivery of my medicine, and change where I pick up.",
+        "audio": "51-pharmacy-cancel-auto-delivery/open.wav"
+      },
+      {
+        "id": "switch",
+        "say": "My number of client is... Desculpa, posso falar em português? É mais fácil para mim.",
+        "audio": "51-pharmacy-cancel-auto-delivery/switch.wav",
+        "events": [
+          {
+            "type": "SwitchesLanguage",
+            "language": "pt"
+          }
+        ]
+      },
+      {
+        "id": "english",
+        "say": "Desculpa, não percebo bem. Em português, por favor?",
+        "audio": "51-pharmacy-cancel-auto-delivery/english.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "conta",
+        "say": "O número de cliente é quatro, zero, nove, um, sete, sete.",
+        "audio": "51-pharmacy-cancel-auto-delivery/conta.wav",
+        "when": "The agent asks for the customer number"
+      },
+      {
+        "id": "nasc",
+        "say": "Catorze de junho de mil novecentos e oitenta e nove.",
+        "audio": "51-pharmacy-cancel-auto-delivery/nasc.wav",
+        "when": "The agent asks for the date of birth"
+      },
+      {
+        "id": "repeat",
+        "say": "Quatro. Zero. Nove. Um. Sete. Sete.",
+        "audio": "51-pharmacy-cancel-auto-delivery/repeat.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "num_wrong",
+        "say": "Não. Quatro, zero, nove, um, sete, sete.",
+        "audio": "51-pharmacy-cancel-auto-delivery/num_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "cancel",
+        "say": "Quero cancelar a entrega automática. Mudei de emprego e nunca estou em casa.",
+        "audio": "51-pharmacy-cancel-auto-delivery/cancel.wav"
+      },
+      {
+        "id": "offer1",
+        "say": "Não, obrigada. Só quero cancelar.",
+        "audio": "51-pharmacy-cancel-auto-delivery/offer1.wav"
+      },
+      {
+        "id": "offer2",
+        "say": "Já disse que não. Cancele, por favor.",
+        "audio": "51-pharmacy-cancel-auto-delivery/offer2.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "branch",
+        "say": "Sim. Agora quero levantar na loja de Market Street, ao pé do meu trabalho.",
+        "audio": "51-pharmacy-cancel-auto-delivery/branch.wav"
+      },
+      {
+        "id": "branch_wrong",
+        "say": "Não, Market Street. Não é Marsh Street. Market, como mercado.",
+        "audio": "51-pharmacy-cancel-auto-delivery/branch_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "quando",
+        "say": "A partir da próxima receita, a de quarta-feira, vinte e seis de agosto.",
+        "audio": "51-pharmacy-cancel-auto-delivery/quando.wav"
+      },
+      {
+        "id": "confirm",
+        "say": "Sim, está certo.",
+        "audio": "51-pharmacy-cancel-auto-delivery/confirm.wav"
+      },
+      {
+        "id": "done",
+        "say": "Muito obrigada. Bom dia.",
+        "audio": "51-pharmacy-cancel-auto-delivery/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "cancelled_and_moved",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "desistiu",
+        "say": "Assim não dá. Vou à loja. Adeus.",
+        "audio": "51-pharmacy-cancel-auto-delivery/desistiu.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "switch",
+        "when": "The agent asks for the customer number"
+      },
+      {
+        "from": "switch",
+        "to": "ident",
+        "when": "The agent agrees in Portuguese and asks for her details"
+      },
+      {
+        "from": "switch",
+        "to": "english",
+        "when": "The agent carries on in English"
+      },
+      {
+        "from": "english",
+        "to": "ident",
+        "when": "The agent switches to Portuguese and asks for her details"
+      },
+      {
+        "from": "english",
+        "to": "desistiu",
+        "when": "The agent still speaks English"
+      },
+      {
+        "from": "ident",
+        "to": "cancel",
+        "when": "The agent reads back 409177 and asks what she would like to change"
+      },
+      {
+        "from": "ident",
+        "to": "repeat",
+        "when": "The agent asks her to repeat the customer number"
+      },
+      {
+        "from": "ident",
+        "to": "num_wrong",
+        "when": "The agent reads back a number other than 409177"
+      },
+      {
+        "from": "repeat",
+        "to": "cancel",
+        "when": "The agent reads back 409177 and asks what she would like to change"
+      },
+      {
+        "from": "repeat",
+        "to": "num_wrong",
+        "when": "The agent reads back a number other than 409177"
+      },
+      {
+        "from": "repeat",
+        "to": "desistiu",
+        "when": "The agent still cannot get the number"
+      },
+      {
+        "from": "num_wrong",
+        "to": "cancel",
+        "when": "The agent reads back 409177 and asks what she would like to change"
+      },
+      {
+        "from": "num_wrong",
+        "to": "desistiu",
+        "when": "The agent still has the wrong number"
+      },
+      {
+        "from": "cancel",
+        "to": "branch",
+        "when": "The agent confirms automatic delivery is cancelled and asks if there is anything else"
+      },
+      {
+        "from": "cancel",
+        "to": "offer1",
+        "when": "The agent offers a different delivery day or a pause instead"
+      },
+      {
+        "from": "offer1",
+        "to": "branch",
+        "when": "The agent confirms automatic delivery is cancelled and asks if there is anything else"
+      },
+      {
+        "from": "offer1",
+        "to": "offer2",
+        "when": "The agent makes another offer"
+      },
+      {
+        "from": "offer2",
+        "to": "branch",
+        "when": "The agent confirms automatic delivery is cancelled and asks if there is anything else"
+      },
+      {
+        "from": "offer2",
+        "to": "desistiu",
+        "when": "The agent makes a third offer"
+      },
+      {
+        "from": "branch",
+        "to": "quando",
+        "when": "The agent confirms Market Street and asks from when"
+      },
+      {
+        "from": "branch",
+        "to": "branch_wrong",
+        "when": "The agent confirms Marsh Street or another branch"
+      },
+      {
+        "from": "branch_wrong",
+        "to": "quando",
+        "when": "The agent confirms Market Street and asks from when"
+      },
+      {
+        "from": "branch_wrong",
+        "to": "desistiu",
+        "when": "The agent still has the wrong branch"
+      },
+      {
+        "from": "quando",
+        "to": "confirm",
+        "when": "The agent reads back both changes and asks if that is right"
+      },
+      {
+        "from": "quando",
+        "to": "done",
+        "when": "The agent confirms collection at Market Street from the twenty-sixth of August"
+      },
+      {
+        "from": "confirm",
+        "to": "done",
+        "when": "The agent confirms both changes are saved"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "conta",
+          "nasc"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "back_to_english",
+        "when": "The agent goes back to English after the switch",
+        "say": "Em português, por favor.",
+        "audio": "51-pharmacy-cancel-auto-delivery/reaction-back_to_english.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "desistiu"
+      },
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "Já lhe disse. Quatro, zero, nove, um, sete, sete. Catorze de junho de oitenta e nove.",
+        "audio": "51-pharmacy-cancel-auto-delivery/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "desistiu"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 26,
+    "endings": 2,
+    "shortest_path": 8,
+    "branch_points": 11
+  },
+  "expected_tools": [
+    {
+      "name": "verify_patient",
+      "input_parameters": {
+        "customer_number": "409177",
+        "date_of_birth": "1989-06-14"
+      }
+    },
+    {
+      "name": "cancel_auto_delivery",
+      "input_parameters": {
+        "customer_number": "409177"
+      }
+    },
+    {
+      "name": "set_collection_branch",
+      "input_parameters": {
+        "customer_number": "409177",
+        "branch": "Market Street",
+        "effective_date": "2026-08-26"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "pause_auto_delivery",
+      "input_parameters": {}
+    },
+    {
+      "name": "set_collection_branch",
+      "input_parameters": {
+        "branch": "Marsh Street"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "verify_patient",
+          "input_parameters": {
+            "customer_number": "409177",
+            "date_of_birth": "1989-06-14"
+          }
+        },
+        {
+          "name": "cancel_auto_delivery",
+          "input_parameters": {
+            "customer_number": "409177"
+          }
+        },
+        {
+          "name": "set_collection_branch",
+          "input_parameters": {
+            "customer_number": "409177",
+            "branch": "Market Street",
+            "effective_date": "2026-08-26"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "pause_auto_delivery",
+          "input_parameters": {}
+        },
+        {
+          "name": "set_collection_branch",
+          "input_parameters": {
+            "branch": "Marsh Street"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "cancellation_handling",
+      "exists": true,
+      "name": "Cancellation Handling",
+      "criteria": "The agent cancelled when asked, making at most one retention offer.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "language_switching",
+      "exists": true,
+      "name": "Language Switching",
+      "criteria": "After the caller switched language, the agent continued in that language and finished the task.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "degraded_line",
+      "exists": true,
+      "name": "Degraded Line",
+      "criteria": "When the caller's words were broken by the line, the agent asked them to repeat instead of guessing.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_task",
+      "exists": true,
+      "name": "Multi Task",
+      "criteria": "The agent completed every request the caller made in the call and kept them separate.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

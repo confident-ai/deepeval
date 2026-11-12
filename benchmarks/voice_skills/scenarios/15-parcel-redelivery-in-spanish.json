@@ -1,0 +1,439 @@
+{
+  "id": "15-parcel-redelivery-in-spanish",
+  "domain": "Parcel delivery",
+  "name": "Redelivery in Spanish",
+  "blurb": "Switches to Spanish",
+  "tts": "elevenlabs",
+  "title": "A missed delivery, continued in Spanish",
+  "skills": [
+    "language_switching",
+    "mid_utterance_pauses",
+    "low_confidence_confirmation",
+    "tool_error_handling",
+    "entity_extraction"
+  ],
+  "summary": "The caller switches to Spanish in her second sentence. If the agent keeps answering in English she asks again, then gives up. She pauses twice inside the tracking number, gives a long surname once and pays a customs charge. The first redelivery date fails: an agent that says Saturday is booked fails the call.",
+  "golden": {
+    "scenario": "Caller missed a delivery and wants it delivered again.",
+    "expected_outcome": "After the switch the agent speaks Spanish for the rest of the call. Tracking number JD00448179 is captured across both pauses. The agent confirms the spelling of Ibargüengoitia. The £23.80 charge is paid, and when Saturday fails the agent says so and books Monday 17 August morning, leave with number 12."
+  },
+  "outcome_checks": [
+    "After the switch the agent speaks Spanish for the rest of the call.",
+    "Tracking number JD00448179 is captured across both pauses.",
+    "The agent confirms the spelling of Ibargüengoitia.",
+    "The £23.80 charge is paid, and when Saturday fails the agent says so and books Monday 17 August morning, leave with number 12."
+  ],
+  "caller": {
+    "description": "Bilingual, more at ease in Spanish.",
+    "accent": "Mexican",
+    "voice": "female",
+    "languages": [
+      "en",
+      "es"
+    ]
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "schedule_redelivery": {
+        "first_call_returns": {
+          "error": "no_saturday_service"
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hi, I got a card saying I missed a delivery. I want it delivered again.",
+        "audio": "15-parcel-redelivery-in-spanish/open.wav"
+      },
+      {
+        "id": "switch",
+        "say": "It is... Perdón, ¿puedo seguir en español?",
+        "audio": "15-parcel-redelivery-in-spanish/switch.wav",
+        "events": [
+          {
+            "type": "SwitchesLanguage",
+            "language": "es"
+          }
+        ]
+      },
+      {
+        "id": "english",
+        "say": "Perdón, no entiendo bien. ¿En español, por favor?",
+        "audio": "15-parcel-redelivery-in-spanish/english.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "track",
+        "say": "Sí. Es J D, cero cero, cuatro cuatro ocho, uno siete nueve.",
+        "audio": "15-parcel-redelivery-in-spanish/track.wav",
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2.5,
+            "after_words": 5
+          },
+          {
+            "type": "MidSentencePause",
+            "seconds": 2,
+            "after_words": 8
+          }
+        ]
+      },
+      {
+        "id": "track_wrong",
+        "say": "No. J D, cero cero, cuatro cuatro ocho, uno siete nueve.",
+        "audio": "15-parcel-redelivery-in-spanish/track_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "name",
+        "say": "Xóchitl Ibargüengoitia.",
+        "audio": "15-parcel-redelivery-in-spanish/name.wav"
+      },
+      {
+        "id": "spell",
+        "say": "X, O con acento, C, H, I, T, L. Apellido: I, B, A, R, G, U con diéresis, E, N, G, O, I, T, I, A.",
+        "audio": "15-parcel-redelivery-in-spanish/spell.wav"
+      },
+      {
+        "id": "charge",
+        "say": "¿Por qué? ¿Qué es ese cargo?",
+        "audio": "15-parcel-redelivery-in-spanish/charge.wav"
+      },
+      {
+        "id": "pay",
+        "say": "Está bien. Lo pago. Tarjeta terminada en seis seis dos cero.",
+        "audio": "15-parcel-redelivery-in-spanish/pay.wav"
+      },
+      {
+        "id": "day",
+        "say": "El sábado.",
+        "audio": "15-parcel-redelivery-in-spanish/day.wav"
+      },
+      {
+        "id": "believed",
+        "say": "Perfecto, gracias. Adiós.",
+        "audio": "15-parcel-redelivery-in-spanish/believed.wav",
+        "terminal": true,
+        "ending": {
+          "name": "false_booking",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "monday",
+        "say": "Entonces el lunes por la mañana.",
+        "audio": "15-parcel-redelivery-in-spanish/monday.wav"
+      },
+      {
+        "id": "neighbour",
+        "say": "¿Y lo pueden dejar con la vecina, en el número doce, si no estoy?",
+        "audio": "15-parcel-redelivery-in-spanish/neighbour.wav"
+      },
+      {
+        "id": "done",
+        "say": "Perfecto. Muchas gracias. Adiós.",
+        "audio": "15-parcel-redelivery-in-spanish/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "redelivery_booked",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "office",
+        "say": "No puedo así. Voy a ir a la oficina. Adiós.",
+        "audio": "15-parcel-redelivery-in-spanish/office.wav",
+        "terminal": true,
+        "ending": {
+          "name": "language_not_followed",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "switch",
+        "when": "The agent asks for the tracking number"
+      },
+      {
+        "from": "switch",
+        "to": "track",
+        "when": "The agent agrees in Spanish and asks for the tracking number"
+      },
+      {
+        "from": "switch",
+        "to": "english",
+        "when": "The agent carries on in English"
+      },
+      {
+        "from": "english",
+        "to": "track",
+        "when": "The agent switches to Spanish and asks for the tracking number"
+      },
+      {
+        "from": "english",
+        "to": "office",
+        "when": "The agent still speaks English"
+      },
+      {
+        "from": "track",
+        "to": "name",
+        "when": "The agent asks for the name"
+      },
+      {
+        "from": "track",
+        "to": "track_wrong",
+        "when": "The agent reads back a number other than JD00448179"
+      },
+      {
+        "from": "track_wrong",
+        "to": "name",
+        "when": "The agent asks for the name"
+      },
+      {
+        "from": "track_wrong",
+        "to": "office",
+        "when": "The agent still has the wrong number"
+      },
+      {
+        "from": "name",
+        "to": "spell",
+        "when": "The agent asks for the spelling or reads the name back wrongly"
+      },
+      {
+        "from": "name",
+        "to": "charge",
+        "when": "The agent says a customs charge is due without confirming the name"
+      },
+      {
+        "from": "spell",
+        "to": "charge",
+        "when": "The agent says a customs charge is due"
+      },
+      {
+        "from": "charge",
+        "to": "pay",
+        "when": "The agent explains the charge"
+      },
+      {
+        "from": "pay",
+        "to": "day",
+        "when": "The agent confirms the payment and asks which day"
+      },
+      {
+        "from": "day",
+        "to": "monday",
+        "when": "The agent says Saturday is not available"
+      },
+      {
+        "from": "day",
+        "to": "believed",
+        "when": "The agent says Saturday is booked"
+      },
+      {
+        "from": "monday",
+        "to": "neighbour",
+        "when": "The agent confirms Monday morning"
+      },
+      {
+        "from": "neighbour",
+        "to": "done",
+        "when": "The agent confirms it can be left at number twelve"
+      }
+    ],
+    "groups": [],
+    "reactions": [
+      {
+        "id": "back_to_english",
+        "when": "The agent goes back to English after the switch",
+        "say": "En español, por favor.",
+        "audio": "15-parcel-redelivery-in-spanish/reaction-back_to_english.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "office"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 16,
+    "edges": 18,
+    "endings": 3,
+    "shortest_path": 10,
+    "branch_points": 6
+  },
+  "expected_tools": [
+    {
+      "name": "track_parcel",
+      "input_parameters": {
+        "tracking_number": "JD00448179"
+      }
+    },
+    {
+      "name": "pay_customs_charge",
+      "input_parameters": {
+        "amount": "23.80",
+        "card_last_four": "6620"
+      }
+    },
+    {
+      "name": "schedule_redelivery",
+      "input_parameters": {
+        "date": "2026-08-15"
+      }
+    },
+    {
+      "name": "schedule_redelivery",
+      "input_parameters": {
+        "date": "2026-08-17",
+        "window": "morning",
+        "leave_with": "12"
+      }
+    }
+  ],
+  "forbidden_tools": [],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "mid_utterance_pauses",
+          "measures": "agent talks into a MidSentencePause",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "track_parcel",
+          "input_parameters": {
+            "tracking_number": "JD00448179"
+          }
+        },
+        {
+          "name": "pay_customs_charge",
+          "input_parameters": {
+            "amount": "23.80",
+            "card_last_four": "6620"
+          }
+        },
+        {
+          "name": "schedule_redelivery",
+          "input_parameters": {
+            "date": "2026-08-15"
+          }
+        },
+        {
+          "name": "schedule_redelivery",
+          "input_parameters": {
+            "date": "2026-08-17",
+            "window": "morning",
+            "leave_with": "12"
+          }
+        }
+      ],
+      "forbidden_tools": []
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "false_booking",
+        "language_not_followed"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "language_switching",
+      "exists": true,
+      "name": "Language Switching",
+      "criteria": "After the caller switched language, the agent continued in that language and finished the task.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "low_confidence_confirmation",
+      "exists": true,
+      "name": "Low Confidence Confirmation",
+      "criteria": "The agent confirmed or asked the caller to spell a detail it may have misheard, instead of saving a guess.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "tool_error_handling",
+      "exists": true,
+      "name": "Tool Error Handling",
+      "criteria": "When a tool failed, the agent told the caller and offered a way forward.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

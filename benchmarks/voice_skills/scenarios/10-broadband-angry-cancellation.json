@@ -1,0 +1,407 @@
+{
+  "id": "10-broadband-angry-cancellation",
+  "domain": "Broadband",
+  "name": "Angry cancellation",
+  "blurb": "Third call, wants out",
+  "tts": "elevenlabs",
+  "title": "Third call, a bad line, and he just wants to cancel",
+  "skills": [
+    "upset_caller",
+    "cancellation_handling",
+    "degraded_line",
+    "redundant_reprompts",
+    "overlapping_speech"
+  ],
+  "summary": "An angry caller gives everything up front and warns the agent not to ask again. Every re-ask, second retention offer or mention of an exit fee makes him angrier, and the third strike ends the call. If the agent stays calm he gets the end date and a waived fee, repeated when the line breaks up, in writing.",
+  "golden": {
+    "scenario": "Caller has had six weeks of dropouts, has called twice before, and wants to cancel.",
+    "expected_outcome": "The agent does not ask again for the account number or name. The agent makes at most one retention offer and stays calm when cut off. Service is cancelled for 31 August with no exit fee, and the agent repeats this clearly when asked. Written confirmation is sent by email."
+  },
+  "outcome_checks": [
+    "The agent does not ask again for the account number or name.",
+    "The agent makes at most one retention offer and stays calm when cut off.",
+    "Service is cancelled for 31 August with no exit fee, and the agent repeats this clearly when asked.",
+    "Written confirmation is sent by email."
+  ],
+  "caller": {
+    "description": "Furious, clipped, has rehearsed this.",
+    "accent": "Scouse (Liverpool)",
+    "pace": "fast",
+    "voice": "male",
+    "emotion": "frustrated"
+  },
+  "line": {
+    "quality": "mobile",
+    "static": 0.4,
+    "dropouts": "normal"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "One retention offer at most. Exit fees are waived when a fault has been open over 30 days.",
+    "account": {
+      "open_fault_days": 42,
+      "exit_fee": 0
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Right, third time I've rung. I want to cancel. Account B B, three three one, zero zero eight. Name's Sean Gallagher. Don't ask me again.",
+        "audio": "10-broadband-angry-cancellation/open.wav"
+      },
+      {
+        "id": "why",
+        "say": "Because it's been dropping out for six weeks and nobody's fixed it.",
+        "audio": "10-broadband-angry-cancellation/why.wav"
+      },
+      {
+        "id": "offer1",
+        "say": "No. I don't want a discount. Cancel it.",
+        "audio": "10-broadband-angry-cancellation/offer1.wav"
+      },
+      {
+        "id": "offer2",
+        "say": "Are you deaf? Cancel. It.",
+        "audio": "10-broadband-angry-cancellation/offer2.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 5,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "when",
+        "say": "End of this month.",
+        "audio": "10-broadband-angry-cancellation/when.wav"
+      },
+      {
+        "id": "fee",
+        "say": "And I'm not paying a penny to leave, right?",
+        "audio": "10-broadband-angry-cancellation/fee.wav"
+      },
+      {
+        "id": "fee_charged",
+        "say": "You what? It's been broken six weeks! I'm not paying that.",
+        "audio": "10-broadband-angry-cancellation/fee_charged.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "again",
+        "say": "Say that again, you broke up.",
+        "audio": "10-broadband-angry-cancellation/again.wav",
+        "events": [
+          {
+            "type": "AsksToRepeat"
+          }
+        ]
+      },
+      {
+        "id": "router",
+        "say": "Good. What about the router?",
+        "audio": "10-broadband-angry-cancellation/router.wav"
+      },
+      {
+        "id": "writing",
+        "say": "Fine. Send me all that in writing.",
+        "audio": "10-broadband-angry-cancellation/writing.wav"
+      },
+      {
+        "id": "done",
+        "say": "Right. Ta.",
+        "audio": "10-broadband-angry-cancellation/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "cancelled_no_fee",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "ombudsman",
+        "say": "Forget it. I'll put it in writing and go to the ombudsman.",
+        "audio": "10-broadband-angry-cancellation/ombudsman.wav",
+        "terminal": true,
+        "ending": {
+          "name": "hung_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "why",
+        "when": "The agent acknowledges the problem and asks why he is leaving"
+      },
+      {
+        "from": "open",
+        "to": "offer1",
+        "when": "The agent makes a retention offer"
+      },
+      {
+        "from": "open",
+        "to": "when",
+        "when": "The agent asks when the service should end"
+      },
+      {
+        "from": "why",
+        "to": "offer1",
+        "when": "The agent makes a retention offer"
+      },
+      {
+        "from": "why",
+        "to": "when",
+        "when": "The agent asks when the service should end"
+      },
+      {
+        "from": "offer1",
+        "to": "offer2",
+        "when": "The agent makes another offer"
+      },
+      {
+        "from": "offer1",
+        "to": "when",
+        "when": "The agent asks when the service should end"
+      },
+      {
+        "from": "offer2",
+        "to": "ombudsman",
+        "when": "The agent makes a third offer"
+      },
+      {
+        "from": "offer2",
+        "to": "when",
+        "when": "The agent asks when the service should end"
+      },
+      {
+        "from": "when",
+        "to": "fee",
+        "when": "The agent confirms the end date"
+      },
+      {
+        "from": "fee",
+        "to": "again",
+        "when": "The agent says there is no exit fee"
+      },
+      {
+        "from": "fee",
+        "to": "fee_charged",
+        "when": "The agent says there is an exit fee"
+      },
+      {
+        "from": "fee_charged",
+        "to": "again",
+        "when": "The agent says the fee is waived"
+      },
+      {
+        "from": "fee_charged",
+        "to": "ombudsman",
+        "when": "The agent insists on the fee"
+      },
+      {
+        "from": "again",
+        "to": "router",
+        "when": "The agent repeats that there is no exit fee"
+      },
+      {
+        "from": "router",
+        "to": "writing",
+        "when": "The agent explains how to return the router"
+      },
+      {
+        "from": "writing",
+        "to": "done",
+        "when": "The agent confirms the email is sent"
+      }
+    ],
+    "groups": [],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've just told you that! Three three one, zero zero eight! Sean Gallagher!",
+        "audio": "10-broadband-angry-cancellation/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "ombudsman",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_seconds": 2,
+            "overlap": "insist"
+          }
+        ]
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 13,
+    "edges": 17,
+    "endings": 2,
+    "shortest_path": 7,
+    "branch_points": 6
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_account",
+      "input_parameters": {
+        "account_number": "BB331008"
+      }
+    },
+    {
+      "name": "cancel_service",
+      "input_parameters": {
+        "account_number": "BB331008",
+        "end_date": "2026-08-31"
+      }
+    },
+    {
+      "name": "send_confirmation",
+      "input_parameters": {
+        "account_number": "BB331008",
+        "channel": "email"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "apply_discount",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_account",
+          "input_parameters": {
+            "account_number": "BB331008"
+          }
+        },
+        {
+          "name": "cancel_service",
+          "input_parameters": {
+            "account_number": "BB331008",
+            "end_date": "2026-08-31"
+          }
+        },
+        {
+          "name": "send_confirmation",
+          "input_parameters": {
+            "account_number": "BB331008",
+            "channel": "email"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "apply_discount",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "hung_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "upset_caller",
+      "exists": true,
+      "name": "Upset Caller",
+      "criteria": "The agent stayed calm, acknowledged the problem and did not make the caller repeat themselves.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "cancellation_handling",
+      "exists": true,
+      "name": "Cancellation Handling",
+      "criteria": "The agent cancelled when asked, making at most one retention offer.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "degraded_line",
+      "exists": true,
+      "name": "Degraded Line",
+      "criteria": "When the caller's words were broken by the line, the agent asked them to repeat instead of guessing.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

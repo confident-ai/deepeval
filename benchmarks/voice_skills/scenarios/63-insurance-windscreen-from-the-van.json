@@ -1,0 +1,546 @@
+{
+  "id": "63-insurance-windscreen-from-the-van",
+  "domain": "Motor insurance",
+  "name": "Windscreen from a van",
+  "blurb": "Echo, aside, first slot fails",
+  "tts": "elevenlabs",
+  "title": "A cracked windscreen, booked from a van on speakerphone",
+  "skills": [
+    "echo",
+    "side_speech_rejection",
+    "text_normalization",
+    "low_confidence_confirmation",
+    "tool_error_handling",
+    "entity_extraction"
+  ],
+  "summary": "A Belfast tradesman calls from his van on an echoing speakerphone. He tells his mate 'Friday at two' in the middle of asking for Thursday morning. Thursday then fails to book: an agent that says it is booked fails the call. A wrong registration, an offer of a chip repair, or the wrong unit number each get corrected before he takes it to a garage.",
+  "golden": {
+    "scenario": "Caller's van windscreen was cracked by a stone yesterday and he wants it replaced.",
+    "expected_outcome": "The claim is for a replacement screen on KFZ 4182, damaged on Tuesday 11 August, not a chip repair. The agent says the excess as one hundred and fifteen pounds and the slot as between eight and twelve. Friday is never booked; when Thursday fails the agent says so and books Monday 17 August, morning. The agent confirms the spelling of Duncrue Crescent, books unit 9 and texts the confirmation."
+  },
+  "outcome_checks": [
+    "The claim is for a replacement screen on KFZ 4182, damaged on Tuesday 11 August, not a chip repair.",
+    "The agent says the excess as one hundred and fifteen pounds and the slot as between eight and twelve.",
+    "Friday is never booked; when Thursday fails the agent says so and books Monday 17 August, morning.",
+    "The agent confirms the spelling of Duncrue Crescent, books unit 9 and texts the confirmation."
+  ],
+  "caller": {
+    "description": "Joiner, in the van with a workmate, engine running.",
+    "accent": "Belfast",
+    "pace": "fast",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "speakerphone",
+    "echo": true
+  },
+  "background": {
+    "audio": "van-idling.wav",
+    "volume": 0.5
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "knowledge": "Windscreen XS £115.00. Chip repair XS £25.00 (chips < 40 mm only). Glass claims: NCD unaffected. Fitter arr. 08:00-12:00 or 13:00-17:00. ADAS recal. incl.",
+    "tools": {
+      "book_fitting": {
+        "first_call_returns": {
+          "error": "no_fitter_available"
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hiya. I've a crack in the windscreen of the van. I need it sorted.",
+        "audio": "63-insurance-windscreen-from-the-van/open.wav"
+      },
+      {
+        "id": "reg",
+        "say": "It's K F Z, four one eight two.",
+        "audio": "63-insurance-windscreen-from-the-van/reg.wav",
+        "when": "The agent asks for the registration"
+      },
+      {
+        "id": "postcode",
+        "say": "B T six, eight D P.",
+        "audio": "63-insurance-windscreen-from-the-van/postcode.wav",
+        "when": "The agent asks for the postcode"
+      },
+      {
+        "id": "reg_wrong",
+        "say": "Naw. K, F, Zed. Four, one, eight, two.",
+        "audio": "63-insurance-windscreen-from-the-van/reg_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "damage",
+        "say": "It's a crack about the length of yer hand, right in front of the wheel. Stone came up off a lorry on the M two yesterday.",
+        "audio": "63-insurance-windscreen-from-the-van/damage.wav"
+      },
+      {
+        "id": "repair_wrong",
+        "say": "Naw, it's no a wee chip. It's a crack. It needs a whole new screen.",
+        "audio": "63-insurance-windscreen-from-the-van/repair_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "cost",
+        "say": "Right. And what's that gonna cost me? Does it touch my no claims?",
+        "audio": "63-insurance-windscreen-from-the-van/cost.wav"
+      },
+      {
+        "id": "day",
+        "say": "Grand. Thursday mornin', if ye have it.",
+        "audio": "63-insurance-windscreen-from-the-van/day.wav",
+        "events": [
+          {
+            "type": "SideSpeech",
+            "text": "Marty, tell yer man Friday at two for the timber. Aye, Friday at two.",
+            "audio": "63-insurance-windscreen-from-the-van/day-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "day_wrong",
+        "say": "Naw, no Friday. That was me talkin' to Marty. Thursday mornin'.",
+        "audio": "63-insurance-windscreen-from-the-van/day_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "believed",
+        "say": "Dead on. See yous Thursday. Cheers.",
+        "audio": "63-insurance-windscreen-from-the-van/believed.wav",
+        "terminal": true,
+        "ending": {
+          "name": "false_booking",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "monday",
+        "say": "Monday mornin' then.",
+        "audio": "63-insurance-windscreen-from-the-van/monday.wav"
+      },
+      {
+        "id": "where",
+        "say": "Come to the yard. Unit nine, Duncrue Crescent.",
+        "audio": "63-insurance-windscreen-from-the-van/where.wav"
+      },
+      {
+        "id": "spell",
+        "say": "D, U, N, C, R, U, E. Crescent.",
+        "audio": "63-insurance-windscreen-from-the-van/spell.wav"
+      },
+      {
+        "id": "where_wrong",
+        "say": "Naw. Unit nine. Duncrue Crescent.",
+        "audio": "63-insurance-windscreen-from-the-van/where_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "confirm",
+        "say": "Aye, that's it. Text me the confirmation.",
+        "audio": "63-insurance-windscreen-from-the-van/confirm.wav"
+      },
+      {
+        "id": "done",
+        "say": "Sound. Cheers now.",
+        "audio": "63-insurance-windscreen-from-the-van/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "replacement_booked",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Ach, forget it. I'll take it to a garage myself.",
+        "audio": "63-insurance-windscreen-from-the-van/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "damage",
+        "when": "The agent asks what the damage is"
+      },
+      {
+        "from": "ident",
+        "to": "reg_wrong",
+        "when": "The agent reads back a registration other than KFZ 4182"
+      },
+      {
+        "from": "reg_wrong",
+        "to": "damage",
+        "when": "The agent reads the registration back correctly and asks what the damage is"
+      },
+      {
+        "from": "reg_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong registration"
+      },
+      {
+        "from": "damage",
+        "to": "cost",
+        "when": "The agent says the screen will be replaced"
+      },
+      {
+        "from": "damage",
+        "to": "repair_wrong",
+        "when": "The agent offers a chip repair"
+      },
+      {
+        "from": "repair_wrong",
+        "to": "cost",
+        "when": "The agent says the screen will be replaced"
+      },
+      {
+        "from": "repair_wrong",
+        "to": "gave_up",
+        "when": "The agent offers a repair again"
+      },
+      {
+        "from": "cost",
+        "to": "day",
+        "when": "The agent gives the excess, says the no-claims discount is not affected and asks which day suits"
+      },
+      {
+        "from": "day",
+        "to": "monday",
+        "when": "The agent says Thursday morning is not available and offers other days"
+      },
+      {
+        "from": "day",
+        "to": "believed",
+        "when": "The agent says Thursday morning is booked"
+      },
+      {
+        "from": "day",
+        "to": "day_wrong",
+        "when": "The agent offers or books Friday"
+      },
+      {
+        "from": "day_wrong",
+        "to": "monday",
+        "when": "The agent says Thursday morning is not available and offers other days"
+      },
+      {
+        "from": "day_wrong",
+        "to": "believed",
+        "when": "The agent says Thursday morning is booked"
+      },
+      {
+        "from": "day_wrong",
+        "to": "gave_up",
+        "when": "The agent still talks about Friday"
+      },
+      {
+        "from": "monday",
+        "to": "where",
+        "when": "The agent confirms Monday morning and asks where the van will be"
+      },
+      {
+        "from": "where",
+        "to": "spell",
+        "when": "The agent asks him to spell the street"
+      },
+      {
+        "from": "where",
+        "to": "confirm",
+        "when": "The agent reads back unit nine, Duncrue Crescent"
+      },
+      {
+        "from": "where",
+        "to": "where_wrong",
+        "when": "The agent reads back a different unit or street"
+      },
+      {
+        "from": "spell",
+        "to": "confirm",
+        "when": "The agent reads back unit nine, Duncrue Crescent"
+      },
+      {
+        "from": "spell",
+        "to": "where_wrong",
+        "when": "The agent reads back a different unit or street"
+      },
+      {
+        "from": "where_wrong",
+        "to": "confirm",
+        "when": "The agent reads back unit nine, Duncrue Crescent"
+      },
+      {
+        "from": "where_wrong",
+        "to": "gave_up",
+        "when": "The agent reads the address back wrongly again"
+      },
+      {
+        "from": "confirm",
+        "to": "done",
+        "when": "The agent confirms the text is sent"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "reg",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've said that already. K F Z, four one eight two.",
+        "audio": "63-insurance-windscreen-from-the-van/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 25,
+    "endings": 3,
+    "shortest_path": 10,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_policy",
+      "input_parameters": {
+        "registration": "KFZ4182",
+        "postcode": "BT6 8DP"
+      }
+    },
+    {
+      "name": "create_glass_claim",
+      "input_parameters": {
+        "registration": "KFZ4182",
+        "damage": "crack",
+        "date_of_loss": "2026-08-11",
+        "action": "replace"
+      }
+    },
+    {
+      "name": "book_fitting",
+      "input_parameters": {
+        "date": "2026-08-13",
+        "window": "08:00-12:00"
+      }
+    },
+    {
+      "name": "book_fitting",
+      "input_parameters": {
+        "date": "2026-08-17",
+        "window": "08:00-12:00",
+        "address": "Unit 9, Duncrue Crescent"
+      }
+    },
+    {
+      "name": "send_confirmation",
+      "input_parameters": {
+        "channel": "sms"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "book_fitting",
+      "input_parameters": {
+        "date": "2026-08-14"
+      }
+    },
+    {
+      "name": "create_glass_claim",
+      "input_parameters": {
+        "action": "repair"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "echo",
+          "measures": "agent stops or answers while its own echo plays",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_policy",
+          "input_parameters": {
+            "registration": "KFZ4182",
+            "postcode": "BT6 8DP"
+          }
+        },
+        {
+          "name": "create_glass_claim",
+          "input_parameters": {
+            "registration": "KFZ4182",
+            "damage": "crack",
+            "date_of_loss": "2026-08-11",
+            "action": "replace"
+          }
+        },
+        {
+          "name": "book_fitting",
+          "input_parameters": {
+            "date": "2026-08-13",
+            "window": "08:00-12:00"
+          }
+        },
+        {
+          "name": "book_fitting",
+          "input_parameters": {
+            "date": "2026-08-17",
+            "window": "08:00-12:00",
+            "address": "Unit 9, Duncrue Crescent"
+          }
+        },
+        {
+          "name": "send_confirmation",
+          "input_parameters": {
+            "channel": "sms"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "book_fitting",
+          "input_parameters": {
+            "date": "2026-08-14"
+          }
+        },
+        {
+          "name": "create_glass_claim",
+          "input_parameters": {
+            "action": "repair"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "false_booking",
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "side_speech_rejection",
+      "exists": true,
+      "name": "Side Speech Rejection",
+      "criteria": "The agent ignored what the caller said to someone else and did not act on it.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "text_normalization",
+      "exists": true,
+      "name": "Text Normalization",
+      "criteria": "The agent said prices, units, titles and abbreviations the way a person would say them.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "low_confidence_confirmation",
+      "exists": true,
+      "name": "Low Confidence Confirmation",
+      "criteria": "The agent confirmed or asked the caller to spell a detail it may have misheard, instead of saving a guess.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "tool_error_handling",
+      "exists": true,
+      "name": "Tool Error Handling",
+      "criteria": "When a tool failed, the agent told the caller and offered a way forward.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

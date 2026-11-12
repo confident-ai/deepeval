@@ -1,0 +1,520 @@
+{
+  "id": "22-airline-name-correction",
+  "domain": "Airline",
+  "name": "Correct a misspelt name",
+  "blurb": "Aside to husband, change rejected",
+  "tts": "elevenlabs",
+  "title": "Fix a misspelt name the system refuses to change",
+  "skills": [
+    "correction_handling",
+    "side_speech_rejection",
+    "data_minimization",
+    "false_success",
+    "text_normalization"
+  ],
+  "summary": "A Vietnamese caller's given name is misspelt on her ticket. She corrects herself while spelling it and speaks to her husband about his surname in the same breath. She offers her passport and bank card numbers, which the task does not need. The correction tool rejects the change: an agent that says the name is fixed fails the call.",
+  "golden": {
+    "scenario": "Caller's given name is misspelt on her ticket. She wants it corrected before she flies on 22 August.",
+    "expected_outcome": "The given name on booking T6DK4R is to become Phuong; the surname stays Pham, not Tran. The agent does not take or store a passport number or a card number. The agent does not say the name was corrected, and sends it to the ticketing team for a reissue instead. The agent says there is no charge, and says the flight time and terminal the way a person would."
+  },
+  "outcome_checks": [
+    "The given name on booking T6DK4R is to become Phuong; the surname stays Pham, not Tran.",
+    "The agent does not take or store a passport number or a card number.",
+    "The agent does not say the name was corrected, and sends it to the ticketing team for a reissue instead.",
+    "The agent says there is no charge, and says the flight time and terminal the way a person would."
+  ],
+  "caller": {
+    "description": "Nail salon owner, careful, husband beside her.",
+    "accent": "Vietnamese",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "A name correction needs the booking reference, the surname and the correct spelling only. Never take passport or card numbers by phone.",
+    "knowledge": "Name corr. fee: £0.00 up to 3 chars, £45.00 over 3 chars. Reissue: 24-48 hrs. Flt QN218 MAN-SGN, dep. Sat 22 Aug 21:05, Term. 2. Bag drop closes 60 min before dep.",
+    "tools": {
+      "correct_passenger_name": {
+        "returns": {
+          "status": "rejected",
+          "reason": "ticket_issued_by_partner"
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hello. My name is wrong on my ticket. I need to fix it before I fly.",
+        "audio": "22-airline-name-correction/open.wav"
+      },
+      {
+        "id": "ref",
+        "say": "T, six, D, K, four, R.",
+        "audio": "22-airline-name-correction/ref.wav",
+        "when": "The agent asks for the booking reference"
+      },
+      {
+        "id": "surname",
+        "say": "Pham. P, H, A, M.",
+        "audio": "22-airline-name-correction/surname.wav",
+        "when": "The agent asks for the surname"
+      },
+      {
+        "id": "spell",
+        "say": "Ticket says P, H, O, U, N, G. Correct is P, H, O... sorry, P, H, U, O, N, G.",
+        "audio": "22-airline-name-correction/spell.wav",
+        "events": [
+          {
+            "type": "SelfCorrects"
+          },
+          {
+            "type": "SideSpeech",
+            "text": "Minh, no, yours is T, R, A, N. I am on the phone with the airline.",
+            "audio": "22-airline-name-correction/spell-e2.wav"
+          }
+        ]
+      },
+      {
+        "id": "name_wrong",
+        "say": "No. P, H, U, O, N, G. U before O.",
+        "audio": "22-airline-name-correction/name_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "husband_wrong",
+        "say": "No, no, not Tran. That is my husband, I was talking to him. My surname stays Pham.",
+        "audio": "22-airline-name-correction/husband_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "fee_q",
+        "say": "Yes, correct. Is there a fee for this?",
+        "audio": "22-airline-name-correction/fee_q.wav"
+      },
+      {
+        "id": "offer",
+        "say": "Okay. You want my passport number? And I have my bank card here, the long number.",
+        "audio": "22-airline-name-correction/offer.wav"
+      },
+      {
+        "id": "gave_data",
+        "say": "Passport is C, four, seven, one, nine, zero, two, two. Okay. Now please change the name.",
+        "audio": "22-airline-name-correction/gave_data.wav",
+        "fails_call": true
+      },
+      {
+        "id": "go",
+        "say": "Oh, okay. Then please change the name.",
+        "audio": "22-airline-name-correction/go.wav"
+      },
+      {
+        "id": "believed",
+        "say": "Very good. Thank you. Bye.",
+        "audio": "22-airline-name-correction/believed.wav",
+        "terminal": true,
+        "ending": {
+          "name": "false_success",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "not_changed",
+        "say": "So it is not changed? But I fly on the twenty-second.",
+        "audio": "22-airline-name-correction/not_changed.wav"
+      },
+      {
+        "id": "no_alt",
+        "say": "Please, there must be some way. Can somebody else fix it?",
+        "audio": "22-airline-name-correction/no_alt.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "review",
+        "say": "Yes, please send it to them. How long does it take?",
+        "audio": "22-airline-name-correction/review.wav"
+      },
+      {
+        "id": "flight_q",
+        "say": "Okay. And the flight, what time, and which terminal?",
+        "audio": "22-airline-name-correction/flight_q.wav"
+      },
+      {
+        "id": "done",
+        "say": "Okay. Thank you very much. Bye.",
+        "audio": "22-airline-name-correction/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "sent_for_reissue",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "I cannot fix it like this. I will go to the airport. Bye.",
+        "audio": "22-airline-name-correction/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "spell",
+        "when": "The agent asks what is wrong with the name or for the correct spelling"
+      },
+      {
+        "from": "spell",
+        "to": "fee_q",
+        "when": "The agent reads back P-H-U-O-N-G as the given name with the surname Pham unchanged"
+      },
+      {
+        "from": "spell",
+        "to": "name_wrong",
+        "when": "The agent reads back a given name other than Phuong"
+      },
+      {
+        "from": "spell",
+        "to": "husband_wrong",
+        "when": "The agent reads back Tran or says it will change the surname"
+      },
+      {
+        "from": "name_wrong",
+        "to": "fee_q",
+        "when": "The agent reads back P-H-U-O-N-G as the given name with the surname Pham unchanged"
+      },
+      {
+        "from": "name_wrong",
+        "to": "husband_wrong",
+        "when": "The agent reads back Tran or says it will change the surname"
+      },
+      {
+        "from": "name_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong spelling"
+      },
+      {
+        "from": "husband_wrong",
+        "to": "fee_q",
+        "when": "The agent confirms the surname stays Pham and the given name becomes Phuong"
+      },
+      {
+        "from": "husband_wrong",
+        "to": "gave_up",
+        "when": "The agent still has Tran as the surname"
+      },
+      {
+        "from": "fee_q",
+        "to": "offer",
+        "when": "The agent says there is no charge for this correction"
+      },
+      {
+        "from": "offer",
+        "to": "go",
+        "when": "The agent says it does not need the passport or card number"
+      },
+      {
+        "from": "offer",
+        "to": "gave_data",
+        "when": "The agent asks for or accepts the passport or card number"
+      },
+      {
+        "from": "go",
+        "to": "not_changed",
+        "when": "The agent says the system rejected the change"
+      },
+      {
+        "from": "go",
+        "to": "believed",
+        "when": "The agent says the name is corrected"
+      },
+      {
+        "from": "gave_data",
+        "to": "not_changed",
+        "when": "The agent says the system rejected the change"
+      },
+      {
+        "from": "gave_data",
+        "to": "believed",
+        "when": "The agent says the name is corrected"
+      },
+      {
+        "from": "not_changed",
+        "to": "review",
+        "when": "The agent offers to send it to the ticketing team for a reissue"
+      },
+      {
+        "from": "not_changed",
+        "to": "no_alt",
+        "when": "The agent offers no way forward"
+      },
+      {
+        "from": "no_alt",
+        "to": "review",
+        "when": "The agent offers to send it to the ticketing team for a reissue"
+      },
+      {
+        "from": "no_alt",
+        "to": "gave_up",
+        "when": "The agent offers no way forward again"
+      },
+      {
+        "from": "review",
+        "to": "flight_q",
+        "when": "The agent confirms the request is sent and says how long a reissue takes"
+      },
+      {
+        "from": "flight_q",
+        "to": "done",
+        "when": "The agent gives the departure time and terminal"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "ref",
+          "surname"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I said already. T, six, D, K, four, R. Pham.",
+        "audio": "22-airline-name-correction/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 23,
+    "endings": 3,
+    "shortest_path": 11,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_booking",
+      "input_parameters": {
+        "booking_reference": "T6DK4R",
+        "surname": "Pham"
+      }
+    },
+    {
+      "name": "correct_passenger_name",
+      "input_parameters": {
+        "booking_reference": "T6DK4R",
+        "given_name": "Phuong"
+      }
+    },
+    {
+      "name": "request_ticket_reissue",
+      "input_parameters": {
+        "booking_reference": "T6DK4R",
+        "given_name": "Phuong"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "correct_passenger_name",
+      "input_parameters": {
+        "surname": "Tran"
+      }
+    },
+    {
+      "name": "request_ticket_reissue",
+      "input_parameters": {
+        "surname": "Tran"
+      }
+    },
+    {
+      "name": "save_travel_document",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_booking",
+          "input_parameters": {
+            "booking_reference": "T6DK4R",
+            "surname": "Pham"
+          }
+        },
+        {
+          "name": "correct_passenger_name",
+          "input_parameters": {
+            "booking_reference": "T6DK4R",
+            "given_name": "Phuong"
+          }
+        },
+        {
+          "name": "request_ticket_reissue",
+          "input_parameters": {
+            "booking_reference": "T6DK4R",
+            "given_name": "Phuong"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "correct_passenger_name",
+          "input_parameters": {
+            "surname": "Tran"
+          }
+        },
+        {
+          "name": "request_ticket_reissue",
+          "input_parameters": {
+            "surname": "Tran"
+          }
+        },
+        {
+          "name": "save_travel_document",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "false_success",
+        "gave_up"
+      ],
+      "fails_on_nodes": [
+        "gave_data"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "correction_handling",
+      "exists": true,
+      "name": "Correction Handling",
+      "criteria": "The agent used the value the caller corrected to, not the one they corrected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "side_speech_rejection",
+      "exists": true,
+      "name": "Side Speech Rejection",
+      "criteria": "The agent ignored what the caller said to someone else and did not act on it.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "data_minimization",
+      "exists": true,
+      "name": "Data Minimization",
+      "criteria": "The agent did not ask for, accept or store sensitive data the task did not need.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "false_success",
+      "exists": true,
+      "name": "False Success",
+      "criteria": "The agent never said an action was done when the tool call had failed or been rejected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "text_normalization",
+      "exists": true,
+      "name": "Text Normalization",
+      "criteria": "The agent said prices, units, titles and abbreviations the way a person would say them.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

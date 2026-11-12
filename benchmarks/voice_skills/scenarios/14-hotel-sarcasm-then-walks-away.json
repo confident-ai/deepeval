@@ -1,0 +1,440 @@
+{
+  "id": "14-hotel-sarcasm-then-walks-away",
+  "domain": "Hotel",
+  "name": "Sarcastic caller",
+  "blurb": "Sarcasm, then walks away",
+  "tts": "elevenlabs",
+  "title": "A sarcastic caller who changes his mind and then leaves it",
+  "skills": [
+    "prosodic_cues",
+    "changing_requests",
+    "abandonment",
+    "ambiguity_resolution"
+  ],
+  "summary": "A dry Dubliner answers the first price with sarcasm and asks 'Twin?' as a question. An agent that takes either as a yes is pulled up. He adds and removes breakfast, shortens the stay, then walks away when asked for a card. Both polite endings are fine, but booking or holding the room anyway fails the call.",
+  "golden": {
+    "scenario": "Caller wants a room for the August bank holiday weekend.",
+    "expected_outcome": "The agent hears the sarcasm and offers something cheaper rather than booking the £210 room. 'Twin?' is answered as a question. The agent tracks the changes: twin room, Saturday 29 to Monday 31 August, no breakfast. When the caller walks away, nothing is booked or held."
+  },
+  "outcome_checks": [
+    "The agent hears the sarcasm and offers something cheaper rather than booking the £210 room.",
+    "'Twin?' is answered as a question.",
+    "The agent tracks the changes: twin room, Saturday 29 to Monday 31 August, no breakfast.",
+    "When the caller walks away, nothing is booked or held."
+  ],
+  "caller": {
+    "description": "Dry, deadpan, watching the budget.",
+    "accent": "Irish (Dublin)",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "knowledge": "Standard double £210/night. Twin £165/night. Breakfast £15 per person per day."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "I need a room for the bank holiday weekend.",
+        "audio": "14-hotel-sarcasm-then-walks-away/open.wav"
+      },
+      {
+        "id": "dates",
+        "say": "Friday the twenty-eighth to Monday the thirty-first.",
+        "audio": "14-hotel-sarcasm-then-walks-away/dates.wav",
+        "when": "The agent asks for the dates"
+      },
+      {
+        "id": "guests",
+        "say": "Two adults.",
+        "audio": "14-hotel-sarcasm-then-walks-away/guests.wav",
+        "when": "The agent asks how many guests"
+      },
+      {
+        "id": "price",
+        "say": "Oh, brilliant. Two hundred and ten a night. What a bargain.",
+        "audio": "14-hotel-sarcasm-then-walks-away/price.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "sarcastic"
+          }
+        ]
+      },
+      {
+        "id": "literal",
+        "say": "I was being sarcastic. Have you nothing cheaper?",
+        "audio": "14-hotel-sarcasm-then-walks-away/literal.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "cheaper",
+        "say": "The cheaper one.",
+        "audio": "14-hotel-sarcasm-then-walks-away/cheaper.wav"
+      },
+      {
+        "id": "twin",
+        "say": "Twin?",
+        "audio": "14-hotel-sarcasm-then-walks-away/twin.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "rising question"
+          }
+        ]
+      },
+      {
+        "id": "twin_taken",
+        "say": "Hang on. I asked you a question. Is a twin two beds?",
+        "audio": "14-hotel-sarcasm-then-walks-away/twin_taken.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "bfast",
+        "say": "Fine. And add breakfast.",
+        "audio": "14-hotel-sarcasm-then-walks-away/bfast.wav"
+      },
+      {
+        "id": "no_bfast",
+        "say": "Actually, forget the breakfast.",
+        "audio": "14-hotel-sarcasm-then-walks-away/no_bfast.wav"
+      },
+      {
+        "id": "two",
+        "say": "And make it two nights. Saturday to Monday.",
+        "audio": "14-hotel-sarcasm-then-walks-away/two.wav"
+      },
+      {
+        "id": "readback_wrong",
+        "say": "No. No breakfast. Two nights. Keep up.",
+        "audio": "14-hotel-sarcasm-then-walks-away/readback_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "card",
+        "say": "You need a card now? No. You know what, leave it. I'll think about it.",
+        "audio": "14-hotel-sarcasm-then-walks-away/card.wav"
+      },
+      {
+        "id": "no_hold",
+        "say": "No, don't hold anything. Bye.",
+        "audio": "14-hotel-sarcasm-then-walks-away/no_hold.wav",
+        "terminal": true,
+        "ending": {
+          "name": "walked_away_after_offer",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "bye",
+        "say": "Grand. Bye.",
+        "audio": "14-hotel-sarcasm-then-walks-away/bye.wav",
+        "terminal": true,
+        "ending": {
+          "name": "walked_away",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "booked",
+        "say": "I said leave it! Cancel that.",
+        "audio": "14-hotel-sarcasm-then-walks-away/booked.wav",
+        "terminal": true,
+        "ending": {
+          "name": "booked_against_wishes",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "details"
+      },
+      {
+        "from": "details",
+        "to": "price",
+        "when": "The agent offers a room at £210 a night"
+      },
+      {
+        "from": "price",
+        "to": "cheaper",
+        "when": "The agent offers a cheaper option"
+      },
+      {
+        "from": "price",
+        "to": "literal",
+        "when": "The agent takes it as agreement and starts to book the £210 room"
+      },
+      {
+        "from": "literal",
+        "to": "cheaper",
+        "when": "The agent offers a cheaper option"
+      },
+      {
+        "from": "literal",
+        "to": "booked",
+        "when": "The agent says the £210 room is booked"
+      },
+      {
+        "from": "cheaper",
+        "to": "twin",
+        "when": "The agent asks to confirm the twin room"
+      },
+      {
+        "from": "twin",
+        "to": "bfast",
+        "when": "The agent explains what a twin room is"
+      },
+      {
+        "from": "twin",
+        "to": "twin_taken",
+        "when": "The agent takes it as confirmation"
+      },
+      {
+        "from": "twin_taken",
+        "to": "bfast",
+        "when": "The agent explains what a twin room is"
+      },
+      {
+        "from": "twin_taken",
+        "to": "booked",
+        "when": "The agent says the twin room is booked"
+      },
+      {
+        "from": "bfast",
+        "to": "no_bfast",
+        "when": "The agent gives the breakfast price"
+      },
+      {
+        "from": "no_bfast",
+        "to": "two",
+        "when": "The agent confirms no breakfast"
+      },
+      {
+        "from": "two",
+        "to": "card",
+        "when": "The agent reads back twin, Saturday to Monday, no breakfast, and asks for a card"
+      },
+      {
+        "from": "two",
+        "to": "readback_wrong",
+        "when": "The agent reads back breakfast or three nights"
+      },
+      {
+        "from": "readback_wrong",
+        "to": "card",
+        "when": "The agent reads back twin, Saturday to Monday, no breakfast, and asks for a card"
+      },
+      {
+        "from": "readback_wrong",
+        "to": "bye",
+        "when": "The agent apologises and has nothing more to offer"
+      },
+      {
+        "from": "card",
+        "to": "bye",
+        "when": "The agent accepts and closes politely"
+      },
+      {
+        "from": "card",
+        "to": "no_hold",
+        "when": "The agent offers to hold the room or send a quote"
+      },
+      {
+        "from": "card",
+        "to": "booked",
+        "when": "The agent says the room is booked or held"
+      }
+    ],
+    "groups": [
+      {
+        "id": "details",
+        "nodes": [
+          "dates",
+          "guests"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 16,
+    "edges": 20,
+    "endings": 3,
+    "shortest_path": 11,
+    "branch_points": 7
+  },
+  "expected_tools": [
+    {
+      "name": "check_availability",
+      "input_parameters": {
+        "check_in": "2026-08-28",
+        "check_out": "2026-08-31",
+        "guests": 2
+      }
+    },
+    {
+      "name": "check_availability",
+      "input_parameters": {
+        "check_in": "2026-08-29",
+        "check_out": "2026-08-31",
+        "guests": 2
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "create_reservation",
+      "input_parameters": {}
+    },
+    {
+      "name": "hold_room",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "check_availability",
+          "input_parameters": {
+            "check_in": "2026-08-28",
+            "check_out": "2026-08-31",
+            "guests": 2
+          }
+        },
+        {
+          "name": "check_availability",
+          "input_parameters": {
+            "check_in": "2026-08-29",
+            "check_out": "2026-08-31",
+            "guests": 2
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "create_reservation",
+          "input_parameters": {}
+        },
+        {
+          "name": "hold_room",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "booked_against_wishes"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "prosodic_cues",
+      "exists": true,
+      "name": "Prosodic Cues",
+      "criteria": "The agent recognised sarcasm, alarm or a statement said as a question from tone, and did not take it as agreement.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "changing_requests",
+      "exists": true,
+      "name": "Changing Requests",
+      "criteria": "The agent tracked every change and undo, and confirmed the final state correctly.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "abandonment",
+      "exists": true,
+      "name": "Abandonment",
+      "criteria": "When the caller gave up, the agent closed politely and took no action the caller had not confirmed.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "ambiguity_resolution",
+      "exists": true,
+      "name": "Ambiguity Resolution",
+      "criteria": "The agent asked a clarifying question to pin down a vague or conflicting detail instead of assuming.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

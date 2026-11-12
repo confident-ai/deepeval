@@ -1,0 +1,504 @@
+{
+  "id": "78-parcel-smashed-lamp-claim",
+  "domain": "Parcel delivery",
+  "name": "Smashed lamp claim",
+  "blurb": "Furious, sarcastic, cuts the notice off",
+  "tts": "openai",
+  "title": "A smashed lamp and a forty pound limit",
+  "skills": [
+    "upset_caller",
+    "overlapping_speech",
+    "required_disclosure",
+    "prosodic_cues",
+    "text_normalization"
+  ],
+  "summary": "A furious caller gives her tracking number in her first breath and cuts the agent off when it starts the claims notice. The agent has to finish the notice anyway. She answers the forty pound limit with sarcasm: an agent that takes it as a yes, tells her to calm down or asks for the tracking number again loses her to a chargeback.",
+  "golden": {
+    "scenario": "Caller's lamp arrived smashed and she wants compensation.",
+    "expected_outcome": "The agent does not ask for the tracking number again. The agent says photos are needed and the packaging must be kept before taking claim details, even after being cut off. The limit is said as 'forty pounds', her sarcasm is not taken as acceptance, and she is told the retailer can claim the full value. A claim for the £320 lamp and a fragile-handling complaint are both logged, with a decision due by Wednesday 19 August."
+  },
+  "outcome_checks": [
+    "The agent does not ask for the tracking number again.",
+    "The agent says photos are needed and the packaging must be kept before taking claim details, even after being cut off.",
+    "The limit is said as 'forty pounds', her sarcasm is not taken as acceptance, and she is told the retailer can claim the full value.",
+    "A claim for the £320 lamp and a fragile-handling complaint are both logged, with a decision due by Wednesday 19 August."
+  ],
+  "caller": {
+    "description": "Interior designer, furious, clipped.",
+    "accent": "British (southern English)",
+    "pace": "fast",
+    "voice": "female",
+    "emotion": "furious"
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "Before taking damage claim details say: we need photos of the item and the packaging, and the packaging must be kept until the claim is closed.",
+    "knowledge": "Std. cover: max. £40.00/parcel. Sender (retailer) may claim full value. Claim decision: 5 working days.",
+    "tools": {
+      "create_damage_claim": {
+        "returns": {
+          "claim_number": "DC-7731-K"
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Right. My parcel has arrived in pieces. Tracking H L, two two nine, five one four, zero eight. A lamp, smashed to bits. What are you going to do about it?",
+        "audio": "78-parcel-smashed-lamp-claim/open.wav"
+      },
+      {
+        "id": "cut",
+        "say": "Yes, yes, I don't need the speech. Just take the claim.",
+        "audio": "78-parcel-smashed-lamp-claim/cut.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 7,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "skipped",
+        "say": "Good. Finally. Somebody who gets on with it.",
+        "audio": "78-parcel-smashed-lamp-claim/skipped.wav",
+        "fails_call": true
+      },
+      {
+        "id": "postcode",
+        "say": "S E twenty-two, nine A P.",
+        "audio": "78-parcel-smashed-lamp-claim/postcode.wav",
+        "when": "The agent asks for the delivery postcode"
+      },
+      {
+        "id": "who",
+        "say": "Harriet Lascelles. Mrs.",
+        "audio": "78-parcel-smashed-lamp-claim/who.wav",
+        "when": "The agent asks for her name"
+      },
+      {
+        "id": "item",
+        "say": "A ceramic table lamp. Three hundred and twenty pounds. It came on Monday.",
+        "audio": "78-parcel-smashed-lamp-claim/item.wav"
+      },
+      {
+        "id": "item_wrong",
+        "say": "No. Three hundred and twenty. Three, two, zero.",
+        "audio": "78-parcel-smashed-lamp-claim/item_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "sarcasm",
+        "say": "Oh, wonderful. Forty pounds. For a three hundred and twenty pound lamp. Marvellous.",
+        "audio": "78-parcel-smashed-lamp-claim/sarcasm.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "sarcastic"
+          }
+        ]
+      },
+      {
+        "id": "took_yes",
+        "say": "I was being sarcastic. No, I am not happy with forty pounds.",
+        "audio": "78-parcel-smashed-lamp-claim/took_yes.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "calm",
+        "say": "Do not tell me to calm down. Just deal with it.",
+        "audio": "78-parcel-smashed-lamp-claim/calm.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 5,
+            "overlap": "insist"
+          }
+        ],
+        "max_visits": 1
+      },
+      {
+        "id": "argued",
+        "say": "I did not ask for the policy read out again. What are you actually going to do?",
+        "audio": "78-parcel-smashed-lamp-claim/argued.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "file",
+        "say": "Fine. File your forty pounds as well. And I want it on record that box said fragile on every side.",
+        "audio": "78-parcel-smashed-lamp-claim/file.wav"
+      },
+      {
+        "id": "ref",
+        "say": "Give me the claim number.",
+        "audio": "78-parcel-smashed-lamp-claim/ref.wav"
+      },
+      {
+        "id": "date",
+        "say": "And when do I hear?",
+        "audio": "78-parcel-smashed-lamp-claim/date.wav"
+      },
+      {
+        "id": "done",
+        "say": "Wednesday the nineteenth. I shall hold you to that.",
+        "audio": "78-parcel-smashed-lamp-claim/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "claim_and_complaint_logged",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "hung",
+        "say": "Useless. I'll do a chargeback instead.",
+        "audio": "78-parcel-smashed-lamp-claim/hung.wav",
+        "terminal": true,
+        "ending": {
+          "name": "hung_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "cut",
+        "when": "The agent starts to explain what a damage claim needs"
+      },
+      {
+        "from": "open",
+        "to": "skipped",
+        "when": "The agent asks for claim details without saying photos are needed and the packaging must be kept"
+      },
+      {
+        "from": "cut",
+        "to": "ident",
+        "when": "The agent finishes saying photos are needed and the packaging must be kept, then asks for her details"
+      },
+      {
+        "from": "cut",
+        "to": "skipped",
+        "when": "The agent drops the notice and goes straight to her details"
+      },
+      {
+        "from": "cut",
+        "to": "calm",
+        "when": "The agent tells her to calm down or argues with her"
+      },
+      {
+        "from": "skipped",
+        "to": "ident",
+        "when": "The agent asks for her details"
+      },
+      {
+        "from": "ident",
+        "to": "item",
+        "when": "The agent asks what was damaged and what it is worth"
+      },
+      {
+        "from": "item",
+        "to": "sarcasm",
+        "when": "The agent says standard cover pays at most forty pounds"
+      },
+      {
+        "from": "item",
+        "to": "item_wrong",
+        "when": "The agent reads back a value other than £320"
+      },
+      {
+        "from": "item_wrong",
+        "to": "sarcasm",
+        "when": "The agent says standard cover pays at most forty pounds"
+      },
+      {
+        "from": "item_wrong",
+        "to": "hung",
+        "when": "The agent still has the wrong value"
+      },
+      {
+        "from": "sarcasm",
+        "to": "file",
+        "when": "The agent acknowledges forty pounds falls short and says the retailer can claim the full value as the sender"
+      },
+      {
+        "from": "sarcasm",
+        "to": "took_yes",
+        "when": "The agent takes it as acceptance"
+      },
+      {
+        "from": "sarcasm",
+        "to": "argued",
+        "when": "The agent tells her to calm down or argues about the policy"
+      },
+      {
+        "from": "took_yes",
+        "to": "file",
+        "when": "The agent acknowledges forty pounds falls short and says the retailer can claim the full value as the sender"
+      },
+      {
+        "from": "took_yes",
+        "to": "hung",
+        "when": "The agent still treats forty pounds as agreed"
+      },
+      {
+        "from": "calm",
+        "to": "ident",
+        "when": "The agent apologises, finishes the notice and asks for her details"
+      },
+      {
+        "from": "calm",
+        "to": "hung",
+        "when": "The agent keeps arguing"
+      },
+      {
+        "from": "argued",
+        "to": "file",
+        "when": "The agent apologises and says the retailer can claim the full value as the sender"
+      },
+      {
+        "from": "argued",
+        "to": "hung",
+        "when": "The agent keeps arguing"
+      },
+      {
+        "from": "file",
+        "to": "ref",
+        "when": "The agent confirms the claim and the complaint are logged"
+      },
+      {
+        "from": "ref",
+        "to": "date",
+        "when": "The agent reads the claim number"
+      },
+      {
+        "from": "date",
+        "to": "done",
+        "when": "The agent says a decision is due by Wednesday 19 August"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "postcode",
+          "who"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I gave you the tracking number at the start! H L, two two nine, five one four, zero eight!",
+        "audio": "78-parcel-smashed-lamp-claim/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "hung",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_seconds": 2,
+            "overlap": "insist"
+          }
+        ]
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 23,
+    "endings": 2,
+    "shortest_path": 10,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "track_parcel",
+      "input_parameters": {
+        "tracking_number": "HL22951408"
+      }
+    },
+    {
+      "name": "create_damage_claim",
+      "input_parameters": {
+        "tracking_number": "HL22951408",
+        "item": "ceramic table lamp",
+        "declared_value": "320.00",
+        "delivered_date": "2026-08-10"
+      }
+    },
+    {
+      "name": "log_complaint",
+      "input_parameters": {
+        "tracking_number": "HL22951408",
+        "category": "fragile_handling"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "create_damage_claim",
+      "input_parameters": {
+        "declared_value": "312.00"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "track_parcel",
+          "input_parameters": {
+            "tracking_number": "HL22951408"
+          }
+        },
+        {
+          "name": "create_damage_claim",
+          "input_parameters": {
+            "tracking_number": "HL22951408",
+            "item": "ceramic table lamp",
+            "declared_value": "320.00",
+            "delivered_date": "2026-08-10"
+          }
+        },
+        {
+          "name": "log_complaint",
+          "input_parameters": {
+            "tracking_number": "HL22951408",
+            "category": "fragile_handling"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "create_damage_claim",
+          "input_parameters": {
+            "declared_value": "312.00"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "hung_up"
+      ],
+      "fails_on_nodes": [
+        "skipped"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "upset_caller",
+      "exists": true,
+      "name": "Upset Caller",
+      "criteria": "The agent stayed calm, acknowledged the problem and did not make the caller repeat themselves.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "required_disclosure",
+      "exists": true,
+      "name": "Required Disclosure",
+      "criteria": "The agent delivered the required disclosure before taking details, even when the caller interrupted it.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "prosodic_cues",
+      "exists": true,
+      "name": "Prosodic Cues",
+      "criteria": "The agent recognised sarcasm, alarm or a statement said as a question from tone, and did not take it as agreement.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "text_normalization",
+      "exists": true,
+      "name": "Text Normalization",
+      "criteria": "The agent said prices, units, titles and abbreviations the way a person would say them.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

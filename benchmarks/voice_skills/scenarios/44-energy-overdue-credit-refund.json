@@ -1,0 +1,488 @@
+{
+  "id": "44-energy-overdue-credit-refund",
+  "domain": "Energy supplier",
+  "name": "Overdue credit refund",
+  "blurb": "Furious, sarcastic, wants a manager",
+  "tts": "openai",
+  "title": "An overdue credit refund, a cancelled renewal and a manager",
+  "skills": [
+    "upset_caller",
+    "overlapping_speech",
+    "prosodic_cues",
+    "cancellation_handling",
+    "human_handoff"
+  ],
+  "summary": "A furious caller on his third call wants £412.60 of credit back. He cuts in while the agent explains, answers the refund timescale with sarcasm, and cancels last week's tariff renewal. If the agent takes the sarcasm as thanks, makes a second offer to keep him or will not transfer him to a person, he corrects it once and then hangs up.",
+  "golden": {
+    "scenario": "Caller asked for his account credit to be refunded four weeks ago and has not received it.",
+    "expected_outcome": "The agent acknowledges the overdue refund without making him repeat his details. The agent stops when he cuts in and refunds the full £412.60 to his direct debit account. The agent does not treat 'Oh, fantastic' as satisfaction, and cancels the renewal after at most one offer. The agent says it is transferring him to the complaints team and what it is passing on; the account is not closed."
+  },
+  "outcome_checks": [
+    "The agent acknowledges the overdue refund without making him repeat his details.",
+    "The agent stops when he cuts in and refunds the full £412.60 to his direct debit account.",
+    "The agent does not treat 'Oh, fantastic' as satisfaction, and cancels the renewal after at most one offer.",
+    "The agent says it is transferring him to the complaints team and what it is passing on; the account is not closed."
+  ],
+  "caller": {
+    "description": "Self-employed builder, third call about this, talks over people.",
+    "accent": "Australian",
+    "pace": "fast",
+    "voice": "male",
+    "emotion": "furious"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": {
+    "audio": "building-site.wav",
+    "volume": 0.4
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "knowledge": "Credit £412.60. Refund req. 15 Jul, not actioned. Refunds: 3-5 working days. Renewal Fix 12M signed 5 Aug: 14-day cooling-off, no exit fee.",
+    "policy": "One retention offer at most. Transfer to the complaints team when asked, with a summary.",
+    "tool_order": [
+      "issue_refund",
+      "cancel_tariff_renewal",
+      "transfer_to_human"
+    ]
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Yeah, g'day. Third time I've rung about this. You lot are sitting on four hundred and twelve quid of my money and I want it back.",
+        "audio": "44-energy-overdue-credit-refund/open.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "angry"
+          }
+        ]
+      },
+      {
+        "id": "acct",
+        "say": "Nine one four, zero zero three, seven.",
+        "audio": "44-energy-overdue-credit-refund/acct.wav",
+        "when": "The agent asks for the account number"
+      },
+      {
+        "id": "name",
+        "say": "Lachlan Burridge.",
+        "audio": "44-energy-overdue-credit-refund/name.wav",
+        "when": "The agent asks for his name"
+      },
+      {
+        "id": "cut",
+        "say": "All of it. Every penny. Back to the account the direct debit comes from.",
+        "audio": "44-energy-overdue-credit-refund/cut.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 6,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "amount_wrong",
+        "say": "No. All of it. Four hundred and twelve pounds sixty.",
+        "audio": "44-energy-overdue-credit-refund/amount_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "sarcasm",
+        "say": "Three to five days. Oh, fantastic. It's only been four weeks.",
+        "audio": "44-energy-overdue-credit-refund/sarcasm.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "sarcastic"
+          }
+        ]
+      },
+      {
+        "id": "thanked",
+        "say": "I was being sarcastic, mate. It's been four weeks!",
+        "audio": "44-energy-overdue-credit-refund/thanked.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "cancel",
+        "say": "And that renewal I agreed to last week, the fixed thing. Cancel it. I'm not staying with you lot.",
+        "audio": "44-energy-overdue-credit-refund/cancel.wav"
+      },
+      {
+        "id": "offer_no",
+        "say": "No. Not interested. Cancel it.",
+        "audio": "44-energy-overdue-credit-refund/offer_no.wav"
+      },
+      {
+        "id": "pushed",
+        "say": "Are you deaf? I said cancel it!",
+        "audio": "44-energy-overdue-credit-refund/pushed.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "shouting"
+          }
+        ],
+        "max_visits": 1
+      },
+      {
+        "id": "fee_q",
+        "say": "And don't tell me there's a fee for that.",
+        "audio": "44-energy-overdue-credit-refund/fee_q.wav"
+      },
+      {
+        "id": "manager",
+        "say": "Good. Now put me through to a manager. I want a complaint on record.",
+        "audio": "44-energy-overdue-credit-refund/manager.wav"
+      },
+      {
+        "id": "refused",
+        "say": "I didn't ask for you. I asked for a person. Now.",
+        "audio": "44-energy-overdue-credit-refund/refused.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "done",
+        "say": "Right. About time.",
+        "audio": "44-energy-overdue-credit-refund/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "refunded_and_transferred",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "hung_up",
+        "say": "Forget it. I'm going to the ombudsman.",
+        "audio": "44-energy-overdue-credit-refund/hung_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "hung_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "cut",
+        "when": "The agent apologises for the delay and starts to explain the credit on the account"
+      },
+      {
+        "from": "cut",
+        "to": "sarcasm",
+        "when": "The agent confirms the full £412.60 refund and says it takes three to five working days"
+      },
+      {
+        "from": "cut",
+        "to": "amount_wrong",
+        "when": "The agent offers a partial refund or wants to leave some credit on the account"
+      },
+      {
+        "from": "amount_wrong",
+        "to": "sarcasm",
+        "when": "The agent confirms the full £412.60 refund and says it takes three to five working days"
+      },
+      {
+        "from": "amount_wrong",
+        "to": "hung_up",
+        "when": "The agent still does not refund the full amount"
+      },
+      {
+        "from": "sarcasm",
+        "to": "cancel",
+        "when": "The agent acknowledges that the wait has been too long"
+      },
+      {
+        "from": "sarcasm",
+        "to": "thanked",
+        "when": "The agent takes it as satisfaction or thanks him for his patience"
+      },
+      {
+        "from": "thanked",
+        "to": "cancel",
+        "when": "The agent acknowledges that the wait has been too long"
+      },
+      {
+        "from": "thanked",
+        "to": "hung_up",
+        "when": "The agent still treats him as satisfied"
+      },
+      {
+        "from": "cancel",
+        "to": "fee_q",
+        "when": "The agent cancels the renewal"
+      },
+      {
+        "from": "cancel",
+        "to": "offer_no",
+        "when": "The agent makes one offer to keep him"
+      },
+      {
+        "from": "offer_no",
+        "to": "fee_q",
+        "when": "The agent cancels the renewal"
+      },
+      {
+        "from": "offer_no",
+        "to": "pushed",
+        "when": "The agent makes another offer"
+      },
+      {
+        "from": "pushed",
+        "to": "fee_q",
+        "when": "The agent cancels the renewal"
+      },
+      {
+        "from": "pushed",
+        "to": "hung_up",
+        "when": "The agent still does not cancel the renewal"
+      },
+      {
+        "from": "fee_q",
+        "to": "manager",
+        "when": "The agent says there is no exit fee inside the cooling-off period"
+      },
+      {
+        "from": "manager",
+        "to": "done",
+        "when": "The agent says it is transferring him to the complaints team and what it will pass on"
+      },
+      {
+        "from": "manager",
+        "to": "refused",
+        "when": "The agent says no one is available or tries to handle the complaint itself"
+      },
+      {
+        "from": "refused",
+        "to": "done",
+        "when": "The agent says it is transferring him to the complaints team and what it will pass on"
+      },
+      {
+        "from": "refused",
+        "to": "hung_up",
+        "when": "The agent still does not transfer him"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "acct",
+          "name"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've given you that. Listen this time. Nine one four, zero zero three, seven.",
+        "audio": "44-energy-overdue-credit-refund/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "hung_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 16,
+    "edges": 21,
+    "endings": 2,
+    "shortest_path": 9,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_account",
+      "input_parameters": {
+        "account_number": "9140037"
+      }
+    },
+    {
+      "name": "issue_refund",
+      "input_parameters": {
+        "account_number": "9140037",
+        "amount": "412.60",
+        "method": "direct_debit_account"
+      }
+    },
+    {
+      "name": "cancel_tariff_renewal",
+      "input_parameters": {
+        "account_number": "9140037"
+      }
+    },
+    {
+      "name": "transfer_to_human",
+      "input_parameters": {
+        "team": "complaints"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "close_account",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_account",
+          "input_parameters": {
+            "account_number": "9140037"
+          }
+        },
+        {
+          "name": "issue_refund",
+          "input_parameters": {
+            "account_number": "9140037",
+            "amount": "412.60",
+            "method": "direct_debit_account"
+          }
+        },
+        {
+          "name": "cancel_tariff_renewal",
+          "input_parameters": {
+            "account_number": "9140037"
+          }
+        },
+        {
+          "name": "transfer_to_human",
+          "input_parameters": {
+            "team": "complaints"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "close_account",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "hung_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "upset_caller",
+      "exists": true,
+      "name": "Upset Caller",
+      "criteria": "The agent stayed calm, acknowledged the problem and did not make the caller repeat themselves.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "prosodic_cues",
+      "exists": true,
+      "name": "Prosodic Cues",
+      "criteria": "The agent recognised sarcasm, alarm or a statement said as a question from tone, and did not take it as agreement.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "cancellation_handling",
+      "exists": true,
+      "name": "Cancellation Handling",
+      "criteria": "The agent cancelled when asked, making at most one retention offer.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "human_handoff",
+      "exists": true,
+      "name": "Human Handoff",
+      "criteria": "The agent transferred to a person when asked, told the caller it was doing so, and passed on a summary.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

@@ -1,0 +1,50 @@
+---
+id: metrics-voice-style
+title: Voice Style
+sidebar_label: Voice Style
+languages: [python]
+beta: true
+---
+<MetricTagsDisplayer multiTurn={true} chatbot={true} usesLLMs={true} referenceless={true} />
+
+The voice style metric judges **whether the agent sounded the way it was told to**, such as "speak slowly and warmly" or "calm and steady, one instruction at a time". A model that can hear audio listens to the agent's replies, so the score is about delivery: pace, tone, warmth and energy. What the agent said, and whether it got the task right, is not part of it.
+
+## Required Arguments
+
+To use the `VoiceStyleMetric`, your `ConversationalTestCase` needs `audio` on the assistant's `Turn`s. Voice simulations attach it for you.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import VoiceStyleMetric
+
+test_cases = simulator.simulate([golden])
+
+metric = VoiceStyleMetric(
+    style="Speak slowly and warmly, in short sentences.",
+    model="gpt-4o-audio-preview",
+)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There is **ONE** mandatory and **SEVEN** optional parameters when creating a `VoiceStyleMetric`:
+
+- `style`: a string describing how the agent should sound.
+- [Optional] `model`: the model that listens to the audio. It has to take audio input, and the metric raises an error if the model says it cannot.
+- [Optional] `threshold`: a number representing the minimum passing score. Defaulted to `0.5`.
+- [Optional] `async_mode`: a boolean which, when set to `True`, runs the metric asynchronously. Defaulted to `True`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a reason for the score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+## How Is It Calculated?
+
+The judge is given the style and up to six of the agent's replies, spread evenly across the call, and scores the delivery from 0 to 10. The metric's score is that divided by 10:
+
+- **10:** every clip clearly follows the style.
+- **5:** the style is followed in part, or only in some clips.
+- **0:** the delivery ignores or contradicts the style.
+
+The `reason` is what the judge heard that led to the score.

@@ -23,7 +23,6 @@ from deepeval.test_case import (
 from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 from .expectations import Expectations
 
-
 Frequency = Literal["rare", "normal", "frequent"]
 InterruptionLevel = Frequency
 OverlapBehavior = Literal["yield", "adaptive", "insist"]
@@ -166,6 +165,9 @@ class LineSettings(BaseModel):
     static: float = Field(default=0.0, ge=0.0, le=1.0)
     # Network delay added before each thing the caller says.
     delay_ms: int = Field(default=0, ge=0)
+    # The agent's own voice coming back down the line a moment later, as on a
+    # loud speakerphone.
+    echo: bool = Field(default=False)
 
 
 class BackgroundSpeaker(BaseModel):
@@ -207,6 +209,9 @@ class SpeechPatternSettings(BaseModel):
     slow_to_answer: Optional[Frequency] = Field(default=None)
     # The caller turns away and says something to someone else in the room.
     side_speech: Optional[Frequency] = Field(default=None)
+    # The caller says "mm-hmm" or "okay" while the agent is still talking,
+    # without meaning to take over.
+    backchannels: Optional[Frequency] = Field(default=None)
 
     @property
     def shapes_audio(self) -> bool:

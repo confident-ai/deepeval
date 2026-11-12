@@ -1,7 +1,7 @@
 ---
 id: conversation-simulator-voice-persona-voice
-title: Voice Settings
-sidebar_label: Voice
+title: Voice Profile
+sidebar_label: Voice Profile
 languages: [python]
 beta: true
 ---
@@ -12,13 +12,33 @@ beta: true
 You often don't need this at all. `deepeval` already works out how a caller sounds from the persona's `characteristics` — see [How Characteristics Reach The Voice](/docs/conversation-simulator-voice-personas#how-characteristics-reach-the-voice). Use `VoiceSettings` to pin something down or override it.
 :::
 
-Under each setting is a recording of the same caller saying the same sentence with it applied. Pick a value to hear it. They were recorded with `OpenAITTSModel(model="gpt-4o-mini-tts-2025-03-20")`, and each is the best of several takes. The emotion and instruction recordings use the `coral`, `sage` or `ash` voice. This is the caller with nothing set:
+Under each setting is a recording of the same caller saying the same sentence with it applied. Pick a value to hear it. They were recorded with `OpenAITTSModel(model="gpt-4o-mini-tts-2025-03-20")`, and each is the best of several takes. The emotion and instruction recordings use the `coral`, `sage` or `ash` voice. Start with the caller with nothing set, then switch between a few settings to compare:
 
 <SettingPlayer
   settings={[
     {
-      "name": "nothing set",
+      "name": "compare",
       "options": [
+        {
+          "label": "Nigerian accent",
+          "code": "VoiceSettings(accent=\"Nigerian\")",
+          "src": "/audio/personas/voice-accent-nigerian.mp3"
+        },
+        {
+          "label": "Frustrated",
+          "code": "VoiceSettings(emotion=\"frustrated\")",
+          "src": "/audio/personas/voice-emotion-frustrated.mp3"
+        },
+        {
+          "label": "Whispering",
+          "code": "VoiceSettings(instructions=\"Whisper every word in a hushed, breathy voice with no voiced tone, as if someone is asleep next to you.\")",
+          "src": "/audio/personas/voice-instructions-whispering.mp3"
+        },
+        {
+          "label": "Fast",
+          "code": "VoiceSettings(pace=\"fast\")",
+          "src": "/audio/personas/voice-pace-fast.mp3"
+        },
         {
           "label": "None",
           "code": "Persona(characteristics=\"...\")",
@@ -128,9 +148,9 @@ There are **EIGHT** optional parameters when creating a `VoiceSettings`:
         "name": "accent_strength",
         "options": [
           {
-            "label": "0.2",
-            "code": "VoiceSettings(accent=\"Australian\", accent_strength=0.2)",
-            "src": "/audio/personas/voice-accent-strength-0-2.mp3"
+            "label": "1.0",
+            "code": "VoiceSettings(accent=\"Australian\", accent_strength=1.0)",
+            "src": "/audio/personas/voice-accent-strength-1-0.mp3"
           },
           {
             "label": "0.5",
@@ -138,9 +158,9 @@ There are **EIGHT** optional parameters when creating a `VoiceSettings`:
             "src": "/audio/personas/voice-accent-strength-0-5.mp3"
           },
           {
-            "label": "1.0",
-            "code": "VoiceSettings(accent=\"Australian\", accent_strength=1.0)",
-            "src": "/audio/personas/voice-accent-strength-1-0.mp3"
+            "label": "0.2",
+            "code": "VoiceSettings(accent=\"Australian\", accent_strength=0.2)",
+            "src": "/audio/personas/voice-accent-strength-0-2.mp3"
           }
         ]
       }

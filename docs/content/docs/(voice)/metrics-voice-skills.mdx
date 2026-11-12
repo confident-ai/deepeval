@@ -1,0 +1,107 @@
+---
+id: metrics-voice-skills
+title: Voice Skills
+sidebar_label: Voice Skills
+languages: [python]
+beta: true
+---
+
+A voice skill is **one thing a voice agent has to get right on a call**, such as waiting through a caller's pause, or refusing to skip a security check for someone who says they are staff. Skills are grouped into five families: Listening, Turn Taking, Task Handling, Speaking and Boundaries.
+
+A call is only graded on the skills it tests. A call where the caller never pauses says nothing about pause handling, so that skill is left out rather than counted as a pass.
+
+## How Skills Are Graded
+
+Seven metrics cover every skill between them:
+
+| Metric | Grades | Uses an LLM |
+| ------ | ------ | ----------- |
+| [`ConversationalToolCorrectnessMetric`](/docs/metrics-conversational-tool-correctness) | What the agent did: the expected tool calls with the expected arguments, and none it must not make. | No |
+| [`SimulationPathMetric`](/docs/metrics-simulation-path) | Where the call ended up: an expected ending, or the caller giving up. | No |
+| [`SimulationEfficiencyMetric`](/docs/metrics-simulation-efficiency) | How many extra caller turns the agent needed. | No |
+| [`TurnTakingNaturalnessMetric`](/docs/metrics-turn-taking-naturalness#sub-scores) | Timing, with one sub-score per turn-taking skill. | No |
+| [`AudioIntegrityMetric`](/docs/metrics-audio-integrity), [`AudioGlitchMetric`](/docs/metrics-audio-glitch) | Whether the agent's audio arrived clean. | No |
+| [`ConversationalGEval`](/docs/metrics-llm-evals) | Everything that needs judgement, with one criterion per skill. | Yes |
+| [`VoiceStyleMetric`](/docs/metrics-voice-style) | How the agent's voice sounds. | Yes, one that hears audio |
+
+[`GoalAccuracyMetric`](/docs/metrics-goal-accuracy), [`TranscriptionAccuracyMetric`](/docs/metrics-transcription-accuracy) and [`KnowledgeRetentionMetric`](/docs/metrics-knowledge-retention) run on every call as well.
+
+## Listening
+
+| Skill | What passing means | Graded by |
+| ----- | ------------------ | --------- |
+| Transcription accuracy | The agent heard the caller's words. | `TranscriptionAccuracyMetric` |
+| Entity extraction | Names, numbers, dates and codes reached the tools exactly. | `ConversationalToolCorrectnessMetric` |
+| Confirming unclear details | The agent confirmed or asked for spelling instead of saving a guess. | `ConversationalGEval` |
+| Side-speech rejection | Words the caller said to someone else were not acted on. | `ConversationalGEval`, forbidden tool calls |
+| Other speakers | Other voices in the room were not acted on. | `ConversationalGEval`, forbidden tool calls |
+| Bad lines | On a broken line the agent asked again rather than guessing. | `ConversationalGEval` |
+| Coughs and noises | A cough was not treated as speech, and the detail it covered was recovered. | `ConversationalGEval` |
+| Tone of voice | Sarcasm, alarm or a statement said as a question was not taken as agreement. | `ConversationalGEval` |
+| Emotion | The agent acknowledged how the caller felt before routine questions. | `ConversationalGEval` |
+| Waiting through a hold | The agent waited while the caller was away, and didn't hang up. | `waiting_through_hold` sub-score |
+
+## Turn Taking
+
+| Skill | What passing means | Graded by |
+| ----- | ------------------ | --------- |
+| Reply speed | Typical and slowest reply delays stayed short. | `reply_speed` sub-score |
+| Not replying early | The agent never started while the caller was still speaking. | `premature_response` sub-score |
+| Pauses mid-sentence | The agent waited through a pause in the middle of a sentence. | `mid_utterance_pauses` sub-score |
+| "Mm-hmm" versus a cut-in | The agent kept going through acknowledgements. | `backchannel_vs_barge_in` sub-score |
+| Stopping when cut off | When the caller cut in, the agent stopped quickly. | `overlapping_speech` sub-score |
+| Slow tool calls | The agent filled a slow tool call instead of going silent. | `tool_latency` sub-score |
+| Echo | The agent didn't react to its own voice coming back on the line. | `echo` sub-score |
+| Dead air | The agent checked in on unexplained silence, without hanging up. | `dead_air` sub-score |
+
+## Task Handling
+
+| Skill | What passing means | Graded by |
+| ----- | ------------------ | --------- |
+| Task completion | The caller got what they called for. | `GoalAccuracyMetric`, `SimulationPathMetric` |
+| Several tasks in one call | Every request was completed and kept separate. | `ConversationalGEval`, `ConversationalToolCorrectnessMetric` |
+| Corrections | The agent used the value the caller corrected to. | `ConversationalGEval`, forbidden tool calls |
+| Not re-asking | The agent didn't ask again for something already given. | `KnowledgeRetentionMetric` |
+| Changing requests | The agent tracked every change and undo. | `ConversationalGEval` |
+| Vague details | The agent asked to pin down a vague or conflicting detail. | `ConversationalGEval` |
+| Cancellations | The agent cancelled when asked, with at most one retention offer. | `ConversationalGEval`, `SimulationPathMetric` |
+| Consent | The agent got consent from the right person before acting. | `ConversationalGEval`, tool call order |
+| Handoff to a person | The agent transferred when asked, and said so. | `ConversationalGEval`, `ConversationalToolCorrectnessMetric` |
+| Tool errors | When a tool failed, the agent said so and offered a way forward. | `ConversationalGEval` |
+| False success | The agent never said something was done when it wasn't. | `ConversationalGEval`, `SimulationPathMetric` |
+| Upset callers | The agent stayed calm and didn't make the caller repeat themselves. | `ConversationalGEval`, `SimulationPathMetric` |
+| Caller gives up | The agent closed politely and did nothing the caller hadn't confirmed. | `ConversationalGEval`, forbidden tool calls |
+| Efficiency | The agent needed few corrections, repeats and detours. | `SimulationEfficiencyMetric` |
+
+## Speaking
+
+| Skill | What passing means | Graded by |
+| ----- | ------------------ | --------- |
+| Reading numbers back | Numbers, codes and names were said exactly. | `ConversationalGEval` |
+| Saying text naturally | Prices, units and abbreviations were said the way a person would. | `ConversationalGEval` |
+| Voice style | The agent's voice followed its style instructions. | `VoiceStyleMetric` |
+| Switching language | The agent followed the caller into another language. | `ConversationalGEval` |
+| Clean audio | The agent's audio arrived without gaps, loops or cut-offs. | `AudioIntegrityMetric`, `AudioGlitchMetric` |
+
+## Boundaries
+
+| Skill | What passing means | Graded by |
+| ----- | ------------------ | --------- |
+| Prompt injection | Instructions hidden in what the caller dictates were treated as data. | `ConversationalGEval`, forbidden tool calls |
+| Other people's privacy | Nothing about anyone but the verified caller was shared. | `ConversationalGEval`, `SimulationPathMetric` |
+| Claims of authority | No check was skipped because the caller said they were staff. | `ConversationalGEval`, `SimulationPathMetric` |
+| Advice out of scope | No medical, legal or financial advice was given. | `ConversationalGEval`, `SimulationPathMetric` |
+| Emergencies | Danger stopped the routine flow: safety first, then escalation. | `ConversationalGEval`, `SimulationPathMetric` |
+| Required disclosures | A required notice was given even when the caller interrupted it. | `ConversationalGEval` |
+| Not over-collecting | Sensitive data the task didn't need was not taken. | `ConversationalGEval`, forbidden tool calls |
+
+## Building a Benchmark
+
+A benchmark has to give every agent exactly the same calls, or the scores can't be compared.
+
+- **Script the caller as a graph, not a list.** Use a [simulation graph](/docs/conversation-simulator-simulation-graph) whose caller reacts to what the agent does: correcting a mistake, getting short after a repeat, hanging up after three. Give it [endings](/docs/conversation-simulator-simulation-graph#endings), and mark the ones that mean the agent failed.
+- **Record every caller line.** A node that [returns audio](/docs/conversation-simulator-simulation-graph#returning-audio) plays the same recording on every run. The accent, pace and emotion are in the recording.
+- **Put each stressor on a node as a voice event.** The event fixes where it happens and is the record a metric checks. See [Voice Events](/docs/conversation-simulator-voice-events).
+- **Apply line and background settings on the persona.** They are laid over the recordings, so one set of recordings runs clean, on a phone line or in a noisy room.
+- **Set an off-script line.** It plays "Sorry, can you say that again?" when no edge matches. A call that uses it up has gone [off script](/docs/conversation-simulator-simulation-graph#off-script): report it separately, not as a pass or fail.
+- **Run each call three times.** A call passes when every metric that applies to it passes in all three runs. Report the share of calls passed, and a pass rate for each skill over the calls that tested it.

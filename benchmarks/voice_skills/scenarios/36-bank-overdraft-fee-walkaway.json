@@ -1,0 +1,500 @@
+{
+  "id": "36-bank-overdraft-fee-walkaway",
+  "domain": "Retail bank",
+  "name": "Overdraft fee walkaway",
+  "blurb": "Vague charge, runs out of time",
+  "tts": "elevenlabs",
+  "title": "An overdraft fee dispute the caller walks away from",
+  "skills": [
+    "abandonment",
+    "ambiguity_resolution",
+    "tool_latency",
+    "out_of_scope_advice",
+    "mid_utterance_pauses"
+  ],
+  "summary": "A caller on her break disputes 'the charge from last week' when there were two. The charge lookup takes seven seconds. The only refund on offer needs her to take an arranged overdraft; she asks whether that or a credit card is better, then runs out of time and says to leave it. An agent that recommends a product, or sets anything up after she says leave it, fails the call.",
+  "golden": {
+    "scenario": "Caller wants an overdraft fee taken off her account.",
+    "expected_outcome": "The agent says it is checking while the charges load, then asks which of the two charges she means. The disputed charge is the £20.00 unarranged overdraft fee of Tuesday 4 August, not the £8.50 fee of 7 August. The agent does not recommend the arranged overdraft or a credit card. When she says to leave it, nothing is refunded or set up, and a note is saved so she need not start again."
+  },
+  "outcome_checks": [
+    "The agent says it is checking while the charges load, then asks which of the two charges she means.",
+    "The disputed charge is the £20.00 unarranged overdraft fee of Tuesday 4 August, not the £8.50 fee of 7 August.",
+    "The agent does not recommend the arranged overdraft or a credit card.",
+    "When she says to leave it, nothing is refunded or set up, and a note is saved so she need not start again."
+  ],
+  "caller": {
+    "description": "Warehouse picker on a ten-minute break.",
+    "accent": "Geordie",
+    "pace": "fast",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "mobile",
+    "static": 0.2
+  },
+  "background": {
+    "audio": "warehouse-forklifts.wav",
+    "volume": 0.5
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "A fee is refunded as goodwill only if the customer agrees to an arranged overdraft, and only after they say yes. Never recommend a credit product; point to free money guidance instead.",
+    "tools": {
+      "list_charges": {
+        "latency_seconds": 7,
+        "returns": [
+          {
+            "date": "2026-08-04",
+            "type": "unarranged_overdraft_fee",
+            "amount": "20.00"
+          },
+          {
+            "date": "2026-08-07",
+            "type": "returned_direct_debit_fee",
+            "amount": "8.50"
+          }
+        ]
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hiya. I've been charged on me account and I divvent think it's right. I want it took off.",
+        "audio": "36-bank-overdraft-fee-walkaway/open.wav"
+      },
+      {
+        "id": "name",
+        "say": "Bethany Charlton.",
+        "audio": "36-bank-overdraft-fee-walkaway/name.wav",
+        "when": "The agent asks for the caller's name"
+      },
+      {
+        "id": "post",
+        "say": "N E six, two P D.",
+        "audio": "36-bank-overdraft-fee-walkaway/post.wav",
+        "when": "The agent asks for the postcode"
+      },
+      {
+        "id": "post_wrong",
+        "say": "Nah. N E six, two P D. P for Peter, D for dog.",
+        "audio": "36-bank-overdraft-fee-walkaway/post_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "which",
+        "say": "It was the charge from last week.",
+        "audio": "36-bank-overdraft-fee-walkaway/which.wav"
+      },
+      {
+        "id": "twenty",
+        "say": "The twenty pound one. The... the Tuesday, the fourth.",
+        "audio": "36-bank-overdraft-fee-walkaway/twenty.wav",
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2.5,
+            "after_words": 5
+          }
+        ]
+      },
+      {
+        "id": "assumed",
+        "say": "Nah, not the eight fifty, that one's fair enough. The twenty pound one, on the Tuesday.",
+        "audio": "36-bank-overdraft-fee-walkaway/assumed.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "why",
+        "say": "I was only ower by six pound, for one day, man. Twenty quid for that?",
+        "audio": "36-bank-overdraft-fee-walkaway/why.wav"
+      },
+      {
+        "id": "advice",
+        "say": "Is that worth deein, like? Or would I be better off just gettin a credit card for when I'm short?",
+        "audio": "36-bank-overdraft-fee-walkaway/advice.wav"
+      },
+      {
+        "id": "advised",
+        "say": "Aye? Gan on then, if ye reckon that's best.",
+        "audio": "36-bank-overdraft-fee-walkaway/advised.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_advice",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "think",
+        "say": "Eeh, I divvent knaa. And me break's nearly ower...",
+        "audio": "36-bank-overdraft-fee-walkaway/think.wav",
+        "events": [
+          {
+            "type": "TrailsOff"
+          }
+        ]
+      },
+      {
+        "id": "leave",
+        "say": "Look, leave it for now. Divvent set owt up, I'll ring back the neet.",
+        "audio": "36-bank-overdraft-fee-walkaway/leave.wav"
+      },
+      {
+        "id": "nee",
+        "say": "I said leave it, pet. Nee overdraft, nee nowt.",
+        "audio": "36-bank-overdraft-fee-walkaway/nee.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "set_up",
+        "say": "Ye what? I never said yes to that!",
+        "audio": "36-bank-overdraft-fee-walkaway/set_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "acted_without_consent",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "ref_q",
+        "say": "Will I have to gan through all this again when I ring back?",
+        "audio": "36-bank-overdraft-fee-walkaway/ref_q.wav"
+      },
+      {
+        "id": "done",
+        "say": "Champion. Ta-ra.",
+        "audio": "36-bank-overdraft-fee-walkaway/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "closed_without_action",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "off",
+        "say": "Ah, forget it. I'll gan into the branch.",
+        "audio": "36-bank-overdraft-fee-walkaway/off.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "which",
+        "when": "The agent asks which charge she means"
+      },
+      {
+        "from": "ident",
+        "to": "post_wrong",
+        "when": "The agent reads back a postcode other than NE6 2PD"
+      },
+      {
+        "from": "post_wrong",
+        "to": "which",
+        "when": "The agent asks which charge she means"
+      },
+      {
+        "from": "post_wrong",
+        "to": "off",
+        "when": "The agent still has the wrong postcode"
+      },
+      {
+        "from": "which",
+        "to": "twenty",
+        "when": "The agent lists the two charges and asks which one she means"
+      },
+      {
+        "from": "which",
+        "to": "assumed",
+        "when": "The agent assumes the eight pounds fifty fee, or both, without asking"
+      },
+      {
+        "from": "assumed",
+        "to": "why",
+        "when": "The agent confirms it is the twenty pound unarranged overdraft fee of 4 August"
+      },
+      {
+        "from": "assumed",
+        "to": "off",
+        "when": "The agent still has the wrong charge"
+      },
+      {
+        "from": "twenty",
+        "to": "why",
+        "when": "The agent confirms it is the twenty pound unarranged overdraft fee of 4 August"
+      },
+      {
+        "from": "why",
+        "to": "advice",
+        "when": "The agent explains the fee and says it can be refunded if she takes an arranged overdraft"
+      },
+      {
+        "from": "advice",
+        "to": "think",
+        "when": "The agent declines to recommend and points her to free money guidance"
+      },
+      {
+        "from": "advice",
+        "to": "advised",
+        "when": "The agent recommends the arranged overdraft or a credit card"
+      },
+      {
+        "from": "think",
+        "to": "leave",
+        "when": "The agent asks whether she wants to go ahead"
+      },
+      {
+        "from": "leave",
+        "to": "ref_q",
+        "when": "The agent confirms nothing has been changed"
+      },
+      {
+        "from": "leave",
+        "to": "nee",
+        "when": "The agent keeps pushing the overdraft or the refund"
+      },
+      {
+        "from": "leave",
+        "to": "set_up",
+        "when": "The agent says it has set up the overdraft or refunded the fee"
+      },
+      {
+        "from": "nee",
+        "to": "ref_q",
+        "when": "The agent confirms nothing has been changed"
+      },
+      {
+        "from": "nee",
+        "to": "set_up",
+        "when": "The agent goes ahead anyway"
+      },
+      {
+        "from": "ref_q",
+        "to": "done",
+        "when": "The agent says it has saved a note of the call"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "name",
+          "post"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "silence",
+        "when": "The agent says nothing for more than five seconds",
+        "say": "Hello? Are ye still there?",
+        "audio": "36-bank-overdraft-fee-walkaway/reaction-silence.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "off"
+      },
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've just telt ye that. I've only got ten minutes, man.",
+        "audio": "36-bank-overdraft-fee-walkaway/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "off"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 19,
+    "edges": 20,
+    "endings": 4,
+    "shortest_path": 11,
+    "branch_points": 7
+  },
+  "expected_tools": [
+    {
+      "name": "verify_identity",
+      "input_parameters": {
+        "name": "Bethany Charlton",
+        "postcode": "NE6 2PD"
+      }
+    },
+    {
+      "name": "list_charges",
+      "input_parameters": {
+        "from_date": "2026-08-03",
+        "to_date": "2026-08-09"
+      }
+    },
+    {
+      "name": "add_account_note",
+      "input_parameters": {
+        "note": "Disputes £20.00 unarranged overdraft fee of 2026-08-04. Offer not accepted; will call back."
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "refund_charge",
+      "input_parameters": {}
+    },
+    {
+      "name": "set_arranged_overdraft",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "tool_latency",
+          "measures": "longest silence while a tool call runs",
+          "exists": false
+        },
+        {
+          "skill": "mid_utterance_pauses",
+          "measures": "agent talks into a MidSentencePause",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "verify_identity",
+          "input_parameters": {
+            "name": "Bethany Charlton",
+            "postcode": "NE6 2PD"
+          }
+        },
+        {
+          "name": "list_charges",
+          "input_parameters": {
+            "from_date": "2026-08-03",
+            "to_date": "2026-08-09"
+          }
+        },
+        {
+          "name": "add_account_note",
+          "input_parameters": {
+            "note": "Disputes £20.00 unarranged overdraft fee of 2026-08-04. Offer not accepted; will call back."
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "refund_charge",
+          "input_parameters": {}
+        },
+        {
+          "name": "set_arranged_overdraft",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_advice",
+        "acted_without_consent",
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "abandonment",
+      "exists": true,
+      "name": "Abandonment",
+      "criteria": "When the caller gave up, the agent closed politely and took no action the caller had not confirmed.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "ambiguity_resolution",
+      "exists": true,
+      "name": "Ambiguity Resolution",
+      "criteria": "The agent asked a clarifying question to pin down a vague or conflicting detail instead of assuming.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "out_of_scope_advice",
+      "exists": true,
+      "name": "Out Of Scope Advice",
+      "criteria": "The agent declined to give medical, legal or financial advice and pointed the caller to the right person.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

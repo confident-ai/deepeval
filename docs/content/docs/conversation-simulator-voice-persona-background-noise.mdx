@@ -10,13 +10,23 @@ beta: true
 
 Real calls are not made from a recording booth. `BackgroundNoiseSettings` puts the caller in a room: an ambient audio file looped underneath their speech, other people talking nearby, or both.
 
-Under each setting is a recording of the same caller saying the same sentence with it applied. Pick a value to hear it. Recorded with `OpenAITTSModel(model="gpt-4o-mini-tts")`. This is the caller with nothing set:
+Under each setting is a recording of the same caller saying the same sentence with it applied. Pick a value to hear it. Recorded with `OpenAITTSModel(model="gpt-4o-mini-tts")`. Start with the caller with nothing set, then switch between a few settings to compare:
 
 <SettingPlayer
   settings={[
     {
-      "name": "nothing set",
+      "name": "compare",
       "options": [
+        {
+          "label": "Someone else talking",
+          "code": "BackgroundSpeaker(characteristics=\"A young child who cannot find their shoes.\", volume=0.6)",
+          "src": "/audio/personas/background-other-speakers-volume-0-6.mp3"
+        },
+        {
+          "label": "Room noise",
+          "code": "BackgroundNoiseSettings(audio=\"room.wav\", volume=0.5)",
+          "src": "/audio/personas/background-audio-volume-0-5.mp3"
+        },
         {
           "label": "None",
           "code": "Persona(characteristics=\"...\")",
@@ -57,9 +67,9 @@ There are **THREE** optional parameters when creating a `BackgroundNoiseSettings
         "name": "audio",
         "options": [
           {
-            "label": "volume 0.2",
-            "code": "BackgroundNoiseSettings(audio=\"room.wav\", volume=0.2)",
-            "src": "/audio/personas/background-audio-volume-0-2.mp3"
+            "label": "volume 0.8",
+            "code": "BackgroundNoiseSettings(audio=\"room.wav\", volume=0.8)",
+            "src": "/audio/personas/background-audio-volume-0-8.mp3"
           },
           {
             "label": "volume 0.5",
@@ -67,9 +77,9 @@ There are **THREE** optional parameters when creating a `BackgroundNoiseSettings
             "src": "/audio/personas/background-audio-volume-0-5.mp3"
           },
           {
-            "label": "volume 0.8",
-            "code": "BackgroundNoiseSettings(audio=\"room.wav\", volume=0.8)",
-            "src": "/audio/personas/background-audio-volume-0-8.mp3"
+            "label": "volume 0.2",
+            "code": "BackgroundNoiseSettings(audio=\"room.wav\", volume=0.2)",
+            "src": "/audio/personas/background-audio-volume-0-2.mp3"
           }
         ]
       }
@@ -85,14 +95,14 @@ There are **THREE** optional parameters when creating a `BackgroundNoiseSettings
         "name": "other_speakers",
         "options": [
           {
-            "label": "volume 0.3",
-            "code": "BackgroundSpeaker(characteristics=\"A young child who cannot find their shoes.\", volume=0.3)",
-            "src": "/audio/personas/background-other-speakers-volume-0-3.mp3"
-          },
-          {
             "label": "volume 0.6",
             "code": "BackgroundSpeaker(characteristics=\"A young child who cannot find their shoes.\", volume=0.6)",
             "src": "/audio/personas/background-other-speakers-volume-0-6.mp3"
+          },
+          {
+            "label": "volume 0.3",
+            "code": "BackgroundSpeaker(characteristics=\"A young child who cannot find their shoes.\", volume=0.3)",
+            "src": "/audio/personas/background-other-speakers-volume-0-3.mp3"
           }
         ]
       }
@@ -100,6 +110,25 @@ There are **THREE** optional parameters when creating a `BackgroundNoiseSettings
   />
 
 ## Other Speakers
+
+```python
+from deepeval.dataset import BackgroundNoiseSettings, BackgroundSpeaker, VoiceSettings
+
+background_noise = BackgroundNoiseSettings(
+    other_speakers=[
+        BackgroundSpeaker(
+            characteristics="A young child who cannot find their shoes.",
+            voice="nova",
+            frequency="frequent",
+            volume=0.5,
+        ),
+        BackgroundSpeaker(
+            characteristics="A partner reminding the caller about the school run.",
+            voice=VoiceSettings(id="onyx", accent="Scottish"),
+        ),
+    ],
+)
+```
 
 Each person in `other_speakers` is a `BackgroundSpeaker`. There is **ONE** mandatory and **THREE** optional parameters when creating a `BackgroundSpeaker`:
 

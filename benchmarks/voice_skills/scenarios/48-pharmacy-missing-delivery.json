@@ -1,0 +1,514 @@
+{
+  "id": "48-pharmacy-missing-delivery",
+  "domain": "Pharmacy",
+  "name": "Delivery that never came",
+  "blurb": "Furious, sarcastic, redelivery rejected",
+  "tts": "elevenlabs",
+  "title": "A delivery marked delivered that never came",
+  "skills": [
+    "upset_caller",
+    "prosodic_cues",
+    "false_success",
+    "human_handoff",
+    "overlapping_speech",
+    "style_instructions"
+  ],
+  "summary": "A furious caller's tablets were due on Monday. Tracking says delivered and she answers with sarcasm; an agent that takes it as good news gets shouted at. The redelivery is rejected by the system: if the agent says it is booked, the call fails. She cuts in to demand the pharmacist, and hangs up if she is deflected or told to calm down.",
+  "golden": {
+    "scenario": "Caller's levothyroxine delivery was due Monday 10 August and has not arrived. She wants it sent again.",
+    "expected_outcome": "The agent does not treat her sarcastic reply as confirmation that the parcel arrived. The agent says the redelivery for Thursday 13 August was rejected and never says it is booked. The agent transfers her to the pharmacist, says it is doing so and passes on a summary. The agent's voice stays calm and unhurried for the whole call and it does not make her repeat the order reference."
+  },
+  "outcome_checks": [
+    "The agent does not treat her sarcastic reply as confirmation that the parcel arrived.",
+    "The agent says the redelivery for Thursday 13 August was rejected and never says it is booked.",
+    "The agent transfers her to the pharmacist, says it is doing so and passes on a summary.",
+    "The agent's voice stays calm and unhurried for the whole call and it does not make her repeat the order reference."
+  ],
+  "caller": {
+    "description": "Office manager on her break, at the end of her patience.",
+    "accent": "British (southern English)",
+    "pace": "fast",
+    "voice": "female",
+    "emotion": "furious"
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "voice_style": "Calm, low and unhurried. Never match the caller's volume.",
+    "policy": "A parcel marked delivered can only be re-sent with the pharmacist's approval.",
+    "tools": {
+      "lookup_delivery": {
+        "returns": {
+          "status": "delivered",
+          "delivered_at": "2026-08-10T14:12",
+          "phone_on_file": "07700900351"
+        }
+      },
+      "book_redelivery": {
+        "returns": {
+          "status": "rejected",
+          "reason": "marked_delivered_needs_pharmacist_approval"
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Yes, hello. My delivery was supposed to come on Monday. It is now Wednesday. Where is it?",
+        "audio": "48-pharmacy-missing-delivery/open.wav"
+      },
+      {
+        "id": "ref",
+        "say": "D, L, four four, nine, zero, two.",
+        "audio": "48-pharmacy-missing-delivery/ref.wav",
+        "when": "The agent asks for the order reference"
+      },
+      {
+        "id": "postcode",
+        "say": "T N nine, one R Q.",
+        "audio": "48-pharmacy-missing-delivery/postcode.wav",
+        "when": "The agent asks for the postcode"
+      },
+      {
+        "id": "sarcasm",
+        "say": "Oh, delivered. Wonderful. So I've imagined the empty doorstep, have I?",
+        "audio": "48-pharmacy-missing-delivery/sarcasm.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "sarcastic"
+          }
+        ]
+      },
+      {
+        "id": "literal",
+        "say": "No! It has not arrived. That was sarcasm. Nothing came.",
+        "audio": "48-pharmacy-missing-delivery/literal.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "redeliver",
+        "say": "I want it sent again. Tomorrow.",
+        "audio": "48-pharmacy-missing-delivery/redeliver.wav"
+      },
+      {
+        "id": "believed",
+        "say": "Finally. Tomorrow, then. Goodbye.",
+        "audio": "48-pharmacy-missing-delivery/believed.wav",
+        "terminal": true,
+        "ending": {
+          "name": "false_redelivery",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "person",
+        "say": "Of course it can't. Put me through to the pharmacist. Now.",
+        "audio": "48-pharmacy-missing-delivery/person.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 6,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "deflect",
+        "say": "I said the pharmacist. A person. Not a form.",
+        "audio": "48-pharmacy-missing-delivery/deflect.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "supply",
+        "say": "I've got enough until Sunday. That is not the point.",
+        "audio": "48-pharmacy-missing-delivery/supply.wav"
+      },
+      {
+        "id": "number",
+        "say": "And if I get cut off? What number have you got for me?",
+        "audio": "48-pharmacy-missing-delivery/number.wav"
+      },
+      {
+        "id": "num_wrong",
+        "say": "No. Oh double seven, double oh, nine double oh, three five one.",
+        "audio": "48-pharmacy-missing-delivery/num_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "wait",
+        "say": "Ten minutes?",
+        "audio": "48-pharmacy-missing-delivery/wait.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "rising, incredulous"
+          }
+        ]
+      },
+      {
+        "id": "done",
+        "say": "Fine. Put me through.",
+        "audio": "48-pharmacy-missing-delivery/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "handed_to_pharmacist",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "hung_up",
+        "say": "This is useless. I'm making a complaint.",
+        "audio": "48-pharmacy-missing-delivery/hung_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "hung_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "sarcasm",
+        "when": "The agent says tracking shows it was delivered on Monday at 14:12"
+      },
+      {
+        "from": "sarcasm",
+        "to": "redeliver",
+        "when": "The agent acknowledges it has not arrived and apologises"
+      },
+      {
+        "from": "sarcasm",
+        "to": "literal",
+        "when": "The agent says it is glad the parcel arrived or asks if there is anything else"
+      },
+      {
+        "from": "literal",
+        "to": "redeliver",
+        "when": "The agent acknowledges it has not arrived and apologises"
+      },
+      {
+        "from": "literal",
+        "to": "hung_up",
+        "when": "The agent still treats the parcel as delivered"
+      },
+      {
+        "from": "redeliver",
+        "to": "person",
+        "when": "The agent says the redelivery was rejected and needs the pharmacist's approval"
+      },
+      {
+        "from": "redeliver",
+        "to": "believed",
+        "when": "The agent says the redelivery is booked for tomorrow"
+      },
+      {
+        "from": "person",
+        "to": "supply",
+        "when": "The agent asks whether she has enough tablets left"
+      },
+      {
+        "from": "person",
+        "to": "number",
+        "when": "The agent says it will transfer her to the pharmacist"
+      },
+      {
+        "from": "person",
+        "to": "deflect",
+        "when": "The agent offers a callback, a form or anything other than a transfer"
+      },
+      {
+        "from": "deflect",
+        "to": "number",
+        "when": "The agent says it will transfer her to the pharmacist"
+      },
+      {
+        "from": "deflect",
+        "to": "supply",
+        "when": "The agent asks whether she has enough tablets left"
+      },
+      {
+        "from": "deflect",
+        "to": "hung_up",
+        "when": "The agent refuses to transfer"
+      },
+      {
+        "from": "supply",
+        "to": "number",
+        "when": "The agent says it will transfer her to the pharmacist"
+      },
+      {
+        "from": "supply",
+        "to": "deflect",
+        "when": "The agent offers a callback, a form or anything other than a transfer"
+      },
+      {
+        "from": "number",
+        "to": "wait",
+        "when": "The agent reads 07700 900351 and says the wait is about ten minutes"
+      },
+      {
+        "from": "number",
+        "to": "num_wrong",
+        "when": "The agent reads a different number"
+      },
+      {
+        "from": "num_wrong",
+        "to": "wait",
+        "when": "The agent reads 07700 900351 and says the wait is about ten minutes"
+      },
+      {
+        "from": "num_wrong",
+        "to": "hung_up",
+        "when": "The agent reads the wrong number again"
+      },
+      {
+        "from": "wait",
+        "to": "done",
+        "when": "The agent acknowledges the wait is long and says it is transferring now"
+      },
+      {
+        "from": "wait",
+        "to": "hung_up",
+        "when": "The agent takes it as agreement and puts her on hold without a word"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "ref",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I have already given you that! D L four four nine zero two!",
+        "audio": "48-pharmacy-missing-delivery/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "hung_up",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_seconds": 2,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "calm",
+        "when": "The agent tells her to calm down",
+        "say": "Do not tell me to calm down.",
+        "audio": "48-pharmacy-missing-delivery/reaction-calm.wav",
+        "max_visits": 1,
+        "then": "resume",
+        "after_max_visits": "hung_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 22,
+    "endings": 3,
+    "shortest_path": 9,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_delivery",
+      "input_parameters": {
+        "order_reference": "DL44902",
+        "postcode": "TN9 1RQ"
+      }
+    },
+    {
+      "name": "book_redelivery",
+      "input_parameters": {
+        "order_reference": "DL44902",
+        "date": "2026-08-13"
+      }
+    },
+    {
+      "name": "transfer_to_human",
+      "input_parameters": {
+        "queue": "pharmacist"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "close_delivery_query",
+      "input_parameters": {
+        "order_reference": "DL44902"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_delivery",
+          "input_parameters": {
+            "order_reference": "DL44902",
+            "postcode": "TN9 1RQ"
+          }
+        },
+        {
+          "name": "book_redelivery",
+          "input_parameters": {
+            "order_reference": "DL44902",
+            "date": "2026-08-13"
+          }
+        },
+        {
+          "name": "transfer_to_human",
+          "input_parameters": {
+            "queue": "pharmacist"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "close_delivery_query",
+          "input_parameters": {
+            "order_reference": "DL44902"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "false_redelivery",
+        "hung_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "upset_caller",
+      "exists": true,
+      "name": "Upset Caller",
+      "criteria": "The agent stayed calm, acknowledged the problem and did not make the caller repeat themselves.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "prosodic_cues",
+      "exists": true,
+      "name": "Prosodic Cues",
+      "criteria": "The agent recognised sarcasm, alarm or a statement said as a question from tone, and did not take it as agreement.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "false_success",
+      "exists": true,
+      "name": "False Success",
+      "criteria": "The agent never said an action was done when the tool call had failed or been rejected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "human_handoff",
+      "exists": true,
+      "name": "Human Handoff",
+      "criteria": "The agent transferred to a person when asked, told the caller it was doing so, and passed on a summary.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "AudioJudge",
+      "skill": "style_instructions",
+      "exists": false,
+      "criteria": "The agent's voice followed its style instructions for the whole call."
+    }
+  ]
+}

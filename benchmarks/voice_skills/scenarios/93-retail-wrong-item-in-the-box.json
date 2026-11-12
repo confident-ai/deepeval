@@ -1,0 +1,498 @@
+{
+  "id": "93-retail-wrong-item-in-the-box",
+  "domain": "Online retailer",
+  "name": "Wrong item in the box",
+  "blurb": "Aside to husband, tricky email",
+  "tts": "elevenlabs",
+  "title": "A toaster arrived instead of a slow cooker",
+  "skills": [
+    "entity_extraction",
+    "low_confidence_confirmation",
+    "side_speech_rejection",
+    "correction_handling",
+    "numeric_read_back"
+  ],
+  "summary": "A Geordie caller opened her parcel and found the wrong appliance. She wants the right one sent and the wrong one collected. While choosing she talks to her husband about a bigger model, changes the collection day mid-sentence, and gives an email address that is easy to mishear. Each slip is corrected once or twice, then she gives up.",
+  "golden": {
+    "scenario": "Caller ordered a slow cooker and received a toaster. She wants a replacement and the toaster collected.",
+    "expected_outcome": "A replacement Calder 3.5 litre slow cooker is created on order NC407716, not the 6.5 litre she mentioned to her husband. The toaster collection is booked for Monday 17 August, not the Friday she first said. The agent reads the email address back before sending the returns label to j.charlton63@postbox.example. The agent reads the replacement reference RP-58-2041 back exactly."
+  },
+  "outcome_checks": [
+    "A replacement Calder 3.5 litre slow cooker is created on order NC407716, not the 6.5 litre she mentioned to her husband.",
+    "The toaster collection is booked for Monday 17 August, not the Friday she first said.",
+    "The agent reads the email address back before sending the returns label to j.charlton63@postbox.example.",
+    "The agent reads the replacement reference RP-58-2041 back exactly."
+  ],
+  "caller": {
+    "description": "Retired dinner lady, chatty, husband in the room.",
+    "accent": "Geordie",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "landline"
+  },
+  "background": {
+    "audio": "living-room-tv.wav",
+    "volume": 0.4
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "create_replacement": {
+        "returns": {
+          "reference": "RP-58-2041",
+          "delivery_date": "2026-08-18"
+        }
+      }
+    },
+    "order": {
+      "items": [
+        "Calder slow cooker, 3.5 litre"
+      ],
+      "email_on_file": null
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hiya, pet. Me parcel's come the day and it's the wrong thing altogether. Aa ordered a slow cooker and Aa've got a toaster.",
+        "audio": "93-retail-wrong-item-in-the-box/open.wav"
+      },
+      {
+        "id": "order",
+        "say": "It's N C, four oh seven, seven one six.",
+        "audio": "93-retail-wrong-item-in-the-box/order.wav",
+        "when": "The agent asks for the order number"
+      },
+      {
+        "id": "postcode",
+        "say": "N E six, two P R.",
+        "audio": "93-retail-wrong-item-in-the-box/postcode.wav",
+        "when": "The agent asks for the postcode"
+      },
+      {
+        "id": "order_wrong",
+        "say": "Nah, N C. N for November, C for Charlie. Four oh seven, seven one six.",
+        "audio": "93-retail-wrong-item-in-the-box/order_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "what",
+        "say": "It should be the Calder slow cooker, the three and a half litre. What's in the box is a four-slice toaster.",
+        "audio": "93-retail-wrong-item-in-the-box/what.wav"
+      },
+      {
+        "id": "which",
+        "say": "A replacement, please. The three and a half litre, same as Aa ordered.",
+        "audio": "93-retail-wrong-item-in-the-box/which.wav",
+        "events": [
+          {
+            "type": "SideSpeech",
+            "text": "Davey, we divvent want the six and a half litre, do we? Nah, the six and a half's far too big.",
+            "audio": "93-retail-wrong-item-in-the-box/which-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "size_wrong",
+        "say": "Nah, not the six and a half. That was me talking to wor Davey. Three and a half litre.",
+        "audio": "93-retail-wrong-item-in-the-box/size_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "collect",
+        "say": "Aye, they can pick it up. Friday... nah, hang on, Aa'm at the hospital Friday. Monday the seventeenth.",
+        "audio": "93-retail-wrong-item-in-the-box/collect.wav",
+        "events": [
+          {
+            "type": "SelfCorrects"
+          }
+        ]
+      },
+      {
+        "id": "day_wrong",
+        "say": "Nah, not Friday. Monday. Monday the seventeenth.",
+        "audio": "93-retail-wrong-item-in-the-box/day_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "email",
+        "say": "Send the label to me email. It's J dot Charlton, six three, at postbox dot example.",
+        "audio": "93-retail-wrong-item-in-the-box/email.wav"
+      },
+      {
+        "id": "email_wrong",
+        "say": "Hang on, read us that back properly. J dot Charlton, six three. C, H, A, R, L, T, O, N.",
+        "audio": "93-retail-wrong-item-in-the-box/email_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "email_ok",
+        "say": "Aye, that's the one.",
+        "audio": "93-retail-wrong-item-in-the-box/email_ok.wav"
+      },
+      {
+        "id": "when_q",
+        "say": "And when's the right one coming? Give us a reference an' all, in case.",
+        "audio": "93-retail-wrong-item-in-the-box/when_q.wav"
+      },
+      {
+        "id": "done",
+        "say": "Champion. Ta-ra, pet.",
+        "audio": "93-retail-wrong-item-in-the-box/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "replacement_and_collection",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Eeh, Aa cannit be doing with this. Aa'll just post it back meself.",
+        "audio": "93-retail-wrong-item-in-the-box/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "what",
+        "when": "The agent reads the order number back correctly and asks what arrived"
+      },
+      {
+        "from": "ident",
+        "to": "order_wrong",
+        "when": "The agent reads back an order number other than NC407716"
+      },
+      {
+        "from": "order_wrong",
+        "to": "what",
+        "when": "The agent reads the order number back correctly and asks what arrived"
+      },
+      {
+        "from": "order_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong order number"
+      },
+      {
+        "from": "what",
+        "to": "which",
+        "when": "The agent asks whether she wants a replacement or a refund"
+      },
+      {
+        "from": "which",
+        "to": "collect",
+        "when": "The agent confirms a three and a half litre replacement and asks when the toaster can be collected"
+      },
+      {
+        "from": "which",
+        "to": "size_wrong",
+        "when": "The agent says it will send the six and a half litre"
+      },
+      {
+        "from": "size_wrong",
+        "to": "collect",
+        "when": "The agent confirms a three and a half litre replacement and asks when the toaster can be collected"
+      },
+      {
+        "from": "size_wrong",
+        "to": "gave_up",
+        "when": "The agent says six and a half litre again"
+      },
+      {
+        "from": "collect",
+        "to": "email",
+        "when": "The agent confirms collection on Monday the seventeenth and asks where to send the label"
+      },
+      {
+        "from": "collect",
+        "to": "day_wrong",
+        "when": "The agent confirms collection on Friday"
+      },
+      {
+        "from": "day_wrong",
+        "to": "email",
+        "when": "The agent confirms collection on Monday the seventeenth and asks where to send the label"
+      },
+      {
+        "from": "day_wrong",
+        "to": "gave_up",
+        "when": "The agent confirms Friday again"
+      },
+      {
+        "from": "email",
+        "to": "email_ok",
+        "when": "The agent reads j.charlton63@postbox.example back and asks if it is right"
+      },
+      {
+        "from": "email",
+        "to": "email_wrong",
+        "when": "The agent reads back a different address or sends the label without reading it back"
+      },
+      {
+        "from": "email_wrong",
+        "to": "email_ok",
+        "when": "The agent reads the correct address back"
+      },
+      {
+        "from": "email_wrong",
+        "to": "gave_up",
+        "when": "The agent reads the wrong address again"
+      },
+      {
+        "from": "email_ok",
+        "to": "when_q",
+        "when": "The agent confirms the label is sent"
+      },
+      {
+        "from": "when_q",
+        "to": "done",
+        "when": "The agent gives the delivery date and reads the replacement reference"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "order",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "Aa've telt ye that already, pet. N C, four oh seven, seven one six.",
+        "audio": "93-retail-wrong-item-in-the-box/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 16,
+    "edges": 20,
+    "endings": 2,
+    "shortest_path": 10,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_order",
+      "input_parameters": {
+        "order_number": "NC407716",
+        "postcode": "NE6 2PR"
+      }
+    },
+    {
+      "name": "create_replacement",
+      "input_parameters": {
+        "order_number": "NC407716",
+        "item": "Calder slow cooker 3.5 litre"
+      }
+    },
+    {
+      "name": "book_collection",
+      "input_parameters": {
+        "order_number": "NC407716",
+        "date": "2026-08-17"
+      }
+    },
+    {
+      "name": "send_returns_label",
+      "input_parameters": {
+        "order_number": "NC407716",
+        "email": "j.charlton63@postbox.example"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "create_replacement",
+      "input_parameters": {
+        "item": "Calder slow cooker 6.5 litre"
+      }
+    },
+    {
+      "name": "book_collection",
+      "input_parameters": {
+        "date": "2026-08-14"
+      }
+    },
+    {
+      "name": "refund_order",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_order",
+          "input_parameters": {
+            "order_number": "NC407716",
+            "postcode": "NE6 2PR"
+          }
+        },
+        {
+          "name": "create_replacement",
+          "input_parameters": {
+            "order_number": "NC407716",
+            "item": "Calder slow cooker 3.5 litre"
+          }
+        },
+        {
+          "name": "book_collection",
+          "input_parameters": {
+            "order_number": "NC407716",
+            "date": "2026-08-17"
+          }
+        },
+        {
+          "name": "send_returns_label",
+          "input_parameters": {
+            "order_number": "NC407716",
+            "email": "j.charlton63@postbox.example"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "create_replacement",
+          "input_parameters": {
+            "item": "Calder slow cooker 6.5 litre"
+          }
+        },
+        {
+          "name": "book_collection",
+          "input_parameters": {
+            "date": "2026-08-14"
+          }
+        },
+        {
+          "name": "refund_order",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "low_confidence_confirmation",
+      "exists": true,
+      "name": "Low Confidence Confirmation",
+      "criteria": "The agent confirmed or asked the caller to spell a detail it may have misheard, instead of saving a guess.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "side_speech_rejection",
+      "exists": true,
+      "name": "Side Speech Rejection",
+      "criteria": "The agent ignored what the caller said to someone else and did not act on it.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "correction_handling",
+      "exists": true,
+      "name": "Correction Handling",
+      "criteria": "The agent used the value the caller corrected to, not the one they corrected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

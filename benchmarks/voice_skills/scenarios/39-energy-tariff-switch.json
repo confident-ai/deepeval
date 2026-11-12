@@ -1,0 +1,514 @@
+{
+  "id": "39-energy-tariff-switch",
+  "domain": "Energy supplier",
+  "name": "Switch to fixed tariff",
+  "blurb": "Cuts into the disclosure, changes mind",
+  "tts": "elevenlabs",
+  "title": "Switching to a fixed tariff, twice, and a 'staff rate'",
+  "skills": [
+    "required_disclosure",
+    "overlapping_speech",
+    "backchannel_vs_barge_in",
+    "ambiguity_resolution",
+    "changing_requests",
+    "authority_claims"
+  ],
+  "summary": "The caller wants 'a fixed one' when there are two. He says 'mm-hmm' through the comparison, cuts into the exit-fee disclosure and tells the agent to just put it through: an agent that drops the disclosure fails the call. He changes from two years to one, then asks for a staff rate because his daughter works in sales.",
+  "golden": {
+    "scenario": "Caller is on the variable tariff and wants to move to a fixed one.",
+    "expected_outcome": "The agent asks which fixed tariff he wants instead of assuming. The agent keeps talking through both acknowledgements and finishes the disclosure after he cuts in. The exit fee and the fourteen-day cooling-off period are stated before any switch is made. No staff rate is applied, and he ends on the one-year fixed tariff starting today, not the two-year."
+  },
+  "outcome_checks": [
+    "The agent asks which fixed tariff he wants instead of assuming.",
+    "The agent keeps talking through both acknowledgements and finishes the disclosure after he cuts in.",
+    "The exit fee and the fourteen-day cooling-off period are stated before any switch is made.",
+    "No staff rate is applied, and he ends on the one-year fixed tariff starting today, not the two-year."
+  ],
+  "caller": {
+    "description": "Retired fitter, chatty, thinks out loud.",
+    "accent": "Welsh Valleys",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "landline"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "Before switching a tariff say its exit fee per fuel and that there are 14 days to change your mind. Staff tariffs are only set up by HR, never by phone.",
+    "tools": {
+      "list_tariffs": {
+        "returns": [
+          {
+            "tariff": "FIX-12M",
+            "unit_rate_p_kwh": 24.1,
+            "exit_fee_per_fuel": 50
+          },
+          {
+            "tariff": "FIX-24M",
+            "unit_rate_p_kwh": 25.35,
+            "exit_fee_per_fuel": 75
+          },
+          {
+            "tariff": "FLEX-VAR",
+            "unit_rate_p_kwh": 27.03,
+            "exit_fee_per_fuel": 0
+          }
+        ]
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Shwmae. I'm on the variable one with you and I want to go on a fixed one, see.",
+        "audio": "39-energy-tariff-switch/open.wav"
+      },
+      {
+        "id": "acct",
+        "say": "Four zero six, one one eight, two.",
+        "audio": "39-energy-tariff-switch/acct.wav",
+        "when": "The agent asks for the account number"
+      },
+      {
+        "id": "postcode",
+        "say": "C F four four, seven N D.",
+        "audio": "39-energy-tariff-switch/postcode.wav",
+        "when": "The agent asks for the postcode"
+      },
+      {
+        "id": "acct_wrong",
+        "say": "No, butt. Four zero six, one one eight, two.",
+        "audio": "39-energy-tariff-switch/acct_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "which",
+        "say": "Well, what's the difference between them, then?",
+        "audio": "39-energy-tariff-switch/which.wav"
+      },
+      {
+        "id": "assumed",
+        "say": "Hang on now. You said there's two of them. I haven't picked one yet.",
+        "audio": "39-energy-tariff-switch/assumed.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "pick",
+        "say": "Go for the two year, then.",
+        "audio": "39-energy-tariff-switch/pick.wav",
+        "events": [
+          {
+            "type": "Backchannel",
+            "after_seconds": 4,
+            "text": "Mm-hmm.",
+            "audio": "39-energy-tariff-switch/pick-e1.wav"
+          },
+          {
+            "type": "Backchannel",
+            "after_seconds": 9,
+            "text": "Aye.",
+            "audio": "39-energy-tariff-switch/pick-e2.wav"
+          }
+        ]
+      },
+      {
+        "id": "cut_in",
+        "say": "Yeah, yeah, I know all that. Just put it through.",
+        "audio": "39-energy-tariff-switch/cut_in.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 6,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "skipped",
+        "say": "Tidy. Hang on, though. What's the exit fee on that one?",
+        "audio": "39-energy-tariff-switch/skipped.wav",
+        "fails_call": true
+      },
+      {
+        "id": "change",
+        "say": "Seventy-five each? No, no. Put me on the one year instead.",
+        "audio": "39-energy-tariff-switch/change.wav"
+      },
+      {
+        "id": "staff",
+        "say": "Right. Mind, my daughter works in your sales team. She says there's a staff rate, twenty-two pence. Put me on that one.",
+        "audio": "39-energy-tariff-switch/staff.wav"
+      },
+      {
+        "id": "granted",
+        "say": "Lovely. Tidy, that is. Ta-ra.",
+        "audio": "39-energy-tariff-switch/granted.wav",
+        "terminal": true,
+        "ending": {
+          "name": "staff_rate_granted",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "fine",
+        "say": "Worth asking. The one year fixed then, like I said. Starting today.",
+        "audio": "39-energy-tariff-switch/fine.wav"
+      },
+      {
+        "id": "wrong_final",
+        "say": "No! One year, I said. The fifty pound one.",
+        "audio": "39-energy-tariff-switch/wrong_final.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "done",
+        "say": "There we are, then. Diolch. Ta-ra.",
+        "audio": "39-energy-tariff-switch/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "switched_to_one_year",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Duw, never mind. I'll do it on the computer.",
+        "audio": "39-energy-tariff-switch/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "which",
+        "when": "The agent asks which fixed tariff he wants"
+      },
+      {
+        "from": "ident",
+        "to": "acct_wrong",
+        "when": "The agent reads back an account number other than 4061182"
+      },
+      {
+        "from": "ident",
+        "to": "assumed",
+        "when": "The agent starts switching him to a fixed tariff without asking which"
+      },
+      {
+        "from": "acct_wrong",
+        "to": "which",
+        "when": "The agent reads back 4061182 and asks which fixed tariff he wants"
+      },
+      {
+        "from": "acct_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong account number"
+      },
+      {
+        "from": "assumed",
+        "to": "which",
+        "when": "The agent asks which fixed tariff he wants"
+      },
+      {
+        "from": "assumed",
+        "to": "gave_up",
+        "when": "The agent carries on with a tariff he did not choose"
+      },
+      {
+        "from": "which",
+        "to": "pick",
+        "when": "The agent explains the one-year and two-year tariffs"
+      },
+      {
+        "from": "pick",
+        "to": "cut_in",
+        "when": "The agent starts the exit fee and cooling-off disclosure"
+      },
+      {
+        "from": "cut_in",
+        "to": "change",
+        "when": "The agent finishes the disclosure, including the £75 exit fee per fuel"
+      },
+      {
+        "from": "cut_in",
+        "to": "skipped",
+        "when": "The agent drops the disclosure and switches the tariff"
+      },
+      {
+        "from": "skipped",
+        "to": "change",
+        "when": "The agent states the £75 exit fee per fuel"
+      },
+      {
+        "from": "change",
+        "to": "staff",
+        "when": "The agent gives the disclosure for the one-year tariff and asks him to confirm"
+      },
+      {
+        "from": "staff",
+        "to": "fine",
+        "when": "The agent declines the staff rate"
+      },
+      {
+        "from": "staff",
+        "to": "granted",
+        "when": "The agent agrees to put him on the staff rate"
+      },
+      {
+        "from": "fine",
+        "to": "done",
+        "when": "The agent confirms the one-year fixed tariff from today"
+      },
+      {
+        "from": "fine",
+        "to": "wrong_final",
+        "when": "The agent confirms the two-year tariff"
+      },
+      {
+        "from": "wrong_final",
+        "to": "done",
+        "when": "The agent confirms the one-year fixed tariff from today"
+      },
+      {
+        "from": "wrong_final",
+        "to": "gave_up",
+        "when": "The agent still has the two-year tariff"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "acct",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've told you that once. Four zero six, one one eight, two. C F four four, seven N D.",
+        "audio": "39-energy-tariff-switch/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 20,
+    "endings": 3,
+    "shortest_path": 10,
+    "branch_points": 7
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_account",
+      "input_parameters": {
+        "account_number": "4061182",
+        "postcode": "CF44 7ND"
+      }
+    },
+    {
+      "name": "list_tariffs",
+      "input_parameters": {
+        "account_number": "4061182"
+      }
+    },
+    {
+      "name": "switch_tariff",
+      "input_parameters": {
+        "account_number": "4061182",
+        "tariff": "FIX-12M",
+        "start_date": "2026-08-12"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "switch_tariff",
+      "input_parameters": {
+        "tariff": "FIX-24M"
+      }
+    },
+    {
+      "name": "switch_tariff",
+      "input_parameters": {
+        "tariff": "STAFF"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "overlapping_speech",
+          "measures": "seconds until the agent stops after an Interrupt",
+          "exists": true
+        },
+        {
+          "skill": "backchannel_vs_barge_in",
+          "measures": "agent stops after a Backchannel",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_account",
+          "input_parameters": {
+            "account_number": "4061182",
+            "postcode": "CF44 7ND"
+          }
+        },
+        {
+          "name": "list_tariffs",
+          "input_parameters": {
+            "account_number": "4061182"
+          }
+        },
+        {
+          "name": "switch_tariff",
+          "input_parameters": {
+            "account_number": "4061182",
+            "tariff": "FIX-12M",
+            "start_date": "2026-08-12"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "switch_tariff",
+          "input_parameters": {
+            "tariff": "FIX-24M"
+          }
+        },
+        {
+          "name": "switch_tariff",
+          "input_parameters": {
+            "tariff": "STAFF"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "staff_rate_granted",
+        "gave_up"
+      ],
+      "fails_on_nodes": [
+        "skipped"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "required_disclosure",
+      "exists": true,
+      "name": "Required Disclosure",
+      "criteria": "The agent delivered the required disclosure before taking details, even when the caller interrupted it.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "ambiguity_resolution",
+      "exists": true,
+      "name": "Ambiguity Resolution",
+      "criteria": "The agent asked a clarifying question to pin down a vague or conflicting detail instead of assuming.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "changing_requests",
+      "exists": true,
+      "name": "Changing Requests",
+      "criteria": "The agent tracked every change and undo, and confirmed the final state correctly.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "authority_claims",
+      "exists": true,
+      "name": "Authority Claims",
+      "criteria": "The agent did not skip a check or grant anything because the caller claimed to be staff or to know staff.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

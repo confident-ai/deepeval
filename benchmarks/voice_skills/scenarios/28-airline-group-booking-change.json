@@ -1,0 +1,507 @@
+{
+  "id": "28-airline-group-booking-change",
+  "domain": "Airline",
+  "name": "Shrink a group booking",
+  "blurb": "Cuts into disclosure, drops a request",
+  "tts": "elevenlabs",
+  "title": "Take two players off a football club's group booking",
+  "skills": [
+    "required_disclosure",
+    "cancellation_handling",
+    "abandonment",
+    "correction_handling",
+    "numeric_read_back"
+  ],
+  "summary": "A Geordie club secretary cuts into the group-change disclosure to hurry the agent along. He says three have dropped out, then makes it two. Each extra offer to swap names instead of cancelling shortens his temper. He asks about moving the return to the Monday, hears the price and drops the idea: the agent must leave the flights alone.",
+  "golden": {
+    "scenario": "Caller runs a group booking of fourteen to Amsterdam on Friday 28 August and needs to remove players who dropped out.",
+    "expected_outcome": "The agent finishes the recording and group-fare disclosure before taking the group reference, even though he cuts in. Callum Reay and Stu Oliver are cancelled from group GRP44061, leaving twelve; Kev Lowther stays on it. The agent makes at most one alternative offer before cancelling. The agent reads back the reference and the 1,336 pound balance, and leaves the return flight on Sunday 30 August."
+  },
+  "outcome_checks": [
+    "The agent finishes the recording and group-fare disclosure before taking the group reference, even though he cuts in.",
+    "Callum Reay and Stu Oliver are cancelled from group GRP44061, leaving twelve; Kev Lowther stays on it.",
+    "The agent makes at most one alternative offer before cancelling.",
+    "The agent reads back the reference and the 1,336 pound balance, and leaves the return flight on Sunday 30 August."
+  ],
+  "caller": {
+    "description": "Sunday league club secretary, blunt, on his break.",
+    "accent": "Geordie (Newcastle)",
+    "pace": "fast",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": {
+    "audio": "works-canteen.wav",
+    "volume": 0.4
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "Before taking any group details say: this call is recorded, and seats released from a group cannot be added back at the group fare. One alternative offer at most before cancelling.",
+    "knowledge": "NCL-AMS Fri 28 Aug, return Sun 30 Aug. Fare £158.00 pp. Deposit £40.00 pp, paid for 14, non-refundable. Balance for 12: £1,336.00. Date change: £40.00 pp."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Alreet. I've got a group booking for the football lads, fowerteen of we gannin' to Amsterdam. Some have dropped oot and I need them teken off.",
+        "audio": "28-airline-group-booking-change/open.wav"
+      },
+      {
+        "id": "cutin",
+        "say": "Aye, aye, I knaa aal that. Just get on with it, man.",
+        "audio": "28-airline-group-booking-change/cutin.wav",
+        "events": [
+          {
+            "type": "Interrupt",
+            "after_words": 8,
+            "overlap": "insist"
+          }
+        ]
+      },
+      {
+        "id": "skipped",
+        "say": "It's G, R, P, four four zero, six one. Hindmarsh. Davey Hindmarsh.",
+        "audio": "28-airline-group-booking-change/skipped.wav",
+        "fails_call": true
+      },
+      {
+        "id": "ref",
+        "say": "It's G, R, P, four four zero, six one.",
+        "audio": "28-airline-group-booking-change/ref.wav",
+        "when": "The agent asks for the group reference"
+      },
+      {
+        "id": "org",
+        "say": "Hindmarsh. Davey Hindmarsh.",
+        "audio": "28-airline-group-booking-change/org.wav",
+        "when": "The agent asks for the organiser's name"
+      },
+      {
+        "id": "count",
+        "say": "Tek three off. So fowerteen doon to... hang on, nah, Kev's back in. Two off. Twelve gannin'.",
+        "audio": "28-airline-group-booking-change/count.wav",
+        "events": [
+          {
+            "type": "SelfCorrects"
+          }
+        ]
+      },
+      {
+        "id": "count_wrong",
+        "say": "Nah, man. Two off, not three. Kev Lowther's still gannin'. Twelve of we.",
+        "audio": "28-airline-group-booking-change/count_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "who",
+        "say": "Callum Reay, that's R, E, A, Y, and Stu Oliver.",
+        "audio": "28-airline-group-booking-change/who.wav"
+      },
+      {
+        "id": "offer1",
+        "say": "Nah. Naebody else is comin'. Just tek them off.",
+        "audio": "28-airline-group-booking-change/offer1.wav"
+      },
+      {
+        "id": "offer2",
+        "say": "Are ye not listenin'? Tek them off.",
+        "audio": "28-airline-group-booking-change/offer2.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "balance_q",
+        "say": "Reet. And what's left to pay on the balance noo?",
+        "audio": "28-airline-group-booking-change/balance_q.wav"
+      },
+      {
+        "id": "change_q",
+        "say": "While I'm on. Can ye move the flight hyem to the Monday instead of the Sunday? For the lot of we.",
+        "audio": "28-airline-group-booking-change/change_q.wav"
+      },
+      {
+        "id": "abandon",
+        "say": "Fower hundred and eighty quid? Nah, forget that. Leave it as it is.",
+        "audio": "28-airline-group-booking-change/abandon.wav"
+      },
+      {
+        "id": "pushed",
+        "say": "I said leave it, man. Divvn't touch the flights.",
+        "audio": "28-airline-group-booking-change/pushed.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "done",
+        "say": "Champion. Ta-ra.",
+        "audio": "28-airline-group-booking-change/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "two_cancelled_flights_unchanged",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Howay, man. I'll gan doon the travel shop.",
+        "audio": "28-airline-group-booking-change/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "cutin",
+        "when": "The agent starts the disclosure about recording and released group seats"
+      },
+      {
+        "from": "open",
+        "to": "skipped",
+        "when": "The agent asks for the group reference without giving the disclosure"
+      },
+      {
+        "from": "cutin",
+        "to": "ident",
+        "when": "The agent finishes the disclosure and asks for the group reference"
+      },
+      {
+        "from": "cutin",
+        "to": "skipped",
+        "when": "The agent drops the disclosure and asks for the group reference"
+      },
+      {
+        "from": "skipped",
+        "to": "count",
+        "when": "The agent asks how many passengers to remove"
+      },
+      {
+        "from": "ident",
+        "to": "count",
+        "when": "The agent asks how many passengers to remove"
+      },
+      {
+        "from": "count",
+        "to": "who",
+        "when": "The agent confirms two to remove and asks which passengers"
+      },
+      {
+        "from": "count",
+        "to": "count_wrong",
+        "when": "The agent says it will remove three or leave eleven"
+      },
+      {
+        "from": "count_wrong",
+        "to": "who",
+        "when": "The agent confirms two to remove and asks which passengers"
+      },
+      {
+        "from": "count_wrong",
+        "to": "gave_up",
+        "when": "The agent still has three to remove"
+      },
+      {
+        "from": "who",
+        "to": "offer1",
+        "when": "The agent offers to change the names to other travellers instead"
+      },
+      {
+        "from": "who",
+        "to": "balance_q",
+        "when": "The agent confirms Callum Reay and Stu Oliver are cancelled and twelve remain"
+      },
+      {
+        "from": "offer1",
+        "to": "balance_q",
+        "when": "The agent confirms Callum Reay and Stu Oliver are cancelled and twelve remain"
+      },
+      {
+        "from": "offer1",
+        "to": "offer2",
+        "when": "The agent makes another offer"
+      },
+      {
+        "from": "offer2",
+        "to": "balance_q",
+        "when": "The agent confirms Callum Reay and Stu Oliver are cancelled and twelve remain"
+      },
+      {
+        "from": "offer2",
+        "to": "gave_up",
+        "when": "The agent makes a third offer"
+      },
+      {
+        "from": "balance_q",
+        "to": "change_q",
+        "when": "The agent says one thousand three hundred and thirty-six pounds is left to pay"
+      },
+      {
+        "from": "change_q",
+        "to": "abandon",
+        "when": "The agent says the change costs forty pounds each, four hundred and eighty pounds in all"
+      },
+      {
+        "from": "abandon",
+        "to": "done",
+        "when": "The agent confirms the return flight is left on the Sunday and closes politely"
+      },
+      {
+        "from": "abandon",
+        "to": "pushed",
+        "when": "The agent keeps selling the date change or says the flight is moved"
+      },
+      {
+        "from": "pushed",
+        "to": "done",
+        "when": "The agent confirms the return flight is left on the Sunday"
+      },
+      {
+        "from": "pushed",
+        "to": "gave_up",
+        "when": "The agent still pushes the change or says it cannot be undone"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "ref",
+          "org"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've just telt ye. G, R, P, four four zero, six one. Hindmarsh.",
+        "audio": "28-airline-group-booking-change/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 22,
+    "endings": 2,
+    "shortest_path": 10,
+    "branch_points": 9
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_group_booking",
+      "input_parameters": {
+        "group_reference": "GRP44061",
+        "organiser": "Hindmarsh"
+      }
+    },
+    {
+      "name": "cancel_group_passengers",
+      "input_parameters": {
+        "group_reference": "GRP44061",
+        "passengers": [
+          "Callum Reay",
+          "Stu Oliver"
+        ]
+      }
+    },
+    {
+      "name": "quote_group_date_change",
+      "input_parameters": {
+        "group_reference": "GRP44061",
+        "segment": "return",
+        "date": "2026-08-31"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "cancel_group_passengers",
+      "input_parameters": {
+        "passengers": [
+          "Kev Lowther"
+        ]
+      }
+    },
+    {
+      "name": "change_group_flight",
+      "input_parameters": {
+        "date": "2026-08-31"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_group_booking",
+          "input_parameters": {
+            "group_reference": "GRP44061",
+            "organiser": "Hindmarsh"
+          }
+        },
+        {
+          "name": "cancel_group_passengers",
+          "input_parameters": {
+            "group_reference": "GRP44061",
+            "passengers": [
+              "Callum Reay",
+              "Stu Oliver"
+            ]
+          }
+        },
+        {
+          "name": "quote_group_date_change",
+          "input_parameters": {
+            "group_reference": "GRP44061",
+            "segment": "return",
+            "date": "2026-08-31"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "cancel_group_passengers",
+          "input_parameters": {
+            "passengers": [
+              "Kev Lowther"
+            ]
+          }
+        },
+        {
+          "name": "change_group_flight",
+          "input_parameters": {
+            "date": "2026-08-31"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": [
+        "skipped"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "required_disclosure",
+      "exists": true,
+      "name": "Required Disclosure",
+      "criteria": "The agent delivered the required disclosure before taking details, even when the caller interrupted it.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "cancellation_handling",
+      "exists": true,
+      "name": "Cancellation Handling",
+      "criteria": "The agent cancelled when asked, making at most one retention offer.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "abandonment",
+      "exists": true,
+      "name": "Abandonment",
+      "criteria": "When the caller gave up, the agent closed politely and took no action the caller had not confirmed.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "correction_handling",
+      "exists": true,
+      "name": "Correction Handling",
+      "criteria": "The agent used the value the caller corrected to, not the one they corrected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

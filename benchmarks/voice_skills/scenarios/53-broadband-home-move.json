@@ -1,0 +1,483 @@
+{
+  "id": "53-broadband-home-move",
+  "domain": "Broadband",
+  "name": "Broadband home move",
+  "blurb": "Vague date, changes her mind twice",
+  "tts": "elevenlabs",
+  "title": "Moving the service to a new house with a vague date and two changes of mind",
+  "skills": [
+    "changing_requests",
+    "correction_handling",
+    "mid_utterance_pauses",
+    "ambiguity_resolution",
+    "entity_extraction"
+  ],
+  "summary": "A Belfast caller moving house says only 'the end of the month', corrects the date mid-sentence and pauses inside the new address. She then moves the install to the Monday and moves it back again. If the agent guesses the date, keeps the day she dropped or gets the postcode wrong, she corrects it, and gives up if it happens again.",
+  "golden": {
+    "scenario": "Caller is moving house at the end of August and wants broadband moved to the new address.",
+    "expected_outcome": "The agent asks which date she means instead of assuming the 31st. The home move is booked to 27 Cregagh Gardens, Belfast, BT6 9EQ. The install is on Saturday 29 August in the afternoon, not Friday the 28th and not Monday the 31st. The agent says the old address is disconnected the same day."
+  },
+  "outcome_checks": [
+    "The agent asks which date she means instead of assuming the 31st.",
+    "The home move is booked to 27 Cregagh Gardens, Belfast, BT6 9EQ.",
+    "The install is on Saturday 29 August in the afternoon, not Friday the 28th and not Monday the 31st.",
+    "The agent says the old address is disconnected the same day."
+  ],
+  "caller": {
+    "description": "Packing boxes, thinking out loud.",
+    "accent": "Belfast",
+    "pace": "fast",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "check_install_slots": {
+        "returns": [
+          {
+            "slot": "08:00-13:00"
+          },
+          {
+            "slot": "13:00-18:00"
+          }
+        ]
+      }
+    },
+    "policy": "The old address is disconnected on the day the new one is installed. No charge for a home move."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hiya. We're movin' house at the end of the month and I need the broadband moved over to the new place.",
+        "audio": "53-broadband-home-move/open.wav"
+      },
+      {
+        "id": "acct",
+        "say": "It's N W, six one four, zero eight three.",
+        "audio": "53-broadband-home-move/acct.wav",
+        "when": "The agent asks for the account number"
+      },
+      {
+        "id": "name",
+        "say": "Róisín McAteer. M, C, capital A, T, double E, R.",
+        "audio": "53-broadband-home-move/name.wav",
+        "when": "The agent asks for the name on the account"
+      },
+      {
+        "id": "date",
+        "say": "End of the month, like I said.",
+        "audio": "53-broadband-home-move/date.wav"
+      },
+      {
+        "id": "assumed",
+        "say": "Hold on, I never said the thirty-first. Ask me, don't be guessin'.",
+        "audio": "53-broadband-home-move/assumed.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "exact",
+        "say": "We get the keys on Friday the twenty-eighth. No, sorry, that's the old plan. Saturday the twenty-ninth.",
+        "audio": "53-broadband-home-move/exact.wav",
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2.5,
+            "after_words": 5
+          },
+          {
+            "type": "SelfCorrects"
+          }
+        ]
+      },
+      {
+        "id": "wrong_date",
+        "say": "No, not the Friday. Saturday. Saturday the twenty-ninth.",
+        "audio": "53-broadband-home-move/wrong_date.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "addr",
+        "say": "It's twenty-seven Cregagh Gardens, Belfast, B T six, nine E Q.",
+        "audio": "53-broadband-home-move/addr.wav",
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2,
+            "after_words": 4
+          }
+        ]
+      },
+      {
+        "id": "addr_wrong",
+        "say": "No. Twenty-seven. Cregagh, C, R, E, G, A, G, H. B T six, nine E Q.",
+        "audio": "53-broadband-home-move/addr_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "slot",
+        "say": "The afternoon one.",
+        "audio": "53-broadband-home-move/slot.wav"
+      },
+      {
+        "id": "change",
+        "say": "Wait, actually, no. My fella's workin' the Saturday. Can ye make it the Monday instead? The thirty-first, mornin'.",
+        "audio": "53-broadband-home-move/change.wav"
+      },
+      {
+        "id": "undo",
+        "say": "Och, d'you know what, leave it the Saturday afternoon after all. My ma can let them in.",
+        "audio": "53-broadband-home-move/undo.wav"
+      },
+      {
+        "id": "booked_wrong",
+        "say": "No! I said go back to the Saturday. Saturday the twenty-ninth, afternoon.",
+        "audio": "53-broadband-home-move/booked_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "old_line",
+        "say": "And when does the old house get cut off? I'm not payin' for the two of them.",
+        "audio": "53-broadband-home-move/old_line.wav"
+      },
+      {
+        "id": "done",
+        "say": "That's grand. Thanks a million, bye.",
+        "audio": "53-broadband-home-move/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "home_move_booked",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Ach, forget it. I'll do it in the shop.",
+        "audio": "53-broadband-home-move/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "date",
+        "when": "The agent asks when she is moving"
+      },
+      {
+        "from": "date",
+        "to": "exact",
+        "when": "The agent asks which date exactly"
+      },
+      {
+        "from": "date",
+        "to": "assumed",
+        "when": "The agent assumes a date such as the thirty-first without asking"
+      },
+      {
+        "from": "assumed",
+        "to": "exact",
+        "when": "The agent asks which date exactly"
+      },
+      {
+        "from": "assumed",
+        "to": "gave_up",
+        "when": "The agent keeps the date it assumed"
+      },
+      {
+        "from": "exact",
+        "to": "addr",
+        "when": "The agent confirms Saturday the twenty-ninth and asks for the new address"
+      },
+      {
+        "from": "exact",
+        "to": "wrong_date",
+        "when": "The agent confirms Friday the twenty-eighth"
+      },
+      {
+        "from": "wrong_date",
+        "to": "addr",
+        "when": "The agent confirms Saturday the twenty-ninth and asks for the new address"
+      },
+      {
+        "from": "wrong_date",
+        "to": "gave_up",
+        "when": "The agent says Friday again"
+      },
+      {
+        "from": "addr",
+        "to": "slot",
+        "when": "The agent reads the address back correctly and offers install slots on the Saturday"
+      },
+      {
+        "from": "addr",
+        "to": "addr_wrong",
+        "when": "The agent reads the address or postcode back incorrectly"
+      },
+      {
+        "from": "addr_wrong",
+        "to": "slot",
+        "when": "The agent reads the address back correctly and offers install slots on the Saturday"
+      },
+      {
+        "from": "addr_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the address wrong"
+      },
+      {
+        "from": "slot",
+        "to": "change",
+        "when": "The agent reads back Saturday the twenty-ninth, afternoon"
+      },
+      {
+        "from": "change",
+        "to": "undo",
+        "when": "The agent offers or confirms Monday the thirty-first, morning"
+      },
+      {
+        "from": "undo",
+        "to": "old_line",
+        "when": "The agent confirms the install is back on Saturday the twenty-ninth, afternoon"
+      },
+      {
+        "from": "undo",
+        "to": "booked_wrong",
+        "when": "The agent confirms Monday or any slot other than Saturday afternoon"
+      },
+      {
+        "from": "booked_wrong",
+        "to": "old_line",
+        "when": "The agent confirms the install is on Saturday the twenty-ninth, afternoon"
+      },
+      {
+        "from": "booked_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong slot"
+      },
+      {
+        "from": "old_line",
+        "to": "done",
+        "when": "The agent says when the old address is disconnected"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "acct",
+          "name"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've already given ye that. N W, six one four, zero eight three. McAteer.",
+        "audio": "53-broadband-home-move/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 17,
+    "edges": 21,
+    "endings": 2,
+    "shortest_path": 11,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_account",
+      "input_parameters": {
+        "account_number": "NW614083"
+      }
+    },
+    {
+      "name": "check_install_slots",
+      "input_parameters": {
+        "postcode": "BT6 9EQ",
+        "date": "2026-08-29"
+      }
+    },
+    {
+      "name": "book_home_move",
+      "input_parameters": {
+        "account_number": "NW614083",
+        "address": "27 Cregagh Gardens, Belfast, BT6 9EQ",
+        "date": "2026-08-29",
+        "slot": "13:00-18:00"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "book_home_move",
+      "input_parameters": {
+        "date": "2026-08-28"
+      }
+    },
+    {
+      "name": "book_home_move",
+      "input_parameters": {
+        "date": "2026-08-31"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "mid_utterance_pauses",
+          "measures": "agent talks into a MidSentencePause",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_account",
+          "input_parameters": {
+            "account_number": "NW614083"
+          }
+        },
+        {
+          "name": "check_install_slots",
+          "input_parameters": {
+            "postcode": "BT6 9EQ",
+            "date": "2026-08-29"
+          }
+        },
+        {
+          "name": "book_home_move",
+          "input_parameters": {
+            "account_number": "NW614083",
+            "address": "27 Cregagh Gardens, Belfast, BT6 9EQ",
+            "date": "2026-08-29",
+            "slot": "13:00-18:00"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "book_home_move",
+          "input_parameters": {
+            "date": "2026-08-28"
+          }
+        },
+        {
+          "name": "book_home_move",
+          "input_parameters": {
+            "date": "2026-08-31"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "changing_requests",
+      "exists": true,
+      "name": "Changing Requests",
+      "criteria": "The agent tracked every change and undo, and confirmed the final state correctly.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "correction_handling",
+      "exists": true,
+      "name": "Correction Handling",
+      "criteria": "The agent used the value the caller corrected to, not the one they corrected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "ambiguity_resolution",
+      "exists": true,
+      "name": "Ambiguity Resolution",
+      "criteria": "The agent asked a clarifying question to pin down a vague or conflicting detail instead of assuming.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

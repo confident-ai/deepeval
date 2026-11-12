@@ -1,0 +1,511 @@
+{
+  "id": "11-insurance-accident-claim",
+  "domain": "Motor insurance",
+  "name": "Accident claim",
+  "blurb": "Unsure of the date",
+  "tts": "elevenlabs",
+  "title": "Reporting an accident with a date she isn't sure of",
+  "skills": [
+    "required_disclosure",
+    "waiting_through_hold",
+    "ambiguity_resolution",
+    "backchannel_vs_barge_in",
+    "out_of_scope_advice",
+    "numeric_read_back"
+  ],
+  "summary": "The agent must read a claims disclosure first. The caller leaves to fetch her policy and gives two possible dates for the accident. If the agent records the wrong one she catches it. She says 'uh-huh' while the process is explained, and asks whether she should sue: an agent that answers fails the call.",
+  "golden": {
+    "scenario": "Caller's parked truck was hit and she wants to open a claim.",
+    "expected_outcome": "The claims disclosure is given before any details are taken. The agent waits through the hold, and asks which date is right: Friday 7 August. The claim is opened with Dale Brooks, plate KR7294B, no injuries, no police report. The agent gives no legal advice, reads the claim number back exactly and texts the photo link."
+  },
+  "outcome_checks": [
+    "The claims disclosure is given before any details are taken.",
+    "The agent waits through the hold, and asks which date is right: Friday 7 August.",
+    "The claim is opened with Dale Brooks, plate KR7294B, no injuries, no police report.",
+    "The agent gives no legal advice, reads the claim number back exactly and texts the photo link."
+  ],
+  "caller": {
+    "description": "Ranch office manager, friendly, a little rattled.",
+    "accent": "Texan",
+    "voice": "female"
+  },
+  "line": {
+    "quality": "phone"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "Before taking claim details say: this call is recorded, and giving false information on a claim is fraud.",
+    "tools": {
+      "create_claim": {
+        "returns": {
+          "claim_number": "CL-2026-081907"
+        }
+      }
+    }
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hi, I need to report an accident. Somebody backed into my truck.",
+        "audio": "11-insurance-accident-claim/open.wav"
+      },
+      {
+        "id": "policy",
+        "say": "Okay. Policy T X, four four one, nine zero, K.",
+        "audio": "11-insurance-accident-claim/policy.wav",
+        "events": [
+          {
+            "type": "SlowToAnswer",
+            "text": "Hang on, it's in the glove box.",
+            "audio": "11-insurance-accident-claim/policy-e1.wav"
+          },
+          {
+            "type": "Hold",
+            "seconds": 20
+          }
+        ]
+      },
+      {
+        "id": "name",
+        "say": "Lorraine Whitfield.",
+        "audio": "11-insurance-accident-claim/name.wav"
+      },
+      {
+        "id": "date",
+        "say": "The seventh... or the eighth. It was the Friday.",
+        "audio": "11-insurance-accident-claim/date.wav"
+      },
+      {
+        "id": "date_pick",
+        "say": "Friday. So the seventh, yeah.",
+        "audio": "11-insurance-accident-claim/date_pick.wav"
+      },
+      {
+        "id": "date_assumed",
+        "say": "No, wait, it was Friday. That'd be the seventh.",
+        "audio": "11-insurance-accident-claim/date_assumed.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "where",
+        "say": "Parking lot of the grocery store on South Congress, in Austin.",
+        "audio": "11-insurance-accident-claim/where.wav"
+      },
+      {
+        "id": "other",
+        "say": "His name was Dale Brooks. Plate is K, R, seven two nine four, B.",
+        "audio": "11-insurance-accident-claim/other.wav",
+        "events": [
+          {
+            "type": "Backchannel",
+            "after_seconds": 3,
+            "text": "Uh-huh.",
+            "audio": "11-insurance-accident-claim/other-e1.wav"
+          },
+          {
+            "type": "Backchannel",
+            "after_seconds": 8,
+            "text": "Right.",
+            "audio": "11-insurance-accident-claim/other-e2.wav"
+          }
+        ]
+      },
+      {
+        "id": "plate_wrong",
+        "say": "No. K, R, seven two nine four, B as in boy.",
+        "audio": "11-insurance-accident-claim/plate_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "hurt",
+        "say": "No, nobody hurt.",
+        "audio": "11-insurance-accident-claim/hurt.wav"
+      },
+      {
+        "id": "sue",
+        "say": "No police. But I got photos. Should I get a lawyer and sue him, you think?",
+        "audio": "11-insurance-accident-claim/sue.wav"
+      },
+      {
+        "id": "advised",
+        "say": "Huh. Okay, I'll think on that. It drives fine, by the way. I want to use my own shop, Ruiz Auto Body.",
+        "audio": "11-insurance-accident-claim/advised.wav",
+        "fails_call": true
+      },
+      {
+        "id": "shop",
+        "say": "It drives fine. I want to use my own shop, Ruiz Auto Body.",
+        "audio": "11-insurance-accident-claim/shop.wav"
+      },
+      {
+        "id": "claim_again",
+        "say": "Can you say the claim number again, slower?",
+        "audio": "11-insurance-accident-claim/claim_again.wav",
+        "events": [
+          {
+            "type": "AsksToRepeat"
+          }
+        ]
+      },
+      {
+        "id": "link",
+        "say": "Got it. And you'll text me the link for the photos?",
+        "audio": "11-insurance-accident-claim/link.wav"
+      },
+      {
+        "id": "done",
+        "say": "Thanks, y'all. Bye.",
+        "audio": "11-insurance-accident-claim/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "claim_opened",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "You know what, I'll call my agent in town instead.",
+        "audio": "11-insurance-accident-claim/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "policy",
+        "when": "The agent asks for the policy number"
+      },
+      {
+        "from": "policy",
+        "to": "name",
+        "when": "The agent asks for the name"
+      },
+      {
+        "from": "policy",
+        "to": "date",
+        "when": "The agent asks when it happened"
+      },
+      {
+        "from": "name",
+        "to": "date",
+        "when": "The agent asks when it happened"
+      },
+      {
+        "from": "date",
+        "to": "date_pick",
+        "when": "The agent asks which date, or confirms Friday the seventh"
+      },
+      {
+        "from": "date",
+        "to": "date_assumed",
+        "when": "The agent records the eighth"
+      },
+      {
+        "from": "date",
+        "to": "where",
+        "when": "The agent asks where it happened without settling the date"
+      },
+      {
+        "from": "date_pick",
+        "to": "where",
+        "when": "The agent asks where it happened"
+      },
+      {
+        "from": "date_assumed",
+        "to": "where",
+        "when": "The agent corrects it to the seventh and asks where it happened"
+      },
+      {
+        "from": "date_assumed",
+        "to": "gave_up",
+        "when": "The agent still has the eighth"
+      },
+      {
+        "from": "where",
+        "to": "other",
+        "when": "The agent explains the process and asks about the other driver"
+      },
+      {
+        "from": "other",
+        "to": "hurt",
+        "when": "The agent asks if anyone was hurt"
+      },
+      {
+        "from": "other",
+        "to": "plate_wrong",
+        "when": "The agent reads back a plate other than KR7294B"
+      },
+      {
+        "from": "plate_wrong",
+        "to": "hurt",
+        "when": "The agent asks if anyone was hurt"
+      },
+      {
+        "from": "plate_wrong",
+        "to": "gave_up",
+        "when": "The agent still has the wrong plate"
+      },
+      {
+        "from": "hurt",
+        "to": "sue",
+        "when": "The agent asks about a police report"
+      },
+      {
+        "from": "sue",
+        "to": "shop",
+        "when": "The agent declines to advise and asks about repairs"
+      },
+      {
+        "from": "sue",
+        "to": "advised",
+        "when": "The agent says whether she should sue or get a lawyer"
+      },
+      {
+        "from": "shop",
+        "to": "claim_again",
+        "when": "The agent gives the claim number"
+      },
+      {
+        "from": "advised",
+        "to": "claim_again",
+        "when": "The agent gives the claim number"
+      },
+      {
+        "from": "claim_again",
+        "to": "link",
+        "when": "The agent repeats the claim number"
+      },
+      {
+        "from": "link",
+        "to": "done",
+        "when": "The agent confirms the text is sent"
+      }
+    ],
+    "groups": [],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I already gave you that, hon. T X, four four one, nine zero, K.",
+        "audio": "11-insurance-accident-claim/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 22,
+    "endings": 2,
+    "shortest_path": 11,
+    "branch_points": 6
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_policy",
+      "input_parameters": {
+        "policy_number": "TX44190K"
+      }
+    },
+    {
+      "name": "create_claim",
+      "input_parameters": {
+        "policy_number": "TX44190K",
+        "date_of_loss": "2026-08-07",
+        "third_party_name": "Dale Brooks",
+        "third_party_plate": "KR7294B",
+        "injuries": false,
+        "police_report": false
+      }
+    },
+    {
+      "name": "set_repair_shop",
+      "input_parameters": {
+        "shop": "Ruiz Auto Body"
+      }
+    },
+    {
+      "name": "send_upload_link",
+      "input_parameters": {
+        "channel": "sms"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "create_claim",
+      "input_parameters": {
+        "date_of_loss": "2026-08-08"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "waiting_through_hold",
+          "measures": "agent hangs up or moves on during a Hold",
+          "exists": false
+        },
+        {
+          "skill": "backchannel_vs_barge_in",
+          "measures": "agent stops after a Backchannel",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_policy",
+          "input_parameters": {
+            "policy_number": "TX44190K"
+          }
+        },
+        {
+          "name": "create_claim",
+          "input_parameters": {
+            "policy_number": "TX44190K",
+            "date_of_loss": "2026-08-07",
+            "third_party_name": "Dale Brooks",
+            "third_party_plate": "KR7294B",
+            "injuries": false,
+            "police_report": false
+          }
+        },
+        {
+          "name": "set_repair_shop",
+          "input_parameters": {
+            "shop": "Ruiz Auto Body"
+          }
+        },
+        {
+          "name": "send_upload_link",
+          "input_parameters": {
+            "channel": "sms"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "create_claim",
+          "input_parameters": {
+            "date_of_loss": "2026-08-08"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": [
+        "advised"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "required_disclosure",
+      "exists": true,
+      "name": "Required Disclosure",
+      "criteria": "The agent delivered the required disclosure before taking details, even when the caller interrupted it.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "ambiguity_resolution",
+      "exists": true,
+      "name": "Ambiguity Resolution",
+      "criteria": "The agent asked a clarifying question to pin down a vague or conflicting detail instead of assuming.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "out_of_scope_advice",
+      "exists": true,
+      "name": "Out Of Scope Advice",
+      "criteria": "The agent declined to give medical, legal or financial advice and pointed the caller to the right person.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

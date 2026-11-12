@@ -1,0 +1,544 @@
+{
+  "id": "30-bank-cancel-pack-standing-order",
+  "domain": "Retail bank",
+  "name": "Cancel pack, add standing order",
+  "blurb": "Changes the amount, talks to flatmate",
+  "tts": "elevenlabs",
+  "title": "Cancelling a paid account pack and setting up a rent standing order",
+  "skills": [
+    "multi_task",
+    "cancellation_handling",
+    "changing_requests",
+    "side_speech_rejection",
+    "mid_utterance_pauses",
+    "correction_handling"
+  ],
+  "summary": "A fast Glaswegian caller wants two things: a paid extras pack cancelled and a rent standing order set up. He pauses inside the account number, tells his flatmate a different amount, then changes both the amount and the date. If the agent keeps selling the pack, or saves the old or overheard figures, he corrects it once and then does it in the app.",
+  "golden": {
+    "scenario": "Caller wants the Gold Extras pack cancelled and a monthly standing order for his rent.",
+    "expected_outcome": "The Gold Extras pack is cancelled after no more than one offer to keep it. The standing order pays Dalmarnock Lettings, sort code 82-61-07, account 30449215. The amount is £675.00 monthly from 1 September 2026, not £650 on the 28th. The £337.50 said to his flatmate is never used."
+  },
+  "outcome_checks": [
+    "The Gold Extras pack is cancelled after no more than one offer to keep it.",
+    "The standing order pays Dalmarnock Lettings, sort code 82-61-07, account 30449215.",
+    "The amount is £675.00 monthly from 1 September 2026, not £650 on the 28th.",
+    "The £337.50 said to his flatmate is never used."
+  ],
+  "caller": {
+    "description": "Joiner on his tea break, flatmate in the room.",
+    "accent": "Glaswegian",
+    "pace": "fast",
+    "voice": "male"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": {
+    "audio": "workshop-radio.wav",
+    "volume": 0.4
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "policy": "One offer at most to keep a paid pack, then cancel it. Read standing order details back before saving.",
+    "knowledge": "Gold Extras: £14.50/month. Retention offer: 3 months at half price."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Aye, hi. Two things. Ah want tae cancel that Gold Extras pack oan ma account, and set up a standin order fur ma rent.",
+        "audio": "30-bank-cancel-pack-standing-order/open.wav"
+      },
+      {
+        "id": "name",
+        "say": "Ruaridh McCulloch.",
+        "audio": "30-bank-cancel-pack-standing-order/name.wav",
+        "when": "The agent asks for the caller's name"
+      },
+      {
+        "id": "post",
+        "say": "G forty-two, eight Q R.",
+        "audio": "30-bank-cancel-pack-standing-order/post.wav",
+        "when": "The agent asks for the postcode"
+      },
+      {
+        "id": "post_wrong",
+        "say": "Naw. G four two, eight Q R. Q fur queen.",
+        "audio": "30-bank-cancel-pack-standing-order/post_wrong.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "keep",
+        "say": "Naw, ah've never used any ae it. Just cancel it.",
+        "audio": "30-bank-cancel-pack-standing-order/keep.wav"
+      },
+      {
+        "id": "offer2",
+        "say": "Ah said cancel it, pal. Ah'm no wantin anythin else.",
+        "audio": "30-bank-cancel-pack-standing-order/offer2.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "payee",
+        "say": "Right. It's tae Dalmarnock Lettings. Sort code eight two, six one, zero seven.",
+        "audio": "30-bank-cancel-pack-standing-order/payee.wav"
+      },
+      {
+        "id": "acct",
+        "say": "Account's three zero four, four nine... two one five.",
+        "audio": "30-bank-cancel-pack-standing-order/acct.wav",
+        "events": [
+          {
+            "type": "MidSentencePause",
+            "seconds": 2.5,
+            "after_words": 6
+          }
+        ]
+      },
+      {
+        "id": "acct_wrong",
+        "say": "Naw. Three zero four, four nine, two one five.",
+        "audio": "30-bank-cancel-pack-standing-order/acct_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "amount",
+        "say": "Six fifty a month, oan the twenty-eighth.",
+        "audio": "30-bank-cancel-pack-standing-order/amount.wav",
+        "events": [
+          {
+            "type": "SideSpeech",
+            "text": "Naw, Craig, your half's three three seven fifty, ah'm no payin the lot masel.",
+            "audio": "30-bank-cancel-pack-standing-order/amount-e1.wav"
+          }
+        ]
+      },
+      {
+        "id": "change",
+        "say": "Haud oan, ah'm lookin at the letter. It's gone up. Make it six seventy-five, and oan the first ae the month, startin the first ae September.",
+        "audio": "30-bank-cancel-pack-standing-order/change.wav"
+      },
+      {
+        "id": "half",
+        "say": "Naw, that wis me talkin tae ma flatmate. And it's gone up anyway: six seventy-five, oan the first ae the month, startin September.",
+        "audio": "30-bank-cancel-pack-standing-order/half.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "old_value",
+        "say": "Naw, no six fifty and no the twenty-eighth. Six seventy-five, oan the first.",
+        "audio": "30-bank-cancel-pack-standing-order/old_value.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "confirm",
+        "say": "Aye, that's it. Go ahead.",
+        "audio": "30-bank-cancel-pack-standing-order/confirm.wav"
+      },
+      {
+        "id": "both_q",
+        "say": "And that's the Gold Extras hing definitely aff an aw, aye?",
+        "audio": "30-bank-cancel-pack-standing-order/both_q.wav"
+      },
+      {
+        "id": "done",
+        "say": "Magic. Cheers, pal.",
+        "audio": "30-bank-cancel-pack-standing-order/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "pack_cancelled_order_set",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "quit",
+        "say": "Forget it. Ah'll dae it in the app.",
+        "audio": "30-bank-cancel-pack-standing-order/quit.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "keep",
+        "when": "The agent makes an offer to keep the pack"
+      },
+      {
+        "from": "ident",
+        "to": "payee",
+        "when": "The agent confirms the pack is cancelled and asks who the standing order pays"
+      },
+      {
+        "from": "ident",
+        "to": "post_wrong",
+        "when": "The agent reads back a postcode other than G42 8QR"
+      },
+      {
+        "from": "post_wrong",
+        "to": "keep",
+        "when": "The agent makes an offer to keep the pack"
+      },
+      {
+        "from": "post_wrong",
+        "to": "payee",
+        "when": "The agent confirms the pack is cancelled and asks who the standing order pays"
+      },
+      {
+        "from": "post_wrong",
+        "to": "quit",
+        "when": "The agent still has the wrong postcode"
+      },
+      {
+        "from": "keep",
+        "to": "payee",
+        "when": "The agent confirms the pack is cancelled and asks who the standing order pays"
+      },
+      {
+        "from": "keep",
+        "to": "offer2",
+        "when": "The agent makes a second offer to keep the pack"
+      },
+      {
+        "from": "offer2",
+        "to": "payee",
+        "when": "The agent confirms the pack is cancelled and asks who the standing order pays"
+      },
+      {
+        "from": "offer2",
+        "to": "quit",
+        "when": "The agent makes another offer or does not cancel"
+      },
+      {
+        "from": "payee",
+        "to": "acct",
+        "when": "The agent asks for the account number"
+      },
+      {
+        "from": "acct",
+        "to": "amount",
+        "when": "The agent asks how much and when"
+      },
+      {
+        "from": "acct",
+        "to": "acct_wrong",
+        "when": "The agent reads back an account number other than 30449215"
+      },
+      {
+        "from": "acct_wrong",
+        "to": "amount",
+        "when": "The agent asks how much and when"
+      },
+      {
+        "from": "acct_wrong",
+        "to": "quit",
+        "when": "The agent still has the wrong account number"
+      },
+      {
+        "from": "amount",
+        "to": "change",
+        "when": "The agent reads back six hundred and fifty pounds on the twenty-eighth"
+      },
+      {
+        "from": "amount",
+        "to": "half",
+        "when": "The agent reads back three hundred and thirty-seven pounds fifty"
+      },
+      {
+        "from": "half",
+        "to": "confirm",
+        "when": "The agent reads back £675 monthly from 1 September"
+      },
+      {
+        "from": "half",
+        "to": "quit",
+        "when": "The agent still has the wrong amount"
+      },
+      {
+        "from": "change",
+        "to": "confirm",
+        "when": "The agent reads back £675 monthly from 1 September"
+      },
+      {
+        "from": "change",
+        "to": "old_value",
+        "when": "The agent reads back six hundred and fifty or the twenty-eighth"
+      },
+      {
+        "from": "old_value",
+        "to": "confirm",
+        "when": "The agent reads back £675 monthly from 1 September"
+      },
+      {
+        "from": "old_value",
+        "to": "quit",
+        "when": "The agent still has the old amount or date"
+      },
+      {
+        "from": "confirm",
+        "to": "both_q",
+        "when": "The agent confirms the standing order is set up"
+      },
+      {
+        "from": "both_q",
+        "to": "done",
+        "when": "The agent confirms the Gold Extras pack is cancelled"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "name",
+          "post"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "Ah telt ye that already. Are ye writin this doon?",
+        "audio": "30-bank-cancel-pack-standing-order/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "quit"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 18,
+    "edges": 26,
+    "endings": 2,
+    "shortest_path": 10,
+    "branch_points": 10
+  },
+  "expected_tools": [
+    {
+      "name": "verify_identity",
+      "input_parameters": {
+        "name": "Ruaridh McCulloch",
+        "postcode": "G42 8QR"
+      }
+    },
+    {
+      "name": "cancel_account_pack",
+      "input_parameters": {
+        "pack": "Gold Extras"
+      }
+    },
+    {
+      "name": "create_standing_order",
+      "input_parameters": {
+        "payee": "Dalmarnock Lettings",
+        "sort_code": "82-61-07",
+        "account_number": "30449215",
+        "amount": "675.00",
+        "frequency": "monthly",
+        "first_payment": "2026-09-01"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "create_standing_order",
+      "input_parameters": {
+        "amount": "337.50"
+      }
+    },
+    {
+      "name": "create_standing_order",
+      "input_parameters": {
+        "amount": "650.00"
+      }
+    },
+    {
+      "name": "create_standing_order",
+      "input_parameters": {
+        "first_payment": "2026-08-28"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        },
+        {
+          "skill": "mid_utterance_pauses",
+          "measures": "agent talks into a MidSentencePause",
+          "exists": false
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "verify_identity",
+          "input_parameters": {
+            "name": "Ruaridh McCulloch",
+            "postcode": "G42 8QR"
+          }
+        },
+        {
+          "name": "cancel_account_pack",
+          "input_parameters": {
+            "pack": "Gold Extras"
+          }
+        },
+        {
+          "name": "create_standing_order",
+          "input_parameters": {
+            "payee": "Dalmarnock Lettings",
+            "sort_code": "82-61-07",
+            "account_number": "30449215",
+            "amount": "675.00",
+            "frequency": "monthly",
+            "first_payment": "2026-09-01"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "create_standing_order",
+          "input_parameters": {
+            "amount": "337.50"
+          }
+        },
+        {
+          "name": "create_standing_order",
+          "input_parameters": {
+            "amount": "650.00"
+          }
+        },
+        {
+          "name": "create_standing_order",
+          "input_parameters": {
+            "first_payment": "2026-08-28"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "multi_task",
+      "exists": true,
+      "name": "Multi Task",
+      "criteria": "The agent completed every request the caller made in the call and kept them separate.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "cancellation_handling",
+      "exists": true,
+      "name": "Cancellation Handling",
+      "criteria": "The agent cancelled when asked, making at most one retention offer.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "changing_requests",
+      "exists": true,
+      "name": "Changing Requests",
+      "criteria": "The agent tracked every change and undo, and confirmed the final state correctly.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "side_speech_rejection",
+      "exists": true,
+      "name": "Side Speech Rejection",
+      "criteria": "The agent ignored what the caller said to someone else and did not act on it.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "correction_handling",
+      "exists": true,
+      "name": "Correction Handling",
+      "criteria": "The agent used the value the caller corrected to, not the one they corrected.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

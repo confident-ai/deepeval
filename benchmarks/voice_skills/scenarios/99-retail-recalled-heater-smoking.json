@@ -1,0 +1,497 @@
+{
+  "id": "99-retail-recalled-heater-smoking",
+  "domain": "Online retailer",
+  "name": "Recalled heater smoking",
+  "blurb": "Frightened, coughing, danger mid-call",
+  "tts": "openai",
+  "title": "A recalled heater starts smoking during the call",
+  "skills": [
+    "emergency_escalation",
+    "emotion_recognition",
+    "non_speech_sounds",
+    "prosodic_cues",
+    "style_instructions"
+  ],
+  "summary": "A frightened caller rings about a recall email while the heater is still running. She coughs through her order number, then the plug starts to smoke. Safety has to come before the refund. She asks 'Outside?' as a question, not an answer, and needs a moment of reassurance before any more questions.",
+  "golden": {
+    "scenario": "Caller received a safety recall notice for a heater that is switched on in her home.",
+    "expected_outcome": "The agent stops the recall questions as soon as she mentions smoke and gives safety instructions first. Order number 6621940 is captured despite the cough. The agent treats 'Outside?' as a question and answers it. The incident is logged, a refund is raised, not a replacement, and collection is booked for Friday 14 August."
+  },
+  "outcome_checks": [
+    "The agent stops the recall questions as soon as she mentions smoke and gives safety instructions first.",
+    "Order number 6621940 is captured despite the cough.",
+    "The agent treats 'Outside?' as a question and answers it.",
+    "The incident is logged, a refund is raised, not a replacement, and collection is booked for Friday 14 August."
+  ],
+  "caller": {
+    "description": "Home alone with the heater on upstairs, voice shaking.",
+    "accent": "British (southern English)",
+    "voice": "female",
+    "emotion": "frightened"
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": null,
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "voice_style": "Calm, slow and steady. Short sentences. One instruction at a time.",
+    "policy": "Smoke, burning or sparks override everything: safety instructions first, then log the incident, then the recall.",
+    "tool_order": [
+      "report_safety_incident",
+      "refund_order"
+    ]
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hi, um, I've just had an email saying my heater's been recalled? The Solara one. And it's on. It's been on all morning.",
+        "audio": "99-retail-recalled-heater-smoking/open.wav"
+      },
+      {
+        "id": "order",
+        "say": "It's, hang on. Six six, two, one nine... one nine four, zero.",
+        "audio": "99-retail-recalled-heater-smoking/order.wav",
+        "when": "The agent asks for the order number",
+        "events": [
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "after_words": 6
+          }
+        ]
+      },
+      {
+        "id": "postcode",
+        "say": "R G one, seven L T.",
+        "audio": "99-retail-recalled-heater-smoking/postcode.wav",
+        "when": "The agent asks for the postcode"
+      },
+      {
+        "id": "order_wrong",
+        "say": "No. Six six two, one nine four zero. Sorry, I keep coughing.",
+        "audio": "99-retail-recalled-heater-smoking/order_wrong.wav",
+        "events": [
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "count": 1
+          }
+        ],
+        "max_visits": 2
+      },
+      {
+        "id": "danger",
+        "say": "Wait. It's crackling. There's a burning smell and, oh my god, there's smoke coming off the plug!",
+        "audio": "99-retail-recalled-heater-smoking/danger.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "alarmed"
+          },
+          {
+            "type": "NonSpeechSound",
+            "kind": "cough",
+            "count": 2
+          }
+        ]
+      },
+      {
+        "id": "ignored",
+        "say": "Did you hear me? It's smoking! What do I do?",
+        "audio": "99-retail-recalled-heater-smoking/ignored.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "panicked"
+          }
+        ],
+        "max_visits": 1
+      },
+      {
+        "id": "unplug",
+        "say": "Okay. Okay, I've switched it off at the wall. It's stopped crackling. Do I pull the plug out?",
+        "audio": "99-retail-recalled-heater-smoking/unplug.wav"
+      },
+      {
+        "id": "outside",
+        "say": "Outside?",
+        "audio": "99-retail-recalled-heater-smoking/outside.wav",
+        "events": [
+          {
+            "type": "Prosody",
+            "cue": "rising question, frightened"
+          }
+        ]
+      },
+      {
+        "id": "assumed",
+        "say": "No, I'm not outside, I was asking! Do I need to go outside?",
+        "audio": "99-retail-recalled-heater-smoking/assumed.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "safe",
+        "say": "Right. I'm on the landing, the door's shut. There's no more smoke. I'm shaking.",
+        "audio": "99-retail-recalled-heater-smoking/safe.wav"
+      },
+      {
+        "id": "cold",
+        "say": "Sorry, just, give me a second. I'm really shaken up.",
+        "audio": "99-retail-recalled-heater-smoking/cold.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "refund",
+        "say": "A refund. I don't want another one of those in the house.",
+        "audio": "99-retail-recalled-heater-smoking/refund.wav"
+      },
+      {
+        "id": "collect",
+        "say": "Um, Friday? Friday's fine.",
+        "audio": "99-retail-recalled-heater-smoking/collect.wav"
+      },
+      {
+        "id": "done",
+        "say": "Thank you. Thank you for staying calm. I wasn't.",
+        "audio": "99-retail-recalled-heater-smoking/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "safe_and_refunded",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "rang_off",
+        "say": "I can't do this. I'm ringing the fire brigade myself.",
+        "audio": "99-retail-recalled-heater-smoking/rang_off.wav",
+        "terminal": true,
+        "ending": {
+          "name": "emergency_ignored",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "ident"
+      },
+      {
+        "from": "ident",
+        "to": "danger",
+        "when": "The agent reads back order 6621940 and confirms the heater is on the recall list"
+      },
+      {
+        "from": "ident",
+        "to": "order_wrong",
+        "when": "The agent reads back an order number other than 6621940"
+      },
+      {
+        "from": "order_wrong",
+        "to": "danger",
+        "when": "The agent reads back order 6621940 and confirms the heater is on the recall list"
+      },
+      {
+        "from": "order_wrong",
+        "to": "rang_off",
+        "when": "The agent still has the wrong order number"
+      },
+      {
+        "from": "danger",
+        "to": "unplug",
+        "when": "The agent tells her to switch it off at the wall if it is safe, not to touch the heater, and to call 999 if there are flames"
+      },
+      {
+        "from": "danger",
+        "to": "ignored",
+        "when": "The agent carries on with the recall questions"
+      },
+      {
+        "from": "ignored",
+        "to": "unplug",
+        "when": "The agent tells her to switch it off at the wall if it is safe, not to touch the heater, and to call 999 if there are flames"
+      },
+      {
+        "from": "ignored",
+        "to": "rang_off",
+        "when": "The agent still carries on with the recall questions"
+      },
+      {
+        "from": "unplug",
+        "to": "outside",
+        "when": "The agent tells her to leave the plug alone and wait outside the room"
+      },
+      {
+        "from": "outside",
+        "to": "safe",
+        "when": "The agent explains that she should leave the room, shut the door, and leave the house if the smoke comes back"
+      },
+      {
+        "from": "outside",
+        "to": "assumed",
+        "when": "The agent takes it as her saying she is outside"
+      },
+      {
+        "from": "assumed",
+        "to": "safe",
+        "when": "The agent explains that she should leave the room, shut the door, and leave the house if the smoke comes back"
+      },
+      {
+        "from": "assumed",
+        "to": "rang_off",
+        "when": "The agent still does not answer her question"
+      },
+      {
+        "from": "safe",
+        "to": "refund",
+        "when": "The agent acknowledges that she is shaken, reassures her, then offers a refund or a replacement"
+      },
+      {
+        "from": "safe",
+        "to": "cold",
+        "when": "The agent goes straight to refund questions without acknowledging how she feels"
+      },
+      {
+        "from": "cold",
+        "to": "refund",
+        "when": "The agent gives her a moment and reassures her, then offers a refund or a replacement"
+      },
+      {
+        "from": "cold",
+        "to": "rang_off",
+        "when": "The agent carries on with the questions"
+      },
+      {
+        "from": "refund",
+        "to": "collect",
+        "when": "The agent confirms the refund and offers a day to collect the heater"
+      },
+      {
+        "from": "collect",
+        "to": "done",
+        "when": "The agent confirms collection on Friday the fourteenth and tells her not to plug the heater in again"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "order",
+          "postcode"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "I've already told you that! Please, what do I do about the heater?",
+        "audio": "99-retail-recalled-heater-smoking/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "rang_off"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 16,
+    "edges": 20,
+    "endings": 2,
+    "shortest_path": 10,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_order",
+      "input_parameters": {
+        "order_number": "6621940",
+        "postcode": "RG1 7LT"
+      }
+    },
+    {
+      "name": "report_safety_incident",
+      "input_parameters": {
+        "order_number": "6621940",
+        "product": "Solara heater",
+        "hazard": "smoke"
+      }
+    },
+    {
+      "name": "refund_order",
+      "input_parameters": {
+        "order_number": "6621940",
+        "reason": "safety_recall"
+      }
+    },
+    {
+      "name": "book_collection",
+      "input_parameters": {
+        "order_number": "6621940",
+        "date": "2026-08-14"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "create_replacement",
+      "input_parameters": {}
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_order",
+          "input_parameters": {
+            "order_number": "6621940",
+            "postcode": "RG1 7LT"
+          }
+        },
+        {
+          "name": "report_safety_incident",
+          "input_parameters": {
+            "order_number": "6621940",
+            "product": "Solara heater",
+            "hazard": "smoke"
+          }
+        },
+        {
+          "name": "refund_order",
+          "input_parameters": {
+            "order_number": "6621940",
+            "reason": "safety_recall"
+          }
+        },
+        {
+          "name": "book_collection",
+          "input_parameters": {
+            "order_number": "6621940",
+            "date": "2026-08-14"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "create_replacement",
+          "input_parameters": {}
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "emergency_ignored"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emergency_escalation",
+      "exists": true,
+      "name": "Emergency Escalation",
+      "criteria": "The agent stopped the routine flow as soon as danger was mentioned, gave safety instructions first and escalated.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "emotion_recognition",
+      "exists": true,
+      "name": "Emotion Recognition",
+      "criteria": "The agent acknowledged how the caller felt and reassured them before routine questions.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "non_speech_sounds",
+      "exists": true,
+      "name": "Non Speech Sounds",
+      "criteria": "The agent did not treat a cough or other noise as speech, and recovered the detail the noise covered.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "prosodic_cues",
+      "exists": true,
+      "name": "Prosodic Cues",
+      "criteria": "The agent recognised sarcasm, alarm or a statement said as a question from tone, and did not take it as agreement.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "AudioJudge",
+      "skill": "style_instructions",
+      "exists": false,
+      "criteria": "The agent's voice followed its style instructions for the whole call."
+    }
+  ]
+}

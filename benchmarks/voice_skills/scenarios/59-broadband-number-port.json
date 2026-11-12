@@ -1,0 +1,544 @@
+{
+  "id": "59-broadband-number-port",
+  "domain": "Broadband",
+  "name": "Number port in Portuguese",
+  "blurb": "Switches to Portuguese, code check fails",
+  "tts": "elevenlabs",
+  "title": "Bringing an old mobile number across, in Portuguese, with a code check that fails",
+  "skills": [
+    "language_switching",
+    "numeric_read_back",
+    "tool_error_handling",
+    "low_confidence_confirmation",
+    "entity_extraction"
+  ],
+  "summary": "A Brazilian caller starts in English and asks to continue in Portuguese. She gives two mobile numbers, a nine character transfer code and a name that needs spelling. The first code check times out. If the agent stays in English, mixes up the numbers or tells her the code is bad, she corrects it, and leaves for the shop if it goes on.",
+  "golden": {
+    "scenario": "Caller has a new SIM and wants her old number moved onto it with the transfer code from her old provider.",
+    "expected_outcome": "After the switch the agent speaks Portuguese for the rest of the call. The agent confirms the spelling of Thaís Albuquerque and reads back 07700 900582 and code XQD418207 exactly. When the first code check fails the agent says so and tries again, without telling her to get a new code. The number 07700 900582 is booked to move on Friday 14 August, not Thursday the 13th."
+  },
+  "outcome_checks": [
+    "After the switch the agent speaks Portuguese for the rest of the call.",
+    "The agent confirms the spelling of Thaís Albuquerque and reads back 07700 900582 and code XQD418207 exactly.",
+    "When the first code check fails the agent says so and tries again, without telling her to get a new code.",
+    "The number 07700 900582 is booked to move on Friday 14 August, not Thursday the 13th."
+  ],
+  "caller": {
+    "description": "Nurse on a break, more at ease in Portuguese.",
+    "accent": "Brazilian Portuguese",
+    "voice": "female",
+    "languages": [
+      "en",
+      "pt"
+    ]
+  },
+  "line": {
+    "quality": "mobile"
+  },
+  "background": {
+    "audio": "hospital-canteen.wav",
+    "volume": 0.4
+  },
+  "agent_setup": {
+    "today": "Wednesday 12 August 2026, 10:00",
+    "tools": {
+      "validate_pac": {
+        "first_call_returns": {
+          "error": "pac_service_timeout"
+        },
+        "returns": {
+          "valid": true,
+          "expires": "2026-09-10"
+        }
+      }
+    },
+    "knowledge": "A number moves on the next working day at the earliest. The old SIM loses signal for up to two hours on the day."
+  },
+  "graph": {
+    "start": "open",
+    "nodes": [
+      {
+        "id": "open",
+        "say": "Hi. I got a new SIM from you, but I want to keep my old number. I have the code from my old company.",
+        "audio": "59-broadband-number-port/open.wav"
+      },
+      {
+        "id": "switch",
+        "say": "My name is... Desculpa, posso falar em português? É mais fácil para mim.",
+        "audio": "59-broadband-number-port/switch.wav",
+        "events": [
+          {
+            "type": "SwitchesLanguage",
+            "language": "pt"
+          }
+        ]
+      },
+      {
+        "id": "english",
+        "say": "Desculpa, não entendi. Em português, por favor?",
+        "audio": "59-broadband-number-port/english.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "name",
+        "say": "Thaís Albuquerque. T, H, A, I com acento agudo, S. Albuquerque: A, L, B, U, Q, U, E, R, Q, U, E.",
+        "audio": "59-broadband-number-port/name.wav",
+        "when": "The agent asks for her name"
+      },
+      {
+        "id": "newnum",
+        "say": "O número novo é zero sete sete zero zero, nove zero zero, três um quatro.",
+        "audio": "59-broadband-number-port/newnum.wav",
+        "when": "The agent asks for the number on the new SIM"
+      },
+      {
+        "id": "old",
+        "say": "O número antigo, que eu quero manter, é zero sete sete zero zero, nove zero zero, cinco oito dois.",
+        "audio": "59-broadband-number-port/old.wav"
+      },
+      {
+        "id": "old_wrong",
+        "say": "Não. Termina em cinco oito dois. Cinco, oito, dois.",
+        "audio": "59-broadband-number-port/old_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "pac",
+        "say": "O código é X, Q, D, quatro um oito, dois zero sete.",
+        "audio": "59-broadband-number-port/pac.wav"
+      },
+      {
+        "id": "pac_wrong",
+        "say": "Não, não. X, Q, D. Quatro, um, oito. Dois, zero, sete.",
+        "audio": "59-broadband-number-port/pac_wrong.wav",
+        "max_visits": 2
+      },
+      {
+        "id": "wait",
+        "say": "Tá bom, eu espero. Tenta de novo.",
+        "audio": "59-broadband-number-port/wait.wav"
+      },
+      {
+        "id": "no_option",
+        "say": "Mas o código é novo, peguei ontem! Pode tentar de novo?",
+        "audio": "59-broadband-number-port/no_option.wav",
+        "max_visits": 1
+      },
+      {
+        "id": "when",
+        "say": "Quando o número antigo vai funcionar no chip novo?",
+        "audio": "59-broadband-number-port/when.wav"
+      },
+      {
+        "id": "sexta",
+        "say": "Prefiro na sexta-feira, dia catorze. Amanhã eu viajo.",
+        "audio": "59-broadband-number-port/sexta.wav"
+      },
+      {
+        "id": "confirm",
+        "say": "Isso, está certo. Pode fazer.",
+        "audio": "59-broadband-number-port/confirm.wav"
+      },
+      {
+        "id": "gap",
+        "say": "E no dia, eu fico sem sinal por muito tempo?",
+        "audio": "59-broadband-number-port/gap.wav"
+      },
+      {
+        "id": "done",
+        "say": "Perfeito. Muito obrigada. Tchau.",
+        "audio": "59-broadband-number-port/done.wav",
+        "terminal": true,
+        "ending": {
+          "name": "port_booked",
+          "result": "expected"
+        }
+      },
+      {
+        "id": "gave_up",
+        "say": "Assim não dá. Eu vou na loja. Tchau.",
+        "audio": "59-broadband-number-port/gave_up.wav",
+        "terminal": true,
+        "ending": {
+          "name": "gave_up",
+          "result": "failure"
+        }
+      },
+      {
+        "id": "lang_fail",
+        "say": "Não consigo assim. Vou pedir para minha filha ligar. Tchau.",
+        "audio": "59-broadband-number-port/lang_fail.wav",
+        "terminal": true,
+        "ending": {
+          "name": "language_not_followed",
+          "result": "failure"
+        }
+      }
+    ],
+    "edges": [
+      {
+        "from": "open",
+        "to": "switch",
+        "when": "The agent asks for her name"
+      },
+      {
+        "from": "switch",
+        "to": "ident",
+        "when": "The agent agrees in Portuguese and asks for her details"
+      },
+      {
+        "from": "switch",
+        "to": "english",
+        "when": "The agent carries on in English"
+      },
+      {
+        "from": "english",
+        "to": "ident",
+        "when": "The agent switches to Portuguese and asks for her details"
+      },
+      {
+        "from": "english",
+        "to": "lang_fail",
+        "when": "The agent still speaks English"
+      },
+      {
+        "from": "ident",
+        "to": "old",
+        "when": "The agent asks for the number she wants to keep"
+      },
+      {
+        "from": "old",
+        "to": "pac",
+        "when": "The agent reads back 07700 900582 and asks for the transfer code"
+      },
+      {
+        "from": "old",
+        "to": "old_wrong",
+        "when": "The agent reads back a different number"
+      },
+      {
+        "from": "old_wrong",
+        "to": "pac",
+        "when": "The agent reads back 07700 900582 and asks for the transfer code"
+      },
+      {
+        "from": "old_wrong",
+        "to": "gave_up",
+        "when": "The agent has the number wrong again"
+      },
+      {
+        "from": "pac",
+        "to": "wait",
+        "when": "The agent reads the code back correctly, says the check failed and that it will try again"
+      },
+      {
+        "from": "pac",
+        "to": "when",
+        "when": "The agent reads the code back correctly and confirms it is valid"
+      },
+      {
+        "from": "pac",
+        "to": "pac_wrong",
+        "when": "The agent reads back a different code"
+      },
+      {
+        "from": "pac",
+        "to": "no_option",
+        "when": "The agent says the code is invalid or tells her to get a new one"
+      },
+      {
+        "from": "pac_wrong",
+        "to": "wait",
+        "when": "The agent reads the code back correctly, says the check failed and that it will try again"
+      },
+      {
+        "from": "pac_wrong",
+        "to": "when",
+        "when": "The agent reads the code back correctly and confirms it is valid"
+      },
+      {
+        "from": "pac_wrong",
+        "to": "gave_up",
+        "when": "The agent has the code wrong again"
+      },
+      {
+        "from": "wait",
+        "to": "when",
+        "when": "The agent confirms the code is valid"
+      },
+      {
+        "from": "no_option",
+        "to": "when",
+        "when": "The agent tries again and confirms the code is valid"
+      },
+      {
+        "from": "no_option",
+        "to": "gave_up",
+        "when": "The agent refuses to try again"
+      },
+      {
+        "from": "when",
+        "to": "sexta",
+        "when": "The agent offers Thursday the thirteenth or asks which day she wants"
+      },
+      {
+        "from": "sexta",
+        "to": "confirm",
+        "when": "The agent reads back the number and Friday the fourteenth and asks to confirm"
+      },
+      {
+        "from": "sexta",
+        "to": "gap",
+        "when": "The agent confirms the move is booked for Friday the fourteenth"
+      },
+      {
+        "from": "confirm",
+        "to": "gap",
+        "when": "The agent confirms the move is booked for Friday the fourteenth"
+      },
+      {
+        "from": "gap",
+        "to": "done",
+        "when": "The agent explains how long the switch takes"
+      }
+    ],
+    "groups": [
+      {
+        "id": "ident",
+        "nodes": [
+          "name",
+          "newnum"
+        ],
+        "order": "any"
+      }
+    ],
+    "reactions": [
+      {
+        "id": "reask",
+        "when": "The agent asks again for a detail the caller already gave",
+        "say": "Eu já falei. Thaís Albuquerque. Zero sete sete zero zero, nove zero zero, três um quatro.",
+        "audio": "59-broadband-number-port/reaction-reask.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      },
+      {
+        "id": "silence",
+        "when": "The agent says nothing for more than five seconds",
+        "say": "Alô? Você ainda está aí?",
+        "audio": "59-broadband-number-port/reaction-silence.wav",
+        "max_visits": 2,
+        "then": "resume",
+        "after_max_visits": "gave_up"
+      }
+    ],
+    "catch_all": {
+      "say": "Sorry, can you say that again?",
+      "audio": "catch-all.wav",
+      "off_script_after": 2
+    }
+  },
+  "shape": {
+    "caller_lines": 20,
+    "edges": 25,
+    "endings": 3,
+    "shortest_path": 10,
+    "branch_points": 8
+  },
+  "expected_tools": [
+    {
+      "name": "lookup_account",
+      "input_parameters": {
+        "name": "Thaís Albuquerque",
+        "mobile_number": "07700900314"
+      }
+    },
+    {
+      "name": "validate_pac",
+      "input_parameters": {
+        "pac_code": "XQD418207",
+        "mobile_number": "07700900582"
+      }
+    },
+    {
+      "name": "validate_pac",
+      "input_parameters": {
+        "pac_code": "XQD418207",
+        "mobile_number": "07700900582"
+      }
+    },
+    {
+      "name": "schedule_port",
+      "input_parameters": {
+        "mobile_number": "07700900582",
+        "pac_code": "XQD418207",
+        "date": "2026-08-14"
+      }
+    }
+  ],
+  "forbidden_tools": [
+    {
+      "name": "schedule_port",
+      "input_parameters": {
+        "date": "2026-08-13"
+      }
+    },
+    {
+      "name": "schedule_port",
+      "input_parameters": {
+        "mobile_number": "07700900314"
+      }
+    }
+  ],
+  "metrics": [
+    {
+      "metric": "GoalAccuracyMetric",
+      "skill": "task_completion",
+      "exists": true
+    },
+    {
+      "metric": "TranscriptionAccuracyMetric",
+      "skill": "transcription_accuracy",
+      "exists": true
+    },
+    {
+      "metric": "KnowledgeRetentionMetric",
+      "skill": "redundant_reprompts",
+      "exists": true
+    },
+    {
+      "metric": "AudioIntegrityMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "AudioGlitchMetric",
+      "skill": "audio_integrity",
+      "exists": true
+    },
+    {
+      "metric": "TurnTakingNaturalnessMetric",
+      "exists": true,
+      "sub_scores": [
+        {
+          "skill": "reply_speed",
+          "measures": "gap after the caller finishes, P50 and P90",
+          "exists": true
+        },
+        {
+          "skill": "premature_response",
+          "measures": "agent starts while the caller is still talking",
+          "exists": true
+        }
+      ]
+    },
+    {
+      "metric": "ConversationalToolCorrectnessMetric",
+      "skill": "entity_extraction",
+      "exists": false,
+      "expected_tools": [
+        {
+          "name": "lookup_account",
+          "input_parameters": {
+            "name": "Thaís Albuquerque",
+            "mobile_number": "07700900314"
+          }
+        },
+        {
+          "name": "validate_pac",
+          "input_parameters": {
+            "pac_code": "XQD418207",
+            "mobile_number": "07700900582"
+          }
+        },
+        {
+          "name": "validate_pac",
+          "input_parameters": {
+            "pac_code": "XQD418207",
+            "mobile_number": "07700900582"
+          }
+        },
+        {
+          "name": "schedule_port",
+          "input_parameters": {
+            "mobile_number": "07700900582",
+            "pac_code": "XQD418207",
+            "date": "2026-08-14"
+          }
+        }
+      ],
+      "forbidden_tools": [
+        {
+          "name": "schedule_port",
+          "input_parameters": {
+            "date": "2026-08-13"
+          }
+        },
+        {
+          "name": "schedule_port",
+          "input_parameters": {
+            "mobile_number": "07700900314"
+          }
+        }
+      ]
+    },
+    {
+      "metric": "JourneyPathCheck",
+      "skill": "task_completion",
+      "exists": false,
+      "fails_on_endings": [
+        "gave_up",
+        "language_not_followed"
+      ],
+      "fails_on_nodes": []
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "language_switching",
+      "exists": true,
+      "name": "Language Switching",
+      "criteria": "After the caller switched language, the agent continued in that language and finished the task.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "numeric_read_back",
+      "exists": true,
+      "name": "Numeric Read Back",
+      "criteria": "The agent read back every number, code and name exactly, character by character.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "tool_error_handling",
+      "exists": true,
+      "name": "Tool Error Handling",
+      "criteria": "When a tool failed, the agent told the caller and offered a way forward.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    },
+    {
+      "metric": "ConversationalGEval",
+      "skill": "low_confidence_confirmation",
+      "exists": true,
+      "name": "Low Confidence Confirmation",
+      "criteria": "The agent confirmed or asked the caller to spell a detail it may have misheard, instead of saving a guess.",
+      "evaluation_params": [
+        "content",
+        "scenario",
+        "expected_outcome"
+      ]
+    }
+  ]
+}

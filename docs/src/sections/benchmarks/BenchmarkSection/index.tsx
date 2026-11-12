@@ -106,9 +106,11 @@ export const MethodologySection: React.FC<{ benchmark: Benchmark }> = ({
   );
 };
 
-export const DatasetSection: React.FC<{ benchmark: Benchmark }> = ({
-  benchmark,
-}) => {
+export const DatasetSection: React.FC<{
+  benchmark: Benchmark;
+  // The test cases themselves, for benchmarks that can show them.
+  children?: ReactNode;
+}> = ({ benchmark, children }) => {
   const { dataset } = benchmark;
   const publicPercent = Math.round(dataset.publicShare * 100);
   const facts: Fact[] = [
@@ -158,8 +160,10 @@ export const DatasetSection: React.FC<{ benchmark: Benchmark }> = ({
           ? "The full test set is public, so every row on the leaderboard can be reproduced."
           : `${publicPercent}% of the test set is public. The rest is held out to check for training-data overlap.`
       }
+      fullWidth={Boolean(children)}
     >
       <FactList facts={facts} />
+      {children}
     </BenchmarkSection>
   );
 };
