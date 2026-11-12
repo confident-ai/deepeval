@@ -72,6 +72,9 @@ CONVERSATIONAL_G_EVAL_PARAMS = {
     MultiTurnParams.EXPECTED_OUTCOME: "Expected Outcome",
     MultiTurnParams.SCENARIO: "Scenario",
     MultiTurnParams.AUDIO: "Audio",
+    MultiTurnParams.CONTEXT: "Context",
+    MultiTurnParams.USER_DESCRIPTION: "User Description",
+    MultiTurnParams.CHATBOT_ROLE: "Chatbot Role",
 }
 
 G_EVAL_API_PARAMS = {
@@ -96,6 +99,9 @@ CONVERSATIONAL_G_EVAL_API_PARAMS = {
     MultiTurnParams.RETRIEVAL_CONTEXT: "retrievalContext",
     MultiTurnParams.TOOLS_CALLED: "toolsCalled",
     MultiTurnParams.AUDIO: "audio",
+    MultiTurnParams.CONTEXT: "context",
+    MultiTurnParams.USER_DESCRIPTION: "userDescription",
+    MultiTurnParams.CHATBOT_ROLE: "chatbotRole",
 }
 
 
