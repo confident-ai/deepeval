@@ -74,6 +74,28 @@ def _offset(event: VoiceEvent, text: str, line_seconds: float) -> float:
     return line_seconds * min(after, words) / words
 
 
+def _quiet_point(
+    pcm: bytes, at: float, sample_rate: int, reach: float = 0.5
+) -> float:
+    """The quietest moment near `at`, so a cut lands between words rather
+    than inside one."""
+    samples = array("h", pcm)
+    frame = max(1, int(0.02 * sample_rate))
+    first = max(0, int((at - reach) * sample_rate))
+    last = min(len(samples) - frame, int((at + reach) * sample_rate))
+    if last <= first:
+        return at
+    loudness = lambda start: sum(
+        abs(sample) for sample in samples[start : start + frame]
+    )
+    quietest = min(range(first, last, frame // 2), key=loudness)
+    here = min(int(at * sample_rate), len(samples) - frame)
+    # A line with no gap nearby is cut where the words fall.
+    if loudness(quietest) >= 0.5 * loudness(here):
+        return at
+    return (quietest + frame // 2) / sample_rate
+
+
 async def assemble_utterance(
     text: str,
     recording: Optional[Audio],
@@ -105,7 +127,9 @@ async def assemble_utterance(
         if isinstance(event, MidSentencePause):
             inside.append(
                 (
-                    _offset(event, text, line_seconds),
+                    _quiet_point(
+                        line, _offset(event, text, line_seconds), sample_rate
+                    ),
                     event,
                     _silence(event.seconds, sample_rate),
                 )
@@ -113,7 +137,9 @@ async def assemble_utterance(
         elif isinstance(event, NonSpeechSound) and event.audio is not None:
             inside.append(
                 (
-                    _offset(event, text, line_seconds),
+                    _quiet_point(
+                        line, _offset(event, text, line_seconds), sample_rate
+                    ),
                     event,
                     _pcm(event.audio, sample_rate),
                 )
