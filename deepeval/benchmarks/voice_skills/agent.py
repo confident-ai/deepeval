@@ -117,6 +117,8 @@ def _handler(name: str, mock: Dict, expected: List[Dict]) -> Callable:
         await asyncio.sleep(mock.get("latency_seconds", 0))
         if calls["made"] == 1 and "first_call_returns" in mock:
             return mock["first_call_returns"]
+        if calls["made"] in mock.get("calls", {}):
+            return mock["calls"][calls["made"]]
         # A lookup with details that match nothing finds nothing.
         if name.startswith(_READS) and expected:
             if not any(_matches(arguments, call) for call in expected):
@@ -149,6 +151,13 @@ def reference_agent(
                 .items()
             }
     results.update(setup.get("tools") or {})
+    # `name#2` is what `name` returns the second time it is called.
+    for key in [key for key in results if "#" in key]:
+        name, _, nth = key.partition("#")
+        later = results.pop(key)
+        results.setdefault(name, {}).setdefault("calls", {})[int(nth)] = (
+            later.get("returns", later)
+        )
     records = _records(setup)
     lookup = next(
         (
