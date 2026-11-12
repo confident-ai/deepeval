@@ -310,7 +310,8 @@ class TestOpenRouterModel:
     @patch("deepeval.models.llms.gateway_model.OpenAI")
     def test_generate_raw_response(self, mock_openai_class, settings):
         """Test generate_raw_response method"""
-        mock_client = Mock()
+        # MagicMock: the model uses the client as a context manager.
+        mock_client = MagicMock()
         mock_openai_class.return_value = mock_client
         mock_completion = Mock()
         mock_completion.choices = [Mock(message=Mock(content="raw response"))]
@@ -338,7 +339,8 @@ class TestOpenRouterModel:
     @patch("deepeval.models.llms.gateway_model.OpenAI")
     def test_generate_samples(self, mock_openai_class, settings):
         """Test generate_samples method"""
-        mock_client = Mock()
+        # MagicMock: the model uses the client as a context manager.
+        mock_client = MagicMock()
         mock_openai_class.return_value = mock_client
         mock_response = Mock()
         mock_response.choices = [
