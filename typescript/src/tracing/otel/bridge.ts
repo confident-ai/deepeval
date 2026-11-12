@@ -47,6 +47,7 @@ import {
   isAiSpan,
   resolveSpanType,
 } from "@/tracing/otel/converter";
+import type { DerivedTraceField } from "@/tracing/otel/hooks";
 import { latestUserText } from "@/tracing/otel/messages";
 
 export const LOCAL_SPAN_ATTRIBUTE = "deepeval.local";
@@ -84,7 +85,7 @@ interface TraceState {
   traceFields: Map<string, Partial<Trace>>;
   conversations: Set<string>;
   /** Trace fields the bridge derived, with the span time that chose each. */
-  derived: Map<string, { time: number; value: unknown }>;
+  derived: Map<DerivedTraceField, { time: number; value: unknown }>;
 }
 
 function key(context: SpanContext): string {
@@ -152,6 +153,10 @@ export class DeepEvalSpanBridge implements SpanProcessor {
   spanFor(span: OtelSpan | undefined): BaseSpan | undefined {
     if (!span) return undefined;
     return this.claims.get(key(span.spanContext()))?.placeholder;
+  }
+
+  clearDerivedTraceField(traceUuid: string, field: DerivedTraceField): void {
+    this.traces.get(traceUuid)?.derived.delete(field);
   }
 
   /** Whether `span` is open and confident-trace will export it. */
@@ -647,7 +652,7 @@ function deriveContent(trace: Trace, state: TraceState, span: BaseSpan): void {
 function derive(
   trace: Trace,
   state: TraceState,
-  field: "input" | "output" | "toolsCalled",
+  field: DerivedTraceField,
   time: number,
   value: unknown,
 ): void {

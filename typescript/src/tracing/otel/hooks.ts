@@ -8,12 +8,18 @@
 import type { BaseSpan, Trace } from "@/tracing/tracing";
 
 export type ExportedScope = "span" | "trace";
+export type DerivedTraceField = "input" | "output" | "toolsCalled";
 
 export const otelHooks: {
   /** The span deepeval collects for the active OTel span. */
   collectedSpan?: () => BaseSpan | undefined;
   /** The trace of the active collected span. */
   collectedTrace?: () => Trace | undefined;
+  /** Forget the bridge's inferred value after an explicit trace field write. */
+  clearDerivedTraceField?: (
+    traceUuid: string,
+    field: DerivedTraceField,
+  ) => void;
   /** Pass an update to the active OTel span, if confident-trace exports it. */
   updateExported?: (scope: ExportedScope, values: Record<string, any>) => void;
   /** Keep the active span, or its whole trace, out of the export. */

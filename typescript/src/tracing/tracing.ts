@@ -31,7 +31,7 @@ import {
 } from "@/tracing/pending-context";
 import { ConfidentAttr } from "@/tracing/attributes";
 import { isTraceInternalEnabled } from "@/tracing/utils";
-import { otelHooks } from "@/tracing/otel/hooks";
+import { type DerivedTraceField, otelHooks } from "@/tracing/otel/hooks";
 
 export enum SpanType {
   AGENT = "agent",
@@ -1371,6 +1371,16 @@ export interface UpdateCurrentTraceParams {
   drop?: boolean;
 }
 
+function setExplicitTraceField<K extends DerivedTraceField>(
+  trace: Trace,
+  field: K,
+  value: Trace[K],
+): void {
+  trace[field] = value;
+  if (value !== undefined)
+    otelHooks.clearDerivedTraceField?.(trace.uuid, field);
+}
+
 export const updateCurrentTrace = ({
   tags,
   metadata,
@@ -1407,12 +1417,12 @@ export const updateCurrentTrace = ({
   if (!currentTrace) return;
 
   if (testCase !== undefined) {
-    currentTrace.input = testCase.input;
-    currentTrace.output = testCase.actualOutput;
+    setExplicitTraceField(currentTrace, "input", testCase.input);
+    setExplicitTraceField(currentTrace, "output", testCase.actualOutput);
     currentTrace.retrievalContext = resolveRetrievalContext(
       testCase.retrievalContext,
     );
-    currentTrace.toolsCalled = testCase.toolsCalled;
+    setExplicitTraceField(currentTrace, "toolsCalled", testCase.toolsCalled);
     currentTrace.expectedTools = testCase.expectedTools;
     currentTrace.context = testCase.context;
     currentTrace.expectedOutput = testCase.expectedOutput;
@@ -1427,10 +1437,10 @@ export const updateCurrentTrace = ({
     currentTrace.threadId = threadId;
   }
   if (input !== undefined) {
-    currentTrace.input = input;
+    setExplicitTraceField(currentTrace, "input", input);
   }
   if (output !== undefined) {
-    currentTrace.output = output;
+    setExplicitTraceField(currentTrace, "output", output);
   }
   if (name !== undefined) {
     currentTrace.name = name;
@@ -1439,7 +1449,7 @@ export const updateCurrentTrace = ({
     currentTrace.retrievalContext = retrievalContext;
   }
   if (toolsCalled !== undefined) {
-    currentTrace.toolsCalled = toolsCalled;
+    setExplicitTraceField(currentTrace, "toolsCalled", toolsCalled);
   }
   if (expectedTools !== undefined) {
     currentTrace.expectedTools = expectedTools;
