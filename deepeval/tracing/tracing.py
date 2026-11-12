@@ -1042,9 +1042,15 @@ class Observer:
             else None
         )
         if trace is not None:
-            if trace.input is None:
+            if (
+                "input" not in trace.model_fields_set
+                and function_input is not None
+            ):
                 trace.input = function_input
-            if trace.output is None:
+            if (
+                "output" not in trace.model_fields_set
+                and function_output is not None
+            ):
                 trace.output = function_output
             if error is not None:
                 trace.status = TraceSpanStatus.ERRORED

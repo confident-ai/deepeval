@@ -1,4 +1,4 @@
-from contextlib import contextmanager
+from contextlib import contextmanager, nullcontext
 from typing import Any, Dict, Iterator, List, Optional, Tuple
 from contextvars import ContextVar, Token
 
@@ -174,6 +174,18 @@ def update_current_span(
         current_span.metrics = metrics
 
 
+def _set_trace_io(trace: Trace, key: str, value: Any) -> None:
+    setup = confident_trace_setup()
+    update = (
+        setup.updating_trace_io(trace.uuid, key) if setup else nullcontext()
+    )
+    with update:
+        setattr(trace, key, value)
+        if value is None:
+            # An optional test-case output of None leaves the trace output open.
+            trace.model_fields_set.discard(key)
+
+
 def update_current_trace(
     name: Optional[str] = None,
     tags: Optional[List[str]] = None,
@@ -204,8 +216,8 @@ def update_current_trace(
     if not current_trace:
         return
     if test_case:
-        current_trace.input = test_case.input
-        current_trace.output = test_case.actual_output
+        _set_trace_io(current_trace, "input", test_case.input)
+        _set_trace_io(current_trace, "output", test_case.actual_output)
         current_trace.expected_output = test_case.expected_output
         current_trace.retrieval_context = test_case.retrieval_context
         current_trace.context = test_case.context
@@ -220,9 +232,9 @@ def update_current_trace(
     if thread_id:
         current_trace.thread_id = thread_id
     if input:
-        current_trace.input = input
+        _set_trace_io(current_trace, "input", input)
     if output:
-        current_trace.output = output
+        _set_trace_io(current_trace, "output", output)
     if retrieval_context:
         current_trace.retrieval_context = retrieval_context
     if context:
