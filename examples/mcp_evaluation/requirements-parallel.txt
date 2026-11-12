@@ -1,0 +1,3 @@
+# Install from the repository root with -r examples/mcp_evaluation/requirements-parallel.txt
+.
+mcp>=1.10,<2
