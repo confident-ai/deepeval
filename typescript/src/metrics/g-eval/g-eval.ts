@@ -158,6 +158,7 @@ export class GEval extends BaseMetric {
       topLogprobs: this.topLogprobs,
       strictMode: this.strictMode,
       scoreMax: this.scoreRange[1],
+      scoreMin: this.scoreRange[0],
     });
   }
 

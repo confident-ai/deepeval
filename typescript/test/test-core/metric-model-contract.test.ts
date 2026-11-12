@@ -3,12 +3,14 @@
 
 import { z } from "zod";
 import { AnswerRelevancyMetric } from "@/metrics/answer-relevancy/answer-relevancy";
+import { GEval } from "@/metrics";
 import { generateWithSchema } from "@/metrics/utils";
 import {
   calculateWeightedSummedScore,
   evaluateGEvalPrompt,
 } from "@/metrics/g-eval/utils";
 import { DeepEvalBaseLLM } from "@/models";
+import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import type {
   ContentTokenLogProbs,
   GenerationResult,
@@ -206,6 +208,14 @@ describe("calculateWeightedSummedScore", () => {
     expect(calculateWeightedSummedScore(9, logProbs)).toBe(9);
   });
 
+  it("ignores candidates below the rubric minimum", () => {
+    // Under a 1-5 rubric, "0" would pull the score below the range.
+    const logProbs = [tokenLogProbs("1", { "1": 0.7, "0": 0.3 })];
+    expect(calculateWeightedSummedScore(1, logProbs, 5, 1)).toBe(1);
+    // A range that starts at 0 still weights "0" in.
+    expect(calculateWeightedSummedScore(1, logProbs, 5)).toBeCloseTo(0.7, 6);
+  });
+
   it("uses the last span, so earlier digits in the reason do not win", () => {
     const logProbs = [
       tokenLogProbs("9", { "9": 1 }),
@@ -236,6 +246,56 @@ describe("evaluateGEvalPrompt", () => {
     });
     expect(score).toBeCloseTo(7.7, 10);
     expect(reason).toBe("solid");
+  });
+
+  it("keeps the weighted score inside scoreMin..scoreMax", async () => {
+    const metric = metricWith(
+      new StubModel(
+        { output: { score: 1, reason: "weak" }, cost: 0 },
+        async () => ({
+          output: '{"score": 1, "reason": "weak"}',
+          cost: 0,
+          logProbs: [tokenLogProbs("1", { "1": 0.7, "0": 0.3 })],
+        }),
+      ),
+    );
+    const [score] = await evaluateGEvalPrompt(metric, "p", {
+      topLogprobs: 20,
+      strictMode: false,
+      scoreMax: 5,
+      scoreMin: 1,
+    });
+    expect(score).toBe(1);
+  });
+
+  it("keeps GEval's score at 0 or above for a rubric that starts above 0", async () => {
+    // The judge gives the rubric minimum (1 of 1-5) with 30% on "0".
+    const metric = new GEval({
+      name: "Helpfulness",
+      evaluationSteps: ["Judge how helpful the answer is."],
+      evaluationParams: [
+        SingleTurnParams.INPUT,
+        SingleTurnParams.ACTUAL_OUTPUT,
+      ],
+      rubric: [
+        { scoreRange: [1, 2], expectedOutcome: "Unhelpful." },
+        { scoreRange: [3, 5], expectedOutcome: "Helpful." },
+      ],
+      model: new StubModel(
+        { output: { score: 1, reason: "weak" }, cost: 0 },
+        async () => ({
+          output: '{"score": 1, "reason": "weak"}',
+          cost: 0,
+          logProbs: [tokenLogProbs("1", { "1": 0.7, "0": 0.3 })],
+        }),
+      ),
+      showIndicator: false,
+    });
+
+    const score = await metric.measure(
+      new LLMTestCase({ input: "q", actualOutput: "a" }),
+    );
+    expect(score).toBe(0);
   });
 
   it("returns the unweighted score in strict mode", async () => {
