@@ -298,7 +298,7 @@ For deterministic tool calls, prefer `update_current_span(...)` to add metadata,
 
 The integration captures inputs, outputs, model names, and tool calls automatically. For anything dynamic, the right API depends on where your code runs.
 
-- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`).
+- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `metrics`).
 - Use `LlmSpanContext` and `AgentSpanContext` for component-level metric defaults and evaluation parameters.
 - Use `update_current_trace(...)` and `update_current_span(...)` from inside a tool body to mutate fields the framework can't see.
 
@@ -408,9 +408,8 @@ async def run_rag(prompt: str):
 | `expected_tools`    | `list`      | Reference tool calls for tool-aware metrics.                                             |
 | `context`           | `list[str]` | Ideal context the model should use when answering.                                       |
 | `retrieval_context` | `list[str]` | Retrieved context the model actually used (LLM-only; Faithfulness, Contextual Relevancy).|
-| `prompt`            | `Prompt`    | Confident AI prompt object; LLM-only.                                                    |
 
-`with trace(...)` accepts trace-level kwargs (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`) — see the [tracing reference](/docs/evaluation-llm-tracing).
+`with trace(...)` accepts trace-level kwargs (`name`, `tags`, `metadata`, `thread_id`, `metrics`) — see the [tracing reference](/docs/evaluation-llm-tracing).
 
 ## FAQs
 

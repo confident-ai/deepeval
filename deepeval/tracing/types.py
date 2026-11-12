@@ -1,12 +1,11 @@
 from enum import Enum
 from dataclasses import dataclass, field
-from pydantic import BaseModel, Field, ConfigDict, PrivateAttr
+from pydantic import BaseModel, Field, ConfigDict
 from typing import Any, Dict, List, Optional, Union, Literal, TYPE_CHECKING
 from rich.progress import Progress
 
 from deepeval.utils import make_model_config
 
-from deepeval.prompt.prompt import Prompt
 from deepeval.test_case.llm_test_case import ToolCall
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics import BaseMetric
@@ -101,7 +100,6 @@ class BaseSpan(BaseModel):
     error: Optional[str] = None
     llm_test_case: Optional[LLMTestCase] = None
     metrics: Optional[List[BaseMetric]] = None
-    metric_collection: Optional[str] = None
     integration: Optional[str] = None
 
     # Don't serialize these
@@ -135,7 +133,6 @@ class LlmSpan(BaseSpan):
 
     model: Optional[str] = None
     provider: Optional[str] = None
-    prompt: Optional[Prompt] = None
     input_token_count: Optional[float] = Field(
         None, serialization_alias="inputTokenCount"
     )
@@ -151,21 +148,10 @@ class LlmSpan(BaseSpan):
     token_intervals: Optional[Dict[float, str]] = Field(
         None, serialization_alias="tokenTimes"
     )
-    prompt_alias: Optional[str] = Field(None, serialization_alias="promptAlias")
-    prompt_version: Optional[str] = Field(
-        None, serialization_alias="promptVersion"
-    )
-    prompt_label: Optional[str] = Field(None, serialization_alias="promptLabel")
-    prompt_commit_hash: Optional[str] = Field(
-        None, serialization_alias="promptCommitHash"
-    )
 
     # input_tools: Optional[List[ToolSchema]] = Field(None, serialization_alias="inputTools")
     # invocation_params: Optional[Dict[str, Any]] = Field(None, serialization_alias="invocationParams")
     # output_metadata: Optional[Dict[str, Any]] = Field(None, serialization_alias="outputMetadata")
-
-    # for serializing `prompt`
-    model_config = make_model_config(arbitrary_types_allowed=True)
 
 
 class RetrieverSpan(BaseSpan):
@@ -191,33 +177,13 @@ class Trace(BaseModel):
     tags: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
     thread_id: Optional[str] = None
-    user_id: Optional[str] = None
     input: Optional[Any] = None
     output: Optional[Any] = None
     metrics: Optional[List[BaseMetric]] = None
-    metric_collection: Optional[str] = None
-    test_case_id: Optional[str] = Field(None, serialization_alias="testCaseId")
-    test_run_id: Optional[str] = Field(None, serialization_alias="testRunId")
-    turn_id: Optional[str] = Field(None, serialization_alias="turnId")
 
     # Don't serialize these
-    confident_api_key: Optional[str] = Field(None, exclude=True)
     environment: str = Field(None, exclude=True)
     drop: bool = Field(False, exclude=True)
-    # Internal marker: True when this Trace was pushed implicitly by an
-    # OTel-mode integration's SpanInterceptor (so that
-    # ``update_current_trace(...)`` works without an enclosing ``@observe``
-    # / ``with trace(...)``). Used by ``ContextAwareSpanProcessor`` to
-    # decide REST vs OTLP routing — implicit placeholders DON'T count as
-    # "user opted into REST". See ``deepeval/integrations/pydantic_ai/
-    # instrumentator.py`` for the push/pop logic.
-    #
-    # Modeled as a ``PrivateAttr`` (not a ``Field``) because Pydantic v2
-    # disallows leading-underscore field names — and ``PrivateAttr`` is
-    # the right shape anyway: never serialized, never settable via the
-    # constructor, only mutated post-init by the SpanInterceptor that
-    # owns the placeholder.
-    _is_otel_implicit: bool = PrivateAttr(default=False)
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(
@@ -240,7 +206,6 @@ class TraceAttributes(BaseModel):
     tags: Optional[List[str]] = None
     metadata: Optional[Dict[str, Any]] = None
     thread_id: Optional[str] = None
-    user_id: Optional[str] = None
 
 
 @dataclass

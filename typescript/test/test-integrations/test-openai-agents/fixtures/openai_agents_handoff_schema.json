@@ -1,226 +1,182 @@
 {
   "name": "Agent workflow",
-  "uuid": "598766f7-4044-4e3c-a8f7-28a0196e03bd",
+  "uuid": "9f951e102b85e8a29c82b651c8e91cff",
   "baseSpans": [
     {
-      "uuid": "span_d9711807844e421eaaa6b4f8",
-      "name": "Handoff → SpanishAgent",
+      "uuid": "728a15ece5280bb5",
+      "name": "Agent workflow",
       "status": "SUCCESS",
       "type": "base",
-      "traceUuid": "598766f7-4044-4e3c-a8f7-28a0196e03bd",
-      "parentUuid": "span_987b8dc4b32440b6be761d11",
-      "startTime": "2026-02-24T11:43:52.816Z",
-      "endTime": "2026-02-24T11:43:52.816Z",
-      "input": null,
-      "output": null,
-      "metadata": {
-        "from_agent": "TriageAgent",
-        "to_agent": "SpanishAgent"
-      }
+      "traceUuid": "9f951e102b85e8a29c82b651c8e91cff",
+      "startTime": "2026-10-21T20:44:52.119Z",
+      "endTime": "2026-10-21T20:44:55.339Z"
+    },
+    {
+      "uuid": "4b860a3fa4efdc4f",
+      "name": "Agent workflow",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "9f951e102b85e8a29c82b651c8e91cff",
+      "parentUuid": "728a15ece5280bb5",
+      "startTime": "2026-10-21T20:44:52.120Z",
+      "endTime": "2026-10-21T20:44:55.340Z"
+    },
+    {
+      "uuid": "f89b3ad967d80f5c",
+      "name": "turn",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "9f951e102b85e8a29c82b651c8e91cff",
+      "parentUuid": "a56be09431768661",
+      "startTime": "2026-10-21T20:44:52.120Z",
+      "endTime": "2026-10-21T20:44:53.746Z"
+    },
+    {
+      "uuid": "3bddd97b534508e9",
+      "name": "handoff",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "9f951e102b85e8a29c82b651c8e91cff",
+      "parentUuid": "f89b3ad967d80f5c",
+      "startTime": "2026-10-21T20:44:53.745Z",
+      "endTime": "2026-10-21T20:44:53.746Z"
+    },
+    {
+      "uuid": "39c3465981c40682",
+      "name": "turn",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "9f951e102b85e8a29c82b651c8e91cff",
+      "parentUuid": "ec6d2109f91efe8c",
+      "startTime": "2026-10-21T20:44:53.746Z",
+      "endTime": "2026-10-21T20:44:55.339Z"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "span_987b8dc4b32440b6be761d11",
+      "uuid": "a56be09431768661",
       "name": "TriageAgent",
       "status": "SUCCESS",
       "type": "agent",
-      "traceUuid": "598766f7-4044-4e3c-a8f7-28a0196e03bd",
-      "startTime": "2026-02-24T11:43:51.753Z",
-      "endTime": "2026-02-24T11:43:52.817Z",
-      "input": [
+      "traceUuid": "9f951e102b85e8a29c82b651c8e91cff",
+      "parentUuid": "4b860a3fa4efdc4f",
+      "startTime": "2026-10-21T20:44:52.120Z",
+      "endTime": "2026-10-21T20:44:53.746Z",
+      "input": "Hola, ¿cómo estás?",
+      "output": [
         {
-          "type": "message",
-          "role": "system",
-          "content": "If input is Spanish, handoff to SpanishAgent. Else EnglishAgent."
-        },
-        {
-          "type": "message",
-          "role": "user",
-          "content": "Hola, ¿cómo estás?"
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "transfer_to_SpanishAgent",
+            "id": "call_FyzGqi72afNLlZseCFmmhkVO",
+            "arguments": "{}"
+          }
         }
       ],
       "availableTools": [],
-      "agentHandoffs": [
-        "SpanishAgent",
-        "EnglishAgent"
-      ],
-      "metadata": {
-        "output_type": "text"
-      }
+      "agentHandoffs": []
     },
     {
-      "uuid": "span_bfb9ca75ca2c4d6d945a4223",
+      "uuid": "ec6d2109f91efe8c",
       "name": "SpanishAgent",
       "status": "SUCCESS",
       "type": "agent",
-      "traceUuid": "598766f7-4044-4e3c-a8f7-28a0196e03bd",
-      "startTime": "2026-02-24T11:43:52.817Z",
-      "endTime": "2026-02-24T11:43:53.635Z",
-      "input": [
-        {
-          "type": "message",
-          "role": "system",
-          "content": "If input is Spanish, handoff to SpanishAgent. Else EnglishAgent."
-        },
-        {
-          "type": "message",
-          "role": "user",
-          "content": "Hola, ¿cómo estás?"
-        }
-      ],
+      "traceUuid": "9f951e102b85e8a29c82b651c8e91cff",
+      "parentUuid": "4b860a3fa4efdc4f",
+      "startTime": "2026-10-21T20:44:53.746Z",
+      "endTime": "2026-10-21T20:44:55.340Z",
+      "input": "Hola, ¿cómo estás?",
       "output": "Hola.",
       "availableTools": [],
-      "agentHandoffs": [],
-      "metadata": {
-        "output_type": "text"
-      }
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "span_0826ec011b9e4e0dbb3f09f1",
-      "name": "LLM Generation",
+      "uuid": "50b7759f9a034f5a",
+      "name": "response",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "598766f7-4044-4e3c-a8f7-28a0196e03bd",
-      "parentUuid": "span_987b8dc4b32440b6be761d11",
-      "startTime": "2026-02-24T11:43:51.753Z",
-      "endTime": "2026-02-24T11:43:52.815Z",
+      "traceUuid": "9f951e102b85e8a29c82b651c8e91cff",
+      "parentUuid": "f89b3ad967d80f5c",
+      "startTime": "2026-10-21T20:44:52.120Z",
+      "endTime": "2026-10-21T20:44:53.744Z",
       "input": [
         {
-          "type": "message",
           "role": "system",
           "content": "If input is Spanish, handoff to SpanishAgent. Else EnglishAgent."
         },
         {
-          "type": "message",
           "role": "user",
           "content": "Hola, ¿cómo estás?"
         }
       ],
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "transfer_to_SpanishAgent",
+            "id": "call_FyzGqi72afNLlZseCFmmhkVO",
+            "arguments": "{}"
+          }
+        }
+      ],
+      "toolsCalled": [
+        {
+          "name": "transfer_to_SpanishAgent",
+          "inputParameters": {}
+        }
+      ],
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 89,
-      "outputTokenCount": 15,
-      "metadata": {
-        "cached_input_tokens": 0,
-        "output_reasoning_tokens": 0,
-        "invocation_params": {
-          "max_output_tokens": null,
-          "parallel_tool_calls": true,
-          "reasoning": {
-            "effort": null,
-            "summary": null
-          },
-          "text": {
-            "format": {
-              "type": "text"
-            },
-            "verbosity": "medium"
-          },
-          "temperature": 1,
-          "tool_choice": "auto",
-          "tools": [
-            {
-              "type": "function",
-              "description": "Handoff to the SpanishAgent agent to handle the request. ",
-              "name": "transfer_to_SpanishAgent",
-              "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": false
-              },
-              "strict": true
-            },
-            {
-              "type": "function",
-              "description": "Handoff to the EnglishAgent agent to handle the request. ",
-              "name": "transfer_to_EnglishAgent",
-              "parameters": {
-                "type": "object",
-                "properties": {},
-                "required": [],
-                "additionalProperties": false
-              },
-              "strict": true
-            }
-          ],
-          "top_p": 1,
-          "truncation": "disabled"
-        }
-      }
+      "outputTokenCount": 15
     },
     {
-      "uuid": "span_247151ef70c84b43ab205579",
-      "name": "LLM Generation",
+      "uuid": "0fbaef6ffe7a6ae0",
+      "name": "response",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "598766f7-4044-4e3c-a8f7-28a0196e03bd",
-      "parentUuid": "span_bfb9ca75ca2c4d6d945a4223",
-      "startTime": "2026-02-24T11:43:52.818Z",
-      "endTime": "2026-02-24T11:43:53.634Z",
+      "traceUuid": "9f951e102b85e8a29c82b651c8e91cff",
+      "parentUuid": "39c3465981c40682",
+      "startTime": "2026-10-21T20:44:53.748Z",
+      "endTime": "2026-10-21T20:44:55.338Z",
       "input": [
         {
-          "type": "message",
           "role": "system",
           "content": "You speak Spanish. Answer 'Hola' to everything."
         },
         {
-          "type": "message",
           "role": "user",
           "content": "Hola, ¿cómo estás?"
         },
         {
-          "name": "transfer_to_SpanishAgent",
-          "arguments": "{}"
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "transfer_to_SpanishAgent",
+            "id": "call_FyzGqi72afNLlZseCFmmhkVO",
+            "arguments": "{}"
+          }
+        },
+        {
+          "role": "user"
         }
       ],
       "output": "Hola.",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 61,
-      "outputTokenCount": 3,
-      "metadata": {
-        "cached_input_tokens": 0,
-        "output_reasoning_tokens": 0,
-        "invocation_params": {
-          "max_output_tokens": null,
-          "parallel_tool_calls": true,
-          "reasoning": {
-            "effort": null,
-            "summary": null
-          },
-          "text": {
-            "format": {
-              "type": "text"
-            },
-            "verbosity": "medium"
-          },
-          "temperature": 1,
-          "tool_choice": "auto",
-          "tools": [],
-          "top_p": 1,
-          "truncation": "disabled"
-        }
-      }
+      "outputTokenCount": 3
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-24T11:43:51.752Z",
-  "endTime": "2026-02-24T11:43:53.635Z",
+  "startTime": "2026-10-21T20:44:52.119Z",
+  "endTime": "2026-10-21T20:44:55.340Z",
   "environment": "testing",
-  "input": [
-    {
-      "type": "message",
-      "role": "system",
-      "content": "If input is Spanish, handoff to SpanishAgent. Else EnglishAgent."
-    },
-    {
-      "type": "message",
-      "role": "user",
-      "content": "Hola, ¿cómo estás?"
-    }
-  ],
-  "output": "Hola."
+  "metadata": {},
+  "input": "Hola, ¿cómo estás?",
+  "output": "Hola.",
+  "status": "SUCCESS"
 }

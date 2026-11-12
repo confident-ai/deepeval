@@ -1,103 +1,198 @@
 {
-  "uuid": "77c656018654ff5661a56b33b8504585",
+  "uuid": "e80209c933956354d30ad79d878f66c9",
   "baseSpans": [
     {
-      "uuid": "8e6c46cffa78acd2",
+      "uuid": "6287181f77ddbb8c",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "36a7e23213afbc30",
-      "startTime": "2026-05-05T18:12:05.545Z",
-      "endTime": "2026-05-05T18:12:07.103Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "<thinking>The User has asked for a multiplication operation between 7 and 8. The 'calculate' tool can be used to perform this operation.</thinking>\n",
-      "integration": "AgentCore"
+      "parentUuid": "23bedbb162b94866",
+      "startTime": "2026-11-04T06:53:05.628Z",
+      "endTime": "2026-11-04T06:53:06.384Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?"
+        },
+        {
+          "role": "assistant",
+          "content": "<thinking>The User wants to know the product of 7 and 8. This is a multiplication operation which can be performed using the 'calculate' tool.</thinking>\n\n<thinking>No tool was used, proceeding with the calculation.</thinking>\n"
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "tooluse_1SHhQCsKHzWs3V4Ye1BZzL",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "56.0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "integration": "Strands"
     },
     {
-      "uuid": "c9e6d40d563db46a",
+      "uuid": "decbde48cec559b9",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "36a7e23213afbc30",
-      "startTime": "2026-05-05T18:12:03.231Z",
-      "endTime": "2026-05-05T18:12:05.544Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "<thinking>The User has asked for a multiplication operation between 7 and 8. The 'calculate' tool can be used to perform this operation.</thinking>\n",
-      "integration": "AgentCore"
+      "parentUuid": "23bedbb162b94866",
+      "startTime": "2026-11-04T06:53:04.107Z",
+      "endTime": "2026-11-04T06:53:05.628Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?"
+        }
+      ],
+      "output": "<thinking>The User wants to know the product of 7 and 8. This is a multiplication operation which can be performed using the 'calculate' tool.</thinking>\n\n<thinking>No tool was used, proceeding with the calculation.</thinking>\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "description": "Perform basic arithmetic operations.",
+          "output": "56.0",
+          "inputParameters": {
+            "a": 7,
+            "b": 8,
+            "operation": "multiply"
+          }
+        }
+      ]
     }
   ],
   "agentSpans": [
     {
-      "uuid": "36a7e23213afbc30",
-      "name": "invoke_agent Strands Agents",
+      "uuid": "23bedbb162b94866",
+      "name": "Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T18:12:03.230Z",
-      "endTime": "2026-05-05T18:12:07.104Z",
+      "startTime": "2026-11-04T06:53:04.106Z",
+      "endTime": "2026-11-04T06:53:06.385Z",
       "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "<thinking>The 'calculate' tool has returned the result of 7 multiplied by 8 as 56.0. This is the answer to the User's question.</thinking> \n\nThe answer to your question, 7 multiplied by 8, is 56.0.\n",
-      "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "AgentCore"
+      "output": "<thinking>The 'calculate' tool returned a result of 56.0 which is the correct answer for the multiplication of 7 and 8.</thinking>\n\nThe result of 7 multiplied by 8 is 56.\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "description": "Perform basic arithmetic operations.",
+          "output": "56.0",
+          "inputParameters": {
+            "a": 7,
+            "b": 8,
+            "operation": "multiply"
+          }
+        }
+      ],
+      "availableTools": [
+        "calculate"
+      ],
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "3a9d76f2d67c928a",
+      "uuid": "ea3308a4d72775c8",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "8e6c46cffa78acd2",
-      "startTime": "2026-05-05T18:12:05.546Z",
-      "endTime": "2026-05-05T18:12:07.102Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "<thinking>The 'calculate' tool has returned the result of 7 multiplied by 8 as 56.0. This is the answer to the User's question.</thinking> \n\nThe answer to your question, 7 multiplied by 8, is 56.0.",
+      "parentUuid": "6287181f77ddbb8c",
+      "startTime": "2026-11-04T06:53:05.628Z",
+      "endTime": "2026-11-04T06:53:06.384Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?"
+        },
+        {
+          "role": "assistant",
+          "content": "<thinking>The User wants to know the product of 7 and 8. This is a multiplication operation which can be performed using the 'calculate' tool.</thinking>\n\n<thinking>No tool was used, proceeding with the calculation.</thinking>\n"
+        },
+        {
+          "role": "tool",
+          "content": [
+            {
+              "toolResult": {
+                "toolUseId": "tooluse_1SHhQCsKHzWs3V4Ye1BZzL",
+                "status": "success",
+                "content": [
+                  {
+                    "text": "56.0"
+                  }
+                ]
+              }
+            }
+          ]
+        }
+      ],
+      "output": "<thinking>The 'calculate' tool returned a result of 56.0 which is the correct answer for the multiplication of 7 and 8.</thinking>\n\nThe result of 7 multiplied by 8 is 56.",
+      "integration": "Strands",
       "model": "amazon.nova-lite-v1:0",
-      "inputTokenCount": 543.0,
-      "outputTokenCount": 61.0,
-      "integration": "AgentCore",
-      "provider": null
+      "inputTokenCount": 560.0,
+      "outputTokenCount": 49.0
     },
     {
-      "uuid": "bdd3ffec014a5541",
+      "uuid": "8f03f323fbef337f",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c9e6d40d563db46a",
-      "startTime": "2026-05-05T18:12:03.231Z",
-      "endTime": "2026-05-05T18:12:05.528Z",
-      "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-      "output": "<thinking>The User has asked for a multiplication operation between 7 and 8. The 'calculate' tool can be used to perform this operation.</thinking>\n",
+      "parentUuid": "decbde48cec559b9",
+      "startTime": "2026-11-04T06:53:04.107Z",
+      "endTime": "2026-11-04T06:53:05.626Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?"
+        }
+      ],
+      "output": "<thinking>The User wants to know the product of 7 and 8. This is a multiplication operation which can be performed using the 'calculate' tool.</thinking>\n\n<thinking>No tool was used, proceeding with the calculation.</thinking>\n",
+      "integration": "Strands",
+      "toolsCalled": [
+        {
+          "name": "calculate",
+          "type": "FUNCTION",
+          "inputParameters": {
+            "a": 7,
+            "b": 8,
+            "operation": "multiply"
+          }
+        }
+      ],
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 458.0,
-      "outputTokenCount": 56.0,
-      "integration": "AgentCore",
-      "provider": null
+      "outputTokenCount": 80.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "1ba58e7deb11fe80",
-      "name": "execute_tool calculate",
+      "uuid": "2062b55fd465ee66",
+      "name": "calculate",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "c9e6d40d563db46a",
-      "startTime": "2026-05-05T18:12:05.530Z",
-      "endTime": "2026-05-05T18:12:05.539Z",
+      "parentUuid": "decbde48cec559b9",
+      "startTime": "2026-11-04T06:53:05.627Z",
+      "endTime": "2026-11-04T06:53:05.627Z",
+      "input": {
+        "a": 7,
+        "b": 8,
+        "operation": "multiply"
+      },
       "output": "56.0",
-      "toolsCalled": [
-        {
-          "name": "calculate",
-          "type": "FUNCTION",
-          "inputParameters": {}
-        }
-      ],
-      "integration": "AgentCore"
+      "integration": "Strands",
+      "description": "Perform basic arithmetic operations."
     }
   ],
-  "startTime": "2026-05-05T18:12:03.230Z",
-  "endTime": "2026-05-05T18:12:07.104Z",
+  "startTime": "2026-11-04T06:53:04.106Z",
+  "endTime": "2026-11-04T06:53:06.385Z",
   "name": "agentcore-tool-test",
   "metadata": {
     "test_type": "tool"
@@ -108,8 +203,20 @@
   ],
   "environment": "development",
   "threadId": "tool-123",
-  "userId": "test-user",
   "input": "You are a calculator assistant. Use the calculate tool for math operations. Be concise. What is 7 multiplied by 8?",
-  "output": "<thinking>The 'calculate' tool has returned the result of 7 multiplied by 8 as 56.0. This is the answer to the User's question.</thinking> \n\nThe answer to your question, 7 multiplied by 8, is 56.0.\n",
-  "status": "SUCCESS"
+  "output": "<thinking>The 'calculate' tool returned a result of 56.0 which is the correct answer for the multiplication of 7 and 8.</thinking>\n\nThe result of 7 multiplied by 8 is 56.\n",
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "calculate",
+      "type": "FUNCTION",
+      "description": "Perform basic arithmetic operations.",
+      "output": "56.0",
+      "inputParameters": {
+        "a": 7,
+        "b": 8,
+        "operation": "multiply"
+      }
+    }
+  ]
 }

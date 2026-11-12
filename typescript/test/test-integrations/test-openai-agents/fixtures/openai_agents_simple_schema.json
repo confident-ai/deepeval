@@ -1,54 +1,69 @@
 {
   "name": "Agent workflow",
-  "uuid": "a8266012-16fb-472d-a8b4-b44015ca4cad",
-  "baseSpans": [],
+  "uuid": "f8062020984c7650a2b13585b9b5df06",
+  "baseSpans": [
+    {
+      "uuid": "a03b9bad48269a56",
+      "name": "Agent workflow",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "f8062020984c7650a2b13585b9b5df06",
+      "startTime": "2026-10-21T20:44:45.002Z",
+      "endTime": "2026-10-21T20:44:46.475Z"
+    },
+    {
+      "uuid": "aa3b85624c4ca2bf",
+      "name": "Agent workflow",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "f8062020984c7650a2b13585b9b5df06",
+      "parentUuid": "a03b9bad48269a56",
+      "startTime": "2026-10-21T20:44:45.005Z",
+      "endTime": "2026-10-21T20:44:46.475Z"
+    },
+    {
+      "uuid": "b0c6cc8f4932c358",
+      "name": "turn",
+      "status": "SUCCESS",
+      "type": "base",
+      "traceUuid": "f8062020984c7650a2b13585b9b5df06",
+      "parentUuid": "a285ee8955c65376",
+      "startTime": "2026-10-21T20:44:45.006Z",
+      "endTime": "2026-10-21T20:44:46.474Z"
+    }
+  ],
   "agentSpans": [
     {
-      "uuid": "span_9de73117f48b4ed1a4def220",
+      "uuid": "a285ee8955c65376",
       "name": "SimpleAgent",
       "status": "SUCCESS",
       "type": "agent",
-      "traceUuid": "a8266012-16fb-472d-a8b4-b44015ca4cad",
-      "startTime": "2026-02-24T11:43:44.657Z",
-      "endTime": "2026-02-24T11:43:45.665Z",
-      "input": [
-        {
-          "type": "message",
-          "role": "system",
-          "content": "You are a helpful assistant. Answer the user's question concisely. Do not use any tools."
-        },
-        {
-          "type": "message",
-          "role": "user",
-          "content": "Say hello concisely."
-        }
-      ],
+      "traceUuid": "f8062020984c7650a2b13585b9b5df06",
+      "parentUuid": "aa3b85624c4ca2bf",
+      "startTime": "2026-10-21T20:44:45.006Z",
+      "endTime": "2026-10-21T20:44:46.475Z",
+      "input": "Say hello concisely.",
       "output": "Hello!",
       "availableTools": [],
-      "agentHandoffs": [],
-      "metadata": {
-        "output_type": "text"
-      }
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "span_eb8b4812bb744a8480f0f8f1",
-      "name": "LLM Generation",
+      "uuid": "d439005b93365c1c",
+      "name": "response",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "a8266012-16fb-472d-a8b4-b44015ca4cad",
-      "parentUuid": "span_9de73117f48b4ed1a4def220",
-      "startTime": "2026-02-24T11:43:44.659Z",
-      "endTime": "2026-02-24T11:43:45.662Z",
+      "traceUuid": "f8062020984c7650a2b13585b9b5df06",
+      "parentUuid": "b0c6cc8f4932c358",
+      "startTime": "2026-10-21T20:44:45.013Z",
+      "endTime": "2026-10-21T20:44:46.463Z",
       "input": [
         {
-          "type": "message",
           "role": "system",
           "content": "You are a helpful assistant. Answer the user's question concisely. Do not use any tools."
         },
         {
-          "type": "message",
           "role": "user",
           "content": "Say hello concisely."
         }
@@ -56,48 +71,16 @@
       "output": "Hello!",
       "model": "gpt-4o-2024-08-06",
       "inputTokenCount": 37,
-      "outputTokenCount": 3,
-      "metadata": {
-        "cached_input_tokens": 0,
-        "output_reasoning_tokens": 0,
-        "invocation_params": {
-          "max_output_tokens": null,
-          "parallel_tool_calls": true,
-          "reasoning": {
-            "effort": null,
-            "summary": null
-          },
-          "text": {
-            "format": {
-              "type": "text"
-            },
-            "verbosity": "medium"
-          },
-          "temperature": 1,
-          "tool_choice": "auto",
-          "tools": [],
-          "top_p": 1,
-          "truncation": "disabled"
-        }
-      }
+      "outputTokenCount": 3
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-24T11:43:44.655Z",
-  "endTime": "2026-02-24T11:43:45.665Z",
+  "startTime": "2026-10-21T20:44:45.002Z",
+  "endTime": "2026-10-21T20:44:46.476Z",
   "environment": "testing",
-  "input": [
-    {
-      "type": "message",
-      "role": "system",
-      "content": "You are a helpful assistant. Answer the user's question concisely. Do not use any tools."
-    },
-    {
-      "type": "message",
-      "role": "user",
-      "content": "Say hello concisely."
-    }
-  ],
-  "output": "Hello!"
+  "metadata": {},
+  "input": "Say hello concisely.",
+  "output": "Hello!",
+  "status": "SUCCESS"
 }

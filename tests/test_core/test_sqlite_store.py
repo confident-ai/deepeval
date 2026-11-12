@@ -115,7 +115,6 @@ def _trace(uuid: str = "trace-1") -> TraceApi:
         startTime="2026-01-01T00:00:00",
         endTime="2026-01-01T00:00:03",
         threadId="thread-1",
-        userId="user-1",
         environment="testing",
         input="hi",
         output="done",
@@ -530,7 +529,7 @@ class TestWriteTestRun:
             "trace-1",
             "my-agent",
             "thread-1",
-            "user-1",
+            None,  # traces no longer carry a user id
             "testing",
         )
         assert json.loads(trace[5]) == ["a", "b"]

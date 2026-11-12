@@ -1,43 +1,458 @@
 {
-  "uuid": "b640f29b-5b0c-4595-ba43-793110678509",
+  "uuid": "89d6ea7a36bed5475e58752c6fad7022",
   "baseSpans": [
     {
-      "uuid": "33ff953c-74e3-42a0-8856-9213f3ef8bc4",
-      "name": "kickoff",
+      "uuid": "f2d924c98984166d",
+      "name": "crew crew",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-06-01T17:24:09.054Z",
-      "endTime": "2026-06-01T17:24:12.294Z",
-      "input": {},
-      "output": "Why did the narwhal always bring a pencil to the ocean? Because it wanted to draw attention with its \"tusk-tastic\" personality!",
+      "startTime": "2026-10-21T17:48:31.862Z",
+      "endTime": "2026-10-21T17:48:33.921Z",
+      "output": "Why did the axolotl break up with its partner? Because it found someone who really knew how to \"gill\" it!",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "eca7a3301211d13c",
+      "name": "task Task",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "f2d924c98984166d",
+      "startTime": "2026-10-21T17:48:32.934Z",
+      "endTime": "2026-10-21T17:48:33.916Z",
+      "input": {
+        "description": "Write a one-sentence joke about the animal provided.",
+        "context": "Axolotl"
+      },
+      "output": "Why did the axolotl break up with its partner? Because it found someone who really knew how to \"gill\" it!",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "e4a460c3ec87c0f3",
+      "name": "flow AgentExecutor",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b5b5d6700baaccc5",
+      "startTime": "2026-10-21T17:48:32.938Z",
+      "endTime": "2026-10-21T17:48:33.914Z",
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "3358934e58ca19d8",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e4a460c3ec87c0f3",
+      "startTime": "2026-10-21T17:48:33.910Z",
+      "endTime": "2026-10-21T17:48:33.911Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "d0a5230cf316b10a",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e4a460c3ec87c0f3",
+      "startTime": "2026-10-21T17:48:33.909Z",
+      "endTime": "2026-10-21T17:48:33.910Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "dedfc09d5cac91bf",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e4a460c3ec87c0f3",
+      "startTime": "2026-10-21T17:48:33.908Z",
+      "endTime": "2026-10-21T17:48:33.909Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "8d350be5d37e2093",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e4a460c3ec87c0f3",
+      "startTime": "2026-10-21T17:48:33.908Z",
+      "endTime": "2026-10-21T17:48:33.908Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "aacd4994808859b4",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e4a460c3ec87c0f3",
+      "startTime": "2026-10-21T17:48:33.907Z",
+      "endTime": "2026-10-21T17:48:33.907Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "4f08845414173dfd",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e4a460c3ec87c0f3",
+      "startTime": "2026-10-21T17:48:33.903Z",
+      "endTime": "2026-10-21T17:48:33.906Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "d2857989b601b2ac",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e4a460c3ec87c0f3",
+      "startTime": "2026-10-21T17:48:33.902Z",
+      "endTime": "2026-10-21T17:48:33.903Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "1c81f4ea3aaf5e4c",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e4a460c3ec87c0f3",
+      "startTime": "2026-10-21T17:48:32.947Z",
+      "endTime": "2026-10-21T17:48:33.902Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "e0db700de46b6e03",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e4a460c3ec87c0f3",
+      "startTime": "2026-10-21T17:48:32.946Z",
+      "endTime": "2026-10-21T17:48:32.946Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "b0adc01d6a33c60e",
+      "name": "node initialize_reasoning",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e4a460c3ec87c0f3",
+      "startTime": "2026-10-21T17:48:32.944Z",
+      "endTime": "2026-10-21T17:48:32.946Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "a83513729c0e28e5",
+      "name": "node check_todos_available",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e4a460c3ec87c0f3",
+      "startTime": "2026-10-21T17:48:32.943Z",
+      "endTime": "2026-10-21T17:48:32.944Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "planning_disabled",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "eacd411f3c23a21a",
+      "name": "node generate_plan",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e4a460c3ec87c0f3",
+      "startTime": "2026-10-21T17:48:32.943Z",
+      "endTime": "2026-10-21T17:48:32.943Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "caacc44d5da168c5",
+      "name": "task Task",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "f2d924c98984166d",
+      "startTime": "2026-10-21T17:48:32.042Z",
+      "endTime": "2026-10-21T17:48:32.929Z",
+      "input": {
+        "description": "Pick a random animal.",
+        "context": ""
+      },
+      "output": "Axolotl",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "b1d3833a09feb411",
+      "name": "flow AgentExecutor",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "cf748741e0723513",
+      "startTime": "2026-10-21T17:48:32.047Z",
+      "endTime": "2026-10-21T17:48:32.926Z",
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "2c315501226b9329",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b1d3833a09feb411",
+      "startTime": "2026-10-21T17:48:32.922Z",
+      "endTime": "2026-10-21T17:48:32.923Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "66acca37eab42c97",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b1d3833a09feb411",
+      "startTime": "2026-10-21T17:48:32.921Z",
+      "endTime": "2026-10-21T17:48:32.921Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "027da94c5ee06989",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b1d3833a09feb411",
+      "startTime": "2026-10-21T17:48:32.919Z",
+      "endTime": "2026-10-21T17:48:32.920Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "8aaf2ea34a8cff76",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b1d3833a09feb411",
+      "startTime": "2026-10-21T17:48:32.918Z",
+      "endTime": "2026-10-21T17:48:32.919Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "25564b9b922376c2",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b1d3833a09feb411",
+      "startTime": "2026-10-21T17:48:32.916Z",
+      "endTime": "2026-10-21T17:48:32.917Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "55744e274aa041e1",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b1d3833a09feb411",
+      "startTime": "2026-10-21T17:48:32.912Z",
+      "endTime": "2026-10-21T17:48:32.915Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "303b8676a8493a65",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b1d3833a09feb411",
+      "startTime": "2026-10-21T17:48:32.911Z",
+      "endTime": "2026-10-21T17:48:32.911Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "5a4392fe1f28d885",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b1d3833a09feb411",
+      "startTime": "2026-10-21T17:48:32.053Z",
+      "endTime": "2026-10-21T17:48:32.910Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "c9a1ad9ae6f1c28a",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b1d3833a09feb411",
+      "startTime": "2026-10-21T17:48:32.052Z",
+      "endTime": "2026-10-21T17:48:32.053Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "350f633b78b43904",
+      "name": "node initialize_reasoning",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b1d3833a09feb411",
+      "startTime": "2026-10-21T17:48:32.051Z",
+      "endTime": "2026-10-21T17:48:32.052Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "362dc1f58be3cb15",
+      "name": "node check_todos_available",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b1d3833a09feb411",
+      "startTime": "2026-10-21T17:48:32.050Z",
+      "endTime": "2026-10-21T17:48:32.051Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "planning_disabled",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "57b7d35f823ba8af",
+      "name": "node generate_plan",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "b1d3833a09feb411",
+      "startTime": "2026-10-21T17:48:32.049Z",
+      "endTime": "2026-10-21T17:48:32.049Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
       "integration": "CrewAI"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "380c21a6-3725-4016-a391-05a22deb9412",
-      "name": "execute_task",
+      "uuid": "b5b5d6700baaccc5",
+      "name": "Writer",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "33ff953c-74e3-42a0-8856-9213f3ef8bc4",
-      "startTime": "2026-06-01T17:24:10.976Z",
-      "endTime": "2026-06-01T17:24:12.291Z",
-      "input": "Write a one-sentence joke about the animal provided.\n\nThis is the expected criteria for your final answer: A joke.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nNarwhal",
-      "output": "Why did the narwhal always bring a pencil to the ocean? Because it wanted to draw attention with its \"tusk-tastic\" personality!",
+      "parentUuid": "eca7a3301211d13c",
+      "startTime": "2026-10-21T17:48:32.935Z",
+      "endTime": "2026-10-21T17:48:33.915Z",
+      "input": {
+        "description": "Write a one-sentence joke about the animal provided.",
+        "context": "Axolotl"
+      },
+      "output": "Why did the axolotl break up with its partner? Because it found someone who really knew how to \"gill\" it!",
       "integration": "CrewAI",
       "availableTools": [],
       "agentHandoffs": []
     },
     {
-      "uuid": "7bc5db50-01a1-4aec-b40b-acd85cab17ad",
-      "name": "execute_task",
+      "uuid": "cf748741e0723513",
+      "name": "Researcher",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "33ff953c-74e3-42a0-8856-9213f3ef8bc4",
-      "startTime": "2026-06-01T17:24:09.072Z",
-      "endTime": "2026-06-01T17:24:10.973Z",
-      "input": "Pick a random animal.\n\nThis is the expected criteria for your final answer: The name of an animal.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "Narwhal",
+      "parentUuid": "caacc44d5da168c5",
+      "startTime": "2026-10-21T17:48:32.042Z",
+      "endTime": "2026-10-21T17:48:32.928Z",
+      "input": {
+        "description": "Pick a random animal.",
+        "context": ""
+      },
+      "output": "Axolotl",
       "integration": "CrewAI",
       "availableTools": [],
       "agentHandoffs": []
@@ -45,62 +460,60 @@
   ],
   "llmSpans": [
     {
-      "uuid": "d95e69e1-75a2-4fb4-a636-865d725b0223",
-      "name": "call",
+      "uuid": "6f8eab9dd17e4e06",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "380c21a6-3725-4016-a391-05a22deb9412",
-      "startTime": "2026-06-01T17:24:10.980Z",
-      "endTime": "2026-06-01T17:24:12.288Z",
+      "parentUuid": "1c81f4ea3aaf5e4c",
+      "startTime": "2026-10-21T17:48:32.947Z",
+      "endTime": "2026-10-21T17:48:33.900Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Writer. Funny writer\nYour personal goal is: Write a joke about the topic",
-          "cache_breakpoint": true
+          "content": "You are Writer. Funny writer\nYour personal goal is: Write a joke about the topic"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Write a one-sentence joke about the animal provided.\n\nThis is the expected criteria for your final answer: A joke.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nNarwhal\n\nProvide your complete response:",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Write a one-sentence joke about the animal provided.\n\nThis is the expected criteria for your final answer: A joke.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nAxolotl\n\nProvide your complete response:"
         }
       ],
-      "output": "Why did the narwhal always bring a pencil to the ocean? Because it wanted to draw attention with its \"tusk-tastic\" personality!",
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI"
     },
     {
-      "uuid": "8da52854-47da-43bf-a869-3deb00b75cd4",
-      "name": "call",
+      "uuid": "344ba1d0dd841339",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "7bc5db50-01a1-4aec-b40b-acd85cab17ad",
-      "startTime": "2026-06-01T17:24:09.077Z",
-      "endTime": "2026-06-01T17:24:10.968Z",
+      "parentUuid": "5a4392fe1f28d885",
+      "startTime": "2026-10-21T17:48:32.053Z",
+      "endTime": "2026-10-21T17:48:32.908Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Researcher. Curious researcher\nYour personal goal is: Find a topic",
-          "cache_breakpoint": true
+          "content": "You are Researcher. Curious researcher\nYour personal goal is: Find a topic"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Pick a random animal.\n\nThis is the expected criteria for your final answer: The name of an animal.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Pick a random animal.\n\nThis is the expected criteria for your final answer: The name of an animal.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nProvide your complete response:"
         }
       ],
-      "output": "Narwhal",
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-06-01T17:24:09.054Z",
-  "endTime": "2026-06-01T17:24:12.294Z",
+  "startTime": "2026-10-21T17:48:31.862Z",
+  "endTime": "2026-10-21T17:48:33.921Z",
+  "name": "crew crew",
   "environment": "development",
-  "input": {},
-  "output": "Why did the narwhal always bring a pencil to the ocean? Because it wanted to draw attention with its \"tusk-tastic\" personality!",
+  "input": {
+    "description": "Pick a random animal.",
+    "context": ""
+  },
+  "output": "Why did the axolotl break up with its partner? Because it found someone who really knew how to \"gill\" it!",
   "status": "SUCCESS"
 }

@@ -1,16 +1,11 @@
 from deepeval.confident.api import Api, Endpoints, HttpMethods
-from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.offline_evals.api import EvaluateTraceRequestBody
 
 
 def evaluate_trace(
     trace_uuid: str, metric_collection: str, overwrite_metrics: bool = False
 ):
-    trace = current_trace_context.get()
-    api_key = None
-    if trace:
-        api_key = trace.confident_api_key
-    api = Api(api_key=api_key)
+    api = Api()
 
     evaluate_trace_request_body = EvaluateTraceRequestBody(
         metricCollection=metric_collection, overwriteMetrics=overwrite_metrics
@@ -37,11 +32,7 @@ def evaluate_trace(
 async def a_evaluate_trace(
     trace_uuid: str, metric_collection: str, overwrite_metrics: bool = False
 ):
-    trace = current_trace_context.get()
-    api_key = None
-    if trace:
-        api_key = trace.confident_api_key
-    api = Api(api_key=api_key)
+    api = Api()
 
     evaluate_trace_request_body = EvaluateTraceRequestBody(
         metricCollection=metric_collection, overwriteMetrics=overwrite_metrics
