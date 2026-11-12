@@ -1,13 +1,9 @@
 import pytest
 
+from tests.test_integrations.utils import confident_trace_instrumentation
+
 
 @pytest.fixture(scope="function", autouse=True)
 def _setup_openai_instrumentation():
-    from deepeval.openai.patch import (
-        patch_openai_classes,
-        unpatch_openai_classes,
-    )
-
-    patch_openai_classes()
-    yield
-    unpatch_openai_classes()
+    with confident_trace_instrumentation("openai"):
+        yield

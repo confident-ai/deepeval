@@ -1,31 +1,309 @@
 {
-  "uuid": "a195acea-3de1-4094-8bfd-836775539c63",
+  "uuid": "6b7eb8861f07b2e0dcb699a01cd90739",
   "baseSpans": [
     {
-      "uuid": "abcb1d85-215f-4e94-b159-4a9fe6a8d720",
-      "name": "kickoff",
+      "uuid": "d43539f4acbc1026",
+      "name": "crew crew",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-06-01T17:28:28.439Z",
-      "endTime": "2026-06-01T17:28:42.755Z",
+      "startTime": "2026-10-21T17:48:09.052Z",
+      "endTime": "2026-10-21T17:48:22.421Z",
       "input": {
         "city": "London"
       },
-      "output": "Here\u2019s the current weather for London:\n\n- Temperature: 60\u00b0F\n- Conditions: Rainy\n- Humidity: 80%\n\nIt\u2019s a cool, damp day, so an umbrella and a light waterproof jacket would be a good idea if you\u2019re heading out.",
+      "output": "London Weather Update:\n- Temperature: 60\u00b0F (approximately 16\u00b0C)\n- Conditions: Rainy\n- Humidity: 80%\n\nWhat this means for your day:\n- Expect ongoing rain; carry an umbrella or wear a waterproof jacket.\n- The air may feel cool and damp; layering is advisable.\n- Watch for slick surfaces; allow a bit more travel time if you\u2019re commuting.",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "f8ecdb901d5a7285",
+      "name": "task Task",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "d43539f4acbc1026",
+      "startTime": "2026-10-21T17:48:09.065Z",
+      "endTime": "2026-10-21T17:48:22.415Z",
+      "input": {
+        "description": "Get the current weather for London and provide a helpful summary.",
+        "context": ""
+      },
+      "output": "London Weather Update:\n- Temperature: 60\u00b0F (approximately 16\u00b0C)\n- Conditions: Rainy\n- Humidity: 80%\n\nWhat this means for your day:\n- Expect ongoing rain; carry an umbrella or wear a waterproof jacket.\n- The air may feel cool and damp; layering is advisable.\n- Watch for slick surfaces; allow a bit more travel time if you\u2019re commuting.",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "41b41aa401e6d688",
+      "name": "flow AgentExecutor",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "8090c68091725d41",
+      "startTime": "2026-10-21T17:48:09.068Z",
+      "endTime": "2026-10-21T17:48:22.412Z",
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "d90a6a3ca50ded6b",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:22.406Z",
+      "endTime": "2026-10-21T17:48:22.407Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "b6e8f4f32a3e8fd2",
+      "name": "node call_llm_native_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:22.405Z",
+      "endTime": "2026-10-21T17:48:22.406Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "e81a3fb778ea183b",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:22.404Z",
+      "endTime": "2026-10-21T17:48:22.405Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning_native",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "1222fe001e99df0c",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:22.403Z",
+      "endTime": "2026-10-21T17:48:22.404Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "fc97bf26609d273b",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:22.398Z",
+      "endTime": "2026-10-21T17:48:22.402Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "1a649b4869645332",
+      "name": "node call_llm_native_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:16.003Z",
+      "endTime": "2026-10-21T17:48:22.396Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "a11145b811207b79",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:16.002Z",
+      "endTime": "2026-10-21T17:48:16.002Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning_native",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "3095976f5a40c499",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:16.001Z",
+      "endTime": "2026-10-21T17:48:16.002Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "0f8caf8d29285d6d",
+      "name": "node increment_and_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:16.001Z",
+      "endTime": "2026-10-21T17:48:16.001Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "6765956e5233c7be",
+      "name": "node check_native_todo_completion",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:16.000Z",
+      "endTime": "2026-10-21T17:48:16.000Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "todo_not_satisfied",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "234c3e6b48725ebc",
+      "name": "node execute_native_tool",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:15.997Z",
+      "endTime": "2026-10-21T17:48:15.999Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_tool_completed",
+      "integration": "CrewAI",
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "type": "FUNCTION",
+          "output": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%",
+          "inputParameters": {
+            "city": "London"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "599919ae59d564be",
+      "name": "node call_llm_native_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:09.072Z",
+      "endTime": "2026-10-21T17:48:15.996Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_tool_calls",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "ebea8f7b2112fa6b",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:09.072Z",
+      "endTime": "2026-10-21T17:48:09.072Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning_native",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "2f27d321a1e92b5c",
+      "name": "node initialize_reasoning",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:09.070Z",
+      "endTime": "2026-10-21T17:48:09.071Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "01f88894fff831bb",
+      "name": "node check_todos_available",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:09.070Z",
+      "endTime": "2026-10-21T17:48:09.070Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "planning_disabled",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "11c6971e9869e4f6",
+      "name": "node generate_plan",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "41b41aa401e6d688",
+      "startTime": "2026-10-21T17:48:09.069Z",
+      "endTime": "2026-10-21T17:48:09.069Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
       "integration": "CrewAI"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "c1a28627-3e36-4a27-91f0-3810932cb126",
-      "name": "execute_task",
+      "uuid": "8090c68091725d41",
+      "name": "Weather Reporter",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "abcb1d85-215f-4e94-b159-4a9fe6a8d720",
-      "startTime": "2026-06-01T17:28:28.446Z",
-      "endTime": "2026-06-01T17:28:42.749Z",
-      "input": "Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.",
-      "output": "Here\u2019s the current weather for London:\n\n- Temperature: 60\u00b0F\n- Conditions: Rainy\n- Humidity: 80%\n\nIt\u2019s a cool, damp day, so an umbrella and a light waterproof jacket would be a good idea if you\u2019re heading out.",
+      "parentUuid": "f8ecdb901d5a7285",
+      "startTime": "2026-10-21T17:48:09.065Z",
+      "endTime": "2026-10-21T17:48:22.414Z",
+      "input": {
+        "description": "Get the current weather for London and provide a helpful summary.",
+        "context": ""
+      },
+      "output": "London Weather Update:\n- Temperature: 60\u00b0F (approximately 16\u00b0C)\n- Conditions: Rainy\n- Humidity: 80%\n\nWhat this means for your day:\n- Expect ongoing rain; carry an umbrella or wear a waterproof jacket.\n- The air may feel cool and damp; layering is advisable.\n- Watch for slick surfaces; allow a bit more travel time if you\u2019re commuting.",
       "integration": "CrewAI",
       "toolsCalled": [
         {
@@ -43,95 +321,79 @@
   ],
   "llmSpans": [
     {
-      "uuid": "d84880a2-4981-483f-bfca-af8e5de03e4b",
-      "name": "call",
+      "uuid": "03de98492538ed1b",
+      "name": "chat gpt-5-nano",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c1a28627-3e36-4a27-91f0-3810932cb126",
-      "startTime": "2026-06-01T17:28:35.757Z",
-      "endTime": "2026-06-01T17:28:42.734Z",
+      "parentUuid": "1a649b4869645332",
+      "startTime": "2026-10-21T17:48:16.004Z",
+      "endTime": "2026-10-21T17:48:22.391Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users.",
-          "cache_breakpoint": true
+          "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users."
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary."
         },
         {
           "role": "assistant",
-          "content": null,
-          "tool_calls": [
-            {
-              "id": "call_jNIXsB6QEFH1UbF2EW4y5bJl",
-              "type": "function",
-              "function": {
-                "name": "'get_weather'",
-                "arguments": "'{\"city\":\"London\"}'"
-              }
+          "content": {
+            "type": "tool_call",
+            "id": "call_ZA4dxgtSkbNwKpOzS5hdKyeQ",
+            "name": "get_weather",
+            "arguments": {
+              "city": "London"
             }
-          ]
+          }
         },
         {
           "role": "tool",
-          "tool_call_id": "call_jNIXsB6QEFH1UbF2EW4y5bJl",
-          "name": "get_weather",
-          "content": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%"
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_ZA4dxgtSkbNwKpOzS5hdKyeQ",
+            "response": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%"
+          }
         }
       ],
-      "output": "Here\u2019s the current weather for London:\n\n- Temperature: 60\u00b0F\n- Conditions: Rainy\n- Humidity: 80%\n\nIt\u2019s a cool, damp day, so an umbrella and a light waterproof jacket would be a good idea if you\u2019re heading out.",
-      "integration": "CrewAI",
-      "model": "gpt-5.4-mini",
+      "integration": "OpenAI",
+      "model": "gpt-5-nano",
       "provider": "OpenAI"
     },
     {
-      "uuid": "251df455-38d5-4cdc-9579-82c0149c4153",
-      "name": "call",
+      "uuid": "863fb0d8c32b4398",
+      "name": "chat gpt-5-nano",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "c1a28627-3e36-4a27-91f0-3810932cb126",
-      "startTime": "2026-06-01T17:28:28.451Z",
-      "endTime": "2026-06-01T17:28:35.752Z",
+      "parentUuid": "599919ae59d564be",
+      "startTime": "2026-10-21T17:48:09.073Z",
+      "endTime": "2026-10-21T17:48:15.991Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users.",
-          "cache_breakpoint": true
+          "content": "You are Weather Reporter. An experienced meteorologist who loves helping people plan their day with accurate weather reports.\nYour personal goal is: Provide accurate and helpful weather information to users."
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary.",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Get the current weather for London and provide a helpful summary.\n\nThis is the expected criteria for your final answer: A clear weather report including temperature, conditions, and humidity.\nyou MUST return the actual complete content as the final answer, not a summary."
         }
       ],
-      "output": [
-        {
-          "id": "call_jNIXsB6QEFH1UbF2EW4y5bJl",
-          "function": {
-            "arguments": "{\"city\":\"London\"}",
-            "name": "get_weather"
-          },
-          "type": "function"
-        }
-      ],
-      "integration": "CrewAI",
-      "model": "gpt-5.4-mini",
+      "integration": "OpenAI",
+      "model": "gpt-5-nano",
       "provider": "OpenAI"
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "347fd3c2-0371-438e-aae0-f62a3ba89090",
+      "uuid": "39ab940d7e3e6f05",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "c1a28627-3e36-4a27-91f0-3810932cb126",
-      "startTime": "2026-06-01T17:28:35.753Z",
-      "endTime": "2026-06-01T17:28:35.753Z",
+      "parentUuid": "234c3e6b48725ebc",
+      "startTime": "2026-10-21T17:48:15.998Z",
+      "endTime": "2026-10-21T17:48:15.998Z",
       "input": {
         "city": "London"
       },
@@ -139,12 +401,23 @@
       "integration": "CrewAI"
     }
   ],
-  "startTime": "2026-06-01T17:28:28.439Z",
-  "endTime": "2026-06-01T17:28:42.755Z",
+  "startTime": "2026-10-21T17:48:09.052Z",
+  "endTime": "2026-10-21T17:48:22.421Z",
+  "name": "crew crew",
   "environment": "development",
   "input": {
     "city": "London"
   },
-  "output": "Here\u2019s the current weather for London:\n\n- Temperature: 60\u00b0F\n- Conditions: Rainy\n- Humidity: 80%\n\nIt\u2019s a cool, damp day, so an umbrella and a light waterproof jacket would be a good idea if you\u2019re heading out.",
-  "status": "SUCCESS"
+  "output": "London Weather Update:\n- Temperature: 60\u00b0F (approximately 16\u00b0C)\n- Conditions: Rainy\n- Humidity: 80%\n\nWhat this means for your day:\n- Expect ongoing rain; carry an umbrella or wear a waterproof jacket.\n- The air may feel cool and damp; layering is advisable.\n- Watch for slick surfaces; allow a bit more travel time if you\u2019re commuting.",
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "get_weather",
+      "type": "FUNCTION",
+      "output": "Weather in London: 60\u00b0F, Rainy, Humidity: 80%",
+      "inputParameters": {
+        "city": "London"
+      }
+    }
+  ]
 }

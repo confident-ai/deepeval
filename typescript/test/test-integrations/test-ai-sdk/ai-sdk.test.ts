@@ -4,6 +4,7 @@ import { z } from "zod";
 import * as path from "path";
 import { Prompt } from "@/prompt";
 
+import { OpenTelemetry } from "@ai-sdk/otel";
 import { configureAiSdkTracing } from "@/integrations/ai-sdk";
 import { setTracingContext } from "@/tracing/trace-context";
 import { traceManager } from "@/tracing/tracing";
@@ -13,10 +14,13 @@ import { generateTraceJson, assertTraceJson } from "../utils";
 const FIXTURES_DIR = path.join(__dirname, "fixtures");
 const GENERATE_SCHEMAS = process.env.GENERATE_SCHEMAS === "true";
 
-const tracer = configureAiSdkTracing({
-  isTestMode: true,
-  environment: "testing",
-});
+const telemetry = {
+  integrations: [
+    new OpenTelemetry({
+      tracer: configureAiSdkTracing({ environment: "testing" }),
+    }),
+  ],
+};
 
 describe("Vercel AI SDK Core Integration Tests", () => {
   beforeEach(() => {
@@ -44,10 +48,7 @@ describe("Vercel AI SDK Core Integration Tests", () => {
           await generateText({
             model: openai("gpt-4o-mini"),
             prompt: "Why is the sky blue? Answer in one short sentence.",
-            experimental_telemetry: {
-              isEnabled: true,
-              tracer: tracer!,
-            },
+            telemetry,
           });
         },
       );
@@ -77,10 +78,7 @@ describe("Vercel AI SDK Core Integration Tests", () => {
           const { textStream } = streamText({
             model: openai("gpt-4o-mini"),
             prompt: "Count from 1 to 5.",
-            experimental_telemetry: {
-              isEnabled: true,
-              tracer: tracer!,
-            },
+            telemetry,
           });
           for await (const chunk of textStream) {
             // consuming chunks...
@@ -126,10 +124,7 @@ describe("Vercel AI SDK Core Integration Tests", () => {
                 }),
               }),
             }),
-            experimental_telemetry: {
-              isEnabled: true,
-              tracer: tracer!,
-            },
+            telemetry,
           });
         },
       );
@@ -172,10 +167,7 @@ describe("Vercel AI SDK Core Integration Tests", () => {
           await generateText({
             model: openai("gpt-4o-mini"),
             prompt: "What is the capital of France?",
-            experimental_telemetry: {
-              isEnabled: true,
-              tracer: tracer!,
-            },
+            telemetry,
           });
         },
       );

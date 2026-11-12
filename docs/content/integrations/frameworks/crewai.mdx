@@ -324,7 +324,7 @@ For deterministic tool calls, prefer `update_current_span(...)` to add metadata,
 
 The integration captures inputs, outputs, model names, and tool calls automatically. For anything dynamic, the right API depends on where your code runs.
 
-- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`).
+- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `metrics`).
 - Use shim kwargs (`Agent(metrics=...)`, `LLM(metrics=...)`, `@tool(metric=...)`) for component-level defaults.
 - Use `update_current_trace(...)` and `update_current_span(...)` from inside a tool body to mutate fields the framework can't see.
 

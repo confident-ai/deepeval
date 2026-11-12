@@ -39,13 +39,8 @@ def _bypass_no_metrics_guard(monkeypatch):
 
 @pytest.fixture(autouse=True)
 def _silence_confident_trace(monkeypatch):
-    # don’t try to flush leftover traces at process end
-    monkeypatch.setenv("CONFIDENT_TRACE_FLUSH", "0")
-
-    # no-op network calls
-    monkeypatch.setattr(
-        trace_manager, "post_trace", lambda *a, **k: None, raising=True
-    )
+    # No export to Confident AI.
+    monkeypatch.setattr(trace_manager, "tracing_enabled", False)
 
 
 @pytest.fixture(autouse=True)

@@ -44,7 +44,7 @@ def calculate(operation: str, a: float, b: float) -> dict:
 
 def _build_agent() -> LlmAgent:
     return LlmAgent(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         name="calculator_assistant",
         instruction=(
             "You are a calculator assistant. Use the calculate tool for "
