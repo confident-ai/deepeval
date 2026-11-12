@@ -473,7 +473,9 @@ def _fill_unset(converted: BaseSpan, fields: Dict[str, Any]) -> None:
     for key, value in fields.items():
         if value is None or not hasattr(converted, key):
             continue
-        if getattr(converted, key) in (None, "", []):
+        current = getattr(converted, key)
+        # An explicit empty tool list disables inference from adapter fields.
+        if current is None or (key != "tools_called" and current in ("", [])):
             setattr(converted, key, value)
 
 
