@@ -259,6 +259,10 @@ function cleanMarkdownForDescription(md: string): string {
   // Drop fenced code blocks entirely — they rarely make useful descriptions.
   text = text.replace(/```[\s\S]*?```/g, '');
 
+  // Drop the "For AI agents" note (see lib/remark-agent-note.ts) with its
+  // body, so it never becomes the page's meta description.
+  text = text.replace(/<AgentNote\b[^>]*>[\s\S]*?<\/AgentNote>/g, '');
+
   // Drop self-closing JSX tags like <ImageDisplayer ... /> and paired
   // tags like <VideoDisplayer>...</VideoDisplayer>. Keep inner text for
   // paired tags so `<Envelope>…</Envelope>` style components don't nuke

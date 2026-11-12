@@ -61,6 +61,8 @@
 
 **DeepEval** is a simple-to-use, open-source LLM evaluation framework, for evaluating large-language model systems. It is similar to Pytest but specialized for unit testing LLM apps. DeepEval incorporates the latest research to run evals via metrics such as G-Eval, task completion, answer relevancy, hallucination, etc., which use LLM-as-a-judge and other NLP models that run **locally on your machine**.
 
+DeepEval is built and maintained by [Confident AI](https://www.confident-ai.com?utm_source=deepeval&utm_medium=github&utm_content=attribution_line&ref_page=github/readme).
+
 Whether you're building AI agents, voice agents, multi-turn chatbots, RAG pipelines, or anything else, implemented via LangChain or OpenAI, DeepEval has you covered. With it, you can easily evaluate:
 
 - **LLM apps end-to-end** as black boxes
