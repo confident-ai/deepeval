@@ -1,0 +1,68 @@
+---
+id: metrics-numeric-match
+title: Numeric Match
+sidebar_label: Numeric Match
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} referenceless={false} />
+
+The numeric match metric checks whether the numeric quantities in your LLM's `actual_output` agree by value with the numbers in `expected_output`, independent of surface formatting. It is deterministic and uses no judge model, so it is reproducible and adds no evaluation cost.
+
+:::info
+The `NumericMatchMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics`, so import them explicitly from `deepeval.metrics.community` instead.
+:::
+
+:::note
+This metric complements [`ExactMatchMetric`](/docs/metrics-others) and [`PatternMatchMetric`](/docs/metrics-others), which compare strings. A numerically correct answer is silently scored wrong by string matching when the surface form differs (`"1,200"` vs `"1200"`, `"3.0"` vs `"3"`, `"$1.2M"` vs `"1200000"`, `"12%"` vs `"12"`), and a wrong answer can be scored right when a correct-looking number appears in a longer string. `NumericMatchMetric` compares the extracted numbers by value.
+:::
+
+## Required Arguments
+
+To use the `NumericMatchMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+- `expected_output`
+
+The score is the fraction of the numbers in `expected_output` that have a tolerance-matching counterpart in `actual_output` (recall of the reference numbers). Matching is multiset-aware, so a single output number cannot satisfy two reference numbers. When `expected_output` contains no numeric value the metric is not applicable and raises `ValueError` rather than returning a fabricated score.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.test_case import LLMTestCase
+from deepeval.metrics.community import NumericMatchMetric
+
+metric = NumericMatchMetric()
+test_case = LLMTestCase(
+    input="What was the quarterly revenue?",
+    # "$1,200,500" is numerically the same value as the reference below.
+    actual_output="Revenue was $1,200,500 for the quarter.",
+    expected_output="1200500",
+)
+
+# To run the metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+## Parameters
+
+- `threshold`: the minimum score for the test case to pass. Defaulted to `1.0`, so every reference number must be present.
+- `rel_tol` and `abs_tol`: passed to `math.isclose` when comparing two numbers. Defaulted to `1e-9` and `0.0` (numerically exact). Loosen them to allow rounding differences, e.g. `abs_tol=0.5` or `rel_tol=0.01`.
+- `parse_magnitude_suffixes`: when `True`, a trailing `k`, `m`, `b`, or `t` multiplies the number (`"1.2M"` becomes `1200000`). Defaulted to `False` so unit letters are never misread as magnitudes.
+- `percent_as_fraction`: when `True`, a trailing `%` divides the number by 100 (`"12%"` becomes `0.12`). Defaulted to `False`, so `"12%"` parses to `12`.
+- `include_reason`: whether to build a reason listing matched, missing, and unmatched numbers. Defaulted to `True`.
+- `strict_mode`: forces the threshold to `1.0`. Defaulted to `False`.
+- `verbose_mode`: prints the extracted numbers and score. Defaulted to `False`.
+
+## How Is It Calculated?
+
+The metric extracts numeric tokens from `expected_output` and `actual_output`, normalizing thousands separators, decimals, signs, scientific notation, and currency symbols. Each reference number is matched greedily against an as-yet-unused output number under `math.isclose`. The final score is:
+
+```
+Numeric Match = Number of matched reference numbers / Total reference numbers
+```
