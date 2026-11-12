@@ -78,9 +78,9 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                     and self.n_problems_per_task < len(goldens)
                 ):
                     goldens = goldens[: self.n_problems_per_task]
+
                 task_correct_predictions = 0
-                task_total_predictions = len(goldens)
-                overall_total_predictions += len(goldens)
+                task_total_predictions = 0
 
                 # Calculate task accuracy
                 if use_batch:
@@ -92,14 +92,21 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                         batch_predictions = self.batch_predict(
                             model, goldens_batch, self.mode
                         )
+
                         for golden, prediction_dict in zip(
                             goldens_batch, batch_predictions
                         ):
                             prediction = prediction_dict["prediction"]
                             score = prediction_dict["score"]
-                            if score:
-                                task_correct_predictions += 1
-                                overall_correct_predictions += 1
+
+                            if score is not None:
+                                task_total_predictions += 1
+                                overall_total_predictions += 1
+
+                                if score:
+                                    task_correct_predictions += 1
+                                    overall_correct_predictions += 1
+
                             predictions_row.append(
                                 (
                                     task.value,
@@ -116,9 +123,13 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                         prediction, score = self.predict(
                             model, golden, self.mode
                         ).values()
-                        if score:
+
+                        if score is not None:
+                            task_total_predictions += 1
+                            overall_total_predictions += 1
                             task_correct_predictions += score
                             overall_correct_predictions += score
+
                         predictions_row.append(
                             (
                                 task.value,
@@ -128,6 +139,7 @@ class TruthfulQA(DeepEvalBaseBenchmark):
                                 score,
                             )
                         )
+
                         if self.verbose_mode:
                             self.print_verbose_logs(
                                 idx,
