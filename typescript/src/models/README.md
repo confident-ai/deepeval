@@ -54,7 +54,8 @@ abstract generate<T = string>(
 - **SDKs are optional/lazy.** Provider SDKs are dynamically `import()`-ed on first use;
   a missing package throws a friendly "install X" error (`importOptional`). `openai` is
   the one commonly-present dep (OpenAI-compatible base).
-- **Temperature defaults to `0`, matching Python**, and is dropped for models the
+- **Temperature defaults to `0`, matching Python** (`AmazonBedrockModel` omits it
+  unless set, as Python's does), and is dropped for models the
   registry flags `supportsTemperature: false` (reasoning models reject it). Passing
   `temperature: null` forces omission — useful for a new reasoning model the registry
   does not cover yet, where the `0` default would otherwise be rejected. Resolution is
@@ -206,7 +207,8 @@ vision-capable — see `checkMultimodalSupport` in `metrics/utils.ts`.
 - **Temperature omission is uniform.** For models that reject `temperature`, Python is
   inconsistent — `OpenAIModel` forces `1`, `AzureOpenAIModel` and `AnthropicModel` omit it.
   TS always omits, which every provider accepts. Python's `AnthropicModel` also defaults
-  to unset rather than `0.0`; TS uses `0` there like every other provider.
+  to unset rather than `0.0`; TS uses `0` there like every other provider except
+  `AmazonBedrockModel`.
 - **Structured output uses `strict: false`** + a tolerant `extractJson` rather than strict
   JSON-schema enforcement; a weak model can still return unparseable JSON (raises a
   "use a more capable model" error).

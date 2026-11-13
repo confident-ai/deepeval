@@ -9,6 +9,7 @@ import {
   AnthropicModel,
   AzureOpenAIModel,
   AISDKModel,
+  AmazonBedrockModel,
   GeminiModel,
   OpenRouterModel,
 } from "@/models";
@@ -263,6 +264,20 @@ describe("temperature resolution", () => {
 
   it("defaults to 0 for models the registry does not know", () => {
     expect(resolve(new OpenAIModel({ model: "some-unknown-model" }))).toBe(0);
+  });
+
+  it("omits temperature for Bedrock unless it is set, matching Python", () => {
+    expect(
+      resolve(new AmazonBedrockModel({ model: "us.openai.gpt-6-sol" })),
+    ).toBeUndefined();
+    expect(
+      resolve(
+        new AmazonBedrockModel({
+          model: "us.openai.gpt-6-sol",
+          temperature: 0,
+        }),
+      ),
+    ).toBe(0);
   });
 });
 
