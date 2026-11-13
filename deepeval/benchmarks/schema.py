@@ -47,6 +47,17 @@ class MultipleChoiceSchemaLower(BaseModel):
     answer: Literal["a", "b", "c", "d", "e"]
 
 
+# MMLU-Pro Models #############################
+
+
+class MultipleChoiceSchemaTenOptions(BaseModel):
+    # MMLU-Pro expands MMLU's four options to ten (A-J). The four-letter
+    # MultipleChoiceSchema cannot represent the gold answer for the ~55% of
+    # items answered E-J, so schema-constrained models could never emit those
+    # letters and those items were always scored 0.
+    answer: Literal["A", "B", "C", "D", "E", "F", "G", "H", "I", "J"]
+
+
 # DROP Models #############################
 
 
