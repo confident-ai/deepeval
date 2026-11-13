@@ -25,3 +25,23 @@ TYPESAFE_MODELS_DATA = ModelDataRegistry(
         "jev-preview": _jev,
     }
 )
+
+DEFAULT_OPENAI_DECISION_MODEL = "gpt-6-luna"
+
+# OpenAI Decisions bills uncached input tokens only; output tokens are free.
+_GPT_6_LUNA_INPUT_PRICE = 0.10 / 1e6
+
+OPENAI_DECISIONS_MAX_QUESTIONS = 400
+
+
+def _gpt_6_luna() -> DeepEvalModelData:
+    return DeepEvalModelData(
+        input_price=_GPT_6_LUNA_INPUT_PRICE, output_price=0.0
+    )
+
+
+OPENAI_DECISION_MODELS_DATA = ModelDataRegistry(
+    {
+        "gpt-6-luna": _gpt_6_luna,
+    }
+)
