@@ -185,7 +185,7 @@ class ToolCorrectnessMetric(BaseMetric):
                     ],
                 )
 
-                return self.score
+            return self.score
 
     async def a_measure(
         self,
@@ -604,6 +604,11 @@ class ToolCorrectnessMetric(BaseMetric):
 
     # For matching input parameters
     def _compare_dicts(self, dict1: Dict, dict2: Dict):
+        # `ToolCall.input_parameters` defaults to None, so treat a missing
+        # dict on either side as an empty dict: two absent dicts compare
+        # equal (score 1.0), an absent dict never matches a present one (0).
+        dict1 = dict1 or {}
+        dict2 = dict2 or {}
         if dict1 == dict2:
             return 1.0
         if self.should_exact_match:
