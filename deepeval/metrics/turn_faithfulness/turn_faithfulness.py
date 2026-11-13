@@ -52,6 +52,15 @@ def _turn_faithfulness_limit_description(
 
 TurnFaithfulnessTemplate = make_template_class("TurnFaithfulnessMetric")
 
+# An empty claim list can mean the turns state nothing checkable or that
+# extraction failed; the score cannot tell them apart, so the reason says
+# which step came back empty (#3629).
+_NO_CLAIMS_REASON = (
+    "No claims were extracted from the assistant turns, so there was "
+    "nothing to verify. If those turns make factual statements, the "
+    "evaluation model may have failed to extract them."
+)
+
 
 class TurnFaithfulnessMetric(BaseConversationalMetric):
     _required_test_case_params: List[MultiTurnParams] = [
@@ -435,7 +444,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
     ) -> Tuple[float, str]:
         number_of_verdicts = len(verdicts)
         if number_of_verdicts == 0:
-            reason = "<no claims to verify>" if self.include_reason else None
+            reason = _NO_CLAIMS_REASON if self.include_reason else None
             return 1.0, reason
 
         score = score_qag_verdicts(
@@ -449,7 +458,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
     ) -> Tuple[float, str]:
         number_of_verdicts = len(verdicts)
         if number_of_verdicts == 0:
-            reason = "<no claims to verify>" if self.include_reason else None
+            reason = _NO_CLAIMS_REASON if self.include_reason else None
             return 1.0, reason
 
         score = score_qag_verdicts(
