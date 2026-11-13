@@ -4,7 +4,7 @@ import warnings
 
 import pytest
 from deepeval import evaluate
-from deepeval.metrics import DAGMetric
+from deepeval.metrics import DAGMetric, GEval
 from deepeval.metrics.dag import (
     TaskNode,
     BinaryJudgementNode,
@@ -12,6 +12,8 @@ from deepeval.metrics.dag import (
     VerdictNode,
     DeepAcyclicGraph,
 )
+from deepeval.metrics.g_eval.g_eval import GEvalTemplate
+from deepeval.metrics.g_eval.utils import Rubric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics.dag.utils import (
@@ -484,7 +486,6 @@ class TestDeepAcyclicGraph:
 
 
 class TestTopDownBuilder:
-
     def test_top_down_build_emits_no_deprecation_warning(self):
         with warnings.catch_warnings(record=True) as caught:
             warnings.simplefilter("always")
@@ -1101,9 +1102,170 @@ class TestCrossJudgementSharedNode:
         assert model.schema_calls.count("NonBinaryJudgementVerdict") == 0
 
 
+GEVAL_LEAF_RUBRIC = [
+    Rubric(score_range=(1, 1), expected_outcome="Unusable."),
+    Rubric(score_range=(5, 5), expected_outcome="Excellent."),
+]
+
+
+class GEvalLeafTemplate(GEvalTemplate):
+    """Marker template, only here to be recognised on the copied leaf."""
+
+
+class GEvalLeafModel(DeepEvalBaseLLM):
+    """Deterministic judge: top verdict, and a raw score of 5 either way.
+
+    ``score_range`` is both the range the prompt asks for and the divisor
+    ``GEval`` applies afterwards, so a judge that tracked the requested
+    range would cancel the two effects out. This one answers 5 whatever
+    range it is asked for, which is what makes a dropped rubric visible
+    as a score.
+    """
+
+    def __init__(self, name: str = "geval-leaf-model"):
+        self.schema_calls = []
+        super().__init__(model=name)
+
+    def load_model(self):
+        return self
+
+    def generate(self, prompt, schema=None, **kwargs):
+        assert schema is not None
+        self.schema_calls.append(schema.__name__)
+
+        if schema.__name__ == "BinaryJudgementVerdict":
+            return schema(verdict=True, reason="mocked")
+        if schema.__name__ == "ReasonScore":
+            return schema(score=5, reason="mocked")
+
+        raise AssertionError(f"Unexpected schema: {schema.__name__}")
+
+    async def a_generate(self, prompt, schema=None, **kwargs):
+        await asyncio.sleep(0)
+        return self.generate(prompt, schema=schema, **kwargs)
+
+    def get_model_name(self):
+        return self.name
+
+
+def build_geval_leaf(model: DeepEvalBaseLLM, **kwargs) -> GEval:
+    return GEval(
+        name="Writing Quality",
+        evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+        evaluation_steps=["Score the writing against the rubric."],
+        rubric=GEVAL_LEAF_RUBRIC,
+        model=model,
+        **kwargs,
+    )
+
+
+class TestGEvalLeaf:
+    """A GEval leaf must keep the configuration it was built with."""
+
+    @staticmethod
+    def _test_case() -> LLMTestCase:
+        return LLMTestCase(
+            input="Write a paragraph.",
+            actual_output="A well written paragraph.",
+        )
+
+    @staticmethod
+    def _build_metric(leaf: GEval, model, async_mode: bool) -> DAGMetric:
+        judge = BinaryJudgementNode(
+            criteria="Is the output non-empty?",
+            evaluation_params=[SingleTurnParams.ACTUAL_OUTPUT],
+        )
+        judge.add_verdict(True, then=leaf)
+        judge.add_verdict(False, score=0)
+        return DAGMetric(
+            name="Writing Quality",
+            dag=DeepAcyclicGraph(root_nodes=[judge]),
+            model=model,
+            include_reason=False,
+            async_mode=async_mode,
+        )
+
+    @classmethod
+    def _copy_leaf(cls, leaf: GEval, dag_model) -> GEval:
+        metric = cls._build_metric(leaf, dag_model, async_mode=False)
+        verdict_node = next(
+            child
+            for child in metric.dag.root_nodes[0].children
+            if child.verdict is True
+        )
+        return verdict_node._build_child_metric(metric)
+
+    @pytest.mark.parametrize("async_mode", [False, True])
+    def test_rubric_scores_the_same_inside_the_dag(self, async_mode):
+        """A rubric that moves the standalone score must move the DAG's."""
+        standalone = build_geval_leaf(GEvalLeafModel(), async_mode=async_mode)
+        standalone_score = standalone.measure(
+            self._test_case(), _show_indicator=False
+        )
+        assert standalone.score_range == (1, 5)
+        assert standalone_score == 1.0
+
+        model = GEvalLeafModel()
+        metric = self._build_metric(
+            build_geval_leaf(model, async_mode=async_mode),
+            model,
+            async_mode=async_mode,
+        )
+        dag_score = metric.measure(self._test_case(), _show_indicator=False)
+
+        assert dag_score == standalone_score
+
+    def test_child_metric_keeps_its_own_settings_and_the_dag_judge(self):
+        """Only the judge is the DAG's; the rest belongs to the leaf."""
+        dag_model = GEvalLeafModel("dag-judge")
+        leaf = build_geval_leaf(
+            GEvalLeafModel("leaf-judge"),
+            strict_mode=True,
+            top_logprobs=5,
+            async_mode=False,
+            flaky=True,
+            verbose_mode=True,
+            _include_g_eval_suffix=False,
+            evaluation_template=GEvalLeafTemplate,
+        )
+        # A custom judge is never native, so flip the flag by hand to stand in for
+        # a leaf that carries a native one. Building a real native model here would
+        # drag in an optional provider package that CI does not install.
+        leaf.using_native_model = True
+
+        copied = self._copy_leaf(leaf, dag_model)
+
+        assert copied.rubric == GEVAL_LEAF_RUBRIC
+        assert copied.score_range == (1, 5)
+        assert copied.strict_mode is True
+        assert copied.top_logprobs == 5
+        assert copied.async_mode is False
+        assert copied.flaky is True
+        assert copied._include_g_eval_suffix is False
+        assert copied.evaluation_template is GEvalLeafTemplate
+        # The leaf asked to be verbose; the DAG silences it on purpose.
+        assert copied.verbose_mode is False
+        # The DAG's judge replaces the leaf's own model and 'using_native_model'
+        # is re-derived from it. Overriding an *explicit* model is a known
+        # defect that this fix deliberately leaves alone, not behaviour worth
+        # wanting; the assertions stay because they are the only thing pinning
+        # the injection a leaf without a model of its own depends on.
+        assert copied.model is dag_model
+        assert copied.evaluation_model == "dag-judge"
+        assert copied.using_native_model is False
+
+    def test_child_metric_keeps_a_threshold_strict_mode_did_not_set(self):
+        """'threshold' has to survive the copy on its own, not via strict_mode."""
+        leaf = build_geval_leaf(GEvalLeafModel("leaf-judge"), threshold=0.9)
+
+        copied = self._copy_leaf(leaf, GEvalLeafModel("dag-judge"))
+
+        assert copied.strict_mode is False
+        assert copied.threshold == 0.9
+
+
 @requires_openai
 class TestDAGMetric:
-
     @staticmethod
     def _build_dag() -> DeepAcyclicGraph:
         extract = TaskNode(

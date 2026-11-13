@@ -59,9 +59,7 @@ class LLMApiTestCase(BaseModel):
 
     # make these optional, not all test cases in a conversation will be evaluated
     success: Union[bool, None] = Field(None)
-    metrics_data: Union[ApiMetricsData, None] = Field(
-        None, alias="metricsData"
-    )
+    metrics_data: Union[ApiMetricsData, None] = Field(None, alias="metricsData")
     run_duration: Union[float, None] = Field(None, alias="runDuration")
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
 
@@ -134,6 +132,7 @@ class TurnApi(BaseModel):
     retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
     tools_called: Optional[List[ToolCall]] = Field(None, alias="toolsCalled")
     comments: Optional[str] = Field(None)
+    metadata: Optional[Dict] = Field(None)
 
 
 class ConversationalApiTestCase(BaseModel):

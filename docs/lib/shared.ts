@@ -22,7 +22,7 @@ export const siteTitle =
  * paragraph.
  */
 export const siteDescription =
-  'DeepEval is the open-source LLM evaluation framework for testing and benchmarking LLM applications.';
+  'DeepEval is the open-source LLM evaluation framework for testing and benchmarking AI agents, voice agents, multi-turn chatbots, RAG, and more.';
 
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';

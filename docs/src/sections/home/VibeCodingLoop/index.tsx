@@ -39,7 +39,7 @@ const NODES: Node[] = [
     id: "tr",
     icon: <Sparkles size={14} aria-hidden />,
     title: "Your AI App",
-    meta: "Agent · RAG · Chatbot",
+    meta: "Agent · Voice · Chatbot · RAG",
   },
   {
     id: "br",

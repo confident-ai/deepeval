@@ -15,7 +15,6 @@ from deepeval.tracing.tracing import (
     trace_manager,
     Trace,
     BaseSpan,
-    LlmSpan,
 )
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.utils import (
@@ -35,19 +34,9 @@ from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
 )
-from deepeval.test_run import (
-    global_test_run_manager,
-    TestRunManager,
-)
 from deepeval.evaluate.types import TestResult
 from deepeval.tracing.types import TraceSpanStatus
 from deepeval.config.settings import get_settings
-from deepeval.test_run import TEMP_FILE_PATH
-from deepeval.confident.api import is_confident
-from deepeval.test_run.hyperparameters import (
-    process_hyperparameters,
-    process_prompts,
-)
 
 logger = logging.getLogger(__name__)
 
@@ -114,6 +103,15 @@ def _skip_metrics_for_error(
     if span is not None and span.status == TraceSpanStatus.ERRORED:
         return True
     return False
+
+
+def _attach_span_tree(
+    test_case: LLMTestCase, trace: Trace, span: Optional[BaseSpan]
+) -> None:
+    """Let metrics that look past their own span (e.g. ArgumentCorrectness)
+    reach the rest of the trace. `span` is None for a trace-level test case."""
+    test_case._trace_root_spans = trace.root_spans
+    test_case._trace_span = span
 
 
 def _trace_error(current_trace: Trace) -> Optional[str]:
@@ -317,36 +315,3 @@ def _execute_classifier(
             classifier.label = None
         else:
             raise
-
-
-def log_prompt(
-    llm_span: LlmSpan,
-    test_run_manager: TestRunManager,
-):
-    prompt = llm_span.prompt
-    if prompt is None:
-        return
-
-    span_hyperparameters = {}
-    prompt_hash = prompt.hash if is_confident() else None
-    key = f"{prompt.alias}_{prompt_hash}"
-    span_hyperparameters[key] = prompt
-
-    test_run = test_run_manager.get_test_run()
-    if test_run.prompts is None:
-        test_run.prompts = []
-    if test_run.hyperparameters is None:
-        test_run.hyperparameters = {}
-
-    if key not in test_run.hyperparameters:
-        test_run.hyperparameters.update(
-            process_hyperparameters(span_hyperparameters, False)
-        )
-        existing_prompt_keys = {f"{p.alias}_{p.hash}" for p in test_run.prompts}
-        new_prompts = process_prompts(span_hyperparameters)
-        for new_prompt in new_prompts:
-            new_prompt_key = f"{new_prompt.alias}_{new_prompt.hash}"
-            if new_prompt_key not in existing_prompt_keys:
-                test_run.prompts.append(new_prompt)
-
-    global_test_run_manager.save_test_run(TEMP_FILE_PATH)

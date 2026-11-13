@@ -28,6 +28,7 @@ def create_api_turn(turn: Turn, index: int) -> TurnApi:
         user_id=turn.user_id,
         retrievalContext=retrieval_context,
         toolsCalled=turn.tools_called,
+        metadata=turn.metadata,
         order=index,
     )
 

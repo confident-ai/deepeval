@@ -115,6 +115,30 @@ def check_conversational_test_case_params(
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 
+    if (
+        MultiTurnParams.CONTEXT in test_case_params
+        and test_case.context is None
+    ):
+        error_str = f"'context' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
+    if (
+        MultiTurnParams.USER_DESCRIPTION in test_case_params
+        and test_case.user_description is None
+    ):
+        error_str = f"'user_description' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
+    if (
+        MultiTurnParams.CHATBOT_ROLE in test_case_params
+        and test_case.chatbot_role is None
+    ):
+        error_str = f"'chatbot_role' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
     if require_chatbot_role and test_case.chatbot_role is None:
         error_str = f"'chatbot_role' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
         metric.error = error_str

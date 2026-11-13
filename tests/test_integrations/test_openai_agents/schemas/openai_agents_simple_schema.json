@@ -1,76 +1,87 @@
 {
-  "uuid": "trace_ed91dcc8d9b0448d843e5f0cbfb7bc81",
-  "baseSpans": [],
+  "uuid": "f72741356f39c1760e7962f1773c0c09",
+  "baseSpans": [
+    {
+      "uuid": "720a020ac483de77",
+      "name": "Agent workflow",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "bcf00d2cacc83f8e",
+      "startTime": "2026-10-21T16:55:48.767Z",
+      "endTime": "2026-10-21T16:55:50.177Z",
+      "integration": "OpenAI Agents"
+    },
+    {
+      "uuid": "2327709bfdaa991e",
+      "name": "turn",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "c888c449b8d677d5",
+      "startTime": "2026-10-21T16:55:48.768Z",
+      "endTime": "2026-10-21T16:55:50.177Z",
+      "integration": "OpenAI Agents"
+    }
+  ],
   "agentSpans": [
     {
-      "uuid": "8bd927b6-5b48-44d3-9409-a9e8fbb0f1d6",
+      "uuid": "bcf00d2cacc83f8e",
+      "name": "openai_agents_simple",
+      "status": "SUCCESS",
+      "type": "agent",
+      "startTime": "2026-10-21T16:55:48.766Z",
+      "endTime": "2026-10-21T16:55:50.177Z",
+      "input": "Hello",
+      "output": "Hi there! How can I assist you today?",
+      "integration": "OpenAI Agents",
+      "availableTools": [],
+      "agentHandoffs": []
+    },
+    {
+      "uuid": "c888c449b8d677d5",
       "name": "SimpleAgent",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-01-29T14:38:29.727Z",
-      "endTime": "2026-01-29T14:38:31.965Z",
-      "metadata": {
-        "output_type": "str"
-      },
+      "parentUuid": "720a020ac483de77",
+      "startTime": "2026-10-21T16:55:48.767Z",
+      "endTime": "2026-10-21T16:55:50.177Z",
       "input": "Hello",
       "output": "Hi there! How can I assist you today?",
+      "integration": "OpenAI Agents",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "OpenAI Agents"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "edc40494-e886-4c64-9b1f-4d968899ace5",
-      "name": "LLM Generation",
+      "uuid": "810a229d19ff0cca",
+      "name": "response",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "8bd927b6-5b48-44d3-9409-a9e8fbb0f1d6",
-      "startTime": "2026-01-29T14:38:29.753Z",
-      "endTime": "2026-01-29T14:38:31.964Z",
-      "metadata": {
-        "cached_input_tokens": 0,
-        "ouptut_reasoning_tokens": 0,
-        "invocation_params": {
-          "parallel_tool_calls": true,
-          "temperature": 0.0,
-          "tool_choice": "auto",
-          "tools": [],
-          "top_p": 1.0,
-          "reasoning": {},
-          "text": {
-            "format": {
-              "type": "text"
-            },
-            "verbosity": "medium"
-          },
-          "truncation": "disabled"
-        }
-      },
+      "parentUuid": "2327709bfdaa991e",
+      "startTime": "2026-10-21T16:55:48.769Z",
+      "endTime": "2026-10-21T16:55:50.175Z",
       "input": [
         {
-          "type": "message",
           "role": "system",
           "content": "You are a helpful assistant. Answer the user's question concisely. Do not use any tools."
         },
         {
-          "type": "message",
           "role": "user",
           "content": "Hello"
         }
       ],
       "output": "Hi there! How can I assist you today?",
-      "model": "gpt-4o-2024-08-06",
-      "inputTokenCount": 32.0,
-      "outputTokenCount": 11.0,
       "integration": "OpenAI Agents",
-      "provider": "OpenAI"
+      "model": "gpt-4o-2024-08-06",
+      "provider": "OpenAI",
+      "inputTokenCount": 32.0,
+      "outputTokenCount": 11.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-01-29T14:38:29.727Z",
-  "endTime": "2026-01-29T14:38:31.965Z",
+  "startTime": "2026-10-21T16:55:48.766Z",
+  "endTime": "2026-10-21T16:55:50.177Z",
   "name": "openai_agents_simple",
   "metadata": {
     "test_type": "simple",
@@ -80,19 +91,7 @@
     ]
   },
   "environment": "development",
-  "threadId": "None",
-  "input": [
-    {
-      "type": "message",
-      "role": "system",
-      "content": "You are a helpful assistant. Answer the user's question concisely. Do not use any tools."
-    },
-    {
-      "type": "message",
-      "role": "user",
-      "content": "Hello"
-    }
-  ],
+  "input": "Hello",
   "output": "Hi there! How can I assist you today?",
   "status": "SUCCESS"
 }

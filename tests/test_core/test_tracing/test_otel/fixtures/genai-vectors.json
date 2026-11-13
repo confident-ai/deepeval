@@ -1,0 +1,12 @@
+{
+  "contract_version": "1",
+  "emitted_semconv": "1.37.0",
+  "cases": [
+    {"name":"attributes", "attributes":{"gen_ai.input.messages":"[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"hello\"}]}]", "gen_ai.output.messages":"[{\"role\":\"assistant\",\"parts\":[{\"type\":\"text\",\"content\":\"world\"}]}]"},"events":[],"expected":{"input":[{"role":"user","content":"hello"}],"output":[{"role":"assistant","content":"world"}]}},
+    {"name":"legacy-span-events", "attributes":{}, "events":[{"name":"gen_ai.user.message","attributes":{"content":"hello"}},{"name":"gen_ai.choice","attributes":{"message":"{\"role\":\"assistant\",\"content\":\"world\"}"}}],"expected":{"input":[{"role":"user","content":"hello"}],"output":[{"role":"assistant","content":"world"}]}},
+    {"name":"both-prefer-attributes", "attributes":{"gen_ai.input.messages":"[{\"role\":\"user\",\"parts\":[{\"type\":\"text\",\"content\":\"new\"}]}]"},"events":[{"name":"gen_ai.user.message","attributes":{"content":"old"}},{"name":"gen_ai.choice","attributes":{"content":"world"}}],"expected":{"input":[{"role":"user","content":"new"}],"output":[{"role":"assistant","content":"world"}]}},
+    {"name":"invalid-attribute-fallback", "attributes":{"gen_ai.input.messages":"broken-json","gen_ai.output.messages":"{}"}, "events":[{"name":"gen_ai.user.message","attributes":{"content":"hello"}},{"name":"gen_ai.choice","attributes":{"content":"world"}}],"expected":{"input":[{"role":"user","content":"hello"}],"output":[{"role":"assistant","content":"world"}]}},
+    {"name":"empty-attribute-authoritative", "attributes":{"gen_ai.input.messages":"[]", "gen_ai.output.messages":"[]"},"events":[{"name":"gen_ai.user.message","attributes":{"content":"old"}}],"expected":{"input":[],"output":[]}}
+  ],
+  "mixed_batch": ["attributes", "legacy-span-events"]
+}

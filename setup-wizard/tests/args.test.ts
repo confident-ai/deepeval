@@ -9,7 +9,7 @@ describe("parseArgs", () => {
     ).toMatchObject({
       from: "in_app_setup",
       projectDir: "/repo/app",
-      appUrl: "https://app.confident-ai.com",
+      appUrl: "https://cloud.confident-ai.com",
       apiUrl: "https://api.confident-ai.com",
       help: false,
     });

@@ -1,55 +1,64 @@
 {
-  "uuid": "14c4cdf7f855a0b33f31222cfcaf5d3a",
+  "uuid": "fa7f3f202b21d9f72b2841217a339908",
   "baseSpans": [
     {
-      "uuid": "20d7dc9053d00206",
+      "uuid": "29d777b7d8dcd146",
       "name": "execute_event_loop_cycle",
       "status": "SUCCESS",
       "type": "base",
-      "parentUuid": "76606151d240386d",
-      "startTime": "2026-05-05T18:12:00.714Z",
-      "endTime": "2026-05-05T18:12:03.139Z",
-      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
-      "integration": "AgentCore"
+      "parentUuid": "614e1c2b43c59d31",
+      "startTime": "2026-11-04T06:52:56.906Z",
+      "endTime": "2026-11-04T06:52:57.976Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "Be concise, reply with one short sentence only. Say hello in exactly three words."
+        }
+      ],
+      "integration": "Strands"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "76606151d240386d",
-      "name": "invoke_agent Strands Agents",
+      "uuid": "614e1c2b43c59d31",
+      "name": "Strands Agents",
       "status": "SUCCESS",
       "type": "agent",
-      "startTime": "2026-05-05T18:12:00.714Z",
-      "endTime": "2026-05-05T18:12:03.140Z",
+      "startTime": "2026-11-04T06:52:56.906Z",
+      "endTime": "2026-11-04T06:52:57.976Z",
       "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
-      "output": "Hello, wonderful, friend.\n",
+      "output": "Hello, there, friend.\n",
+      "integration": "Strands",
       "availableTools": [],
-      "agentHandoffs": [],
-      "integration": "AgentCore"
+      "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "6ea68cf9856ce0f0",
+      "uuid": "4e8fcc56f3697a17",
       "name": "chat",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "20d7dc9053d00206",
-      "startTime": "2026-05-05T18:12:00.714Z",
-      "endTime": "2026-05-05T18:12:03.137Z",
-      "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
-      "output": "Hello, wonderful, friend.",
+      "parentUuid": "29d777b7d8dcd146",
+      "startTime": "2026-11-04T06:52:56.906Z",
+      "endTime": "2026-11-04T06:52:57.975Z",
+      "input": [
+        {
+          "role": "user",
+          "content": "Be concise, reply with one short sentence only. Say hello in exactly three words."
+        }
+      ],
+      "output": "Hello, there, friend.",
+      "integration": "Strands",
       "model": "amazon.nova-lite-v1:0",
       "inputTokenCount": 17.0,
-      "outputTokenCount": 7.0,
-      "integration": "AgentCore",
-      "provider": null
+      "outputTokenCount": 7.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-05-05T18:12:00.714Z",
-  "endTime": "2026-05-05T18:12:03.140Z",
+  "startTime": "2026-11-04T06:52:56.906Z",
+  "endTime": "2026-11-04T06:52:57.976Z",
   "name": "agentcore-simple-test",
   "metadata": {
     "test_type": "simple"
@@ -60,8 +69,7 @@
   ],
   "environment": "development",
   "threadId": "simple-123",
-  "userId": "test-user",
   "input": "Be concise, reply with one short sentence only. Say hello in exactly three words.",
-  "output": "Hello, wonderful, friend.\n",
+  "output": "Hello, there, friend.\n",
   "status": "SUCCESS"
 }

@@ -9,14 +9,7 @@ languages: [python]
 
 ## Quick summary
 
-There are two types of evaluations in `deepeval`:
-
-- End-to-End Testing
-- Component-level Testing
-
-This means you can evaluate prompts **end-to-end** or on the **component-level**.
-
-[End-to-end testing](#end-to-end) is useful when you want to evaluate the prompt's impact on the entire LLM application, since metric scores in end-to-end tests are calculated on the final output. [Component-level testing](#component-level) is useful when you want to evaluate prompts for specific LLM generation processes, since metric scores in component-level tests are calculated on the component-level.
+You can evaluate prompts **end-to-end**. [End-to-end testing](#end-to-end) is useful when you want to evaluate the prompt's impact on the entire LLM application, since metric scores in end-to-end tests are calculated on the final output.
 
 ## Evaluating Prompts
 
@@ -135,74 +128,6 @@ def hyperparameters():
 
 Based on the metric scores, you can iterate on different prompts to identify the highest-performing version and optimize your LLM application accordingly.
 
-### Component-Level
-
-`deepeval` also supports component-level prompt evaluation to assess specific LLM generations within your application. To enable this, first [set up tracing](/docs/evaluation-llm-tracing), then call `update_llm_span` with the prompts you want to evaluate for each LLM span. Additionally, supply the metrics you want to use in the `@observe` decorator for each span.
-
-```python title="main.py" showLineNumbers={true} {13,20}
-from openai import OpenAI
-from deepeval.tracing import observe, update_llm_span
-from deepeval.metrics import AnswerRelevancyMetric
-from deepeval.prompt import Prompt, PromptMessage
-
-prompt_1 = Prompt(alias="First",  messages_template=[PromptMessage(role="system", content="You are a helpful assistant.")])
-
-@observe(type="llm", metrics=[AnswerRelevancyMetric()])
-def gen1(input: str):
-    prompt_template = [{"role": msg.role, "content": msg.content} for msg in prompt_1.messages_template]
-    res = OpenAI().chat.completions.create(model="gpt-4o", messages=prompt_template+[{"role":"user","content":input}])
-    update_llm_span(prompt=prompt_1)
-    return res.choices[0].message.content
-
-@observe()
-def your_llm_app(input: str):
-    return gen1(input)
-```
-
-:::note
-Since `update_llm_span` can only be called inside an LLM span, prompt evaluation is limited to LLM spans only.
-:::
-
-Then run the `evals_iterator` to evaluate the prompts configured for each LLM span.
-
-```python title="main.py" showLineNumbers={true} {17,25}
-from deepeval.dataset import EvaluationDataset, Golden
-...
-
-dataset = EvaluationDataset([Golden(input="Hello")])
-for golden in dataset.evals_iterator():
-    your_llm_app(golden.input)
-```
-
-<details>
-<summary>✅ If successful, you should see a confirmation log like the one above in your CLI.</summary>
-
-```bash
-✓ Prompts Logged
-
-╭─ Message Prompt (v00.00.20) ──────────────────────────────╮
-│                                                           │
-│  type: messages                                           │
-│  output_type: OutputType.SCHEMA                           │
-│  interpolation_type: PromptInterpolationType.FSTRING      │
-│                                                           │
-│  Model Settings:                                          │
-│    – provider: OPEN_AI                                    │
-│    – name: gpt-4o                                         │
-│    – temperature: 0.7                                     │
-│    – max_tokens: None                                     │
-│    – top_p: None                                          │
-│    – frequency_penalty: None                              │
-│    – presence_penalty: None                               │
-│    – stop_sequence: None                                  │
-│    – reasoning_effort: None                               │
-│    – verbosity: LOW                                       │
-│                                                           │
-╰───────────────────────────────────────────────────────────╯
-```
-
-</details>
-
 ### Arena
 
 You can also evaluate prompts side-by-side using `ArenaGEval` to pick the best-performing prompt for your given criteria. Simply include the prompts in the `hyperparameters` field of each `Contestant`.
@@ -310,7 +235,7 @@ You are a helpful assistant.
 </Tabs>
 
 :::caution
-When evaluating prompts, you must call `load` or `pull` before passing the prompt to the `hyperparameters` dictionary for end-to-end evaluation, and before calling `update_llm_span` for component-level evaluations.
+When evaluating prompts, you must call `load` or `pull` before passing the prompt to the `hyperparameters` dictionary for end-to-end evaluation.
 :::
 
 ### From Scratch
@@ -448,8 +373,7 @@ prompt.update(
         <>
           Pass your <code>Prompt</code> object into the{" "}
           <code>hyperparameters</code> dictionary of <code>evaluate()</code> for
-          end-to-end evals, or via <code>update_llm_span</code> for
-          component-level evals. <code>deepeval</code> then ties each test
+          end-to-end evals. <code>deepeval</code> then ties each test
           run's scores to
           that prompt so you can pick the best one.
         </>
@@ -486,22 +410,6 @@ prompt.update(
           and model name), output settings, and a list of <code>Tool</code>s
           your agent has access to, so the full generation configuration is
           versioned alongside the template.
-        </>
-      ),
-    },
-    {
-      question:
-        "Can I see which prompt versions fail in production?",
-      answer: (
-        <>
-          Prompts work entirely locally from files or code. If you{" "}
-          <code>pull()</code> versioned prompts from{" "}
-          <a href="https://www.confident-ai.com/products/llm-observability">
-            Confident AI
-          </a>,
-          the version is logged on each production trace, so failing traces
-          point back to the prompt that produced them. It's optional and
-          file/code-based prompts behave identically.
         </>
       ),
     },

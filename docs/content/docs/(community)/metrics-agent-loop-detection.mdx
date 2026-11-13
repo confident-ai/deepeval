@@ -7,7 +7,7 @@ languages: [python]
 
 <MetricTagsDisplayer community={true} singleTurn={true} agent={true} referenceless={true} />
 
-The Agent Loop Detection metric is a **fully deterministic** (no LLM required) agentic metric that detects whether an LLM agent is stuck in an infinite loop or cyclical execution pattern. It analyzes the agent's full execution trace across three independent sub-signals and returns a score from **0.0** (severe looping detected) to **1.0** (clean execution).
+The Agent Loop Detection metric is a **fully deterministic** (no LLM required) agentic metric that detects whether an AI agent is stuck in an infinite loop or cyclical execution pattern. It analyzes the agent's full execution trace across three independent sub-signals and returns a score from **0.0** (severe looping detected) to **1.0** (clean execution).
 
 ::::info
 Agent Loop Detection analyzes your **agent's full execution trace**, which requires [setting up tracing](/docs/evaluation-llm-tracing). Because it is fully deterministic, it runs in production without any API key or LLM call.

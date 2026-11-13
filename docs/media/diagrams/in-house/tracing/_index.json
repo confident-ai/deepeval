@@ -11,6 +11,13 @@
           "https://deepeval-docs.s3.amazonaws.com/docs:llm-trace.png"
         ]
       }
+    },
+    {
+      "file": "agent-trace-to-test-case.webp",
+      "title": "An agent trace and the fields extracted into its test case",
+      "alt": "An agent trace for a refund agent with an LLM planning span, a retriever with an embedding span, a search_orders tool call, an issue_refund call that timed out and its retry, a billing sub-agent with its own LLM span and a final answer. The tool calls are extracted into tools_called and the final answer into actual_output on the agent’s test case.",
+      "width": 2136,
+      "height": 1491
     }
   ]
 }

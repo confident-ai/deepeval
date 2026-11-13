@@ -7,6 +7,7 @@ peek: true
 ---
 
 import {
+  AudioLines,
   Bot,
   Cloud,
   Database,
@@ -27,10 +28,12 @@ import VibeCodingLoop from "@site/src/sections/home/VibeCodingLoop";
 **DeepEval** is an open-source LLM evaluation framework for LLM applications. DeepEval makes it extremely easy to build and iterate on LLM (applications) and was built with the following principles in mind:
 
 - Unit test LLM outputs with Pytest-style assertions.
-- Use 50+ ready-to-use metrics, including LLM-as-a-judge, Jev-as-a-judge, agent, tool-use,
-  conversational, voice, safety, RAG, and multimodal metrics.
-- Evaluate AI agents, conversational agents (chatbots), voice AI, RAG pipelines, MCP systems, and
+- Use 50+ ready-to-use metrics, including LLM-as-a-judge, Jev-as-a-judge, AI agent, tool-use,
+  voice, multi-turn, RAG, safety, and multimodal metrics.
+- Evaluate AI agents, voice agents, multi-turn chatbots, RAG pipelines, MCP systems, and
   other custom workflows.
+- Run voice-native evals that score the call audio itself, so you can test how a
+  voice agent sounded and when it spoke, not just what the transcript says.
 - Run end-to-end, trajectory-based, and component-level evals.
 - Generate synthetic datasets for edge cases that are hard to collect manually.
 - Customize metrics, prompts, models, and evaluation templates when built-in
@@ -49,7 +52,7 @@ Install the DeepEval Skill in **Cursor, Claude Code, Codex, Windsurf**, or any o
 
 DeepEval was designed for a technical audience and here are the main personas we serve well:
 
-- **AI engineers** who need to evaluate agents, RAG pipelines, tool calls, and
+- **AI engineers** who need to evaluate AI agents, voice agents, multi-turn chatbots, RAG pipelines, tool calls, and
   production LLM workflows, write unit tests for AI behavior, and use evals in
   agentic coding tools like Claude Code and Codex.
 - **Data scientists** who want repeatable experiments for comparing prompts,
@@ -102,6 +105,10 @@ Alternatively, if you already have a concrete use case - try out one of our use 
   <Card icon={<Bot />} title="AI Agents" href="/docs/getting-started-agents">
     Set up tracing, evaluate end-to-end task completion, and score individual
     agent components.
+  </Card>
+  <Card icon={<AudioLines />} title="Voice Agents" href="/docs/evaluation-voice">
+    Run voice-native evals on call audio and transcripts, including latency and
+    turn-taking.
   </Card>
   <Card
     icon={<MessagesSquare />}
@@ -250,7 +257,7 @@ DeepEval is shaped by the people who report bugs, propose ideas, review changes,
     {
       question: "What can I evaluate with DeepEval?",
       answer:
-        "AI agents, MCP systems, chatbots, tool-using workflows, LLM arenas, RAG pipelines, summarizers, structured outputs, multimodal apps, and custom LLM workflows.",
+        "AI agents, voice agents, multi-turn chatbots, RAG pipelines, MCP systems, tool-using workflows, LLM arenas, summarizers, structured outputs, multimodal apps, and custom LLM workflows.",
     },
     {
       question: "How is DeepEval different from observability tools?",

@@ -3,6 +3,7 @@ import { openai } from "@ai-sdk/openai";
 import { z } from "zod";
 import * as path from "path";
 
+import { OpenTelemetry } from "@ai-sdk/otel";
 import { configureAiSdkTracing } from "@/integrations/ai-sdk";
 import { setTracingContext } from "@/tracing/trace-context";
 import { traceManager } from "@/tracing/tracing";
@@ -12,10 +13,13 @@ import { generateTraceJson, assertTraceJson } from "../utils";
 const FIXTURES_DIR = path.join(__dirname, "fixtures");
 const GENERATE_SCHEMAS = process.env.GENERATE_SCHEMAS === "true";
 
-const tracer = configureAiSdkTracing({
-  isTestMode: true,
-  environment: "testing",
-});
+const telemetry = {
+  integrations: [
+    new OpenTelemetry({
+      tracer: configureAiSdkTracing({ environment: "testing" }),
+    }),
+  ],
+};
 
 describe("Vercel AI SDK Tool Calling Tests", () => {
   beforeEach(() => {
@@ -62,10 +66,7 @@ describe("Vercel AI SDK Tool Calling Tests", () => {
               }),
             },
             stopWhen: stepCountIs(2),
-            experimental_telemetry: {
-              isEnabled: true,
-              tracer: tracer!,
-            },
+            telemetry,
           });
         },
       );

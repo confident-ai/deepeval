@@ -186,7 +186,7 @@ For users starting out, scoping the interaction as the overall LLM application w
 
 ## LLM Test Case
 
-An `LLMTestCase` in `deepeval` can be used to unit test interactions within your LLM application (which can just be an LLM itself), which includes use cases such as RAG and LLM agents (for individual components, agents within agents, or the agent altogether). It contains the necessary information (<Term py="tools_called" ts="toolsCalled"/> for agents, <Term py="retrieval_context" ts="retrievalContext"/> for RAG, etc.) to evaluate your LLM application for a given `input`.
+An `LLMTestCase` in `deepeval` can be used to unit test interactions within your LLM application (which can just be an LLM itself), which includes use cases such as AI agents and RAG (for individual components, agents within agents, or the agent altogether). It contains the necessary information (<Term py="tools_called" ts="toolsCalled"/> for agents, <Term py="retrieval_context" ts="retrievalContext"/> for RAG, etc.) to evaluate your LLM application for a given `input`.
 
 <ImageDisplayer id="diagrams/in-house/evaluation/llm-test-case" />
 
@@ -204,7 +204,7 @@ With the exception of conversational metrics, which are metrics to evaluate conv
 You cannot use conversational metrics to evaluate an `LLMTestCase`. Conveniently, most metrics in `deepeval` are non-conversational.
 :::
 
-Keep reading to learn which parameters in an `LLMTestCase` are required to evaluate different aspects of an LLM applications - ranging from pure LLMs, RAG pipelines, and even LLM agents.
+Keep reading to learn which parameters in an `LLMTestCase` are required to evaluate different aspects of an LLM applications - ranging from AI agents to RAG pipelines and pure LLMs.
 
 ### Input
 
@@ -564,7 +564,7 @@ Remember, `context` is the ideal retrieval results for a given input and typical
 
 ### Tools Called
 
-The <Term py="tools_called" ts="toolsCalled"/> parameter is an **optional** parameter that represents the tools your LLM agent actually invoked during execution. By providing <Term py="tools_called" ts="toolsCalled"/>, you can evaluate how effectively your LLM agent utilized the tools available to it.
+The <Term py="tools_called" ts="toolsCalled"/> parameter is an **optional** parameter that represents the tools your AI agent actually invoked during execution. By providing <Term py="tools_called" ts="toolsCalled"/>, you can evaluate how effectively your AI agent utilized the tools available to it.
 
 :::note
 The <Term py="tools_called" ts="toolsCalled"/> parameter accepts a list of `ToolCall` objects.

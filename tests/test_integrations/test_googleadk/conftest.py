@@ -8,17 +8,15 @@ suite, lifted into conftest so the four test modules don't duplicate
 the same five lines.
 
 The Google ADK test suite is split into:
-  - ``test_span_interceptor.py`` — synthetic OTel-span unit tests for
-    ``OpenInferenceSpanInterceptor`` (no live ADK / Gemini calls).
   - ``test_sync.py`` / ``test_async.py`` — end-to-end traces via real
     ADK agents, schema-asserted. Skipped without ``GOOGLE_API_KEY``.
   - ``test_evaluate_agent.py`` — component-level evals through
     ``dataset.evals_iterator``. Skipped without ``GOOGLE_API_KEY``
     + ``OPENAI_API_KEY`` (the metric scorer).
 
+Offline coverage lives in ``tests/test_core/test_tracing/test_otel``.
 Skip markers live on the integration test modules themselves
-(``pytestmark = pytest.mark.skipif(...)``) — defining them here would
-also skip the synthetic interceptor tests, which don't need any keys.
+(``pytestmark = pytest.mark.skipif(...)``).
 """
 
 import os

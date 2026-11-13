@@ -5,7 +5,7 @@
  */
 import fs from "node:fs";
 import path from "node:path";
-import { BLOG_DIR, COVER_FILE, FRAME_FILES, MONTH_FOLDER, SLUG, monthFolder } from "../lib/post-folders.mjs";
+import { BLOG_DIR, COVER_FILE, MONTH_FOLDER, SLUG, monthFolder } from "../lib/post-folders.mjs";
 import { IMAGE_FILE, IMAGE_FOLDERS, INDEX_FILE, MEDIA_DIR, NAME, indexFolders, loadLibrary } from "../lib/media/library.mjs";
 
 const ROOT = process.cwd();
@@ -42,8 +42,8 @@ for (const entry of fs.readdirSync(BLOG_DIR, { withFileTypes: true })) {
     if (!files.some((f) => f.name === "article.mdx")) fail(dir, "missing article.mdx");
     if (files.filter((f) => COVER_FILE.test(f.name)).length > 1) fail(dir, "a post has at most one cover");
     for (const f of files) {
-      const ok = f.isFile() && (f.name === "article.mdx" || COVER_FILE.test(f.name) || FRAME_FILES.includes(f.name));
-      if (!ok) fail(path.join(dir, f.name), `a post folder holds only article.mdx, one cover.* and ${FRAME_FILES.join(", ")}`);
+      const ok = f.isFile() && (f.name === "article.mdx" || COVER_FILE.test(f.name));
+      if (!ok) fail(path.join(dir, f.name), "a post folder holds only article.mdx and one cover.*");
     }
     posts.push({ month: entry.name, slug: post.name, file: path.join(dir, "article.mdx") });
   }
