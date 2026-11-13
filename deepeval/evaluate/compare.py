@@ -197,7 +197,21 @@ async def a_execute_arena_test_cases(
             run_duration=run_duration,
         )
 
-    # Create tasks for all test cases
+    async def run_comparisons(progress=None, pbar_id=None):
+        tasks = []
+        for i, test_case in enumerate(test_cases):
+            task = execute_with_semaphore(
+                func=evaluate_single_test_case,
+                test_case=test_case,
+                progress=progress,
+                pbar_id=pbar_id,
+                index=i,
+            )
+            tasks.append(asyncio.create_task(task))
+            await asyncio.sleep(throttle_value)
+
+        await asyncio.gather(*tasks)
+
     if show_indicator:
         progress = Progress(
             TextColumn("{task.description}"),
@@ -212,19 +226,9 @@ async def a_execute_arena_test_cases(
                 f"🆚 Comparing {len(test_cases)} contestants concurrently",
                 total=len(test_cases),
             )
-            tasks = []
-            for i, test_case in enumerate(test_cases):
-                task = execute_with_semaphore(
-                    func=evaluate_single_test_case,
-                    test_case=test_case,
-                    progress=progress,
-                    pbar_id=pbar_id,
-                    index=i,
-                )
-                tasks.append(asyncio.create_task(task))
-                await asyncio.sleep(throttle_value)
-
-            await asyncio.gather(*tasks)
+            await run_comparisons(progress=progress, pbar_id=pbar_id)
+    else:
+        await run_comparisons()
 
     return winners
 
