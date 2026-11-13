@@ -9,7 +9,8 @@ They pin down:
   - a non-native judge returning a non-conforming verdict string is normalized
     (leading yes/no) or dropped, never crashing and never silently counted as
     relevant
-  - the documented fallback when no valid verdicts exist (score = 1)
+  - dropped verdicts stay in the denominator: with no valid verdicts the
+    score is 0, since every asked window went unassessed (issue #3401)
   - a custom template_class is threaded through to prompt resolution
 """
 
@@ -163,16 +164,16 @@ class TestTurnRelevancyAggregation:
         assert TurnRelevancyVerdict(verdict="no").verdict == "no"
         assert TurnRelevancyVerdict(verdict="yes").verdict == "yes"
 
-    def test_no_valid_verdicts_falls_back_to_perfect_score(self):
-        # Documents the fallback introduced for issue #2327: if every
-        # verdict failed to generate, the metric scores 1 rather than crash.
+    def test_no_valid_verdicts_scores_zero(self):
+        # Every verdict failed to generate: nothing was assessed, so the
+        # score is 0 rather than the old #2327 fallback of 1 (issue #3401).
         metric = TurnRelevancyMetric(
             model=ScriptedJudge(["yes"]), async_mode=False
         )
         metric.verdicts = [None, None, None]
-        assert metric._calculate_score() == 1
+        assert metric._calculate_score() == 0.0
 
-    def test_failed_verdicts_are_excluded_from_denominator(self):
+    def test_failed_verdicts_count_against_denominator(self):
         metric = TurnRelevancyMetric(
             model=ScriptedJudge(["yes"]), async_mode=False
         )
@@ -182,7 +183,9 @@ class TestTurnRelevancyAggregation:
             None,
             TurnRelevancyVerdict(verdict="yes"),
         ]
-        assert metric._calculate_score() == 0.5
+        # 1 relevant out of 4 asked windows; the 2 dropped verdicts count
+        # against the score instead of shrinking the denominator.
+        assert metric._calculate_score() == 0.25
 
     def test_nonconforming_verdict_string_is_normalized_not_crashed(self):
         # A non-native judge that returns a raw JSON string with a verbose
@@ -207,8 +210,8 @@ class TestTurnRelevancyAggregation:
         assert metric.verdicts[0].verdict == "no"
 
     def test_ambiguous_verdict_string_is_dropped_not_crashed(self):
-        # An unparseable verdict ("maybe") is excluded from scoring (None),
-        # consistent with the #2327 fallback — and never raises.
+        # An unparseable verdict ("maybe") is dropped (None) and counts
+        # against the score — and never raises.
         judge = RawJsonJudge(['{"verdict": "maybe"}'])
         metric = TurnRelevancyMetric(
             model=judge, async_mode=False, include_reason=False
@@ -223,7 +226,7 @@ class TestTurnRelevancyAggregation:
             _show_indicator=False,
         )
         assert metric.verdicts[0] is None
-        assert score == 1  # no valid verdicts -> documented fallback
+        assert score == 0.0  # the one asked window went unassessed
 
     def test_custom_template_class_is_threaded_through(self):
         # the configured template_class must thread through to prompt resolution

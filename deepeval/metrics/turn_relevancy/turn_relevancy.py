@@ -304,8 +304,14 @@ class TurnRelevancyMetric(BaseConversationalMetric):
 
     def _calculate_score(self) -> float:
         # None verdicts (failed generation / out-of-vocabulary replies) are
-        # dropped by score_qag_verdicts.
-        return score_qag_verdicts(self, self.verdicts, passing=(Verdict.YES,))
+        # dropped by score_qag_verdicts; expected_count keeps them in the
+        # denominator so unassessed windows count against the score.
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=(Verdict.YES,),
+            expected_count=len(self.verdicts),
+        )
 
     @property
     def __name__(self):
