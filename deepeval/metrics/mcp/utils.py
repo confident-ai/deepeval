@@ -9,6 +9,16 @@ from pydantic import BaseModel
 from deepeval.metrics.mcp.schema import Task
 from deepeval.test_case import MCPServer, MCPToolCall
 
+# A conversation with no complete user -> assistant interaction has no tasks
+# to judge. Like the other metrics with nothing to evaluate (e.g. argument
+# correctness with no tool calls, the turn contextual metrics with no
+# retrieval context), it scores 1 and says so in the reason instead of
+# averaging an empty list to 0.
+NO_TASKS_REASON = (
+    "There were no tasks to evaluate: the conversation contains no complete "
+    "user -> assistant interaction."
+)
+
 
 def _primitive_state(primitive: object) -> Any:
     if isinstance(primitive, BaseModel):
