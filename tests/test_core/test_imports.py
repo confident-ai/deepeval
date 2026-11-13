@@ -359,6 +359,7 @@ def test_benchmarks_imports():
         GSM8K,
         BoolQ,
         EquityMedQA,
+        HaluEval,
     )
 
     assert MMLU is not None
@@ -377,6 +378,7 @@ def test_benchmarks_imports():
     assert GSM8K is not None
     assert BoolQ is not None
     assert EquityMedQA is not None
+    assert HaluEval is not None
 
 
 def test_tracing_imports():

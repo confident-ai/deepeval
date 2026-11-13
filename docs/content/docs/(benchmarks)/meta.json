@@ -16,6 +16,7 @@
     "benchmarks-arc",
     "benchmarks-bbq",
     "benchmarks-lambada",
-    "benchmarks-winogrande"
+    "benchmarks-winogrande",
+    "benchmarks-halu-eval"
   ]
 }

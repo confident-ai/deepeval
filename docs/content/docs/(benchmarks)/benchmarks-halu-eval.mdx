@@ -1,0 +1,112 @@
+---
+id: benchmarks-halu-eval
+title: HaluEval
+sidebar_label: HaluEval
+languages: [python]
+---
+
+
+**HaluEval** is a hallucination evaluation benchmark that tests whether an LLM can **recognize** hallucinated responses. It contains about 35K samples across four tasks: question answering (10K), knowledge-grounded dialogue (10K), summarization (10K), and general user queries (about 4.5K) with human-annotated ChatGPT responses.
+
+:::info
+To learn more about the dataset and its construction, you can [read the original paper here](https://arxiv.org/abs/2305.11747).
+:::
+
+For the QA, dialogue and summarization tasks, every sample has a right response and a hallucinated response, so each sample becomes **two** problems: the right response (expected answer `No`) and the hallucinated response (expected answer `Yes`). General samples use their human label.
+
+## Arguments
+
+There are **TWO** optional arguments when using the `HaluEval` benchmark:
+
+- [Optional] `tasks`: a list of tasks (`HaluEvalTask` enums), which specifies the subject areas for model evaluation. By default, this is set to all tasks. The list of `HaluEvalTask` enums can be found [here](#halueval-tasks).
+- [Optional] `n_problems_per_task`: the number of problems per task for model evaluation. By default, this is set to `None` (all problems).
+
+## Usage
+
+The code below assesses a custom `mistral_7b` model ([click here to learn how to use **ANY** custom LLM](/docs/benchmarks-introduction#benchmarking-your-llm)) on 100 problems from each of the QA and summarization tasks.
+
+```python
+from deepeval.benchmarks import HaluEval
+from deepeval.benchmarks.tasks import HaluEvalTask
+
+# Define benchmark with specific tasks and number of problems
+benchmark = HaluEval(
+    tasks=[HaluEvalTask.QA, HaluEvalTask.SUMMARIZATION],
+    n_problems_per_task=100,
+)
+
+# Replace 'mistral_7b' with your own custom model
+benchmark.evaluate(model=mistral_7b)
+print(benchmark.overall_score)
+print(benchmark.task_scores)
+```
+
+The `overall_score` for this benchmark ranges from 0 to 1, where 1 signifies perfect performance and 0 indicates no correct answers. The model's score, based on **exact matching**, is the proportion of problems for which the model gives the correct answer (i.e. 'Yes' if the response is hallucinated, 'No' otherwise) in relation to the total number of problems.
+
+## HaluEval Tasks
+
+The `HaluEvalTask` enum classifies the four tasks covered in the HaluEval benchmark.
+
+```python
+from deepeval.benchmarks.tasks import HaluEvalTask
+
+hallu_tasks = [HaluEvalTask.QA]
+```
+
+Below is the comprehensive list of available tasks:
+
+- `QA`
+- `DIALOGUE`
+- `SUMMARIZATION`
+- `GENERAL`
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What does the `HaluEval` benchmark measure?",
+      answer: (
+        <>
+          HaluEval measures whether an LLM can recognize hallucinated
+          responses in question answering, dialogue, summarization and general
+          user queries. See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a>{" "}
+          for how scoring works across benchmarks.
+        </>
+      ),
+    },
+    {
+      question: "How is `HaluEval` scored?",
+      answer: (
+        <>
+          Scoring is based on <strong>exact matching</strong>: the model answers
+          'Yes' (hallucinated) or 'No' (not hallucinated), and the{" "}
+          <code>overall_score</code> is the proportion of correct answers. Task
+          level scores are available in <code>task_scores</code>.
+        </>
+      ),
+    },
+    {
+      question: "How is `HaluEval` different from `TruthfulQA`?",
+      answer: (
+        <>
+          <a href="/docs/benchmarks-truthful-qa">TruthfulQA</a> tests whether a
+          model <em>generates</em> truthful answers. HaluEval tests whether a
+          model can <em>detect</em> hallucinations in a given response, which
+          is useful when choosing an LLM judge or guardrail model.
+        </>
+      ),
+    },
+    {
+      question: "How many problems does `HaluEval` evaluate by default?",
+      answer: (
+        <>
+          All of them: 20K problems each for QA, dialogue and summarization
+          (two per sample) and 4,507 for general. Pass{" "}
+          <code>n_problems_per_task</code> to evaluate fewer.
+        </>
+      ),
+    },
+  ]}
+/>
