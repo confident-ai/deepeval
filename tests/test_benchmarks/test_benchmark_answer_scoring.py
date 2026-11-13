@@ -59,6 +59,23 @@ def test_drop_delimiter_is_not_a_character_that_occurs_in_answers():
     assert DELIMITER not in "0123456789,.- abcdefghijklmnopqrstuvwxyz"
 
 
+def test_quasi_contains_score_matches_span_surrounded_by_extra_text():
+    # quasi_contains_score previously checked list *membership* of the whole
+    # normalized prediction (an exact match against one of the targets), not
+    # whether a target span is *contained* in the prediction as its name
+    # promises. A correct DROP answer wrapped in the model's own wording
+    # (e.g. "The answer is Paris.") was silently scored 0.
+    assert Scorer.quasi_contains_score(["Paris"], "The answer is Paris.") == 1
+    assert Scorer.quasi_contains_score(["Paris"], "Paris") == 1
+    assert Scorer.quasi_contains_score(["Paris"], "London") == 0
+
+
+def test_quasi_contains_score_ignores_empty_targets():
+    # An empty normalized target must not trivially "contain" in everything.
+    assert Scorer.quasi_contains_score([""], "anything") == 0
+    assert Scorer.quasi_contains_score([], "anything") == 0
+
+
 # --------------------------------------------------------------------------- #
 # BigBenchHard: the batch path must not corrupt schema-constrained answers
 # --------------------------------------------------------------------------- #
