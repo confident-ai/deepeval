@@ -7,7 +7,14 @@ def should_use_batch(model: DeepEvalBaseLLM, batch_size: Optional[int] = None):
     if batch_size is None:
         return False
 
-    if not hasattr(model, "batch_generate"):
+    # DeepEvalBaseLLM always defines batch_generate, but its default
+    # implementation just raises NotImplementedError. Only use batching when
+    # the model actually overrides it, otherwise fall back to per-sample
+    # generation as documented.
+    if (
+        getattr(type(model), "batch_generate", None)
+        is DeepEvalBaseLLM.batch_generate
+    ):
         return False
 
-    return True
+    return hasattr(model, "batch_generate")
