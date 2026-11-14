@@ -278,6 +278,9 @@
     "python",
     "typescript"
   ],
+  "/docs/metrics-calibration": [
+    "python"
+  ],
   "/docs/metrics-citation-faithfulness": [
     "python"
   ],
