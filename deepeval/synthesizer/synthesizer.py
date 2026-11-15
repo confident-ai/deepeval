@@ -1347,7 +1347,8 @@ class Synthesizer:
                     goldens.append(golden)
 
         # Wrap up Synthesis
-        self.synthetic_goldens.extend(goldens)
+        if not self.async_mode:
+            self.synthetic_goldens.extend(goldens)
         if _send_data:
             pass
         return goldens
@@ -2958,7 +2959,8 @@ class Synthesizer:
                     goldens.append(golden)
 
         # Wrap up Synthesis
-        self.synthetic_conversational_goldens.extend(goldens)
+        if not self.async_mode:
+            self.synthetic_conversational_goldens.extend(goldens)
         if _send_data:
             pass
         return goldens

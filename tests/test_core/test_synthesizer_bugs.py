@@ -12,8 +12,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 
-from deepeval.synthesizer.config import FiltrationConfig, StylingConfig
+from deepeval.synthesizer.config import (
+    ConversationalStylingConfig,
+    FiltrationConfig,
+    StylingConfig,
+)
 from deepeval.synthesizer.schema import (
+    ConversationalScenario,
     SQLData,
     SyntheticData,
 )
@@ -174,6 +179,97 @@ class TestFromScratchEvolutionsMetadata:
         assert goldens[1].additional_metadata["evolutions"] == [
             "Comparative",
             "Hypothetical",
+        ]
+
+
+class TestFromScratchStoresEachGoldenOnce:
+    """The goldens kept on the synthesizer must hold every generated golden
+    exactly once, whether or not async_mode is on."""
+
+    @pytest.mark.parametrize("async_mode", [True, False])
+    def test_synthetic_goldens_are_not_duplicated(self, async_mode):
+        synth = _make_synthesizer(
+            async_mode=async_mode,
+            styling_config=StylingConfig(
+                scenario="test scenario",
+                task="test task",
+                input_format="question",
+            ),
+        )
+        synth._generate_inputs = MagicMock(
+            return_value=[
+                SyntheticData(input="input_A"),
+                SyntheticData(input="input_B"),
+            ]
+        )
+        synth._evolve_input = MagicMock(
+            side_effect=lambda **kwargs: (
+                f"evolved_{kwargs['input']}",
+                ["Reasoning"],
+            )
+        )
+        synth._a_evolve_input = AsyncMock(
+            side_effect=lambda **kwargs: (
+                f"evolved_{kwargs['input']}",
+                ["Reasoning"],
+            )
+        )
+
+        goldens = synth.generate_goldens_from_scratch(
+            num_goldens=2, _send_data=False
+        )
+
+        assert [g.input for g in goldens] == [
+            "evolved_input_A",
+            "evolved_input_B",
+        ]
+        assert [g.input for g in synth.synthetic_goldens] == [
+            "evolved_input_A",
+            "evolved_input_B",
+        ]
+
+    @pytest.mark.parametrize("async_mode", [True, False])
+    def test_synthetic_conversational_goldens_are_not_duplicated(
+        self, async_mode
+    ):
+        synth = _make_synthesizer(
+            async_mode=async_mode,
+            conversational_styling_config=ConversationalStylingConfig(
+                scenario_context="test context",
+                conversational_task="test task",
+                participant_roles="user and assistant",
+            ),
+        )
+        synth._generate_scenarios = MagicMock(
+            return_value=[
+                ConversationalScenario(scenario="scenario_A"),
+                ConversationalScenario(scenario="scenario_B"),
+            ]
+        )
+        synth._evolve_scenario = MagicMock(
+            side_effect=lambda **kwargs: (
+                f"evolved_{kwargs['scenario']}",
+                ["Reasoning"],
+            )
+        )
+        synth._a_evolve_scenario = AsyncMock(
+            side_effect=lambda **kwargs: (
+                f"evolved_{kwargs['scenario']}",
+                ["Reasoning"],
+            )
+        )
+
+        goldens = synth.generate_conversational_goldens_from_scratch(
+            num_goldens=2, _send_data=False
+        )
+
+        assert [g.scenario for g in goldens] == [
+            "evolved_scenario_A",
+            "evolved_scenario_B",
+        ]
+        assert [g.scenario for g in synth.synthetic_conversational_goldens] == [
+            "evolved_scenario_A",
+            "evolved_scenario_B",
         ]
 
 
