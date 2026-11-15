@@ -1,0 +1,102 @@
+---
+id: metrics-agent-as-a-judge
+title: Agent Judge
+sidebar_label: Agent Judge
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={true} referenceless={true} agent={true} trajectory={true} />
+
+The Agent Judge metric implements [Agent-as-a-Judge](https://arxiv.org/abs/2410.10934) (Zhuge et al., ICML 2025) for a single test case: instead of one holistic LLM verdict, the task `input` is decomposed into ordered **milestones**, and a judge LLM issues a **fresh, independent verdict per milestone** against the agent's trajectory — its `actual_output` plus the `tools_called` that produced it. The score is the mean milestone verdict, so partial progress yields a graded reward signal instead of a binary pass/fail.
+
+## Required Arguments
+
+To use the `AgentJudgeMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import AgentJudgeMetric
+from deepeval.test_case import LLMTestCase, ToolCall
+
+metric = AgentJudgeMetric(threshold=0.5)
+
+test_case = LLMTestCase(
+    input="Find the cheapest flights from Paris to Tokyo in April",
+    actual_output="The cheapest is AF-274 at $780 on Apr 12.",
+    tools_called=[
+        ToolCall(name="search_flights", input_parameters={"from": "Paris", "to": "Tokyo", "month": "April"}),
+        ToolCall(name="sort_by_price", input_parameters={}),
+    ],
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+# print(metric.score, metric.reason, metric.milestone_scores)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **EIGHT** optional parameters when creating an `AgentJudgeMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to `0.5`.
+- [Optional] `requirements`: a list of strings giving the task's milestones explicitly. When supplied, LLM decomposition is skipped entirely. Defaulted to `None`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** any custom LLM model of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4.1'.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables concurrent execution within the `measure()` method. Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `AgentJudgeMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The metric runs in two stages. First, the task `input` is decomposed into 2–6 ordered, independently checkable milestones (skipped when `requirements` is supplied). Second, the judge receives the numbered milestones plus the agent trajectory — the final output rendered alongside each tool call's name, arguments, and output (long tool outputs are truncated at 400 characters) — and returns a `0.0` / `0.5` / `1.0` verdict per milestone. The metric score is the clamped mean of those verdicts. Judges sometimes miscount milestones, so missing verdicts are padded with `0.0` and extras dropped before averaging; `metric.milestone_scores` exposes the per-milestone breakdown for dashboards and reward signals.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from an LLM-judged answer relevance?",
+      answer: (
+        <>
+          A single-pass judge scores the final answer as a whole and can
+          be swayed by confident-sounding output. Agent-as-a-Judge
+          scores the step-by-step work: each milestone is judged
+          independently with fresh evidence from the trajectory, which
+          is exactly what the research found separates it from
+          LLM-as-a-Judge (90% vs 70% alignment with human consensus on
+          the DevAI benchmark).
+        </>
+      ),
+    },
+    {
+      question: "Should I supply requirements or let the metric decompose?",
+      answer: (
+        <>
+          Supply `requirements` when you have known acceptance criteria
+          (or benchmark annotations) — it removes one LLM call and makes
+          scores comparable across runs. Let the metric decompose for
+          open-ended tasks where you only have the user's request.
+        </>
+      ),
+    },
+  ]}
+/>

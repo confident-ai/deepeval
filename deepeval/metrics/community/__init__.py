@@ -1,3 +1,4 @@
+from .agent_judge.agent_judge import AgentJudgeMetric
 from .citation_faithfulness.citation_faithfulness import (
     CitationFaithfulnessMetric,
 )
@@ -8,6 +9,7 @@ from .latency_budget.latency_budget import LatencyBudgetMetric
 from .tool_outcome.tool_outcome import ToolOutcomeMetric
 
 __all__ = [
+    "AgentJudgeMetric",
     "CitationFaithfulnessMetric",
     "CitationIntegrityMetric",
     "CostBudgetMetric",
