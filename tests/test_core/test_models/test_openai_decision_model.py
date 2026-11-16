@@ -136,9 +136,7 @@ def _nested(depth):
     return state
 
 
-@pytest.mark.parametrize(
-    "state", [{"spans": list(range(10_000))}, _nested(33)]
-)
+@pytest.mark.parametrize("state", [{"spans": list(range(10_000))}, _nested(33)])
 def test_json_over_openai_limits_is_sent_as_text(state):
     client = FakeClient([ANSWERS])
     _model(client).decide(state, QUESTIONS)

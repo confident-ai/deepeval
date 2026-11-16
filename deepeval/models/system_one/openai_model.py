@@ -88,8 +88,6 @@ def _to_input(state: Any) -> Any:
 
 
 class OpenAIDecisionModel(DeepEvalBaseSystemOneModel):
-    """OpenAI's Decisions API (`POST /v1/decisions`) as a System One model."""
-
     # OpenAI publishes no context limit for its decision models; the API
     # rejects oversized requests itself.
     max_state_tokens: Optional[int] = None
@@ -179,7 +177,11 @@ class OpenAIDecisionModel(DeepEvalBaseSystemOneModel):
         )
 
     def _body(self, request_input: Any, questions: List[Dict]) -> Dict:
-        return {"model": self.name, "input": request_input, "questions": questions}
+        return {
+            "model": self.name,
+            "input": request_input,
+            "questions": questions,
+        }
 
     ###############################################
     # Translation
@@ -188,56 +190,75 @@ class OpenAIDecisionModel(DeepEvalBaseSystemOneModel):
     def _to_api_question_chunks(
         self, questions: Dict[str, SystemOneQuestion]
     ) -> List[List[Dict]]:
+        api_questions = self._to_api_questions(questions)
+        return [
+            api_questions[i : i + OPENAI_DECISIONS_MAX_QUESTIONS]
+            for i in range(
+                0, len(api_questions), OPENAI_DECISIONS_MAX_QUESTIONS
+            )
+        ]
+
+    def _to_api_questions(
+        self, questions: Dict[str, SystemOneQuestion]
+    ) -> List[Dict]:
         if not questions:
             raise DeepEvalError(
                 "OpenAIDecisionModel.decide requires at least one question."
             )
-        api_questions = [
-            self._to_api_question(key, question)
-            for key, question in questions.items()
-        ]
-        return [
-            api_questions[i : i + OPENAI_DECISIONS_MAX_QUESTIONS]
-            for i in range(0, len(api_questions), OPENAI_DECISIONS_MAX_QUESTIONS)
-        ]
-
-    def _to_api_question(self, key: str, question: SystemOneQuestion) -> Dict:
-        if isinstance(question, NoulQuestion):
-            instructions = _as_text(question.instructions)
-            if question.true is not None:
-                instructions += f"\n\nTrue when: {_as_text(question.true)}"
-            if question.false is not None:
-                instructions += f"\nFalse when: {_as_text(question.false)}"
-            return {
-                "type": "predicate",
-                "name": key,
-                "instructions": instructions,
-            }
-        if isinstance(question, ChoiceQuestion):
-            return {
-                "type": "choice",
-                "name": key,
-                "instructions": _as_text(question.instructions),
-                "choices": [
-                    {"value": value, "description": _as_text(description)}
-                    if description is not None
-                    else {"value": value}
-                    for value, description in question.options.items()
-                ],
-            }
-        if isinstance(question, ScoreQuestion):
-            return {
-                "type": "score",
-                "name": key,
-                "instructions": _as_text(question.instructions),
-                "levels": [
-                    {"label": f"level_{index}", "description": _as_text(level)}
-                    for index, level in enumerate(question.levels)
-                ],
-            }
-        raise DeepEvalError(
-            f"Unsupported System One question type: {type(question)}"
-        )
+        api: List[Dict] = []
+        for key, question in questions.items():
+            if isinstance(question, NoulQuestion):
+                instructions = _as_text(question.instructions)
+                if question.true is not None:
+                    instructions += f"\n\nTrue when: {_as_text(question.true)}"
+                if question.false is not None:
+                    instructions += f"\nFalse when: {_as_text(question.false)}"
+                api.append(
+                    {
+                        "type": "predicate",
+                        "name": key,
+                        "instructions": instructions,
+                    }
+                )
+            elif isinstance(question, ChoiceQuestion):
+                api.append(
+                    {
+                        "type": "choice",
+                        "name": key,
+                        "instructions": _as_text(question.instructions),
+                        "choices": [
+                            (
+                                {
+                                    "value": value,
+                                    "description": _as_text(description),
+                                }
+                                if description is not None
+                                else {"value": value}
+                            )
+                            for value, description in question.options.items()
+                        ],
+                    }
+                )
+            elif isinstance(question, ScoreQuestion):
+                api.append(
+                    {
+                        "type": "score",
+                        "name": key,
+                        "instructions": _as_text(question.instructions),
+                        "levels": [
+                            {
+                                "label": f"level_{index}",
+                                "description": _as_text(level),
+                            }
+                            for index, level in enumerate(question.levels)
+                        ],
+                    }
+                )
+            else:
+                raise DeepEvalError(
+                    f"Unsupported System One question type: {type(question)}"
+                )
+        return api
 
     def _from_api_responses(
         self,
@@ -289,7 +310,9 @@ class OpenAIDecisionModel(DeepEvalBaseSystemOneModel):
                 confidence=answer["confidence"],
             )
         else:
-            raise DeepEvalError(f"Unexpected OpenAI decision answer: {answer!r}")
+            raise DeepEvalError(
+                f"Unexpected OpenAI decision answer: {answer!r}"
+            )
 
     ###############################################
     # Utilities
