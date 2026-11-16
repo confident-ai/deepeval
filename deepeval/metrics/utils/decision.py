@@ -12,6 +12,7 @@ from typing import (
     Union,
 )
 
+import openai
 from tenacity import RetryError
 
 from deepeval.config.eval_mode import (
@@ -188,6 +189,10 @@ def _is_permanent(exc: BaseException) -> bool:
     measure: no SDK, no key, rejected key."""
     if isinstance(exc, ImportError):
         return True
+    if isinstance(
+        exc, (openai.AuthenticationError, openai.PermissionDeniedError)
+    ):
+        return True
     try:
         from typesafe_sdk import (
             TypeSafeAuthenticationError,
@@ -227,6 +232,7 @@ def _system_one_error_types() -> Tuple[type, ...]:
         TimeoutError,
         asyncio.TimeoutError,
         ImportError,
+        openai.APIError,
     ]
     try:
         from typesafe_sdk import TypeSafeError
