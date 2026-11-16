@@ -14,7 +14,6 @@ fields are documented separately in `span-attributes.md`.
 | `confident.trace.name` | string | Human-readable trace name. |
 | `confident.trace.input` | string | Trace input. Passthrough; JSON-encode if not already a string. |
 | `confident.trace.output` | string | Trace output. Passthrough; JSON-encode if not already a string. |
-| `confident.trace.user_id` | string | End user / customer identifier. |
 | `confident.trace.thread_id` | string | Conversation or session thread identifier. |
 | `confident.trace.tags` | list of strings | Grouping labels. Native OTLP string array, or a JSON array string. |
 | `confident.trace.metadata` | JSON string | Arbitrary key-value context. Must be a JSON-encoded object string (OTLP has no map type). |
@@ -23,9 +22,6 @@ fields are documented separately in `span-attributes.md`.
 | `confident.trace.context` | list of strings | Ground-truth context for the trace. Native OTLP string array, or a JSON array string. |
 | `confident.trace.tools_called` | list of strings | Tools called during the trace. Native OTLP list where each element is a JSON-serialized `ToolCall`. |
 | `confident.trace.expected_tools` | list of strings | Tools that should have been called. Native OTLP list of JSON-serialized `ToolCall` strings. |
-| `confident.trace.test_case_id` | string | Reference to a test case ID. |
-| `confident.trace.turn_id` | string | Turn identifier for multi-turn conversations. |
-| `confident.trace.metric_collection` | string | Name of a Confident AI metric collection to run online (server-side) evals against this trace. |
 
 All attributes are optional. Set only what is meaningful for the app.
 

@@ -292,8 +292,8 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
     # doing it twice (here + walker) would either double-emit or require
     # the walker to dedupe.
     #
-    # Trace-level fields (``name``, ``tags``, ``thread_id``, ``user_id``,
-    # ``metadata``, ``environment``) are forwarded from the trace so that
+    # Trace-level fields (``name``, ``tags``, ``thread_id``, ``metadata``,
+    # ``environment``) are forwarded from the trace so that
     # OTel-based integrations whose users configured them via instrumentation
     # settings or ``update_current_trace(...)`` see them on the dashboard.
     # The non-eval REST path (``trace_manager.create_trace_api``) already
@@ -345,7 +345,6 @@ def create_api_trace(trace: Trace, golden: Golden) -> TraceApi:
         name=trace.name,
         tags=trace.tags,
         threadId=trace.thread_id,
-        userId=trace.user_id,
         environment=trace.environment,
         status=(
             TraceSpanApiStatus.SUCCESS

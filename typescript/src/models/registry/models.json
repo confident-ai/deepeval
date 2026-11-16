@@ -711,6 +711,15 @@
       "supportsTemperature": false,
       "supportsThinking": true
     },
+    "claude-sonnet-5-5": {
+      "supportsLogProbs": false,
+      "supportsMultimodal": true,
+      "supportsStructuredOutputs": true,
+      "supportsJson": true,
+      "inputPrice": 2e-06,
+      "outputPrice": 1e-05,
+      "supportsTemperature": false
+    },
     "claude-fable-5": {
       "supportsLogProbs": false,
       "supportsMultimodal": true,

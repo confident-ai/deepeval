@@ -196,6 +196,10 @@ class BaseVoiceConnector(ABC):
         return False
 
     @property
+    def supports_parallel_calls(self) -> bool:
+        return True
+
+    @property
     def call_ended(self) -> bool:
         return False
 

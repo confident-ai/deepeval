@@ -69,6 +69,7 @@ LATEST_TEST_RUN_DATA_KEY = "testRunData"
 LATEST_TEST_RUN_LINK_KEY = "testRunLink"
 console = Console()
 
+
 class TestRunResultDisplay(Enum):
     ALL = "all"
     FAILING = "failing"

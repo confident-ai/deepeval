@@ -155,16 +155,7 @@ class BaseApiSpan(BaseModel):
     )
 
     ## evals
-    metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[List[MetricData]] = Field(None, alias="metricsData")
-    prompt_alias: Optional[str] = Field(None, serialization_alias="promptAlias")
-    prompt_version: Optional[str] = Field(
-        None, serialization_alias="promptVersion"
-    )
-    prompt_label: Optional[str] = Field(None, serialization_alias="promptLabel")
-    prompt_commit_hash: Optional[str] = Field(
-        None, serialization_alias="promptCommitHash"
-    )
 
 
 class TraceApi(BaseModel):
@@ -187,13 +178,9 @@ class TraceApi(BaseModel):
     tags: Optional[List[str]] = Field(None)
     environment: Optional[str] = Field(None)
     thread_id: Optional[str] = Field(None, alias="threadId")
-    user_id: Optional[str] = Field(None, alias="userId")
     input: Optional[Any] = Field(None)
     output: Optional[Any] = Field(None)
     status: Optional[TraceSpanApiStatus] = Field(TraceSpanApiStatus.SUCCESS)
-    test_case_id: Optional[str] = Field(None, alias="testCaseId")
-    test_run_id: Optional[str] = Field(None, alias="testRunId")
-    turn_id: Optional[str] = Field(None, alias="turnId")
 
     # additional test case parameters
     retrieval_context: Optional[List[str]] = Field(
@@ -207,13 +194,9 @@ class TraceApi(BaseModel):
     )
 
     # evals
-    metric_collection: Optional[str] = Field(None, alias="metricCollection")
     metrics_data: Optional[ApiMetricsData] = Field(None, alias="metricsData")
 
     # MLLM attachments
     attachments: Optional[Dict[str, AttachmentApi]] = Field(
         None, alias="attachments"
     )
-
-    # Don't serialize these
-    confident_api_key: Optional[str] = Field(None, exclude=True)

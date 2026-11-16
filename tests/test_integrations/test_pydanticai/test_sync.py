@@ -343,8 +343,8 @@ class TestNextSpanApp:
 
 
 class TestExecutionModes:
-    """Schema-asserted coverage for the three execution modes documented
-    in ``deepeval/integrations/pydantic_ai/README.md``. The other
+    """Schema-asserted coverage for the three execution modes: bare
+    ``agent.run``, ``with trace(...)`` and ``@observe``. The other
     schema tests in this file all run in Mode 1 (bare ``agent.run``);
     these add Mode 2 / Mode 3 / Mode-1-with-tool-enrichment."""
 
@@ -404,9 +404,8 @@ class TestExecutionModes:
     @trace_test("pydanticai_bare_tool_enrichment_schema.json")
     def test_bare_trace_enrichment_from_tool(self):
         """Mode 1 + ``update_current_trace`` from inside a tool body.
-        No ``@observe`` / ``with trace(...)``: the implicit ``Trace``
-        placeholder pushed by ``SpanInterceptor`` is the write target.
-        Mirrors ``pydantic_after_bare.py``."""
+        No ``@observe`` / ``with trace(...)``: the trace the bridge collects
+        for the run is the write target. Mirrors ``pydantic_after_bare.py``."""
         agent = create_enrichment_agent(
             name="pydanticai-bare-enrichment-test",
             tags=["pydanticai", "enrichment"],

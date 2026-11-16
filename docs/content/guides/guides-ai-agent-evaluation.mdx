@@ -451,31 +451,9 @@ In production, the goal shifts from benchmarking to **catching the trajectories 
 - **Avoid resource overhead** — no local metric initialization or LLM judge calls
 - **Feed the next eval** — every failing trace is a test case your dataset was missing
 
-[Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production traces before anyone has written an eval for them, clusters them into failure modes, and turns them into goldens for your next `deepeval` run. Evals can also run on every production trace and flag the failing ones, which is what the setup below configures.
+[Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production traces before anyone has written an eval for them, clusters them into failure modes, and turns them into goldens for your next `deepeval` run.
 
-### Create a Metric Collection
-
-Log in to Confident AI and create a metric collection containing the metrics you want to run in production:
-
-<VideoDisplayer
-  src={ASSETS.metricsCreateCollection}
-  confidentUrl="/docs/llm-tracing/evaluations"
-  label="Create a metric collection on Confident AI"
-  description="Choose the metrics that run on every production trace."
-/>
-
-### Reference the Collection
-
-Replace your local `metrics=[...]` with `metric_collection`:
-
-```python
-# Reference your Confident AI metric collection by name
-@observe(metric_collection="my-agent-metrics")
-def call_openai(messages):
-    ...
-```
-
-That's it. Whenever your agent runs, `deepeval` exports the trace to Confident AI in the background, and the metric collection evaluates it asynchronously. Traces that fail are the ones worth pulling into your dataset, so the next development run tests the trajectory that broke in production.
+Whenever your agent runs, `deepeval` exports the trace to Confident AI in the background. Traces that fail are the ones worth pulling into your dataset, so the next development run tests the trajectory that broke in production.
 
 <VideoDisplayer
   src={ASSETS.tracingTraces}
@@ -592,9 +570,7 @@ With proper evaluation in place, you can catch regressions before users do, pinp
             Confident AI
           </a>
           , which surfaces failing production traces so you can turn them into
-          goldens for your next eval. Attach metric collections to your agent
-          and LLM spans to evaluate every trace asynchronously without adding
-          latency to your application.
+          goldens for your next eval.
         </>
       ),
     },

@@ -958,16 +958,21 @@ See the [OpenAI Agents integration](/integrations/frameworks/openai-agents) for 
 </Tab>
 <Tab value="Vercel AI SDK">
 
-Call `configureAiSdkTracing(...)` once at startup, then pass the returned tracer into `experimental_telemetry` on every call you want traced:
+Call `configureAiSdkTracing(...)` once at startup, then pass its tracer to `@ai-sdk/otel`'s `OpenTelemetry` integration in the `telemetry` of every call you want traced:
 
 ```typescript title="ai-sdk-agent.ts" showLineNumbers
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { OpenTelemetry } from "@ai-sdk/otel";
 import { configureAiSdkTracing } from "deepeval/integrations/ai-sdk";
 import { TaskCompletionMetric } from "deepeval/metrics";
 ...
 
-const tracer = configureAiSdkTracing({ name: "weather-app" });
+const telemetry = {
+  integrations: [
+    new OpenTelemetry({ tracer: configureAiSdkTracing({ name: "weather-app" }) }),
+  ],
+};
 
 for await (const golden of dataset.evalsIterator({
   metrics: [new TaskCompletionMetric()],
@@ -975,7 +980,7 @@ for await (const golden of dataset.evalsIterator({
   await generateText({
     model: openai("gpt-4o-mini"),
     prompt: (golden as Golden).input,
-    experimental_telemetry: { isEnabled: true, tracer },
+    telemetry,
   });
 }
 ```

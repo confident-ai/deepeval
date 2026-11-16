@@ -38,7 +38,7 @@ Options:
 --proj-id <id>         Select this project
 ```
 
-The default services are `https://app.confident-ai.com` and
+The default services are `https://cloud.confident-ai.com` and
 `https://api.confident-ai.com`.
 
 ## What it does

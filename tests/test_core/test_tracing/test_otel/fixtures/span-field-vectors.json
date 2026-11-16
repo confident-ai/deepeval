@@ -1,0 +1,12 @@
+{
+  "cases": [
+    {"field": "input", "value": null},
+    {"field": "output", "value": ""},
+    {"field": "metadata", "value": {"release": "v2"}},
+    {"field": "retrieval_context", "value": ["document"]},
+    {"field": "context", "value": []},
+    {"field": "expected_output", "value": "answer"},
+    {"field": "tools_called", "value": [{"name": "lookup", "input_parameters": {"city": "Macau"}}]},
+    {"field": "expected_tools", "value": []}
+  ]
+}

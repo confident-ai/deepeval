@@ -1,35 +1,36 @@
 {
-  "uuid": "9c39e152-53e7-43f0-8078-1e483b2af34c",
+  "uuid": "39cb9d5cb46c14e3f4f92e20cdab75be",
   "baseSpans": [],
   "agentSpans": [],
   "llmSpans": [
     {
-      "uuid": "adf34116-434f-445d-9a33-c890e4cfba9f",
-      "name": "llm_generation",
+      "uuid": "2b7d54b91af49c75",
+      "name": "chat gpt-4o",
       "status": "SUCCESS",
       "type": "llm",
-      "startTime": "2026-02-15T05:55:29.267Z",
-      "endTime": "2026-02-15T05:55:30.069Z",
+      "startTime": "2026-10-21T14:05:34.402Z",
+      "endTime": "2026-10-21T14:05:35.876Z",
       "input": [
         {
           "role": "user",
           "content": "Hello, how are you?"
         }
       ],
-      "output": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
-      "model": "gpt-4o",
-      "inputTokenCount": 13.0,
-      "outputTokenCount": 29.0,
+      "output": "Hello! I'm just a computer program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
       "integration": "OpenAI",
-      "provider": "OpenAI"
+      "model": "gpt-4o",
+      "provider": "OpenAI",
+      "inputTokenCount": 13.0,
+      "outputTokenCount": 30.0
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [],
-  "startTime": "2026-02-15T05:55:29.267Z",
-  "endTime": "2026-02-15T05:55:30.069Z",
+  "startTime": "2026-10-21T14:05:34.402Z",
+  "endTime": "2026-10-21T14:05:35.876Z",
+  "name": "chat gpt-4o",
   "environment": "development",
   "input": "Hello, how are you?",
-  "output": "Hello! I'm just a program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
+  "output": "Hello! I'm just a computer program, so I don't have feelings, but I'm here and ready to help you. How can I assist you today?",
   "status": "SUCCESS"
 }

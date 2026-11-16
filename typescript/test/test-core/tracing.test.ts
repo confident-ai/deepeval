@@ -1,4 +1,5 @@
 import { config } from "dotenv";
+import { InMemorySpanExporter } from "@opentelemetry/sdk-trace-base";
 
 import {
   getCurrentSpan,
@@ -14,9 +15,19 @@ import {
 import { TraceSpanApiStatus } from "@/tracing/api";
 import { LLMTestCase } from "@/test-case";
 import { Environment } from "@/tracing/utils";
+import {
+  confidentTrace,
+  ensureConfidentTrace,
+  flushConfidentTrace,
+} from "@/tracing/otel/setup";
+import { setTracingContext } from "@/tracing/trace-context";
 
 config();
 process.env.CONFIDENT_TRACE_VERBOSE = "YES";
+
+// confident-trace exports `observe` spans; here, into memory.
+const exported = new InMemorySpanExporter();
+ensureConfidentTrace({ exporter: exported });
 
 describe("Tracing Module", () => {
   beforeEach(() => {
@@ -191,9 +202,10 @@ describe("Tracing Module", () => {
     const trace = traces[traces.length - 1];
     expect(trace.drop).toBe(true);
 
-    traceManager.configure({ tracingEnabled: true });
-    const result = traceManager.postTrace(trace);
-    expect(result).toBeUndefined();
+    await flushConfidentTrace(5000);
+    expect(exported.getFinishedSpans().map((span) => span.name)).not.toContain(
+      "droppedFunction",
+    );
   });
 
   test("Should mark trace ERRORED when error propagates to root observe (uncaught)", async () => {
@@ -284,5 +296,70 @@ describe("Tracing Module", () => {
     expect(traces[0].input).toBe(`trace input: ${QUERY}`);
     expect(traces[0].output).toBe(`trace output for ${QUERY}`);
     expect(traces[0].tags).toEqual(["tag1", "tag2"]);
+  });
+  test("Should export observe traces through confident-trace", async () => {
+    // Earlier tests' spans may still wait in the export batch.
+    await flushConfidentTrace(5000);
+    exported.reset();
+    const { withSpan } = confidentTrace();
+    const lookup = observe({
+      type: SpanType.TOOL,
+      name: "lookup",
+      description: "Looks things up.",
+      fn: async () => withSpan({ name: "inner", type: "tool" }, () => "sunny"),
+    });
+    const failing = observe({
+      name: "failing",
+      fn: async () => {
+        throw new Error("boom");
+      },
+    });
+    const agent = observe({
+      type: SpanType.AGENT,
+      name: "agent",
+      availableTools: ["lookup"],
+      fn: async () => {
+        await failing().catch(() => undefined);
+        return lookup();
+      },
+    });
+
+    await setTracingContext({ name: "exported" }, () => agent());
+    await flushConfidentTrace(5000);
+
+    const spans = new Map(
+      exported.getFinishedSpans().map((span) => [span.name, span]),
+    );
+    expect([...spans.keys()].sort()).toEqual(
+      ["agent", "failing", "inner", "lookup"].sort(),
+    );
+    expect(spans.get("agent")?.attributes).toMatchObject({
+      "confident.trace.name": "exported",
+      "confident.agent.available_tools": ["lookup"],
+    });
+    expect(spans.get("lookup")?.attributes["confident.tool.description"]).toBe(
+      "Looks things up.",
+    );
+    expect(spans.get("failing")?.status.message).toBe("boom");
+    // The observe root, not the confident-trace span inside it, has the trace.
+    expect(
+      spans.get("inner")?.attributes["confident.trace.name"],
+    ).toBeUndefined();
+  });
+
+  test("Should keep observe traces local during an evaluation", async () => {
+    await flushConfidentTrace(5000);
+    exported.reset();
+    const release = traceManager.beginEvaluation();
+    try {
+      await observe({ name: "local", fn: async () => "done" })();
+    } finally {
+      release();
+    }
+    await flushConfidentTrace(5000);
+
+    expect(exported.getFinishedSpans()).toHaveLength(0);
+    const traces = traceManager.getAllTraces();
+    expect(traces[traces.length - 1].rootSpans[0].name).toBe("local");
   });
 });

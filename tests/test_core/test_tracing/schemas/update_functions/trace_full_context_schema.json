@@ -31,7 +31,6 @@
   ],
   "environment": "testing",
   "threadId": "thread_001",
-  "userId": "user_001",
   "input": "Custom trace input",
   "output": "Custom trace output",
   "status": "SUCCESS"

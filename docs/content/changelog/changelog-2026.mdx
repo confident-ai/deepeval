@@ -20,14 +20,182 @@ First things first, DeepEval exists because of everyone who opened issues, revie
 
 {/* DeepEval release notes start */}
 
+## November
+
+November's release focused on improving reliability, compatibility, and accuracy across the tool's evaluation, voice, and integration features. Key updates include robust handling of model parameters and prompt formats, enhanced support for new models and voice connectors, and more precise scoring and evaluation logic. Several critical bugs were fixed to prevent crashes and ensure consistent behavior across different environments and data formats. Documentation and test coverage were expanded to clarify usage and ensure correctness, while tracing and telemetry were unified under a new SDK for streamlined integration management.
+
+### New Feature
+
+#### v4.3.4
+- Add support for including metadata in the turn API, allowing users to attach additional information to each turn. ([#3448](https://github.com/confident-ai/deepeval/pull/3448)) {/* pr:3448 */} ([Tanay](https://github.com/tanayvaswani))
+
+#### v4.3.3
+- Add support for the claude-sonnet-5-5 model in the model registry with correct handling of temperature and structured outputs. The model now avoids sending unsupported parameters, enables structured output configuration, and provides accurate cost calculation. Existing models remain unchanged. ([#3413](https://github.com/confident-ai/deepeval/pull/3413)) {/* pr:3413 */} ([Vansh Bhardwaj](https://github.com/VanshBhardwaj24))
+- Extend voice support with new connectors, including PhoneConnector, SIPConnector, LiveKitProvider, and TwilioProvider. Add support for SIP transport and media encryption options. Improve parallel call handling for connectors that do not support concurrent sessions, providing clearer error messages and guidance. Update internal APIs and tests to cover new voice connector functionality. ([#3580](https://github.com/confident-ai/deepeval/pull/3580)) {/* pr:3580 */} ([Tanay](https://github.com/tanayvaswani))
+
+
+### Improvement
+
+#### v4.3.4
+- Migrate all existing integrations to use the confident-trace SDK for tracing and telemetry. This change streamlines tracing setup and ensures consistent telemetry collection across integrations. Legacy Anthropic integration code has been removed in favor of confident-trace, reducing maintenance overhead and improving reliability. ([#3505](https://github.com/confident-ai/deepeval/pull/3505)) {/* pr:3505 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+- Update integration tests to use improved configuration and tracing logic, including changes to test utilities and schema files. Adjust test setup to prevent traces from being exported during tests and update Python version requirement in documentation to Python 3.10 or higher. Remove user ID fields from trace schemas and related tests for consistency. ([#3506](https://github.com/confident-ai/deepeval/pull/3506)) {/* pr:3506 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+
+#### v4.3.3
+- Clarified documentation for the Tool Correctness metric to indicate it is reference-based, aligning with its requirement for expected tools. ([#3466](https://github.com/confident-ai/deepeval/pull/3466)) {/* pr:3466 */} ([andreabosisio](https://github.com/andreabosisio))
+- Raise the original provider's exception when all retry attempts are exhausted instead of a generic RetryError. This allows users to handle the specific error that caused the failure, improving error transparency and debugging. Tests have been updated to expect the provider's exception type. ([#3542](https://github.com/confident-ai/deepeval/pull/3542)) {/* pr:3542 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+- Update documentation to clarify support for voice agents and expand details on voice agent connectors and metrics. Improve descriptions of multi-turn and voice evaluation capabilities, integrations, and enterprise features. No changes to core functionality. ([#3573](https://github.com/confident-ai/deepeval/pull/3573)) {/* pr:3573 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+
+
+### Bug Fix
+
+#### v4.3.4
+- Fixes an issue where GEval or ConversationalGEval leaf nodes in DAGs would silently lose important configuration parameters such as rubric and strict_mode, leading to incorrect evaluation behavior. All constructor arguments are now properly preserved when copying these metric nodes, ensuring consistent scoring and evaluation logic. ([#3255](https://github.com/confident-ai/deepeval/pull/3255)) {/* pr:3255 */} ([Christopher Krah](https://github.com/chrikrah))
+- Fix cache key for G-Eval metrics to include the rubric, ensuring that changes to the rubric trigger re-evaluation instead of reusing outdated cached scores. Metrics without a rubric continue to use the previous cache behavior. This prevents incorrect results when the rubric is tightened or modified. ([#3579](https://github.com/confident-ai/deepeval/pull/3579)) {/* pr:3579 */} ([Jyotheeswara Reddy Gottam](https://github.com/gjreddy))
+- Fix turn-taking logic in LiveKit voice connector to ensure accurate handling of agent speech turns and transcription, preventing premature or missed turn completions during conversations. ([#3590](https://github.com/confident-ai/deepeval/pull/3590)) {/* pr:3590 */} ([Tanay](https://github.com/tanayvaswani))
+- Fixes the Argument Correctness metric to correctly walk the trace and associate tool calls with their owning LLM spans during evaluation. This ensures that tool calls are properly attributed and evaluated even when not directly listed in the test case, improving the accuracy and reliability of argument correctness checks. ([#3591](https://github.com/confident-ai/deepeval/pull/3591)) {/* pr:3591 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+- Fixes an issue where the agent's turn could finish after the caller, ensuring the agent always completes its turn before the caller responds in voice simulations. This prevents overlapping turns and improves the accuracy of simulated conversations, especially in duplex voice scenarios. The update also handles edge cases where silence or call termination could previously result in incorrect turn handling. ([#3593](https://github.com/confident-ai/deepeval/pull/3593)) {/* pr:3593 */} ([Tanay](https://github.com/tanayvaswani))
+- Fix calculation of audio start time for voice replies that contain no speech, ensuring all agent replies have a valid start time even when silent. This improves consistency in voice conversation simulations and prevents missing start times in edge cases. ([#3594](https://github.com/confident-ai/deepeval/pull/3594)) {/* pr:3594 */} ([Tanay](https://github.com/tanayvaswani))
+- Fix WAV files generated by text-to-speech models to include correct RIFF and data sizes, ensuring accurate audio duration measurement and compatibility with transcription services. Prevents inflated transcription costs and errors caused by placeholder sizes in streamed WAV headers. Audio duration is now calculated based on actual frames, and all supported TTS models now return properly sized WAV files. ([#3595](https://github.com/confident-ai/deepeval/pull/3595)) {/* pr:3595 */} ([Kritin Vongthongsri](https://github.com/kritinv))
+- Prevent stale or removed TypeScript source files from being included in package builds by cleaning the dist directory before each build. This ensures that only current source files are shipped, resolving import errors and runtime crashes caused by outdated modules. Builds are now consistent across local and CI environments, and users no longer encounter missing module or function errors after upgrading. ([#3604](https://github.com/confident-ai/deepeval/pull/3604)) {/* pr:3604 */} ([Tony](https://github.com/tony-confidentai))
+
+#### v4.3.3
+- Stop defaulting RAGAS metric classes to the deprecated gpt-3.5-turbo model and use the library-wide default model instead. This prevents future API errors when OpenAI retires gpt-3.5-turbo. Existing code that explicitly sets the model parameter is unaffected. ([#3407](https://github.com/confident-ai/deepeval/pull/3407)) {/* pr:3407 */} ([Manobhi Sriram](https://github.com/manobhisriram))
+- Prevent failures on reasoning models by omitting the default temperature parameter in LiteLLMModel unless explicitly set. This change ensures compatibility with models that reject explicit temperature values and aligns behavior with other model integrations. Unit tests have been added to verify correct parameter handling. ([#3431](https://github.com/confident-ai/deepeval/pull/3431)) {/* pr:3431 */} ([Udbhav Shrinet](https://github.com/udbhav-shrinet))
+- Fix crash when generating prompts by ensuring text prompts are passed as strings and multimodal prompts use the correct SDK Content objects. This prevents protobuf TypeErrors and improves compatibility with the xai_sdk chat interface. ([#3437](https://github.com/confident-ai/deepeval/pull/3437)) {/* pr:3437 */} ([Christian Sidak](https://github.com/Christian-Sidak))
+- Fix crash in add_test_cases_from_json_file when loading JSON files with null values for tools_called or expected_tools, treating null as empty lists for consistency with other loaders. This prevents TypeError and ensures round-trip compatibility when saving and loading datasets without tools. ([#3470](https://github.com/confident-ai/deepeval/pull/3470)) {/* pr:3470 */} ([nancy](https://github.com/nancy6547))
+- Fixes a crash when reading structured tool results from MCP 2.x by correctly handling both the new `structured_content` field and the legacy `structuredContent` attribute. Ensures compatibility with different MCP versions and falls back to textual content when structured results are unavailable. Adds regression tests to verify correct behavior across versions. ([#3533](https://github.com/confident-ai/deepeval/pull/3533)) {/* pr:3533 */} ([Anh Nguyen (Jerry)](https://github.com/anh-nguyenn))
+- Classifier-only evaluation results are now saved to the results_folder, ensuring that classification outputs are written locally even when no uploads occur. Save failures now issue warnings instead of stopping execution. Added tests confirm that classifier-only runs correctly write results to disk. ([#3539](https://github.com/confident-ai/deepeval/pull/3539)) {/* pr:3539 */} ([prassu017](https://github.com/prassu017))
+- Fixes scoring for digit-split tokens by correctly locating the full score span from the end of the response, ensuring accurate weighting of each token's logprob. Candidates that are strict prefixes of valid scores are now excluded, and candidates above the maximum score are ignored. Introduces an optional score_max parameter for precise control over valid score ranges. This results in more accurate and reliable score distributions, especially for models that emit multi-token numbers. ([#3554](https://github.com/confident-ai/deepeval/pull/3554)) {/* pr:3554 */} ([mengzhe gan](https://github.com/kittimzhe))
+- Detects image and PDF placeholders in conversation-level context for both ConversationalTestCase and ConversationalGolden, ensuring correct modality flags are set. This improves test-case accuracy by matching context handling with other conversational fields. The update does not affect image data mapping but ensures modality detection is consistent across all relevant fields. ([#3572](https://github.com/confident-ai/deepeval/pull/3572)) {/* pr:3572 */} ([BosPrimigenious](https://github.com/bosprimigenious))
+
+
+
+## October
+
+October's release focused on expanding support for audio and voice workflows, introducing new metrics for transcription accuracy and audio glitch detection, and enabling audio input across evaluation models. The handling of expectations in datasets was improved, with better import, export, and lifecycle management. Documentation saw significant enhancements in clarity, SEO, and usability, including a reorganized blog, updated guides, and a new setup wizard for streamlined onboarding. Additional improvements included more precise test run tracking, clearer error handling, and refined user journey attribution, all contributing to a more robust and user-friendly developer experience.
+
+### New Feature
+
+#### v4.3.2
+- Add a setup script for installing and running the DeepEval setup wizard directly from the command line. The documentation now includes a CLI installation option alongside Python and TypeScript, with improved command labels and icons for clarity. The setup script automatically selects the latest stable release and aligns with the Python and TypeScript launchers for consistent installation behavior. ([#3474](https://github.com/confident-ai/deepeval/pull/3474)) {/* pr:3474 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+
+#### v4.3.1
+- Add a specific error for cases where a metric's prompt exceeds the evaluation model's context window, providing clearer feedback when test cases are too large to evaluate. This helps users identify and resolve issues related to prompt size limits across supported providers. ([#3455](https://github.com/confident-ai/deepeval/pull/3455)) {/* pr:3455 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+- Add an evaluation setup wizard accessible via `deepeval setup` in Python and `npx deepeval setup` in TypeScript. The wizard runs locally, reuses existing Confident AI keys, and is distributed as a standalone binary with integrity verification and caching. This streamlines project setup and avoids duplicate key creation. ([#3472](https://github.com/confident-ai/deepeval/pull/3472)) {/* pr:3472 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+
+#### v4.3.0
+- Add support for voice input across all evaluation models, enabling users to provide audio data for model evaluation. Models now report whether they support or require audio input, and audio token billing is handled according to provider specifications. This enhancement allows seamless integration of audio-based prompts and evaluation workflows. ([#3460](https://github.com/confident-ai/deepeval/pull/3460)) {/* pr:3460 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+- Add support for audio input in the ConversationalGEval metric, enabling evaluation of conversational test cases that include audio data. Users can now specify audio models and pass audio clips as part of multi-turn conversations, allowing for more comprehensive and multimodal evaluation scenarios. The metric automatically routes evaluation steps and scoring to the appropriate model based on whether audio is present. ([#3462](https://github.com/confident-ai/deepeval/pull/3462)) {/* pr:3462 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+
+#### v4.2.9
+- Add a transcription accuracy metric to evaluate how faithfully a voice agent's speech-to-text output matches what the caller actually said, distinguishing between minor formatting differences and substantive transcription errors. ([#3414](https://github.com/confident-ai/deepeval/pull/3414)) {/* pr:3414 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+- Add support for reading `metadata` and `tags` fields in expectation evidence, allowing test cases to include and validate these attributes during evaluation. ([#3443](https://github.com/confident-ai/deepeval/pull/3443)) {/* pr:3443 */} ([Tanay](https://github.com/tanayvaswani))
+- Add new metrics for evaluating transcription accuracy and detecting audio glitches such as held tones, dead streams, clipping, and abrupt ends in audio recordings. These metrics help identify and quantify issues in audio data, improving the reliability of speech and audio processing workflows. ([#3453](https://github.com/confident-ai/deepeval/pull/3453)) {/* pr:3453 */} ([Yekta Kocaoğullar](https://github.com/ykocaogullar))
+
+
+### Improvement
+
+#### v4.3.2
+- Improve documentation wording and organization for better clarity and readability. ([#3487](https://github.com/confident-ai/deepeval/pull/3487)) {/* pr:3487 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+- Update all application links to use cloud.confident-ai.com instead of app.confident-ai.com in the CLI, documentation, setup wizard, examples, and tests. The CLI continues to tag links to the old host for compatibility. ([#3520](https://github.com/confident-ai/deepeval/pull/3520)) {/* pr:3520 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+- Replace interactive frames in documentation with exported webp diagrams, simplifying the documentation and reducing dependencies. This change removes interactive board visualizations and uses static images instead, making the documentation easier to maintain and faster to load. ([#3521](https://github.com/confident-ai/deepeval/pull/3521)) {/* pr:3521 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+- Rejects malformed API keys during login and provides clear error messages when an invalid key is entered. Cancelling the login process now fails gracefully and ensures the user is not logged in. ([#3522](https://github.com/confident-ai/deepeval/pull/3522)) {/* pr:3522 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+
+#### v4.3.1
+- Move blog posts into organized folders and migrate content images to a local media library, improving content management and reliability. Blog post URLs remain unchanged, while images are now referenced locally as WebP files for better performance. Covers now replace the image frontmatter and display as post heroes. Added an LLM evaluation guide post and improved validation scripts for content and media. ([#3465](https://github.com/confident-ai/deepeval/pull/3465)) {/* pr:3465 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+- Polished and updated the LLM evaluation guide for improved clarity, more practical examples, and clearer explanations of key concepts. Enhanced code and data field formatting in documentation visuals for better readability. Updated author credits and improved descriptions to better reflect the guide's content and purpose. ([#3467](https://github.com/confident-ai/deepeval/pull/3467)) {/* pr:3467 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+- Improve wording and descriptions related to Confident AI throughout documentation and the README to better clarify its features, benefits, and integration points for production AI monitoring and evaluation. ([#3471](https://github.com/confident-ai/deepeval/pull/3471)) {/* pr:3471 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+- Add a Build with agents dropdown to the home hero section, allowing users to quickly access setup instructions and commands for integrating coding agents with their projects. The dropdown provides tabs for different agent options, copyable commands, and a link to the universal starter prompt, making it easier to get started with agent-driven workflows. ([#3473](https://github.com/confident-ai/deepeval/pull/3473)) {/* pr:3473 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+
+#### v4.3.0
+- Prevent dropout and held-tone detectors from triggering on normal speech, reducing false positives in audio glitch detection. Improved the accuracy of audio analysis by refining thresholds and adding tests to ensure pauses and natural speech patterns are not misclassified as glitches. ([#3459](https://github.com/confident-ai/deepeval/pull/3459)) {/* pr:3459 */} ([Yekta Kocaoğullar](https://github.com/ykocaogullar))
+
+#### v4.2.9
+- Improve documentation SEO by updating benchmark page titles to include 'Benchmark', refining the RAGAS metrics page title and description, and ensuring the enterprise page is included in the sitemap. Meta descriptions now use the first paragraph as a fallback, providing clearer summaries for search engines. Sidebar labels and page structure remain unchanged. ([#3119](https://github.com/confident-ai/deepeval/pull/3119)) {/* pr:3119 */} ([Tony](https://github.com/tony-confidentai))
+- Improve tracking of user signup journeys by recording the original external referrer when a visitor arrives at the docs and carrying the full navigation trail across all Confident AI hosts. This enables better attribution of signups to their true sources and preserves the user's path through documentation and site boundaries. ([#3331](https://github.com/confident-ai/deepeval/pull/3331)) {/* pr:3331 */} ([Tony](https://github.com/tony-confidentai))
+- Send the pulled dataset version along with test runs, allowing more precise tracking and reproducibility of test results. The dataset version is now included in test case metadata and is sent when available. If the dataset version is unknown, it is omitted from the test run payload. ([#3417](https://github.com/confident-ai/deepeval/pull/3417)) {/* pr:3417 */} ([Yekta Kocaoğullar](https://github.com/ykocaogullar))
+- Improve expectations evaluation by updating the reasoning process and exposing verdicts as an attribute. Users can now access detailed verdicts for each expectation, and the reasoning behind evaluation outcomes is more clearly explained. This enhances transparency and debuggability when analyzing test results. ([#3423](https://github.com/confident-ai/deepeval/pull/3423)) {/* pr:3423 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+
+#### v4.2.8
+- Add support for handling and saving expectations in datasets and goldens, allowing expectations to be loaded from and saved to files. Improves dataset import and export by including expectations in parsing and serialization. Ensures that expectations are properly managed throughout the test run lifecycle, including local and remote operations. ([#3402](https://github.com/confident-ai/deepeval/pull/3402)) {/* pr:3402 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+
+
+### Bug Fix
+
+#### v4.2.9
+- Fix model name resolution for LiteLLM models to correctly include the configured region and provider information. ([#3424](https://github.com/confident-ai/deepeval/pull/3424)) {/* pr:3424 */} ([Tanay](https://github.com/tanayvaswani))
+
+
+
+## September
+
+September's release introduces significant enhancements across API flexibility, voice simulation, and agent interoperability. Users can now update and delete golden test cases more easily, configure multiple speech providers, and record full conversation audio in simulations. The addition of agent discovery endpoints and WebRTC integration expands compatibility with AI platforms, while new storage options and improved changelog tooling streamline workflows. Privacy and trace data handling have been strengthened, and experimental support for TypeSafe AI's System One model enables advanced metric routing for early adopters.
+
+### New Feature
+
+#### v4.2.6
+- Add support for including structured metadata in personas, allowing additional details such as account numbers or plans to be attached and rendered in text simulations. Improve background noise settings to accept both local file paths and http(s) URLs for audio files, enabling background audio to be loaded from remote sources as well as local files. If a background audio URL cannot be downloaded, the simulation now gracefully skips adding background noise instead of failing. ([#3333](https://github.com/confident-ai/deepeval/pull/3333)) {/* pr:3333 */} ([Tanay](https://github.com/tanayvaswani))
+- Add support for Claude Opus 5.5 in the Anthropic model registry. The new model is registered with appropriate settings to prevent sending unsupported parameters, ensuring compatibility and correct cost calculation. Existing models and AmazonBedrockModel remain unchanged. ([#3349](https://github.com/confident-ai/deepeval/pull/3349)) {/* pr:3349 */} ([Lucas Kim](https://github.com/kimnamu))
+
+#### v4.2.5
+- Add ConversationalJevEval metric for evaluating multi-turn conversations using JevEval questions, enabling more comprehensive assessment of conversational test cases. ([#3337](https://github.com/confident-ai/deepeval/pull/3337)) {/* pr:3337 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+
+#### v4.2.4
+- Add tracking of docs pages visited to app signup links by including a compact site path parameter, allowing better attribution of user journeys from documentation to signup. The site path records up to 40 steps and is capped at 300 characters, ensuring efficient tracking without affecting other outbound links. ([#3289](https://github.com/confident-ai/deepeval/pull/3289)) {/* pr:3289 */} ([Tony](https://github.com/tony-confidentai))
+
+#### v4.2.3
+- Add support for a custom WebRTC connector, enabling integration with WebRTC-based voice transports. This allows users to connect to signaling endpoints via HTTP or WebSocket, exchange SDP offers and answers, and stream audio and text over WebRTC data channels. The connector handles signaling, candidate negotiation, and audio streaming, providing a flexible way to interact with WebRTC agents. ([#3276](https://github.com/confident-ai/deepeval/pull/3276)) {/* pr:3276 */} ([Tanay](https://github.com/tanayvaswani))
+- Add support for storing test run results in a local SQLite database as an alternative to JSON files. The diagnose and inspect commands now display and accept SQLite stores, allowing users to view and manage test runs stored in a database. Environment variables and CLI options have been updated to configure and select the storage backend. Telemetry now reports the selected local storage backend. ([#3281](https://github.com/confident-ai/deepeval/pull/3281)) {/* pr:3281 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+
+#### v4.2.1
+- Add agent discovery endpoints and WebMCP tools, making the site discoverable and consumable by AI agents. Support Markdown content negotiation, provide RFC-compliant API catalogs and agent skills indexes, and expose ARD manifests with appropriate CORS headers. Introduce in-browser tools for searching docs, retrieving page markdown, and listing agent resources. Improve interoperability with AI agent platforms and enhance documentation accessibility. ([#3109](https://github.com/confident-ai/deepeval/pull/3109)) {/* pr:3109 */} ([Tony](https://github.com/tony-confidentai))
+- Add support for configuring the maximum number of concurrent conversations in the conversation simulator, allowing users to control parallelism during simulation. Each conversation now gets its own connector instance, improving isolation and concurrency. The simulator enforces the max_concurrent limit and exposes the configured connector only when it is an instance, not a factory. ([#3148](https://github.com/confident-ai/deepeval/pull/3148)) {/* pr:3148 */} ([Tanay](https://github.com/tanayvaswani))
+- Add support for recording full conversation audio in voice simulations, producing a stereo WAV file with caller and agent channels. Improve turn detection in duplex connectors, allowing turns to end early when a finished sentence is detected, and clarify how interruptions and barge turns are handled. Verbose logs for voice metrics now print breakdowns as indented JSON with rounded floats for easier reading. Update documentation pointers for new and changed voice simulation features. ([#3163](https://github.com/confident-ai/deepeval/pull/3163)) {/* pr:3163 */} ([Tanay](https://github.com/tanayvaswani))
+
+
+### Experimental Feature
+
+#### v4.2.4
+- Add experimental support for routing metric and classifier decision steps to TypeSafe AI's System One model (Jev) instead of the LLM when experimental mode is enabled. This includes QAG verdicts, DAG judgements, G-Eval scoring, and classifier label assignment, with no LLM fallback in experimental mode. Users can opt in via the experimental mode environment variable and must configure the required API key and SDK. All built-in metrics and classifiers are wired for this feature, except for a few L. ([#3332](https://github.com/confident-ai/deepeval/pull/3332)) {/* pr:3332 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+
+
+### Improvement
+
+#### v4.2.5
+- Update documentation for Generate Goldens From Documents to include three previously missing parameters in the Custom Golden Generation section, ensuring all configuration options are accurately described. ([#3311](https://github.com/confident-ai/deepeval/pull/3311)) {/* pr:3311 */} ([Abdelrahman Mohamed Ali](https://github.com/AbdoAlshoki2))
+
+#### v4.2.2
+- Improve compatibility with Pydantic AI by supporting both legacy and modern agent instrumentation patterns, ensuring correct extraction of tool arguments and results for all supported versions. Update documentation and examples to reflect changes in Pydantic AI's API and clarify integration usage. Enhance test coverage for tool telemetry extraction and agent setup. ([#3252](https://github.com/confident-ai/deepeval/pull/3252)) {/* pr:3252 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+
+#### v4.2.1
+- Add support for updating and deleting golden test cases via new API endpoints, allowing users to modify or remove goldens from datasets more easily. The update and delete methods now require both the golden ID and dataset alias, improving clarity and error handling when managing goldens. ([#3020](https://github.com/confident-ai/deepeval/pull/3020)) {/* pr:3020 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+- Update the changelog generation script to use the gpt-4.1 model and improve compatibility with monorepo tag schemes. The script now correctly handles SDK-specific tag prefixes and ensures changelog entries display consistent version formatting. Existing PRs are tracked more reliably to prevent duplicate entries across releases. Command-line arguments now support specifying multiple tags for release generation. ([#3105](https://github.com/confident-ai/deepeval/pull/3105)) {/* pr:3105 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+- Update the documentation banner to inform users that some metrics' scoring logic now follows the convention that higher scores are better, with a link to the changelog for details. ([#3107](https://github.com/confident-ai/deepeval/pull/3107)) {/* pr:3107 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+- Add environment variables and configuration options for multiple speech-to-text and text-to-speech providers, including ElevenLabs, Deepgram, Cartesia, and AssemblyAI, allowing users to select and configure their preferred voice provider. Update documentation pointers for new voice mode features and connector behaviors. Improve CLI structure by introducing a root Typer app for easier command registration. Update import paths for speech model modules to reflect new organization. Add .gitignore, . ([#3139](https://github.com/confident-ai/deepeval/pull/3139)) {/* pr:3139 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+
+
+### Bug Fix
+
+#### v4.2.7
+- Fixes issues with phone call lifecycle in voice simulations, ensuring that calls end correctly when the agent disconnects or hangs up. Simulations now accurately record the stop reason when the agent ends the call, and agent speech that occurs before the caller replies is properly handled as its own turn. These changes improve the reliability and accuracy of voice-based conversation simulations. ([#3379](https://github.com/confident-ai/deepeval/pull/3379)) {/* pr:3379 */} ([Tanay](https://github.com/tanayvaswani))
+
+#### v4.2.4
+- Prevent sensitive instance data from being captured in async functions decorated with observe by replacing self with the class name in tracing inputs. This improves privacy and ensures that secrets such as API keys are not inadvertently logged during tracing. ([#3300](https://github.com/confident-ai/deepeval/pull/3300)) {/* pr:3300 */} ([Yekta Kocaoğullar](https://github.com/ykocaogullar))
+
+#### v4.2.2
+- Fixes the application of tools_called and expected_tools fields in OpenTelemetry integrations, ensuring these attributes are correctly set on spans when present. Improves trace data completeness and consistency for tool usage tracking. ([#3103](https://github.com/confident-ai/deepeval/pull/3103)) {/* pr:3103 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+
+
+
 ## August
 
-August brought major improvements to the developer tool, focusing on enhanced reliability, flexibility, and user experience. The DAG metrics system was overhauled for easier construction and validation, while new end-to-end tests and stricter type checking increased robustness across the codebase. Documentation saw significant updates, including expanded TypeScript support and clearer examples, and onboarding was streamlined with a new setup wizard and dynamic questionnaires. Notably, support for voice conversation simulations and component-level evaluations was introduced, broadening the tool's capabilities for testing conversational and multimodal AI systems. Numerous bug fixes and refin­e
+August brought significant improvements to the developer tool, focusing on enhanced evaluation workflows, expanded TypeScript support, and better onboarding experiences. Key metrics were updated to align with standard scoring conventions, and new features such as voice conversation simulations and component-level evaluations were introduced. The release also addressed numerous usability and reliability issues, including improved authentication options, more robust trace handling, and clearer documentation. These updates collectively provide users with greater flexibility, accuracy, and control in building and evaluating AI applications.
 
 ### Breaking Change
 
 #### v4.2.0
 - Updated [`BiasMetric`](/docs/metrics-bias), [`HallucinationMetric`](/docs/metrics-hallucination), [`MisuseMetric`](/docs/metrics-misuse) and [`ToxicityMetric`](/docs/metrics-toxicity) scoring logic to align with `deepeval`'s standard convention where higher scores indicate better performance (range: 0 to 1). Users are required to review and update their metric thresholds and evaluation code to reflect this directional change. ([#3102](https://github.com/confident-ai/deepeval/pull/3102)) {/* pr:3102 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+
 
 ### New Feature
 
@@ -103,7 +271,7 @@ August brought major improvements to the developer tool, focusing on enhanced re
 
 ## July
 
-July's release focused on improving reliability, safety, and usability across the toolset. Several new deterministic metrics were introduced, including agent loop detection and tool permission checks, both designed for zero-latency, production-ready evaluation without external dependencies. Numerous bug fixes addressed issues with function signatures, error reporting, and hashability, while enhancements to prompt construction and verdict normalization increased consistency and clarity. Documentation and workflow improvements, including automated release note drafting and clearer guidance on model selection, further streamlined the developer experience.
+July's release focused on enhancing reliability, safety, and evaluation capabilities for Python developer tools. New deterministic metrics such as `AgentLoopDetectionMetric` and `ToolPermissionMetric` enable robust detection of infinite loops and unauthorized tool usage without external dependencies, making them suitable for production environments. Improvements to chatbot evaluation workflows, citation faithfulness checks, and verdict handling further strengthen the accuracy and consistency of conversational AI assessments. The release also brings better error handling, safer JSON serialization, and expanded TypeScript support, alongside workflow automation and documentation refinements to,
 
 ### New Feature
 
@@ -147,7 +315,7 @@ July's release focused on improving reliability, safety, and usability across th
 
 ## June
 
-June's release focused on expanding model support, improving documentation, and enhancing evaluation capabilities across both Python and TypeScript interfaces. Users can now work with the latest Anthropic and Gemini models, benefit from more accurate cost and token tracking, and generate synthetic contexts spanning multiple files. The documentation has been clarified and corrected throughout, with guides for custom LLMs, telemetry, and baseline test runs now more reliable and informative. Project structure and test workflows have been reorganized for better maintainability, and new features like dataset versioning and governance checks provide greater control and transparency for users.
+June's release brings major enhancements to both Python and TypeScript interfaces, expanding support for new evaluation models, including Gemini 3 and Claude Opus 4-8, with improved multimodal and structured output capabilities. The update introduces dataset versioning, comprehensive token and cost tracking, and more flexible context generation across multiple files, enabling richer evaluation scenarios and better reproducibility. Governance checks and official baseline designation are now available in the CLI, while numerous documentation improvements and bug fixes ensure a smoother user experience and more reliable integrations. Project organization and test workflows have also been overha
 
 ### New Feature
 
@@ -217,7 +385,7 @@ June's release focused on expanding model support, improving documentation, and 
 
 ## May
 
-May was a month of significant enhancements and new integrations for the tool, focusing on improved reliability, expanded observability, and broader compatibility. Key updates include robust error handling, support for multimodal traces, and seamless integration with platforms like Google ADK, Strands, Cursor, and Claude. The release also introduces new CLI features, prompt optimization improvements, and detailed documentation for both users and integrators. These changes collectively make the tool more powerful, flexible, and user-friendly for Python AI developers.
+May's release brings significant enhancements to multimodal tracing, enabling seamless analysis of workflows involving images and PDFs. The conversation simulator now supports flexible simulation graphs, offering advanced control over conversation flows and improved extensibility. Integrations have expanded to include Google ADK and Strands, with robust OpenTelemetry-based tracing and comprehensive documentation updates. Prompt optimization algorithms have been streamlined for efficiency, and new features such as a CLI trace inspector and improved evaluation reporting enhance usability. Numerous fixes and test improvements ensure greater reliability, traceability, and performance across the
 
 ### New Feature
 
@@ -271,7 +439,7 @@ May was a month of significant enhancements and new integrations for the tool, f
 
 ## April
 
-April's release focused on streamlining configuration and improving model support, with legacy options removed and new features added for both OpenAI and Anthropic models, including multimodal and structured output capabilities. The release introduced prompt branch management, enhanced tracing with better test case correlation, and expanded support for custom metadata and tags in evaluation workflows. Documentation and changelog tooling saw significant upgrades, including a new Next.js-based docs site and improved parsing for release notes. Numerous bug fixes addressed issues in tracing, schema handling, and CSV round-tripping, while new CLI commands and simulator APIs made it easier to work
+April's release focused on streamlining configuration and improving model support, with legacy options removed and new features added for both OpenAI and Anthropic models, including multimodal and structured output capabilities. The documentation site was overhauled for better usability, and tracing was enhanced with new guides, expanded metadata, and improved integration across workflows. The release also introduced a powerful `generate` CLI for synthetic goldens, prompt branch management, and a skills-compatible `deepeval` integration, while addressing numerous bugs and refining test infrastructure for more reliable and insightful evaluation.
 
 ### Breaking Change
 
@@ -349,7 +517,7 @@ April's release focused on streamlining configuration and improving model suppor
 
 ## March
 
-March was a month of significant improvements in observability, reliability, and flexibility for the tool. Major highlights include deepened OpenTelemetry and OpenInference integrations, enabling richer tracing and metric collection for agents, tools, and LLMs, with robust export and validation options. The release also focused on fixing a wide range of issues, from memory leaks and async metric isolation to improved provider selection and more accurate test result accumulation. Enhanced documentation and code formatting ensure a smoother developer experience, while new configuration options and bug fixes make the tool more adaptable and dependable across diverse environments and workflows.
+March brought major improvements to observability and integration, with AgentCore and OpenInference now supporting robust OpenTelemetry instrumentation, span classification, and trace export via OTLP. Enhanced configuration options and clearer error handling make it easier to connect with a variety of providers, including Amazon Bedrock and Azure OpenAI, while new documentation and test coverage help users adopt these features confidently. Numerous bug fixes address trace reliability, async evaluation, memory leaks, and provider-specific quirks, resulting in more stable and accurate metrics across diverse workflows. Code formatting and validation improvements further streamline development,,
 
 ### New Feature
 
@@ -407,7 +575,7 @@ March was a month of significant improvements in observability, reliability, and
 
 ## February
 
-February's release focused on enhancing tool and prompt support, with significant improvements to schema handling and prompt versioning. The update introduced more flexible cache directory management and expanded regional support for Confident AI requests. Numerous bug fixes addressed issues in tracing, documentation, and platform compatibility, while dependency management was refined to streamline installations. Overall, these changes improve reliability, developer experience, and cross-platform robustness.
+February's release focused on enhancing tool and prompt support, with improvements to schema handling and prompt versioning that make it easier to manage and call tools programmatically. Dependency management was streamlined by removing unnecessary packages and improving compatibility across platforms. Several bug fixes addressed issues in tracing, prompt metadata, and documentation, while new features like AU data region support and more robust Windows cleanup further improved usability and reliability. Overall, this month brought greater consistency, flexibility, and stability to the developer experience.
 
 ### New Feature
 
@@ -464,7 +632,7 @@ February's release focused on enhancing tool and prompt support, with significan
 
 ## January
 
-January saw major improvements in model integration, authentication, and documentation across the tool. New support for OpenRouter and Azure AD authentication expands model compatibility, while enhancements to tracing, metric collection, and error handling make integrations with LangChain, LangGraph, and Pydantic AI more robust and reliable. The release also introduces an automated changelog generator and updates documentation for clarity and easier navigation. Numerous bug fixes address edge cases in evaluation, tracing, and API routing, resulting in a smoother developer experience.
+January saw major improvements in model integration, authentication, and developer experience. The release introduced OpenRouter support with flexible model APIs, enhanced Azure OpenAI authentication, and explicit control over Vertex AI and Gemini clients. Changelog generation and documentation were overhauled for clarity and consistency, while tracing and metric collection became more robust across LangChain, LangGraph, and Pydantic AI integrations. Numerous bug fixes addressed edge cases in evaluation, tracing, and API routing, resulting in a more reliable and user-friendly toolset.
 
 ### New Feature
 

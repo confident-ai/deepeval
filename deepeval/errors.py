@@ -67,8 +67,7 @@ class NoMetricsError(DeepEvalError):
     Raised by the ``evals_iterator`` executor when, after iteration completes,
     we can prove that no metrics were declared via:
       - ``evals_iterator(metrics=[...])`` (top-level / trace-level metrics)
-      - ``@observe(metrics=[...])`` or ``@observe(metric_collection=...)``
-        on any span (span-level metrics)
+      - ``@observe(metrics=[...])`` on any span (span-level metrics)
       - ``update_current_trace(metrics=[...])`` inside the traced function
         (trace-level metrics, set at runtime)
 

@@ -158,7 +158,7 @@ Historical version mappings are not available. The pair below is the exact versi
 <Case id="python">
 
 ```bash
-pip install -U deepeval openai-agents
+pip install -U deepeval openai-agents openinference-instrumentation-openai-agents
 ```
 
 The integration registers `DeepEvalTracingProcessor` against the agents SDK's tracing pipeline, then provides `Agent` and `function_tool` shims that accept `deepeval` metrics directly.
@@ -663,8 +663,8 @@ The integration captures inputs, outputs, model names, and tool calls automatica
 
 <Case id="python">
 
-- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `user_id`).
-- Use `Agent`/`function_tool` kwargs (`agent_metrics`, `llm_metrics`, `metrics=`, `confident_prompt`) for component-level defaults.
+- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`).
+- Use `Agent`/`function_tool` kwargs (`agent_metrics`, `llm_metrics`, `metrics=`) for component-level defaults.
 - Use `update_current_trace(...)` and `update_current_span(...)` from inside a tool body to mutate fields the framework can't see.
 
 ```python title="openai_agents_app.py" showLineNumbers
@@ -683,7 +683,7 @@ def get_weather(city: str) -> str:
 
 <Case id="typescript">
 
-- Use `setTracingContext(...)` for trace-level fields (`name`, `tags`, `metadata`, `threadId`, `userId`) and scope-wide span defaults.
+- Use `setTracingContext(...)` for trace-level fields (`name`, `tags`, `metadata`, `threadId`) and scope-wide span defaults.
 - Use `nextAgentSpan(...)` / `nextLlmSpan(...)` / `nextToolSpan(...)` to stage component-level fields onto the next span the processor opens.
 - Use `updateCurrentSpan(...)` / `updateCurrentTrace(...)` from inside a tool body to mutate fields the framework can't see.
 
@@ -696,7 +696,6 @@ await setTracingContext(
     name: "weather-ask",
     tags: ["openai-agents", "weather"],
     threadId: "thread-123",
-    userId: "user-xyz",
   },
   () => ask("What's the weather in Paris?"),
 );
@@ -816,13 +815,14 @@ for await (const golden of dataset.evalsIterator()) {
 To score **every** agent span in the handoff tree (triage + specialist), use scope-wide context:
 
 ```typescript title="openai-agents-app.ts" showLineNumbers
+import { TaskCompletionMetric } from "deepeval/metrics";
 import { setTracingContext } from "deepeval/tracing";
 ...
 
 await setTracingContext(
   {
     agentSpanContext: {
-      metricCollection: "agents_v1",
+      metrics: [new TaskCompletionMetric()],
     },
   },
   () => run(triageAgent, "What's the weather in Paris?"),
@@ -874,55 +874,6 @@ const respondToUser = observe({
 
 </Switch>
 
-### Bind a Confident AI prompt
-
-<Switch>
-
-<Case id="python">
-
-Pass `confident_prompt=` to attach a Confident AI [`Prompt`](/docs/prompt-management) to every LLM span produced by that agent. Prompt analytics (commit hash, version, label) flow with the trace.
-
-```python title="openai_agents_app.py" showLineNumbers
-from deepeval.openai_agents import Agent
-from deepeval.prompt import Prompt
-
-prompt = Prompt(alias="weather-system")
-prompt.pull(version="latest")
-
-agent = Agent(
-    name="weather_agent",
-    instructions=prompt.interpolate(),
-    tools=[get_weather],
-    confident_prompt=prompt,
-)
-```
-
-</Case>
-
-<Case id="typescript">
-
-Stage a `Prompt` on the LLM context — the processor copies alias, hash, version, and label onto every LLM span opened inside the callback.
-
-```typescript title="openai-agents-app.ts" showLineNumbers
-import { Prompt } from "deepeval/prompt";
-import { setTracingContext } from "deepeval/tracing";
-...
-
-const prompt = new Prompt({ alias: "weather-system" });
-await prompt.pull({ version: "latest" });
-
-await setTracingContext(
-  {
-    llmSpanContext: { prompt },
-  },
-  () => ask("What's the weather in Paris?"),
-);
-```
-
-</Case>
-
-</Switch>
-
 ## API reference
 
 <Switch>
@@ -935,7 +886,6 @@ await setTracingContext(
 | ------------------ | -------- | ----------------------------------------------------------------------------------- |
 | `agent_metrics`    | `list`   | Metrics applied to this agent's span on every run.                                   |
 | `llm_metrics`      | `list`   | Metrics applied to LLM spans produced by this agent's model calls.                   |
-| `confident_prompt` | `Prompt` | Confident AI prompt object; captured on every LLM span produced by this agent.       |
 
 `function_tool(..., metrics=[...])` accepts the SDK's standard kwargs plus `metrics`, applied to that tool's span on every call.
 

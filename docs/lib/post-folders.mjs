@@ -12,7 +12,6 @@ export const MONTH_FOLDER = new RegExp(`^\\d{4}_(${MONTHS.join("|")})$`);
 export const SLUG = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 export const POST_FILE = /^(\d{4}_[a-z]{3})\/([^/]+)\/article\.mdx$/;
 export const COVER_FILE = /^cover\.(webp|png|jpe?g|gif)$/;
-export const FRAME_FILES = ["boards.json", "flows.json", "charts.json", "schemas.json", "chats.json", "transcripts.json"];
 
 /** Slugs for a blog file path relative to `content/blog`; `undefined` keeps fumadocs' default. */
 export function postSlugs(file) {

@@ -214,13 +214,13 @@ with trace(
     )
 ```
 
-`LlmSpanContext` accepts `metrics`, `expected_output`, `expected_tools`, `context`, `retrieval_context`, and `prompt`. Each one is read by the Anthropic patch when the next LLM span is created.
+`LlmSpanContext` accepts `metrics`, `expected_output`, `expected_tools`, `context`, and `retrieval_context`. Each one is read by the Anthropic patch when the next LLM span is created.
 
 ## Customizing trace and span data
 
 The patch captures input messages, output text, and `tools_called` automatically. For anything else, the right API depends on where your code runs.
 
-- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`, `user_id`).
+- Use `with trace(...)` for trace-level fields (`name`, `tags`, `metadata`, `thread_id`).
 - Use `LlmSpanContext` for LLM-span-level fields the metric needs (`expected_output`, `retrieval_context`, etc.).
 - Use `@observe` to wrap retrieval, post-processing, or any other step you want to see as its own span in the trace.
 
@@ -239,7 +239,6 @@ def respond_to_user(prompt: str) -> str:
     docs = retrieve_docs(prompt)
     with trace(
         llm_span_context=LlmSpanContext(retrieval_context=docs),
-        user_id="user-123",
         tags=["anthropic", "rag"],
     ):
         response = client.messages.create(
@@ -363,13 +362,12 @@ with trace(
 | Kwarg               | Type        | Description                                                                              |
 | ------------------- | ----------- | ---------------------------------------------------------------------------------------- |
 | `metrics`           | `list`      | Metrics applied to the next LLM span.                                                    |
-| `prompt`            | `Prompt`    | Confident AI prompt object; captured on the LLM span for prompt-version analytics.       |
 | `expected_output`   | `str`       | Reference output for metrics that compare against ground truth.                          |
 | `expected_tools`    | `list`      | Reference tool calls for tool-aware metrics.                                             |
 | `context`           | `list[str]` | Ideal context the model should use when answering.                                       |
 | `retrieval_context` | `list[str]` | Retrieved context the model actually used (Faithfulness, Contextual Relevancy, etc.).    |
 
-`with trace(...)` accepts trace-level kwargs (`name`, `tags`, `metadata`, `thread_id`, `user_id`, `metrics`, `input`, `output`) — see the [tracing reference](/docs/evaluation-llm-tracing).
+`with trace(...)` accepts trace-level kwargs (`name`, `tags`, `metadata`, `thread_id`, `metrics`, `input`, `output`) — see the [tracing reference](/docs/evaluation-llm-tracing).
 
 ## FAQs
 

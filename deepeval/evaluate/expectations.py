@@ -176,8 +176,7 @@ class _ExpectationEvaluator:
             for condition, verdict in zip(conditions, self.verdicts)
         ]
         return (
-            _REASON_INSTRUCTIONS
-            + f"Score:\n{self.score}\n\n"
+            _REASON_INSTRUCTIONS + f"Score:\n{self.score}\n\n"
             f"Requirements:\n{json.dumps(verdicts, ensure_ascii=False)}\n\n"
             "JSON:\n"
         )

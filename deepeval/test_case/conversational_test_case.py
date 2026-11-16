@@ -154,9 +154,7 @@ class Turn(BaseModel):
         if self.interrupted is not None:
             attrs.append(f"interrupted={self.interrupted!r}")
         if self.provider_transcript is not None:
-            attrs.append(
-                f"provider_transcript={self.provider_transcript!r}"
-            )
+            attrs.append(f"provider_transcript={self.provider_transcript!r}")
         if self.user_id is not None:
             attrs.append(f"user_id={self.user_id!r}")
         if self.retrieval_context is not None:
@@ -325,6 +323,9 @@ class ConversationalTestCase(BaseModel):
             if re.search(pattern, self.user_description) is not None:
                 self.multimodal = True
                 return self
+        if self.context and any(re.search(pattern, c) for c in self.context):
+            self.multimodal = True
+            return self
         if self.turns:
             for turn in self.turns:
                 if re.search(pattern, turn.content) is not None:

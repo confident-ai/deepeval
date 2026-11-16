@@ -189,6 +189,77 @@ def test_turn_taking_omits_consistency_with_fewer_than_three_delays():
     )
 
 
+def _contiguous_call(latencies_ms):
+    turns = []
+    cursor = 0.0
+    for index, latency_ms in enumerate(latencies_ms):
+        turns.append(
+            Turn(
+                role="user",
+                content=f"Question {index}",
+                audio=make_tone(duration=1.0, start_time=cursor),
+            )
+        )
+        cursor += 1.0
+        turns.append(
+            Turn(
+                role="assistant",
+                content=f"Answer {index}",
+                audio=make_tone(duration=2.0, start_time=cursor),
+                latency_ms=latency_ms,
+            )
+        )
+        cursor += 2.0
+    return ConversationalTestCase(turns=turns)
+
+
+def test_turn_taking_uses_latency_when_clips_touch():
+    metric = TurnTakingNaturalnessMetric()
+    metric.measure(
+        _contiguous_call([4150.0, 900.0, 1200.0]), _show_indicator=False
+    )
+
+    transitions = metric.score_breakdown["transitions"]
+    assert [t["gap_seconds"] for t in transitions] == pytest.approx(
+        [4.15, 0.9, 1.2]
+    )
+    assert {t["gap_source"] for t in transitions} == {"latency"}
+    assert len(metric.score_breakdown["unmeasured_transitions"]) == 2
+    assert metric.score_breakdown["response_delays"]["count"] == 3
+    assert metric.score < 0.8
+    assert "2 transition(s) were left out" in metric.reason
+
+
+def test_turn_taking_skips_when_touching_clips_have_no_latency():
+    metric = TurnTakingNaturalnessMetric()
+
+    assert (
+        metric.measure(_contiguous_call([None, None]), _show_indicator=False)
+        is None
+    )
+    assert metric.skipped is True
+    assert len(metric.score_breakdown["unmeasured_transitions"]) == 3
+
+
+def test_turn_taking_prefers_audio_gap_over_latency():
+    test_case = _call_with_response_delays([0.4] * 3)
+    for turn in test_case.turns[1::2]:
+        turn.latency_ms = 5000.0
+    metric = TurnTakingNaturalnessMetric()
+    metric.measure(test_case, _show_indicator=False)
+
+    gaps = [
+        t["gap_seconds"]
+        for t in metric.score_breakdown["transitions"]
+        if t["from_turn"] % 2 == 0
+    ]
+    assert gaps == pytest.approx([0.4] * 3)
+    assert {t["gap_source"] for t in metric.score_breakdown["transitions"]} == {
+        "audio"
+    }
+    assert metric.score_breakdown["unmeasured_transitions"] == []
+
+
 def test_timeline_rendering_preserves_gap_and_overlap():
     turns = [
         Turn(role="user", content="One", audio=make_tone(start_time=0.0)),

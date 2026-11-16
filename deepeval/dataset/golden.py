@@ -384,6 +384,9 @@ class ConversationalGolden(BaseModel):
             if re.search(pattern, self.user_description) is not None:
                 self.multimodal = True
                 return self
+        if self.context and any(re.search(pattern, c) for c in self.context):
+            self.multimodal = True
+            return self
         if self.turns:
             for turn in self.turns:
                 if re.search(pattern, turn.content) is not None:
