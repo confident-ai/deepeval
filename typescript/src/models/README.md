@@ -49,8 +49,8 @@ abstract generate<T = string>(
 - **Structured output is "best-effort JSON + parse"**: each provider asks for JSON in its
   own way (OpenAI `response_format: json_schema` with `strict: false`; Gemini
   `responseMimeType`; Ollama `format`), then the response is run through
-  `extractJson()` (slices the first `{`…last `}`, strips trailing commas) and
-  `schema.parse()`. The AI SDK path uses native `generateObject`.
+  `extractJson()` (slices the first `{`…last `}`; strips trailing commas only if that
+  fails to parse) and `schema.parse()`. The AI SDK path uses native `generateObject`.
 - **SDKs are optional/lazy.** Provider SDKs are dynamically `import()`-ed on first use;
   a missing package throws a friendly "install X" error (`importOptional`). `openai` is
   the one commonly-present dep (OpenAI-compatible base).
