@@ -10,6 +10,7 @@ class ConversationCompletion(BaseModel):
 
 class SimulatedInput(BaseModel):
     simulated_input: str
+    keypad_input: Optional[str] = None
 
 
 class EdgeChoice(BaseModel):
