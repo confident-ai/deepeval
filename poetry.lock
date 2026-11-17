@@ -9805,4 +9805,4 @@ inspect = ["pyperclip", "textual"]
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <4.0"
-content-hash = "a2c5ccd30cd257d3195e674c5750ba7a110cf144461380c518488dd6e22d629b"
+content-hash = "74fca21fcdd3cd0af42e06bb2ef40ee36a58e863b1caed9238e7558ae6daec30"

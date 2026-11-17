@@ -70,6 +70,7 @@ tiktoken = "*"
 pypdf = "*"
 docx2txt = "*"
 pandas = "*"
+numpy = "*"
 pysqlite3-binary = { version = "^0.5.4", markers = "platform_system == 'Linux'" }
 pre-commit = "^4.3.0"
 ruff = "^0.13.0"
