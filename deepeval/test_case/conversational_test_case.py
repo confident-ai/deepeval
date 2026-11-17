@@ -81,6 +81,7 @@ class Turn(BaseModel):
             "providerTranscript", "provider_transcript"
         ),
     )
+    dtmf: Optional[str] = Field(default=None)
     # RAG & tools
     retrieval_context: Optional[List[Union[str, RetrievedContextData]]] = Field(
         default=None,
@@ -155,6 +156,8 @@ class Turn(BaseModel):
             attrs.append(f"interrupted={self.interrupted!r}")
         if self.provider_transcript is not None:
             attrs.append(f"provider_transcript={self.provider_transcript!r}")
+        if self.dtmf is not None:
+            attrs.append(f"dtmf={self.dtmf!r}")
         if self.user_id is not None:
             attrs.append(f"user_id={self.user_id!r}")
         if self.retrieval_context is not None:
