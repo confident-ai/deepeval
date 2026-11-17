@@ -237,7 +237,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         )
         verdicts = await self._a_generate_verdicts(claims, truths, multimodal)
         score, reason = self._get_interaction_score_and_reason(
-            verdicts, multimodal
+            verdicts, multimodal, claims_count=len(claims)
         )
         interaction_score = InteractionFaithfulnessScore(
             score=score,
@@ -272,7 +272,7 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         )
         verdicts = self._generate_verdicts(claims, truths, multimodal)
         score, reason = self._get_interaction_score_and_reason(
-            verdicts, multimodal
+            verdicts, multimodal, claims_count=len(claims)
         )
         interaction_score = InteractionFaithfulnessScore(
             score=score,
@@ -439,12 +439,26 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             return (Verdict.YES,)
         return (Verdict.YES, Verdict.BORDERLINE)
 
+    def _empty_verdicts_reason(self, claims_count: int) -> str:
+        if claims_count == 0:
+            return _NO_CLAIMS_REASON
+        # Claims were extracted but the judge returned no verdicts for them.
+        return (
+            "The evaluation model returned no verdicts for the "
+            f"{claims_count} claim(s) extracted from the assistant turns, so "
+            "they could not be verified."
+        )
+
     def _get_interaction_score_and_reason(
-        self, verdicts, multimodal: bool
+        self, verdicts, multimodal: bool, claims_count: int = 0
     ) -> Tuple[float, str]:
         number_of_verdicts = len(verdicts)
         if number_of_verdicts == 0:
-            reason = _NO_CLAIMS_REASON if self.include_reason else None
+            reason = (
+                self._empty_verdicts_reason(claims_count)
+                if self.include_reason
+                else None
+            )
             return 1.0, reason
 
         score = score_qag_verdicts(
@@ -454,11 +468,15 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         return score, reason
 
     async def _a_get_interaction_score_and_reason(
-        self, verdicts, multimodal: bool
+        self, verdicts, multimodal: bool, claims_count: int = 0
     ) -> Tuple[float, str]:
         number_of_verdicts = len(verdicts)
         if number_of_verdicts == 0:
-            reason = _NO_CLAIMS_REASON if self.include_reason else None
+            reason = (
+                self._empty_verdicts_reason(claims_count)
+                if self.include_reason
+                else None
+            )
             return 1.0, reason
 
         score = score_qag_verdicts(

@@ -118,3 +118,40 @@ def test_faithfulness_reason_says_no_claims_were_extracted(async_mode):
         "Reason: No claims were extracted from the assistant turns"
         in metric.verbose_logs
     )
+
+
+class _ClaimsButNoVerdictsLLM(_EmptyExtractionLLM):
+    """Extracts truths and a claim, then returns no verdicts for the claim."""
+
+    def generate(self, prompt, schema=None, **kwargs):
+        if "truths" in schema.model_fields:
+            return schema(truths=["HTTPS uses TLS."])
+        if "claims" in schema.model_fields:
+            return schema(claims=["HTTPS uses TLS."])
+        return super().generate(prompt, schema=schema, **kwargs)
+
+
+@pytest.mark.parametrize("async_mode", [False, True])
+def test_faithfulness_reason_when_claims_get_no_verdicts(async_mode):
+    metric = TurnFaithfulnessMetric(
+        model=_ClaimsButNoVerdictsLLM(), async_mode=async_mode
+    )
+    metric.measure(_test_case(["ctx one"]), _show_indicator=False)
+
+    assert metric.score == 1.0
+    assert (
+        "Reason: The evaluation model returned no verdicts for the 1 "
+        "claim(s) extracted from the assistant turns" in metric.verbose_logs
+    )
+    assert "No claims were extracted" not in metric.verbose_logs
+
+
+def test_faithfulness_empty_verdicts_reason_respects_include_reason_false():
+    metric = TurnFaithfulnessMetric(
+        model=_ClaimsButNoVerdictsLLM(), include_reason=False
+    )
+    score, reason = metric._get_interaction_score_and_reason(
+        [], multimodal=False, claims_count=1
+    )
+    assert score == 1.0
+    assert reason is None

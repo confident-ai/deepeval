@@ -395,9 +395,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
         # The contexts exist but the judge returned no verdicts for them, so
         # say that instead of reporting that there were none (#3629).
         return (
-            f"The evaluation model returned no verdicts for the "
+            "The evaluation model returned no verdicts for the "
             f"{retrieval_context_count} retrieval context(s) in the given "
-            f"turns, so the contextual relevancy could not be evaluated."
+            "turns, so the contextual relevancy could not be evaluated."
         )
 
     async def _a_get_interaction_score_and_reason(
