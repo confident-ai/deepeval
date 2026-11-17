@@ -60,12 +60,19 @@ def fake_av():
 
 class FakeTrack:
     kind = "audio"
+    # Held open until a test releases it: without this, the track ends as
+    # soon as its frames are consumed and the drain loop queues
+    # turn_complete before a test can deliver a data-channel transcript,
+    # so a consumer stopping at turn_complete never sees the transcript.
+    end_event = None
 
     def __init__(self, frames):
         self._frames = list(frames)
 
     async def recv(self):
         if not self._frames:
+            if FakeTrack.end_event is not None:
+                await FakeTrack.end_event.wait()
             raise RuntimeError("track ended")
         await asyncio.sleep(0)
         return self._frames.pop(0)
@@ -182,6 +189,7 @@ def agent_frame(pcm: bytes) -> FakeAudioFrame:
 @pytest.fixture
 def fake_stack(monkeypatch):
     FakePeerConnection.instances = []
+    FakeTrack.end_event = asyncio.Event()
     aiortc = types.SimpleNamespace(
         RTCPeerConnection=FakePeerConnection,
         RTCSessionDescription=lambda sdp, type: types.SimpleNamespace(
@@ -310,6 +318,9 @@ async def test_agent_audio_and_text_arrive_as_events(fake_stack):
     await connector.connect()
     pc = FakePeerConnection.instances[-1]
     pc.channels[0].handlers["message"](json.dumps({"transcript": "Hello"}))
+    # Let the track end only now that the transcript is queued, so
+    # turn_complete can never overtake it in the downlink queue.
+    FakeTrack.end_event.set()
 
     events = []
     async for event in connector.iter_agent_events():
