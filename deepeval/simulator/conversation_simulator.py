@@ -933,6 +933,10 @@ class ConversationSimulator:
                 if muted:
                     assistant_turn = await self._voice_listen(session, turns)
                     turns.append(assistant_turn)
+                elif session is not None and turns[-1].dtmf:
+                    await session.connector.send_dtmf(turns[-1].dtmf)
+                    assistant_turn = await self._voice_listen(session, turns)
+                    turns.append(assistant_turn)
                 elif session is not None and session.is_duplex:
                     user_turns_before = sum(
                         1 for turn in turns if turn.role == "user"
