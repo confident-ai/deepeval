@@ -16,6 +16,7 @@ from deepeval.metrics.voice._analysis import (
     dbfs,
     decode_audio,
     frame_samples,
+    get_numpy,
     pitch_and_periodicity,
     rms,
 )
@@ -24,7 +25,7 @@ from deepeval.voice.connectors import audio_utils
 from deepeval.voice.timeline import build_audio_timeline
 
 # Tones are tracked on audio downsampled to this rate: the artifacts of
-# interest sit far below its Nyquist frequency and the search is pure Python.
+# interest sit far below its Nyquist frequency.
 ANALYSIS_SAMPLE_RATE = 8000
 TONE_FRAME_MS = 40
 TONE_MIN_HZ = 60.0
@@ -142,14 +143,29 @@ class GlitchReport:
     timeline_available: bool
 
 
+def _resampled(samples: array, from_rate: int, to_rate: int) -> array:
+    """`audio_utils.resample_pcm16` on numpy, sample for sample."""
+    np = get_numpy()
+    values = np.asarray(samples)
+    n = len(values)
+    if from_rate == to_rate or n == 0:
+        return array("h", samples)
+    out_n = max(1, round(n * to_rate / from_rate))
+    step = (n - 1) / out_n if out_n > 1 else 0.0
+    positions = np.arange(out_n) * step
+    left = positions.astype(np.int64)
+    fraction = positions - left
+    right = np.minimum(left + 1, n - 1)
+    mixed = values[left] * (1.0 - fraction) + values[right] * fraction
+    return array("h", mixed.astype(np.int64).astype(np.int16).tobytes())
+
+
 def _tone_frames(samples: array, sample_rate: int) -> List[ToneFrame]:
-    pcm = samples.tobytes()
+    data = samples
     rate = sample_rate
     if sample_rate > ANALYSIS_SAMPLE_RATE:
-        pcm = audio_utils.resample_pcm16(pcm, sample_rate, ANALYSIS_SAMPLE_RATE)
+        data = _resampled(samples, sample_rate, ANALYSIS_SAMPLE_RATE)
         rate = ANALYSIS_SAMPLE_RATE
-    data = array("h")
-    data.frombytes(pcm)
     frames = []
     for index, frame in enumerate(
         frame_samples(data, rate, frame_ms=TONE_FRAME_MS)

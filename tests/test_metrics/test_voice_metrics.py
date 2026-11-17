@@ -315,3 +315,22 @@ def test_audio_integrity_fails_undecodable_assistant_audio():
 
     assert metric.measure(test_case, _show_indicator=False) == 0
     assert metric.score_breakdown["critical_failure"] is True
+
+
+def test_audio_analysis_without_numpy_says_numpy_is_required(monkeypatch):
+    import builtins
+
+    from deepeval.metrics.voice import _analysis
+
+    real_import = builtins.__import__
+
+    def no_numpy(name, *args, **kwargs):
+        if name == "numpy":
+            raise ModuleNotFoundError("No module named 'numpy'")
+        return real_import(name, *args, **kwargs)
+
+    monkeypatch.setattr(_analysis, "_numpy_mod", None)
+    monkeypatch.setattr(builtins, "__import__", no_numpy)
+
+    with pytest.raises(ImportError, match="numpy is required"):
+        _analysis.rms(array("h", [1, 2, 3]))
