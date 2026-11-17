@@ -14,6 +14,7 @@ from deepeval.voice.connectors.providers.livekit import (
     connector as livekit_module,
 )
 from deepeval.voice.connectors.providers.livekit import sip as sip_module
+from deepeval.voice.connectors.utils import keypad_keys
 from deepeval.voice.protocol import VoiceProtocol
 from tests.test_core.test_voice.helpers import install_fake_livekit
 
@@ -271,3 +272,35 @@ def test_a_dial_connector_can_hang_up_silent_calls():
 
     assert isinstance(connector, SilenceTimeoutMixin)
     assert connector.silence_timeout_s == 30
+
+
+def test_dial_connectors_can_press_keypad_keys():
+    assert _phone().supports_dtmf is True
+    assert _sip().supports_dtmf is True
+
+
+@pytest.mark.asyncio
+async def test_keypad_keys_are_published_into_the_call_room(
+    livekit, monkeypatch
+):
+    livekit()
+    monkeypatch.setattr(livekit_module, "_DTMF_KEY_INTERVAL_S", 0.0)
+    connector = _phone()
+    await _dial(connector)
+
+    await connector.send_dtmf("12*#")
+
+    assert connector._room.local_participant.dtmf == [
+        (1, "1"),
+        (2, "2"),
+        (10, "*"),
+        (11, "#"),
+    ]
+
+
+@pytest.mark.parametrize(
+    "value, keys",
+    [("1234#", "1234#"), ("1 2-3, 4", "1234"), ("press *0", "*0"), (None, "")],
+)
+def test_keypad_keys_keep_only_what_a_keypad_has(value, keys):
+    assert keypad_keys(value) == keys

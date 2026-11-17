@@ -196,6 +196,16 @@ class BaseVoiceConnector(ABC):
         return False
 
     @property
+    def supports_dtmf(self) -> bool:
+        return False
+
+    async def send_dtmf(self, keys: str) -> None:
+        raise NotImplementedError(
+            f"{type(self).__name__} does not support send_dtmf(); "
+            "keypad presses need a phone or SIP connector."
+        )
+
+    @property
     def supports_parallel_calls(self) -> bool:
         return True
 

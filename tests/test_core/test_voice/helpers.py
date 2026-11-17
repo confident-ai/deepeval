@@ -47,6 +47,7 @@ class FakeLocalParticipant:
     def __init__(self):
         self.published = []
         self.unpublished = []
+        self.dtmf = []
 
     async def publish_track(self, track, options):
         self.published.append(track)
@@ -54,6 +55,9 @@ class FakeLocalParticipant:
 
     async def unpublish_track(self, sid):
         self.unpublished.append(sid)
+
+    async def publish_dtmf(self, *, code, digit):
+        self.dtmf.append((code, digit))
 
 
 class FakeRoom:
