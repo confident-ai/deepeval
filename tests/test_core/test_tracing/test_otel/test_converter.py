@@ -1,4 +1,3 @@
-
 """``convert_span`` against real confident-trace spans and its receiver vectors.
 
 ``fixtures/`` holds unmodified copies of confident-trace's ``spec/`` vectors.
