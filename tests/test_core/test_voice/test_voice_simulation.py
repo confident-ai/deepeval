@@ -368,3 +368,44 @@ def test_an_agent_that_cut_in_is_heard_out_before_the_caller_speaks_again():
     assert cut_in.interrupted is True
     assert reply.interrupted is None
     assert reply.audio.duration >= 0.6
+
+
+class _PlaysOutLate(_CutsInOnTheCaller):
+    async def stream_uplink(self, audio, *, trailing_silence: bool = True):
+        await super().stream_uplink(audio, trailing_silence=trailing_silence)
+        await asyncio.sleep(audio.duration + 1.0)
+
+    async def _speak(self, line_s: float) -> None:
+        await self._say(0.2, b"\x00\x00")
+        await self._say(line_s + 0.6, b"\x10\x27")
+        await self._say(0.5, b"\x00\x00")
+        await self._say(0.6, b"\x10\x27")
+        while True:
+            await self._say(0.2, b"\x00\x00")
+
+
+def test_the_callers_line_ends_when_it_has_played_out():
+    connector = _PlaysOutLate()
+    simulator = ConversationSimulator(
+        voice_config=VoiceConfig(
+            connector=connector,
+            tts_model=_LongLineTTS(),
+            stt_model=_StubSTT(),
+        ),
+        simulator_model=_StaticVoiceModel(),
+    )
+    golden = ConversationalGolden(
+        scenario="Ask the agent a question",
+        persona=Persona(characteristics="A caller with a long question."),
+    )
+
+    case = simulator.simulate([golden], max_user_simulations=1)[0]
+
+    assert [turn.role for turn in case.turns] == [
+        "user",
+        "assistant",
+        "assistant",
+    ]
+    cut_in, reply = case.turns[1:]
+    assert cut_in.interrupted is True
+    assert reply.interrupted is None

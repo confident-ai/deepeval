@@ -122,6 +122,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self.turn_detection = turn_detection
         timing = turn_detection_timing(turn_detection)
         self.end_of_turn_silence_ms = timing.end_of_turn_silence_ms
+        self.response_timeout_ms = timing.response_timeout_ms
         self.max_turn_timeout_s = timing.max_turn_timeout_s
         self.connect_timeout_s = connect_timeout_s
 

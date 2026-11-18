@@ -40,6 +40,7 @@ _AGENT_CHARS_PER_SECOND = 13.0
 
 _SEMANTIC_EOT_SILENCE_MS = 500.0
 _STT_ON_SILENCE_MS = 200.0
+_CALLER_ECHO_MS = 500.0
 
 
 def _looks_complete(text: str) -> bool:
@@ -333,7 +334,7 @@ class DuplexExchange:
 
         def _finish_barge(barge: _Barge, audio: Audio, sent_at: float) -> None:
             """Attach what the barge sounded like once its last frame is out."""
-            nonlocal last_uplink_at
+            nonlocal last_uplink_at, caller_uplink_ended_at
             if barge.turn is None:
                 return
             audio.start_time = max(0.0, sent_at - self.call_started_at)
@@ -344,6 +345,8 @@ class DuplexExchange:
                 # utterance, so its wait starts where the caller stopped.
                 utterance.sent_at = ended
             last_uplink_at = ended
+            if caller_uplink_ended_at is not None:
+                caller_uplink_ended_at = max(caller_uplink_ended_at, ended)
 
         async def _speak_barge(barge: _Barge) -> None:
             """Put a barge on the uplink as it is synthesized, off the loop.
@@ -558,7 +561,9 @@ class DuplexExchange:
                 if (
                     caller_uplink_ended_at is not None
                     and utterance.last_speech_at is not None
-                    and utterance.last_speech_at < caller_uplink_ended_at
+                    and utterance.first_audio_at < caller_uplink_ended_at
+                    and utterance.last_speech_at
+                    < caller_uplink_ended_at + _CALLER_ECHO_MS / 1000.0
                 ):
                     await _restart_after_barge()
                     return False
@@ -566,7 +571,14 @@ class DuplexExchange:
                 # finished on its own rather than being cut off.
                 await _finalize_assistant(interrupted=False)
                 return True
-            return False
+            return (
+                caller_uplink_ended_at is not None
+                and barge is None
+                and not utterance.started
+                and not self.floor.user_uplink_active
+                and now - max(caller_uplink_ended_at, last_uplink_at)
+                >= self.connector.response_timeout_ms / 1000.0
+            )
 
         events = self.connector.iter_agent_events()
         try:
