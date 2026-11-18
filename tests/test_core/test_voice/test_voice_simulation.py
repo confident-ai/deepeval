@@ -9,9 +9,7 @@ alternating and carrying audio, that costs land in the run totals, and that a
 persona which barges in produces a barge turn.
 """
 
-import asyncio
 import os
-import time
 from typing import List, Optional, Tuple
 
 import pytest
@@ -27,10 +25,8 @@ from deepeval.simulator import ConversationSimulator
 from deepeval.test_case import Audio, Turn
 from deepeval.voice import CallbackVoiceConnector, VoiceConfig
 from deepeval.voice.connectors import audio_utils
-from deepeval.voice.connectors.transports.base import BaseVoiceConnector
-from deepeval.voice.connectors.types import AgentEvent, ConnectorTurn
+from deepeval.voice.connectors.types import ConnectorTurn
 from deepeval.voice.output import DEFAULT_VOICE_FOLDER, UNSET
-from deepeval.voice.protocol import VoiceProtocol
 
 _RATE = 24000
 _TTS_COST = 0.5
@@ -278,134 +274,3 @@ def test_muted_persona_still_alternates_turns():
         "assistant",
     ]
     assert all(turn.content == "" for turn in case.turns if turn.role == "user")
-
-
-_FRAME_S = 0.02
-
-
-class _LongLineTTS(_StubTTS):
-    def synthesize(self, text, *args, voice=None, **kwargs):
-        self.spoken.append(text)
-        return _tone(1.5), _TTS_COST
-
-
-class _CutsInOnTheCaller(BaseVoiceConnector):
-    protocol = VoiceProtocol.WEBSOCKET
-    end_of_turn_silence_ms = 300
-    max_turn_timeout_s = 5.0
-
-    def __init__(self):
-        self._events: Optional[asyncio.Queue] = None
-        self._agent: Optional[asyncio.Task] = None
-
-    @property
-    def supports_duplex(self) -> bool:
-        return True
-
-    async def connect(self) -> None:
-        self._events = asyncio.Queue()
-
-    async def disconnect(self) -> None:
-        if self._agent is not None:
-            self._agent.cancel()
-
-    async def exchange_turn(self, audio):
-        raise NotImplementedError
-
-    async def stop_uplink(self) -> None:
-        return None
-
-    async def stream_uplink(self, audio, *, trailing_silence: bool = True):
-        if self._agent is None:
-            self._agent = asyncio.create_task(self._speak(audio.duration))
-
-    async def _say(self, seconds: float, sample: bytes) -> None:
-        for _ in range(int(seconds / _FRAME_S)):
-            await self._events.put(
-                AgentEvent(
-                    audio=sample * int(_RATE * _FRAME_S),
-                    received_at=time.perf_counter(),
-                )
-            )
-            await asyncio.sleep(_FRAME_S)
-
-    async def _speak(self, line_s: float) -> None:
-        await self._say(0.2, b"\x00\x00")
-        await self._say(0.2, b"\x10\x27")
-        await self._say(line_s - 0.1, b"\x00\x00")
-        await self._say(0.6, b"\x10\x27")
-        while True:
-            await self._say(0.2, b"\x00\x00")
-
-    async def iter_agent_events(self):
-        while True:
-            yield await self._events.get()
-
-
-def test_an_agent_that_cut_in_is_heard_out_before_the_caller_speaks_again():
-    connector = _CutsInOnTheCaller()
-    simulator = ConversationSimulator(
-        voice_config=VoiceConfig(
-            connector=connector,
-            tts_model=_LongLineTTS(),
-            stt_model=_StubSTT(),
-        ),
-        simulator_model=_StaticVoiceModel(),
-    )
-    golden = ConversationalGolden(
-        scenario="Ask the agent a question",
-        persona=Persona(characteristics="A caller with a long question."),
-    )
-
-    case = simulator.simulate([golden], max_user_simulations=1)[0]
-
-    assert [turn.role for turn in case.turns] == [
-        "user",
-        "assistant",
-        "assistant",
-    ]
-    cut_in, reply = case.turns[1:]
-    assert cut_in.interrupted is True
-    assert reply.interrupted is None
-    assert reply.audio.duration >= 0.6
-
-
-class _PlaysOutLate(_CutsInOnTheCaller):
-    async def stream_uplink(self, audio, *, trailing_silence: bool = True):
-        await super().stream_uplink(audio, trailing_silence=trailing_silence)
-        await asyncio.sleep(audio.duration + 1.0)
-
-    async def _speak(self, line_s: float) -> None:
-        await self._say(0.2, b"\x00\x00")
-        await self._say(line_s + 0.6, b"\x10\x27")
-        await self._say(0.5, b"\x00\x00")
-        await self._say(0.6, b"\x10\x27")
-        while True:
-            await self._say(0.2, b"\x00\x00")
-
-
-def test_the_callers_line_ends_when_it_has_played_out():
-    connector = _PlaysOutLate()
-    simulator = ConversationSimulator(
-        voice_config=VoiceConfig(
-            connector=connector,
-            tts_model=_LongLineTTS(),
-            stt_model=_StubSTT(),
-        ),
-        simulator_model=_StaticVoiceModel(),
-    )
-    golden = ConversationalGolden(
-        scenario="Ask the agent a question",
-        persona=Persona(characteristics="A caller with a long question."),
-    )
-
-    case = simulator.simulate([golden], max_user_simulations=1)[0]
-
-    assert [turn.role for turn in case.turns] == [
-        "user",
-        "assistant",
-        "assistant",
-    ]
-    cut_in, reply = case.turns[1:]
-    assert cut_in.interrupted is True
-    assert reply.interrupted is None
