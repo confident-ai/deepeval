@@ -86,9 +86,12 @@ export function getModelData(
   namespace: ModelNamespace | string | undefined,
   modelName: string | undefined,
 ): ModelData {
-  const entry =
-    namespace && modelName
-      ? GENERATED_MODEL_DATA[namespace]?.[modelName]
-      : undefined;
+  const table = namespace ? GENERATED_MODEL_DATA[namespace] : undefined;
+  let entry = table && modelName ? table[modelName] : undefined;
+  // Bedrock inference profile IDs (us./eu./global. ...) reuse the base model row
+  // unless the profile has its own row.
+  if (!entry && table && namespace === "bedrock" && modelName?.includes(".")) {
+    entry = table[modelName.slice(modelName.indexOf(".") + 1)];
+  }
   return { ...DEFAULT_MODEL_DATA, ...entry };
 }

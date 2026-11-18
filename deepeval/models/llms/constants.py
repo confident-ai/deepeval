@@ -2404,6 +2404,25 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
             input_price=1.00 / 1e6,
             output_price=5.00 / 1e6,
         ),
+        # US regional inference profiles are priced 10% above the global rows.
+        "us.anthropic.claude-sonnet-4-5-20250929-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
+            supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
+            supports_json=False,
+            input_price=3.30 / 1e6,
+            output_price=16.50 / 1e6,
+        ),
+        "us.anthropic.claude-haiku-4-5-20251001-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
+            supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
+            supports_json=False,
+            input_price=1.10 / 1e6,
+            output_price=5.50 / 1e6,
+        ),
         ################
         # amazon titan #
         ################
