@@ -1,0 +1,391 @@
+---
+id: conversation-simulator-voice-persona-voice
+title: Voice Settings
+sidebar_label: Voice
+languages: [python]
+beta: true
+---
+
+`VoiceSettings` controls **how the simulated caller sounds**: which voice speaks, and the accent, emotion and delivery it speaks with. Set it as `voice` on a [`Persona`](/docs/conversation-simulator-voice-personas).
+
+:::tip
+You often don't need this at all. `deepeval` already works out how a caller sounds from the persona's `characteristics` — see [How Characteristics Reach The Voice](/docs/conversation-simulator-voice-personas#how-characteristics-reach-the-voice). Use `VoiceSettings` to pin something down or override it.
+:::
+
+Under each setting is a recording of the same caller saying the same sentence with it applied. Pick a value to hear it. They were recorded with `OpenAITTSModel(model="gpt-4o-mini-tts-2025-03-20")`, and each is the best of several takes. The emotion and instruction recordings use the `coral`, `sage` or `ash` voice. This is the caller with nothing set:
+
+<SettingPlayer
+  settings={[
+    {
+      "name": "nothing set",
+      "options": [
+        {
+          "label": "None",
+          "code": "Persona(characteristics=\"...\")",
+          "src": "/audio/personas/baseline.mp3"
+        }
+      ]
+    }
+  ]}
+/>
+
+## Create Voice Settings
+
+```python
+from deepeval.dataset import Persona, VoiceSettings
+
+persona = Persona(
+    characteristics="You are calling about a late delivery.",
+    voice=VoiceSettings(
+        id="coral",
+        accent="Scottish",
+        emotion="frustrated",
+        instructions="A little out of breath and in a hurry.",
+    ),
+)
+```
+
+There are **EIGHT** optional parameters when creating a `VoiceSettings`:
+
+- [Optional] `id`: a string voice ID passed straight through to your `tts_model`, so valid values depend on the model you configured on [`VoiceConfig`](/docs/conversation-simulator-voice-mode#tts-and-stt-models) — `"alloy"`, `"onyx"`, `"shimmer"`, etc. for the default `OpenAITTSModel`. Defaulted to `None`.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "id",
+        "options": [
+          {
+            "label": "alloy",
+            "code": "VoiceSettings(id=\"alloy\")",
+            "src": "/audio/personas/voice-id-alloy.mp3"
+          },
+          {
+            "label": "onyx",
+            "code": "VoiceSettings(id=\"onyx\")",
+            "src": "/audio/personas/voice-id-onyx.mp3"
+          },
+          {
+            "label": "coral",
+            "code": "VoiceSettings(id=\"coral\")",
+            "src": "/audio/personas/voice-id-coral.mp3"
+          },
+          {
+            "label": "nova",
+            "code": "VoiceSettings(id=\"nova\")",
+            "src": "/audio/personas/voice-id-nova.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+- [Optional] `accent`: a string accent for the caller to speak with. Defaulted to `None`.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "accent",
+        "options": [
+          {
+            "label": "Australian",
+            "code": "VoiceSettings(accent=\"Australian\")",
+            "src": "/audio/personas/voice-accent-australian.mp3"
+          },
+          {
+            "label": "Indian",
+            "code": "VoiceSettings(accent=\"Indian\")",
+            "src": "/audio/personas/voice-accent-indian.mp3"
+          },
+          {
+            "label": "Spanish",
+            "code": "VoiceSettings(accent=\"Spanish\")",
+            "src": "/audio/personas/voice-accent-spanish.mp3"
+          },
+          {
+            "label": "French",
+            "code": "VoiceSettings(accent=\"French\")",
+            "src": "/audio/personas/voice-accent-french.mp3"
+          },
+          {
+            "label": "German",
+            "code": "VoiceSettings(accent=\"German\")",
+            "src": "/audio/personas/voice-accent-german.mp3"
+          },
+          {
+            "label": "Nigerian",
+            "code": "VoiceSettings(accent=\"Nigerian\")",
+            "src": "/audio/personas/voice-accent-nigerian.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `accent_strength`: a float between `0.0` and `1.0` for how thick the accent is. The bottom third of the scale asks for a light accent, the middle for a strong one, and the top for a very heavy one. Defaulted to `1.0`.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "accent_strength",
+        "options": [
+          {
+            "label": "0.2",
+            "code": "VoiceSettings(accent=\"Australian\", accent_strength=0.2)",
+            "src": "/audio/personas/voice-accent-strength-0-2.mp3"
+          },
+          {
+            "label": "0.5",
+            "code": "VoiceSettings(accent=\"Australian\", accent_strength=0.5)",
+            "src": "/audio/personas/voice-accent-strength-0-5.mp3"
+          },
+          {
+            "label": "1.0",
+            "code": "VoiceSettings(accent=\"Australian\", accent_strength=1.0)",
+            "src": "/audio/personas/voice-accent-strength-1-0.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `emotion`: a string for how the caller feels. It reaches both the voice and the simulator model, so the words match the tone. Defaulted to `None`.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "emotion",
+        "options": [
+          {
+            "label": "frustrated",
+            "code": "VoiceSettings(emotion=\"frustrated\")",
+            "src": "/audio/personas/voice-emotion-frustrated.mp3"
+          },
+          {
+            "label": "cheerful",
+            "code": "VoiceSettings(emotion=\"cheerful\")",
+            "src": "/audio/personas/voice-emotion-cheerful.mp3"
+          },
+          {
+            "label": "anxious",
+            "code": "VoiceSettings(emotion=\"anxious\")",
+            "src": "/audio/personas/voice-emotion-anxious.mp3"
+          },
+          {
+            "label": "bored",
+            "code": "VoiceSettings(emotion=\"bored\")",
+            "src": "/audio/personas/voice-emotion-bored.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `emotion_strength`: a float between `0.0` and `1.0` for how openly the emotion shows. It changes the caller's words ("a little frustrated", "frustrated", "very frustrated") and how the emotion is asked of the TTS model. Defaulted to `1.0`.
+- [Optional] `pace`: either `"slow"` or `"fast"`, for how quickly the caller speaks. Defaulted to `None`.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "pace",
+        "options": [
+          {
+            "label": "slow",
+            "code": "VoiceSettings(pace=\"slow\")",
+            "src": "/audio/personas/voice-pace-slow.mp3"
+          },
+          {
+            "label": "fast",
+            "code": "VoiceSettings(pace=\"fast\")",
+            "src": "/audio/personas/voice-pace-fast.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `volume`: a float between `0.0` and `1.0` for how loud the caller is, where `1.0` is the voice as the TTS model made it. Defaulted to `1.0`.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "volume",
+        "options": [
+          {
+            "label": "0.3",
+            "code": "VoiceSettings(volume=0.3)",
+            "src": "/audio/personas/voice-volume-0-3.mp3"
+          },
+          {
+            "label": "0.6",
+            "code": "VoiceSettings(volume=0.6)",
+            "src": "/audio/personas/voice-volume-0-6.mp3"
+          },
+          {
+            "label": "1.0",
+            "code": "VoiceSettings(volume=1.0)",
+            "src": "/audio/personas/baseline.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `instructions`: a string for anything else about delivery, such as energy and tone. Defaulted to `None`.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "instructions",
+        "options": [
+          {
+            "label": "Whispering",
+            "code": "VoiceSettings(instructions=\"Whisper every word in a hushed, breathy voice with no voiced tone, as if someone is asleep next to you.\")",
+            "src": "/audio/personas/voice-instructions-whispering.mp3"
+          },
+          {
+            "label": "Sleepy",
+            "code": "VoiceSettings(instructions=\"You have just been woken up by this call and are still half asleep.\")",
+            "src": "/audio/personas/voice-instructions-sleepy.mp3"
+          },
+          {
+            "label": "Tearful",
+            "code": "VoiceSettings(instructions=\"You are on the verge of tears.\")",
+            "src": "/audio/personas/voice-instructions-tearful.mp3"
+          },
+          {
+            "label": "Elderly",
+            "code": "VoiceSettings(instructions=\"You are a frail person in your late eighties.\")",
+            "src": "/audio/personas/voice-instructions-elderly.mp3"
+          },
+          {
+            "label": "Out of breath",
+            "code": "VoiceSettings(instructions=\"You have just run up four flights of stairs and are gasping for air.\")",
+            "src": "/audio/personas/voice-instructions-out-of-breath.mp3"
+          },
+          {
+            "label": "Shouting",
+            "code": "VoiceSettings(instructions=\"You are shouting to be heard over a loud, crowded room.\")",
+            "src": "/audio/personas/voice-instructions-shouting.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+Passing a string is shorthand for the ID alone: `Persona(voice="onyx")` is `Persona(voice=VoiceSettings(id="onyx"))`.
+
+:::caution
+How well the voice follows `accent`, `emotion`, `pace` and `instructions` is up to the TTS model, and it varies from one utterance to the next. In our tests with `gpt-4o-mini-tts`:
+
+- Pace, whispering, and bored or sleepy deliveries came through on most takes.
+- Australian, Indian, Spanish, French, German and Nigerian accents came through on about half the takes at the default strength, and on nearly all at the top of the scale. A light accent is often not heard at all.
+- Other emotions and acted states came through on fewer than half, and `emotion_strength` made no difference we could measure in the voice, only in the words.
+- Thai, Chinese, Russian and Arabic accents did not come through.
+- The `alloy` voice is the flattest. `coral`, `sage` and `ash` follow a direction much more readily.
+
+For an accent that holds for the whole call, pick a voice that already has it and pass its `id`.
+:::
+
+:::note
+`accent`, `emotion`, `pace` and `instructions` are passed as `instructions` to TTS models that take them, which `OpenAITTSModel(model="gpt-4o-mini-tts")`, the default, does. Other TTS models ignore them and `deepeval` warns once — there, the accent comes from the voice you pick with `id`.
+:::
+
+`volume` is applied to the caller's audio by `deepeval`, so it works with every TTS model. `pace` is asked of the TTS model as an instruction, like `accent`. Pitch is **not** a persona field: describe it in `instructions`, or set it on the TTS model itself (`OpenAITTSModel(generation_kwargs={...})`).
+
+## How The Voice Is Directed
+
+`deepeval` does not send your settings to the TTS model one by one. Before each call, the simulator model writes a single **voice direction** for the persona, in the same four parts every time:
+
+```
+Affect: who they sound like. Tone: the quality of the voice. Pacing: speed, rhythm and pauses. Emotion: what they feel and how openly it shows.
+```
+
+Your `accent`, `emotion`, `pace` and `instructions` are worked into it and repeated after it, and it ends with a reminder to hold the delivery on every word. That one direction is then sent, word for word, with every line the caller speaks, so the caller is directed the same way from the first line to the last. With [`persona_delivery`](/docs/conversation-simulator-voice-personas#how-characteristics-reach-the-voice) off, the direction is built from your settings alone.
+
+## Per-Persona TTS Model
+
+`tts_model` gives one caller a different speech model from the rest of the run, for example to mix providers across a set of personas:
+
+```python
+from deepeval.models.tts import ElevenLabsTTSModel
+
+persona = Persona(
+    characteristics="You are an older adult who speaks slowly.",
+    tts_model=ElevenLabsTTSModel(),
+    voice="JBFqnCBsd6RMkjVDRZzb",
+)
+```
+
+It replaces the `tts_model` on [`VoiceConfig`](/docs/conversation-simulator-voice-mode#tts-and-stt-models) for that persona's conversations only, and what it spends is counted in the simulator's `tts_cost` at its own price. The voice `id` then has to be a voice of that model. The model is not saved when you push or save the dataset.
+
+## TTS Model Support
+
+Every TTS model takes a voice `id`. `volume` is applied by `deepeval`. Only models that can be steered with instructions act on `accent`, `emotion`, `pace` and `instructions`.
+
+<TtsSupportTable
+  rows={[
+    {
+      "setting": "id",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "accent",
+      "openai": "Some accents",
+      "elevenlabs": false,
+      "cartesia": false,
+      "deepgram": false
+    },
+    {
+      "setting": "accent_strength",
+      "openai": "Some accents",
+      "elevenlabs": false,
+      "cartesia": false,
+      "deepgram": false
+    },
+    {
+      "setting": "emotion",
+      "openai": "Some takes",
+      "elevenlabs": false,
+      "cartesia": false,
+      "deepgram": false
+    },
+    {
+      "setting": "emotion_strength",
+      "openai": "Words only",
+      "elevenlabs": "Words only",
+      "cartesia": "Words only",
+      "deepgram": "Words only"
+    },
+    {
+      "setting": "pace",
+      "openai": "Most takes",
+      "elevenlabs": false,
+      "cartesia": false,
+      "deepgram": false
+    },
+    {
+      "setting": "volume",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "instructions",
+      "openai": "Some takes",
+      "elevenlabs": false,
+      "cartesia": false,
+      "deepgram": false
+    }
+  ]}
+/>
+
+- **OpenAI** takes instructions on `gpt-4o-mini-tts` and its dated snapshots, and not on `tts-1` or `tts-1-hd`. The `2025-03-20` snapshot followed them far more often than `2025-12-15` in our tests.
+- A cross means `deepeval` does not pass the setting to that model today, not that the provider has no controls of its own.
+- **ElevenLabs** and **Cartesia** voices each have a fixed accent and style, so pick a voice that already sounds the way you want and pass its ID as `id`.
+- **Deepgram** voices are part of the Aura model name, so `id` is the voice segment of it, such as `"thalia"`.
+- A model you write yourself takes them if its `supports_voice_instructions()` returns `True`.
+
+On a model that cannot act on them, `deepeval` warns once and the caller speaks in the plain voice. `emotion` still reaches the simulator model, so the caller's words carry it either way.

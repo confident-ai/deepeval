@@ -64,6 +64,10 @@ class VoiceConfig:
     instead when a connector cannot be copied, such as one holding a LiveKit
     room you connected yourself.
 
+    `persona_delivery` has the simulator model describe how each persona sounds
+    from its `characteristics`, once per conversation, so the voice matches the
+    words. Only TTS models that take instructions can act on it.
+
     `interruption_settings` is deprecated: set
     `Persona(interruption_behavior=...)` on the golden instead. When set here
     it applies to every golden that has no persona-level behavior of its own.
@@ -79,6 +83,9 @@ class VoiceConfig:
     output_dir: Optional[str] = field(default=UNSET)
     combine_audio_files: bool = True
     record_call: bool = False
+    # Work out how each caller sounds from their persona's `characteristics`
+    # and pass it to TTS models that take instructions.
+    persona_delivery: bool = True
     interruption_settings: Optional[InterruptionBehavior] = None
 
     def __post_init__(self) -> None:

@@ -196,6 +196,7 @@ class DuplexExchange:
         language: str,
         a_generate_schema,
         call_started_at: float,
+        tts_kwargs: Optional[dict] = None,
     ):
         self.connector = connector
         self.tts_model = tts_model
@@ -207,9 +208,13 @@ class DuplexExchange:
         self.a_generate_schema = a_generate_schema
         self.sample_rate = connector.recv_sample_rate
         self.call_started_at = call_started_at
-        self.tts_kwargs = (
-            golden.persona.tts_kwargs() if golden.persona is not None else {}
-        )
+        if tts_kwargs is None:
+            tts_kwargs = (
+                golden.persona.tts_kwargs(tts_model)
+                if golden.persona is not None
+                else {}
+            )
+        self.tts_kwargs = tts_kwargs
         self.background_noise = (
             golden.persona.background_noise
             if golden.persona is not None

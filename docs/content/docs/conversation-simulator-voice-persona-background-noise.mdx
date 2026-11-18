@@ -1,0 +1,147 @@
+---
+id: conversation-simulator-voice-persona-background-noise
+title: Background Noise
+sidebar_label: Background Noise
+languages: [python]
+beta: true
+---
+
+`BackgroundNoiseSettings` controls **what can be heard around the simulated caller**. Set it as `background_noise` on a [`Persona`](/docs/conversation-simulator-voice-personas).
+
+Real calls are not made from a recording booth. `BackgroundNoiseSettings` puts the caller in a room: an ambient audio file looped underneath their speech, other people talking nearby, or both.
+
+Under each setting is a recording of the same caller saying the same sentence with it applied. Pick a value to hear it. Recorded with `OpenAITTSModel(model="gpt-4o-mini-tts")`. This is the caller with nothing set:
+
+<SettingPlayer
+  settings={[
+    {
+      "name": "nothing set",
+      "options": [
+        {
+          "label": "None",
+          "code": "Persona(characteristics=\"...\")",
+          "src": "/audio/personas/baseline.mp3"
+        }
+      ]
+    }
+  ]}
+/>
+
+## Create Background Noise Settings
+
+```python
+from deepeval.dataset import Persona, BackgroundNoiseSettings, BackgroundSpeaker
+
+persona = Persona(
+    characteristics="You are a parent calling from home while your kids get ready for school.",
+    background_noise=BackgroundNoiseSettings(
+        audio="kitchen.wav",
+        volume=0.3,
+        other_speakers=[
+            BackgroundSpeaker(
+                characteristics="A young child who cannot find their shoes.",
+                voice="nova",
+            )
+        ],
+    ),
+)
+```
+
+There are **THREE** optional parameters when creating a `BackgroundNoiseSettings`:
+
+- [Optional] `audio`: a path or `http(s)` URL to a `.wav` or `.mp3` file, which is looped for the length of the call. Defaulted to `None`.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "audio",
+        "options": [
+          {
+            "label": "volume 0.2",
+            "code": "BackgroundNoiseSettings(audio=\"room.wav\", volume=0.2)",
+            "src": "/audio/personas/background-audio-volume-0-2.mp3"
+          },
+          {
+            "label": "volume 0.5",
+            "code": "BackgroundNoiseSettings(audio=\"room.wav\", volume=0.5)",
+            "src": "/audio/personas/background-audio-volume-0-5.mp3"
+          },
+          {
+            "label": "volume 0.8",
+            "code": "BackgroundNoiseSettings(audio=\"room.wav\", volume=0.8)",
+            "src": "/audio/personas/background-audio-volume-0-8.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+- [Optional] `volume`: a float between `0.0` and `1.0` for how loudly `audio` is mixed in. Defaulted to `0.3`.
+- [Optional] `other_speakers`: a list of `BackgroundSpeaker`s, the other people in the room. Defaulted to an empty list.
+
+  <SettingPlayer
+    settings={[
+      {
+        "name": "other_speakers",
+        "options": [
+          {
+            "label": "volume 0.3",
+            "code": "BackgroundSpeaker(characteristics=\"A young child who cannot find their shoes.\", volume=0.3)",
+            "src": "/audio/personas/background-other-speakers-volume-0-3.mp3"
+          },
+          {
+            "label": "volume 0.6",
+            "code": "BackgroundSpeaker(characteristics=\"A young child who cannot find their shoes.\", volume=0.6)",
+            "src": "/audio/personas/background-other-speakers-volume-0-6.mp3"
+          }
+        ]
+      }
+    ]}
+  />
+
+## Other Speakers
+
+Each person in `other_speakers` is a `BackgroundSpeaker`. There is **ONE** mandatory and **THREE** optional parameters when creating a `BackgroundSpeaker`:
+
+- `characteristics`: a string describing who they are and what they talk about. The simulator model writes their lines from it before the call.
+- [Optional] `voice`: a `VoiceSettings` or a string voice ID for the speaker. Defaulted to `None` (the TTS model's own default voice).
+- [Optional] `frequency`: either `"rare"`, `"normal"` or `"frequent"`, for how often they are heard while the caller is talking. Defaulted to `"normal"`.
+- [Optional] `volume`: a float between `0.0` and `1.0` for how loud they are next to the caller. Defaulted to `0.3`.
+
+A background speaker never talks to your agent. They are there to test whether the agent can tell the caller's voice from someone else's.
+
+:::tip
+Pick an `audio` file that loops cleanly — an abrupt cut or trailing silence repeats for the whole conversation. `.mp3` files need `pydub` and `ffmpeg` installed; `.wav` files need nothing.
+:::
+
+## TTS Model Support
+
+Background audio is mixed into the caller's speech after it is synthesized, and other speakers are spoken by the same TTS model as the caller, so both work with every TTS model.
+
+<TtsSupportTable
+  rows={[
+    {
+      "setting": "audio",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "volume",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    },
+    {
+      "setting": "other_speakers",
+      "openai": true,
+      "elevenlabs": true,
+      "cartesia": true,
+      "deepgram": true
+    }
+  ]}
+/>
+
+A background speaker's `voice` uses only the voice `id`. Their accent, emotion and instructions are not applied.

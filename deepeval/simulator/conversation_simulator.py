@@ -38,6 +38,7 @@ from deepeval.simulator.template import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import MULTIMODAL_SUPPORTED_MODELS
 from deepeval.simulator.schema import (
+    CallerVoiceProfile,
     SimulatedInput,
 )
 from deepeval.simulator.controller.controller import (
@@ -169,11 +170,14 @@ class _VoiceSession:
 
     connector: "BaseVoiceConnector"
     persona: Optional["Persona"]
+    tts_model: "DeepEvalBaseTTS"
     policy: Optional["InterruptionPolicy"] = None
     floor: Optional["FloorController"] = None
     started_at: Optional[float] = None
     barges: int = 0
     recorder: Optional[CallRecorder] = None
+    # How the caller sounds, worked out from the persona's characteristics.
+    delivery: Optional[str] = None
 
     @property
     def is_duplex(self) -> bool:
@@ -222,6 +226,11 @@ class _VoiceRun:
         return _VoiceSession(
             connector=connector,
             persona=persona,
+            tts_model=(
+                persona.caller_tts_model(self.tts_model)
+                if persona is not None
+                else self.tts_model
+            ),
             policy=policy,
             floor=floor or FloorController(),
             recorder=recorder,
@@ -757,6 +766,9 @@ class ConversationSimulator:
             # connected before the first turn and disconnected when the
             # conversation ends (or errors).
             if session is not None:
+                # Before the line opens: an agent that greets on connect
+                # should not be left talking to nobody while this is written.
+                await self._prepare_caller_voice(session, golden)
                 connect_started = time.perf_counter()
                 logger.debug(
                     "Voice connector connect started: %s",
@@ -1045,8 +1057,64 @@ class ConversationSimulator:
         return conversational_test_case
 
     @staticmethod
-    def _persona_tts_kwargs(persona) -> dict:
-        return {} if persona is None else persona.tts_kwargs()
+    def _persona_tts_kwargs(session: _VoiceSession) -> dict:
+        persona = session.persona
+        if persona is None:
+            return {}
+        return persona.tts_kwargs(session.tts_model, session.delivery)
+
+    async def _prepare_caller_voice(
+        self, session: _VoiceSession, golden: ConversationalGolden
+    ) -> None:
+        """Write the parts of the call a persona implies but does not state.
+
+        How the caller sounds, what they say to the room and what the people
+        around them say all follow from the persona, so the simulator model is
+        asked for them once, before the first turn.
+        """
+        from deepeval.simulator.caller_voice_template import (
+            CallerVoiceTemplate,
+        )
+        from deepeval.voice.caller_speech import CallerSpeechTTS
+
+        persona = session.persona
+        if persona is None or persona.muted:
+            return
+        tts_model = session.tts_model
+        patterns, noise = persona.speech_patterns, persona.background_noise
+        # A TTS model that only duck-types the base class cannot say whether
+        # it takes instructions, which is the same as not taking them.
+        takes_instructions = getattr(
+            tts_model, "supports_voice_instructions", lambda: False
+        )
+        delivery = self._voice.config.persona_delivery and takes_instructions()
+        asides = patterns is not None and patterns.side_speech is not None
+        speakers = (
+            [speaker.characteristics for speaker in noise.other_speakers]
+            if noise is not None
+            else []
+        )
+        if not (delivery or asides or speakers):
+            return
+        try:
+            profile: CallerVoiceProfile = await self.a_generate_schema(
+                CallerVoiceTemplate.describe_caller_voice(
+                    persona,
+                    self.language,
+                    delivery=delivery,
+                    asides=asides,
+                    background_speakers=speakers,
+                ),
+                CallerVoiceProfile,
+            )
+        except Exception as exc:
+            # The call is still worth making in the persona's plain voice.
+            logger.warning("Could not prepare the caller's voice: %s", exc)
+            return
+        if delivery:
+            session.delivery = profile.delivery
+        if isinstance(tts_model, CallerSpeechTTS):
+            tts_model.use_lines(profile.asides, profile.background_lines)
 
     @staticmethod
     def _stt_kwargs(session: _VoiceSession) -> dict:
@@ -1089,11 +1157,10 @@ class ConversationSimulator:
         from deepeval.voice.background import BackgroundMixer
 
         voice = self._voice
-        tts_kwargs = self._persona_tts_kwargs(persona)
-        if not voice.tts_model.supports_streaming():
-            audio, tts_cost = await voice.tts_model.a_synthesize(
-                text, **tts_kwargs
-            )
+        tts_model = session.tts_model
+        tts_kwargs = self._persona_tts_kwargs(session)
+        if not tts_model.supports_streaming():
+            audio, tts_cost = await tts_model.a_synthesize(text, **tts_kwargs)
             if tts_cost is not None:
                 voice.tts_cost += tts_cost
             _populate_audio_duration(audio)
@@ -1109,7 +1176,7 @@ class ConversationSimulator:
         )
 
         async def _frames():
-            async for chunk in voice.tts_model.a_synthesize_stream(
+            async for chunk in tts_model.a_synthesize_stream(
                 text, **tts_kwargs
             ):
                 yield mixer.mix_chunk(chunk)
@@ -1119,7 +1186,7 @@ class ConversationSimulator:
         result = await session.connector.stream_uplink_chunks(
             _frames(), trailing_silence=trailing_silence
         )
-        tts_cost = voice.tts_model.synthesis_cost(text)
+        tts_cost = tts_model.synthesis_cost(text)
         if tts_cost is not None:
             voice.tts_cost += tts_cost
         logger.debug(
@@ -1393,8 +1460,8 @@ class ConversationSimulator:
         voice = self._voice
         tts_started = time.perf_counter()
         logger.debug("User TTS started: characters=%d", len(input))
-        user_audio, tts_cost = await voice.tts_model.a_synthesize(
-            input, **self._persona_tts_kwargs(session.persona)
+        user_audio, tts_cost = await session.tts_model.a_synthesize(
+            input, **self._persona_tts_kwargs(session)
         )
         _populate_audio_duration(user_audio)
         logger.debug(
@@ -1620,7 +1687,7 @@ class ConversationSimulator:
         voice = self._voice
         exchange = DuplexExchange(
             connector=session.connector,
-            tts_model=voice.tts_model,
+            tts_model=session.tts_model,
             stt_model=voice.stt_model,
             policy=session.policy,
             floor=session.floor,
@@ -1628,6 +1695,7 @@ class ConversationSimulator:
             language=self.language,
             a_generate_schema=self.a_generate_schema,
             call_started_at=session.started_at or time.perf_counter(),
+            tts_kwargs=self._persona_tts_kwargs(session),
         )
         result = await exchange.run(
             turns=turns,

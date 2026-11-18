@@ -141,6 +141,18 @@
   "/docs/conversation-simulator-voice-mode": [
     "python"
   ],
+  "/docs/conversation-simulator-voice-persona-background-noise": [
+    "python"
+  ],
+  "/docs/conversation-simulator-voice-persona-line": [
+    "python"
+  ],
+  "/docs/conversation-simulator-voice-persona-speech-patterns": [
+    "python"
+  ],
+  "/docs/conversation-simulator-voice-persona-voice": [
+    "python"
+  ],
   "/docs/conversation-simulator-voice-personas": [
     "python"
   ],
@@ -270,6 +282,9 @@
   "/docs/metrics-argument-correctness": [
     "python",
     "typescript"
+  ],
+  "/docs/metrics-audio-glitch": [
+    "python"
   ],
   "/docs/metrics-audio-integrity": [
     "python"
@@ -761,6 +776,9 @@
     "python"
   ],
   "/integrations/voice-agent-connectors/pipecat": [
+    "python"
+  ],
+  "/integrations/voice-agent-connectors/twilio": [
     "python"
   ],
   "/integrations/voice-agent-connectors/vapi": [
