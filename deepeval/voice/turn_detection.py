@@ -28,6 +28,7 @@ class TurnDetectionTiming:
     level: TurnDetection
     # Quiet since the last speech before the agent is taken to have finished.
     end_of_turn_silence_ms: int
+    response_timeout_ms: int
     # Hard ceiling on waiting, so an agent that never goes quiet cannot hang
     # the simulation. In duplex this bounds the whole exchange, barges included.
     max_turn_timeout_s: float
@@ -40,12 +41,14 @@ def turn_detection_timing(level: TurnDetection) -> TurnDetectionTiming:
         return TurnDetectionTiming(
             level=level,
             end_of_turn_silence_ms=500,
+            response_timeout_ms=3000,
             max_turn_timeout_s=20.0,
         )
     if level == "balanced":
         return TurnDetectionTiming(
             level=level,
             end_of_turn_silence_ms=800,
+            response_timeout_ms=5000,
             max_turn_timeout_s=30.0,
         )
     if level == "patient":
@@ -55,6 +58,7 @@ def turn_detection_timing(level: TurnDetection) -> TurnDetectionTiming:
         return TurnDetectionTiming(
             level=level,
             end_of_turn_silence_ms=2500,
+            response_timeout_ms=8000,
             max_turn_timeout_s=120.0,
         )
     raise ValueError(

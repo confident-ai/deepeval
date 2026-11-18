@@ -113,6 +113,7 @@ class LiveKitConnector(BaseVoiceConnector):
         self.turn_detection = turn_detection
         timing = turn_detection_timing(turn_detection)
         self.end_of_turn_silence_ms = timing.end_of_turn_silence_ms
+        self.response_timeout_ms = timing.response_timeout_ms
         self.max_turn_timeout_s = timing.max_turn_timeout_s
         self.silence_threshold_rms = silence_threshold_rms
         self.connect_timeout_s = connect_timeout_s
@@ -559,6 +560,8 @@ class LiveKitConnector(BaseVoiceConnector):
         self._uplink.task = asyncio.create_task(_stream())
         await self._uplink.task
         self._uplink.task = None
+        if not self._uplink.cancelled:
+            await self._source.wait_for_playout()
 
     async def stream_uplink_chunks(
         self,
@@ -617,6 +620,8 @@ class LiveKitConnector(BaseVoiceConnector):
         if resampler is not None and not self._uplink.cancelled:
             for frame in resampler.flush():
                 await self._source.capture_frame(frame)
+        if first_frame_at is not None and not self._uplink.cancelled:
+            await self._source.wait_for_playout()
         return UplinkResult(
             audio=recorder.to_audio(), first_frame_at=first_frame_at
         )

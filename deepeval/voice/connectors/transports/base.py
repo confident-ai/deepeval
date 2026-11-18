@@ -96,6 +96,7 @@ class BaseVoiceConnector(ABC):
     # defaults rather than something each transport may or may not expose.
     # Transports that select a `turn_detection` preset overwrite them.
     end_of_turn_silence_ms: int = 800
+    response_timeout_ms: int = 5000
     max_turn_timeout_s: float = 30.0
     silence_threshold_rms: float = DEFAULT_SILENCE_RMS
 

@@ -1518,7 +1518,11 @@ class ConversationSimulator:
         sent_at = uplink_started_at + (user_audio.duration or 0.0)
 
         assistant_turn = await self._run_duplex(
-            session, golden, turns, sent_at, caller_uplink_ended_at=sent_at
+            session,
+            golden,
+            turns,
+            sent_at,
+            caller_uplink_ended_at=max(sent_at, time.perf_counter()),
         )
         if assistant_turn is not None:
             return assistant_turn

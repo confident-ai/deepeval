@@ -791,3 +791,92 @@ async def test_speech_that_runs_past_the_callers_end_stays_one_turn():
     (reply,) = result.turns
     assert reply.interrupted is None
     assert audio_duration(reply.audio) >= 0.8
+
+
+class _EchoesTheCaller(_CutsInOnTheCaller):
+    async def iter_agent_events(self):
+        at = self.uplink_ended_at - 2.0
+        pcm = _tone(200) + _quiet(1500) + _tone(500)
+        for frame in _frames(pcm):
+            yield AgentEvent(audio=frame, received_at=at)
+            at += _FRAME_MS / 1000
+        await asyncio.sleep(1.0)
+        for frame in _frames(_tone(600)):
+            yield AgentEvent(audio=frame, received_at=time.perf_counter())
+            await asyncio.sleep(_FRAME_MS / 1000)
+        while True:
+            yield AgentEvent(
+                audio=_quiet(_FRAME_MS), received_at=time.perf_counter()
+            )
+            await asyncio.sleep(_FRAME_MS / 1000)
+
+
+@pytest.mark.asyncio
+async def test_the_callers_echo_past_their_end_is_not_the_agents_reply():
+    uplink_ended_at = time.perf_counter() - 1.0
+    connector = _EchoesTheCaller(uplink_ended_at)
+    exchange = _exchange(connector, stt_model=_StubSTT())
+
+    turns, result = await _run_after_caller(
+        exchange, connector, uplink_ended_at
+    )
+
+    *cut_ins, reply = result.turns
+    assert cut_ins
+    assert all(turn.interrupted for turn in cut_ins)
+    assert reply.interrupted is None
+    assert reply.latency_ms > 1000
+
+
+class _ThinksBeforeAnswering(_AnswersOverTheCallersEnd):
+    end_of_turn_silence_ms = 300
+    response_timeout_ms = 2000
+
+    async def iter_agent_events(self):
+        for _ in range(int(1.2 / (_FRAME_MS / 1000))):
+            yield AgentEvent(
+                audio=_quiet(_FRAME_MS), received_at=time.perf_counter()
+            )
+            await asyncio.sleep(_FRAME_MS / 1000)
+        async for event in super().iter_agent_events():
+            yield event
+
+
+@pytest.mark.asyncio
+async def test_a_slow_reply_is_waited_for_past_end_of_turn_silence():
+    connector = _ThinksBeforeAnswering()
+    exchange = _exchange(connector, stt_model=_StubSTT())
+
+    turns, result = await _run_after_caller(
+        exchange, connector, time.perf_counter()
+    )
+
+    (reply,) = result.turns
+    assert audio_duration(reply.audio) >= 0.8
+    assert reply.latency_ms == pytest.approx(1200, abs=200)
+
+
+class _NeverAnswers(_StillTalking):
+    signals_turn_complete = False
+    end_of_turn_silence_ms = 300
+    response_timeout_ms = 500
+    max_turn_timeout_s = 5.0
+
+    async def iter_agent_events(self):
+        while True:
+            yield AgentEvent(
+                audio=_quiet(_FRAME_MS), received_at=time.perf_counter()
+            )
+            await asyncio.sleep(_FRAME_MS / 1000)
+
+
+@pytest.mark.asyncio
+async def test_no_reply_within_the_response_timeout_ends_the_exchange():
+    connector = _NeverAnswers()
+    exchange = _exchange(connector, stt_model=_StubSTT())
+    started = time.perf_counter()
+
+    turns, result = await _run_after_caller(exchange, connector, started)
+
+    assert result.turns == []
+    assert time.perf_counter() - started < 2.0
