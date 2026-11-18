@@ -15,6 +15,14 @@ class SimulationTemplate:
         - If an image is unclear or ambiguous, mark uncertainty explicitly.
     """
 
+    keypad_rules = """
+        --- PHONE KEYPAD ---
+        You are on a phone call and can press keys on your phone's keypad.
+        - When the agent asks you to press a key or enter something on the keypad (for example "press 1 for billing" or "enter your PIN followed by the pound key"), add a `keypad_input` key to the JSON object with the keys to press, using only 0-9, * and #, and set `simulated_input` to an empty string.
+        - Take what you enter from the persona and scenario, such as an account number or PIN.
+        - Otherwise leave out `keypad_input` and reply as usual.
+    """
+
     @staticmethod
     def _persona_block(golden: ConversationalGolden, indent: int = 12) -> str:
         """Render the golden's persona, aligned with the prompt's indentation.

@@ -29,6 +29,7 @@ from deepeval.voice.connectors.transports.base import (
 )
 from deepeval.voice.connectors.types import AgentEvent, ConnectorTurn
 from deepeval.voice.connectors import audio_utils
+from deepeval.voice.connectors.utils import DTMF_CODES
 from deepeval.voice.connectors.turn_engine import collect_agent_turn
 from deepeval.voice.streaming import (
     DEFAULT_STREAM_SAMPLE_RATE,
@@ -49,6 +50,7 @@ BACKGROUND_AUDIO_TRACK = "background_audio"
 AGENT_STATE_ATTRIBUTE = "lk.agent.state"
 _TURN_END_SETTLE_S = 0.5
 _TRANSCRIPT_POLL_S = 0.05
+_DTMF_KEY_INTERVAL_S = 0.3
 
 
 class AgentState(str, Enum):
@@ -624,6 +626,14 @@ class LiveKitConnector(BaseVoiceConnector):
     async def stop_uplink(self) -> None:
         if self._uplink is not None:
             await self._uplink.stop()
+
+    async def send_dtmf(self, keys: str) -> None:
+        for index, key in enumerate(keys):
+            if index:
+                await asyncio.sleep(_DTMF_KEY_INTERVAL_S)
+            await self._room.local_participant.publish_dtmf(
+                code=DTMF_CODES[key], digit=key
+            )
 
     @property
     def supports_duplex(self) -> bool:

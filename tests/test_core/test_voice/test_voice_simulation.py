@@ -274,3 +274,70 @@ def test_muted_persona_still_alternates_turns():
         "assistant",
     ]
     assert all(turn.content == "" for turn in case.turns if turn.role == "user")
+
+
+class _KeypadConnector(CallbackVoiceConnector):
+    def __init__(self, *args, pressed: List[str], **kwargs):
+        super().__init__(*args, **kwargs)
+        self.pressed = pressed
+
+    @property
+    def supports_dtmf(self) -> bool:
+        return True
+
+    async def send_dtmf(self, keys: str) -> None:
+        self.pressed.append(keys)
+
+
+class _KeypadVoiceModel(_StaticVoiceModel):
+    def __init__(self, keys: str):
+        super().__init__()
+        self.keys = keys
+        self.prompts: List[str] = []
+
+    def generate(self, prompt: str, schema=None):
+        if schema is not None and schema.__name__ == "SimulatedInput":
+            self.prompts.append(prompt)
+            if "PHONE KEYPAD" in prompt and not self.user_turns:
+                self.user_turns += 1
+                return schema(simulated_input="", keypad_input=self.keys)
+        return super().generate(prompt, schema=schema)
+
+
+def _simulate_keypad(connector_class, keys: str = "1 2 3 4 #"):
+    tts, pressed = _StubTTS(), []
+    kwargs = {"pressed": pressed} if connector_class is _KeypadConnector else {}
+    connector = connector_class(_agent(), turn_detection="eager", **kwargs)
+    model = _KeypadVoiceModel(keys)
+    simulator = ConversationSimulator(
+        voice_config=VoiceConfig(
+            connector=connector, tts_model=tts, stt_model=_StubSTT()
+        ),
+        simulator_model=model,
+    )
+    golden = ConversationalGolden(
+        scenario="Get past the phone menu with PIN 1234",
+        persona=Persona(characteristics="A caller with a PIN."),
+    )
+    [case] = simulator.simulate([golden], max_user_simulations=2)
+    return case, tts, pressed, model
+
+
+def test_a_phone_caller_presses_keys_instead_of_speaking():
+    case, tts, pressed, model = _simulate_keypad(_KeypadConnector)
+
+    assert pressed == ["1234#"]
+    keypad_turn = case.turns[0]
+    assert keypad_turn.role == "user"
+    assert keypad_turn.dtmf == "1234#"
+    assert keypad_turn.content == "Pressed 1 2 3 4 #"
+    assert case.turns[1].role == "assistant"
+    assert "Pressed 1 2 3 4 #" not in tts.spoken
+    assert all("PHONE KEYPAD" in prompt for prompt in model.prompts)
+
+
+def test_a_caller_without_a_keypad_never_presses_keys():
+    case, _, _, model = _simulate_keypad(CallbackVoiceConnector)
+
+    assert all(turn.dtmf is None for turn in case.turns)
+    assert not any("PHONE KEYPAD" in prompt for prompt in model.prompts)

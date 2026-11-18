@@ -10,6 +10,7 @@ from deepeval.errors import DeepEvalError
 from deepeval.voice.connectors.transports.base import BaseVoiceConnector
 
 E164_PHONE_NUMBER = re.compile(r"^\+[1-9]\d{1,14}$")
+DTMF_CODES = {**{str(digit): digit for digit in range(10)}, "*": 10, "#": 11}
 
 
 class ElevenLabsIdentity(Enum):
@@ -176,3 +177,7 @@ class DialPacer:
 
 def is_phone_number(value: Optional[str]) -> bool:
     return bool(value) and E164_PHONE_NUMBER.match(value) is not None
+
+
+def keypad_keys(value: Optional[str]) -> str:
+    return "".join(key for key in value or "" if key in DTMF_CODES)

@@ -153,6 +153,10 @@ class _LiveKitDialConnector(SilenceTimeoutMixin, LiveKitConnector):
         self.dial_interval_s = dial_interval_s
         self._room_to_delete: Optional[str] = None
 
+    @property
+    def supports_dtmf(self) -> bool:
+        return True
+
     def _livekit_api(self):
         return require_dependency(
             "livekit.api",
