@@ -60,6 +60,8 @@ class ElevenLabsTTSModel(DeepEvalBaseTTS):
     platform.
     """
 
+    provider = PS.ELEVENLABS
+
     def __init__(
         self,
         model: Optional[str] = None,

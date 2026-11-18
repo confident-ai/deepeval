@@ -41,6 +41,8 @@ class DeepgramTTSModel(DeepEvalBaseTTS):
     rather than being sent as a separate field.
     """
 
+    provider = PS.DEEPGRAM
+
     def __init__(
         self,
         model: Optional[str] = None,
