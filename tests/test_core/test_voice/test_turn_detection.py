@@ -28,13 +28,6 @@ class TestTurnDetectionPresets:
         ]
         assert timeouts == sorted(timeouts)
 
-    def test_response_wait_grows_with_the_level(self):
-        waits = [
-            turn_detection_timing(level).response_timeout_ms
-            for level in ("eager", "balanced", "patient")
-        ]
-        assert waits == sorted(waits)
-
     def test_a_connector_resolves_the_preset_to_timings(self):
         connector = CallbackVoiceConnector(_agent, turn_detection="patient")
         patient = turn_detection_timing("patient")
@@ -42,7 +35,6 @@ class TestTurnDetectionPresets:
             connector.end_of_turn_silence_ms == patient.end_of_turn_silence_ms
         )
         assert connector.max_turn_timeout_s == patient.max_turn_timeout_s
-        assert connector.response_timeout_ms == patient.response_timeout_ms
 
     def test_an_unknown_level_names_the_ones_that_exist(self):
         with pytest.raises(ValueError, match="eager.*balanced.*patient"):

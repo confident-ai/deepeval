@@ -1517,13 +1517,7 @@ class ConversationSimulator:
         # in-process ones return before a single frame has been heard.
         sent_at = uplink_started_at + (user_audio.duration or 0.0)
 
-        assistant_turn = await self._run_duplex(
-            session,
-            golden,
-            turns,
-            sent_at,
-            caller_uplink_ended_at=max(sent_at, time.perf_counter()),
-        )
+        assistant_turn = await self._run_duplex(session, golden, turns, sent_at)
         if assistant_turn is not None:
             return assistant_turn
         if session.connector.call_ended:
@@ -1619,7 +1613,6 @@ class ConversationSimulator:
         golden: ConversationalGolden,
         turns: List[Turn],
         sent_at: float,
-        caller_uplink_ended_at: Optional[float] = None,
     ) -> Optional[Turn]:
         """Listen until the agent's turn ends; None if it never spoke."""
         from deepeval.voice.duplex import DuplexExchange
@@ -1640,7 +1633,6 @@ class ConversationSimulator:
             turns=turns,
             sent_at=sent_at,
             barges_this_conversation=session.barges,
-            caller_uplink_ended_at=caller_uplink_ended_at,
         )
         session.barges += result.barges
         voice.tts_cost += result.tts_cost

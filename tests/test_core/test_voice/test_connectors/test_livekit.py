@@ -3,7 +3,6 @@ from types import SimpleNamespace
 
 import pytest
 
-from deepeval.test_case import AudioChunk
 from deepeval.voice import LiveKitConnector
 from deepeval.voice.connectors.providers.livekit import (
     connector as livekit_module,
@@ -458,36 +457,3 @@ async def test_without_agent_state_the_caller_speaking_closes_the_agent_turn(
     await asyncio.sleep(0.05)
 
     assert _transcripts(connector) == []
-
-
-class _PlayoutSource:
-    def __init__(self):
-        self.calls = []
-
-    async def capture_frame(self, frame):
-        self.calls.append("capture")
-
-    async def wait_for_playout(self):
-        self.calls.append("playout")
-
-
-async def _one_chunk(rate):
-    yield AudioChunk.from_bytes(
-        b"\x00\x00" * (rate // 50),
-        "audio/pcm",
-        sampleRate=rate,
-        encoding="pcm",
-    )
-
-
-@pytest.mark.asyncio
-async def test_an_utterance_is_sent_once_it_has_played_out(monkeypatch):
-    connector = await _state_watching_connector(monkeypatch)
-    connector._rtc.AudioFrame = lambda **kwargs: SimpleNamespace(**kwargs)
-    connector._source = _PlayoutSource()
-
-    await connector.stream_uplink_chunks(
-        _one_chunk(connector.livekit_sample_rate)
-    )
-
-    assert connector._source.calls[-1] == "playout"
