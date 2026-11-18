@@ -803,8 +803,13 @@ def test_task_node_renders_conversation_level_params_once():
     test_case = ConversationalTestCase(
         turns=[
             Turn(role="user", content="Where is Dr. Lee?"),
-            Turn(role="assistant", content="Room 4."),
+            Turn(
+                role="assistant",
+                content="Room 4.",
+                metadata={"source": "directory"},
+            ),
         ],
+        metadata={"department": "cardiology"},
         context=["Dr. Lee is in room 4"],
         user_description="A patient",
         chatbot_role="A receptionist",
@@ -815,6 +820,7 @@ def test_task_node_renders_conversation_level_params_once():
         children=[],
         evaluation_params=[
             MultiTurnParams.CONTENT,
+            MultiTurnParams.METADATA,
             MultiTurnParams.CONTEXT,
             MultiTurnParams.USER_DESCRIPTION,
             MultiTurnParams.CHATBOT_ROLE,
@@ -824,6 +830,9 @@ def test_task_node_renders_conversation_level_params_once():
     text = node._resolve_text(test_case, None, {})
 
     assert text.count("Content:") == 2
+    assert text.count("Metadata:") == 1
+    assert "Metadata:\n{'department': 'cardiology'}" in text
+    assert "directory" not in text
     assert text.count("Context:\n['Dr. Lee is in room 4']") == 1
     assert text.count("User Description:\nA patient") == 1
     assert text.count("Chatbot Role:\nA receptionist") == 1

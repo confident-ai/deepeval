@@ -61,10 +61,11 @@ class ConversationalBaseNode(PromptMixin):
                 start, end = self.turn_window
             else:
                 start, end = 0, len(test_case.turns) - 1
+            # METADATA selects test_case.metadata even though Turn also has it.
             turn_params = [
                 param
                 for param in self.evaluation_params
-                if param.value in Turn.model_fields
+                if param.value not in ConversationalTestCase.model_fields
             ]
             text += "Full Conversation: \n"
             for index in range(start, end + 1):
