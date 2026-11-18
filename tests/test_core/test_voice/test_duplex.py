@@ -693,3 +693,101 @@ async def test_a_reply_ended_without_speech_still_has_a_start_time():
     assistant = next(t for t in result.turns if t.role == "assistant")
     assert assistant.audio is not None
     assert assistant.audio.start_time is not None
+
+
+_FRAME_MS = 20
+
+
+def _frames(pcm: bytes, *, sample_rate: int = 24000) -> list:
+    step = int(sample_rate * _FRAME_MS / 1000) * 2
+    return [pcm[i : i + step] for i in range(0, len(pcm), step)]
+
+
+class _CutsInOnTheCaller(_StillTalking):
+    signals_turn_complete = False
+    end_of_turn_silence_ms = 300
+    max_turn_timeout_s = 5.0
+
+    def __init__(self, uplink_ended_at: float):
+        self.uplink_ended_at = uplink_ended_at
+
+    async def iter_agent_events(self):
+        at = self.uplink_ended_at - 2.0
+        for frame in _frames(_tone(200)) + _frames(_quiet(1500)):
+            yield AgentEvent(audio=frame, received_at=at)
+            at += _FRAME_MS / 1000
+        await asyncio.sleep(0.3)
+        for frame in _frames(_tone(600)):
+            yield AgentEvent(audio=frame, received_at=time.perf_counter())
+            await asyncio.sleep(_FRAME_MS / 1000)
+        while True:
+            yield AgentEvent(
+                audio=_quiet(_FRAME_MS), received_at=time.perf_counter()
+            )
+            await asyncio.sleep(_FRAME_MS / 1000)
+
+
+class _AnswersOverTheCallersEnd(_StillTalking):
+    signals_turn_complete = False
+    end_of_turn_silence_ms = 300
+    max_turn_timeout_s = 5.0
+
+    async def iter_agent_events(self):
+        for frame in _frames(_tone(800)):
+            yield AgentEvent(audio=frame, received_at=time.perf_counter())
+            await asyncio.sleep(_FRAME_MS / 1000)
+        while True:
+            yield AgentEvent(
+                audio=_quiet(_FRAME_MS), received_at=time.perf_counter()
+            )
+            await asyncio.sleep(_FRAME_MS / 1000)
+
+
+async def _run_after_caller(exchange, connector, uplink_ended_at: float):
+    turns = [Turn(role="user", content="Hello")]
+    async with connector:
+        result = await asyncio.wait_for(
+            exchange.run(
+                turns=turns,
+                sent_at=uplink_ended_at,
+                barges_this_conversation=(
+                    exchange.policy.max_barges_per_conversation
+                ),
+                caller_uplink_ended_at=uplink_ended_at,
+            ),
+            timeout=10,
+        )
+    return turns, result
+
+
+@pytest.mark.asyncio
+async def test_speech_said_only_over_the_caller_is_not_the_agents_reply():
+    uplink_ended_at = time.perf_counter()
+    connector = _CutsInOnTheCaller(uplink_ended_at)
+    exchange = _exchange(connector, stt_model=_StubSTT())
+
+    turns, result = await _run_after_caller(
+        exchange, connector, uplink_ended_at
+    )
+
+    assert [t.role for t in turns] == ["user", "assistant", "assistant"]
+    cut_in, reply = result.turns
+    assert cut_in.interrupted is True
+    assert reply.interrupted is None
+    assert audio_duration(reply.audio) >= 0.6
+    assert reply.latency_ms == pytest.approx(300, abs=150)
+
+
+@pytest.mark.asyncio
+async def test_speech_that_runs_past_the_callers_end_stays_one_turn():
+    connector = _AnswersOverTheCallersEnd()
+    exchange = _exchange(connector, stt_model=_StubSTT())
+
+    turns, result = await _run_after_caller(
+        exchange, connector, time.perf_counter() + 0.3
+    )
+
+    assert [t.role for t in turns] == ["user", "assistant"]
+    (reply,) = result.turns
+    assert reply.interrupted is None
+    assert audio_duration(reply.audio) >= 0.8

@@ -89,6 +89,7 @@ class _AgentUtterance:
     transcript: str = ""
     provider_transcript_parts: List[str] = field(default_factory=list)
     first_audio_at: Optional[float] = None
+    last_speech_at: Optional[float] = None
 
     # Silence since the last speech, and whether there has been any speech to
     # measure it from.
@@ -112,6 +113,7 @@ class _AgentUtterance:
         self.transcript = ""
         self.provider_transcript_parts = []
         self.first_audio_at = None
+        self.last_speech_at = None
         self.started = False
         self.trailing_silence_ms = 0.0
         self.barges = 0
@@ -222,6 +224,7 @@ class DuplexExchange:
         turns: List[Turn],
         sent_at: float,
         barges_this_conversation: int,
+        caller_uplink_ended_at: Optional[float] = None,
     ) -> DuplexExchangeResult:
         result = DuplexExchangeResult(frustrated=self.floor.frustrated)
         self.floor.reset_turn()
@@ -552,6 +555,13 @@ class DuplexExchange:
                 and not self.floor.agent_speaking
                 and not self.floor.user_uplink_active
             ):
+                if (
+                    caller_uplink_ended_at is not None
+                    and utterance.last_speech_at is not None
+                    and utterance.last_speech_at < caller_uplink_ended_at
+                ):
+                    await _restart_after_barge()
+                    return False
                 # Silence ran out with the floor uncontested: the agent
                 # finished on its own rather than being cut off.
                 await _finalize_assistant(interrupted=False)
@@ -692,6 +702,7 @@ class DuplexExchange:
                         # mid-sentence once the pauses and scheduling gaps add up
                         # to the threshold, discarding the rest of the reply.
                         utterance.trailing_silence_ms = 0.0
+                        utterance.last_speech_at = arrived_at
                         if utterance.first_audio_at is None:
                             utterance.first_audio_at = arrived_at
                         utterance.pcm.extend(event.audio)
@@ -824,9 +835,7 @@ class DuplexExchange:
             # timeout mid-reply. Not an interruption — nobody cut the agent
             # off, we stopped listening — which `_finalize_assistant` records
             # as `ended_without_agent_signal`.
-            if utterance.started and (
-                not result.turns or result.turns[-1].role != "assistant"
-            ):
+            if utterance.started:
                 await _finalize_assistant(interrupted=False)
 
         result.frustrated = self.floor.frustrated or result.frustrated
