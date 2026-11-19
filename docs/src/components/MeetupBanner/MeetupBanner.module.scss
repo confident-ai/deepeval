@@ -1,5 +1,6 @@
-// Inverse of the page: dark bar in light mode, light bar in dark mode.
-// The site has no accent colour, so the primary pair gives the most contrast.
+// Dark bar in light mode, light bar in dark mode. The site has no brand
+// colour and --color-fd-accent is a low-contrast tint, so the primary pair
+// gives the most contrast.
 .banner {
   padding-inline: 3rem;
   background-color: var(--color-fd-primary);
@@ -17,7 +18,8 @@
   }
 }
 
-// Homepage: scroll away with the page instead of sticking over the home nav.
+// Shell placement: overrides Banner's sticky so the bar scrolls away instead
+// of covering the sticky top nav.
 .static {
   position: relative;
 }
@@ -28,7 +30,8 @@
   text-underline-offset: 3px;
 }
 
-// Phones: keep the bar on one line.
+// Phones: shorter text and padding so the bar fits on one line in its fixed
+// height down to about 340px.
 @media (max-width: 480px) {
   .banner {
     padding-inline: 2.25rem;
@@ -38,4 +41,20 @@
   .wideOnly {
     display: none;
   }
+}
+
+// Which bar shows, decided before first paint by the <html> class that
+// meetupEndedScript adds. Ids match MEETUP_BANNER_ID and the JevEval banner.
+:global(html.sf-meetup-ended #sf-meetup-2026-11-20),
+:global(html:not(.sf-meetup-ended) #docs-announcement) {
+  display: none;
+}
+
+// Both Banners set --fd-banner-height: 30px while their own bar is not
+// dismissed. Zero it when the bar on screen was dismissed, so the hidden
+// bar's rule cannot leave a gap. html + two classes beats fumadocs'
+// `:root:not(.nd-banner-<id>)`.
+:global(html:not(.sf-meetup-ended).nd-banner-sf-meetup-2026-11-20),
+:global(html.sf-meetup-ended.nd-banner-docs-announcement) {
+  --fd-banner-height: 0px;
 }
