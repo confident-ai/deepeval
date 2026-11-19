@@ -359,6 +359,7 @@ class GEval(BaseMetric):
             weighted_score_fn=partial(
                 calculate_weighted_summed_score,
                 score_max=self.score_range[1],
+                score_min=self.score_range[0],
             ),
         )
 
@@ -380,6 +381,7 @@ class GEval(BaseMetric):
             weighted_score_fn=partial(
                 calculate_weighted_summed_score,
                 score_max=self.score_range[1],
+                score_min=self.score_range[0],
             ),
         )
 
