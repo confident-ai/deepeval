@@ -1,0 +1,55 @@
+---
+id: nace
+title: Nace (Drex)
+sidebar_label: Nace
+languages: [python]
+---
+
+[Nace](https://nace.ai)'s [Drex](https://console.nace.ai/docs/drex) decision models answer the bounded questions (yes/no, a rating, one option from a set) that `deepeval` metrics ask under the `hybrid` and `system_one` [eval modes](/docs/evaluation-eval-modes), and for [`JevEval`](/docs/metrics-jev-eval). Nace serves them through the same Decisions API as [OpenAI's decision model](/integrations/models/openai#as-a-decision-model), so `NaceModel` needs no extra SDK.
+
+### As a Decision Model
+
+Provide your `NACE_API_KEY`:
+
+```bash
+export NACE_API_KEY=<your-nace-api-key>
+```
+
+Then define a `NaceModel` and pass it as the metric's `system_one_model`:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import NaceModel
+
+model = NaceModel(model="drex-max-v1.1")
+answer_relevancy = AnswerRelevancyMetric(
+    system_one_model=model,
+    eval_mode="system_one",
+)
+```
+
+There are **ZERO** mandatory and **FOUR** optional parameters when creating a `NaceModel`:
+
+- [Optional] `model`: A string specifying which Drex model to use: `drex-max-v1.1`, `drex-max-finance` or `drex-v2.0`. Defaults to `NACE_MODEL_NAME` if not passed; falls back to `drex-max-v1.1` if unset.
+- [Optional] `api_key`: A string specifying your Nace API key. Defaults to `NACE_API_KEY` if not passed; raises an error if unset.
+- [Optional] `base_url`: A string specifying the base URL for the Nace API. Defaults to `https://console.nace.ai/v1`.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token. Defaults to `NACE_COST_PER_INPUT_TOKEN` if not passed; falls back to Nace's price of $0.03 per 1M input tokens. Drex does not charge for output tokens.
+
+A question the model refuses to answer raises an error, so under `hybrid` that decision falls back to the LLM.
+
+### As The Default Decision Model
+
+To have every metric decide with Drex without passing `system_one_model`, choose Nace as the System One provider:
+
+```bash
+export DEEPEVAL_DECISION_PROVIDER=nace
+```
+
+Or save it with `deepeval`'s CLI, which accepts `--model` and `--cost-per-input-token` too. `deepeval unset-nace` (or `deepeval set-typesafe`) switches back to Jev:
+
+```bash
+deepeval set-nace --prompt-api-key --save=dotenv
+deepeval set-eval-mode system_one --save=dotenv
+```
+
+A Drex model name passed as `system_one_model` (for example `system_one_model="drex-max-finance"`) picks Nace whatever `DEEPEVAL_DECISION_PROVIDER` says.
