@@ -323,6 +323,7 @@ async def test_a_turn_we_stopped_listening_to_says_only_what_was_heard():
         "intended_content": "I need your order number before I can look "
         "into this.",
         "ended_without_agent_signal": True,
+        "transcript_source": "transcription",
     }
     assert audio_duration(turn.audio) == pytest.approx(0.4, abs=0.05)
 

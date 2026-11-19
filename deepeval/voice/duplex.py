@@ -19,6 +19,11 @@ from deepeval.voice.interruption import (
     should_poll_judge,
 )
 from deepeval.voice.timeline import audio_duration
+from deepeval.voice.transcript_source import (
+    TRANSCRIPT_FROM_AGENT,
+    TRANSCRIPT_FROM_STT,
+    transcript_source_metadata,
+)
 from deepeval.simulator.interrupt_template import SimulatorInterruptTemplate
 from deepeval.simulator.schema import InterruptDecision
 
@@ -422,6 +427,7 @@ class DuplexExchange:
             *, interrupted: bool, content: Optional[str] = None
         ) -> None:
             text = content if content is not None else utterance.transcript
+            source = TRANSCRIPT_FROM_AGENT if text else None
             spoken_pcm = bytes(utterance.pcm)
             has_audio = len(spoken_pcm) > 0
             audio = (
@@ -463,6 +469,7 @@ class DuplexExchange:
                     if unfinished:
                         metadata["ended_without_agent_signal"] = True
                 text = spoken
+                source = TRANSCRIPT_FROM_STT
             elif (
                 has_audio
                 and not connector_transcript_seen
@@ -471,7 +478,9 @@ class DuplexExchange:
                 spoken, stt_cost = await self.stt_model.a_transcribe(audio)
                 if stt_cost is not None:
                     result.stt_cost += stt_cost
-                text = spoken or text
+                if spoken:
+                    text = spoken
+                    source = TRANSCRIPT_FROM_STT
             latency_ms = (
                 max(0.0, (utterance.first_audio_at - utterance.sent_at))
                 * 1000.0
@@ -487,7 +496,7 @@ class DuplexExchange:
                 provider_transcript=(
                     " ".join(utterance.provider_transcript_parts) or None
                 ),
-                metadata=metadata,
+                metadata=transcript_source_metadata(source, metadata),
             )
             # Place the reply where it began rather than at the end: a barge is
             # appended the moment it fires, so appending here would record the

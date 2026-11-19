@@ -40,6 +40,11 @@ from deepeval.metrics.utils import MULTIMODAL_SUPPORTED_MODELS
 from deepeval.simulator.schema import (
     SimulatedInput,
 )
+from deepeval.voice.transcript_source import (
+    TRANSCRIPT_FROM_AGENT,
+    TRANSCRIPT_FROM_STT,
+    transcript_source_metadata,
+)
 from deepeval.simulator.controller.controller import (
     SimulationController,
     expected_outcome_controller,
@@ -1483,12 +1488,18 @@ class ConversationSimulator:
         # events are often spurious when the next user turn arrives while
         # the previous reply is still playing server-side.
         replied = has_audio or bool(conn_turn.transcript)
+        source = (
+            TRANSCRIPT_FROM_AGENT
+            if conn_turn.transcript
+            else TRANSCRIPT_FROM_STT if has_audio else None
+        )
         return Turn(
             role="assistant",
             content=agent_text,
             audio=conn_turn.audio if replied else None,
             latency_ms=conn_turn.latency_ms if replied else None,
             provider_transcript=conn_turn.provider_transcript,
+            metadata=transcript_source_metadata(source),
         )
 
     async def _voice_duplex_exchange(
@@ -1557,7 +1568,9 @@ class ConversationSimulator:
         audio = _pcm_to_audio(bytes(backlog.pcm[: backlog.speech_len]), rate)
         audio.start_time = max(0.0, backlog.voiced_at - call_started_at)
         text = backlog.transcript
+        source = TRANSCRIPT_FROM_AGENT
         if not text:
+            source = TRANSCRIPT_FROM_STT
             voice = self._voice
             text, stt_cost = await voice.stt_model.a_transcribe(
                 audio, **self._stt_kwargs(session)
@@ -1573,7 +1586,13 @@ class ConversationSimulator:
             )
             return True
         turns.insert(
-            index, Turn(role="assistant", content=text or "", audio=audio)
+            index,
+            Turn(
+                role="assistant",
+                content=text or "",
+                audio=audio,
+                metadata=transcript_source_metadata(source),
+            ),
         )
         return True
 
