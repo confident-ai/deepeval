@@ -40,7 +40,11 @@ from deepeval.models.stt import (
     ElevenLabsSTTModel,
     OpenAISTTModel,
 )
-from deepeval.models.system_one import OpenAIDecisionModel, TypeSafeModel
+from deepeval.models.system_one import (
+    NaceModel,
+    OpenAIDecisionModel,
+    TypeSafeModel,
+)
 
 __all__ = [
     "DeepEvalBaseModel",
@@ -51,6 +55,7 @@ __all__ = [
     "DeepEvalBaseSystemOneModel",
     "TypeSafeModel",
     "OpenAIDecisionModel",
+    "NaceModel",
     "OpenAIModel",
     "AzureOpenAIModel",
     "LocalModel",
