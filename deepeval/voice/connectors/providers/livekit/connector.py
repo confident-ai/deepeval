@@ -62,9 +62,13 @@ class AgentState(str, Enum):
 _BUSY_AGENT_STATES = frozenset({AgentState.THINKING, AgentState.SPEAKING})
 
 
+_DTMF_DIGIT_INTERVAL_S = 0.15
+
+
 class LiveKitConnector(BaseVoiceConnector):
 
     protocol: ClassVar[VoiceProtocol] = VoiceProtocol.WEBRTC
+    keypad_signal = True
 
     def __init__(
         self,
@@ -852,6 +856,19 @@ class LiveKitConnector(BaseVoiceConnector):
             encoding="wav",
             duration=duration,
         )
+
+    async def send_dtmf(self, digits: str) -> None:
+        """Publish each digit as a DTMF packet; LiveKit SIP sends it on as
+        RFC 4733 telephone-event, and room agents get `sip_dtmf_received`."""
+        from deepeval.voice.keypad import DTMF_CODES
+
+        if self._room is None:
+            raise DeepEvalError("LiveKitConnector is not connected.")
+        for digit in digits:
+            await self._room.local_participant.publish_dtmf(
+                code=DTMF_CODES[digit], digit=digit
+            )
+            await asyncio.sleep(_DTMF_DIGIT_INTERVAL_S)
 
     async def disconnect(self) -> None:
         self._end_call()

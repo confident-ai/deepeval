@@ -80,6 +80,9 @@ class VoiceConfig:
     combine_audio_files: bool = True
     record_call: bool = False
     interruption_settings: Optional[InterruptionBehavior] = None
+    # The agent accepts keypad (DTMF) input: the simulated caller may press
+    # keys instead of speaking when the agent asks for keypad entry.
+    keypad_input: bool = False
 
     def __post_init__(self) -> None:
         # A factory can only be checked by calling it, which belongs in

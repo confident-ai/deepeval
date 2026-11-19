@@ -28,6 +28,39 @@ class SimulationTemplate:
         return block.replace("\n", "\n" + " " * indent)
 
     @staticmethod
+    def decide_keypad(golden: ConversationalGolden, turns: List[Turn]) -> str:
+        previous_conversation = serialize_turns_for_prompt(turns)
+        return textwrap.dedent(f"""
+            You are deciding whether a simulated phone caller presses keys on
+            their keypad instead of speaking their next reply.
+
+            Guidelines:
+            1. Press keys only when the assistant's last reply asks for keypad
+               entry ("enter", "type", "press", "use your keypad"), or the
+               scenario says the caller enters something on the keypad now.
+            2. Use only digits 0-9, * and #. Add a trailing # only when the
+               assistant asks for it.
+            3. Take the digits from the scenario or persona, never invent them.
+            4. Otherwise the caller speaks: return null.
+
+            IMPORTANT: The output must be a JSON object with a single key
+            `keypad`, whose value is the digits pressed or null.
+
+            Example: {{"keypad": "8670940983#"}}
+
+            Scenario:
+            {golden.scenario}
+
+            Persona:
+            {golden.user_description}
+
+            Previous Conversation:
+            {previous_conversation}
+
+            JSON:
+            """)
+
+    @staticmethod
     def simulate_first_user_turn(
         golden: ConversationalGolden, language: str
     ) -> str:
@@ -72,8 +105,7 @@ class SimulationTemplate:
         language: str,
     ) -> str:
         previous_conversation = serialize_turns_for_prompt(turns)
-        prompt = textwrap.dedent(
-            f"""
+        prompt = textwrap.dedent(f"""
             Pretend you are a user of an LLM app. Your task is to generate the next user input in {language} 
             based on the provided scenario, persona, and the previous conversation.
 
@@ -111,6 +143,5 @@ class SimulationTemplate:
             {previous_conversation}
 
             JSON Output:
-        """
-        )
+        """)
         return prompt

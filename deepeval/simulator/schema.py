@@ -1,6 +1,6 @@
 from typing import Optional
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ConversationCompletion(BaseModel):
@@ -10,6 +10,10 @@ class ConversationCompletion(BaseModel):
 
 class SimulatedInput(BaseModel):
     simulated_input: str
+
+
+class KeypadInput(BaseModel):
+    keypad: Optional[str] = Field(None, pattern=r"^[0-9*#]+$")
 
 
 class EdgeChoice(BaseModel):
