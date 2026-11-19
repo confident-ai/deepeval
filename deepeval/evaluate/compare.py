@@ -170,6 +170,7 @@ async def a_execute_arena_test_cases(
                 if verbose_mode is not None
                 else metric.verbose_mode
             ),
+            evaluation_template=metric.evaluation_template,
         )
 
         start_time = time.perf_counter()
@@ -263,6 +264,7 @@ def execute_arena_test_cases(
                     if verbose_mode is not None
                     else metric.verbose_mode
                 ),
+                evaluation_template=metric.evaluation_template,
             )
 
             start_time = time.perf_counter()
