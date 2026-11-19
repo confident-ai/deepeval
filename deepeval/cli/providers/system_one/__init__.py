@@ -1,3 +1,3 @@
 """System One (typed decision) provider commands."""
 
-from deepeval.cli.providers.system_one import typesafe  # noqa: F401
+from deepeval.cli.providers.system_one import nace, typesafe  # noqa: F401

@@ -23,10 +23,11 @@ class NaceModel(OpenAIDecisionModel):
         cost_per_input_token: Optional[float] = None,
         **kwargs,
     ):
+        settings = get_settings()
         if api_key is None:
             # Read here so the parent never falls back to OPENAI_API_KEY.
             api_key = require_secret_api_key(
-                get_settings().NACE_API_KEY,
+                settings.NACE_API_KEY,
                 provider_label="Nace",
                 env_var_name="NACE_API_KEY",
                 param_hint="`api_key` to NaceModel(...)",
@@ -38,13 +39,13 @@ class NaceModel(OpenAIDecisionModel):
             **(kwargs.get("default_headers") or {}),
         }
         super().__init__(
-            model=model or DEFAULT_NACE_MODEL,
+            model=model or settings.NACE_MODEL_NAME or DEFAULT_NACE_MODEL,
             api_key=api_key,
             base_url=base_url or NACE_BASE_URL,
             cost_per_input_token=(
-                DREX_INPUT_PRICE
-                if cost_per_input_token is None
-                else cost_per_input_token
+                cost_per_input_token
+                if cost_per_input_token is not None
+                else settings.NACE_COST_PER_INPUT_TOKEN or DREX_INPUT_PRICE
             ),
             **kwargs,
         )
