@@ -4,6 +4,7 @@ import os
 import time
 from typing import List
 from rich.console import Console, Group
+from rich.markup import escape
 from rich.table import Table
 from rich.panel import Panel
 from rich.tree import Tree
@@ -190,14 +191,14 @@ class EvaluationConsoleReport:
                     summary_parts.append(
                         f"{len(classifications)} classifications"
                     )
-                summary_text = f"[{status_color} bold]{status_icon} {case.name} ({', '.join(summary_parts)})[/{status_color} bold]"
+                summary_text = f"[{status_color} bold]{status_icon} {escape(case.name)} ({', '.join(summary_parts)})[/{status_color} bold]"
                 renderables.append(
                     Panel(summary_text, border_style=status_color, expand=True)
                 )
                 continue
 
             content_tree = Tree(
-                f"[{status_color} bold]{status_icon} {case.name}[/{status_color} bold]"
+                f"[{status_color} bold]{status_icon} {escape(case.name)}[/{status_color} bold]"
             )
 
             if case.conversational:
@@ -206,17 +207,19 @@ class EvaluationConsoleReport:
                 )
                 for turn in case.turns:
                     convo_tree.add(
-                        f"[bold]{turn.role.capitalize()}:[/bold] {turn.content}"
+                        f"[bold]{turn.role.capitalize()}:[/bold] {escape(turn.content)}"
                     )
             else:
                 data_table = Table(show_header=False, box=None, padding=(0, 2))
                 data_table.add_column("Key", style="bold cyan")
                 data_table.add_column("Value")
-                data_table.add_row("Input:", str(case.input))
-                data_table.add_row("Actual Output:", str(case.actual_output))
+                data_table.add_row("Input:", escape(str(case.input)))
+                data_table.add_row(
+                    "Actual Output:", escape(str(case.actual_output))
+                )
                 if case.expected_output and case.expected_output != "N/A":
                     data_table.add_row(
-                        "Expected Output:", str(case.expected_output)
+                        "Expected Output:", escape(str(case.expected_output))
                     )
                 content_tree.add(data_table)
 
@@ -259,7 +262,11 @@ class EvaluationConsoleReport:
                         reason_str = reason_str[:47] + "..."
 
                     metrics_table.add_row(
-                        m_icon, m.name, score_str, thresh_str, reason_str
+                        m_icon,
+                        escape(m.name),
+                        score_str,
+                        thresh_str,
+                        escape(reason_str),
                     )
 
                 content_tree.add(metrics_table)
@@ -284,14 +291,14 @@ class EvaluationConsoleReport:
                         reason_str = reason_str[:47] + "..."
                     classifiers_table.add_row(
                         _classification_status(c),
-                        c.name,
-                        _classification_label(c),
+                        escape(c.name),
+                        escape(_classification_label(c)),
                         (
-                            str(c.expected_label)
+                            escape(str(c.expected_label))
                             if c.expected_label is not None
                             else "N/A"
                         ),
-                        reason_str,
+                        escape(reason_str),
                     )
 
                 content_tree.add(classifiers_table)
@@ -381,7 +388,10 @@ class EvaluationConsoleReport:
                 )
                 pass_rate = _format_pass_rate(agg)
                 agg_table.add_row(
-                    metric_name, avg_score, pass_rate, str(agg["total"])
+                    escape(metric_name),
+                    avg_score,
+                    pass_rate,
+                    str(agg["total"]),
                 )
 
             renderables.append(
@@ -405,8 +415,8 @@ class EvaluationConsoleReport:
 
             for name, agg in classifier_aggregates.items():
                 cls_table.add_row(
-                    name,
-                    _format_label_distribution(agg["labels"]),
+                    escape(name),
+                    escape(_format_label_distribution(agg["labels"])),
                     _format_classifier_pass_rate(agg),
                     str(agg["errors"]),
                     str(agg["total"]),

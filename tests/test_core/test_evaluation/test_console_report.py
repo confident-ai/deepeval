@@ -253,3 +253,89 @@ def test_display_option_passing_all_hidden_shows_all_failed_note():
 
     assert "failing_case" not in text
     assert "All 1 test case failed — no passing test cases to display." in text
+
+
+def _make_metric_with_reason(reason: str) -> MetricData:
+    return MetricData(
+        name="Exact Match",
+        score=0.0,
+        threshold=0.5,
+        reason=reason,
+        success=False,
+        strictMode=False,
+        evaluationModel=None,
+        error=None,
+        evaluationCost=None,
+        verboseLogs=None,
+    )
+
+
+def test_markup_like_test_data_does_not_crash_report():
+    report = EvaluationConsoleReport(
+        [
+            EvalTestResult(
+                name="markup_case",
+                success=False,
+                input="<s>[INST] hi [/INST]",
+                actual_output="out",
+                conversational=False,
+                metrics_data=[_make_metric_with_reason("saw [/INST] token")],
+                turns=None,
+            )
+        ]
+    )
+
+    text = _render_text(report, truncate=False)
+
+    assert "<s>[INST] hi [/INST]" in text
+    assert "saw [/INST] token" in text
+
+
+def test_markup_like_test_data_is_rendered_literally():
+    report = EvaluationConsoleReport(
+        [
+            EvalTestResult(
+                name="case [bold]1[/bold]",
+                success=False,
+                input="keep [red]x[/red] literal",
+                actual_output="[green]out[/green]",
+                expected_output="[blue]exp[/blue]",
+                conversational=False,
+                metrics_data=[_make_metric_with_reason("why [red]x[/red]")],
+                turns=None,
+            )
+        ]
+    )
+
+    text = _render_text(report, truncate=False)
+
+    assert "case [bold]1[/bold]" in text
+    assert "keep [red]x[/red] literal" in text
+    assert "[green]out[/green]" in text
+    assert "[blue]exp[/blue]" in text
+    assert "why [red]x[/red]" in text
+
+
+def test_markup_like_turn_content_is_rendered_literally():
+    from deepeval.test_run.api import TurnApi
+
+    report = EvaluationConsoleReport(
+        [
+            EvalTestResult(
+                name="convo",
+                success=False,
+                input=None,
+                conversational=True,
+                metrics_data=[_make_metric_with_reason("r")],
+                turns=[
+                    TurnApi(order=0, role="user", content="[/INST] hi"),
+                    TurnApi(order=1, role="assistant", content="[red]x[/red]"),
+                ],
+            )
+        ]
+    )
+
+    text = _render_text(report, truncate=False)
+
+    assert "[/INST] hi" in text
+    assert "[red]x[/red]" in text

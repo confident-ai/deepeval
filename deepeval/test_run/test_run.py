@@ -7,6 +7,7 @@ from typing import Any, Optional, List, Dict, Union, Tuple
 import sys
 from rich.table import Table
 from rich.console import Console
+from rich.markup import escape
 from rich import print
 
 
@@ -768,7 +769,7 @@ class TestRunManager:
             pass_count, fail_count, flaky_pass_count, flaky_fail_count
         )
         table.add_row(
-            test_case_name,
+            escape(test_case_name),
             *[""] * 3,
             rate_str,
         )
@@ -781,7 +782,7 @@ class TestRunManager:
 
             table.add_row(
                 "",
-                str(metric_data.name),
+                escape(str(metric_data.name)),
                 formatted_score,
                 status,
                 "",
@@ -842,7 +843,7 @@ class TestRunManager:
 
             if conversational_test_case.turns:
                 turns_table = Table(
-                    title=f"Conversation - {conversational_test_case_name}",
+                    title=f"Conversation - {escape(conversational_test_case_name)}",
                     show_header=True,
                     header_style="bold",
                 )
@@ -889,14 +890,14 @@ class TestRunManager:
                     turns_table.add_row(
                         str(t.order),
                         t.role,
-                        details,
-                        shorten(tool_names, len_short()),
+                        escape(details),
+                        escape(shorten(tool_names, len_short())),
                     )
 
                 console.print(turns_table)
             else:
                 console.print(
-                    f"[dim]No turns recorded for {conversational_test_case_name}.[/dim]"
+                    f"[dim]No turns recorded for {escape(conversational_test_case_name)}.[/dim]"
                 )
             if conversational_test_case.metrics_data is not None:
                 pass_count, fail_count, flaky_pass_count, flaky_fail_count = (
@@ -1294,7 +1295,9 @@ class TestRunManager:
         def format_string(
             v, default="[dim]None[/dim]", color: Optional[str] = None
         ):
-            formatted_string = str(v) if v not in (None, "", []) else default
+            formatted_string = (
+                escape(str(v)) if v not in (None, "", []) else default
+            )
             return (
                 f"{formatted_string}"
                 if color is None or v in (None, "", [])
@@ -1338,7 +1341,7 @@ class TestRunManager:
                 lines.extend(settings_lines)
             title = f"{format_string(prompt.alias)}"
             if prompt.hash:
-                title += f" ({prompt.hash})"
+                title += f" ({escape(prompt.hash)})"
             body = "\n".join(lines)
             panel = Panel(
                 body,
