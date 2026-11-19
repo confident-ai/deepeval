@@ -8,6 +8,13 @@
     "metrics-agent-responsiveness",
     "metrics-audio-integrity",
     "metrics-audio-glitch",
+    "metrics-audio-dropout",
+    "metrics-audio-clipping",
+    "metrics-audio-loop",
+    "metrics-abrupt-cut-off",
+    "metrics-held-tone",
+    "metrics-dead-stream",
+    "metrics-echo",
     "metrics-voice-reliability",
     "metrics-transcription-accuracy"
   ]

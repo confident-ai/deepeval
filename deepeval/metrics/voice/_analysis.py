@@ -15,7 +15,20 @@ from deepeval.voice.connectors import audio_utils
 DROPOUT_MAX_FRAMES = 10
 DROPOUT_FLOOR_RATIO = 0.1
 MIN_PAUSE_FLOOR_RMS = 8.0
+# With no pause noise to compare against, a dropout is a near-zero run whose
+# edges stay near speech level; on real TTS, natural pauses fade to <= 0.012.
+DROPOUT_NEAR_ZERO_SAMPLE = 8
+DROPOUT_MIN_MS = 10
+DROPOUT_EDGE_MS = 5
+DROPOUT_CONTEXT_MS = 60
+DROPOUT_EDGE_RATIO = 0.25
 CLIPPING_ABS_SAMPLE = 32760
+# Whitened autocorrelation: on real TTS, clean replies peak at <= 0.0099 and
+# echoes at >= 20% of the reply's level at >= 0.0179.
+ECHO_MIN_DELAY_S = 0.06
+ECHO_MAX_DELAY_S = 0.5
+ECHO_WHITENING = 0.75
+ECHO_MIN_STRENGTH = 0.015
 
 # Lazy import cache
 _numpy_mod = None
@@ -203,6 +216,66 @@ def pitch_and_periodicity(
     return rate / (best_lag + offset), best
 
 
+def _hard_edged_gaps(samples: Sequence[int], sample_rate: int) -> int:
+    np = get_numpy()
+    values = np.asarray(samples).astype(np.int64)
+    quiet = np.abs(values) <= DROPOUT_NEAR_ZERO_SAMPLE
+    changes = np.diff(np.concatenate(([0], quiet.astype(np.int8), [0])))
+    starts = np.flatnonzero(changes == 1)
+    ends = np.flatnonzero(changes == -1)
+    min_length = sample_rate * DROPOUT_MIN_MS // 1000
+    max_length = sample_rate * DROPOUT_MAX_FRAMES * 20 // 1000
+    edge = max(1, sample_rate * DROPOUT_EDGE_MS // 1000)
+    context = max(1, sample_rate * DROPOUT_CONTEXT_MS // 1000)
+
+    def level(start: int, end: int) -> float:
+        window = values[start:end]
+        return math.sqrt(int(window @ window) / len(window))
+
+    count = 0
+    for start, end in zip(starts.tolist(), ends.tolist()):
+        if not (
+            min_length <= end - start <= max_length
+            and start >= context
+            and end + context <= len(values)
+        ):
+            continue
+        before = level(start - context, start)
+        after = level(end, end + context)
+        if (
+            min(before, after) >= audio_utils.DEFAULT_SILENCE_RMS
+            and level(start - edge, start) >= DROPOUT_EDGE_RATIO * before
+            and level(end, end + edge) >= DROPOUT_EDGE_RATIO * after
+        ):
+            count += 1
+    return count
+
+
+def echo_delay_and_strength(audio: Audio) -> Tuple[float, float]:
+    samples, sample_rate = decode_audio(audio)
+    np = get_numpy()
+    step = max(1, sample_rate // 8000)
+    rate = sample_rate / step
+    values = np.asarray(samples[::step], dtype=np.float64)
+    values -= values.mean()
+    min_lag = int(ECHO_MIN_DELAY_S * rate)
+    max_lag = min(len(values), int(ECHO_MAX_DELAY_S * rate))
+    if max_lag <= min_lag:
+        return 0.0, 0.0
+    size = 1 << int(math.ceil(math.log2(2 * len(values))))
+    spectrum = np.fft.rfft(values, size)
+    magnitude = np.abs(spectrum)
+    whitened = magnitude**2 / np.maximum(magnitude, 1e-9) ** (
+        2 * ECHO_WHITENING
+    )
+    correlation = np.fft.irfft(whitened, size)
+    if correlation[0] <= 0:
+        return 0.0, 0.0
+    candidates = correlation[min_lag:max_lag] / correlation[0]
+    best = int(candidates.argmax())
+    return (min_lag + best) / rate, float(candidates[best])
+
+
 def analyze_audio(audio: Audio) -> AudioMeasurements:
     samples, sample_rate = decode_audio(audio)
     frames = frame_samples(samples, sample_rate)
@@ -240,6 +313,8 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
             and min(frame_rms[start:index]) <= DROPOUT_FLOOR_RATIO * pause_floor
         ):
             dropout_events += 1
+    if pause_floor < MIN_PAUSE_FLOOR_RMS:
+        dropout_events = _hard_edged_gaps(samples, sample_rate)
 
     voiced_rms = [
         value
