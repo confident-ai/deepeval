@@ -32,6 +32,11 @@ def _reject_multimodal_without_llm(metric, model: Optional[DeepEvalBaseLLM]):
         )
 
 
+def system_one_reads_images(metric) -> bool:
+    system_one_model = getattr(metric, "system_one_model", None)
+    return bool(system_one_model and system_one_model.supports_multimodal())
+
+
 def _check_audio_model(metric, model: Optional[DeepEvalBaseLLM], audio: bool):
     # Fail before any request when the judge can't take what the metric sends.
     if audio:
@@ -61,7 +66,7 @@ def check_conversational_test_case_params(
 ):
     _check_audio_model(metric, model, audio)
 
-    if multimodal:
+    if multimodal and not (model is None and system_one_reads_images(metric)):
         _reject_multimodal_without_llm(metric, model)
         if not model or not model.supports_multimodal():
             if model and type(model) in MULTIMODAL_SUPPORTED_MODELS.keys():
@@ -178,7 +183,7 @@ def check_llm_test_case_params(
     model: Optional[DeepEvalBaseLLM] = None,
     multimodal: Optional[bool] = False,
 ):
-    if multimodal:
+    if multimodal and not (model is None and system_one_reads_images(metric)):
         _reject_multimodal_without_llm(metric, model)
         if not model or not model.supports_multimodal():
             if model and type(model) in MULTIMODAL_SUPPORTED_MODELS.keys():

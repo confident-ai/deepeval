@@ -229,7 +229,7 @@ Nothing falls back to the LLM in this mode:
 
 - **Test case too large** (over 32k tokens of test case plus question, or 64k for the whole request): caught before sending, and raises an error telling you to switch the metric back to `llm`.
 - **Any other Jev error** (rate limit after retries, rejected key, network error): raised as-is.
-- **Multimodal test cases**: raise up front, since Jev evaluates text.
+- **Multimodal test cases**: raise up front, since Jev evaluates text<Only id="python">. A decision model that reads images, such as [`OpenAIDecisionModel`](/integrations/models/openai#as-a-decision-model), judges them with their images</Only>.
   :::
 
 :::info
