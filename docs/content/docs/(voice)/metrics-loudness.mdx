@@ -1,0 +1,137 @@
+---
+id: metrics-loudness
+title: Loudness
+sidebar_label: Loudness
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The loudness metric checks whether your voice agent **speaks too quietly or too loudly**, for example so quietly that the caller has to turn the volume up. It returns the share of agent replies whose speech level falls inside an accepted range, between 0 and 1.
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import LoudnessMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = LoudnessMetric(threshold=0.8, min_dbfs=-32, max_dbfs=-6)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **SEVEN** optional parameters when creating a `LoudnessMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `min_dbfs`: an integer for the quietest speech level, in dBFS, that a reply may have. Defaulted to `-32`.
+- [Optional] `max_dbfs`: an integer for the loudest speech level, in dBFS, that a reply may have. Must be above `min_dbfs` and no higher than `0`. Defaulted to `-6`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+`score_breakdown` lists the replies where the issue was found:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.75
+print(metric.score_breakdown)
+```
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 1,
+    "events": [{"type": "too_quiet", "turn": 3, "speech_dbfs": -37.5}],
+    "skipped": [],
+}
+```
+
+`turn` is the turn's zero-based position in the conversation. `type` is `too_quiet` or `too_loud`, and `speech_dbfs` is the reply's speech level. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
+
+## How Is It Calculated?
+
+`LoudnessMetric` checks every agent reply that has audio and scores the share of them without the issue:
+
+<Equation formula="\text{Loudness} = \frac{\text{Agent replies with speech between min\_dbfs and max\_dbfs}}{\text{Agent replies with decodable audio}}" />
+
+Each reply is cut into 20 ms frames, and its **speech level** is the 90th percentile of the frames loud enough to be speech. Pauses are left out, so a reply with long silences is not mistaken for a quiet one. dBFS is decibels below the loudest level digital audio can hold, so 0 is the maximum and speech sits at negative values.
+
+The defaults come from telephone audio. Normal phone speech sits at about −22 dBFS on this scale. **−32 dBFS** is 10 dB below that, which sounds about half as loud, and **−6 dBFS** leaves under 6 dB of room before the loudest syllables clip.
+
+A reply that is too loud and also distorted counts here and in [Audio Clipping](/docs/metrics-audio-clipping): the level and the distortion are separate problems.
+
+If no agent reply has decodable audio, the metric is skipped.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from speech intelligibility?",
+      answer: (
+        <>
+          <a href="/docs/metrics-speech-intelligibility">
+            SpeechIntelligibilityMetric
+          </a>{" "}
+          blends the whole clip's volume, pauses included, with noise, clipping
+          and dropouts. This metric looks only at the speech, and tells you
+          whether it was too quiet or too loud.
+        </>
+      ),
+    },
+    {
+      question: "When should I change the limits?",
+      answer: (
+        <>
+          If your agent's audio is normalized to a known level, narrow the
+          range around it, for example <code>min_dbfs=-26, max_dbfs=-10</code>,
+          to catch smaller drifts from your target.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Detection is deterministic and runs locally over the audio
+          samples, so it has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the simulated user's audio too?",
+      answer: (
+        <>
+          No. Only assistant turns are inspected. The caller's audio is produced
+          by your own TTS model, so defects there are a problem with the test
+          harness rather than with the agent under test.
+        </>
+      ),
+    },
+  ]}
+/>

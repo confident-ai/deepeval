@@ -55,6 +55,9 @@ def defect_share_result(
     defects: List[Dict],
     skipped: List[Dict],
     defect_label: str,
+    no_eligible_reason: str = (
+        "No decodable assistant audio was available to evaluate."
+    ),
 ) -> VoiceMetricResult:
     defective_turns = {defect["turn"] for defect in defects}
     breakdown = {
@@ -64,11 +67,7 @@ def defect_share_result(
         "skipped": skipped,
     }
     if not eligible_turns:
-        return (
-            None,
-            "No decodable assistant audio was available to evaluate.",
-            breakdown,
-        )
+        return None, no_eligible_reason, breakdown
     if not defective_turns:
         return 1.0, f"No agent reply had {defect_label}.", breakdown
     return (

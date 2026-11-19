@@ -1,3 +1,4 @@
+from deepeval.metrics.voice.background_noise import BackgroundNoiseMetric
 from deepeval.metrics.voice.clipping import AudioClippingMetric
 from deepeval.metrics.voice.consistency import VoiceConsistencyMetric
 from deepeval.metrics.voice.cutoff import AbruptCutoffMetric
@@ -8,10 +9,12 @@ from deepeval.metrics.voice.held_tone import HeldToneMetric
 from deepeval.metrics.voice.integrity import AudioIntegrityMetric
 from deepeval.metrics.voice.intelligibility import SpeechIntelligibilityMetric
 from deepeval.metrics.voice.loop import AudioLoopMetric
+from deepeval.metrics.voice.loudness import LoudnessMetric
 from deepeval.metrics.voice.naturalness import VoiceNaturalnessMetric
 from deepeval.metrics.voice.reliability import VoiceReliabilityMetric
 from deepeval.metrics.voice.responsiveness import AgentResponsivenessMetric
 from deepeval.metrics.voice.turn_taking import TurnTakingNaturalnessMetric
+from deepeval.metrics.voice.volume_variance import VolumeVarianceMetric
 
 __all__ = [
     "VoiceNaturalnessMetric",
@@ -28,4 +31,7 @@ __all__ = [
     "HeldToneMetric",
     "DeadStreamMetric",
     "EchoMetric",
+    "BackgroundNoiseMetric",
+    "LoudnessMetric",
+    "VolumeVarianceMetric",
 ]

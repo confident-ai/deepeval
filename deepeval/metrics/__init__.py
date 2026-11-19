@@ -83,14 +83,17 @@ from .voice import (
     AudioDropoutMetric,
     AudioIntegrityMetric,
     AudioLoopMetric,
+    BackgroundNoiseMetric,
     DeadStreamMetric,
     EchoMetric,
     HeldToneMetric,
+    LoudnessMetric,
     SpeechIntelligibilityMetric,
     TurnTakingNaturalnessMetric,
     VoiceConsistencyMetric,
     VoiceNaturalnessMetric,
     VoiceReliabilityMetric,
+    VolumeVarianceMetric,
 )
 
 __all__ = [
@@ -179,4 +182,7 @@ __all__ = [
     "HeldToneMetric",
     "DeadStreamMetric",
     "EchoMetric",
+    "BackgroundNoiseMetric",
+    "LoudnessMetric",
+    "VolumeVarianceMetric",
 ]

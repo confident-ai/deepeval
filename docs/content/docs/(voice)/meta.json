@@ -15,6 +15,9 @@
     "metrics-held-tone",
     "metrics-dead-stream",
     "metrics-echo",
+    "metrics-background-noise",
+    "metrics-loudness",
+    "metrics-volume-variance",
     "metrics-voice-reliability",
     "metrics-transcription-accuracy"
   ]

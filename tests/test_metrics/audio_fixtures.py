@@ -1,4 +1,5 @@
-"""Synthetic audio for the audio-glitch and audio-defect metric tests."""
+"""Synthetic audio for the audio-glitch, audio-defect and audio-level metric
+tests."""
 
 import math
 import random
@@ -126,6 +127,30 @@ def with_noise(samples: array, dbfs, *, seed=0) -> array:
     rng = random.Random(seed)
     level = 32768 * 10 ** (dbfs / 20)
     return array("h", [_saturate(v + rng.gauss(0, level)) for v in samples])
+
+
+def with_gain(samples: array, gain) -> array:
+    return array("h", [_saturate(sample * gain) for sample in samples])
+
+
+def faded(samples: array, db) -> array:
+    """Level moves by `db` across the clip, evenly in dB: a fade when
+    negative, a swell up to the original level when positive."""
+    count = len(samples)
+    return array(
+        "h",
+        [
+            _saturate(
+                sample
+                * 10
+                ** (
+                    (db * index / count if db < 0 else db * (index / count - 1))
+                    / 20
+                )
+            )
+            for index, sample in enumerate(samples)
+        ],
+    )
 
 
 def to_audio(samples: array, start_time=None) -> Audio:
