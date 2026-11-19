@@ -68,7 +68,6 @@ _DTMF_DIGIT_INTERVAL_S = 0.15
 class LiveKitConnector(BaseVoiceConnector):
 
     protocol: ClassVar[VoiceProtocol] = VoiceProtocol.WEBRTC
-    keypad_signal = True
 
     def __init__(
         self,
@@ -857,7 +856,7 @@ class LiveKitConnector(BaseVoiceConnector):
             duration=duration,
         )
 
-    async def send_dtmf(self, digits: str) -> None:
+    async def send_dtmf(self, digits: str) -> bool:
         from deepeval.voice.keypad import DTMF_CODES
 
         if self._room is None:
@@ -867,6 +866,7 @@ class LiveKitConnector(BaseVoiceConnector):
                 code=DTMF_CODES[digit], digit=digit
             )
             await asyncio.sleep(_DTMF_DIGIT_INTERVAL_S)
+        return True
 
     async def disconnect(self) -> None:
         self._end_call()

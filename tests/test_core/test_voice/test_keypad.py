@@ -97,14 +97,13 @@ class _KeypadModel(DeepEvalBaseLLM):
 
 
 class _SignallingConnector(CallbackVoiceConnector):
-    keypad_signal = True
-
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
         self.sent: List[str] = []
 
-    async def send_dtmf(self, digits: str) -> None:
+    async def send_dtmf(self, digits: str) -> bool:
         self.sent.append(digits)
+        return True
 
 
 def _simulate(connector, *, keypad_input: bool = True, digits: str = "1234#"):
@@ -182,9 +181,7 @@ def test_livekit_publishes_each_digit(monkeypatch):
     participant = MagicMock(publish_dtmf=AsyncMock())
     connector._room = MagicMock(local_participant=participant)
 
-    asyncio.run(connector.send_dtmf("9*#"))
-
-    assert LiveKitConnector.keypad_signal
+    assert asyncio.run(connector.send_dtmf("9*#"))
     assert [
         call.kwargs for call in participant.publish_dtmf.call_args_list
     ] == [

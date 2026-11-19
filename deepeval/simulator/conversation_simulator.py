@@ -1158,15 +1158,12 @@ class ConversationSimulator:
         digits: str,
         *,
         trailing_silence: bool,
-        play: bool = True,
     ) -> Tuple["Audio", float]:
         connector = session.connector
         sample_rate, _ = connector.audio_format
         audio = keypad_audio(digits, sample_rate)
         started_at = time.perf_counter()
-        if connector.keypad_signal:
-            await connector.send_dtmf(digits)
-        elif play:
+        if not await connector.send_dtmf(digits):
             await connector.stream_uplink(
                 audio, trailing_silence=trailing_silence
             )
@@ -1438,14 +1435,14 @@ class ConversationSimulator:
         everything else goes through `_voice_duplex_exchange`.
         """
         if keypad:
-            user_audio, _ = await self._press_keys(
-                session, keypad, trailing_silence=False, play=False
-            )
+            sample_rate, _ = session.connector.audio_format
+            user_audio = keypad_audio(keypad, sample_rate)
             if turns and turns[-1].role == "user":
                 turns[-1].audio = user_audio
+            signalled = await session.connector.send_dtmf(keypad)
             played = (
                 self._silence_audio(session, user_audio.duration or 0.0)
-                if session.connector.keypad_signal
+                if signalled
                 else user_audio
             )
             return await self._voice_exchange(session, played, turns)

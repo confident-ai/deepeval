@@ -99,10 +99,8 @@ class BaseVoiceConnector(ABC):
     max_turn_timeout_s: float = 30.0
     silence_threshold_rms: float = DEFAULT_SILENCE_RMS
 
-    keypad_signal: bool = False
-
-    async def send_dtmf(self, digits: str) -> None:
-        pass
+    async def send_dtmf(self, digits: str) -> bool:
+        return False
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
