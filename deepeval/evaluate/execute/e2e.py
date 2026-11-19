@@ -95,6 +95,19 @@ from deepeval.evaluate.execute._common import (
 )
 
 
+def _reset_metrics(
+    metrics: List[Union[BaseMetric, BaseConversationalMetric]],
+) -> None:
+    # The sync path reuses metric instances across test cases. Clear the
+    # previous case's result so that, on a timeout, a metric is neither taken
+    # as finished nor reported with that case's logs.
+    for metric in metrics:
+        metric.error = None
+        metric.skipped = False
+        metric.success = None
+        metric.verbose_logs = None
+
+
 def _reset_classifiers(classifiers: List[BaseClassifier]) -> None:
     for classifier in classifiers:
         classifier.error = None
@@ -251,8 +264,7 @@ def execute_test_cases(
                 def _run_case():
                     nonlocal new_cached_test_case, current_index, llm_test_case_count, conversational_test_case_count, case_classifications
                     record_test_case(test_case)
-                    for metric in metrics:
-                        metric.error = None  # Reset metric error
+                    _reset_metrics(metrics)
                     _reset_classifiers(classifiers)
 
                     if isinstance(test_case, LLMTestCase):
