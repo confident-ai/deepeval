@@ -37,6 +37,7 @@ NOISE_MIN_SECONDS = 2.0
 EDGE_ABOVE_NOISE_DB = 10.0
 VOLUME_WINDOW_SECONDS = 1.0
 VOLUME_PEAK_FRAMES = 5
+VOLUME_MIN_SPEECH_FRAMES = 15
 VOLUME_MIN_WINDOWS = 3
 
 # Lazy import cache
@@ -304,19 +305,43 @@ def _speech_and_noise_levels(frame_rms: Sequence[float]) -> Tuple[float, float]:
     )
 
 
+def _snr_from_quiet_frames(frame_rms: Sequence[float]) -> float:
+    # Too short for a pause-based noise level; keeps the earlier estimate so
+    # short clips score as they always have.
+    voiced = [
+        value
+        for value in frame_rms
+        if value > 0 and value >= audio_utils.DEFAULT_SILENCE_RMS
+    ]
+    quiet = [
+        value
+        for value in frame_rms
+        if value > 0 and value < audio_utils.DEFAULT_SILENCE_RMS
+    ]
+    speech_level = _percentile(voiced, 0.75)
+    noise_level = (
+        _percentile(quiet, 0.25) if quiet else max(1.0, speech_level / 100.0)
+    )
+    if not speech_level:
+        return 0.0
+    return 20.0 * math.log10(max(speech_level, 1.0) / max(noise_level, 1.0))
+
+
 def volume_drift_db(audio: Audio) -> Optional[float]:
     samples, sample_rate = decode_audio(audio)
     frame_rms = [rms(frame) for frame in frame_samples(samples, sample_rate)]
     per_window = int(VOLUME_WINDOW_SECONDS * 1000 / 20)
     levels = []
     for start in range(0, len(frame_rms) - per_window + 1, per_window):
-        # The loudest few frames give the window's speech level however
-        # much of it is pause; a window without that much speech is dropped.
-        loudest = sorted(frame_rms[start : start + per_window])[
-            -VOLUME_PEAK_FRAMES:
-        ]
-        if loudest[0] >= audio_utils.DEFAULT_SILENCE_RMS:
-            levels.append(dbfs(median(loudest)))
+        window = frame_rms[start : start + per_window]
+        # A window holding only a word's tail would read as a fake fade.
+        speech_frames = sum(
+            value >= audio_utils.DEFAULT_SILENCE_RMS for value in window
+        )
+        if speech_frames >= VOLUME_MIN_SPEECH_FRAMES:
+            # The loudest few frames give the speech level however much of
+            # the window is pause.
+            levels.append(dbfs(median(sorted(window)[-VOLUME_PEAK_FRAMES:])))
     if len(levels) < VOLUME_MIN_WINDOWS:
         return None
     # Median of pairwise slopes, so one odd window at a word's tail can't
@@ -370,11 +395,14 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         dropout_events = _hard_edged_gaps(samples, sample_rate)
 
     speech_level, noise_level = _speech_and_noise_levels(frame_rms)
-    snr_db = (
-        20.0 * math.log10(max(speech_level, 1.0) / max(noise_level, 1.0))
-        if speech_level
-        else 0.0
-    )
+    if len(samples) / sample_rate >= NOISE_MIN_SECONDS:
+        snr_db = (
+            20.0 * math.log10(max(speech_level, 1.0) / max(noise_level, 1.0))
+            if speech_level
+            else 0.0
+        )
+    else:
+        snr_db = _snr_from_quiet_frames(frame_rms)
 
     np = get_numpy()
     values = np.asarray(samples).astype(np.int32)

@@ -78,7 +78,7 @@ print(metric.score_breakdown)
 
 <Equation formula="\text{Volume Variance} = \frac{\text{Agent replies drifting by max\_drift\_db or less}}{\text{Agent replies with three or more seconds of speech}}" />
 
-Each reply is cut into one-second windows. A window's level is the median of its five loudest 20 ms frames, so a window that is half pause still reads at its speech level; windows without that much speech are left out. The metric fits a line through the levels with a method that ignores single outlier windows, such as the fading tail of a word, and reports the line's rise or fall from the first window to the last.
+Each reply is cut into one-second windows. A window's level is the median of its five loudest 20 ms frames, so a window that is half pause still reads at its speech level. Windows with under 0.3 seconds of speech, such as one holding only the tail of a word, are left out. The metric fits a line through the levels with a method that ignores single outlier windows, such as the fading tail of a word, and reports the line's rise or fall from the first window to the last.
 
 The default of **10 dB** is roughly the step at which a voice sounds half (or twice) as loud. Natural speech rises and falls between sentences, but on real agent replies that trend stays within about 5 dB.
 

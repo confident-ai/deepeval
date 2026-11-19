@@ -207,3 +207,20 @@ def test_a_call_of_only_short_replies_is_skipped():
     assert metric.reason == (
         "No assistant reply was long enough to follow its volume."
     )
+
+
+def test_a_reply_too_short_to_measure_noise_is_skipped():
+    metric = _measure(
+        BackgroundNoiseMetric(),
+        _with_reply(1, with_noise(agent_speech(1.5), -30)),
+    )
+    assert metric.score == 1.0
+    assert metric.score_breakdown["eligible_turns"] == 2
+    assert [entry["turn"] for entry in metric.score_breakdown["skipped"]] == [1]
+
+
+def test_short_clips_keep_the_earlier_snr_estimate():
+    clip = with_noise(agent_speech(1.5), -30)
+    # Without pauses quieter than the silence cutoff, the earlier estimate
+    # assumes 40 dB; the composite metrics keep scoring short clips that way.
+    assert analyze_audio(to_audio(clip)).estimated_snr_db == pytest.approx(40.0)

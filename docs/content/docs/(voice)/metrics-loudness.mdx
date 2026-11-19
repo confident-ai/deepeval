@@ -81,7 +81,7 @@ print(metric.score_breakdown)
 
 Each reply is cut into 20 ms frames, and its **speech level** is the 90th percentile of the frames loud enough to be speech. Pauses are left out, so a reply with long silences is not mistaken for a quiet one. dBFS is decibels below the loudest level digital audio can hold, so 0 is the maximum and speech sits at negative values.
 
-The defaults come from telephone audio. Normal phone speech sits at about −22 dBFS on this scale. **−32 dBFS** is 10 dB below that, which sounds about half as loud, and **−6 dBFS** leaves under 6 dB of room before the loudest syllables clip.
+The defaults come from telephone audio. ITU-T test speech is normalized to an active speech level of −26 dBov (ITU-T P.56), which is about −22 dBFS on this metric's scale. **−32 dBFS** is 10 dB below that, which sounds about half as loud, and **−6 dBFS** leaves under 6 dB of room before the loudest syllables clip.
 
 A reply that is too loud and also distorted counts here and in [Audio Clipping](/docs/metrics-audio-clipping): the level and the distortion are separate problems.
 

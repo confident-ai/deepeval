@@ -70,19 +70,19 @@ print(metric.score_breakdown)
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation, and `estimated_snr_db` is the reply's estimated signal-to-noise ratio. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
+`turn` is the turn's zero-based position in the conversation, and `estimated_snr_db` is the reply's estimated signal-to-noise ratio. Agent replies whose audio could not be decoded, or that are under two seconds long, are listed under `skipped`.
 
 ## How Is It Calculated?
 
-`BackgroundNoiseMetric` checks every agent reply that has audio and scores the share of them without the issue:
+`BackgroundNoiseMetric` checks every agent reply with at least two seconds of audio and scores the share of them without the issue:
 
-<Equation formula="\text{Background Noise} = \frac{\text{Agent replies at or above min\_snr\_db}}{\text{Agent replies with decodable audio}}" />
+<Equation formula="\text{Background Noise} = \frac{\text{Agent replies at or above min\_snr\_db}}{\text{Agent replies with two or more seconds of audio}}" />
 
 Each reply is cut into 20 ms frames. The **speech level** is the 90th percentile of the frames loud enough to be speech, and the **noise level** is the 10th percentile of all frames, which lands in the pauses between words. The signal-to-noise ratio is the gap between the two in dB. A reply with a ratio below `min_snr_db` has background noise.
 
-The default of **20 dB** is where noise behind speech becomes clearly audible. Clean synthetic speech usually measures above 60 dB, and noise at −45 dBFS behind normal speech measures about 30 dB.
+The default of **20 dB** sits 5 dB above the +15 dB speech-to-noise ratio that speech-intelligibility guidance treats as the minimum for clearly understood speech, so it flags noise that starts to get in the way. Produced speech, such as audiobooks, keeps its noise about 40 dB below the voice, and clean synthetic speech usually measures above 60 dB. Noise at −45 dBFS behind normal speech measures about 30 dB and passes.
 
-If no agent reply has decodable audio, the metric is skipped.
+Noise is measured in the pauses between words, and a reply under **two seconds** rarely has one, so shorter replies are skipped. If no agent reply is long enough, the metric is skipped.
 
 ## FAQs
 
