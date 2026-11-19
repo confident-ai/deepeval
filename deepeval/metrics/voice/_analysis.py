@@ -207,7 +207,7 @@ def _yin_pitch_hz(frame: Any, rate: float) -> Optional[float]:
     left, best, right = normalized[lag - 1 : lag + 2]
     curvature = left - 2 * best + right
     offset = 0.5 * (left - right) / curvature if curvature > 0 else 0.0
-    return rate / (lag + offset)
+    return float(rate / (lag + offset))
 
 
 def _pitch_stretches(track: Sequence[Optional[float]]) -> List[Tuple[int, int]]:

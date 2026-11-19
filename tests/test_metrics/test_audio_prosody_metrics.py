@@ -295,3 +295,13 @@ def test_a_reply_too_short_for_pauses_is_skipped():
     metric = _measure(PausesMetric(), turns)
     assert metric.score == 1.0
     assert [entry["turn"] for entry in metric.score_breakdown["skipped"]] == [1]
+
+
+def test_pitch_events_hold_plain_numbers():
+    turns = _with_reply(
+        1, _set_audio(speech_like(3.0, base_hz=230.0 * 2**0.5, seed=1))
+    )
+    [event] = _measure(PitchConsistencyMetric(), turns).score_breakdown[
+        "events"
+    ]
+    assert type(event["pitch_median_hz"]) is float
