@@ -5,6 +5,12 @@ sidebar_label: Eval Modes
 languages: [python, typescript]
 ---
 
+<Only id="python">
+
+Nace's [Drex](/integrations/models/nace) answers the same questions and can take Jev's place everywhere on this page: see [choosing the System One provider](#choosing-the-system-one-provider).
+
+</Only>
+
 In `deepeval`, the **eval mode** decides who judges your LLM-as-a-judge metrics<Only id="python"> and classifiers</Only>: an LLM alone, an LLM and Jev together, or Jev alone. Jev is TypeSafe AI's System One model. Instead of generating text, it answers bounded questions (yes/no, a rating on a scale, one option from a set) with calibrated probabilities.
 
 ## Quick Summary
@@ -235,6 +241,31 @@ Nothing falls back to the LLM in this mode:
 :::info
 Scores from different eval modes are not the same number: a `system_one` score comes from Jev's answers, not the LLM chain's equation. Keep a metric on one eval mode when comparing runs.
 :::
+
+<Only id="python">
+
+## Choosing The System One Provider
+
+`hybrid` and `system_one` decide with TypeSafe AI's Jev unless you choose Nace's Drex. Set `DEEPEVAL_DECISION_PROVIDER` (`typesafe`, the default, or `nace`) with the CLI or your environment:
+
+```bash
+deepeval set-nace --prompt-api-key --save=dotenv  # sets DEEPEVAL_DECISION_PROVIDER=nace
+deepeval set-eval-mode system_one --save=dotenv
+```
+
+Every metric then builds a `NaceModel` where it would have built a `TypeSafeModel`; `deepeval set-typesafe` switches back. A `system_one_model` passed to a metric always wins, so you can also mix both in one run:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric, FaithfulnessMetric
+from deepeval.models import NaceModel, TypeSafeModel
+
+metrics = [
+    FaithfulnessMetric(system_one_model=NaceModel(), eval_mode="system_one"),
+    AnswerRelevancyMetric(system_one_model=TypeSafeModel(), eval_mode="system_one"),
+]
+```
+
+</Only>
 
 ## Confidence Scores
 

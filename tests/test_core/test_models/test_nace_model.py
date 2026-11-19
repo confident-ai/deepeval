@@ -6,7 +6,8 @@ import pytest
 from deepeval._version import __version__
 from deepeval.config.settings import reset_settings
 from deepeval.errors import DeepEvalError
-from deepeval.models import NaceModel
+from deepeval.metrics.utils import initialize_system_one_model
+from deepeval.models import NaceModel, TypeSafeModel
 from deepeval.models.system_one import NoulQuestion
 
 QUESTIONS = {"q": NoulQuestion(instructions="Is the output relevant?")}
@@ -62,3 +63,45 @@ def test_never_sends_the_openai_key(monkeypatch):
     monkeypatch.setenv("NACE_API_KEY", "nace-key")
     reset_settings(reload_dotenv=False)
     assert NaceModel().load_model().api_key == "nace-key"
+
+
+def test_decision_provider_selects_nace(monkeypatch):
+    monkeypatch.setenv("DEEPEVAL_DECISION_PROVIDER", "nace")
+    monkeypatch.setenv("NACE_API_KEY", "nace-key")
+    monkeypatch.setenv("NACE_MODEL_NAME", "drex-max-finance")
+    reset_settings(reload_dotenv=False)
+
+    model = initialize_system_one_model(None, "system_one")
+
+    assert isinstance(model, NaceModel)
+    assert model.name == "drex-max-finance"
+
+
+def test_a_drex_model_name_picks_nace_whatever_the_provider(monkeypatch):
+    monkeypatch.setenv("NACE_API_KEY", "nace-key")
+    reset_settings(reload_dotenv=False)
+
+    model = initialize_system_one_model("drex-v2.0", "hybrid")
+
+    assert isinstance(model, NaceModel)
+    assert model.name == "drex-v2.0"
+
+
+def test_decision_provider_defaults_to_typesafe(monkeypatch):
+    pytest.importorskip("typesafe_sdk")
+    monkeypatch.delenv("DEEPEVAL_DECISION_PROVIDER", raising=False)
+    monkeypatch.setenv("TYPESAFE_API_KEY", "ts_test")
+    reset_settings(reload_dotenv=False)
+
+    assert isinstance(
+        initialize_system_one_model(None, "system_one"), TypeSafeModel
+    )
+
+
+def test_unusable_nace_says_how_to_configure_it(monkeypatch):
+    monkeypatch.setenv("DEEPEVAL_DECISION_PROVIDER", "nace")
+    monkeypatch.delenv("NACE_API_KEY", raising=False)
+    reset_settings(reload_dotenv=False)
+
+    with pytest.raises(DeepEvalError, match="deepeval set-nace"):
+        initialize_system_one_model(None, "hybrid")
