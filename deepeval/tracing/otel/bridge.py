@@ -340,7 +340,7 @@ class DeepEvalSpanBridge(SpanProcessor):
         _attach(trace, state, collected)
         if isinstance(collected, AgentSpan):
             _fill_agent_content(collected)
-        if not collected.tools_called:
+        if collected.tools_called is None:
             # Like ``@observe``, a span lists the tools run under it; an
             # integration's agent also lists those its intermediate steps ran.
             collected.tools_called = (
@@ -349,7 +349,7 @@ class DeepEvalSpanBridge(SpanProcessor):
                     descendants=isinstance(collected, AgentSpan)
                     and not observed,
                 )
-                or collected.tools_called
+                or None
             )
         if converted.conversation_id:
             state.conversations[uuid] = converted.conversation_id
