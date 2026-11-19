@@ -5,7 +5,10 @@ import {
   generateBinaryJudgement,
   generateChoiceJudgement,
 } from "@/metrics/system-one/decision";
-import { CONVERSATIONAL_G_EVAL_PARAMS } from "@/metrics/conversational-g-eval/utils";
+import {
+  CONVERSATIONAL_G_EVAL_PARAMS,
+  conversationLevelValue,
+} from "@/metrics/conversational-g-eval/utils";
 import {
   BinaryJudgementVerdictSchema,
   MetricScoreReasonSchema,
@@ -96,13 +99,21 @@ abstract class ConversationalBaseNode {
       isValidTurnWindow(this.turnWindow, testCase.turns);
       [start, end] = this.turnWindow;
     }
+    const turnParams = this.evaluationParams.filter(
+      (param) => param in TURN_FIELDS,
+    );
     text += "Full Conversation: \n";
     for (let index = start; index <= end; index++) {
       const turn = testCase.turns[index];
-      for (const param of this.evaluationParams) {
+      for (const param of turnParams) {
         const value = TURN_FIELDS[param]?.(turn);
         text += `${CONVERSATIONAL_G_EVAL_PARAMS[param] ?? param}:\n${formatTurnValue(value)}\n\n`;
       }
+    }
+    for (const param of this.evaluationParams) {
+      if (turnParams.includes(param)) continue;
+      const value = conversationLevelValue(testCase, param);
+      text += `${CONVERSATIONAL_G_EVAL_PARAMS[param] ?? param}:\n${formatTurnValue(value)}\n\n`;
     }
     return text;
   }
