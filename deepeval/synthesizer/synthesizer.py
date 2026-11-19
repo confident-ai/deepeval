@@ -1122,11 +1122,11 @@ class Synthesizer:
                     "synthetic_input_quality": scores[input_index],
                     "context_source_files": context_source_files,
                     "used_source_files": (data.used_source_files or []),
-                    # "context_quality": (
-                    #     context_scores[data_index]
-                    #     if context_scores is not None
-                    #     else None
-                    # ),
+                    "context_quality": (
+                        context_scores[context_index]
+                        if context_scores is not None
+                        else None
+                    ),
                 },
             )
             update_pbar(progress, pbar_generate_goldens_id, remove=False)
@@ -2768,6 +2768,11 @@ class Synthesizer:
                 additional_metadata={
                     "evolutions": evolutions_used,
                     "synthetic_scenario_quality": scores[scenario_index],
+                    "context_quality": (
+                        context_scores[context_index]
+                        if context_scores is not None
+                        else None
+                    ),
                     "source_files": (
                         context_source_files[0]
                         if context_source_files
