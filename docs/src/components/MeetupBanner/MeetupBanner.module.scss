@@ -44,7 +44,7 @@
 }
 
 // Which bar shows, decided before first paint by the <html> class that
-// meetupEndedScript adds. Ids match MEETUP_BANNER_ID and the JevEval banner.
+// bannerPrepaintScript adds. Ids match MEETUP_BANNER_ID and the JevEval banner.
 :global(html.sf-meetup-ended #sf-meetup-2026-11-20),
 :global(html:not(.sf-meetup-ended) #docs-announcement) {
   display: none;
