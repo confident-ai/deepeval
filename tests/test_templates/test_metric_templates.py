@@ -142,8 +142,6 @@ def test_geval_trace_templates_render(multimodal: bool):
 
 def test_simulator_interrupt_templates_present():
     methods = _bundle_data("simulator")["SimulatorInterruptTemplate"]
-    assert "decide_interrupt" in methods
-    assert "interruption_bias_rare" in methods
-    assert "interruption_bias_normal" in methods
-    assert "interruption_bias_frequent" in methods
+    assert "write_interruption" in methods
     assert "interruption_frustration" in methods
+    assert "decide_interrupt" not in methods
