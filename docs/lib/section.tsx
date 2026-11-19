@@ -2,6 +2,8 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import type { MDXComponents } from "mdx/types";
 import { notFound } from "next/navigation";
+import { Banner } from "fumadocs-ui/components/banner";
+import { MeetupBanner } from "@/lib/announcement";
 import {
   DocsBody,
   DocsDescription,
@@ -28,8 +30,8 @@ import { LanguageScopedDocsLayout } from "@/components/lang/language-scoped-docs
 import { BetaBadge } from "@/components/beta-mark";
 import { PlainBreadcrumb } from "@/components/plain-breadcrumb";
 import MascotPeek from "@/src/components/MascotPeek";
-import MeetupBanner from "@/src/components/MeetupBanner";
 import { CAST } from "@/src/components/Mascot/_cast";
+import Link from "next/link";
 
 // Each section's fumadocs-mdx collection resolves to a differently-typed
 // `LoaderOutput` (docs vs guides vs integrations all have their own
@@ -120,7 +122,11 @@ export function createSection(config: SectionConfig) {
     const { nav, ...rest } = baseOptions();
     return (
       <>
-        <MeetupBanner placement="section" />
+        <MeetupBanner />
+        <Banner id="docs-announcement" height="30px">
+          💥 Introducing JevEval: Jev-as-a-Judge for LLM evaluation.{" "}
+          <Link href="/blog/introducing-jev-as-a-judge">Read the post →</Link>
+        </Banner>
         <LanguageScopedDocsLayout
           {...rest}
           nav={{ ...nav, mode: "top" }}

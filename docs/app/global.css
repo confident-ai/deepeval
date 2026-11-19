@@ -643,18 +643,35 @@ summary {
 }
 
 #docs-announcement,
-#docs-announcement * {
+#docs-announcement *,
+#sf-meetup,
+#sf-meetup * {
   font-size: 13px;
   font-weight: 400;
 }
 
-#docs-announcement a {
+#docs-announcement a,
+#sf-meetup a {
   display: inline;
   margin-inline: 0.2em;
   color: LinkText;
   text-decoration-line: underline;
   text-decoration-color: currentColor;
   text-underline-offset: 3px;
+}
+
+#sf-meetup a {
+  font-weight: 600;
+}
+
+/* Meetup banner until 7pm PT Fri 20 Nov, then JevEval (lib/announcement.tsx). */
+html.meetup-ended #sf-meetup,
+html:not(.meetup-ended) #docs-announcement {
+  display: none;
+}
+html:not(.meetup-ended).nd-banner-sf-meetup,
+html.meetup-ended.nd-banner-docs-announcement {
+  --fd-banner-height: 0px;
 }
 
 /* ------------------------------------------------------------------ */
