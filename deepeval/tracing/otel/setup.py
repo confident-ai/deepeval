@@ -370,6 +370,14 @@ def open_collected_spans(trace_uuid: str) -> int:
     return _bridge.open_spans(trace_uuid) if _bridge is not None else 0
 
 
+def updating_trace_io(trace_uuid: str, key: str) -> ContextManager[None]:
+    """Coordinate a direct I/O assignment with local span collection."""
+    bridge = _bridge
+    if bridge is None:
+        return nullcontext()
+    return bridge.updating_trace_io(trace_uuid, key)
+
+
 def drop_current(whole_trace: bool) -> None:
     """Keep the current span, or its whole trace, out of the export."""
     drop_from_export(otel_trace.get_current_span(), whole_trace)

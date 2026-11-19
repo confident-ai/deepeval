@@ -16,6 +16,7 @@ import json
 import logging
 import threading
 from collections import OrderedDict
+from contextlib import contextmanager
 from dataclasses import dataclass, field
 from typing import (
     Any,
@@ -86,6 +87,7 @@ OBSERVE_SCOPE = "deepeval"
 # Only a trace's root names it. Any span may fill an unset input or output,
 # as deepeval's native integrations did.
 _ROOT_TRACE_FIELDS = frozenset(("name",))
+_TRACE_IO_FIELDS = frozenset(("input", "output"))
 
 _SPAN_CONTEXTS = {
     SpanType.LLM: current_llm_context,
@@ -218,6 +220,15 @@ class DeepEvalSpanBridge(SpanProcessor):
         """How many collected spans of the deepeval trace are still open."""
         state = self._traces.get(trace_uuid)
         return state.open_spans if state is not None else 0
+
+    @contextmanager
+    def updating_trace_io(self, trace_uuid: str, key: str) -> Iterator[None]:
+        """A direct update can take ownership of an already inferred value."""
+        with self._lock:
+            state = self._traces.get(trace_uuid)
+            if state is not None:
+                state.derived.pop(key, None)
+            yield
 
     def _claim(self, span: Span) -> Optional[_Claim]:
         parent = span.parent
@@ -358,6 +369,7 @@ class DeepEvalSpanBridge(SpanProcessor):
             return
         _fill_unset(
             trace,
+            state,
             converted.trace_fields,
             is_root=collected.parent_uuid is None,
         )
@@ -525,14 +537,22 @@ def _attach(trace: Trace, state: _TraceState, span: BaseSpan) -> None:
 
 
 def _fill_unset(
-    trace: Trace, trace_fields: Dict[str, Any], is_root: bool
+    trace: Trace,
+    state: _TraceState,
+    trace_fields: Dict[str, Any],
+    is_root: bool,
 ) -> None:
-    """deepeval-owned traces keep their own values; spans only fill gaps."""
+    """Keep trace values from deepeval and accept declarations over inference."""
     for key, value in trace_fields.items():
         if key in _ROOT_TRACE_FIELDS and not is_root:
             continue
-        if getattr(trace, key) is None:
-            setattr(trace, key, value)
+        if key in _TRACE_IO_FIELDS:
+            if not _replaceable(trace, state, key, lambda _: True):
+                continue
+            state.derived.pop(key, None)
+        elif getattr(trace, key) is not None:
+            continue
+        setattr(trace, key, value)
 
 
 def _end_owned_trace(trace_uuid: str, state: _TraceState) -> None:
@@ -549,8 +569,8 @@ def _end_owned_trace(trace_uuid: str, state: _TraceState) -> None:
     recorded: Dict[str, Any] = {}
     for span in spans:
         recorded.update(state.trace_fields.get(span.uuid, {}))
-    _fill_unset(trace, recorded, is_root=True)
-    _fill_unset(trace, _trace_content(trace, state, spans), is_root=True)
+    _fill_unset(trace, state, recorded, is_root=True)
+    _fill_unset(trace, state, _trace_content(trace, state, spans), is_root=True)
     if any(root.status == TraceSpanStatus.ERRORED for root in trace.root_spans):
         trace.status = TraceSpanStatus.ERRORED
     set_trace_time(trace)
@@ -653,12 +673,15 @@ def _derive_content(trace: Trace, state: _TraceState, span: BaseSpan) -> None:
 def _replaceable(
     trace: Trace, state: _TraceState, key: str, better: Callable[[float], bool]
 ) -> bool:
-    """Unset, or derived from a worse span; never a value deepeval code set."""
-    current = getattr(trace, key)
-    if current is None:
+    """Unset or inferred from a weaker candidate. Explicit null is a value."""
+    if key not in trace.model_fields_set:
         return True
     derived = state.derived.get(key)
-    return derived is not None and current is derived[1] and better(derived[0])
+    return (
+        derived is not None
+        and getattr(trace, key) is derived[1]
+        and better(derived[0])
+    )
 
 
 def _derive(
