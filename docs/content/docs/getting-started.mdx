@@ -324,12 +324,13 @@ Set your `OPENAI_API_KEY` as an env variable (or [configure any other LLM](/docs
 
 ```python title="test_example.py"
 from deepeval import assert_test
-from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.test_case import Turn, ConversationalTestCase, MultiTurnParams
 from deepeval.metrics import ConversationalGEval
 
 def test_professionalism():
     professionalism_metric = ConversationalGEval(
         name="Professionalism",
+        evaluation_params=[MultiTurnParams.CONTENT],
         criteria="Determine whether the assistant has acted professionally based on the content.",
         threshold=0.5
     )
