@@ -681,6 +681,9 @@
     "python",
     "typescript"
   ],
+  "/integrations/models/nace": [
+    "python"
+  ],
   "/integrations/models/ollama": [
     "python",
     "typescript"
