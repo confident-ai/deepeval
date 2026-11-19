@@ -92,11 +92,8 @@ MetricTemplateMethod = Literal[
 
 # Keep in sync with the method keys in `templates/simulator/templates.json`.
 SimulatorTemplateMethod = Literal[
-    "decide_interrupt",
-    "interruption_bias_frequent",
-    "interruption_bias_normal",
-    "interruption_bias_rare",
     "interruption_frustration",
+    "write_interruption",
 ]
 
 # Keep in sync with the method keys in `templates/classifiers/templates.json`.

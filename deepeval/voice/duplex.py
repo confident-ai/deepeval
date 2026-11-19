@@ -1,26 +1,23 @@
-"""Duplex voice exchange: LLM barge judge + floor control."""
+"""Duplex voice exchange: scheduled barge-in + floor control."""
 
 from __future__ import annotations
 
 import asyncio
+import copy
 import logging
 import time
 from dataclasses import dataclass, field
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Tuple
 
 from deepeval.dataset import ConversationalGolden
 from deepeval.test_case import Audio, Turn
-from deepeval.voice.background import BackgroundMixer, mix_background
+from deepeval.voice.background import mix_background
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.floor_control import FloorController, FloorState
-from deepeval.voice.streaming import PcmRecorder
-from deepeval.voice.interruption import (
-    InterruptionPolicy,
-    should_poll_judge,
-)
+from deepeval.voice.interruption import InterruptionSchedule
 from deepeval.voice.timeline import audio_duration
 from deepeval.simulator.interrupt_template import SimulatorInterruptTemplate
-from deepeval.simulator.schema import InterruptDecision
+from deepeval.simulator.schema import InterruptUtterance
 
 if TYPE_CHECKING:
     from deepeval.models.base_model import DeepEvalBaseSTT, DeepEvalBaseTTS
@@ -34,12 +31,15 @@ _EVENT_POLL_S = 0.05
 # Speaking rate used to judge how much of a reply the caller has heard when the
 # connector hands us text ahead of the audio. Deliberately below conversational
 # English (~15 chars/s) so the estimate lags the speech rather than running past
-# it: showing the judge words that have not been spoken is the failure that
-# matters, and hearing slightly less than was said is what interrupting is like.
+# it: reading the reply as finished before it has been spoken ends it early.
 _AGENT_CHARS_PER_SECOND = 13.0
 
 _SEMANTIC_EOT_SILENCE_MS = 500.0
+_BARGE_YIELD_SILENCE_MS = 300.0
 _STT_ON_SILENCE_MS = 200.0
+
+_BARGE_LEAD_S = 0.6
+_MIN_CUT_OFF_SPEECH_S = 0.2
 
 
 def _looks_complete(text: str) -> bool:
@@ -48,18 +48,29 @@ def _looks_complete(text: str) -> bool:
     return bool(text) and not text.endswith("...") and text[-1] in ".!?…"
 
 
+def _talked_over(
+    started_at: Optional[float], other_until: Optional[float]
+) -> bool:
+    return (
+        started_at is not None
+        and other_until is not None
+        and other_until > started_at
+    )
+
+
 @dataclass
 class _Barge:
-    """A barge from the moment it is decided on until it has all been said.
+    """A barge from the moment it is written until it has all been said.
 
-    Deciding to cut in and being heard cutting in are separate moments: the
-    words have to be synthesized and put on the uplink in between. `turn` is
-    filled in at the second moment, so it doubles as the record of whether the
-    agent has heard any of this yet.
+    The line is written and voiced before the reply it interrupts begins, so it
+    can go out the moment the schedule says to cut in. `turn` is filled in when
+    it does, so it doubles as the record of whether the agent has heard it.
     """
 
     utterance: str
     frustrated: bool
+    audio: Audio
+    tts_cost: float = 0.0
     task: Optional[asyncio.Task] = None
     turn: Optional[Turn] = None
 
@@ -72,9 +83,9 @@ class _AgentUtterance:
     agent's next one begins as a fresh utterance. `reset` is that transition.
     It lives here, in one place, because the fields fall into three groups that
     have to move together: what has been received so far, the silence being
-    measured to decide the reply is over, and how much barging and judging this
-    reply has already been given. Leaving any of them behind lets the new reply
-    inherit the old one's end-of-turn timer or spend its barge budget.
+    measured to decide the reply is over, and whether this reply is one to cut
+    in on and has been. Leaving any of them behind lets the new reply inherit
+    the old one's end-of-turn timer or its barge.
     """
 
     # Where this reply belongs in `turns`, and which uplink it answers.
@@ -89,15 +100,17 @@ class _AgentUtterance:
     transcript: str = ""
     provider_transcript_parts: List[str] = field(default_factory=list)
     first_audio_at: Optional[float] = None
+    speaking_until: Optional[float] = None
 
     # Silence since the last speech, and whether there has been any speech to
     # measure it from.
     started: bool = False
     trailing_silence_ms: float = 0.0
 
-    # Barge and judge budget already spent on this reply.
+    # Whether the schedule picked this reply to cut in on, and the barges made.
+    scheduled: bool = False
     barges: int = 0
-    last_judged_len: int = 0
+    barged_at: Optional[float] = None
     last_stt_pcm_len: int = 0
     speech_pcm_len: int = 0
     transcribed_pcm_len: int = 0
@@ -112,10 +125,12 @@ class _AgentUtterance:
         self.transcript = ""
         self.provider_transcript_parts = []
         self.first_audio_at = None
+        self.speaking_until = None
         self.started = False
         self.trailing_silence_ms = 0.0
+        self.scheduled = False
         self.barges = 0
-        self.last_judged_len = 0
+        self.barged_at = None
         self.last_stt_pcm_len = 0
         self.speech_pcm_len = 0
         self.transcribed_pcm_len = 0
@@ -181,7 +196,7 @@ def _spoken_prefix(transcript: str, heard_seconds: float) -> str:
 class DuplexExchange:
     """Runs one duplex listen/barge cycle after the initial user audio is sent.
 
-    Without a `policy` the caller never barges and the exchange only listens.
+    Without a `schedule` the caller never barges and the exchange only listens.
     """
 
     def __init__(
@@ -190,7 +205,7 @@ class DuplexExchange:
         connector: "BaseVoiceConnector",
         tts_model: "DeepEvalBaseTTS",
         stt_model: "DeepEvalBaseSTT",
-        policy: Optional[InterruptionPolicy],
+        schedule: Optional[InterruptionSchedule],
         floor: FloorController,
         golden: ConversationalGolden,
         language: str,
@@ -200,7 +215,7 @@ class DuplexExchange:
         self.connector = connector
         self.tts_model = tts_model
         self.stt_model = stt_model
-        self.policy = policy
+        self.schedule = schedule
         self.floor = floor
         self.golden = golden
         self.language = language
@@ -216,12 +231,20 @@ class DuplexExchange:
             else None
         )
 
+    def prepare_barge(self, turns: List[Turn]) -> Optional[asyncio.Task]:
+        if self.schedule is None or not self.schedule.interrupts_next_reply:
+            return None
+        return asyncio.create_task(
+            self._write_barge(list(turns), frustrated=self.floor.frustrated)
+        )
+
     async def run(
         self,
         *,
         turns: List[Turn],
         sent_at: float,
-        barges_this_conversation: int,
+        prepared_barge: Optional[asyncio.Task] = None,
+        caller_spoke: Optional[Tuple[float, float]] = None,
     ) -> DuplexExchangeResult:
         result = DuplexExchangeResult(frustrated=self.floor.frustrated)
         self.floor.reset_turn()
@@ -235,13 +258,13 @@ class DuplexExchange:
             awaiting_end_signal=self.connector.signals_turn_complete,
         )
         # Work in flight on behalf of the loop, none of it owned by a single
-        # utterance: the judge and the barge outlive the reply they answer.
-        judge_task: Optional[asyncio.Task] = None
+        # utterance: the prepared line and the barge outlive the reply they
+        # answer.
+        ready_barge: Optional[_Barge] = None
         barge: Optional[_Barge] = None
-        pending_decision: Optional[InterruptDecision] = None
+        last_barge: Optional[_Barge] = None
         stt_task: Optional[asyncio.Task] = None
         event_task: Optional[asyncio.Task] = None
-        last_judge_at: Optional[float] = None
         # Whether the transport has ever handed us text. Sticky for the whole
         # exchange: it describes the transport, not this reply.
         connector_transcript_seen = False
@@ -254,12 +277,7 @@ class DuplexExchange:
         last_uplink_at = sent_at
 
         def _heard_transcript() -> str:
-            """What the caller has heard of the reply now in progress.
-
-            The judge stands in for someone listening to the call, so it decides
-            whether to cut in on this rather than on the reply's full text —
-            otherwise it answers questions the agent has not asked yet.
-            """
+            """What the caller has heard of the reply now in progress."""
             if not connector_transcript_seen:
                 # Transcribed from the audio already delivered, so it can only
                 # contain speech that played.
@@ -281,6 +299,8 @@ class DuplexExchange:
             )
 
         def _silence_needed_ms() -> float:
+            if self.floor.barge_in_progress:
+                return min(_BARGE_YIELD_SILENCE_MS, eot_silence)
             if _reads_finished():
                 return min(_SEMANTIC_EOT_SILENCE_MS, eot_silence)
             return eot_silence
@@ -311,7 +331,7 @@ class DuplexExchange:
 
         def _take_floor(barge: _Barge, sent_at: float) -> None:
             """Record the caller cutting in, at the moment the agent hears it."""
-            nonlocal barges_this_conversation, last_uplink_at
+            nonlocal last_barge, last_uplink_at
             meta = {"barge_in": True}
             if barge.frustrated:
                 meta["frustrated"] = True
@@ -324,9 +344,18 @@ class DuplexExchange:
             # which is only known once the last frame is out; until then the
             # start of the barge is the best floor for its reply's wait.
             last_uplink_at = sent_at
+            last_barge = barge
             utterance.barges += 1
-            barges_this_conversation += 1
+            utterance.barged_at = sent_at
             result.barges += 1
+            _land_scheduled_barge()
+
+        def _land_scheduled_barge() -> None:
+            if utterance.scheduled and _talked_over(
+                utterance.barged_at, utterance.speaking_until
+            ):
+                self.schedule.on_interruption_landed()
+                utterance.scheduled = False
 
         def _finish_barge(barge: _Barge, audio: Audio, sent_at: float) -> None:
             """Attach what the barge sounded like once its last frame is out."""
@@ -343,78 +372,16 @@ class DuplexExchange:
             last_uplink_at = ended
 
         async def _speak_barge(barge: _Barge) -> None:
-            """Put a barge on the uplink as it is synthesized, off the loop.
-
-            A caller settles on what to say and then says it; nothing the agent
-            utters in between changes the words or holds them back. Waiting for
-            the finished clip before sending any of it put the whole TTS round
-            trip between the decision and the first word, which the recording
-            shows as the agent falling silent seconds before the caller cuts in
-            — a pause no live call would contain. The caller takes the floor
-            when the transport says the speech is going out, which for one that
-            needs the utterance whole is still the end of synthesis.
-            """
+            """Put an already voiced barge on the uplink, off the loop."""
             # No trailing silence on a barge — we want overlap, not VAD pad.
-            if not self.tts_model.supports_streaming():
-                audio, tts_cost = await self.tts_model.a_synthesize(
-                    barge.utterance, **self.tts_kwargs
-                )
-                if tts_cost is not None:
-                    result.tts_cost += tts_cost
-                audio = mix_background(audio, self.background_noise)
-                sent_at = time.perf_counter()
-                _take_floor(barge, sent_at)
-                _finish_barge(barge, audio, sent_at)
-                await self.connector.stream_uplink(
-                    audio, trailing_silence=False
-                )
-                return
-
-            mixer = BackgroundMixer(self.background_noise)
-            recorder = PcmRecorder()
-            sent_at: Optional[float] = None
-
-            def _audible(at: float) -> None:
-                nonlocal sent_at
-                sent_at = at
-                _take_floor(barge, at)
-
-            async def _frames():
-                async for chunk in self.tts_model.a_synthesize_stream(
-                    barge.utterance, **self.tts_kwargs
-                ):
-                    mixed = mixer.mix_chunk(chunk)
-                    recorder.add(mixed)
-                    yield mixed
-
-            try:
-                await self.connector.stream_uplink_chunks(
-                    _frames(),
-                    trailing_silence=False,
-                    on_first_frame=_audible,
-                )
-            finally:
-                tts_cost = self.tts_model.synthesis_cost(barge.utterance)
-                if tts_cost is not None:
-                    result.tts_cost += tts_cost
-                if sent_at is not None:
-                    _finish_barge(barge, recorder.to_audio(), sent_at)
-
-        async def _speak_frustrated_barge(barge: _Barge) -> None:
-            retry = await self._judge(
-                turns=list(turns),
-                partial=_heard_transcript() or "(agent still speaking)",
-                frustrated=True,
+            sent_at = time.perf_counter()
+            _take_floor(barge, sent_at)
+            _finish_barge(barge, barge.audio, sent_at)
+            await self.connector.stream_uplink(
+                barge.audio, trailing_silence=False
             )
-            barge.utterance = (
-                retry.utterance
-                if retry.should_interrupt and retry.utterance
-                else "Sorry — go ahead."
-            )
-            await _speak_barge(barge)
 
-        def _start_barge(utterance: str, *, frustrated: bool) -> _Barge:
-            barge = _Barge(utterance=utterance, frustrated=frustrated)
+        def _start_barge(barge: _Barge) -> _Barge:
             barge.task = asyncio.create_task(_speak_barge(barge))
             return barge
 
@@ -504,15 +471,46 @@ class DuplexExchange:
             )
 
         async def _restart_after_barge() -> None:
-            """Record the reply a barge cut off and listen for the next one.
+            """Record the reply a barge met and listen for the next one.
 
             The caller has the floor, so the agent's own turn is over whether
             it said so or not. Everything scoped to that reply starts again —
-            its end-of-turn timer, and the barge and judge budget it had spent
-            — or the reply that follows inherits a spent budget and a timer
-            already partway to expiring.
+            its end-of-turn timer and its barge — or the reply that follows
+            inherits a barge already spent and a timer partway to expiring.
+            The reply was cut off only if the caller started while the agent
+            was still audible; a barge that went out into a pause found it
+            already finished.
             """
-            await _finalize_assistant(interrupted=True)
+            utterance.awaiting_end_signal = False
+            await _finalize_assistant(
+                interrupted=_talked_over(
+                    utterance.barged_at, utterance.speaking_until
+                )
+            )
+            self.floor.reset_turn()
+
+        def _cut_off_by_caller() -> bool:
+            return (
+                caller_spoke is not None
+                and _talked_over(caller_spoke[0], utterance.speaking_until)
+                and utterance.speaking_until <= caller_spoke[1]
+            )
+
+        async def _record_cut_off() -> None:
+            voiced_s = (
+                utterance.speech_pcm_len / 2 / self.sample_rate
+                if self.sample_rate
+                else 0.0
+            )
+            if voiced_s >= _MIN_CUT_OFF_SPEECH_S:
+                utterance.awaiting_end_signal = False
+                await _finalize_assistant(interrupted=True)
+            else:
+                utterance.reset(
+                    index=len(turns),
+                    sent_at=last_uplink_at,
+                    awaiting_end_signal=self.connector.signals_turn_complete,
+                )
             self.floor.reset_turn()
 
         async def _advance_end_of_turn(elapsed_ms: float, now: float) -> bool:
@@ -552,6 +550,9 @@ class DuplexExchange:
                 and not self.floor.agent_speaking
                 and not self.floor.user_uplink_active
             ):
+                if _cut_off_by_caller():
+                    await _record_cut_off()
+                    return False
                 # Silence ran out with the floor uncontested: the agent
                 # finished on its own rather than being cut off.
                 await _finalize_assistant(interrupted=False)
@@ -563,14 +564,17 @@ class DuplexExchange:
             while not exchange_done and time.perf_counter() < deadline:
                 now = time.perf_counter()
 
-                # Consume pending judge result without blocking the audio loop.
-                if judge_task is not None and judge_task.done():
+                if prepared_barge is not None and prepared_barge.done():
                     try:
-                        pending_decision = judge_task.result()
+                        ready_barge = prepared_barge.result()
+                    except asyncio.CancelledError:
+                        ready_barge = None
                     except Exception:
-                        logger.exception("Interrupt judge failed")
-                        pending_decision = None
-                    judge_task = None
+                        logger.exception("Writing the interruption failed")
+                        ready_barge = None
+                    prepared_barge = None
+                    if ready_barge is not None:
+                        result.tts_cost += ready_barge.tts_cost
 
                 # A barge takes the floor from inside its own task, the moment
                 # the transport starts sending it — not when it was decided on.
@@ -588,17 +592,17 @@ class DuplexExchange:
                     barge = None
 
                 if (
-                    pending_decision is not None
-                    and pending_decision.should_interrupt
-                    and self.floor.can_run_judge
-                    and pending_decision.utterance
+                    ready_barge is not None
                     and barge is None
+                    and utterance.scheduled
+                    and utterance.barges == 0
+                    and self.floor.can_barge
+                    and utterance.first_audio_at is not None
+                    and now - utterance.first_audio_at >= _BARGE_LEAD_S
+                    and _talked_over(now, utterance.speaking_until)
                 ):
-                    barge = _start_barge(
-                        pending_decision.utterance,
-                        frustrated=self.floor.frustrated,
-                    )
-                    pending_decision = None
+                    barge = _start_barge(ready_barge)
+                    ready_barge = None
 
                 # Floor tick (grace / awkward silence / retry).
                 action = self.floor.tick(now)
@@ -627,16 +631,17 @@ class DuplexExchange:
                     await _restart_after_barge()
                 if (
                     action.retry_barge
-                    and self.policy is not None
+                    and self.schedule is not None
                     and self.floor.frustrated
                     and barge is None
+                    and last_barge is not None
                 ):
-                    # Ask the judge once more, in frustration, for something to
-                    # cut back in with. Off the loop for the same reason as any
-                    # other barge: the agent has the floor until this is spoken.
-                    barge = _Barge(utterance="", frustrated=True)
-                    barge.task = asyncio.create_task(
-                        _speak_frustrated_barge(barge)
+                    barge = _start_barge(
+                        _Barge(
+                            utterance=last_barge.utterance,
+                            frustrated=True,
+                            audio=copy.copy(last_barge.audio),
+                        )
                     )
 
                 # Pull next agent event with a short timeout so timers keep ticking.
@@ -680,12 +685,24 @@ class DuplexExchange:
                         len(event.audio) / 2 / self.sample_rate
                     ) * 1000.0
                     if not silent:
+                        if not utterance.started and self.schedule is not None:
+                            utterance.scheduled = (
+                                self.schedule.on_agent_reply_start()
+                            )
                         if (
                             not utterance.started
                             or not self.floor.agent_speaking
                         ):
                             self.floor.on_agent_speech_start(arrived_at)
                             utterance.started = True
+                        utterance.speaking_until = (
+                            max(
+                                utterance.speaking_until or arrived_at,
+                                arrived_at,
+                            )
+                            + frame_ms / 1000.0
+                        )
+                        _land_scheduled_barge()
                         # The end-of-turn timer measures silence *since the last
                         # speech*, so every spoken frame clears it. Letting it
                         # accumulate across a turn instead ends the agent
@@ -741,6 +758,9 @@ class DuplexExchange:
                         # Keep listening for follow-up agent speech briefly.
                         continue
                     elif utterance.started:
+                        if _cut_off_by_caller():
+                            await _record_cut_off()
+                            continue
                         # The agent said it was done and nobody was barging.
                         await _finalize_assistant(interrupted=False)
                         exchange_done = True
@@ -754,41 +774,18 @@ class DuplexExchange:
                     if self.floor.state == FloorState.LISTENING:
                         await _maybe_stop_uplink()
 
-                # Schedule interrupt judge when listening to agent speech.
-                heard = _heard_transcript()
-                if (
-                    self.policy is not None
-                    and self.floor.can_run_judge
-                    and heard
-                    and judge_task is None
-                    and should_poll_judge(
-                        policy=self.policy,
-                        partial_transcript=heard,
-                        last_judged_len=utterance.last_judged_len,
-                        last_judge_at=last_judge_at,
-                        now=now,
-                        barges_this_conversation=barges_this_conversation,
-                        barges_this_agent_turn=utterance.barges,
-                    )
-                ):
-                    utterance.last_judged_len = len(heard)
-                    last_judge_at = now
-                    snap_turns = list(turns)
-                    snap_partial = heard
-                    frustrated = self.floor.frustrated
-
-                    async def _run_judge(
-                        t=snap_turns, p=snap_partial, f=frustrated
-                    ):
-                        return await self._judge(
-                            turns=t, partial=p, frustrated=f
-                        )
-
-                    judge_task = asyncio.create_task(_run_judge())
-
         finally:
-            if judge_task is not None and not judge_task.done():
-                judge_task.cancel()
+            if prepared_barge is not None:
+                if not prepared_barge.done():
+                    prepared_barge.cancel()
+                try:
+                    unused = await prepared_barge
+                    if unused is not None:
+                        result.tts_cost += unused.tts_cost
+                except asyncio.CancelledError:
+                    pass
+                except Exception:
+                    logger.exception("Writing the interruption failed")
             if barge is not None:
                 if barge.turn is None and not barge.task.done():
                     # The agent finished while this was still being synthesized,
@@ -824,30 +821,31 @@ class DuplexExchange:
             # timeout mid-reply. Not an interruption — nobody cut the agent
             # off, we stopped listening — which `_finalize_assistant` records
             # as `ended_without_agent_signal`.
-            if utterance.started and (
-                not result.turns or result.turns[-1].role != "assistant"
-            ):
+            if utterance.started:
                 await _finalize_assistant(interrupted=False)
 
         result.frustrated = self.floor.frustrated or result.frustrated
         return result
 
-    async def _judge(
-        self,
-        *,
-        turns: List[Turn],
-        partial: str,
-        frustrated: bool,
-    ) -> InterruptDecision:
-        prompt = SimulatorInterruptTemplate.decide_interrupt(
+    async def _write_barge(
+        self, turns: List[Turn], *, frustrated: bool
+    ) -> Optional[_Barge]:
+        prompt = SimulatorInterruptTemplate.write_interruption(
             golden=self.golden,
             turns=turns,
-            partial_agent_transcript=partial,
-            interruption_level=self.policy.level,
             language=self.language,
             frustrated=frustrated,
         )
-        decision = await self.a_generate_schema(prompt, InterruptDecision)
-        if decision.should_interrupt and not decision.utterance:
-            decision.should_interrupt = False
-        return decision
+        line = await self.a_generate_schema(prompt, InterruptUtterance)
+        utterance = (line.utterance or "").strip()
+        if not utterance:
+            return None
+        audio, tts_cost = await self.tts_model.a_synthesize(
+            utterance, **self.tts_kwargs
+        )
+        return _Barge(
+            utterance=utterance,
+            frustrated=frustrated,
+            audio=mix_background(audio, self.background_noise),
+            tts_cost=tts_cost or 0.0,
+        )

@@ -14,7 +14,7 @@ Pointers only: where each code change on this branch needs a docs section, and w
 ## `docs/content/docs/conversation-simulator-voice-connectors.mdx`
 
 - **Turn Detection**: the preset window (`eager` 0.5s / `balanced` 0.8s / `patient` 2.5s) is now the ceiling, not the wait. When the running transcript reads as a finished sentence and covers all the speech heard so far, the turn ends after 0.5s of silence. Replies that trail off mid-sentence still wait the full window. Only applies on the duplex path.
-- **Callback** / **Generic WebSocket** (custom connectors): document the `supports_duplex` property. Returning `True` makes the simulator run the duplex exchange on that connector even without an interruption policy; it requires `stream_uplink`, `iter_agent_events` and `stop_uplink`.
+- **Callback** / **Generic WebSocket** (custom connectors): document the `supports_duplex` property. Returning `True` makes the simulator run the duplex exchange on that connector even without an interruption schedule; it requires `stream_uplink`, `iter_agent_events` and `stop_uplink`.
 
 ## `docs/content/docs/conversation-simulator-voice-personas.mdx`
 
@@ -23,7 +23,7 @@ Pointers only: where each code change on this branch needs a docs section, and w
 
 ## `docs/content/docs/conversation-simulator-voice-interruptions.mdx`
 
-- **How It Works**: `DuplexExchange` accepts `policy=None`; the barge judge only runs when a policy is set.
+- **How It Works**: `DuplexExchange` accepts `schedule=None`; a barge line is only written when a schedule is set.
 - **What Gets Recorded**: `Turn.latency_ms` is clamped at zero when the agent was already talking before the caller finished (backlogged speech is a wait of zero, not a negative one). Every barge turn counts toward the turn budget.
 
 ## `docs/content/docs/(voice)/metrics-*.mdx` (all seven voice metrics)

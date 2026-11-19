@@ -766,6 +766,18 @@ class WebRTCConnector(BaseVoiceConnector):
         except asyncio.TimeoutError:
             pass
 
+    def take_pending_agent_events(self) -> List[AgentEvent]:
+        events: List[AgentEvent] = []
+        if self._inbound is None:
+            return events
+        while not self._inbound.empty():
+            event = self._inbound.get_nowait()
+            if event.turn_complete:
+                self._inbound.put_nowait(event)
+                break
+            events.append(event)
+        return events
+
     def drain_downlink(self) -> None:
         if self._inbound is None:
             return
