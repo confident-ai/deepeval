@@ -28,36 +28,22 @@ class SimulationTemplate:
         return block.replace("\n", "\n" + " " * indent)
 
     @staticmethod
-    def decide_keypad(golden: ConversationalGolden, turns: List[Turn]) -> str:
-        previous_conversation = serialize_turns_for_prompt(turns)
+    def keypad_option() -> str:
         return textwrap.dedent(
-            f"""You are deciding whether a simulated phone caller presses keys on
-            their keypad instead of speaking their next reply.
-
-            Guidelines:
+            """
+            Keypad:
+            The caller can press keys on their phone's keypad instead of speaking.
             1. Press keys only when the assistant's last reply asks for keypad
                entry ("enter", "type", "press", "use your keypad"), or the
                scenario says the caller enters something on the keypad now.
             2. Use only digits 0-9, * and #. Add a trailing # only when the
                assistant asks for it.
             3. Take the digits from the scenario or persona, never invent them.
-            4. Otherwise the caller speaks: return null.
+            4. When pressing keys, set `keypad` to the digits pressed; otherwise
+               set it to null.
 
-            IMPORTANT: The output must be a JSON object with a single key
-            `keypad`, whose value is the digits pressed or null.
-
-            Example: {{"keypad": "8670940983#"}}
-
-            Scenario:
-            {golden.scenario}
-
-            Persona:
-            {golden.user_description}
-
-            Previous Conversation:
-            {previous_conversation}
-
-            JSON:
+            Add the `keypad` key to the JSON output, for example:
+            {"simulated_input": "", "keypad": "8670940983#"}
             """
         )
 

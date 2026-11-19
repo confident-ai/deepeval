@@ -12,7 +12,7 @@ class SimulatedInput(BaseModel):
     simulated_input: str
 
 
-class KeypadInput(BaseModel):
+class KeypadSimulatedInput(SimulatedInput):
     keypad: Optional[str] = Field(None, pattern=r"^[0-9*#]+$")
 
 

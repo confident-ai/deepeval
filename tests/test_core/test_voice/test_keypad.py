@@ -10,7 +10,7 @@ from pydantic import ValidationError
 from deepeval.dataset.golden import ConversationalGolden, Persona
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.simulator import ConversationSimulator
-from deepeval.simulator.schema import KeypadInput
+from deepeval.simulator.schema import KeypadSimulatedInput
 from deepeval.test_case import Audio
 from deepeval.voice import CallbackVoiceConnector, VoiceConfig
 from deepeval.voice.connectors.providers.livekit.connector import (
@@ -61,10 +61,13 @@ def test_tones_carry_every_digit():
 
 
 def test_keypad_input_takes_only_keypad_digits():
-    assert KeypadInput(keypad="1234#").keypad == "1234#"
-    assert KeypadInput(keypad=None).keypad is None
+    assert (
+        KeypadSimulatedInput(simulated_input="", keypad="1234#").keypad
+        == "1234#"
+    )
+    assert KeypadSimulatedInput(simulated_input="Hi").keypad is None
     with pytest.raises(ValidationError):
-        KeypadInput(keypad="MP12")
+        KeypadSimulatedInput(simulated_input="", keypad="MP12")
 
 
 class _KeypadModel(DeepEvalBaseLLM):
@@ -80,9 +83,12 @@ class _KeypadModel(DeepEvalBaseLLM):
         name = schema.__name__
         if name == "SimulatedInput":
             return schema(simulated_input="It's one two three four.")
-        if name == "KeypadInput":
+        if name == "KeypadSimulatedInput":
             self.decisions += 1
-            return schema(keypad=self.digits if self.decisions == 1 else None)
+            return schema(
+                simulated_input="It's one two three four.",
+                keypad=self.digits if self.decisions == 1 else None,
+            )
         if name == "ConversationCompletion":
             return schema(is_complete=False, reason="not done")
         if name == "EdgeChoice":

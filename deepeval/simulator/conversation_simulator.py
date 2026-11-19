@@ -38,7 +38,7 @@ from deepeval.simulator.template import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import MULTIMODAL_SUPPORTED_MODELS
 from deepeval.simulator.schema import (
-    KeypadInput,
+    KeypadSimulatedInput,
     SimulatedInput,
 )
 from deepeval.voice.keypad import keypad_audio, keypad_turn_text
@@ -920,13 +920,7 @@ class ConversationSimulator:
                         break
                     agent_catch_ups = 0
                     turns.append(emission.turn)
-                    keypad = await self._a_keypad_digits(session, golden, turns)
-                    if keypad:
-                        emission.turn.content = keypad_turn_text(keypad)
-                        emission.turn.metadata = {
-                            **(emission.turn.metadata or {}),
-                            "dtmf": keypad,
-                        }
+                    keypad = (emission.turn.metadata or {}).get("dtmf")
                     user_input = emission.turn.content
                     logger.debug("Simulated user turn: %r", user_input)
                     update_pbar(progress, pbar_max_user_simluations_id)
@@ -1139,19 +1133,6 @@ class ConversationSimulator:
         )
         return result.audio, result.first_frame_at or time.perf_counter()
 
-    async def _a_keypad_digits(
-        self,
-        session: Optional[_VoiceSession],
-        golden: ConversationalGolden,
-        turns: List[Turn],
-    ) -> Optional[str]:
-        if session is None or not self._voice.config.keypad_input:
-            return None
-        decision: KeypadInput = await self.a_generate_schema(
-            SimulationTemplate.decide_keypad(golden, turns), KeypadInput
-        )
-        return decision.keypad
-
     async def _press_keys(
         self,
         session: _VoiceSession,
@@ -1291,6 +1272,12 @@ class ConversationSimulator:
     ):
         tmpl = template or SimulationTemplate
         prompt = tmpl.simulate_first_user_turn(golden, self.language)
+        if self._keypad_input:
+            return self._keypad_turn(
+                self.generate_schema(
+                    prompt + tmpl.keypad_option(), KeypadSimulatedInput
+                )
+            )
         simulated_input: SimulatedInput = self.generate_schema(
             prompt, SimulatedInput
         )
@@ -1303,6 +1290,12 @@ class ConversationSimulator:
     ):
         tmpl = template or SimulationTemplate
         prompt = tmpl.simulate_first_user_turn(golden, self.language)
+        if self._keypad_input:
+            return self._keypad_turn(
+                await self.a_generate_schema(
+                    prompt + tmpl.keypad_option(), KeypadSimulatedInput
+                )
+            )
         simulated_input: SimulatedInput = await self.a_generate_schema(
             prompt, SimulatedInput
         )
@@ -1316,6 +1309,12 @@ class ConversationSimulator:
     ):
         tmpl = template or SimulationTemplate
         prompt = tmpl.simulate_user_turn(golden, turns, self.language)
+        if self._keypad_input:
+            return self._keypad_turn(
+                self.generate_schema(
+                    prompt + tmpl.keypad_option(), KeypadSimulatedInput
+                )
+            )
         simulated_input: SimulatedInput = self.generate_schema(
             prompt, SimulatedInput
         )
@@ -1329,10 +1328,30 @@ class ConversationSimulator:
     ):
         tmpl = template or SimulationTemplate
         prompt = tmpl.simulate_user_turn(golden, turns, self.language)
+        if self._keypad_input:
+            return self._keypad_turn(
+                await self.a_generate_schema(
+                    prompt + tmpl.keypad_option(), KeypadSimulatedInput
+                )
+            )
         simulated_input: SimulatedInput = await self.a_generate_schema(
             prompt, SimulatedInput
         )
         return simulated_input.simulated_input
+
+    @property
+    def _keypad_input(self) -> bool:
+        return bool(self.voice_config and self.voice_config.keypad_input)
+
+    @staticmethod
+    def _keypad_turn(simulated: KeypadSimulatedInput) -> Union[str, Turn]:
+        if not simulated.keypad:
+            return simulated.simulated_input
+        return Turn(
+            role="user",
+            content=keypad_turn_text(simulated.keypad),
+            metadata={"dtmf": simulated.keypad},
+        )
 
     ############################################
     ### Generate Structured Response ###########
