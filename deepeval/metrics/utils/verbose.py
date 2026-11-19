@@ -43,6 +43,17 @@ def construct_verbose_logs(metric: BaseMetric, steps: List[str]) -> str:
         # don't add new line for penultimate step
         if i < len(steps) - 2:
             verbose_logs += " \n \n"
+    dropped = getattr(metric, "qag_verdicts_dropped_count", 0)
+    if dropped:
+        # Surface silently excluded judge verdicts (see issue #3654): the
+        # count is also on the metric for programmatic inspection.
+        received = getattr(metric, "qag_verdicts_received_count", 0)
+        if verbose_logs:
+            verbose_logs += " \n \n"
+        verbose_logs += (
+            f"QAG verdict parsing: {dropped} of {received} returned "
+            "verdicts were unrecognized or unsupported and excluded."
+        )
     if metric.verbose_mode:
         # only print reason and score for deepeval
         print_verbose_logs(metric.__name__, verbose_logs + f"\n \n{steps[-1]}")

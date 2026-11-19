@@ -442,8 +442,19 @@ class TestStandaloneMetrics:
 
 
 class TestIntegrations:
-    def test_an_integration_is_reported_once_per_process(self, backend):
+    def test_an_integration_is_reported_once_per_process(
+        self, backend, monkeypatch
+    ):
+        from deepeval.telemetry import client as client_mod
         from deepeval.tracing.integrations import Integration
+
+        # `_installed_integrations` is process-global and never reset, so
+        # an earlier test that reports LANGCHAIN (e.g. the langchain otel
+        # tests) would leave this test with zero events. Swap in a fresh
+        # registry for this test only; monkeypatch restores the original
+        # afterwards, so other tests are unaffected. The dedup is still
+        # proven: 3 captures must yield exactly 1 event.
+        monkeypatch.setattr(client_mod, "_installed_integrations", set())
 
         for _ in range(3):
             with telemetry.capture_tracing_integration(Integration.LANGCHAIN):
