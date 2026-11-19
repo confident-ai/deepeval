@@ -368,10 +368,18 @@ class EvaluationDataset:
             expected_tools_col_name,
             lambda value: parse_tools(value, "expected_tools"),
         )
+
+        def parse_mapping(value):
+            if not value:
+                return None
+            try:
+                return trimAndLoadJson(value)
+            except (ValueError, json.JSONDecodeError):
+                # Tolerate a cell written as a Python dict literal.
+                return ast.literal_eval(value)
+
         metadatas = _parse_column(
-            df,
-            additional_metadata_col_name,
-            lambda value: ast.literal_eval(value) if value else None,
+            df, additional_metadata_col_name, parse_mapping
         )
 
         expectations_values = _parse_column(
