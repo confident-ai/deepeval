@@ -374,6 +374,7 @@ def calculate_weighted_summed_score(
     raw_score: int,
     raw_response: ChatCompletion,
     score_max: int = 10,
+    score_min: int = 0,
 ) -> Union[int, float]:
     """Average the scores the judge considered, weighted by their probability.
     Falls back to ``raw_score`` when there is nothing to weight."""
@@ -389,7 +390,7 @@ def calculate_weighted_summed_score(
     for candidate in score_token.top_logprobs:
         if candidate.logprob < _MIN_LOGPROB or not candidate.token.isdecimal():
             continue
-        if int(candidate.token) > score_max:
+        if int(candidate.token) > score_max or int(candidate.token) < score_min:
             continue
 
         if candidate.token == score_token.token:
