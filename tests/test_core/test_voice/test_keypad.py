@@ -1,5 +1,3 @@
-"""Keypad (DTMF) input: the tones, the decision, and the voice path that sends them."""
-
 import asyncio
 import math
 from array import array
@@ -70,8 +68,6 @@ def test_keypad_input_takes_only_keypad_digits():
 
 
 class _KeypadModel(DeepEvalBaseLLM):
-    """Presses `digits` on the first decision, then speaks."""
-
     def __init__(self, digits: str):
         self.digits = digits
         self.decisions = 0

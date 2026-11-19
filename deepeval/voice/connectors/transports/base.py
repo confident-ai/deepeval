@@ -99,13 +99,10 @@ class BaseVoiceConnector(ABC):
     max_turn_timeout_s: float = 30.0
     silence_threshold_rms: float = DEFAULT_SILENCE_RMS
 
-    # Keypad (DTMF) input. A connector that can carry key presses as a signal
-    # beside the audio sets `keypad_signal` and implements `send_dtmf`; the
-    # simulator plays the tones on the uplink for every other connector.
     keypad_signal: bool = False
 
     async def send_dtmf(self, digits: str) -> None:
-        """Send `digits` (0-9, *, #) as keypad presses. No-op by default."""
+        pass
 
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)

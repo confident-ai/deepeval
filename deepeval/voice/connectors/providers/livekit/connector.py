@@ -858,8 +858,6 @@ class LiveKitConnector(BaseVoiceConnector):
         )
 
     async def send_dtmf(self, digits: str) -> None:
-        """Publish each digit as a DTMF packet; LiveKit SIP sends it on as
-        RFC 4733 telephone-event, and room agents get `sip_dtmf_received`."""
         from deepeval.voice.keypad import DTMF_CODES
 
         if self._room is None:

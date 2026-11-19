@@ -1,11 +1,3 @@
-"""Keypad (DTMF) input for simulated callers.
-
-A key press reaches the agent either as a signal beside the audio (RFC 4733
-telephone-event, which LiveKit SIP sends for `publish_dtmf`) or as the
-dual-tone audio itself. Connectors that can send the signal set
-`keypad_signal`; the rest get the tones on their uplink.
-"""
-
 import math
 
 from deepeval.test_case import Audio
@@ -26,7 +18,6 @@ DTMF_FREQUENCIES = {
     "#": (941, 1477),
 }
 DTMF_CODES = {**{str(digit): digit for digit in range(10)}, "*": 10, "#": 11}
-DIGITS_PATTERN = r"^[0-9*#]+$"
 TONE_S = 0.1
 GAP_S = 0.08
 TONE_AMPLITUDE = 0.25
@@ -37,7 +28,6 @@ def keypad_turn_text(digits: str) -> str:
 
 
 def dtmf_tones(digits: str, sample_rate: int) -> bytes:
-    """16-bit mono PCM: each digit's tone pair for 100 ms, then 80 ms of silence."""
     pcm = bytearray()
     for digit in digits:
         low, high = DTMF_FREQUENCIES[digit]

@@ -30,8 +30,8 @@ class SimulationTemplate:
     @staticmethod
     def decide_keypad(golden: ConversationalGolden, turns: List[Turn]) -> str:
         previous_conversation = serialize_turns_for_prompt(turns)
-        return textwrap.dedent(f"""
-            You are deciding whether a simulated phone caller presses keys on
+        return textwrap.dedent(
+            f"""You are deciding whether a simulated phone caller presses keys on
             their keypad instead of speaking their next reply.
 
             Guidelines:
@@ -58,7 +58,8 @@ class SimulationTemplate:
             {previous_conversation}
 
             JSON:
-            """)
+            """
+        )
 
     @staticmethod
     def simulate_first_user_turn(
@@ -105,7 +106,8 @@ class SimulationTemplate:
         language: str,
     ) -> str:
         previous_conversation = serialize_turns_for_prompt(turns)
-        prompt = textwrap.dedent(f"""
+        prompt = textwrap.dedent(
+            f"""
             Pretend you are a user of an LLM app. Your task is to generate the next user input in {language} 
             based on the provided scenario, persona, and the previous conversation.
 
@@ -143,5 +145,6 @@ class SimulationTemplate:
             {previous_conversation}
 
             JSON Output:
-        """)
+        """
+        )
         return prompt

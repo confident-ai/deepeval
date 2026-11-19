@@ -41,7 +41,7 @@ from deepeval.simulator.schema import (
     KeypadInput,
     SimulatedInput,
 )
-from deepeval.voice.keypad import keypad_turn_text
+from deepeval.voice.keypad import keypad_audio, keypad_turn_text
 from deepeval.simulator.controller.controller import (
     SimulationController,
     expected_outcome_controller,
@@ -1145,7 +1145,6 @@ class ConversationSimulator:
         golden: ConversationalGolden,
         turns: List[Turn],
     ) -> Optional[str]:
-        """The digits the caller presses instead of speaking, if any."""
         if session is None or not self._voice.config.keypad_input:
             return None
         decision: KeypadInput = await self.a_generate_schema(
@@ -1161,15 +1160,6 @@ class ConversationSimulator:
         trailing_silence: bool,
         play: bool = True,
     ) -> Tuple["Audio", float]:
-        """Send `digits` the way the connector carries them.
-
-        A signalling connector gets `send_dtmf`; any other gets the tones on
-        its uplink. Either way the tones are the turn's audio, so the key
-        press has a place and a sound in the recording. `play=False` leaves
-        the tones for the caller to send itself (the half-duplex exchange).
-        """
-        from deepeval.voice.keypad import keypad_audio
-
         connector = session.connector
         sample_rate, _ = connector.audio_format
         audio = keypad_audio(digits, sample_rate)
