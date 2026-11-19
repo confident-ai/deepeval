@@ -11,7 +11,10 @@ import {
 } from "@opentelemetry/sdk-trace-base";
 import type { ReadableSpan } from "@opentelemetry/sdk-trace-base";
 
-import { ToolCall } from "@/test-case";
+import { runMetrics } from "@/evaluate/test-run";
+import { ExactMatchMetric } from "@/metrics/exact-match";
+import { LLMTestCase, ToolCall } from "@/test-case";
+import { getCurrentTrace, updateCurrentTrace } from "@/tracing";
 import { nextLlmSpan } from "@/tracing/pending-context";
 import {
   type AgentSpan,
@@ -81,6 +84,17 @@ const MESSAGES = {
     },
   ]),
 };
+
+function recordModelOutput(answer: string) {
+  withSpan({ name: "chat", type: "llm" }, (span) =>
+    span.setAttributes({
+      ...MESSAGES,
+      "gen_ai.output.messages": JSON.stringify([
+        { role: "assistant", parts: [{ type: "text", content: answer }] },
+      ]),
+    }),
+  );
+}
 
 beforeEach(() => traceManager.clearTraces());
 
@@ -267,26 +281,94 @@ describe("DeepEvalSpanBridge", () => {
     );
 
     // Each call is a trace of its own to OTel, but one deepeval trace.
-    const call = (answer: string) =>
-      withSpan({ name: "chat", type: "llm" }, (span) =>
-        span.setAttributes({
-          ...MESSAGES,
-          "gen_ai.output.messages": JSON.stringify([
-            { role: "assistant", parts: [{ type: "text", content: answer }] },
-          ]),
-        }),
-      );
     await observe({
       name: "endpoint",
       fn: async () => {
-        call("Let me check.");
-        call("Sunny.");
+        recordModelOutput("Let me check.");
+        recordModelOutput("Sunny.");
       },
     })();
     unsubscribe();
 
     expect(traces[0].output).toBe("Sunny.");
   });
+
+  it.each([false, true])(
+    "keeps an explicit trace output equal to the inferred value (testCase=%s)",
+    async (useTestCase) => {
+      const { traces, stop } = capture();
+      try {
+        const app = observe({
+          name: "endpoint",
+          fn: async () => {
+            recordModelOutput("Sunny.");
+            expect(getCurrentTrace()?.output).toBe("Sunny.");
+            const fields = { actualOutput: "Sunny.", expectedOutput: "Sunny." };
+            if (useTestCase)
+              updateCurrentTrace({
+                testCase: new LLMTestCase({ input: "Weather?", ...fields }),
+              });
+            else
+              updateCurrentTrace({
+                output: fields.actualOutput,
+                expectedOutput: fields.expectedOutput,
+              });
+            recordModelOutput("Cloudy.");
+          },
+        });
+        const outcome = await runMetrics(app, [
+          new ExactMatchMetric({ showIndicator: false }),
+        ]);
+        expect(outcome.pass).toBe(true);
+        expect(traces).toHaveLength(1);
+        expect(traceManager.createTraceApi(traces[0]).output).toBe("Sunny.");
+        expect(
+          traces[0].rootSpans[0].children.map((span) => span.output),
+        ).toEqual(["Sunny.", "Cloudy."]);
+      } finally {
+        stop();
+      }
+    },
+  );
+
+  it.each([
+    { clearWithTestCase: false, expected: ["lookup"] },
+    { clearWithTestCase: true, expected: undefined },
+  ])(
+    "preserves trace tools separately from tool spans (clearWithTestCase=$clearWithTestCase)",
+    async ({ clearWithTestCase, expected }) => {
+      const { traces, stop } = capture();
+      try {
+        await observe({
+          name: "endpoint",
+          fn: async () => {
+            withSpan({ name: "lookup", type: "tool" }, () => {});
+            if (clearWithTestCase) {
+              updateCurrentTrace({
+                testCase: new LLMTestCase({
+                  input: "Weather?",
+                  actualOutput: "Sunny.",
+                }),
+              });
+            } else {
+              updateCurrentTrace({
+                toolsCalled: getCurrentTrace()?.toolsCalled,
+              });
+            }
+            withSpan({ name: "search", type: "tool" }, () => {});
+          },
+        })();
+        expect(traces[0].toolsCalled?.map((tool) => tool.name)).toEqual(
+          expected,
+        );
+        expect(
+          traces[0].rootSpans[0].children.map((span) => span.name),
+        ).toEqual(["lookup", "search"]);
+      } finally {
+        stop();
+      }
+    },
+  );
 
   it("leaves other spans to confident-trace's export", async () => {
     exported.reset();
