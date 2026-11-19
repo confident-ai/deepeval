@@ -19,6 +19,7 @@ from tests.test_metrics.audio_fixtures import (
     spoken_words,
     to_audio,
     tone,
+    with_noise,
     zeros,
 )
 
@@ -172,6 +173,18 @@ def test_a_reply_the_caller_barged_into_is_not_an_abrupt_cut_off():
     turns = _with_defect(1, lambda: cut_short(speech_like(3.0), 1.125))
     turns[1].interrupted = True
     assert _measure(AbruptCutoffMetric, turns).score == 1.0
+
+
+def test_a_reply_ending_in_steady_background_noise_is_not_a_cut_off():
+    turns = _with_defect(1, lambda: with_noise(speech_like(3.0), -30))
+    assert _measure(AbruptCutoffMetric, turns).score == 1.0
+
+
+def test_a_reply_cut_mid_word_over_background_noise_is_a_cut_off():
+    turns = _with_defect(
+        1, lambda: cut_short(with_noise(speech_like(4.0), -30), 2.125)
+    )
+    assert _measure(AbruptCutoffMetric, turns).score == pytest.approx(2 / 3)
 
 
 def test_a_dead_stretch_mid_reply_is_a_dead_stream_not_a_cut_off():

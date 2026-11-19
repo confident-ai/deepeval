@@ -118,6 +118,16 @@ def cut_short(samples: array, seconds) -> array:
     return samples[: int(seconds * RATE)]
 
 
+def _saturate(value) -> int:
+    return max(-32768, min(32767, int(value)))
+
+
+def with_noise(samples: array, dbfs, *, seed=0) -> array:
+    rng = random.Random(seed)
+    level = 32768 * 10 ** (dbfs / 20)
+    return array("h", [_saturate(v + rng.gauss(0, level)) for v in samples])
+
+
 def to_audio(samples: array, start_time=None) -> Audio:
     return Audio.from_bytes(
         audio_utils.pcm16_to_wav_bytes(samples.tobytes(), RATE, num_channels=1),

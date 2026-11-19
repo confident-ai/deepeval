@@ -29,6 +29,11 @@ ECHO_MIN_DELAY_S = 0.06
 ECHO_MAX_DELAY_S = 0.5
 ECHO_WHITENING = 0.75
 ECHO_MIN_STRENGTH = 0.015
+NOISE_LEVEL_PERCENTILE = 0.1
+NOISE_MIN_SECONDS = 2.0
+# A cut-off ends mid-sound: the last 20 ms must stand this far above the
+# reply's background noise, not just above a fixed level.
+EDGE_ABOVE_NOISE_DB = 10.0
 
 # Lazy import cache
 _numpy_mod = None
@@ -276,6 +281,11 @@ def echo_delay_and_strength(audio: Audio) -> Tuple[float, float]:
     return (min_lag + best) / rate, float(candidates[best])
 
 
+def _percentile(values: Sequence[float], fraction: float) -> float:
+    ordered = sorted(values)
+    return ordered[int(fraction * (len(ordered) - 1))] if ordered else 0.0
+
+
 def analyze_audio(audio: Audio) -> AudioMeasurements:
     samples, sample_rate = decode_audio(audio)
     frames = frame_samples(samples, sample_rate)
@@ -366,6 +376,15 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
 
     edge_size = max(1, int(sample_rate * 0.02))
     edge_threshold = max(audio_utils.DEFAULT_SILENCE_RMS * 2, 1000)
+    end_threshold = edge_threshold
+    if len(samples) / sample_rate >= NOISE_MIN_SECONDS:
+        # A reply that simply ends inside steady background noise isn't cut.
+        background = _percentile(
+            [value for value in frame_rms if value > 0], NOISE_LEVEL_PERCENTILE
+        )
+        end_threshold = max(
+            edge_threshold, background * 10 ** (EDGE_ABOVE_NOISE_DB / 20)
+        )
     return AudioMeasurements(
         duration=len(samples) / sample_rate,
         rms_dbfs=dbfs(rms(samples)),
@@ -382,7 +401,7 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         pitch_mean_hz=mean(pitches) if pitches else None,
         pitch_variation_hz=pstdev(pitches) if len(pitches) > 1 else None,
         starts_abruptly=rms(samples[:edge_size]) > edge_threshold,
-        ends_abruptly=rms(samples[-edge_size:]) > edge_threshold,
+        ends_abruptly=rms(samples[-edge_size:]) > end_threshold,
     )
 
 
