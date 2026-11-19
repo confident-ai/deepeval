@@ -48,6 +48,7 @@ class InboundEvent:
 
     audio: Optional[bytes] = None
     transcript: Optional[str] = None
+    provider_transcript: Optional[str] = None
     turn_complete: bool = False
     pong_reply: Optional[Union[str, bytes]] = None
     ready: bool = False
@@ -75,6 +76,7 @@ class WebSocketMessageSchema(BaseModel):
     receive_audio_key: str = Field(default="audio", min_length=1)
     binary_inbound: bool = False
     receive_transcript_key: Optional[str] = None
+    receive_provider_transcript_key: Optional[str] = None
 
     # End of turn: the value under `type_key` that means the agent is done.
     # Without one, only silence is left to infer it from.
@@ -138,6 +140,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self._inbound: Optional[asyncio.Queue] = None
         self._ready: Optional[asyncio.Event] = None
         self._current_transcript: Optional[str] = None
+        self._provider_transcript_parts: List[str] = []
         self._interrupted: bool = False
         self._uplink: Optional[UplinkStream] = None
 
@@ -181,16 +184,13 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         self._ready = asyncio.Event()
         self._uplink = UplinkStream()
         self._current_transcript = None
+        self._provider_transcript_parts = []
         self._interrupted = False
         self._tool_hold = asyncio.Event()
         self._tools_running = 0
         self._tool_spans = []
 
-        self._session = aiohttp.ClientSession()
-        url = await self._open_session()
-        self._ws = await self._session.ws_connect(
-            url, headers=self._connect_headers()
-        )
+        self._ws = await self._open_socket()
 
         for message in self._initial_messages():
             await self._send(message)
@@ -211,6 +211,13 @@ class BaseWebSocketConnector(BaseVoiceConnector):
                 f"{self.connect_timeout_s}s. Check the agent id / credentials "
                 "and that the provider is reachable."
             )
+
+    async def _open_socket(self):
+        self._session = aiohttp.ClientSession()
+        url = await self._open_session()
+        return await self._session.ws_connect(
+            url, headers=self._connect_headers()
+        )
 
     async def _send(self, message: Union[str, bytes]) -> None:
         if isinstance(message, (bytes, bytearray)):
@@ -261,6 +268,16 @@ class BaseWebSocketConnector(BaseVoiceConnector):
                         await self._inbound.put(
                             AgentEvent(
                                 transcript=event.transcript,
+                                received_at=received_at,
+                            )
+                        )
+                    if event.provider_transcript:
+                        self._provider_transcript_parts.append(
+                            event.provider_transcript
+                        )
+                        await self._inbound.put(
+                            AgentEvent(
+                                provider_transcript=event.provider_transcript,
                                 received_at=received_at,
                             )
                         )
@@ -460,6 +477,7 @@ class BaseWebSocketConnector(BaseVoiceConnector):
     async def exchange_turn(self, audio: Audio) -> ConnectorTurn:
         self.drain_downlink()
         self._current_transcript = None
+        self._provider_transcript_parts = []
         self._interrupted = False
         self._tool_spans = []
 
@@ -523,6 +541,8 @@ class BaseWebSocketConnector(BaseVoiceConnector):
         return ConnectorTurn(
             audio=reply,
             transcript=self._current_transcript,
+            provider_transcript=" ".join(self._provider_transcript_parts)
+            or None,
             latency_ms=latency_ms,
             interrupted=self._interrupted,
             input_audio_started_at=input_audio_started_at,
@@ -574,6 +594,7 @@ class WebSocketConnector(BaseWebSocketConnector):
         receive_audio_key: str = "audio",
         binary_inbound: bool = False,
         receive_transcript_key: Optional[str] = None,
+        receive_provider_transcript_key: Optional[str] = None,
         turn_complete_type: Optional[str] = None,
         type_key: str = "type",
         init_messages: Optional[List[Union[str, dict]]] = None,
@@ -583,15 +604,16 @@ class WebSocketConnector(BaseWebSocketConnector):
         super().__init__(sample_rate=sample_rate, **base_kwargs)
         self.url = url
         self.headers = headers
-        # The nine message-shape arguments describe one thing — the agent's
+        # The ten message-shape arguments describe one thing — the agent's
         # dialect — and are kept as one, validated together rather than
-        # scattered across the connector as nine unchecked strings.
+        # scattered across the connector as ten unchecked strings.
         self.schema = WebSocketMessageSchema(
             send_key=send_key,
             binary_outbound=binary_outbound,
             receive_audio_key=receive_audio_key,
             binary_inbound=binary_inbound,
             receive_transcript_key=receive_transcript_key,
+            receive_provider_transcript_key=receive_provider_transcript_key,
             turn_complete_type=turn_complete_type,
             type_key=type_key,
             init_messages=init_messages or [],
@@ -641,6 +663,10 @@ class WebSocketConnector(BaseWebSocketConnector):
             transcript = schema.read(message, schema.receive_transcript_key)
             if transcript:
                 event.transcript = transcript
+        if schema.receive_provider_transcript_key:
+            heard = schema.read(message, schema.receive_provider_transcript_key)
+            if heard:
+                event.provider_transcript = heard
         if (
             schema.turn_complete_type is not None
             and message.get(schema.type_key) == schema.turn_complete_type

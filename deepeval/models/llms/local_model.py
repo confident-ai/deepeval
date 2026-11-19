@@ -10,17 +10,14 @@ from deepeval.models.retry_policy import (
     sdk_retries_for,
 )
 from deepeval.models.llms.utils import trim_and_load_json
+from deepeval.models.llms.multimodal import to_openai_content
+from deepeval.test_case import Audio
 from deepeval.models.utils import (
     require_secret_api_key,
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.constants import ProviderSlug as PS
-from deepeval.test_case import MLLMImage
-from deepeval.utils import (
-    check_if_multimodal,
-    convert_to_multi_modal_array,
-    require_param,
-)
+from deepeval.utils import require_param
 
 # consistent retry rules
 retry_local = create_retry_decorator(PS.LOCAL)
@@ -86,14 +83,18 @@ class LocalModel(DeepEvalBaseLLM):
 
     @retry_local
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = prompt
+        content = to_openai_content(
+            prompt,
+            audio,
+            text_only_as_string=True,
+            inline_remote_images=True,
+        )
 
         client = self.load_model(async_mode=False)
         response: ChatCompletion = client.chat.completions.create(
@@ -112,14 +113,18 @@ class LocalModel(DeepEvalBaseLLM):
 
     @retry_local
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = prompt
+        content = to_openai_content(
+            prompt,
+            audio,
+            text_only_as_string=True,
+            inline_remote_images=True,
+        )
 
         client = self.load_model(async_mode=True)
         response: ChatCompletion = await client.chat.completions.create(
@@ -135,63 +140,6 @@ class LocalModel(DeepEvalBaseLLM):
             return schema.model_validate(json_output), 0.0
         else:
             return res_content, 0.0
-
-    def generate_content(
-        self, multimodal_input: List[Union[str, MLLMImage]] = []
-    ):
-        """
-        Converts multimodal input into OpenAI-compatible format.
-        Uses data URIs for all images since we can't guarantee local servers support URL fetching.
-        """
-        prompt = []
-        for element in multimodal_input:
-            if isinstance(element, str):
-                prompt.append({"type": "text", "text": element})
-            elif isinstance(element, MLLMImage):
-                # For local servers, use data URIs for both remote and local images
-                # Most local servers don't support fetching external URLs
-                if element.url and not element.local:
-                    import requests
-                    import base64
-
-                    settings = get_settings()
-                    try:
-                        response = requests.get(
-                            element.url,
-                            timeout=(
-                                settings.MEDIA_IMAGE_CONNECT_TIMEOUT_SECONDS,
-                                settings.MEDIA_IMAGE_READ_TIMEOUT_SECONDS,
-                            ),
-                        )
-                        response.raise_for_status()
-
-                        # Get mime type from response
-                        mime_type = response.headers.get(
-                            "content-type", element.mimeType or "image/jpeg"
-                        )
-
-                        # Encode to base64
-                        b64_data = base64.b64encode(response.content).decode(
-                            "utf-8"
-                        )
-                        data_uri = f"data:{mime_type};base64,{b64_data}"
-
-                    except Exception as e:
-                        raise ValueError(
-                            f"Failed to fetch remote image {element.url}: {e}"
-                        )
-                else:
-                    element.ensure_images_loaded()
-                    mime_type = element.mimeType or "image/jpeg"
-                    data_uri = f"data:{mime_type};base64,{element.dataBase64}"
-
-                prompt.append(
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": data_uri},
-                    }
-                )
-        return prompt
 
     ###############################################
     # Model

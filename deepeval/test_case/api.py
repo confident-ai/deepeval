@@ -28,6 +28,7 @@ def create_api_turn(turn: Turn, index: int) -> TurnApi:
         user_id=turn.user_id,
         retrievalContext=retrieval_context,
         toolsCalled=turn.tools_called,
+        metadata=turn.metadata,
         order=index,
     )
 
@@ -53,6 +54,7 @@ def create_api_test_case(
 
         api_test_case = ConversationalApiTestCase(
             name=name,
+            expectations=test_case.expectations,
             success=True,
             metricsData=[],
             runDuration=0,
@@ -101,6 +103,7 @@ def create_api_test_case(
 
         api_test_case = LLMApiTestCase(
             name=name,
+            expectations=test_case.expectations,
             input=test_case.input,
             actualOutput=test_case.actual_output,
             expectedOutput=test_case.expected_output,

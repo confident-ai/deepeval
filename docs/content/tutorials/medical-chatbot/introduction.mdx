@@ -3,27 +3,25 @@ id: introduction
 title: Introduction to Chatbot Evaluation
 sidebar_label: Introduction
 ---
-import { ASSETS } from "@site/src/assets";
-
 Learn how to build and evaluate a reliable **LLM-powered medical chatbot** using **OpenAI**, **LangChain**, **Qdrant**, and **DeepEval**—from development to deployment.
 
 <TechStackCards
   techStack={[
     {
       name: "DeepEval",
-      logo: "https://pbs.twimg.com/profile_images/1888060560161574912/qbw1-_2g.png",
+      logo: "/icons/deepeval-icon.svg",
     },
     {
       name: "OpenAI",
-      logo: "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/openai.png",
+      logo: "/icons/integrations/openai.svg",
     },
     {
       name: "Qdrant",
-      logo: "https://cdn-avatars.huggingface.co/v1/production/uploads/612689acc64ee1aa6818808a/y7jCVdW48MnIZVmsCefSC.png",
+      logo: "/icons/integrations/qdrant.webp",
     },
     {
       name: "LangChain",
-      logo: "https://logo.svgcdn.com/s/langchain-dark-8x.png",
+      logo: "/icons/integrations/langchain.svg",
     },
   ]}
 />
@@ -95,7 +93,7 @@ In this tutorial, you'll learn to evaluate and test a **medical chatbot** using 
 
 It's a **multi-turn conversational agent**—meaning it can remember previous messages, handle follow-up questions, and take action based on the full conversation. Here's a nice looking UI to give you a better idea of what your chatbot could look like in the real world:
 
-<ImageDisplayer src={ASSETS.tutorialMedicalChatbotOverview} alt="Medical Chatbot Overview" />
+<ImageDisplayer id="screenshots/example-apps/medical-chatbot" />
 
 In the next section, we'll begin by going through the chatbot implementation, built with OpenAI, Qdrant, and LangChain.
 

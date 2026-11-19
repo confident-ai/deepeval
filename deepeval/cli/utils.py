@@ -43,13 +43,18 @@ from deepeval.confident.api import get_confident_api_key, set_confident_api_key
 from deepeval.cli.dotenv_handler import DotenvHandler
 
 StrOrEnum = Union[str, "Enum"]
-PROD = "https://app.confident-ai.com"
+PROD = "https://cloud.confident-ai.com"
 WWW = "https://www.confident-ai.com"
 
 # Hosts considered "browser-clickable" Confident AI properties. Programmatic
 # hosts (api.*, deepeval.*, otel.*) are intentionally excluded.
 _CONFIDENT_UTM_HOSTS = frozenset(
-    {"confident-ai.com", "www.confident-ai.com", "app.confident-ai.com"}
+    {
+        "confident-ai.com",
+        "www.confident-ai.com",
+        "cloud.confident-ai.com",
+        "app.confident-ai.com",
+    }
 )
 _UTM_SOURCE = "deepeval"
 

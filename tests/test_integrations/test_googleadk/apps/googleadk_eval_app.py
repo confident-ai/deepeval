@@ -52,7 +52,7 @@ def special_tool(query: str) -> dict:
 
 def _build_agent() -> LlmAgent:
     return LlmAgent(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         name="evals_assistant",
         instruction="You are a helpful assistant. Be concise.",
         tools=[special_tool],

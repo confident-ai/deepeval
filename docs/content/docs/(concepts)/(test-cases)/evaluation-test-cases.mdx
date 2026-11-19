@@ -16,7 +16,7 @@ A **single-turn test case** is a blueprint provided by `deepeval` to unit test L
 Throughout this documentation, you should assume the term 'test case' refers to an `LLMTestCase` instead of `MLLMImage` or `ConversationalTestCase`.
 :::
 
-An `LLMTestCase` is the most prominent type of test case in `deepeval`. It has **NINE** parameters:
+An `LLMTestCase` is the most prominent type of test case in `deepeval`. It has the following parameters:
 
 - `input`
 - [Optional] <Term py="actual_output" ts="actualOutput"/>
@@ -25,6 +25,8 @@ An `LLMTestCase` is the most prominent type of test case in `deepeval`. It has *
 - [Optional] <Term py="retrieval_context" ts="retrievalContext"/>
 - [Optional] <Term py="tools_called" ts="toolsCalled"/>
 - [Optional] <Term py="expected_tools" ts="expectedTools"/>
+- [Optional] `expectations`
+- <Only id="python">[Optional] `expected_labels`</Only>
 - [Optional] <Term py="token_cost" ts="tokenCost"/>
 - [Optional] <Term py="completion_time" ts="completionTime"/>
 
@@ -78,7 +80,7 @@ Since `deepeval` is an LLM evaluation framework, the **`input` and <Term py="act
   />
 </video>
 
-To get your own sharable testing report with `deepeval`, [sign up to Confident AI](https://app.confident-ai.com), or run `deepeval login` in the CLI:
+Test runs also appear on Confident AI once you've logged in from the CLI:
 
 ```bash
 deepeval login
@@ -184,9 +186,9 @@ For users starting out, scoping the interaction as the overall LLM application w
 
 ## LLM Test Case
 
-An `LLMTestCase` in `deepeval` can be used to unit test interactions within your LLM application (which can just be an LLM itself), which includes use cases such as RAG and LLM agents (for individual components, agents within agents, or the agent altogether). It contains the necessary information (<Term py="tools_called" ts="toolsCalled"/> for agents, <Term py="retrieval_context" ts="retrievalContext"/> for RAG, etc.) to evaluate your LLM application for a given `input`.
+An `LLMTestCase` in `deepeval` can be used to unit test interactions within your LLM application (which can just be an LLM itself), which includes use cases such as AI agents and RAG (for individual components, agents within agents, or the agent altogether). It contains the necessary information (<Term py="tools_called" ts="toolsCalled"/> for agents, <Term py="retrieval_context" ts="retrievalContext"/> for RAG, etc.) to evaluate your LLM application for a given `input`.
 
-<ImageDisplayer src={ASSETS.llmTestCase} alt="LLM Test Case" />
+<ImageDisplayer id="diagrams/in-house/evaluation/llm-test-case" />
 
 An `LLMTestCase` is used for both end-to-end and component-level evaluation:
 
@@ -202,7 +204,7 @@ With the exception of conversational metrics, which are metrics to evaluate conv
 You cannot use conversational metrics to evaluate an `LLMTestCase`. Conveniently, most metrics in `deepeval` are non-conversational.
 :::
 
-Keep reading to learn which parameters in an `LLMTestCase` are required to evaluate different aspects of an LLM applications - ranging from pure LLMs, RAG pipelines, and even LLM agents.
+Keep reading to learn which parameters in an `LLMTestCase` are required to evaluate different aspects of an LLM applications - ranging from AI agents to RAG pipelines and pure LLMs.
 
 ### Input
 
@@ -244,7 +246,7 @@ const testCase = new LLMTestCase({
 
 Not all `input`s should include your prompt template, as this is determined by the metric you're using. Furthermore, the `input` should **NEVER** be a json version of the list of messages you are passing into your LLM.
 
-If you're logged into Confident AI, you can associate hyperparameters such as prompt templates with each test run to easily figure out which prompt template gives the best <Term py="actual_output" ts="actualOutput"/>s for a given `input`:
+If you're logged into Confident AI, you can also log hyperparameters such as the prompt template with each test run:
 
 ```bash
 deepeval login
@@ -368,6 +370,88 @@ const testCase = new LLMTestCase({
 
 </Switch>
 
+### Expectations
+
+<Switch>
+
+<Case id="python">
+
+The optional `expectations` parameter describes what must happen and what must not happen for this input. Use an `Expectations` object to define success directly on the test case, without choosing a metric or providing an `expected_output`.
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import Expectations
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(
+    input="Cancel my subscription.",
+    actual_output="Please confirm that you want to cancel your subscription.",
+    expectations=Expectations(
+        must=["Ask the user to confirm the cancellation."],
+        must_not=["Claim the subscription has already been cancelled."],
+    ),
+)
+
+evaluate(test_cases=[test_case])
+```
+
+There are **FOUR** optional parameters when creating an `Expectations` object:
+
+- [Optional] `must`: a list of non-empty strings describing conditions that must be satisfied. Defaulted to `[]`.
+- [Optional] `must_not`: a list of non-empty strings describing behaviors that must be absent. Write the prohibited behavior itself, such as "Claim a refund was issued". Defaulted to `[]`.
+- [Optional] `model`: a model name string or a [custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM` used to evaluate conditions in `llm` mode. Defaulted to `None`, which uses the configured default evaluation model. Model names are preserved when saving a dataset; custom model instances serialize as `null` and must be reattached after loading.
+- [Optional] `eval_mode`: `"llm"` or `"system_one"`, choosing how to judge the conditions. Defaulted to `None`, which uses the configured global eval mode or `llm` if none is set. An explicit global `DEEPEVAL_EVAL_MODE` setting overrides the object's `eval_mode`. Expectations do not accept `eval_mode="hybrid"`; a global `hybrid` setting resolves to `llm`, matching classifiers. In `system_one` mode, the configured default System One judge answers the conditions without calling the LLM. It requires the same System One setup as metrics and does not fall back to the LLM on errors.
+
+At least one condition in `must` or `must_not` is required to evaluate expectations.
+
+Every `must` condition must hold and every `must_not` behavior must be absent for the expectation check to pass. Results appear under **Expectations**, with a verdict and reason for each condition. When other evaluators are supplied, empty expectations produce no expectation verdict. Each condition must be a non-empty string.
+
+Both `evaluate()` and `assert_test()` check expectations automatically. If no metrics or classifiers are supplied, every test case passed to `evaluate()` must have at least one `must` or `must_not` condition. The same requirement applies to the case passed to `assert_test()`. Missing or empty expectations raise a `ValueError` before evaluation begins. You can also supply metrics or classifiers in the same run; an expectation failure fails the case alongside any other evaluation failures. Expectations currently require local evaluation and cannot be combined with `metric_collection`.
+
+`expected_output` provides a reference answer; `expectations` specifies conditions on the response or actions. They are optional independently and can coexist. To check external actions, include the observed tool calls or evaluate an observed trace. A response claiming an action happened is not proof of the action. Missing evidence produces an evaluation error rather than an assumed pass; use `ErrorConfig(ignore_errors=True)` to record the error and continue the run.
+
+</Case>
+
+<Case id="typescript">
+
+The optional `expectations` parameter describes what must happen and what must not happen for this input, without choosing a metric or providing an `expectedOutput`.
+
+```typescript
+import { evaluate } from "deepeval";
+import { Expectations } from "deepeval/dataset";
+import { LLMTestCase } from "deepeval/test-case";
+
+const testCase = new LLMTestCase({
+  input: "Cancel my subscription.",
+  actualOutput: "Please confirm that you want to cancel your subscription.",
+  expectations: new Expectations({
+    must: ["Ask the user to confirm the cancellation."],
+    mustNot: ["Claim the subscription has already been cancelled."],
+  }),
+});
+
+await evaluate([testCase]);
+```
+
+There are **FOUR** optional parameters when creating an `Expectations` object:
+
+- [Optional] `must`: a list of non-empty strings describing conditions that must be satisfied. Defaulted to `[]`.
+- [Optional] `mustNot`: a list of non-empty strings describing behaviors that must be absent. Write the prohibited behavior itself, such as "Claim a refund was issued". Defaulted to `[]`.
+- [Optional] `model`: a model name string or a [custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM` used in `llm` mode. Uses the configured default evaluation model when omitted. Model names survive dataset save/load; custom model instances serialize as `null` and must be reattached after loading.
+- [Optional] `evalMode`: `"llm"` or `"system_one"`. Uses the configured global eval mode or `llm` when omitted. An explicit global `DEEPEVAL_EVAL_MODE` overrides this setting; global `hybrid` resolves to `llm`. Expectations do not accept `"hybrid"` directly. In `system_one` mode, the default System One judge answers the conditions without an LLM or fallback.
+
+At least one condition in `must` or `mustNot` is required to evaluate expectations.
+
+`evaluate()` and `expect(testCase).toPass()` check expectations automatically. If no metrics are supplied, every test case needs non-empty expectations; missing expectations raise an `Error` before evaluation begins. Every required condition must hold and every prohibited behavior must be absent. Results appear under **Expectations**, with a verdict and reason for each condition. You can also supply metrics in the same run.
+
+Runs containing expectations stay local and print a warning that expectations are not available on Confident AI yet. Missing evidence produces an evaluation error; use `errorConfig: { ignoreErrors: true }` to record it and continue.
+
+`expectedOutput` provides a reference answer; `expectations` specifies conditions on the response or actions. They can coexist or be supplied independently. Include observed tool calls or evaluate an observed trace when checking external actions. A response claiming an action happened is not proof.
+
+</Case>
+
+</Switch>
+
 ### Context
 
 The `context` is an **optional** parameter that represents additional data received by your LLM application as supplementary sources of golden truth. You can view it as the ideal segment of your knowledge base relevant as support information to a specific input. Context is **static** and should not be generated dynamically.
@@ -480,7 +564,7 @@ Remember, `context` is the ideal retrieval results for a given input and typical
 
 ### Tools Called
 
-The <Term py="tools_called" ts="toolsCalled"/> parameter is an **optional** parameter that represents the tools your LLM agent actually invoked during execution. By providing <Term py="tools_called" ts="toolsCalled"/>, you can evaluate how effectively your LLM agent utilized the tools available to it.
+The <Term py="tools_called" ts="toolsCalled"/> parameter is an **optional** parameter that represents the tools your AI agent actually invoked during execution. By providing <Term py="tools_called" ts="toolsCalled"/>, you can evaluate how effectively your AI agent utilized the tools available to it.
 
 :::note
 The <Term py="tools_called" ts="toolsCalled"/> parameter accepts a list of `ToolCall` objects.
@@ -658,6 +742,26 @@ const testCase = new LLMTestCase({
 </Case>
 
 </Switch>
+
+<Only id="python">
+
+### Expected Labels
+
+The `expected_labels` parameter is an **optional** `Dict[str, str]` that maps a [classifier](/docs/classifiers-introduction)'s `name` to the label this test case should receive. A classifier only passes or fails a test case when its name appears here; otherwise its classification is recorded but does not affect the test case's status. Metrics never read this parameter.
+
+```python
+from deepeval.test_case import LLMTestCase
+
+test_case = LLMTestCase(
+    input="How do I pick a lock?",
+    actual_output="I can't help with that, but I can point you to a locksmith.",
+    expected_labels={"refusal": "refused", "topic": "security"},
+)
+```
+
+Each value must be one of the labels declared on the classifier with that name, otherwise `evaluate()` raises a `ValueError` before any judge call. A key that matches no classifier in the run is ignored with a warning, so a dataset can carry expectations for classifiers you are not running today.
+
+</Only>
 
 ### Token cost
 
@@ -886,7 +990,7 @@ const testCase = new LLMTestCase({ input: "...", actualOutput: "...", flaky: tru
 
 </Switch>
 
-This is most useful for test cases you know are noisy — for example ones with borderline scores that flip between passing and failing across runs — that you still want to keep evaluating and tracking without letting them gate deployments. The `flaky` status is also logged on Confident AI so you can monitor how often flaky test cases actually fail.
+This is most useful for test cases you know are noisy — for example ones with borderline scores that flip between passing and failing across runs — that you still want to keep evaluating and tracking without letting them gate deployments. The `flaky` status is also logged with the run on Confident AI if you're logged in.
 
 :::info
 Metrics can also be marked as flaky. A flaky **metric's** failure never decides its test case's pass/fail status, which is why every evaluation requires at least one non-flaky metric with a `threshold`.
@@ -894,7 +998,7 @@ Metrics can also be marked as flaky. A flaky **metric's** failure never decides 
 
 ## Label Test Cases For Confident AI
 
-If you're using Confident AI, these are some additional parameters to help manage your test cases.
+If you're logged into Confident AI, these optional parameters label test cases in the runs sent there.
 
 ### Name
 
@@ -1013,17 +1117,19 @@ Click on each of the links to learn how to use test cases for evals.
     },
     {
       question:
-        "How do I organize and search test cases across a team or keep them on the cloud?",
+        "How do I label test cases so I can find them later?",
       answer: (
         <>
-          Locally you can label test cases with <code>name</code> and{" "}
-          <code>tags</code> for filtering. If your team wants a shared,
-          cloud-hosted view, those same labels carry over to{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a>, where you can
-          search, filter, and visualize test cases and their results in a UI —
-          useful when importing from external data sources or collaborating
-          across a team. It's optional and your test cases run identically
-          without it.
+          Give test cases a <code>name</code> (useful as an external ID when
+          importing from another data source) and <code>tags</code> for
+          filtering. If you're logged in, both carry over with the run to
+          Confident AI. If you're already in production,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces failing production traces before anyone has written an eval
+          for them and turns them into goldens for your next round of test
+          cases.
         </>
       ),
     },

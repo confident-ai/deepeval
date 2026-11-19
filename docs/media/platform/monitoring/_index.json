@@ -1,0 +1,28 @@
+{
+  "images": [
+    {
+      "file": "alert-rule-editor.webp",
+      "title": "Alert rule editor with trace count preview",
+      "alt": "Confident AI Edit Alert Rule panel for Hourly Trace Alerts, setting a trace count condition with a sentiment filter beside a 30-day preview",
+      "width": 2400,
+      "height": 1375,
+      "source": {
+        "urls": [
+          "/img/confident-alerts.png"
+        ]
+      }
+    },
+    {
+      "file": "signals.webp",
+      "title": "Signals page with production findings",
+      "alt": "Confident AI Signals page listing five findings, such as a 4.3x spike in circular output and a new cryptocurrency tax advice topic",
+      "width": 2400,
+      "height": 1337,
+      "source": {
+        "urls": [
+          "/img/confident-production-monitoring.png"
+        ]
+      }
+    }
+  ]
+}

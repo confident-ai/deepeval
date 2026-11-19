@@ -21,8 +21,8 @@ The best evaluation datasets are grounded in real product behavior. We recommend
 2. **Use production traffic.** If you do not have a curated dataset, sample real conversations or requests from production, then review and clean them before using them for evals.
 3. **Use synthetic data.** If you do not have enough curated or production data, generate synthetic examples to create initial coverage and uncover obvious regressions.
 
-:::tip
-[Confident AI](https://www.confident-ai.com) automates the trace -> annotate -> dataset loop, so your team can turn real production behavior into curated evaluation data. All you need to do is ingest traces with `deepeval`, then review and promote the right examples into datasets.
+:::tip[Goldens from production]
+Synthetic data gets you started, but once your app is live the best goldens come from traces that failed. [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production traces before anyone has written an eval for them, routes them to the right annotators, and turns them into goldens for your next dataset.
 :::
 
 Synthetic data is most useful when it gives you a starting point faster. For high-stakes workflows, you should still review, edit, and enrich generated examples before treating them as ground truth.
@@ -166,25 +166,16 @@ Start with goldens to define what should be tested, then add turn simulation whe
       ),
     },
     {
-      question: "How do I turn production traffic into evaluation datasets?",
+      question: "How do I turn production traces into evaluation datasets?",
       answer: (
         <>
-          Ingest traces with <code>deepeval</code>, then review and promote the
-          best examples into a dataset on{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a>, the
-          enterprise platform for all-in-one evals, observability, and red
-          teaming, which automates the trace → annotate → dataset loop.
-        </>
-      ),
-    },
-    {
-      question: "Can my team generate synthetic data without code?",
-      answer: (
-        <>
-          Yes. On <a href="https://www.confident-ai.com">Confident AI</a> you
-          can generate goldens no-code — connect your knowledge bases, customize
-          the generation pipeline, experiment with variations, and collaborate
-          on the resulting dataset as a team.
+          Catch the traces that fail and turn them into a dataset. On{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>
+          , failing production traces are clustered into failure modes and
+          routed to the right annotators (engineers, QA, domain experts, PMs),
+          who turn them into goldens for your next eval.
         </>
       ),
     },

@@ -1,38 +1,507 @@
 {
-  "uuid": "526f2601-f909-4e81-a9fc-353cb861105d",
+  "uuid": "de963c318998bf9ddbab4de8462fff1c",
   "baseSpans": [
     {
-      "uuid": "27b7f37b-e1b5-417c-bf3f-1017299f3c15",
-      "name": "kickoff",
+      "uuid": "91f0ac17a660bb6d",
+      "name": "crew crew",
       "status": "SUCCESS",
       "type": "base",
-      "startTime": "2026-06-01T17:24:23.016Z",
-      "endTime": "2026-06-01T17:24:26.765Z",
-      "input": {},
+      "startTime": "2026-10-21T17:48:39.932Z",
+      "endTime": "2026-10-21T17:48:43.577Z",
       "output": "SUCCESS",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "7f77a7272ff95abc",
+      "name": "task Task",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "91f0ac17a660bb6d",
+      "startTime": "2026-10-21T17:48:40.110Z",
+      "endTime": "2026-10-21T17:48:43.570Z",
+      "input": {
+        "description": "Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.",
+        "context": ""
+      },
+      "output": "SUCCESS",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "e65b8ff790a12c99",
+      "name": "flow AgentExecutor",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "835464eed9087191",
+      "startTime": "2026-10-21T17:48:40.120Z",
+      "endTime": "2026-10-21T17:48:43.567Z",
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "fbea5710530c4a8f",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:43.562Z",
+      "endTime": "2026-10-21T17:48:43.563Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "62eba621e3c987bc",
+      "name": "node call_llm_native_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:43.561Z",
+      "endTime": "2026-10-21T17:48:43.562Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "f6440cf9153f5a6d",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:43.560Z",
+      "endTime": "2026-10-21T17:48:43.561Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning_native",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "57b0d4d5a8a0f181",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:43.559Z",
+      "endTime": "2026-10-21T17:48:43.559Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "e6aa29ab6a0df8b3",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:43.555Z",
+      "endTime": "2026-10-21T17:48:43.558Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "117fa519cd366f5e",
+      "name": "node call_llm_native_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:42.650Z",
+      "endTime": "2026-10-21T17:48:43.554Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "84aa4955a38ad001",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:42.649Z",
+      "endTime": "2026-10-21T17:48:42.649Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning_native",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "a51625905ae62943",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:42.648Z",
+      "endTime": "2026-10-21T17:48:42.649Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "eee37cee7e9a9475",
+      "name": "node increment_and_continue",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:42.647Z",
+      "endTime": "2026-10-21T17:48:42.648Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "cf474c089a2458a8",
+      "name": "node check_native_todo_completion",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:42.646Z",
+      "endTime": "2026-10-21T17:48:42.647Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "todo_not_satisfied",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "24b1c73f5a95e352",
+      "name": "node execute_native_tool",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:41.724Z",
+      "endTime": "2026-10-21T17:48:42.646Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_tool_completed",
+      "integration": "CrewAI",
+      "toolsCalled": [
+        {
+          "name": "Delegate work to coworker",
+          "type": "FUNCTION",
+          "output": "SUCCESS",
+          "inputParameters": {
+            "task": "Write the word: 'SUCCESS'.",
+            "context": "The task is to simply write the word 'SUCCESS' without any additional content or context.",
+            "coworker": "Writer"
+          }
+        }
+      ]
+    },
+    {
+      "uuid": "df6d01dcc4af1e82",
+      "name": "flow AgentExecutor",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "2a3222ced4edfa3d",
+      "startTime": "2026-10-21T17:48:41.730Z",
+      "endTime": "2026-10-21T17:48:42.643Z",
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "b4bbcef738a7cdb5",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "df6d01dcc4af1e82",
+      "startTime": "2026-10-21T17:48:42.639Z",
+      "endTime": "2026-10-21T17:48:42.639Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "34cde637f25a8e15",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "df6d01dcc4af1e82",
+      "startTime": "2026-10-21T17:48:42.637Z",
+      "endTime": "2026-10-21T17:48:42.638Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "da30729c965684a4",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "df6d01dcc4af1e82",
+      "startTime": "2026-10-21T17:48:42.636Z",
+      "endTime": "2026-10-21T17:48:42.636Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "ff9c4ea4d1465341",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "df6d01dcc4af1e82",
+      "startTime": "2026-10-21T17:48:42.635Z",
+      "endTime": "2026-10-21T17:48:42.635Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "68057cf3053e78bc",
+      "name": "node continue_iteration",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "df6d01dcc4af1e82",
+      "startTime": "2026-10-21T17:48:42.634Z",
+      "endTime": "2026-10-21T17:48:42.634Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "check_iteration",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "33dc483b364585fd",
+      "name": "node finalize",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "df6d01dcc4af1e82",
+      "startTime": "2026-10-21T17:48:42.630Z",
+      "endTime": "2026-10-21T17:48:42.632Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "completed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "fcce0599602a46a2",
+      "name": "node route_by_answer_type",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "df6d01dcc4af1e82",
+      "startTime": "2026-10-21T17:48:42.628Z",
+      "endTime": "2026-10-21T17:48:42.629Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "agent_finished",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "e5a21ea24062ca8a",
+      "name": "node call_llm_and_parse",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "df6d01dcc4af1e82",
+      "startTime": "2026-10-21T17:48:41.739Z",
+      "endTime": "2026-10-21T17:48:42.627Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "parsed",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "f5f48c7a8be38700",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "df6d01dcc4af1e82",
+      "startTime": "2026-10-21T17:48:41.738Z",
+      "endTime": "2026-10-21T17:48:41.738Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "5bcf1aad2efe593d",
+      "name": "node initialize_reasoning",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "df6d01dcc4af1e82",
+      "startTime": "2026-10-21T17:48:41.735Z",
+      "endTime": "2026-10-21T17:48:41.738Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "841279eeb9c1c57e",
+      "name": "node check_todos_available",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "df6d01dcc4af1e82",
+      "startTime": "2026-10-21T17:48:41.734Z",
+      "endTime": "2026-10-21T17:48:41.735Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "planning_disabled",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "f66d7ea98f397fc8",
+      "name": "node generate_plan",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "df6d01dcc4af1e82",
+      "startTime": "2026-10-21T17:48:41.733Z",
+      "endTime": "2026-10-21T17:48:41.734Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "c5701f8328fd498e",
+      "name": "node call_llm_native_tools",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:40.124Z",
+      "endTime": "2026-10-21T17:48:41.724Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "native_tool_calls",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "6354970e241f9359",
+      "name": "node check_max_iterations",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:40.124Z",
+      "endTime": "2026-10-21T17:48:40.124Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "continue_reasoning_native",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "97cdd21a3ca123d5",
+      "name": "node initialize_reasoning",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:40.122Z",
+      "endTime": "2026-10-21T17:48:40.124Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "initialized",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "aa0c9cf8f70a685a",
+      "name": "node check_todos_available",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:40.122Z",
+      "endTime": "2026-10-21T17:48:40.122Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
+      "output": "planning_disabled",
+      "integration": "CrewAI"
+    },
+    {
+      "uuid": "32de887fc2dff836",
+      "name": "node generate_plan",
+      "status": "SUCCESS",
+      "type": "base",
+      "parentUuid": "e65b8ff790a12c99",
+      "startTime": "2026-10-21T17:48:40.121Z",
+      "endTime": "2026-10-21T17:48:40.121Z",
+      "input": {
+        "args": [],
+        "kwargs": {}
+      },
       "integration": "CrewAI"
     }
   ],
   "agentSpans": [
     {
-      "uuid": "43152fd2-a0b1-42db-b443-bf7b146671cb",
-      "name": "execute_task",
+      "uuid": "835464eed9087191",
+      "name": "Crew Manager",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "27b7f37b-e1b5-417c-bf3f-1017299f3c15",
-      "startTime": "2026-06-01T17:24:23.032Z",
-      "endTime": "2026-06-01T17:24:26.758Z",
-      "input": "Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary.",
+      "parentUuid": "7f77a7272ff95abc",
+      "startTime": "2026-10-21T17:48:40.111Z",
+      "endTime": "2026-10-21T17:48:43.568Z",
+      "input": {
+        "description": "Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.",
+        "context": ""
+      },
       "output": "SUCCESS",
       "integration": "CrewAI",
       "toolsCalled": [
         {
-          "name": "delegate_work_to_coworker",
+          "name": "Delegate work to coworker",
           "type": "FUNCTION",
           "output": "SUCCESS",
           "inputParameters": {
             "task": "Write the word: 'SUCCESS'.",
-            "context": "The task is to simply write the word 'SUCCESS' as it is, without any additional content or context.",
+            "context": "The task is to simply write the word 'SUCCESS' without any additional content or context.",
             "coworker": "Writer"
           }
         }
@@ -41,14 +510,17 @@
       "agentHandoffs": []
     },
     {
-      "uuid": "25991256-89b0-4c1f-9ff2-1b8977522897",
-      "name": "execute_task",
+      "uuid": "2a3222ced4edfa3d",
+      "name": "Writer",
       "status": "SUCCESS",
       "type": "agent",
-      "parentUuid": "43152fd2-a0b1-42db-b443-bf7b146671cb",
-      "startTime": "2026-06-01T17:24:25.283Z",
-      "endTime": "2026-06-01T17:24:25.915Z",
-      "input": "Write the word: 'SUCCESS'.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe task is to simply write the word 'SUCCESS' as it is, without any additional content or context.",
+      "parentUuid": "47455f467b0ea1da",
+      "startTime": "2026-10-21T17:48:41.727Z",
+      "endTime": "2026-10-21T17:48:42.644Z",
+      "input": {
+        "description": "Write the word: 'SUCCESS'.",
+        "context": "The task is to simply write the word 'SUCCESS' without any additional content or context."
+      },
       "output": "SUCCESS",
       "integration": "CrewAI",
       "availableTools": [],
@@ -57,106 +529,89 @@
   ],
   "llmSpans": [
     {
-      "uuid": "fc0c74c9-f6db-43b1-a2a1-57840da25c5d",
-      "name": "call",
+      "uuid": "dbae3698b9068d02",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "43152fd2-a0b1-42db-b443-bf7b146671cb",
-      "startTime": "2026-06-01T17:24:25.921Z",
-      "endTime": "2026-06-01T17:24:26.751Z",
+      "parentUuid": "117fa519cd366f5e",
+      "startTime": "2026-10-21T17:48:42.651Z",
+      "endTime": "2026-10-21T17:48:43.551Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible.",
-          "cache_breakpoint": true
+          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible."
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary.",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary."
         },
         {
           "role": "assistant",
-          "content": null,
-          "tool_calls": [
-            {
-              "id": "call_RWUsRUMXn8PBacIedrOWgvPZ",
-              "type": "function",
-              "function": {
-                "name": "'delegate_work_to_coworker'",
-                "arguments": "'{\"task\":\"Write the word: \\'SUCCESS\\'.\",\"context\":\"The task is to simply write the word \\'SUCCESS\\' as it is, without any additional content or context.\",\"coworker\":\"Writer\"}'"
-              }
+          "content": {
+            "type": "tool_call",
+            "id": "call_tDgZJXhQEKEkzlGR6zr6s01O",
+            "name": "delegate_work_to_coworker",
+            "arguments": {
+              "task": "Write the word: 'SUCCESS'.",
+              "context": "The task is to simply write the word 'SUCCESS' without any additional content or context.",
+              "coworker": "Writer"
             }
-          ]
+          }
         },
         {
           "role": "tool",
-          "tool_call_id": "call_RWUsRUMXn8PBacIedrOWgvPZ",
-          "name": "delegate_work_to_coworker",
-          "content": "SUCCESS"
+          "content": {
+            "type": "tool_call_response",
+            "id": "call_tDgZJXhQEKEkzlGR6zr6s01O",
+            "response": "SUCCESS"
+          }
         }
       ],
-      "output": "SUCCESS",
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI"
     },
     {
-      "uuid": "32e0b5aa-fa1f-4f51-9976-7ff15ac8bb1d",
-      "name": "call",
+      "uuid": "bcbd64464953a1ef",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "25991256-89b0-4c1f-9ff2-1b8977522897",
-      "startTime": "2026-06-01T17:24:25.287Z",
-      "endTime": "2026-06-01T17:24:25.909Z",
+      "parentUuid": "e5a21ea24062ca8a",
+      "startTime": "2026-10-21T17:48:41.740Z",
+      "endTime": "2026-10-21T17:48:42.624Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Writer. You are a junior writer. You simply write back what you are told.\nYour personal goal is: Write simple words",
-          "cache_breakpoint": true
+          "content": "You are Writer. You are a junior writer. You simply write back what you are told.\nYour personal goal is: Write simple words"
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Write the word: 'SUCCESS'.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe task is to simply write the word 'SUCCESS' as it is, without any additional content or context.\n\nProvide your complete response:",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Write the word: 'SUCCESS'.\n\nThis is the expected criteria for your final answer: Your best answer to your coworker asking you this, accounting for the context shared.\nyou MUST return the actual complete content as the final answer, not a summary.\n\nThis is the context you're working with:\nThe task is to simply write the word 'SUCCESS' without any additional content or context.\n\nProvide your complete response:"
         }
       ],
-      "output": "SUCCESS",
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI"
     },
     {
-      "uuid": "d8b5db4d-4069-4cfd-9c3d-506dac3236cd",
-      "name": "call",
+      "uuid": "accab2bdb87772a3",
+      "name": "chat gpt-4o-mini",
       "status": "SUCCESS",
       "type": "llm",
-      "parentUuid": "43152fd2-a0b1-42db-b443-bf7b146671cb",
-      "startTime": "2026-06-01T17:24:23.041Z",
-      "endTime": "2026-06-01T17:24:25.282Z",
+      "parentUuid": "c5701f8328fd498e",
+      "startTime": "2026-10-21T17:48:40.125Z",
+      "endTime": "2026-10-21T17:48:41.721Z",
       "input": [
         {
           "role": "system",
-          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible.",
-          "cache_breakpoint": true
+          "content": "You are Crew Manager. You are a seasoned manager with a knack for getting the best out of your team.\nYou are also known for your ability to delegate work to the right people, and to ask the right questions to get the best out of your team.\nEven though you don't perform tasks by yourself, you have a lot of experience in the field, which allows you to properly evaluate the work of your team members.\nYour personal goal is: Manage the team to complete the task in the best way possible."
         },
         {
           "role": "user",
-          "content": "\nCurrent Task: Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary.",
-          "cache_breakpoint": true
+          "content": "\nCurrent Task: Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.\n\nThis is the expected criteria for your final answer: The word 'SUCCESS'.\nyou MUST return the actual complete content as the final answer, not a summary."
         }
       ],
-      "output": [
-        {
-          "id": "call_RWUsRUMXn8PBacIedrOWgvPZ",
-          "function": {
-            "arguments": "{\"task\":\"Write the word: 'SUCCESS'.\",\"context\":\"The task is to simply write the word 'SUCCESS' as it is, without any additional content or context.\",\"coworker\":\"Writer\"}",
-            "name": "delegate_work_to_coworker"
-          },
-          "type": "function"
-        }
-      ],
-      "integration": "CrewAI",
+      "integration": "OpenAI",
       "model": "gpt-4o-mini",
       "provider": "OpenAI"
     }
@@ -164,26 +619,42 @@
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "f541ff31-87b2-4402-baac-e2c208d23538",
-      "name": "delegate_work_to_coworker",
+      "uuid": "47455f467b0ea1da",
+      "name": "Delegate work to coworker",
       "status": "SUCCESS",
       "type": "tool",
-      "parentUuid": "43152fd2-a0b1-42db-b443-bf7b146671cb",
-      "startTime": "2026-06-01T17:24:25.282Z",
-      "endTime": "2026-06-01T17:24:25.915Z",
+      "parentUuid": "24b1c73f5a95e352",
+      "startTime": "2026-10-21T17:48:41.726Z",
+      "endTime": "2026-10-21T17:48:42.644Z",
       "input": {
         "task": "Write the word: 'SUCCESS'.",
-        "context": "The task is to simply write the word 'SUCCESS' as it is, without any additional content or context.",
+        "context": "The task is to simply write the word 'SUCCESS' without any additional content or context.",
         "coworker": "Writer"
       },
       "output": "SUCCESS",
       "integration": "CrewAI"
     }
   ],
-  "startTime": "2026-06-01T17:24:23.016Z",
-  "endTime": "2026-06-01T17:24:26.765Z",
+  "startTime": "2026-10-21T17:48:39.932Z",
+  "endTime": "2026-10-21T17:48:43.577Z",
+  "name": "crew crew",
   "environment": "development",
-  "input": {},
+  "input": {
+    "description": "Manager: You must delegate a task to the 'Writer' agent to write the word: 'SUCCESS'. Do nothing else.",
+    "context": ""
+  },
   "output": "SUCCESS",
-  "status": "SUCCESS"
+  "status": "SUCCESS",
+  "toolsCalled": [
+    {
+      "name": "Delegate work to coworker",
+      "type": "FUNCTION",
+      "output": "SUCCESS",
+      "inputParameters": {
+        "task": "Write the word: 'SUCCESS'.",
+        "context": "The task is to simply write the word 'SUCCESS' without any additional content or context.",
+        "coworker": "Writer"
+      }
+    }
+  ]
 }

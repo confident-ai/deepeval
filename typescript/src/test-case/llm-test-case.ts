@@ -1,4 +1,9 @@
 import {
+  Expectations,
+  ExpectationsOptions,
+  resolveExpectations,
+} from "@/dataset/expectations";
+import {
   MCPServer,
   MCPToolCall,
   MCPResourceCall,
@@ -13,6 +18,7 @@ import {
   MLLM_IMAGE_REGISTRY,
   MLLMImage,
 } from "@/test-case/mllm-image";
+import type { BaseSpan } from "@/tracing/tracing";
 
 export enum SingleTurnParams {
   INPUT = "input",
@@ -92,6 +98,7 @@ export function resolveRetrievalContext(
 }
 
 export class LLMTestCase {
+  expectations?: Expectations;
   input: string;
   actualOutput: string;
   expectedOutput?: string;
@@ -115,11 +122,14 @@ export class LLMTestCase {
   /** A flaky test case reports its failures without failing the run. */
   flaky: boolean = false;
   _traceDict?: Record<string, unknown>;
+  _traceRootSpans?: BaseSpan[];
+  _traceSpan?: BaseSpan;
   _datasetRank?: number;
   _datasetAlias?: string;
   _datasetId?: string;
 
   constructor(params: {
+    expectations?: Expectations | ExpectationsOptions;
     input: string;
     actualOutput: string;
     expectedOutput?: string;
@@ -145,6 +155,7 @@ export class LLMTestCase {
     _datasetAlias?: string;
     _datasetId?: string;
   }) {
+    this.expectations = resolveExpectations(params.expectations);
     this.input = params.input;
     this.actualOutput = params.actualOutput;
     this.expectedOutput = params.expectedOutput;

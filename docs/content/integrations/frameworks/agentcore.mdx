@@ -271,7 +271,7 @@ from deepeval.tracing import update_current_trace
 
 def lookup_order(order_id: str) -> dict:
     order = orders_db.get(order_id)
-    update_current_trace(user_id=order["user_id"], metadata={"order_id": order_id})
+    update_current_trace(metadata={"order_id": order_id})
     return order
 ```
 
@@ -365,11 +365,9 @@ def respond_to_user(prompt: str) -> str:
 | ------------------- | ----------- | -------------------------------------------------------------------------- |
 | `name`              | `str`       | Default trace name. Override at runtime via `update_current_trace`.        |
 | `thread_id`         | `str`       | Default thread identifier. Useful for grouping conversational turns.       |
-| `user_id`           | `str`       | Default actor identifier. Override per-request via `update_current_trace`. |
 | `metadata`          | `dict`      | Default trace metadata. Merged with runtime overrides; runtime wins.       |
 | `tags`              | `list[str]` | Default tags applied to every trace produced by this app.                  |
 | `environment`       | `str`       | One of `"development"`, `"staging"`, `"production"`, `"testing"`.          |
-| `metric_collection` | `str`       | Default metric collection applied at the trace level.                      |
 
 For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_span`, `next_llm_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).
 
@@ -394,12 +392,11 @@ For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_
       answer: (
         <>
           Yes. Pass <code>environment="production"</code> to{" "}
-          <code>instrument_agentcore(...)</code> and, when logged into Confident
-          AI, your live AgentCore traces stream in for{" "}
-          <a href="https://www.confident-ai.com/docs/llm-tracing/online-evals">
-            online evals
-          </a>{" "}
-          on real traffic.
+          <code>instrument_agentcore(...)</code> and the deployed runtime keeps
+          tracing every invocation.{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">Confident AI</a> surfaces failing AgentCore traces
+          before anyone has written an eval for them, clusters them into failure
+          modes, and turns them into goldens for your next eval.
         </>
       ),
     },
@@ -411,18 +408,6 @@ For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_
           inside a parametrized <code>pytest</code> test with{" "}
           <code>assert_test(...)</code> and <code>deepeval test run</code> so a
           failing metric breaks the build.
-        </>
-      ),
-    },
-    {
-      question: "Where do these traces and scores show up beyond my terminal?",
-      answer: (
-        <>
-          Run <code>deepeval login</code> and{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> renders the
-          same AgentCore traces — agent spans, LLM spans, tool calls — and their
-          scores in a shared cloud UI. It's optional; everything runs locally
-          without it.
         </>
       ),
     },

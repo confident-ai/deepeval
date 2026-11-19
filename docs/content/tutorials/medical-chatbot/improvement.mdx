@@ -5,8 +5,6 @@ sidebar_label: Improving Prompts and Models
 languages: [python]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 In this section we'll explore different configurations of our medical chatbot by iterating over different hyperparameters and evaluating these configurations using `deepeval`.
 
 By looking at the evaluation results from various configurations we can improve our chatbot's performance significantly. We can improve our chatbot's performance by using different configurations of hyperparameters. The following are the hyperparameters we'll be iterating over our chatbot:
@@ -229,6 +227,6 @@ chatbot = MedicalChatbot(
 
 This new updated model now performs as we intended and can be used to create a UI interface, this is what a UI integrated chatbot looks like:
 
-<ImageDisplayer src={ASSETS.tutorialMedicalChatbotOverview} alt="Chatbot UI Overview" />
+<ImageDisplayer id="screenshots/example-apps/medical-chatbot" />
 
 In the next section, we'll go over how to setup tracing for our chatbot to observe it on a component level and [prepare the chatbot for deployment](/tutorials/medical-chatbot/evals-in-prod).

@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "Every sentence in `expected_output` can be attributed to the facts in `retrieval_context`.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "`retrieval_context` contains the key facts needed to write `expected_output`."
+  },
+  {
+    "type": "score",
+    "question": "How much of `expected_output` can be attributed to the facts in `retrieval_context`?",
+    "levels": ["None of it", "Less than half", "Most of it", "All of it"]
+  }
+]

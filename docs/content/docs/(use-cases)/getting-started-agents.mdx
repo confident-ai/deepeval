@@ -26,7 +26,7 @@ Agent evals in `deepeval` are powered by **tracing**:
 2. **Every run emits a trace** — with a span per component: LLM calls, tools, retrievers, sub-agents.
 3. **Attach metrics where you want evals** — the trace for end-to-end, individual spans for component-level.
 
-<ImageDisplayer src={ASSETS.componentLevelEvals} alt="component level evals" />
+<ImageDisplayer id="diagrams/in-house/evaluation/component-level-evals" />
 
 Test cases are built from traces automatically, and everything in this quickstart — CI/CD, <Term py="evals_iterator()" ts="evalsIterator()"/>, sub-agents — runs on this one setup.
 
@@ -62,7 +62,7 @@ The trace-tree TUI ships with the package, so there's no extra sub-module to ins
 
 </Switch>
 
-You should also log in:
+Optionally, log in to send your test runs to Confident AI as well:
 
 <Switch>
 
@@ -84,16 +84,14 @@ npx deepeval login
 
 </Switch>
 
-It connects you to [Confident AI](https://www.confident-ai.com/) so you can store results, annotate, and inspect evaluated agent traces on the cloud.
-
 :::info
-As you'll see in the final [next steps](#next-steps) section, Confident AI also lets you monitor and inspect your agent's traces in production — and run online evals on them as they come in.
+If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing agent traces before anyone has written an eval for them and turns them into goldens for your next eval. The [next steps](#next-steps) section shows how.
 
 <VideoDisplayer
   src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/introduction"
   label="Agent traces in production"
-  description="See every agent execution as a full trace of LLM, tool, and retriever calls."
+  description="Failing agent trajectories surface as traces of LLM, tool, and retriever calls."
 />
 :::
 
@@ -196,8 +194,7 @@ npx deepeval inspect
 </Switch>
 
 <ImageDisplayer
-  src={ASSETS.deepevalTuiInspect}
-  alt="deepeval inspect TUI showing a trace tree with per-span scores and metric reasons"
+  id="screenshots/deepeval/inspect-trace-tree"
 />
 
 <Only id="python">
@@ -410,10 +407,10 @@ Then run your evals exactly as before — [<Term py="evals_iterator()" ts="evals
 Now that you have run your first agentic evals, you should:
 
 1. **Customize your metrics**: Update the [list of metrics](/docs/metrics-introduction) for each component.
-2. **Customize tracing**: It helps benchmark and identify different components on the UI.
+2. **Customize tracing**: Name and type your spans so each component of the agent's trajectory can be evaluated on its own.
 3. **Explore the integration docs**: Each [framework integration](/integrations/frameworks/openai) has its own page with end-to-end and component-level patterns.
 
-You'll be able to analyze performance over time on **traces** (end-to-end) and **spans** (component-level).
+If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production traces, clusters them into failure modes, and turns them into goldens for your next eval. Once that eval exists, it runs on **traces** (end-to-end) and **spans** (component-level) and flags the failing ones.
 
 <Tabs items={["End-to-end (traces) in prod", "Component-level (spans) in prod"]}>
 <Tab value="End-to-end (traces) in prod">
@@ -424,7 +421,7 @@ Evals on traces are [end-to-end evaluations](/docs/evaluation-end-to-end-llm-eva
   src={ASSETS.tracingTraces}
   confidentUrl="/docs/llm-tracing/introduction"
   label="Trace-level evals in production"
-  description="Score entire agent executions end-to-end on live traffic."
+  description="Score entire agent trajectories end-to-end on every production trace."
 />
 
 </Tab>

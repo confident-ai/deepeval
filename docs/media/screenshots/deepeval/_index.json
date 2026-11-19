@@ -1,0 +1,16 @@
+{
+  "images": [
+    {
+      "file": "inspect-trace-tree.webp",
+      "title": "deepeval inspect TUI with a trace tree",
+      "alt": "deepeval inspect TUI with an agent trace's span tree on the left and the orchestrator's Task Completion score and reason on the right",
+      "width": 2400,
+      "height": 1432,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.us-east-1.amazonaws.com/docs:tui-trace-inspect.png"
+        ]
+      }
+    }
+  ]
+}

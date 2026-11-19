@@ -1,0 +1,14 @@
+The transcription accuracy score is {{ score }}, which is the proportion of the caller's turns that the voice agent's speech-to-text heard faithfully.
+
+These are the turns it did not hear faithfully: {{ mistranscriptions }}
+
+Explain why the score is {{ score }} by naming what the agent mis-heard, quoting the words where they are given. Say plainly that these are transcription failures rather than mistakes in the agent's reasoning. If the list is empty, say the agent heard the caller correctly throughout.
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the 'reason' key. No words or explanation is needed.
+**
+
+Example JSON:
+{
+  "reason": "The score is <transcription_accuracy_score> because <your_reason>."
+}

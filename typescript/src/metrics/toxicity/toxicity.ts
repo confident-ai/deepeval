@@ -1,14 +1,22 @@
 import { BaseMetric, resolveThreshold } from "@/metrics/base-metrics";
 import { LLMTestCase, SingleTurnParams } from "@/test-case";
 import { DeepEvalBaseLLM } from "@/models";
+import type { DeepEvalBaseSystemOneModel } from "@/models/system-one";
+import type { EvalModeName } from "@/config/eval-mode";
 import {
-  initializeModel,
+  initializeMetricModels,
   generateWithSchema,
-  checkSingleTurnParams,
   constructVerboseLogs,
   warnScoreDirectionFlipped,
   prettifyList,
 } from "@/metrics/utils";
+import {
+  generateQagVerdicts,
+  parseQuestions,
+  runSystemOneEval,
+  type SystemOneEvalSpec,
+  type SystemOneVerdictSpec,
+} from "@/metrics/system-one";
 import {
   OpinionsSchema,
   VerdictsSchema,
@@ -16,6 +24,7 @@ import {
   type ToxicityVerdict,
 } from "@/metrics/toxicity/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
+import { prepareMeasure } from "@/metrics/prepare-measure";
 
 const TEMPLATE_CLASS = "ToxicityMetric";
 
@@ -25,6 +34,10 @@ export interface ToxicityMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
+  /** The System One model (Jev) used under `hybrid` / `system_one`. */
+  systemOneModel?: DeepEvalBaseSystemOneModel | string;
+  /** Who decides; defaults to `DEEPEVAL_EVAL_MODE`, then `llm`. */
+  evalMode?: EvalModeName;
   includeReason?: boolean;
   strictMode?: boolean;
   verboseMode?: boolean;
@@ -57,18 +70,15 @@ export class ToxicityMetric extends BaseMetric {
       SingleTurnParams.INPUT,
       SingleTurnParams.ACTUAL_OUTPUT,
     ];
-    const { model, usingNativeModel } = initializeModel(options.model);
-    this.model = model;
-    this.usingNativeModel = usingNativeModel;
-    this.evaluationModel = this.model.getModelName();
+    initializeMetricModels(this, options);
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
     this.error = undefined;
     await this.startProgress();
     try {
-      checkSingleTurnParams(testCase, this.requiredParams, this);
-      this.evaluationCost = this.usingNativeModel ? 0 : undefined;
+      prepareMeasure(this, testCase);
+      if (await runSystemOneEval(this, testCase)) return this.score as number;
 
       this.opinions = await this.generateOpinions(testCase.actualOutput);
       this.verdicts = await this.generateVerdicts();
@@ -95,13 +105,43 @@ export class ToxicityMetric extends BaseMetric {
     return opinions;
   }
 
+  private systemOneVerdictSpec(): SystemOneVerdictSpec<
+    string,
+    ToxicityVerdict
+  > {
+    return {
+      instructions: this.getPrompt("_experimental_system_one_verdict"),
+      items: this.opinions,
+      itemKey: "opinion",
+    };
+  }
+
+  systemOneEvalSpec(testCase: LLMTestCase): SystemOneEvalSpec | undefined {
+    if (testCase.multimodal) return undefined;
+    return {
+      evaluationParams: [SingleTurnParams.ACTUAL_OUTPUT],
+      questions: parseQuestions(
+        this.getPrompt("_experimental_system_one_questions"),
+      ),
+    };
+  }
+
   private async generateVerdicts(): Promise<ToxicityVerdict[]> {
     if (this.opinions.length === 0) return [];
-    const prompt = this.getPrompt("generate_verdicts", {
-      opinions: this.opinions,
+    return generateQagVerdicts(this, {
+      systemOne: this.systemOneVerdictSpec(),
+      llm: async () => {
+        const prompt = this.getPrompt("generate_verdicts", {
+          opinions: this.opinions,
+        });
+        const { verdicts } = await generateWithSchema(
+          this,
+          prompt,
+          VerdictsSchema,
+        );
+        return verdicts;
+      },
     });
-    const { verdicts } = await generateWithSchema(this, prompt, VerdictsSchema);
-    return verdicts;
   }
 
   private async generateReason(): Promise<string | undefined> {

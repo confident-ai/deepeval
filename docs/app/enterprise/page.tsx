@@ -9,7 +9,7 @@ import EnterpriseHeroSection from "@/src/sections/enterprise/EnterpriseHeroSecti
 export const metadata: Metadata = {
   title: "Enterprise",
   description:
-    "Scale DeepEval with enterprise observability, shared workflows, and production-grade LLM evaluation on Confident AI.",
+    "Standardize AI quality across your organization with Confident AI: one quality standard for every team, AI governance as release gates, and evals on every production trace.",
   alternates: { canonical: "/enterprise" },
 };
 

@@ -7,9 +7,36 @@ languages: [python, typescript]
 
 import { GitMerge, Terminal } from "lucide-react";
 
-This page sets your coding agent (Cursor, Claude Code, Codex, Windsurf, OpenCode, …) up to drive a real DeepEval loop on your repo — install the skill, point it at our LLM-friendly docs, paste the starter prompt, and you're off.
+This page sets your coding agent (Cursor, Claude Code, Codex, Windsurf, OpenCode, …) up to drive a real DeepEval loop on your repo — run the setup wizard for a first evaluation, install the skill, point it at our LLM-friendly docs, paste the starter prompt, and you're off.
 
 If you want to understand the loop _before_ wiring it up, read [Vibe Coding with DeepEval](/docs/vibe-coding) first.
+
+## Run the Setup Wizard
+
+The fastest way to a first evaluation is the setup wizard. Run it from an interactive terminal at the root of your repo:
+
+<Switch>
+
+<Case id="python">
+
+```bash
+pip install -U deepeval
+deepeval setup
+```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+npx deepeval setup
+```
+
+</Case>
+
+</Switch>
+
+The wizard checks your repo and DeepEval install, sets up the judge model that powers LLM metrics, then hands the evaluation to your coding agent: Claude Code, Codex, or Cursor CLI when one is installed, or a prompt you paste into any other agent. It ends by running the evaluation once and reporting what it found. It can also sign you in to Confident AI, or skip that and keep everything local. Keys are written to a git-ignored `.env.local` and never passed to the agent's prompt, and the wizard doesn't commit or push. It supports macOS and Linux for now; see the [`setup` command](/docs/command-line-interface#setup) for its flags.
 
 ## Install the Agent Skill
 
@@ -65,8 +92,9 @@ my AI app. Then re-run to confirm.
 - 5-min Quickstart: https://www.deepeval.com/docs/getting-started
 - Vibe Coding (the loop): https://www.deepeval.com/docs/vibe-coding
 - Agents Quickstart: https://www.deepeval.com/docs/getting-started-agents
-- RAG Quickstart: https://www.deepeval.com/docs/getting-started-rag
+- Voice Agents: https://www.deepeval.com/docs/evaluation-voice
 - Chatbot Quickstart: https://www.deepeval.com/docs/getting-started-chatbots
+- RAG Quickstart: https://www.deepeval.com/docs/getting-started-rag
 - Metrics catalog: https://www.deepeval.com/docs/metrics-introduction
 - CLI reference: https://www.deepeval.com/docs/command-line-interface
 - LLM-friendly docs: https://www.deepeval.com/llms.txt
@@ -81,6 +109,7 @@ my AI app. Then re-run to confirm.
 - LlamaIndex: https://www.deepeval.com/integrations/frameworks/llamaindex
 - CrewAI: https://www.deepeval.com/integrations/frameworks/crewai
 - PydanticAI: https://www.deepeval.com/integrations/frameworks/pydanticai
+- Voice agent connectors (Vapi, ElevenLabs, LiveKit, Pipecat): https://www.deepeval.com/integrations#voice-agent-connectors
 - Google ADK: https://www.deepeval.com/integrations/frameworks/google-adk
 - AWS AgentCore: https://www.deepeval.com/integrations/frameworks/agentcore
 - HuggingFace: https://www.deepeval.com/integrations/frameworks/huggingface
@@ -157,7 +186,7 @@ Repeat for the requested number of rounds (default 5).
 1. Detect the framework (see "Framework Integrations First" above) and tell
    me which integration you'll use, OR confirm there's no match and you'll
    fall back to manual `@observe`.
-2. Ask me what I'm building (agent / RAG / chatbot / plain LLM), what
+2. Ask me what I'm building (agent / voice agent / chatbot / RAG / plain LLM), what
    dataset I have (or whether to generate one with `deepeval generate`),
    and whether I want results pushed to Confident AI.
 3. Set up a committed pytest eval suite under `tests/evals/`, do one round
@@ -170,7 +199,7 @@ With the [Agent Skill](#install-the-agent-skill) installed, you can shorten the 
 
 ## Connect to Confident AI (optional)
 
-DeepEval is local-first, so the loop above works fully offline. Connecting to [Confident AI](https://www.confident-ai.com) extends the loop across your team:
+DeepEval is local-first, so the loop above works fully offline. If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) catches failing production traces, clusters them into failure modes, and turns them into goldens for the next round of the loop. To connect, log in:
 
 <Switch>
 
@@ -192,7 +221,7 @@ npx deepeval login
 
 </Switch>
 
-Every <Term py="deepeval test run" ts="npx deepeval test run"/> your agent kicks off pushes a testing report your reviewers can open with <Term py="deepeval view" ts="npx deepeval view"/>. Production monitoring sends new failure cases straight back into the dataset, so the next iteration round picks up real regressions automatically.
+After that, test runs your agent kicks off with <Term py="deepeval test run" ts="npx deepeval test run"/> also show up on Confident AI, and <Term py="deepeval view" ts="npx deepeval view"/> opens the most recent one.
 
 ## Next Steps
 

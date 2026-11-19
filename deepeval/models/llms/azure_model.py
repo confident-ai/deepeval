@@ -11,21 +11,23 @@ from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
 )
-from deepeval.test_case import MLLMImage
-from deepeval.utils import (
-    convert_to_multi_modal_array,
-    check_if_multimodal,
-    require_param,
-)
+from deepeval.utils import require_param
 from deepeval.models.llms.utils import (
     trim_and_load_json,
 )
+from deepeval.models.llms.multimodal import (
+    ensure_audio,
+    to_openai_content,
+)
+from deepeval.test_case import Audio
 from deepeval.models.utils import (
     parse_model_name,
     require_secret_api_key,
     require_costs,
     normalize_kwargs_and_extract_aliases,
     EvaluationCost,
+    prompt_audio_tokens,
+    token_cost,
 )
 from deepeval.constants import ProviderSlug as PS
 
@@ -178,15 +180,14 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
     @retry_azure
     def generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=False)
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = self._prompt_content(prompt, audio)
 
         if schema:
             if self.model_data.supports_structured_outputs:
@@ -207,6 +208,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 return structured_output, cost
             if self.model_data.supports_json:
@@ -229,6 +231,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 return schema.model_validate(json_output), cost
 
@@ -246,7 +249,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         )
         output = completion.choices[0].message.content
         cost = self.calculate_cost(
-            completion.usage.prompt_tokens, completion.usage.completion_tokens
+            completion.usage.prompt_tokens,
+            completion.usage.completion_tokens,
+            prompt_audio_tokens(completion.usage),
         )
         if schema:
             json_output = trim_and_load_json(output)
@@ -256,15 +261,14 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
     @retry_azure
     async def a_generate(
-        self, prompt: str, schema: Optional[BaseModel] = None
+        self,
+        prompt: str,
+        schema: Optional[BaseModel] = None,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[Union[str, BaseModel], float]:
         client = self.load_model(async_mode=True)
 
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = self._prompt_content(prompt, audio)
 
         if schema:
             if self.model_data.supports_structured_outputs:
@@ -285,6 +289,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 return structured_output, cost
             if self.model_data.supports_json:
@@ -307,6 +312,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
                 cost = self.calculate_cost(
                     completion.usage.prompt_tokens,
                     completion.usage.completion_tokens,
+                    prompt_audio_tokens(completion.usage),
                 )
                 return schema.model_validate(json_output), cost
 
@@ -326,6 +332,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         cost = self.calculate_cost(
             completion.usage.prompt_tokens,
             completion.usage.completion_tokens,
+            prompt_audio_tokens(completion.usage),
         )
         if schema:
             json_output = trim_and_load_json(output)
@@ -342,14 +349,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         self,
         prompt: str,
         top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=False)
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = self._prompt_content(prompt, audio)
         completion = client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": content}],
@@ -365,7 +369,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens)
+        cost = self.calculate_cost(
+            input_tokens,
+            output_tokens,
+            prompt_audio_tokens(completion.usage),
+        )
 
         return completion, cost
 
@@ -374,14 +382,11 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         self,
         prompt: str,
         top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
         client = self.load_model(async_mode=True)
-        if check_if_multimodal(prompt):
-            prompt = convert_to_multi_modal_array(input=prompt)
-            content = self.generate_content(prompt)
-        else:
-            content = [{"type": "text", "text": prompt}]
+        content = self._prompt_content(prompt, audio)
         completion = await client.chat.completions.create(
             model=self.deployment_name,
             messages=[{"role": "user", "content": content}],
@@ -397,50 +402,31 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         # Cost calculation
         input_tokens = completion.usage.prompt_tokens
         output_tokens = completion.usage.completion_tokens
-        cost = self.calculate_cost(input_tokens, output_tokens)
+        cost = self.calculate_cost(
+            input_tokens,
+            output_tokens,
+            prompt_audio_tokens(completion.usage),
+        )
 
         return completion, cost
 
-    def generate_content(
-        self, multimodal_input: Optional[List[Union[str, MLLMImage]]] = None
-    ):
-        multimodal_input = [] if multimodal_input is None else multimodal_input
-        content = []
-        for element in multimodal_input:
-            if isinstance(element, str):
-                content.append({"type": "text", "text": element})
-            elif isinstance(element, MLLMImage):
-                if element.url and not element.local:
-                    content.append(
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": element.url},
-                        }
-                    )
-                else:
-                    element.ensure_images_loaded()
-                    data_uri = (
-                        f"data:{element.mimeType};base64,{element.dataBase64}"
-                    )
-                    content.append(
-                        {
-                            "type": "image_url",
-                            "image_url": {"url": data_uri},
-                        }
-                    )
-        return content
+    def _prompt_content(
+        self, prompt: str, audio: Optional[List[Audio]] = None
+    ) -> List[Dict]:
+        if self.requires_audio():
+            ensure_audio(audio, self.name)
+        return to_openai_content(prompt, audio)
 
     ###############################################
     # Utilities
     ###############################################
 
-    def calculate_cost(self, input_tokens: int, output_tokens: int) -> float:
-        if self.model_data.input_price and self.model_data.output_price:
-            input_cost = input_tokens * self.model_data.input_price
-            output_cost = output_tokens * self.model_data.output_price
-            return EvaluationCost(
-                input_cost + output_cost, input_tokens, output_tokens
-            )
+    def calculate_cost(
+        self, input_tokens: int, output_tokens: int, audio_input_tokens: int = 0
+    ) -> Optional[EvaluationCost]:
+        return token_cost(
+            self.model_data, input_tokens, output_tokens, audio_input_tokens
+        )
 
     ###############################################
     # Capabilities
@@ -454,6 +440,12 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
 
     def supports_multimodal(self) -> Union[bool, None]:
         return self.model_data.supports_multimodal
+
+    def supports_audio(self) -> Union[bool, None]:
+        return self.model_data.supports_audio
+
+    def requires_audio(self) -> Union[bool, None]:
+        return self.model_data.requires_audio
 
     def supports_structured_outputs(self) -> Union[bool, None]:
         return self.model_data.supports_structured_outputs

@@ -6,8 +6,6 @@ languages: [python]
 ---
 
 
-import { ASSETS } from "@site/src/assets";
-
 If you already have prepared contexts, you can skip document processing. Simply provide these contexts to `deepeval`'s `Synthesizer`, and it will generate goldens directly without processing documents.
 
 <div
@@ -17,7 +15,7 @@ If you already have prepared contexts, you can skip document processing. Simply 
     justifyContent: "center",
   }}
 >
-  <ImageDisplayer src={ASSETS.synthesizeFromContexts} alt="LangChain" />
+  <ImageDisplayer id="diagrams/in-house/datasets/goldens-from-contexts" />
 </div>
 
 :::tip
@@ -127,13 +125,17 @@ Remember, single-turn generations produces single-turn `Golden`s, while multi-tu
       ),
     },
     {
-      question: "Can my team generate goldens from our contexts without code?",
+      question: "Are goldens generated from contexts enough once my app is live?",
       answer: (
         <>
-          Yes. On <a href="https://www.confident-ai.com">Confident AI</a> you
-          can connect your knowledge bases and run the generation pipeline
-          no-code — tweak filtration, evolutions, and styling, experiment with
-          variations, and collaborate on the resulting dataset as a team.
+          They get your first evals running, but they only cover what your
+          contexts anticipate. If you're already in production,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces failing production traces before anyone has written an eval
+          for them, clusters them into failure modes, and turns them into
+          goldens for your next eval.
         </>
       ),
     },

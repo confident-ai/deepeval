@@ -1,7 +1,8 @@
 from contextlib import contextmanager
-from typing import Any, Dict, Iterator, List, Optional
-from contextvars import ContextVar
+from typing import Any, Dict, Iterator, List, Optional, Tuple
+from contextvars import ContextVar, Token
 
+from deepeval.tracing.internal import confident_trace_setup
 from deepeval.tracing.types import (
     AgentSpan,
     BaseSpan,
@@ -34,6 +35,7 @@ class SpanContext:
         span = self.current_span.get()
         if span:
             span.drop = True
+        _drop_exported(whole_trace=False)
 
 
 class TraceContext:
@@ -55,10 +57,65 @@ class TraceContext:
         trace = self.current_trace.get()
         if trace:
             trace.drop = True
+        _drop_exported(whole_trace=True)
 
 
 current_span_context = SpanContext()
 current_trace_context = TraceContext()
+
+
+def active_span() -> Optional[BaseSpan]:
+    """The innermost open span: deepeval's own, or a confident-trace span
+    deepeval collects, seen through the placeholder that stands in for it."""
+    span = current_span_context.get()
+    collected = _collected_span()
+    if collected is None or (
+        span is not None and is_descendant(span, collected.uuid)
+    ):
+        return span
+    return collected
+
+
+def is_descendant(span: BaseSpan, ancestor_uuid: str) -> bool:
+    """Whether ``span`` was opened inside the span ``ancestor_uuid``."""
+    from deepeval.tracing.tracing import trace_manager
+
+    while span is not None and span.parent_uuid:
+        if span.parent_uuid == ancestor_uuid:
+            return True
+        span = trace_manager.get_span_by_uuid(span.parent_uuid)
+    return False
+
+
+def _collected_span() -> Optional[BaseSpan]:
+    setup = confident_trace_setup()
+    return setup.current_collected_span() if setup else None
+
+
+def _update_exported(scope: str, values: Dict[str, Any]) -> None:
+    """Pass an update to the current confident-trace span too, so it reaches
+    Confident AI when that span is exported."""
+    setup = confident_trace_setup()
+    if setup is None:
+        return
+    if scope == "trace":
+        setup.update_exported_trace(**values)
+    else:
+        setup.update_exported_span(**values)
+
+
+def _drop_exported(whole_trace: bool) -> None:
+    setup = confident_trace_setup()
+    if setup is not None:
+        setup.drop_current(whole_trace)
+
+
+def _collected_trace() -> Optional[Trace]:
+    """The trace of the current collected confident-trace span, if any."""
+    from deepeval.tracing.tracing import trace_manager
+
+    span = _collected_span()
+    return trace_manager.get_trace_by_uuid(span.trace_uuid) if span else None
 
 
 def update_current_span(
@@ -74,10 +131,12 @@ def update_current_span(
     integration: Optional[str] = None,
     provider: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ):
-    current_span = current_span_context.get()
+    _update_exported("span", dict(locals()))
+    current_span = active_span()
     if not current_span:
         return
     if test_case:
@@ -111,8 +170,6 @@ def update_current_span(
         current_span.integration = integration
     if provider is not None and hasattr(current_span, "provider"):
         current_span.provider = provider
-    if metric_collection:
-        current_span.metric_collection = metric_collection
     if metrics:
         current_span.metrics = metrics
 
@@ -122,6 +179,7 @@ def update_current_trace(
     tags: Optional[List[str]] = None,
     metadata: Optional[Dict[str, Any]] = None,
     thread_id: Optional[str] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     user_id: Optional[str] = None,
     input: Optional[Any] = None,
     output: Optional[Any] = None,
@@ -131,6 +189,9 @@ def update_current_trace(
     tools_called: Optional[List[ToolCall]] = None,
     expected_tools: Optional[List[ToolCall]] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: confident_api_key, test_case_id, test_run_id,
+    # turn_id and metric_collection are Confident AI platform settings.
+    # Don't build on them.
     confident_api_key: Optional[str] = None,
     test_case_id: Optional[str] = None,
     test_run_id: Optional[str] = None,
@@ -138,7 +199,8 @@ def update_current_trace(
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ):
-    current_trace = current_trace_context.get()
+    _update_exported("trace", dict(locals()))
+    current_trace = current_trace_context.get() or _collected_trace()
     if not current_trace:
         return
     if test_case:
@@ -157,8 +219,6 @@ def update_current_trace(
         current_trace.metadata = metadata
     if thread_id:
         current_trace.thread_id = thread_id
-    if user_id:
-        current_trace.user_id = user_id
     if input:
         current_trace.input = input
     if output:
@@ -173,16 +233,6 @@ def update_current_trace(
         current_trace.tools_called = tools_called
     if expected_tools:
         current_trace.expected_tools = expected_tools
-    if confident_api_key:
-        current_trace.confident_api_key = confident_api_key
-    if test_case_id:
-        current_trace.test_case_id = test_case_id
-    if test_run_id:
-        current_trace.test_run_id = test_run_id
-    if turn_id:
-        current_trace.turn_id = turn_id
-    if metric_collection:
-        current_trace.metric_collection = metric_collection
     if metrics:
         current_trace.metrics = metrics
 
@@ -194,9 +244,11 @@ def update_llm_span(
     cost_per_input_token: Optional[float] = None,
     cost_per_output_token: Optional[float] = None,
     token_intervals: Optional[Dict[float, str]] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     prompt: Optional[Prompt] = None,
 ):
-    current_span = current_span_context.get()
+    _update_exported("span", dict(locals()))
+    current_span = active_span()
     if not current_span or not isinstance(current_span, LlmSpan):
         return
     if model:
@@ -215,13 +267,6 @@ def update_llm_span(
         current_span.cost_per_output_token = cost_per_output_token
     if token_intervals:
         current_span.token_intervals = token_intervals
-    if prompt:
-        current_span.prompt = prompt
-        # Updating on span as well
-        current_span.prompt_alias = prompt.alias
-        current_span.prompt_commit_hash = prompt.hash
-        current_span.prompt_label = prompt.label
-        current_span.prompt_version = prompt.version
 
 
 def update_agent_span(
@@ -232,11 +277,12 @@ def update_agent_span(
 
     Type-specific counterpart to ``update_current_span(...)``: only
     handles fields unique to ``AgentSpan``. Generic fields (name,
-    metadata, metric_collection, input/output, ...) still go through
+    metadata, input/output, ...) still go through
     ``update_current_span(...)``. No-op if the current span isn't an
     ``AgentSpan``.
     """
-    current_span = current_span_context.get()
+    _update_exported("span", dict(locals()))
+    current_span = active_span()
     if not current_span or not isinstance(current_span, AgentSpan):
         return
     if available_tools is not None:
@@ -255,7 +301,8 @@ def update_tool_span(
     span creation; use ``update_current_span(name=...)`` to rename
     after the fact. No-op if the current span isn't a ``ToolSpan``.
     """
-    current_span = current_span_context.get()
+    _update_exported("span", dict(locals()))
+    current_span = active_span()
     if not current_span or not isinstance(current_span, ToolSpan):
         return
     if description is not None:
@@ -267,7 +314,8 @@ def update_retriever_span(
     top_k: Optional[int] = None,
     chunk_size: Optional[int] = None,
 ):
-    current_span = current_span_context.get()
+    _update_exported("span", dict(locals()))
+    current_span = active_span()
     if not current_span or not isinstance(current_span, RetrieverSpan):
         return
     if embedder:
@@ -369,6 +417,7 @@ def next_span(
     metadata: Optional[Dict[str, Any]] = None,
     name: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ) -> Iterator[None]:
@@ -391,7 +440,6 @@ def next_span(
             "metadata": metadata,
             "name": name,
             "test_case": test_case,
-            "metric_collection": metric_collection,
             "metrics": metrics,
         }
     )
@@ -420,6 +468,7 @@ def next_agent_span(
     metadata: Optional[Dict[str, Any]] = None,
     name: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ) -> Iterator[None]:
@@ -440,7 +489,6 @@ def next_agent_span(
             "metadata": metadata,
             "name": name,
             "test_case": test_case,
-            "metric_collection": metric_collection,
             "metrics": metrics,
         }
     )
@@ -462,6 +510,7 @@ def next_llm_span(
     cost_per_input_token: Optional[float] = None,
     cost_per_output_token: Optional[float] = None,
     token_intervals: Optional[Dict[float, str]] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     prompt: Optional[Prompt] = None,
     # base fields
     input: Optional[Any] = None,
@@ -474,11 +523,12 @@ def next_llm_span(
     metadata: Optional[Dict[str, Any]] = None,
     name: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ) -> Iterator[None]:
     """Set defaults for the next ``LlmSpan``. One-stop: accepts
-    LLM-specific fields (``model``, token counts, ``prompt``, ...) AND
+    LLM-specific fields (``model``, token counts, ...) AND
     the same base fields ``update_current_span(...)`` takes."""
     payload = _drop_none(
         {
@@ -488,7 +538,6 @@ def next_llm_span(
             "cost_per_input_token": cost_per_input_token,
             "cost_per_output_token": cost_per_output_token,
             "token_intervals": token_intervals,
-            "prompt": prompt,
             "input": input,
             "output": output,
             "retrieval_context": retrieval_context,
@@ -499,7 +548,6 @@ def next_llm_span(
             "metadata": metadata,
             "name": name,
             "test_case": test_case,
-            "metric_collection": metric_collection,
             "metrics": metrics,
         }
     )
@@ -527,6 +575,7 @@ def next_tool_span(
     metadata: Optional[Dict[str, Any]] = None,
     name: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ) -> Iterator[None]:
@@ -546,7 +595,6 @@ def next_tool_span(
             "metadata": metadata,
             "name": name,
             "test_case": test_case,
-            "metric_collection": metric_collection,
             "metrics": metrics,
         }
     )
@@ -576,6 +624,7 @@ def next_retriever_span(
     metadata: Optional[Dict[str, Any]] = None,
     name: Optional[str] = None,
     test_case: Optional[LLMTestCase] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
     metrics: Optional[List[BaseMetric]] = None,
 ) -> Iterator[None]:
@@ -597,7 +646,6 @@ def next_retriever_span(
             "metadata": metadata,
             "name": name,
             "test_case": test_case,
-            "metric_collection": metric_collection,
             "metrics": metrics,
         }
     )
@@ -646,17 +694,18 @@ def pop_pending_for(span_type: Optional[str]) -> Dict[str, Any]:
     "retriever"`` or ``None`` to consume only the base slot.
     """
     merged: Dict[str, Any] = {}
-
-    base_slot = _pending_next_span.get()
-    if base_slot is not None and base_slot.payload:
-        merged.update(base_slot.payload)
-        base_slot.payload = None
-
-    if span_type and span_type in _TYPED_SLOTS:
-        typed_slot = _TYPED_SLOTS[span_type].get()
-        if typed_slot is not None and typed_slot.payload:
-            merged.update(typed_slot.payload)
-            typed_slot.payload = None
+    # Least specific first, so later slots win: an integration's staged
+    # defaults, then ``next_span``, then the typed ``next_*_span``.
+    for variable in (
+        _INTEGRATION_SLOTS[None],
+        _INTEGRATION_SLOTS.get(span_type),
+        _pending_next_span,
+        _TYPED_SLOTS.get(span_type),
+    ):
+        slot = variable.get() if variable is not None else None
+        if slot is not None and slot.payload:
+            merged.update(slot.payload)
+            slot.payload = None
 
     return merged
 
@@ -702,3 +751,91 @@ def apply_pending_to_span(span: BaseSpan, payload: Dict[str, Any]) -> None:
         except Exception:
             # Pydantic validation errors / locked fields → skip silently.
             continue
+
+
+# ---------------------------------------------------------------------------
+# Staging without a ``with`` block, for integrations whose start and end
+# arrive as separate callbacks (e.g. LangChain's). The staged payload is
+# consumed exactly like a ``next_*_span(...)`` one.
+# ---------------------------------------------------------------------------
+
+_pending_next_trace: ContextVar[Optional[_PendingSlot]] = ContextVar(
+    "pending_next_trace", default=None
+)
+_pending_next_span_type: ContextVar[Optional[_PendingSlot]] = ContextVar(
+    "pending_next_span_type", default=None
+)
+# Kept apart from the ``next_*_span`` slots so a user's staging still wins.
+_INTEGRATION_SLOTS: Dict[Optional[str], ContextVar] = {
+    span_type: ContextVar(
+        f"integration_next_{span_type or 'any'}_span", default=None
+    )
+    for span_type in (None, *_TYPED_SLOTS)
+}
+
+Staged = Tuple[ContextVar, Token, _PendingSlot]
+
+
+def stage_next_span(
+    span_type: Optional[str], payload: Dict[str, Any]
+) -> Staged:
+    """An integration's defaults for the next span of ``span_type``, which
+    ``next_*_span(...)`` overrides; ``unstage`` clears them."""
+    return _stage(
+        _INTEGRATION_SLOTS.get(span_type, _INTEGRATION_SLOTS[None]), payload
+    )
+
+
+@contextmanager
+def staged_next_span(
+    span_type: Optional[str], payload: Dict[str, Any]
+) -> Iterator[None]:
+    """``stage_next_span`` for the duration of a ``with`` block."""
+    staged = stage_next_span(span_type, payload)
+    try:
+        yield
+    finally:
+        unstage(staged)
+
+
+def stage_next_trace(payload: Dict[str, Any]) -> Staged:
+    """Defaults for the trace that the next root span starts."""
+    return _stage(_pending_next_trace, payload)
+
+
+def stage_next_span_type(span_type: str) -> Staged:
+    """The type the next span takes, whatever its attributes say."""
+    return _stage(_pending_next_span_type, {"type": span_type})
+
+
+def pop_pending_trace() -> Dict[str, Any]:
+    """One-shot consume the staged trace defaults."""
+    return _pop(_pending_next_trace)
+
+
+def pop_pending_span_type() -> Optional[str]:
+    """One-shot consume the staged span type."""
+    return _pop(_pending_next_span_type).get("type")
+
+
+def unstage(staged: Staged) -> None:
+    variable, token, slot = staged
+    # Whatever happens to the context, nothing staged may outlive its caller.
+    slot.payload = None
+    try:
+        variable.reset(token)
+    except ValueError:
+        pass
+
+
+def _stage(variable: ContextVar, payload: Dict[str, Any]) -> Staged:
+    slot = _PendingSlot(_drop_none(payload))
+    return variable, variable.set(slot), slot
+
+
+def _pop(variable: ContextVar) -> Dict[str, Any]:
+    slot = variable.get()
+    if slot is None or not slot.payload:
+        return {}
+    payload, slot.payload = slot.payload, None
+    return payload

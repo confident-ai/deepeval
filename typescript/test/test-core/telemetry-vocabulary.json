@@ -59,6 +59,10 @@
     "python",
     "typescript"
   ],
+  "localStores": [
+    "json",
+    "sqlite"
+  ],
   "loginMethods": [
     "api_key_flag",
     "browser",
@@ -103,6 +107,7 @@
     "async_mode",
     "in_component",
     "flush_reason",
+    "local_store",
     "provider",
     "model",
     "tracing_enabled",
@@ -138,6 +143,7 @@
     "eval.flush_reason",
     "eval.golden_count",
     "eval.in_component",
+    "eval.local_store",
     "eval.metric_runs",
     "eval.metrics",
     "eval.metrics_count",
@@ -189,6 +195,7 @@
     "integrations_count": "tracing.integrations_count",
     "integrations_primary": "tracing.integrations_primary",
     "last_feature": "feature.last",
+    "local_store": "eval.local_store",
     "logged_in": "user.logged_in",
     "login_method": "login.method",
     "login_outcome": "login.outcome",

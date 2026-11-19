@@ -180,6 +180,34 @@ You can use custom providers by setting the API key and base URL with your custo
 Before passing additional generation parameters, double check the params supported by the model and your model provider in their [official docs](https://platform.openai.com/docs/api-reference/responses/create).
 :::
 
+<Only id="python">
+
+### As a Decision Model
+
+OpenAI's [Decisions API](https://developers.openai.com/api/docs/guides/decisions) can answer the bounded questions (yes/no, a rating, one option from a set) that `deepeval` metrics ask under the `hybrid` and `system_one` [eval modes](/docs/evaluation-eval-modes), and for [`JevEval`](/docs/metrics-jev-eval). Define an `OpenAIDecisionModel` and pass it as the metric's `system_one_model`:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import OpenAIDecisionModel
+
+model = OpenAIDecisionModel(model="gpt-6-luna")
+answer_relevancy = AnswerRelevancyMetric(
+    system_one_model=model,
+    eval_mode="system_one",
+)
+```
+
+There are **ZERO** mandatory and **FOUR** optional parameters when creating an `OpenAIDecisionModel`:
+
+- [Optional] `model`: A string specifying which decision model to use. Defaults to `gpt-6-luna`, currently the only model the Decisions API supports.
+- [Optional] `api_key`: A string specifying your OpenAI API key. Defaults to `OPENAI_API_KEY` if not passed; raises an error if unset.
+- [Optional] `base_url`: A string specifying the base URL for the OpenAI API.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token. Defaults to `deepeval`'s pricing for `gpt-6-luna`. The Decisions API does not charge for output tokens.
+
+A question the model refuses to answer raises an error, so under `hybrid` that decision falls back to the LLM.
+
+</Only>
+
 ### Available OpenAI Models
 
 :::note
@@ -188,6 +216,14 @@ This list only displays some of the available models. For a comprehensive list, 
 
 Below is a list of commonly used OpenAI models:
 
+- `gpt-6-astra`
+- `gpt-6-sol`
+- `gpt-6-luna`
+- `gpt-5.6-sol`
+- `gpt-5.6-terra`
+- `gpt-5.6-luna`
+- `gpt-5.5`
+- `gpt-5.4`
 - `gpt-5`
 - `gpt-5-mini`
 - `gpt-5-nano`
@@ -213,7 +249,11 @@ Below is a list of commonly used OpenAI models:
 <Case id="python">
 
 :::caution[G-Eval requires log probabilities]
-`GEval` and `ConversationalGEval` compute scores from token-level log probabilities, which some OpenAI models do not expose. The `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-chat-latest`, `gpt-5.1`, and `gpt-5.2` models return no log probabilities, so passing any of them as the judge model for these metrics raises `AttributeError: log_probs unsupported.`. For `GEval` and `ConversationalGEval`, use a log-probability-capable model such as <DefaultLLMModel /> (the default) or `gpt-4.1`. Other metrics are unaffected.
+`GEval` and `ConversationalGEval` compute scores from token-level log probabilities, which some OpenAI models do not expose. The `gpt-6-astra`, `gpt-6-sol`, `gpt-6-luna`, `gpt-5.6-sol`, `gpt-5.6-terra`, `gpt-5.6-luna`, `gpt-5.5`, `gpt-5.4-mini`, `gpt-5`, `gpt-5-mini`, `gpt-5-nano`, `gpt-5-chat-latest`, `gpt-5.1`, and `gpt-5.2` models return no log probabilities, so passing any of them as the judge model for these metrics raises `AttributeError: log_probs unsupported.`. For `GEval` and `ConversationalGEval`, use a log-probability-capable model such as <DefaultLLMModel /> (the default) or `gpt-4.1`. Other metrics are unaffected.
+:::
+
+:::note[Reasoning models]
+Reasoning models such as the GPT-5 and GPT-6 families reject `temperature` values other than the default. `deepeval` omits the parameter for the models it recognizes, so a `temperature` you pass is ignored for them.
 :::
 
 </Case>

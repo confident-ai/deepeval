@@ -36,10 +36,11 @@ persona = Persona(
 )
 ```
 
-There is **ONE** mandatory and **EIGHT** optional parameters when creating a `Persona`:
+There is **ONE** mandatory and **NINE** optional parameters when creating a `Persona`:
 
 - `characteristics`: a string prompt describing the user's demographics, personality, emotional arc, and speaking style.
 - [Optional] `name`: a string name for the caller. Defaulted to `None`.
+- [Optional] `metadata`: a dictionary of structured facts about the caller (an account number, a resume, an order) that the simulator can draw on. Defaulted to `None`.
 - [Optional] `voice`: a string voice ID passed to your `tts_model`. Defaulted to `None` (the TTS model's own default voice).
 - [Optional] `interruption_behavior`: an [`InterruptionBehavior`](#interruptions) that lets the caller barge in, or `None` for a caller who never cuts in. Defaulted to `None`.
 - [Optional] `speaks_first`: a boolean for whether the caller opens the conversation instead of waiting for the agent's greeting. Defaulted to `True`.
@@ -48,7 +49,7 @@ There is **ONE** mandatory and **EIGHT** optional parameters when creating a `Pe
 - [Optional] `multilingual_stt`: a boolean which when set to `True` asks your `stt_model` to detect the agent's language per utterance instead of locking to one. Defaulted to `False`.
 - [Optional] `hold_timeout`: a float number of seconds of agent silence or hold music before the caller hangs up. Defaulted to `None`.
 
-Only `name` and `characteristics` apply to text simulations. Everything else is voice-only and is ignored when you simulate with a `model_callback`.
+Only `name`, `characteristics` and `metadata` apply to text simulations. Everything else is voice-only and is ignored when you simulate with a `model_callback`.
 
 :::caution
 `persona` supersedes the deprecated `user_description` on `ConversationalGolden`. Passing `user_description` still works and is promoted to `Persona(characteristics=...)` for you.
@@ -109,7 +110,7 @@ persona = Persona(
 
 There is **ONE** mandatory and **ONE** optional parameter when creating a `BackgroundNoiseSettings`:
 
-- `audio`: a path to a `.wav` or `.mp3` file, which is looped for the length of the call.
+- `audio`: a path or `http(s)` URL to a `.wav` or `.mp3` file, which is looped for the length of the call.
 - [Optional] `volume`: a float between `0.0` and `1.0` for how loudly the noise is mixed in. Defaulted to `0.3`.
 
 :::tip

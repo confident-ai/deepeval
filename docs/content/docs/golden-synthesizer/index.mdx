@@ -5,8 +5,6 @@ sidebar_label: Golden Synthesizer
 languages: [python]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 `deepeval`'s `Synthesizer` offers a fast and easy way to generate high-quality **single and multi-turn goldens** for your evaluation datasets in just a few lines of code. This is especially helpful if:
 
 - You don't have an evaluation dataset to start with
@@ -73,8 +71,6 @@ Congratulations 🎉🥳! You've just generated your first set of synthetic gold
 
 :::info
 `deepeval`'s `Synthesizer` uses the data evolution method to generate large volumes of data across various complexity levels to make synthetic data more realistic. This method was originally introduced by the developers of [Evol-Instruct and WizardML.](https://arxiv.org/abs/2304.12244)
-
-For those interested, here is a [great article on how `deepeval`'s synthesizer was built.](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms)
 :::
 
 ## Create Your First Synthesizer
@@ -187,7 +183,7 @@ And that's it! You now have access to a list of synthetic goldens generated usin
 <Tabs items={["Confident AI", "Locally"]}>
 <Tab value="Confident AI">
 
-To avoid losing any generated synthetic `Goldens`, you can push a dataset containing the generated goldens to Confident AI:
+To keep the generated `Goldens`, you can push them as a dataset to Confident AI:
 
 ```python
 from deepeval.dataset import EvaluationDataset
@@ -197,7 +193,7 @@ dataset = EvaluationDataset(goldens=synthesizer.synthetic_goldens)
 dataset.push(alias="My Generated Dataset")
 ```
 
-This keeps your dataset on the cloud and you'll be able to edit and version control it in one place. When you are ready to evaluate your LLM application using the generated goldens, simply pull the dataset from the cloud like how you would pull a GitHub repo:
+When you're ready to evaluate your LLM application with the generated goldens, pull the dataset back by its alias:
 
 ```python
 from deepeval import evaluate
@@ -441,7 +437,7 @@ In the **filtration** step, `input`s of generated goldens are subject to quality
     justifyContent: "center",
   }}
 >
-  <ImageDisplayer src={ASSETS.generationFiltration} />
+  <ImageDisplayer id="diagrams/in-house/datasets/synthetic-input-filtering" />
 </div>
 
 Any goldens that has a quality scores below the `synthetic_input_quality_threshold` will be re-generated. If the quality score still does not meet the required `synthetic_input_quality_threshold` after the allowed `max_quality_retries`, the most generation with the highest score is used. As a result, some generated `Goldens` in your final evaluation dataset may not meet the minimum input quality scores, but you will be guaranteed at least a golden regardless of its quality.
@@ -465,7 +461,7 @@ As an example, a golden might take the following evolutionary route when `num_ev
     justifyContent: "center",
   }}
 >
-  <ImageDisplayer src={ASSETS.evolutions} />
+  <ImageDisplayer id="diagrams/in-house/datasets/input-evolution-tree" />
 
 </div>
 
@@ -540,13 +536,16 @@ In the final **styling** step, the `input`s and `expected_outputs` of each golde
       ),
     },
     {
-      question: "Can my team generate goldens without code?",
+      question: "Where should new goldens come from once my app is live?",
       answer: (
         <>
-          Yes. On <a href="https://www.confident-ai.com">Confident AI</a> you
-          can connect your knowledge bases and run the generation pipeline
-          no-code — tweak filtration, evolutions, and styling, experiment with
-          variations, and collaborate on the resulting dataset as a team.
+          Synthetic goldens give you initial coverage before launch. Once
+          you're in production,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces failing production traces, clusters them into failure modes,
+          and turns them into goldens for your next eval.
         </>
       ),
     },
