@@ -1,5 +1,5 @@
-"""Synthetic audio for the audio-glitch, audio-defect and audio-level metric
-tests."""
+"""Synthetic audio for the audio-glitch, audio-defect, audio-level and
+audio-prosody metric tests."""
 
 import math
 import random
@@ -11,15 +11,18 @@ from deepeval.voice.connectors import audio_utils
 RATE = 8000
 
 
-def speech_like(seconds, *, base_hz=200.0, seed=0, noise=20) -> array:
-    """A voice-shaped signal: pitch gliding ±30 Hz, harmonics, syllables of
-    sound and near-silence, and faint room noise so pauses are never zero."""
+def speech_like(
+    seconds, *, base_hz=200.0, seed=0, noise=20, glide_hz=30.0
+) -> array:
+    """A voice-shaped signal: pitch gliding ±`glide_hz`, harmonics, syllables
+    of sound and near-silence, and faint room noise so pauses are never
+    zero."""
     rng = random.Random(seed)
     out = array("h")
     phase = 0.0
     for index in range(int(seconds * RATE)):
         t = index / RATE
-        hz = base_hz + 30.0 * math.sin(2 * math.pi * t / 1.0)
+        hz = base_hz + glide_hz * math.sin(2 * math.pi * t / 1.0)
         phase += 2 * math.pi * hz / RATE
         envelope = max(0.0, math.sin(math.pi * 4.0 * t)) ** 0.7
         voice = (
@@ -40,6 +43,31 @@ def vowel(seconds, *, start_hz=200.0, end_hz=185.0) -> array:
     for index in range(count):
         hz = start_hz + (end_hz - start_hz) * index / count
         phase += 2 * math.pi * hz / RATE
+        out.append(
+            int(
+                5000
+                * (
+                    math.sin(phase)
+                    + 0.5 * math.sin(2 * phase)
+                    + 0.3 * math.sin(3 * phase)
+                )
+                / 1.8
+            )
+        )
+    return out
+
+
+def cracked_vowel(
+    seconds, *, hz=200.0, crack_at=1.0, crack_seconds=0.2, semitones=8.0
+) -> array:
+    """A held vowel whose pitch leaps by `semitones` for `crack_seconds`."""
+    out = array("h")
+    phase = 0.0
+    for index in range(int(seconds * RATE)):
+        t = index / RATE
+        cracked = crack_at <= t < crack_at + crack_seconds
+        frame_hz = hz * 2 ** (semitones / 12) if cracked else hz
+        phase += 2 * math.pi * frame_hz / RATE
         out.append(
             int(
                 5000
@@ -117,6 +145,16 @@ def clipped(seconds) -> array:
 
 def cut_short(samples: array, seconds) -> array:
     return samples[: int(seconds * RATE)]
+
+
+def with_pause(samples: array, at, seconds, *, noise=20) -> array:
+    """Faint room noise for `seconds`, inserted `at` seconds in."""
+    rng = random.Random(1)
+    split = int(at * RATE)
+    gap = array(
+        "h", [int(rng.gauss(0, noise)) for _ in range(int(seconds * RATE))]
+    )
+    return samples[:split] + gap + samples[split:]
 
 
 def _saturate(value) -> int:

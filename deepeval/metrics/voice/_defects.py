@@ -1,11 +1,15 @@
 """Shared pieces of the single-defect voice metrics. Each one scores the
 share of agent replies free of its one defect; caller audio is ignored."""
 
+from statistics import median
 from typing import Dict, List, Tuple
 
 from deepeval.metrics.voice._analysis import AudioMeasurements, analyze_audio
 from deepeval.metrics.voice.base_metric import VoiceMetricResult
 from deepeval.test_case import ConversationalTestCase
+
+# With fewer replies there is no telling which one is off.
+MIN_COMPARED_REPLIES = 3
 
 
 def agent_reply_measurements(
@@ -50,6 +54,14 @@ def agent_glitch_events(
     return eligible_turns, events, skipped
 
 
+def shifts_from_typical(levels: Dict[int, float]) -> Dict[int, float]:
+    """Each reply's distance from the call's typical (median) reply."""
+    if not levels:
+        return {}
+    typical = median(levels.values())
+    return {turn: level - typical for turn, level in levels.items()}
+
+
 def defect_share_result(
     eligible_turns: List[int],
     defects: List[Dict],
@@ -58,6 +70,7 @@ def defect_share_result(
     no_eligible_reason: str = (
         "No decodable assistant audio was available to evaluate."
     ),
+    min_eligible_turns: int = 1,
 ) -> VoiceMetricResult:
     defective_turns = {defect["turn"] for defect in defects}
     breakdown = {
@@ -66,7 +79,7 @@ def defect_share_result(
         "events": sorted(defects, key=lambda defect: defect["turn"]),
         "skipped": skipped,
     }
-    if not eligible_turns:
+    if len(eligible_turns) < min_eligible_turns:
         return None, no_eligible_reason, breakdown
     if not defective_turns:
         return 1.0, f"No agent reply had {defect_label}.", breakdown

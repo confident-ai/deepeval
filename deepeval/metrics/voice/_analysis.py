@@ -35,10 +35,33 @@ NOISE_MIN_SECONDS = 2.0
 # A cut-off ends mid-sound: the last 20 ms must stand this far above the
 # reply's background noise, not just above a fixed level.
 EDGE_ABOVE_NOISE_DB = 10.0
+# A pause sits within this much of the background noise; a wider margin would
+# count the quiet ends of words in a noisy reply as pause.
+PAUSE_ABOVE_NOISE_DB = 6.0
 VOLUME_WINDOW_SECONDS = 1.0
 VOLUME_PEAK_FRAMES = 5
 VOLUME_MIN_SPEECH_FRAMES = 15
 VOLUME_MIN_WINDOWS = 3
+# Pitch is tracked with YIN (de Cheveigne & Kawahara 2002) on 8 kHz audio.
+PITCH_SAMPLE_RATE = 8000
+PITCH_FRAME_MS = 40
+PITCH_MIN_HZ = 70.0
+PITCH_MAX_HZ = 500.0
+PITCH_YIN_THRESHOLD = 0.15
+# Frames closer than this belong to one stretch of continuous pitch.
+PITCH_CONTINUOUS_SEMITONES = 3.0
+# The tracker can lock onto the octave for a few frames at a time; a stretch
+# that short sitting an octave off its neighbours is folded back.
+PITCH_OCTAVE_MAX_FRAMES = 3
+PITCH_OCTAVE_TOLERANCE_SEMITONES = 3.0
+# 6 semitones in 40 ms is 2.5x the fastest pitch change a speaker can make
+# (Xu & Sun 2002).
+PITCH_JUMP_SEMITONES = 6.0
+PITCH_MIN_VOICED_SECONDS = 1.0
+PITCH_MIN_FRAMES = int(PITCH_MIN_VOICED_SECONDS * 1000 / PITCH_FRAME_MS)
+# Gaps under 200 ms are part of articulating words, not pauses.
+PAUSE_MIN_MS = 200
+SPEECH_SPAN_MIN_SECONDS = 2.0
 
 # Lazy import cache
 _numpy_mod = None
@@ -78,6 +101,13 @@ class AudioMeasurements:
     pitch_variation_hz: Optional[float]
     starts_abruptly: bool
     ends_abruptly: bool
+    pitch_median_hz: Optional[float]
+    pitch_spread_semitones: Optional[float]
+    voiced_pitch_frames: int
+    pitch_jumps: int
+    speech_span_seconds: float
+    longest_pause_ms: float
+    pause_fraction: float
 
 
 def clamp_score(value: float) -> float:
@@ -130,25 +160,139 @@ def frame_samples(
     ]
 
 
-def _pitch_hz(frame: Sequence[int], sample_rate: int) -> Optional[float]:
-    if rms(frame) < audio_utils.DEFAULT_SILENCE_RMS:
+def semitones(hz: float, reference_hz: float) -> float:
+    return 12.0 * math.log2(hz / reference_hz)
+
+
+def _downsampled(samples: Sequence[int], sample_rate: int) -> Tuple[Any, float]:
+    np = get_numpy()
+    values = np.asarray(samples, dtype=np.float64)
+    step = sample_rate // PITCH_SAMPLE_RATE
+    if step <= 1:
+        return values, float(sample_rate)
+    # Averaging each block removes what the lower rate can't hold.
+    usable = len(values) // step * step
+    return values[:usable].reshape(-1, step).mean(axis=1), sample_rate / step
+
+
+def _yin_pitch_hz(frame: Any, rate: float) -> Optional[float]:
+    np = get_numpy()
+    max_lag = int(rate / PITCH_MIN_HZ)
+    min_lag = max(2, int(rate / PITCH_MAX_HZ))
+    window = len(frame) - max_lag
+    if window <= 0:
         return None
-    step = max(1, sample_rate // 8000)
-    data = frame[::step]
-    rate = sample_rate / step
-    min_lag = max(1, int(rate / 400))
-    max_lag = min(len(data) // 2, int(rate / 70))
-    if max_lag <= min_lag:
+    centered = frame - frame.mean()
+    level = math.sqrt(float(centered @ centered) / len(centered))
+    if level < audio_utils.DEFAULT_SILENCE_RMS:
         return None
-    centered = _centered(data)
-    energy = float(centered @ centered)
-    if energy <= 0:
+    energy = np.concatenate(([0.0], np.cumsum(centered * centered)))
+    lags = np.arange(max_lag + 1)
+    products = np.correlate(
+        centered[: window + max_lag], centered[:window], "valid"
+    )[: max_lag + 1]
+    difference = (
+        energy[window] + energy[lags + window] - energy[lags] - 2 * products
+    )
+    normalized = np.ones(max_lag + 1)
+    normalized[1:] = (
+        difference[1:] * lags[1:] / np.maximum(np.cumsum(difference[1:]), 1e-9)
+    )
+    below = np.nonzero(normalized[min_lag:max_lag] < PITCH_YIN_THRESHOLD)[0]
+    if below.size == 0:
         return None
-    correlations = _autocorrelation(centered)[min_lag : max_lag + 1]
-    best = int(correlations.argmax())
-    if float(correlations[best]) / energy < 0.15:
-        return None
-    return rate / (min_lag + best)
+    lag = min_lag + int(below[0])
+    while lag + 1 < max_lag and normalized[lag + 1] < normalized[lag]:
+        lag += 1
+    left, best, right = normalized[lag - 1 : lag + 2]
+    curvature = left - 2 * best + right
+    offset = 0.5 * (left - right) / curvature if curvature > 0 else 0.0
+    return rate / (lag + offset)
+
+
+def _pitch_stretches(track: Sequence[Optional[float]]) -> List[Tuple[int, int]]:
+    stretches = []
+    index = 0
+    while index < len(track):
+        if track[index] is None:
+            index += 1
+            continue
+        end = index + 1
+        while (
+            end < len(track)
+            and track[end] is not None
+            and abs(semitones(track[end], track[end - 1]))
+            < PITCH_CONTINUOUS_SEMITONES
+        ):
+            end += 1
+        stretches.append((index, end))
+        index = end
+    return stretches
+
+
+def _without_octave_errors(
+    track: Sequence[Optional[float]],
+) -> List[Optional[float]]:
+    track = list(track)
+    # A second pass catches an error that sat next to another one.
+    for _ in range(2):
+        stretches = _pitch_stretches(track)
+        for position, (start, end) in enumerate(stretches):
+            if end - start > PITCH_OCTAVE_MAX_FRAMES:
+                continue
+            level = median(track[start:end])
+            neighbours = []
+            if position > 0 and stretches[position - 1][1] == start:
+                neighbours.append(track[start - 1])
+            if (
+                position + 1 < len(stretches)
+                and stretches[position + 1][0] == end
+            ):
+                neighbours.append(track[end])
+            offsets = [semitones(level, pitch) for pitch in neighbours]
+            if (
+                offsets
+                and all(
+                    abs(abs(offset) - 12.0) <= PITCH_OCTAVE_TOLERANCE_SEMITONES
+                    for offset in offsets
+                )
+                and len({offset > 0 for offset in offsets}) == 1
+            ):
+                factor = 0.5 if offsets[0] > 0 else 2.0
+                for index in range(start, end):
+                    track[index] *= factor
+    return track
+
+
+def pitch_track(
+    samples: Sequence[int], sample_rate: int
+) -> List[Optional[float]]:
+    """Pitch of each 40 ms frame, None where it is unvoiced."""
+    data, rate = _downsampled(samples, sample_rate)
+    width = int(rate * PITCH_FRAME_MS / 1000)
+    return _without_octave_errors(
+        [
+            _yin_pitch_hz(data[start : start + width], rate)
+            for start in range(0, len(data) - width + 1, width)
+        ]
+    )
+
+
+def count_pitch_jumps(track: Sequence[Optional[float]]) -> int:
+    """Steps of 6+ semitones between two stretches of steady pitch; a lone
+    frame on either side is more likely a tracking slip than a crack."""
+    stretches = _pitch_stretches(track)
+    return sum(
+        1
+        for (start, end), (next_start, next_end) in zip(
+            stretches, stretches[1:]
+        )
+        if end == next_start
+        and end - start >= 2
+        and next_end - next_start >= 2
+        and abs(semitones(track[next_start], track[end - 1]))
+        >= PITCH_JUMP_SEMITONES
+    )
 
 
 def _centered(data: Sequence[int]) -> Any:
@@ -176,7 +320,7 @@ def pitch_and_periodicity(
 ) -> Optional[Tuple[float, float]]:
     """Pitch in Hz and how periodic the frame is (1.0 for a pure tone).
 
-    Searches a wider range than `_pitch_hz`, which stops at 400 Hz: a TTS
+    Searches a wider range than `pitch_track`, which stops at 500 Hz: a TTS
     artifact can sit well above a voice. Lags are searched coarsely then
     refined, and the shortest lag close to the best one wins so a
     sub-harmonic is not reported.
@@ -408,11 +552,17 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
     values = np.asarray(samples).astype(np.int32)
     negative = values < 0
     crossings = int(np.count_nonzero(negative[:-1] != negative[1:]))
-    pitches = [
-        pitch
-        for frame in frame_samples(samples, sample_rate, frame_ms=40)
-        if (pitch := _pitch_hz(frame, sample_rate)) is not None
-    ]
+    track = pitch_track(samples, sample_rate)
+    pitches = [pitch for pitch in track if pitch is not None]
+    pitch_median = median(pitches) if pitches else None
+    pitch_spread = (
+        # Scaled median deviation: a standard deviation that one cracked
+        # word can't move.
+        1.4826
+        * median(abs(semitones(pitch, pitch_median)) for pitch in pitches)
+        if len(pitches) > 1
+        else None
+    )
 
     loop_window = max(1, int(sample_rate * 0.25))
     fingerprints = {}
@@ -429,11 +579,30 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
     edge_size = max(1, int(sample_rate * 0.02))
     edge_threshold = max(audio_utils.DEFAULT_SILENCE_RMS * 2, 1000)
     end_threshold = edge_threshold
+    speaking = audio_utils.DEFAULT_SILENCE_RMS
     if len(samples) / sample_rate >= NOISE_MIN_SECONDS:
         # A reply that simply ends inside steady background noise isn't cut.
         end_threshold = max(
             edge_threshold, noise_level * 10 ** (EDGE_ABOVE_NOISE_DB / 20)
         )
+        pause_ceiling = noise_level * 10 ** (PAUSE_ABOVE_NOISE_DB / 20)
+        # With no quieter stretch to call noise, the "noise" is the speech.
+        if pause_ceiling < speech_level:
+            speaking = max(speaking, pause_ceiling)
+    spoken = [
+        index for index, value in enumerate(frame_rms) if value >= speaking
+    ]
+    pauses = []
+    if spoken:
+        current = 0
+        for value in frame_rms[spoken[0] : spoken[-1] + 1]:
+            if value < speaking:
+                current += 1
+                continue
+            if current * 20 >= PAUSE_MIN_MS:
+                pauses.append(current * 20)
+            current = 0
+    speech_span_ms = (spoken[-1] - spoken[0] + 1) * 20 if spoken else 0
     return AudioMeasurements(
         duration=len(samples) / sample_rate,
         rms_dbfs=dbfs(rms(samples)),
@@ -452,7 +621,34 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         pitch_variation_hz=pstdev(pitches) if len(pitches) > 1 else None,
         starts_abruptly=rms(samples[:edge_size]) > edge_threshold,
         ends_abruptly=rms(samples[-edge_size:]) > end_threshold,
+        pitch_median_hz=pitch_median,
+        pitch_spread_semitones=pitch_spread,
+        voiced_pitch_frames=len(pitches),
+        pitch_jumps=count_pitch_jumps(track),
+        speech_span_seconds=speech_span_ms / 1000,
+        longest_pause_ms=float(max(pauses, default=0)),
+        pause_fraction=sum(pauses) / speech_span_ms if speech_span_ms else 0.0,
     )
+
+
+def _spoken_word_count(content: str) -> int:
+    # Digits are read out one by one, so "555-1234" is seven spoken words.
+    return sum(
+        sum(character.isdigit() for character in token)
+        + any(character.isalpha() for character in token)
+        for token in content.split()
+    )
+
+
+def speech_span_rate_wpm(
+    content: str, measurements: AudioMeasurements
+) -> Optional[float]:
+    """Spoken words per minute from first to last speech, pauses included,
+    the way conversational rates are usually measured."""
+    words = _spoken_word_count(content)
+    if words == 0 or measurements.speech_span_seconds < SPEECH_SPAN_MIN_SECONDS:
+        return None
+    return words / (measurements.speech_span_seconds / 60.0)
 
 
 def speaking_rate_wpm(
