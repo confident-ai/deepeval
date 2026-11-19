@@ -3,6 +3,7 @@ import type { Metadata } from "next";
 import type { MDXComponents } from "mdx/types";
 import { notFound } from "next/navigation";
 import { Banner } from "fumadocs-ui/components/banner";
+import { MeetupBanner } from "@/lib/announcement";
 import {
   DocsBody,
   DocsDescription,
@@ -121,6 +122,7 @@ export function createSection(config: SectionConfig) {
     const { nav, ...rest } = baseOptions();
     return (
       <>
+        <MeetupBanner />
         <Banner id="docs-announcement" height="30px">
           💥 Introducing JevEval: Jev-as-a-Judge for LLM evaluation.{" "}
           <Link href="/blog/introducing-jev-as-a-judge">Read the post →</Link>
