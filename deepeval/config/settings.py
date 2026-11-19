@@ -52,6 +52,7 @@ from deepeval.config.utils import (
 )
 from deepeval.constants import (
     CONFIDENT_REGIONS,
+    OLLAMA_API_KEY_SELECTOR,
     SUPPORTED_CONFIDENT_REGIONS,
     SUPPORTED_PROVIDER_SLUGS,
     slugify,
@@ -72,6 +73,28 @@ _DEPRECATED_TO_OVERRIDE = {
 }
 # Track which secrets we've warned about when loading from the legacy keyfile
 _LEGACY_KEYFILE_SECRET_WARNED: set[str] = set()
+
+
+_OLLAMA_SELECTOR_KEYS = {
+    "USE_OLLAMA_MODEL": "LOCAL_MODEL_API_KEY",
+    "USE_OLLAMA_EMBEDDINGS": "LOCAL_EMBEDDING_API_KEY",
+}
+
+
+def _is_ollama_selector(api_key: Union[SecretStr, str, None]) -> bool:
+    # `SecretStr` never compares equal to a plain string, so the
+    # selector is read out before comparing.
+    if isinstance(api_key, SecretStr):
+        api_key = api_key.get_secret_value()
+    return api_key == OLLAMA_API_KEY_SELECTOR
+
+
+def is_ollama_selected(
+    use_flag: Optional[bool], api_key: Union[SecretStr, str, None]
+) -> bool:
+    if use_flag is not None:
+        return use_flag
+    return _is_ollama_selector(api_key)
 
 
 def _family_of_use_flag(env_key: str) -> str:
@@ -680,6 +703,10 @@ class Settings(BaseSettings):
         None,
         description="Select a local/self-hosted model as the active LLM provider.",
     )
+    USE_OLLAMA_MODEL: Optional[bool] = Field(
+        None,
+        description="Select a local Ollama model as the active LLM provider.",
+    )
     LOCAL_MODEL_API_KEY: Optional[SecretStr] = Field(
         None,
         description="API key for a local/self-hosted LLM endpoint (if required).",
@@ -870,6 +897,9 @@ class Settings(BaseSettings):
     # Local
     USE_LOCAL_EMBEDDINGS: Optional[bool] = Field(
         None, description="Use a local/self-hosted embeddings endpoint."
+    )
+    USE_OLLAMA_EMBEDDINGS: Optional[bool] = Field(
+        None, description="Use a local Ollama embeddings model."
     )
     LOCAL_EMBEDDING_MODEL_NAME: Optional[str] = Field(
         None,
@@ -1203,10 +1233,12 @@ class Settings(BaseSettings):
         "SKIP_DEEPEVAL_MISSING_PARAMS",
         "TOKENIZERS_PARALLELISM",
         "TRANSFORMERS_NO_ADVISORY_WARNINGS",
+        "USE_ANTHROPIC_MODEL",
         "USE_AWS_BEDROCK_MODEL",
         "USE_OPENAI_MODEL",
         "USE_AZURE_OPENAI",
         "USE_LOCAL_MODEL",
+        "USE_OLLAMA_MODEL",
         "USE_GEMINI_MODEL",
         "USE_MOONSHOT_MODEL",
         "USE_GROK_MODEL",
@@ -1214,7 +1246,9 @@ class Settings(BaseSettings):
         "USE_LITELLM",
         "USE_AZURE_OPENAI_EMBEDDING",
         "USE_LOCAL_EMBEDDINGS",
+        "USE_OLLAMA_EMBEDDINGS",
         "USE_PORTKEY_MODEL",
+        "USE_OPENROUTER_MODEL",
         "USE_OPENAI_TTS",
         "USE_ELEVENLABS_TTS",
         "USE_CARTESIA_TTS",
@@ -1718,8 +1752,6 @@ class Settings(BaseSettings):
             Flip USE_* settings within the target's provider family
             (LLM, embeddings, TTS or STT).
             """
-            from deepeval.key_handler import KEY_FILE_HANDLER
-
             target_key = getattr(target, "value", str(target))
             target_family = _family_of_use_flag(target_key)
 
@@ -1736,20 +1768,54 @@ class Settings(BaseSettings):
                 )
 
             for field in use_fields:
-                on = field == target_key
                 # Non-targets are *unset* (None) rather than written as an
                 # explicit False/"NO": keeps the keystore and dotenv clean
                 # and preserves Optional[bool] unset-vs-false semantics.
                 # `should_use_*()` treats a missing flag as off.
-                setattr(self._s, field, True if on else None)
+                # Ollama's flags go through `deselect_ollama`.
+                if field == target_key:
+                    self._set_use_flag(field, True)
+                elif field in _OLLAMA_SELECTOR_KEYS:
+                    self.deselect_ollama(field)
+                else:
+                    self._set_use_flag(field, None)
 
-                if self._persist is not False:
-                    legacy_member = _find_legacy_enum(field)
-                    if legacy_member is not None:
-                        if on:
-                            KEY_FILE_HANDLER.write_key(legacy_member, "YES")
-                        else:
-                            KEY_FILE_HANDLER.remove_key(legacy_member)
+        def deselect_ollama(self, flag) -> None:
+            from deepeval.config.settings_manager import _resolve_save_path
+
+            flag = getattr(flag, "value", str(flag))
+            key = _OLLAMA_SELECTOR_KEYS[flag]
+            api_key = getattr(self._s, key)
+            if not is_ollama_selected(getattr(self._s, flag), api_key):
+                return
+
+            value = None
+            if _is_ollama_selector(api_key):
+                setattr(self._s, key, None)
+                _, path = _resolve_save_path(self._save)
+                if (
+                    self._persist is False
+                    or path is None
+                    or not _is_ollama_selector(read_dotenv_file(path).get(key))
+                ):
+                    value = False
+            self._set_use_flag(flag, value)
+
+        def _set_use_flag(self, field: str, value: Optional[bool]) -> None:
+            from deepeval.key_handler import KEY_FILE_HANDLER
+
+            setattr(self._s, field, value)
+            if self._persist is False:
+                return
+            legacy_member = _find_legacy_enum(field)
+            if legacy_member is None:
+                return
+            if value is None:
+                KEY_FILE_HANDLER.remove_key(legacy_member)
+            else:
+                KEY_FILE_HANDLER.write_key(
+                    legacy_member, "YES" if value else "NO"
+                )
 
     def edit(
         self, *, save: Optional[str] = None, persist: Optional[bool] = None

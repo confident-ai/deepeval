@@ -11,7 +11,8 @@ from deepeval.cli.utils import (
     handle_save_result as _handle_save_result,
     is_openai_configured,
 )
-from deepeval.config.settings import get_settings
+from deepeval.config.settings import get_settings, is_ollama_selected
+from deepeval.constants import OLLAMA_API_KEY_SELECTOR
 from deepeval.key_handler import (
     EmbeddingKeyValues,
     ModelKeyValues,
@@ -51,8 +52,8 @@ def set_ollama_model_env(
 
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        edit_ctx.switch_model_provider(ModelKeyValues.USE_LOCAL_MODEL)
-        settings.LOCAL_MODEL_API_KEY = "ollama"
+        edit_ctx.switch_model_provider(ModelKeyValues.USE_OLLAMA_MODEL)
+        settings.LOCAL_MODEL_API_KEY = OLLAMA_API_KEY_SELECTOR
         if model is not None:
             settings.OLLAMA_MODEL_NAME = model
         if base_url is not None:
@@ -102,11 +103,15 @@ def unset_ollama_model_env(
 ):
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
+        if is_ollama_selected(
+            settings.USE_OLLAMA_MODEL, settings.LOCAL_MODEL_API_KEY
+        ):
+            settings.USE_LOCAL_MODEL = None
+            settings.LOCAL_MODEL_BASE_URL = None
+        edit_ctx.deselect_ollama(ModelKeyValues.USE_OLLAMA_MODEL)
         if clear_secrets:
             settings.LOCAL_MODEL_API_KEY = None
         settings.OLLAMA_MODEL_NAME = None
-        settings.LOCAL_MODEL_BASE_URL = None
-        settings.USE_LOCAL_MODEL = None
 
     handled, path, updates = edit_ctx.result
 
@@ -162,8 +167,8 @@ def set_ollama_embeddings_env(
 
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
-        edit_ctx.switch_model_provider(EmbeddingKeyValues.USE_LOCAL_EMBEDDINGS)
-        settings.LOCAL_EMBEDDING_API_KEY = "ollama"
+        edit_ctx.switch_model_provider(EmbeddingKeyValues.USE_OLLAMA_EMBEDDINGS)
+        settings.LOCAL_EMBEDDING_API_KEY = OLLAMA_API_KEY_SELECTOR
         if model is not None:
             settings.LOCAL_EMBEDDING_MODEL_NAME = model
         if base_url is not None:
@@ -213,11 +218,15 @@ def unset_ollama_embeddings_env(
 ):
     settings = get_settings()
     with settings.edit(save=save) as edit_ctx:
+        if is_ollama_selected(
+            settings.USE_OLLAMA_EMBEDDINGS, settings.LOCAL_EMBEDDING_API_KEY
+        ):
+            settings.USE_LOCAL_EMBEDDINGS = None
+            settings.LOCAL_EMBEDDING_MODEL_NAME = None
+            settings.LOCAL_EMBEDDING_BASE_URL = None
+        edit_ctx.deselect_ollama(EmbeddingKeyValues.USE_OLLAMA_EMBEDDINGS)
         if clear_secrets:
             settings.LOCAL_EMBEDDING_API_KEY = None
-        settings.LOCAL_EMBEDDING_MODEL_NAME = None
-        settings.LOCAL_EMBEDDING_BASE_URL = None
-        settings.USE_LOCAL_EMBEDDINGS = None
 
     handled, path, updates = edit_ctx.result
 

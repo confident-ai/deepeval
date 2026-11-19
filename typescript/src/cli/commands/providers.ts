@@ -3,8 +3,14 @@
 
 import * as fs from "fs";
 import { Command, InvalidArgumentError } from "commander";
-import { editSettings, type SettingsDraft } from "@/config/settings";
 import {
+  editSettings,
+  saveTargetPath,
+  type SettingsDraft,
+} from "@/config/settings";
+import { readDotenvFile } from "@/config/dotenv-load";
+import {
+  isProviderSelected,
   ownedSettings,
   PROVIDERS,
   USE_LLM_FLAGS,
@@ -44,14 +50,36 @@ function loadJsonFile(path: string, flag: string): string {
   }
 }
 
+function deselectLegacySelected(
+  draft: SettingsDraft,
+  provider: ProviderSpec,
+  save: string | undefined,
+): void {
+  const values = draft as Record<string, unknown>;
+  const selector = provider.legacySelector;
+  if (!selector || !isProviderSelected(provider, values)) return;
+  let selectorStays = false;
+  if (values[selector.setting] === selector.value) {
+    values[selector.setting] = null;
+    const path = saveTargetPath(save);
+    selectorStays =
+      !path || readDotenvFile(path)[selector.setting] !== selector.value;
+  }
+  values[provider.useFlag] = selectorStays ? false : null;
+}
+
 function switchModelProvider(
   draft: SettingsDraft,
   provider: ProviderSpec,
+  save: string | undefined,
 ): void {
   for (const flag of USE_LLM_FLAGS) {
-    if (flag !== provider.useFlag) {
-      (draft as Record<string, unknown>)[flag] = null;
-    }
+    if (flag === provider.useFlag) continue;
+    const legacy = PROVIDERS.find(
+      (other) => other.useFlag === flag && other.legacySelector,
+    );
+    if (legacy) deselectLegacySelected(draft, legacy, save);
+    else (draft as Record<string, unknown>)[flag] = null;
   }
   (draft as Record<string, unknown>)[provider.useFlag] = true;
 }
@@ -125,7 +153,7 @@ function registerSetCommand(program: Command, provider: ProviderSpec): void {
 
       const result = editSettings(
         (draft) => {
-          switchModelProvider(draft, provider);
+          switchModelProvider(draft, provider, save);
           const write = (setting: string, value: unknown) => {
             (draft as Record<string, unknown>)[setting] = value;
           };
@@ -233,8 +261,16 @@ function registerUnsetCommand(program: Command, provider: ProviderSpec): void {
     const save = normalizeSave(options.save);
     const result = editSettings(
       (draft) => {
+        const values = draft as Record<string, unknown>;
+        if (isProviderSelected(provider, values)) {
+          for (const setting of provider.sharedSettings ?? []) {
+            values[setting] = null;
+          }
+        }
+        deselectLegacySelected(draft, provider, save);
         for (const setting of ownedSettings(provider)) {
-          (draft as Record<string, unknown>)[setting] = null;
+          if (provider.legacySelector && setting === provider.useFlag) continue;
+          values[setting] = null;
         }
         if (options.clearSecrets) {
           for (const setting of provider.secretSettings ?? []) {

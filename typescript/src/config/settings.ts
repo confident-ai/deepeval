@@ -8,6 +8,7 @@ import {
   updateKeystore,
 } from "@/config/keystore";
 import {
+  EMPTY_IS_SET,
   getFieldSchema,
   isSecretSetting,
   normalizeSettingKey,
@@ -30,13 +31,14 @@ function rawValues(): Record<string, string> {
   const keystore = readKeystore();
   const raw: Record<string, string> = {};
   for (const name of SETTING_NAMES) {
+    const keepEmpty = EMPTY_IS_SET.has(name);
     const fromEnv = process.env[name];
-    if (fromEnv !== undefined && fromEnv !== "") {
+    if (fromEnv !== undefined && (fromEnv !== "" || keepEmpty)) {
       raw[name] = fromEnv;
       continue;
     }
     const fromKeystore = keystore[name];
-    if (fromKeystore !== undefined && fromKeystore !== "") {
+    if (fromKeystore !== undefined && (fromKeystore !== "" || keepEmpty)) {
       raw[name] = fromKeystore;
     }
   }
@@ -101,12 +103,15 @@ export function resetSettings({
 export type SettingSource = "env" | "dotenv" | "keystore" | "default";
 
 export function getSettingSource(name: SettingName): SettingSource {
+  const keepEmpty = EMPTY_IS_SET.has(name);
   const fromEnv = process.env[name];
-  if (fromEnv !== undefined && fromEnv !== "") {
+  if (fromEnv !== undefined && (fromEnv !== "" || keepEmpty)) {
     return cameFromDotenv(name) ? "dotenv" : "env";
   }
   const fromKeystore = readKeystore()[name];
-  if (fromKeystore !== undefined && fromKeystore !== "") return "keystore";
+  if (fromKeystore !== undefined && (fromKeystore !== "" || keepEmpty)) {
+    return "keystore";
+  }
   return "default";
 }
 
@@ -174,6 +179,10 @@ export function resolveSaveTarget(
   if (save) return save;
   const fallback = process.env.DEEPEVAL_DEFAULT_SAVE;
   return fallback && fallback.trim() ? fallback.trim() : null;
+}
+
+export function saveTargetPath(save: string | null | undefined): string | null {
+  return parseSaveOption(resolveSaveTarget(save)).path;
 }
 
 /**

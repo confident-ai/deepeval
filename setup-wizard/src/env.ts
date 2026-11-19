@@ -18,7 +18,7 @@ const assignmentPattern = (key: string): RegExp =>
 /** Replace each key in place when present, otherwise append it. */
 export const mergeEnvContent = (
   content: string,
-  values: Record<string, string>,
+  values: Record<string, string | null>,
 ): string => {
   const newline = content.includes("\r\n") ? "\r\n" : "\n";
   let merged = content ? content.split(/\r?\n/) : [];
@@ -26,6 +26,10 @@ export const mergeEnvContent = (
 
   for (const [key, value] of Object.entries(values)) {
     const matches = assignmentPattern(key);
+    if (value === null) {
+      merged = merged.filter((line) => !matches.test(line));
+      continue;
+    }
     const assignment = `${key}=${JSON.stringify(value)}`;
     let kept = false;
     merged = merged.filter((line) => {
@@ -95,7 +99,7 @@ export const readEnvValues = async (
 
 export const writeEnvValues = async (
   cwd: string,
-  values: Record<string, string>,
+  values: Record<string, string | null>,
 ): Promise<string> => {
   const path = join(cwd, ".env.local");
   try {

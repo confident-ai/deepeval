@@ -57,9 +57,19 @@ export interface JudgeProvider {
    * OpenAI needs no flag because it is DeepEval's fallback.
    */
   flags: Record<string, string>;
+  selects?: (env: EnvValues) => boolean;
   /** Position in DeepEval's `initialize_model` chain, which is first-match. */
   precedence: number;
 }
+
+const OLLAMA_FLAG = "USE_OLLAMA_MODEL";
+const OLLAMA_MARKER = "ollama";
+
+const ollamaSelected = (env: EnvValues): boolean => {
+  const flag = env[OLLAMA_FLAG];
+  if (flag !== undefined) return isTruthy(flag);
+  return (env.LOCAL_MODEL_API_KEY ?? "").trim() === OLLAMA_MARKER;
+};
 
 const apiKey = (envVar: string, label: string): JudgeSecret => ({
   envVar,
@@ -260,7 +270,12 @@ export const judgeProviders: readonly JudgeProvider[] = [
         placeholder: "llama3.1",
       },
     ],
-    flags: { USE_LOCAL_MODEL: "true", LOCAL_MODEL_API_KEY: "ollama" },
+    flags: {
+      [OLLAMA_FLAG]: "true",
+      USE_LOCAL_MODEL: "true",
+      LOCAL_MODEL_API_KEY: OLLAMA_MARKER,
+    },
+    selects: ollamaSelected,
     precedence: 5,
   },
   {
@@ -272,7 +287,7 @@ export const judgeProviders: readonly JudgeProvider[] = [
         envVar: "LOCAL_MODEL_API_KEY",
         label: "API key your server expects (any value if it needs none)",
         // DeepEval reads this exact value as its Ollama marker.
-        reservedValues: ["ollama"],
+        reservedValues: [OLLAMA_MARKER],
       },
     ],
     settings: [
@@ -296,8 +311,25 @@ export interface JudgeStatus {
   missing: string[];
 }
 
+const TRUTHY = new Set([
+  "1",
+  "true",
+  "t",
+  "yes",
+  "y",
+  "on",
+  "enable",
+  "enabled",
+]);
+
 const isTruthy = (value: string | undefined): boolean =>
-  ["true", "1", "yes"].includes((value ?? "").trim().toLowerCase());
+  TRUTHY.has(
+    (value ?? "")
+      .trim()
+      .replace(/^"+|"+$/g, "")
+      .replace(/^'+|'+$/g, "")
+      .toLowerCase(),
+  );
 
 const isFilled = (value: string | undefined): boolean =>
   (value ?? "").trim().length > 0;
@@ -312,6 +344,14 @@ export const judgeVariables = (provider: JudgeProvider): string[] => [
   ...provider.settings.map((setting) => setting.envVar),
 ];
 
+export const isUsableSecretValue = (
+  secret: JudgeSecret,
+  value: string | undefined,
+): boolean => {
+  const trimmed = (value ?? "").trim();
+  return Boolean(trimmed) && !secret.reservedValues?.includes(trimmed);
+};
+
 /** The provider's requirements this environment cannot satisfy yet. */
 export const judgeMissing = (
   provider: JudgeProvider,
@@ -319,7 +359,9 @@ export const judgeMissing = (
 ): string[] => [
   ...provider.secrets
     .filter(
-      (secret) => isRequired(secret, env) && !isFilled(env[secret.envVar]),
+      (secret) =>
+        isRequired(secret, env) &&
+        !isUsableSecretValue(secret, env[secret.envVar]),
     )
     .map((secret) => secret.envVar),
   ...provider.settings
@@ -334,10 +376,9 @@ export const judgeMissing = (
  */
 export const providersWithKey = (env: EnvValues): JudgeProvider[] =>
   judgeProviders.filter((provider) =>
-    provider.secrets.some((secret) => {
-      const value = (env[secret.envVar] ?? "").trim();
-      return Boolean(value) && !secret.reservedValues?.includes(value);
-    }),
+    provider.secrets.some((secret) =>
+      isUsableSecretValue(secret, env[secret.envVar]),
+    ),
   );
 
 /** Which judge DeepEval would pick, and what it is still missing. */
@@ -346,11 +387,13 @@ export const detectJudge = (env: EnvValues): JudgeStatus | undefined => {
     .filter((provider) => Object.keys(provider.flags).length > 0)
     .sort((left, right) => left.precedence - right.precedence)
     .find((provider) =>
-      Object.entries(provider.flags).every(([envVar, value]) =>
-        value === "true"
-          ? isTruthy(env[envVar])
-          : (env[envVar] ?? "").trim() === value,
-      ),
+      provider.selects
+        ? provider.selects(env)
+        : Object.entries(provider.flags).every(([envVar, value]) =>
+            value === "true"
+              ? isTruthy(env[envVar])
+              : (env[envVar] ?? "").trim() === value,
+          ),
     );
   const provider =
     flagged ??
@@ -368,8 +411,17 @@ export const judgeEnvValues = (
     secrets?: Record<string, string>;
     settings?: Record<string, string>;
   },
-): Record<string, string> => {
-  const values: Record<string, string> = { ...provider.flags };
+  env: EnvValues = {},
+): Record<string, string | null> => {
+  const values: Record<string, string | null> = {};
+  if (!provider.flags[OLLAMA_FLAG] && ollamaSelected(env)) {
+    values[OLLAMA_FLAG] = null;
+    values.USE_LOCAL_MODEL = null;
+    if ((env.LOCAL_MODEL_API_KEY ?? "").trim() === OLLAMA_MARKER) {
+      values.LOCAL_MODEL_API_KEY = null;
+    }
+  }
+  Object.assign(values, provider.flags);
   for (const { envVar } of [...provider.secrets, ...provider.settings]) {
     const value = (
       answers.secrets?.[envVar] ?? answers.settings?.[envVar]
