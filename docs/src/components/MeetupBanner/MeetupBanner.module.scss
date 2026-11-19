@@ -1,0 +1,41 @@
+// Inverse of the page: dark bar in light mode, light bar in dark mode.
+// The site has no accent colour, so the primary pair gives the most contrast.
+.banner {
+  padding-inline: 3rem;
+  background-color: var(--color-fd-primary);
+  color: var(--color-fd-primary-foreground);
+  font-size: 0.8125rem;
+
+  button {
+    color: var(--color-fd-primary-foreground);
+    opacity: 0.7;
+
+    &:hover {
+      opacity: 1;
+      background-color: transparent;
+    }
+  }
+}
+
+// Homepage: scroll away with the page instead of sticking over the home nav.
+.static {
+  position: relative;
+}
+
+.link {
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+// Phones: keep the bar on one line.
+@media (max-width: 480px) {
+  .banner {
+    padding-inline: 2.25rem;
+    font-size: 0.75rem;
+  }
+
+  .wideOnly {
+    display: none;
+  }
+}

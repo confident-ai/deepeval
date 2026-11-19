@@ -29,6 +29,7 @@ import { LanguageScopedDocsLayout } from "@/components/lang/language-scoped-docs
 import { BetaBadge } from "@/components/beta-mark";
 import { PlainBreadcrumb } from "@/components/plain-breadcrumb";
 import MascotPeek from "@/src/components/MascotPeek";
+import MeetupBanner from "@/src/components/MeetupBanner";
 import { CAST } from "@/src/components/Mascot/_cast";
 import Link from "next/link";
 
@@ -121,10 +122,15 @@ export function createSection(config: SectionConfig) {
     const { nav, ...rest } = baseOptions();
     return (
       <>
-        <Banner id="docs-announcement" height="30px">
-          💥 Introducing JevEval: Jev-as-a-Judge for LLM evaluation.{" "}
-          <Link href="/blog/introducing-jev-as-a-judge">Read the post →</Link>
-        </Banner>
+        <MeetupBanner
+          placement="section"
+          fallback={
+            <Banner id="docs-announcement" height="30px">
+              💥 Introducing JevEval: Jev-as-a-Judge for LLM evaluation.{" "}
+              <Link href="/blog/introducing-jev-as-a-judge">Read the post →</Link>
+            </Banner>
+          }
+        />
         <LanguageScopedDocsLayout
           {...rest}
           nav={{ ...nav, mode: "top" }}
