@@ -106,6 +106,7 @@ class HallucinationMetric(BaseMetric):
                 if run_system_one_eval(self, test_case):
                     return self.score
 
+                self.contexts: List[str] = test_case.context
                 self.verdicts: List[HallucinationVerdict] = (
                     self._generate_verdicts(
                         test_case.actual_output, test_case.context
@@ -142,6 +143,7 @@ class HallucinationMetric(BaseMetric):
             if await a_run_system_one_eval(self, test_case):
                 return self.score
 
+            self.contexts: List[str] = test_case.context
             self.verdicts: List[HallucinationVerdict] = (
                 await self._a_generate_verdicts(
                     test_case.actual_output, test_case.context
@@ -285,6 +287,7 @@ class HallucinationMetric(BaseMetric):
             self,
             self.verdicts,
             passing=(Verdict.YES,),
+            expected_count=len(self.contexts),
         )
 
     @property
