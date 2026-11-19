@@ -38,8 +38,10 @@ from deepeval.simulator.template import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import MULTIMODAL_SUPPORTED_MODELS
 from deepeval.simulator.schema import (
+    KeypadSimulatedInput,
     SimulatedInput,
 )
+from deepeval.voice.keypad import keypad_audio, keypad_turn_text
 from deepeval.simulator.controller.controller import (
     SimulationController,
     expected_outcome_controller,
@@ -861,6 +863,7 @@ class ConversationSimulator:
 
                 # Generate turn from user (via simulation graph)
                 emission_end = False
+                keypad = None
                 if len(turns) > 0 and turns[-1].role == "user":
                     user_input = turns[-1].content
                 elif muted:
@@ -917,6 +920,7 @@ class ConversationSimulator:
                         break
                     agent_catch_ups = 0
                     turns.append(emission.turn)
+                    keypad = (emission.turn.metadata or {}).get("dtmf")
                     user_input = emission.turn.content
                     logger.debug("Simulated user turn: %r", user_input)
                     update_pbar(progress, pbar_max_user_simluations_id)
@@ -934,7 +938,7 @@ class ConversationSimulator:
                         1 for turn in turns if turn.role == "user"
                     )
                     assistant_turn = await self._voice_duplex_exchange(
-                        session, user_input, turns, golden
+                        session, user_input, turns, golden, keypad=keypad
                     )
                     simulation_counter += (
                         sum(1 for turn in turns if turn.role == "user")
@@ -942,7 +946,7 @@ class ConversationSimulator:
                     )
                 elif session is not None:
                     assistant_turn = await self._voice_model_callback(
-                        session, user_input, turns
+                        session, user_input, turns, keypad=keypad
                     )
                     turns.append(assistant_turn)
                 elif self.is_callback_async:
@@ -1129,6 +1133,23 @@ class ConversationSimulator:
         )
         return result.audio, result.first_frame_at or time.perf_counter()
 
+    async def _press_keys(
+        self,
+        session: _VoiceSession,
+        digits: str,
+        *,
+        trailing_silence: bool,
+    ) -> Tuple["Audio", float]:
+        connector = session.connector
+        sample_rate, _ = connector.audio_format
+        audio = keypad_audio(digits, sample_rate)
+        started_at = time.perf_counter()
+        if not await connector.send_dtmf(digits):
+            await connector.stream_uplink(
+                audio, trailing_silence=trailing_silence
+            )
+        return audio, started_at
+
     @staticmethod
     def _silence_audio(session: _VoiceSession, seconds: float) -> "Audio":
         """Digital silence in the connector's uplink format."""
@@ -1251,6 +1272,12 @@ class ConversationSimulator:
     ):
         tmpl = template or SimulationTemplate
         prompt = tmpl.simulate_first_user_turn(golden, self.language)
+        if self._keypad_input:
+            return self._keypad_turn(
+                self.generate_schema(
+                    prompt + tmpl.keypad_option(), KeypadSimulatedInput
+                )
+            )
         simulated_input: SimulatedInput = self.generate_schema(
             prompt, SimulatedInput
         )
@@ -1263,6 +1290,12 @@ class ConversationSimulator:
     ):
         tmpl = template or SimulationTemplate
         prompt = tmpl.simulate_first_user_turn(golden, self.language)
+        if self._keypad_input:
+            return self._keypad_turn(
+                await self.a_generate_schema(
+                    prompt + tmpl.keypad_option(), KeypadSimulatedInput
+                )
+            )
         simulated_input: SimulatedInput = await self.a_generate_schema(
             prompt, SimulatedInput
         )
@@ -1276,6 +1309,12 @@ class ConversationSimulator:
     ):
         tmpl = template or SimulationTemplate
         prompt = tmpl.simulate_user_turn(golden, turns, self.language)
+        if self._keypad_input:
+            return self._keypad_turn(
+                self.generate_schema(
+                    prompt + tmpl.keypad_option(), KeypadSimulatedInput
+                )
+            )
         simulated_input: SimulatedInput = self.generate_schema(
             prompt, SimulatedInput
         )
@@ -1289,10 +1328,30 @@ class ConversationSimulator:
     ):
         tmpl = template or SimulationTemplate
         prompt = tmpl.simulate_user_turn(golden, turns, self.language)
+        if self._keypad_input:
+            return self._keypad_turn(
+                await self.a_generate_schema(
+                    prompt + tmpl.keypad_option(), KeypadSimulatedInput
+                )
+            )
         simulated_input: SimulatedInput = await self.a_generate_schema(
             prompt, SimulatedInput
         )
         return simulated_input.simulated_input
+
+    @property
+    def _keypad_input(self) -> bool:
+        return bool(self.voice_config and self.voice_config.keypad_input)
+
+    @staticmethod
+    def _keypad_turn(simulated: KeypadSimulatedInput) -> Union[str, Turn]:
+        if not simulated.keypad:
+            return simulated.simulated_input
+        return Turn(
+            role="user",
+            content=keypad_turn_text(simulated.keypad),
+            metadata={"dtmf": simulated.keypad},
+        )
 
     ############################################
     ### Generate Structured Response ###########
@@ -1383,13 +1442,29 @@ class ConversationSimulator:
         )
 
     async def _voice_model_callback(
-        self, session: _VoiceSession, input: str, turns: List[Turn]
+        self,
+        session: _VoiceSession,
+        input: str,
+        turns: List[Turn],
+        keypad: Optional[str] = None,
     ) -> Turn:
         """Half-duplex voice callback: TTS → exchange_turn → STT.
 
         The fallback for transports that cannot carry both voices at once;
         everything else goes through `_voice_duplex_exchange`.
         """
+        if keypad:
+            sample_rate, _ = session.connector.audio_format
+            user_audio = keypad_audio(keypad, sample_rate)
+            if turns and turns[-1].role == "user":
+                turns[-1].audio = user_audio
+            signalled = await session.connector.send_dtmf(keypad)
+            played = (
+                self._silence_audio(session, user_audio.duration or 0.0)
+                if signalled
+                else user_audio
+            )
+            return await self._voice_exchange(session, played, turns)
         voice = self._voice
         tts_started = time.perf_counter()
         logger.debug("User TTS started: characters=%d", len(input))
@@ -1497,6 +1572,7 @@ class ConversationSimulator:
         input: str,
         turns: List[Turn],
         golden: ConversationalGolden,
+        keypad: Optional[str] = None,
     ) -> Turn:
         """Duplex voice exchange with mid-speech barge-in and floor control.
 
@@ -1505,9 +1581,14 @@ class ConversationSimulator:
         """
         call_started_at = session.started_at or time.perf_counter()
         await self._take_agent_backlog(session, turns, call_started_at)
-        user_audio, uplink_started_at = await self._send_user_utterance(
-            session, input, golden.persona, trailing_silence=True
-        )
+        if keypad:
+            user_audio, uplink_started_at = await self._press_keys(
+                session, keypad, trailing_silence=True
+            )
+        else:
+            user_audio, uplink_started_at = await self._send_user_utterance(
+                session, input, golden.persona, trailing_silence=True
+            )
         user_audio.start_time = max(0.0, uplink_started_at - call_started_at)
         if turns and turns[-1].role == "user":
             turns[-1].audio = user_audio

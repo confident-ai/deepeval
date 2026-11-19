@@ -62,6 +62,9 @@ class AgentState(str, Enum):
 _BUSY_AGENT_STATES = frozenset({AgentState.THINKING, AgentState.SPEAKING})
 
 
+_DTMF_DIGIT_INTERVAL_S = 0.15
+
+
 class LiveKitConnector(BaseVoiceConnector):
 
     protocol: ClassVar[VoiceProtocol] = VoiceProtocol.WEBRTC
@@ -852,6 +855,18 @@ class LiveKitConnector(BaseVoiceConnector):
             encoding="wav",
             duration=duration,
         )
+
+    async def send_dtmf(self, digits: str) -> bool:
+        from deepeval.voice.keypad import DTMF_CODES
+
+        if self._room is None:
+            raise DeepEvalError("LiveKitConnector is not connected.")
+        for digit in digits:
+            await self._room.local_participant.publish_dtmf(
+                code=DTMF_CODES[digit], digit=digit
+            )
+            await asyncio.sleep(_DTMF_DIGIT_INTERVAL_S)
+        return True
 
     async def disconnect(self) -> None:
         self._end_call()
