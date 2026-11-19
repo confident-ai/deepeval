@@ -18,6 +18,7 @@ export interface PatternMatchMetricOptions {
  */
 export class PatternMatchMetric extends BaseMetric {
   pattern: string;
+  readonly ignoreCase: boolean;
   private readonly regex: RegExp;
 
   constructor(options: PatternMatchMetricOptions) {
@@ -31,11 +32,12 @@ export class PatternMatchMetric extends BaseMetric {
       SingleTurnParams.ACTUAL_OUTPUT,
     ];
     this.pattern = options.pattern.trim();
+    this.ignoreCase = options.ignoreCase ?? false;
     try {
       // Anchor to emulate Python's re.fullmatch (whole-string match).
       this.regex = new RegExp(
         `^(?:${this.pattern})$`,
-        options.ignoreCase ? "i" : "",
+        this.ignoreCase ? "i" : "",
       );
     } catch (e) {
       throw new Error(`Invalid regex pattern: ${options.pattern} — ${e}`);
