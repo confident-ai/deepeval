@@ -9,6 +9,10 @@ from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug as PS
 from deepeval.errors import DeepEvalError
 from deepeval.models.base_model import DeepEvalBaseSystemOneModel
+from deepeval.models.llms.multimodal import (
+    _openai_image_url,
+    multimodal_parts,
+)
 from deepeval.models.retry_policy import (
     create_retry_decorator,
     sdk_retries_for,
@@ -69,6 +73,21 @@ def _fits_input_json(state: Any) -> bool:
 
 
 def _to_input(state: Any) -> Any:
+    parts = multimodal_parts(_as_text(state))
+    if parts is not None:
+        # Images go in place and inline: some Decisions APIs fetch no URLs.
+        content = [
+            (
+                {"type": "input_text", "text": part}
+                if isinstance(part, str)
+                else {
+                    "type": "input_image",
+                    "image_url": _openai_image_url(part, inline_remote=True),
+                }
+            )
+            for part in parts
+        ]
+        return [{"role": "user", "type": "message", "content": content}]
     if isinstance(state, (dict, list)):
         compact = json.dumps(
             state, ensure_ascii=False, separators=(",", ":"), default=str
@@ -353,6 +372,9 @@ class OpenAIDecisionModel(DeepEvalBaseSystemOneModel):
         if not kw.get("timeout"):
             kw["timeout"] = _request_timeout_seconds()
         return cls(**kw)
+
+    def supports_multimodal(self) -> bool:
+        return True
 
     def get_model_name(self):
         return f"{self.name} (OpenAI)"

@@ -15,6 +15,7 @@ from deepeval.models.system_one import (
     ScoreQuestion,
     context_limits,
 )
+from deepeval.test_case import MLLMImage
 from deepeval.models.system_one.constants import (
     OPENAI_DECISIONS_MAX_QUESTIONS,
 )
@@ -220,3 +221,17 @@ def test_openai_errors_take_the_system_one_fallback():
     assert openai.APIError in _system_one_error_types()
     auth_error = openai.AuthenticationError.__new__(openai.AuthenticationError)
     assert _is_permanent(auth_error)
+
+
+def test_images_go_in_place_as_data_urls():
+    image = MLLMImage(dataBase64="aGk=", mimeType="image/png")
+    client = FakeClient([ANSWERS])
+    _model(client).decide({"actual_output": f"before {image} after"}, QUESTIONS)
+
+    content = client.bodies[0]["input"][0]["content"]
+    assert [part["type"] for part in content] == [
+        "input_text",
+        "input_image",
+        "input_text",
+    ]
+    assert content[1]["image_url"] == "data:image/png;base64,aGk="

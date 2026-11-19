@@ -204,7 +204,7 @@ There are **ZERO** mandatory and **FOUR** optional parameters when creating an `
 - [Optional] `base_url`: A string specifying the base URL for the OpenAI API.
 - [Optional] `cost_per_input_token`: A float specifying the cost for each input token. Defaults to `deepeval`'s pricing for `gpt-6-luna`. The Decisions API does not charge for output tokens.
 
-A question the model refuses to answer raises an error, so under `hybrid` that decision falls back to the LLM.
+A question the model refuses to answer raises an error, so under `hybrid` that decision falls back to the LLM. Images in a multimodal test case are sent along with its text, in place, so `system_one` can judge it too.
 
 </Only>
 
