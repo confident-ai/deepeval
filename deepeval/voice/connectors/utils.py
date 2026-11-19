@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import asyncio
+import re
+import time
 from enum import Enum
 from typing import Any, Optional, Union
 
 from deepeval.errors import DeepEvalError
 from deepeval.voice.connectors.transports.base import BaseVoiceConnector
+
+E164_PHONE_NUMBER = re.compile(r"^\+[1-9]\d{1,14}$")
 
 
 class ElevenLabsIdentity(Enum):
@@ -19,6 +24,10 @@ class LiveKitIdentity(Enum):
 class VapiIdentity(Enum):
     CLIENT = "Vapi"
     ASYNC_CLIENT = "AsyncVapi"
+
+
+class WebRTCIdentity(Enum):
+    PEER_CONNECTION = "RTCPeerConnection"
 
 
 class PipecatIdentity(Enum):
@@ -60,6 +69,11 @@ _REDIRECTS = {
         "VoiceConfig received a Vapi client. Pass "
         "`VapiConnector(assistant_id=...)` instead."
     ),
+    WebRTCIdentity.PEER_CONNECTION: (
+        "VoiceConfig received an aiortc `RTCPeerConnection`. Pass "
+        "`WebRTCConnector(signaling_url=...)` instead, which builds and "
+        "negotiates its own peer connection with your agent."
+    ),
 }
 
 # Pipecat's pipeline objects and its WebSocket transports all mean the same
@@ -85,7 +99,13 @@ def _root_module(cls: type) -> str:
 def _identify(
     obj: Any,
 ) -> Optional[
-    Union[ElevenLabsIdentity, LiveKitIdentity, PipecatIdentity, VapiIdentity]
+    Union[
+        ElevenLabsIdentity,
+        LiveKitIdentity,
+        PipecatIdentity,
+        VapiIdentity,
+        WebRTCIdentity,
+    ]
 ]:
     """Name the vendor class `obj` is, without importing the vendor package.
 
@@ -112,6 +132,10 @@ def _identify(
             for identity in PipecatIdentity:
                 if name == identity.value:
                     return identity
+        if root == "aiortc":
+            for identity in WebRTCIdentity:
+                if name == identity.value:
+                    return identity
     return None
 
 
@@ -132,6 +156,23 @@ def validate_connector(connector: Any) -> BaseVoiceConnector:
     raise DeepEvalError(
         f"VoiceConfig cannot use {type(connector).__name__!r} as a connector. "
         "Pass an `ElevenLabsConnector`, `LiveKitConnector`, `VapiConnector`, "
-        "`PipecatConnector`, `WebSocketConnector`, `CallbackVoiceConnector`, "
-        "or your own `BaseVoiceConnector` subclass."
+        "`PipecatConnector`, `WebSocketConnector`, `WebRTCConnector`, "
+        "`CallbackVoiceConnector`, or your own `BaseVoiceConnector` subclass."
     )
+
+
+class DialPacer:
+
+    def __init__(self):
+        self._next_slot = 0.0
+
+    async def wait(self, interval_s: float) -> None:
+        now = time.monotonic()
+        slot = max(now, self._next_slot)
+        self._next_slot = slot + interval_s
+        if slot > now:
+            await asyncio.sleep(slot - now)
+
+
+def is_phone_number(value: Optional[str]) -> bool:
+    return bool(value) and E164_PHONE_NUMBER.match(value) is not None

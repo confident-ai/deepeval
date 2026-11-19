@@ -1,9 +1,10 @@
-from typing import List, Literal
+from typing import List
 from pydantic import BaseModel
+from deepeval.metrics.base_metric import YesNo
 
 
 class HallucinationVerdict(BaseModel):
-    verdict: Literal["yes", "no"]
+    verdict: YesNo
     reason: str
 
 

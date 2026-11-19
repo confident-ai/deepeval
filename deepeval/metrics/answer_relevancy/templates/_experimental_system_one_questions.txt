@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "Every statement in `actual_output` is relevant to addressing `input`.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "`actual_output` directly addresses what `input` asks for, rather than a different or broader topic."
+  },
+  {
+    "type": "score",
+    "question": "How much of `actual_output` is relevant to addressing `input`?",
+    "levels": ["None of it", "Less than half", "Most of it", "All of it"]
+  }
+]

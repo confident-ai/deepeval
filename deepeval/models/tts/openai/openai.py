@@ -3,6 +3,7 @@ from pydantic import SecretStr
 from openai import OpenAI, AsyncOpenAI
 
 from deepeval.test_case import Audio, AudioChunk
+from deepeval.voice.connectors import audio_utils
 from deepeval.models.base_model import DeepEvalBaseTTS
 from deepeval.models.tts._frames import frame_pcm_stream, frame_size_bytes
 from deepeval.models.utils import parse_model_name, require_secret_api_key
@@ -89,7 +90,7 @@ class OpenAITTSModel(DeepEvalBaseTTS):
 
     def _to_audio(self, data: bytes, fmt: str) -> Audio:
         return Audio.from_bytes(
-            data,
+            audio_utils.normalize_wav_bytes(data),
             _FORMAT_MIME.get(fmt, "audio/wav"),
             sampleRate=_OPENAI_TTS_SAMPLE_RATE,
             encoding=fmt,

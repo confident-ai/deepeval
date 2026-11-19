@@ -80,6 +80,7 @@ class VoiceConfig:
     combine_audio_files: bool = True
     record_call: bool = False
     interruption_settings: Optional[InterruptionBehavior] = None
+    keypad_input: bool = False
 
     def __post_init__(self) -> None:
         # A factory can only be checked by calling it, which belongs in

@@ -172,11 +172,11 @@ def enable_dotenv(monkeypatch):
 
 
 @pytest.fixture(autouse=False)
-def unpatch_openai_after():
-    from deepeval.openai.patch import unpatch_openai_classes
+def shutdown_confident_trace_after():
+    from deepeval.tracing.otel.setup import shutdown_confident_trace
 
     yield
-    unpatch_openai_classes()
+    shutdown_confident_trace()
 
 
 @pytest.fixture(autouse=True)

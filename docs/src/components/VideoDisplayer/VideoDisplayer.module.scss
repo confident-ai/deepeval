@@ -71,6 +71,10 @@
     .cta {
       flex-basis: 100%;
 
+      > * {
+        width: 100%;
+      }
+
       a,
       button {
         width: 100%;

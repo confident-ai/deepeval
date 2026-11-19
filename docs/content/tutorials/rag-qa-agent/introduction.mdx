@@ -3,8 +3,6 @@ id: introduction
 title: RAG Agent Evaluation Tutorial
 sidebar_label: Introduction
 ---
-import { ASSETS } from "@site/src/assets";
-
 This tutorial walks you through the entire process of building a reliable **RAG (_Retrieval-Augmented Generation_) QA Agent**, 
 from initial development to iterative improvement through `deepeval`'s evaluations.  We'll build this RAG QA Agent using **OpenAI**, **LangChain** and **DeepEval**.
 
@@ -12,15 +10,15 @@ from initial development to iterative improvement through `deepeval`'s evaluatio
     techStack={[
         {
             name: "OpenAI",
-            logo: "https://registry.npmmirror.com/@lobehub/icons-static-png/latest/files/light/openai.png",
+            logo: "/icons/integrations/openai.svg",
         },
         {
             name: "LangChain",
-            logo: "https://logo.svgcdn.com/s/langchain-dark-8x.png",
+            logo: "/icons/integrations/langchain.svg",
         },
         {
             name: "DeepEval",
-            logo: "https://pbs.twimg.com/profile_images/1888060560161574912/qbw1-_2g.png",
+            logo: "/icons/deepeval-icon.svg",
         }
     ]}
 />
@@ -97,7 +95,7 @@ In this tutorial, you'll create a **RAG QA agent** that answers questions about 
 Below is an example of what **Theranos**'s internal RAG QA agent might look like:.
 
 
-<ImageDisplayer src={ASSETS.tutorialQaAgentOverview} alt="MadeUpCompany's RAG QA Agent" />
+<ImageDisplayer id="screenshots/example-apps/rag-qa-agent" />
 
 In the following sections of this tutorial, you'll learn how to build a reliable RAG QA Agent that retrieves correct data and generates an 
 accurate answer based on the retrieved context.

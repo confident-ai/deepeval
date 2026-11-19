@@ -1,15 +1,16 @@
+from deepeval.dataset.expectations import expectation_evidence
 import logging
 import sys
 import json
 import os
-from typing import List, Optional, Dict, Union
+from typing import TYPE_CHECKING, Any, List, Optional, Dict, Union
 from enum import Enum
 from pydantic import BaseModel, Field
 
 from deepeval.utils import make_model_config
 
 from deepeval.test_case import SingleTurnParams, LLMTestCase, ToolCallParams
-from deepeval.test_run.api import MetricData
+from deepeval.test_run.api import MetricData, Classification
 from deepeval.utils import (
     delete_file_if_exists,
     is_read_only_env,
@@ -17,6 +18,11 @@ from deepeval.utils import (
 )
 from deepeval.metrics import BaseMetric
 from deepeval.constants import HIDDEN_DIR
+
+if TYPE_CHECKING:
+    # Imported lazily: `deepeval.classifiers` depends on `deepeval.metrics`,
+    # which imports this module, so a runtime import here would be circular.
+    from deepeval.classifiers.base_classifier import BaseClassifier
 
 logger = logging.getLogger(__name__)
 
@@ -49,6 +55,8 @@ class MetricConfiguration(BaseModel):
     ##### Optional fields #####
     evaluation_steps: Optional[List[str]] = None
     assessment_questions: Optional[List[str]] = None
+    rubric: Optional[List[Dict[str, Any]]] = None
+    expected_schema: Optional[Dict[str, Any]] = None
     embeddings: Optional[str] = None
     evaluation_params: Optional[
         Union[List[SingleTurnParams], List[ToolCallParams]]
@@ -60,8 +68,28 @@ class CachedMetricData(BaseModel):
     metric_configuration: MetricConfiguration
 
 
+class CachedLabel(BaseModel):
+    name: str
+    description: Optional[str] = None
+
+
+class ClassifierConfiguration(BaseModel):
+    labels: List[CachedLabel]
+    evaluation_model: Optional[str] = None
+    include_reason: bool = True
+    allow_none: bool = False
+
+
+class CachedClassification(BaseModel):
+    classification: Classification
+    classifier_configuration: ClassifierConfiguration
+
+
 class CachedTestCase(BaseModel):
     cached_metrics_data: List[CachedMetricData] = Field(
+        default_factory=lambda: []
+    )
+    cached_classifications: List[CachedClassification] = Field(
         default_factory=lambda: []
     )
     hyperparameters: Optional[str] = Field(None)
@@ -132,6 +160,11 @@ class TestRunCacheManager:
             ),
             "hyperparameters": hyperparameters,
         }
+        if test_case.expectations:
+            cache_dict["expectations"] = test_case.expectations.model_dump(
+                mode="json"
+            )
+            cache_dict["expectation_evidence"] = expectation_evidence(test_case)
         test_case_cache_key = serialize(cache_dict)
         cached_test_case = cached_test_run.get_cached_api_test_case(
             test_case_cache_key
@@ -162,6 +195,11 @@ class TestRunCacheManager:
             ),
             "hyperparameters": hyperparameters,
         }
+        if test_case.expectations:
+            cache_dict["expectations"] = test_case.expectations.model_dump(
+                mode="json"
+            )
+            cache_dict["expectation_evidence"] = expectation_evidence(test_case)
         test_case_cache_key = serialize(cache_dict)
         cached_test_run = self.get_cached_test_run(from_temp=to_temp)
         cached_test_run.test_cases_lookup_map[test_case_cache_key] = (
@@ -344,11 +382,17 @@ class Cache:
             "evaluation_params",
             "assessment_questions",
             "evaluation_steps",
+            "rubric",
+            "expected_schema",
         ]
 
         for field in config_fields:
             metric_value = getattr(metric, field, None)
             cached_value = getattr(metric_configuration, field, None)
+            if field == "rubric":
+                metric_value = Cache._serialize_rubric(metric_value)
+            if field == "expected_schema":
+                metric_value = Cache._serialize_expected_schema(metric_value)
 
             # TODO: Refactor. This won't work well with custom metrics
             if field == "evaluation_steps":
@@ -379,6 +423,62 @@ class Cache:
         return True
 
     @staticmethod
+    def get_classification(
+        classifier: "BaseClassifier",
+        cached_test_case: Optional[CachedTestCase],
+    ) -> Optional[CachedClassification]:
+        """Return the cached classification for this classifier, if the cached
+        run used the same name, label set (names and descriptions) and judge
+        model, and did not error. ``expected_label`` / ``success`` on the
+        cached row are stale by design and must be recomputed by the caller."""
+        if not cached_test_case:
+            return None
+        configuration = Cache.create_classifier_configuration(classifier)
+        for cached in cached_test_case.cached_classifications:
+            if (
+                cached.classification.name == classifier.__name__
+                and cached.classification.error is None
+                and cached.classifier_configuration == configuration
+            ):
+                return cached
+        return None
+
+    @staticmethod
+    def create_classifier_configuration(
+        classifier: "BaseClassifier",
+    ) -> ClassifierConfiguration:
+        return ClassifierConfiguration(
+            labels=[
+                CachedLabel(name=label.name, description=label.description)
+                for label in classifier.labels
+            ],
+            evaluation_model=classifier.evaluation_model,
+            include_reason=classifier.include_reason,
+            allow_none=getattr(classifier, "allow_none", False),
+        )
+
+    @staticmethod
+    def _serialize_rubric(rubric: Any) -> Optional[List[Dict[str, Any]]]:
+        # GEval's rubric changes the score the judge gives, so a cached score
+        # is only reused for the same rubric. Stored as JSON-ready dicts so a
+        # rubric read back from the cache file compares equal.
+        if not rubric:
+            return None
+        return [item.model_dump(mode="json") for item in rubric]
+
+    @staticmethod
+    def _serialize_expected_schema(schema: Any) -> Optional[Dict[str, Any]]:
+        # JsonCorrectnessMetric passes or fails an output against this schema,
+        # so a cached result is only reused for the same one.
+        if schema is None:
+            return None
+        try:
+            return schema.model_json_schema()
+        except Exception:
+            # Types JSON Schema can't express: key on the model's name.
+            return {"title": getattr(schema, "__qualname__", repr(schema))}
+
+    @staticmethod
     def create_metric_configuration(metric: BaseMetric) -> MetricConfiguration:
         config_kwargs = {}
         config_fields = [
@@ -394,11 +494,17 @@ class Cache:
             "evaluation_steps",  # checked
             "evaluation_params",  # checked
             "assessment_questions",  # checked
+            "rubric",  # checked
+            "expected_schema",  # checked
         ]
         for field in config_fields:
             value = getattr(metric, field, None)
             if field == "embeddings" and value is not None:
                 value = value.__class__.__name__
+            if field == "rubric":
+                value = Cache._serialize_rubric(value)
+            if field == "expected_schema":
+                value = Cache._serialize_expected_schema(value)
             config_kwargs[field] = value
 
         return MetricConfiguration(**config_kwargs)

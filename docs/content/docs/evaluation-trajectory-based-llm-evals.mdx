@@ -296,7 +296,10 @@ Instrument your agent using `deepeval`'s native tracing or the integration for y
 
 ### Evaluate Trajectory
 
-Pass trajectory metrics to <Term py="evals_iterator()" ts="evalsIterator()"/>, then invoke your traced agent once for each golden. This guide uses only `TaskCompletionMetric`, `StepEfficiencyMetric`, and `PlanAdherenceMetric`; see the [metrics introduction](/docs/metrics-introduction) for guidance on metrics and their behavior.
+Pass trajectory metrics to <Term py="evals_iterator()" ts="evalsIterator()"/>, then invoke your traced agent once for each golden. Use the built-in `TaskCompletionMetric`, `StepEfficiencyMetric`, and `PlanAdherenceMetric`, or define your own trajectory criteria with G-Eval or JevEval; see the [metrics introduction](/docs/metrics-introduction) for guidance on metrics and their behavior.
+
+<Tabs items={["Built-in", "G-Eval", "JevEval"]}>
+<Tab value="Built-in">
 
 <Switch>
 
@@ -345,6 +348,115 @@ for await (const golden of dataset.evalsIterator({ metrics })) {
 
 </Switch>
 
+</Tab>
+<Tab value="G-Eval">
+
+Leave out <Term py="evaluation_params" ts="evaluationParams"/> and [G-Eval](/docs/metrics-llm-evals#evaluating-the-trajectory) judges the complete trace against your `criteria`, instead of individual test case fields.
+
+<Switch>
+
+<Case id="python">
+
+```python title="evaluate_agent.py" showLineNumbers
+from deepeval.metrics import GEval
+
+tool_use = GEval(
+    name="Tool Use",
+    criteria="Judge whether the agent chose appropriate tools, passed them correct arguments, and grounded its final answer in what those tools returned.",
+)
+
+for golden in dataset.evals_iterator(metrics=[tool_use]):
+    my_ai_agent(golden.input)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript title="evaluate-agent.ts" showLineNumbers
+import { GEval } from "deepeval/metrics";
+
+const toolUse = new GEval({
+  name: "Tool Use",
+  criteria:
+    "Judge whether the agent chose appropriate tools, passed them correct arguments, and grounded its final answer in what those tools returned.",
+});
+
+for await (const golden of dataset.evalsIterator({ metrics: [toolUse] })) {
+  await myAiAgent((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
+</Tab>
+<Tab value="JevEval">
+
+Leave out <Term py="evaluation_params" ts="evaluationParams"/> and [JevEval](/docs/metrics-jev-eval#evaluating-the-trajectory) sends the trace to Jev, which answers your questions about the agent's run with calibrated probabilities. It needs a `TYPESAFE_API_KEY`.
+
+<Switch>
+
+<Case id="python">
+
+```python title="evaluate_agent.py" showLineNumbers
+from deepeval.metrics.jev_eval import Noul, Score
+from deepeval.metrics import JevEval
+
+tool_use = JevEval(
+    name="Tool Use",
+    questions=[
+        Noul("Every tool the agent called was relevant to the user's request."),
+        Noul("The agent's final output is consistent with what its tools returned.", weight=2),
+        Score(
+            "How directly did the agent reach its final output?",
+            levels=["Wasteful", "Some redundant steps", "Mostly direct", "Direct"],
+        ),
+    ],
+)
+
+for golden in dataset.evals_iterator(metrics=[tool_use]):
+    my_ai_agent(golden.input)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript title="evaluate-agent.ts" showLineNumbers
+import { JevEval, Noul, Score } from "deepeval/metrics";
+
+const toolUse = new JevEval({
+  name: "Tool Use",
+  questions: [
+    new Noul({
+      statement: "Every tool the agent called was relevant to the user's request.",
+    }),
+    new Noul({
+      statement:
+        "The agent's final output is consistent with what its tools returned.",
+      weight: 2,
+    }),
+    new Score({
+      question: "How directly did the agent reach its final output?",
+      levels: ["Wasteful", "Some redundant steps", "Mostly direct", "Direct"],
+    }),
+  ],
+});
+
+for await (const golden of dataset.evalsIterator({ metrics: [toolUse] })) {
+  await myAiAgent((golden as Golden).input);
+}
+```
+
+</Case>
+
+</Switch>
+
+</Tab>
+</Tabs>
+
 The iterator captures one trace per golden and evaluates the complete trajectory after the agent finishes. Each metric score and reason is stored alongside the trace, allowing you to connect a failure to the exact execution path that produced it.
 
 </Step>
@@ -353,6 +465,9 @@ The iterator captures one trace per golden and evaluates the complete trajectory
 ## In CI/CD
 
 Run trajectory-based evals on every pull request by moving the same dataset, traced agent, and metrics into a <Term py="pytest" ts="vitest"/> test. A test fails when any trajectory metric falls below its threshold, allowing the eval to block a regression from shipping.
+
+<Tabs items={["Built-in", "G-Eval", "JevEval"]}>
+<Tab value="Built-in">
 
 <Switch>
 
@@ -430,6 +545,169 @@ npx deepeval test run agent-trajectory.test.ts
 
 </Switch>
 
+</Tab>
+<Tab value="G-Eval">
+
+<Switch>
+
+<Case id="python">
+
+```python title="test_agent_trajectory.py" showLineNumbers
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics import GEval
+from deepeval import assert_test
+from app import my_ai_agent
+import pytest
+
+dataset = EvaluationDataset(
+    goldens=[Golden(input="Plan a three-day trip to Paris")]
+)
+tool_use = GEval(
+    name="Tool Use",
+    criteria="Judge whether the agent chose appropriate tools, passed them correct arguments, and grounded its final answer in what those tools returned.",
+)
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_agent_trajectory(golden: Golden):
+    my_ai_agent(golden.input)
+    assert_test(golden=golden, metrics=[tool_use])
+```
+
+```bash
+deepeval test run test_agent_trajectory.py
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript title="agent-trajectory.test.ts" showLineNumbers
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { GEval } from "deepeval/metrics";
+import { myAiAgent } from "./app";
+import { expect, it } from "vitest";
+import "deepeval/vitest";
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Plan a three-day trip to Paris" })],
+});
+const toolUse = new GEval({
+  name: "Tool Use",
+  criteria:
+    "Judge whether the agent chose appropriate tools, passed them correct arguments, and grounded its final answer in what those tools returned.",
+});
+
+it.each(dataset.goldens as Golden[])(
+  "evaluates the complete trajectory #%$",
+  async (golden) => {
+    await expect(golden).toPass([toolUse], {
+      task: (g) => myAiAgent(g.input),
+    });
+  },
+);
+```
+
+```bash
+npx deepeval test run agent-trajectory.test.ts
+```
+
+</Case>
+
+</Switch>
+
+</Tab>
+<Tab value="JevEval">
+
+<Switch>
+
+<Case id="python">
+
+```python title="test_agent_trajectory.py" showLineNumbers
+from deepeval.dataset import EvaluationDataset, Golden
+from deepeval.metrics.jev_eval import Noul, Score
+from deepeval.metrics import JevEval
+from deepeval import assert_test
+from app import my_ai_agent
+import pytest
+
+dataset = EvaluationDataset(
+    goldens=[Golden(input="Plan a three-day trip to Paris")]
+)
+tool_use = JevEval(
+    name="Tool Use",
+    questions=[
+        Noul("Every tool the agent called was relevant to the user's request."),
+        Noul("The agent's final output is consistent with what its tools returned.", weight=2),
+        Score(
+            "How directly did the agent reach its final output?",
+            levels=["Wasteful", "Some redundant steps", "Mostly direct", "Direct"],
+        ),
+    ],
+)
+
+@pytest.mark.parametrize("golden", dataset.goldens)
+def test_agent_trajectory(golden: Golden):
+    my_ai_agent(golden.input)
+    assert_test(golden=golden, metrics=[tool_use])
+```
+
+```bash
+deepeval test run test_agent_trajectory.py
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript title="agent-trajectory.test.ts" showLineNumbers
+import { JevEval, Noul, Score } from "deepeval/metrics";
+import { EvaluationDataset, Golden } from "deepeval/dataset";
+import { myAiAgent } from "./app";
+import { expect, it } from "vitest";
+import "deepeval/vitest";
+
+const dataset = new EvaluationDataset({
+  goldens: [new Golden({ input: "Plan a three-day trip to Paris" })],
+});
+const toolUse = new JevEval({
+  name: "Tool Use",
+  questions: [
+    new Noul({
+      statement: "Every tool the agent called was relevant to the user's request.",
+    }),
+    new Noul({
+      statement:
+        "The agent's final output is consistent with what its tools returned.",
+      weight: 2,
+    }),
+    new Score({
+      question: "How directly did the agent reach its final output?",
+      levels: ["Wasteful", "Some redundant steps", "Mostly direct", "Direct"],
+    }),
+  ],
+});
+
+it.each(dataset.goldens as Golden[])(
+  "evaluates the complete trajectory #%$",
+  async (golden) => {
+    await expect(golden).toPass([toolUse], {
+      task: (g) => myAiAgent(g.input),
+    });
+  },
+);
+```
+
+```bash
+npx deepeval test run agent-trajectory.test.ts
+```
+
+</Case>
+
+</Switch>
+
+</Tab>
+</Tabs>
+
 Your agent must remain instrumented in CI so the assertion can capture and evaluate its complete trace. See [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd) for pipeline configuration and command options.
 
 ## FAQs
@@ -483,9 +761,10 @@ Your agent must remain instrumented in CI so the assertion can capture and evalu
       question: "Which metrics does this guide use?",
       answer: (
         <>
-          This guide uses <code>TaskCompletionMetric</code>,{" "}
+          This guide uses the built-in <code>TaskCompletionMetric</code>,{" "}
           <code>StepEfficiencyMetric</code>, and{" "}
-          <code>PlanAdherenceMetric</code>. See the{" "}
+          <code>PlanAdherenceMetric</code>, plus custom trajectory metrics
+          built with <code>GEval</code> and <code>JevEval</code>. See the{" "}
           <a href="/docs/metrics-introduction">metrics introduction</a> for
           metric guidance and configuration.
         </>

@@ -87,6 +87,7 @@ class _AgentUtterance:
     # What has been received of the reply so far.
     pcm: bytearray = field(default_factory=bytearray)
     transcript: str = ""
+    provider_transcript_parts: List[str] = field(default_factory=list)
     first_audio_at: Optional[float] = None
 
     # Silence since the last speech, and whether there has been any speech to
@@ -109,6 +110,7 @@ class _AgentUtterance:
         self.awaiting_end_signal = awaiting_end_signal
         self.pcm = bytearray()
         self.transcript = ""
+        self.provider_transcript_parts = []
         self.first_audio_at = None
         self.started = False
         self.trailing_silence_ms = 0.0
@@ -427,10 +429,13 @@ class DuplexExchange:
                 if has_audio
                 else None
             )
-            if audio is not None and utterance.first_audio_at is not None:
-                audio.start_time = max(
-                    0.0, utterance.first_audio_at - self.call_started_at
+            if audio is not None:
+                heard_at = (
+                    utterance.first_audio_at
+                    if utterance.first_audio_at is not None
+                    else utterance.sent_at
                 )
+                audio.start_time = max(0.0, heard_at - self.call_started_at)
             metadata = None
             # The agent never said it had finished, so this turn ended because
             # we stopped listening — its recording can hold less than the
@@ -458,6 +463,15 @@ class DuplexExchange:
                     if unfinished:
                         metadata["ended_without_agent_signal"] = True
                 text = spoken
+            elif (
+                has_audio
+                and not connector_transcript_seen
+                and utterance.transcribed_pcm_len < utterance.speech_pcm_len
+            ):
+                spoken, stt_cost = await self.stt_model.a_transcribe(audio)
+                if stt_cost is not None:
+                    result.stt_cost += stt_cost
+                text = spoken or text
             latency_ms = (
                 max(0.0, (utterance.first_audio_at - utterance.sent_at))
                 * 1000.0
@@ -470,6 +484,9 @@ class DuplexExchange:
                 audio=audio,
                 latency_ms=latency_ms,
                 interrupted=interrupted if interrupted else None,
+                provider_transcript=(
+                    " ".join(utterance.provider_transcript_parts) or None
+                ),
                 metadata=metadata,
             )
             # Place the reply where it began rather than at the end: a barge is
@@ -650,6 +667,11 @@ class DuplexExchange:
                     utterance.transcript = event.transcript
                     connector_transcript_seen = True
 
+                if event.provider_transcript:
+                    utterance.provider_transcript_parts.append(
+                        event.provider_transcript
+                    )
+
                 if event.audio:
                     silent = audio_utils.is_silent(
                         event.audio, self.connector.silence_threshold_rms
@@ -688,7 +710,7 @@ class DuplexExchange:
                     )
                     if (
                         not connector_transcript_seen
-                        and (stt_task is None or stt_task.done())
+                        and stt_task is None
                         and len(utterance.pcm) - utterance.last_stt_pcm_len
                         > (0 if quiet else stt_stride_bytes)
                     ):
@@ -802,7 +824,7 @@ class DuplexExchange:
             # timeout mid-reply. Not an interruption — nobody cut the agent
             # off, we stopped listening — which `_finalize_assistant` records
             # as `ended_without_agent_signal`.
-            if utterance.pcm and (
+            if utterance.started and (
                 not result.turns or result.turns[-1].role != "assistant"
             ):
                 await _finalize_assistant(interrupted=False)

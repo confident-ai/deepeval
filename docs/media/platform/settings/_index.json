@@ -1,0 +1,16 @@
+{
+  "images": [
+    {
+      "file": "project-api-key.svg",
+      "title": "Project settings with API key copy button",
+      "alt": "Confident AI project settings General tab with the Project API Key value redacted and its Copy button highlighted in red",
+      "width": 960,
+      "height": 470,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/tutorial_setup_01.svg"
+        ]
+      }
+    }
+  ]
+}

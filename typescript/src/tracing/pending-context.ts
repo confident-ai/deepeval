@@ -17,6 +17,7 @@ export interface PendingSpanParams {
   metadata?: Record<string, any>;
   name?: string;
   testCase?: LLMTestCase;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   metricCollection?: string;
   metrics?: BaseMetric[];
 }
@@ -32,6 +33,7 @@ export interface PendingLlmSpanParams extends PendingSpanParams {
   outputTokenCount?: number;
   costPerInputToken?: number;
   costPerOutputToken?: number;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   prompt?: Prompt;
 }
 
@@ -80,10 +82,15 @@ export function _setAmbientPayloadReader(
   ambientReader = reader;
 }
 
-function dropUndefined(params: Record<string, any>): PendingPayload {
+/** `params` without undefined entries, nor null ones when `nullIsUnset`. */
+function dropUnset(
+  params: Record<string, any>,
+  nullIsUnset = false,
+): PendingPayload {
   const out: PendingPayload = {};
   for (const [key, value] of Object.entries(params)) {
-    if (value !== undefined) out[key] = value;
+    if (value === undefined || (nullIsUnset && value === null)) continue;
+    out[key] = value;
   }
   return out;
 }
@@ -95,7 +102,7 @@ function withSlot<T>(
 ): Promise<T> {
   const store: SlotStore = {
     ...(pendingStore.getStore() ?? {}),
-    [key]: new PendingSlot(dropUndefined(params)),
+    [key]: new PendingSlot(dropUnset(params)),
   };
   return pendingStore.run(store, async () => await fn());
 }
@@ -173,13 +180,14 @@ export function popPendingFor(spanType?: string): PendingPayload | undefined {
   const kindForAmbient = slotKindForSpanType(spanType);
   const ambient = ambientReader?.(kindForAmbient);
   const store = pendingStore.getStore();
+  const staged = drain(integrationStore.getStore()?.span, kindForAmbient);
 
-  if (!store)
-    return ambient && Object.keys(ambient).length > 0
-      ? { ...ambient }
-      : undefined;
+  if (!store) {
+    const merged = { ...(ambient ?? {}), ...staged };
+    return Object.keys(merged).length > 0 ? merged : undefined;
+  }
 
-  const merged: PendingPayload = { ...(ambient ?? {}) };
+  const merged: PendingPayload = { ...(ambient ?? {}), ...staged };
 
   const baseSlot = store.base;
   if (baseSlot?.payload) {
@@ -226,7 +234,6 @@ const BASE_FIELD_ATTRS: Record<string, AttributeEncoding> = {
   expectedTools: [ConfidentAttr.SPAN_EXPECTED_TOOLS, asJson],
   metadata: [ConfidentAttr.SPAN_METADATA, asJson],
   name: [ConfidentAttr.SPAN_NAME, String],
-  metricCollection: [ConfidentAttr.SPAN_METRIC_COLLECTION, String],
 };
 
 const TYPED_FIELD_ATTRS: Record<SlotKind, Record<string, AttributeEncoding>> = {
@@ -251,9 +258,7 @@ const TYPED_FIELD_ATTRS: Record<SlotKind, Record<string, AttributeEncoding>> = {
   },
 };
 
-// `metrics` and `prompt` hold objects and so have no attribute of their own:
-// metric instances only ever reach the REST route, and a `Prompt` is flattened
-// into the four `confident.span.prompt_*` scalars instead.
+// `metrics` holds metric objects, which have no attribute of their own.
 const BASE_FIELDS: readonly string[] = [
   ...Object.keys(BASE_FIELD_ATTRS),
   "metrics",
@@ -262,7 +267,7 @@ const BASE_FIELDS: readonly string[] = [
 // Guards against cross-type leakage (e.g. `embedder` landing on an LLM span).
 const TYPED_FIELDS: Record<SlotKind, readonly string[]> = {
   agent: Object.keys(TYPED_FIELD_ATTRS.agent),
-  llm: [...Object.keys(TYPED_FIELD_ATTRS.llm), "prompt"],
+  llm: Object.keys(TYPED_FIELD_ATTRS.llm),
   tool: Object.keys(TYPED_FIELD_ATTRS.tool),
   retriever: Object.keys(TYPED_FIELD_ATTRS.retriever),
 };
@@ -324,10 +329,7 @@ export function applyPendingToSpan(
  *
  * The OTLP counterpart to {@link applyPendingToSpan}: on that route no local
  * span object is ever built, so the attributes are the only carrier for
- * anything staged with `next*Span(...)`. A `Prompt` in particular cannot ride
- * in OTel attributes (primitives only), so it is flattened into the four
- * `confident.span.prompt_*` scalars the backend reads back to link the span to
- * its prompt version.
+ * anything staged with `next*Span(...)`.
  *
  * `popPendingFor` drains the slot whether or not this can encode what it
  * finds, so every encodable field has to be handled here: a gap loses the
@@ -361,18 +363,6 @@ export function pendingToOtelAttributes(
     }
   }
 
-  if (kind === "llm") {
-    const prompt = resolved.prompt as Prompt | undefined;
-    if (prompt) {
-      if (prompt._alias) attrs[ConfidentAttr.SPAN_PROMPT_ALIAS] = prompt._alias;
-      if (prompt.hash)
-        attrs[ConfidentAttr.SPAN_PROMPT_COMMIT_HASH] = prompt.hash;
-      if (prompt.label) attrs[ConfidentAttr.SPAN_PROMPT_LABEL] = prompt.label;
-      if (prompt.version)
-        attrs[ConfidentAttr.SPAN_PROMPT_VERSION] = prompt.version;
-    }
-  }
-
   return attrs;
 }
 
@@ -390,6 +380,80 @@ export function setDefaultSpanAttribute(
   value: OtelAttributeValue,
 ): void {
   if (attributes[key] === undefined) attributes[key] = value;
+}
+
+////////////////////////////////////////////////////////
+/// Integration staging ////////////////////////////////
+////////////////////////////////////////////////////////
+
+// What an integration stages for the span it is about to open, kept apart
+// from the `next*Span` slots so a user's staging still wins.
+type IntegrationStore = {
+  span?: SlotStore;
+  trace?: PendingSlot;
+  spanType?: PendingSlot;
+};
+
+const integrationStore = new AsyncLocalStorage<IntegrationStore>();
+
+export interface StagedValues {
+  /** Defaults for the next span, of `spanKind` when given. */
+  span?: PendingPayload;
+  spanKind?: SlotKind;
+  /** The type the next span takes, whatever its attributes say. */
+  spanType?: string;
+  /** Defaults for the trace the next root span starts. */
+  trace?: PendingPayload;
+}
+
+/**
+ * Run `fn` with `values` staged for the spans it opens, each consumed once.
+ *
+ * For integrations whose framework opens its span synchronously inside `fn`.
+ */
+export function withStaged<T>(values: StagedValues, fn: () => T): T {
+  const store: IntegrationStore = { ...(integrationStore.getStore() ?? {}) };
+  // Frameworks report an unset value as null, and a default never clears one.
+  if (values.span)
+    store.span = {
+      ...(store.span ?? {}),
+      [values.spanKind ?? "base"]: new PendingSlot(
+        dropUnset(values.span, true),
+      ),
+    };
+  if (values.trace)
+    store.trace = new PendingSlot(dropUnset(values.trace, true));
+  if (values.spanType)
+    store.spanType = new PendingSlot({ type: values.spanType });
+  return integrationStore.run(store, fn);
+}
+
+/** One-shot consume the staged trace defaults. */
+export function popPendingTrace(): PendingPayload {
+  return take(integrationStore.getStore()?.trace) ?? {};
+}
+
+/** One-shot consume the staged span type. */
+export function popPendingSpanType(): string | undefined {
+  return take(integrationStore.getStore()?.spanType)?.type;
+}
+
+function take(slot: PendingSlot | undefined): PendingPayload | undefined {
+  if (!slot?.payload) return undefined;
+  const payload = slot.payload;
+  slot.payload = undefined;
+  return payload;
+}
+
+function drain(
+  store: SlotStore | undefined,
+  kind: SlotKind | undefined,
+): PendingPayload {
+  if (!store) return {};
+  return {
+    ...(take(store.base) ?? {}),
+    ...(kind ? (take(store[kind]) ?? {}) : {}),
+  };
 }
 
 /** Test seam: drop every staged payload in the current scope. */

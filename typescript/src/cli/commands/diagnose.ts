@@ -14,6 +14,28 @@ import { getProvider, type ProviderSpec } from "@/cli/providers";
 import { selectProvider } from "@/models/provider-selection";
 import { printTable } from "@/cli/utils";
 import { getVersion } from "@/cli/version";
+import { HIDDEN_DIR } from "@/constants";
+import {
+  LOCAL_STORE_JSON,
+  LOCAL_STORE_SQLITE,
+  normalizeLocalStoreMode,
+  isSqliteSupported,
+  sqliteUnsupportedMessage,
+  type LocalStoreMode,
+} from "@/sqlite-store/mode";
+import { resolveDbPath, resolveIncludeRowJson } from "@/sqlite-store/store";
+import {
+  MODE_EXPERIMENTAL,
+  resolveDeepEvalMode,
+  type DeepEvalMode,
+} from "@/config/mode";
+import {
+  EvalMode,
+  resolveEvalMode,
+  usesSystemOne,
+  type EvalModeName,
+} from "@/config/eval-mode";
+import { DEFAULT_TYPESAFE_MODEL } from "@/models/system-one/constants";
 
 // Settings worth showing when set, matching Python's `_RELEVANT_MARKERS`.
 const RELEVANT_MARKERS = [
@@ -27,6 +49,11 @@ const RELEVANT_MARKERS = [
   "TEMPERATURE",
   "DEEPEVAL_DEFAULT_SAVE",
   "DEEPEVAL_RESULTS_FOLDER",
+  "DEEPEVAL_LOCAL_STORE",
+  "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON",
+  "DEEPEVAL_MODE",
+  "DEEPEVAL_EVAL_MODE",
+  "TYPESAFE_",
 ];
 
 function maskSecret(value: string): string {
@@ -71,6 +98,22 @@ interface DiagnoseReport {
     apiUrl: string;
   };
   model: { provider: string | null; model: string | null; reason: string };
+  localStorage: {
+    backend: LocalStoreMode;
+    backendSource: string;
+    location: string;
+    resultsFolder: string | null;
+    resultsFolderSource: string | null;
+    includeRowJson?: boolean;
+    error?: string;
+  };
+  mode: { mode: DeepEvalMode; modeSource: string };
+  evalMode: {
+    mode: EvalModeName;
+    modeSource: string;
+    systemOneModel: string;
+    typesafeApiKeySet: boolean;
+  };
   sources: { dotenvFiles: string[]; keystore: string };
   settings: Array<{
     name: string;
@@ -78,6 +121,75 @@ interface DiagnoseReport {
     source: string;
     secret: boolean;
   }>;
+}
+
+/** Where finished test runs go, always reported (even on defaults). */
+function localStorageSection(
+  settings: Record<string, unknown>,
+): DiagnoseReport["localStorage"] {
+  const configured = settings.DEEPEVAL_LOCAL_STORE as string | undefined;
+  const backend = normalizeLocalStoreMode(configured ?? "") ?? LOCAL_STORE_JSON;
+  const backendSource =
+    configured === undefined || configured === ""
+      ? "built-in default"
+      : getSettingSource("DEEPEVAL_LOCAL_STORE");
+  const resultsFolder =
+    (settings.DEEPEVAL_RESULTS_FOLDER as string | undefined)?.trim() || null;
+  const base = {
+    backend,
+    backendSource,
+    resultsFolder,
+    resultsFolderSource: resultsFolder
+      ? getSettingSource("DEEPEVAL_RESULTS_FOLDER")
+      : null,
+  };
+  if (backend === LOCAL_STORE_SQLITE) {
+    return {
+      ...base,
+      location: resolveDbPath(resultsFolder ?? undefined),
+      includeRowJson: resolveIncludeRowJson(),
+      ...(isSqliteSupported() ? {} : { error: sqliteUnsupportedMessage() }),
+    };
+  }
+  return {
+    ...base,
+    location: resultsFolder
+      ? `${resultsFolder}/test_run_*.json`
+      : `${HIDDEN_DIR}/.latest_test_run.json (latest run only)`,
+  };
+}
+
+/** Which feature channel is in effect, always reported (even on defaults). */
+function modeSection(
+  settings: Record<string, unknown>,
+): DiagnoseReport["mode"] {
+  const configured = settings.DEEPEVAL_MODE as string | undefined;
+  return {
+    mode: resolveDeepEvalMode(),
+    modeSource:
+      configured === undefined || configured === ""
+        ? "built-in default"
+        : getSettingSource("DEEPEVAL_MODE"),
+  };
+}
+
+/** Who decides in judge metrics, always reported (even on defaults). */
+function evalModeSection(
+  settings: Record<string, unknown>,
+): DiagnoseReport["evalMode"] {
+  const configured = settings.DEEPEVAL_EVAL_MODE as string | undefined;
+  const apiKey = (settings.TYPESAFE_API_KEY as string | undefined) ?? "";
+  return {
+    mode: resolveEvalMode(),
+    modeSource:
+      configured === undefined || configured === ""
+        ? "built-in default"
+        : getSettingSource("DEEPEVAL_EVAL_MODE"),
+    systemOneModel:
+      (settings.TYPESAFE_MODEL_NAME as string | undefined) ||
+      DEFAULT_TYPESAFE_MODEL,
+    typesafeApiKeySet: apiKey.trim() !== "",
+  };
 }
 
 function buildReport(): DiagnoseReport {
@@ -116,6 +228,9 @@ function buildReport(): DiagnoseReport {
         : null,
       reason,
     },
+    localStorage: localStorageSection(settings),
+    mode: modeSection(settings),
+    evalMode: evalModeSection(settings),
     sources: {
       dotenvFiles: loadedDotenvPaths(),
       keystore: keystoreLocation(),
@@ -154,6 +269,53 @@ function printReport(report: DiagnoseReport): void {
   console.log(`  provider   ${report.model.provider ?? "(none configured)"}`);
   if (report.model.model) console.log(`  model      ${report.model.model}`);
   console.log(`  reason     ${report.model.reason}`);
+
+  const storage = report.localStorage;
+  console.log(`\n${BOLD}Local storage${RESET}`);
+  console.log(`  backend    ${storage.backend} (${storage.backendSource})`);
+  console.log(`  location   ${storage.location}`);
+  if (storage.resultsFolder) {
+    console.log(
+      `  folder     ${storage.resultsFolder} (${storage.resultsFolderSource})`,
+    );
+  }
+  if (storage.includeRowJson !== undefined) {
+    console.log(
+      `  row json   ${storage.includeRowJson ? "on" : "off (default)"}`,
+    );
+  }
+  if (storage.error) console.log(`  ⚠ ${storage.error}`);
+  console.log(
+    "  change with `npx deepeval set-local-store <json|sqlite> --save=dotenv`",
+  );
+
+  console.log(`\n${BOLD}Mode${RESET}`);
+  console.log(`  channel    ${report.mode.mode} (${report.mode.modeSource})`);
+  console.log(
+    report.mode.mode === MODE_EXPERIMENTAL
+      ? "  ⚠ experimental features may change or break between releases; " +
+          "opt out with `npx deepeval set-mode stable --save=dotenv`"
+      : "  change with `npx deepeval set-mode <stable|experimental> --save=dotenv`",
+  );
+
+  const evalMode = report.evalMode;
+  console.log(`\n${BOLD}Eval mode${RESET}`);
+  console.log(`  mode       ${evalMode.mode} (${evalMode.modeSource})`);
+  if (usesSystemOne(evalMode.mode)) {
+    console.log(`  system one ${evalMode.systemOneModel} (TypeSafe AI)`);
+    console.log(
+      `  api key    ${evalMode.typesafeApiKeySet ? "set" : "(not set)"}`,
+    );
+    if (!evalMode.typesafeApiKeySet) {
+      console.log(
+        "  ⚠ TYPESAFE_API_KEY is not set; metrics will fail until you run " +
+          "`npx deepeval set-typesafe --prompt-api-key`",
+      );
+    }
+  }
+  console.log(
+    `  change with \`npx deepeval set-eval-mode <${EvalMode.LLM}|${EvalMode.HYBRID}|${EvalMode.SYSTEM_ONE}> --save=dotenv\``,
+  );
 
   console.log(`\n${BOLD}Configuration sources${RESET}`);
   console.log(

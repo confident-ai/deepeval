@@ -2,6 +2,7 @@
 
 import uuid as _uuid
 import time as _time
+import pytest
 import deepeval.models.llms.openai_model as openai_mod
 
 from types import SimpleNamespace
@@ -113,7 +114,6 @@ class TestOpenAIModelCompletionKwargs:
                     "content": [{"type": "text", "text": "test prompt"}],
                 }
             ],
-            temperature=1,  # GPT-5 auto-sets to 1
             reasoning_effort="high",
             seed=123,
         )
@@ -246,7 +246,7 @@ class TestOpenAIModelCompletionKwargs:
                 "content": [{"type": "text", "text": "async test prompt"}],
             }
         ]
-        assert call_args["temperature"] == 1  # GPT-5-nano auto-sets to 1
+        assert "temperature" not in call_args
         assert call_args["reasoning_effort"] == "medium"
         assert call_args["max_tokens"] == 1500
 
@@ -852,6 +852,57 @@ def test_gpt55_snapshot_model_data_matches_alias():
     snapshot = OPENAI_MODELS_DATA.get("gpt-5.5-2026-04-23")
 
     assert snapshot == alias
+
+
+@pytest.mark.parametrize(
+    "model_name, input_price, output_price",
+    [
+        ("gpt-5.6-sol", 4.00, 20.00),
+        ("gpt-5.6-terra", 2.00, 12.00),
+        ("gpt-5.6-luna", 0.20, 1.20),
+        ("gpt-6-astra", 10.00, 50.00),
+        ("gpt-6-sol", 2.00, 10.00),
+        ("gpt-6-luna", 0.10, 0.50),
+    ],
+)
+def test_gpt56_and_gpt6_model_data_matches_openai_docs(
+    model_name, input_price, output_price
+):
+    assert model_name in OPENAI_MODELS_DATA
+    model_data = OPENAI_MODELS_DATA.get(model_name)
+
+    assert model_data.supports_structured_outputs is True
+    assert model_data.supports_multimodal is True
+    assert model_data.supports_temperature is False
+    assert model_data.input_price == input_price / 1e6
+    assert model_data.output_price == output_price / 1e6
+
+
+@patch("deepeval.models.llms.openai_model.OpenAI")
+def test_reasoning_model_uses_structured_outputs_without_temperature(
+    mock_openai_class, settings
+):
+    mock_client = Mock()
+    mock_openai_class.return_value = mock_client
+    mock_parsed = SampleSchema(field1="test", field2=42)
+    mock_completion = Mock()
+    mock_completion.choices = [Mock(message=Mock(parsed=mock_parsed))]
+    mock_completion.usage.prompt_tokens = 1000
+    mock_completion.usage.completion_tokens = 100
+    mock_client.beta.chat.completions.parse.return_value = mock_completion
+
+    with settings.edit(persist=False):
+        settings.OPENAI_API_KEY = "test-key"
+
+    model = OpenAIModel(model="gpt-6-luna", temperature=0)
+    output, cost = model.generate("test prompt", SampleSchema)
+
+    kwargs = mock_client.beta.chat.completions.parse.call_args.kwargs
+    assert kwargs["response_format"] is SampleSchema
+    assert "temperature" not in kwargs
+    mock_client.chat.completions.create.assert_not_called()
+    assert output == mock_parsed
+    assert cost == pytest.approx(1000 * 0.10 / 1e6 + 100 * 0.50 / 1e6)
 
 
 ##############################

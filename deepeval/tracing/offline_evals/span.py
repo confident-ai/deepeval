@@ -1,16 +1,11 @@
 from deepeval.confident.api import Api, Endpoints, HttpMethods
-from deepeval.tracing.context import current_trace_context
 from deepeval.tracing.offline_evals.api import EvaluateSpanRequestBody
 
 
 def evaluate_span(
     span_uuid: str, metric_collection: str, overwrite_metrics: bool = False
 ):
-    trace = current_trace_context.get()
-    api_key = None
-    if trace:
-        api_key = trace.confident_api_key
-    api = Api(api_key=api_key)
+    api = Api()
 
     evaluate_span_request_body = EvaluateSpanRequestBody(
         metricCollection=metric_collection, overwriteMetrics=overwrite_metrics
@@ -35,11 +30,7 @@ def evaluate_span(
 async def a_evaluate_span(
     span_uuid: str, metric_collection: str, overwrite_metrics: bool = False
 ):
-    trace = current_trace_context.get()
-    api_key = None
-    if trace:
-        api_key = trace.confident_api_key
-    api = Api(api_key=api_key)
+    api = Api()
 
     evaluate_span_request_body = EvaluateSpanRequestBody(
         metricCollection=metric_collection, overwriteMetrics=overwrite_metrics

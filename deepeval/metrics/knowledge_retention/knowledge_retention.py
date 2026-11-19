@@ -2,15 +2,26 @@ from typing import Optional, Union, List, Type
 
 from deepeval.test_case import ConversationalTestCase, Turn, MultiTurnParams
 from deepeval.metrics import BaseConversationalMetric
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
-    check_conversational_test_case_params,
+    prepare_measure,
+    generate_qag_verdict,
+    a_generate_qag_verdict,
+    score_qag_verdicts,
     construct_verbose_logs,
     initialize_model,
+    initialize_system_one_model,
     convert_turn_to_dict,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    SystemOneBinarySpec,
+    SystemOneEvalSpec,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.knowledge_retention.schema import (
     Knowledge,
@@ -31,6 +42,10 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         self,
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -41,8 +56,16 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         ] = KnowledgeRetentionTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -56,18 +79,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ):
-        check_conversational_test_case_params(
-            test_case,
-            self._required_test_case_params,
-            self,
-            False,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -81,11 +93,16 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 self.knowledges: List[Union[Knowledge, None]] = (
                     self._generate_knowledges(test_case.turns)
                 )
                 self.verdicts: List[KnowledgeRetentionVerdict] = (
-                    self._generate_verdicts(test_case.turns)
+                    self._generate_verdicts(
+                        test_case.turns, test_case.multimodal
+                    )
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
@@ -107,29 +124,23 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-        check_conversational_test_case_params(
-            test_case,
-            self._required_test_case_params,
-            self,
-            False,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
             async_mode=True,
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             self.knowledges: List[Union[Knowledge, None]] = (
                 await self._a_generate_knowledges(test_case.turns)
             )
             self.verdicts: List[KnowledgeRetentionVerdict] = (
-                await self._a_generate_verdicts(test_case.turns)
+                await self._a_generate_verdicts(
+                    test_case.turns, test_case.multimodal
+                )
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
@@ -150,7 +161,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         attritions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -172,7 +183,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         attritions = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "yes":
+            if verdict.verdict == Verdict.YES:
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -189,7 +200,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
         )
 
     async def _a_generate_verdicts(
-        self, turns: List[Turn]
+        self, turns: List[Turn], multimodal: bool
     ) -> List[KnowledgeRetentionVerdict]:
         verdicts: List[KnowledgeRetentionVerdict] = []
         for i in range(len(turns)):
@@ -209,18 +220,20 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 llm_message=turns[i].content,
                 accumulated_knowledge=accumulated_knowledge,
             )
-            verdict = await a_generate_with_schema_and_extract(
+            verdict = await a_generate_qag_verdict(
                 metric=self,
                 prompt=prompt,
-                schema_cls=KnowledgeRetentionVerdict,
-                extract_schema=lambda s: s,
-                extract_json=lambda data: KnowledgeRetentionVerdict(**data),
+                verdict_cls=KnowledgeRetentionVerdict,
+                allowed=YES_NO,
+                system_one=self._experimental_system_one_spec(
+                    turns[i].content, accumulated_knowledge, multimodal
+                ),
             )
             verdicts.append(verdict)
         return verdicts
 
     def _generate_verdicts(
-        self, turns: List[Turn]
+        self, turns: List[Turn], multimodal: bool
     ) -> List[KnowledgeRetentionVerdict]:
         verdicts: List[KnowledgeRetentionVerdict] = []
         for i in range(len(turns)):
@@ -241,12 +254,14 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 accumulated_knowledge=accumulated_knowledge,
             )
 
-            verdict = generate_with_schema_and_extract(
+            verdict = generate_qag_verdict(
                 metric=self,
                 prompt=prompt,
-                schema_cls=KnowledgeRetentionVerdict,
-                extract_schema=lambda s: s,
-                extract_json=lambda data: KnowledgeRetentionVerdict(**data),
+                verdict_cls=KnowledgeRetentionVerdict,
+                allowed=YES_NO,
+                system_one=self._experimental_system_one_spec(
+                    turns[i].content, accumulated_knowledge, multimodal
+                ),
             )
             verdicts.append(verdict)
         return verdicts
@@ -310,19 +325,37 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         return knowledges
 
+    def _experimental_system_one_spec(
+        self, llm_message: str, accumulated_knowledge: List, multimodal: bool
+    ) -> Optional[SystemOneBinarySpec]:
+        if multimodal:
+            return None
+        return SystemOneBinarySpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            state={
+                "llm_message": llm_message,
+                "accumulated_knowledge": accumulated_knowledge,
+            },
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: ConversationalTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole conversation as one Jev
+        request, each turn carrying its `role` and `content`; see
+        EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=self._required_test_case_params,
+            questions=parse_questions(
+                self._get_prompt("_experimental_system_one_questions")
+            ),
+        )
+
     def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        retention_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
-                retention_count += 1
-
-        score = retention_count / number_of_verdicts
-
-        return 0 if self.strict_mode and score < self.threshold else score
+        # "yes" means the assistant forgot something, so "no" is the pass.
+        return score_qag_verdicts(self, self.verdicts, passing=(Verdict.NO,))
 
     @property
     def __name__(self):

@@ -1,0 +1,13 @@
+[
+{% for topic in relevant_topics %}
+  {
+    "type": "noul",
+    "statement": {{ ("Every user question in `turns` about this topic is directly and correctly answered by the assistant, not refused or deflected: " ~ topic) | tojson }}
+  },
+{% endfor %}
+  {
+    "type": "noul",
+    "statement": "The assistant declines to answer every user question in `turns` that is not about any of the topics in `relevant_topics`.",
+    "weight": {{ [relevant_topics | length, 1] | max }}
+  }
+]

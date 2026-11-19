@@ -1,0 +1,28 @@
+{
+  "images": [
+    {
+      "file": "dataset-editor.webp",
+      "title": "Dataset editor with single-turn goldens",
+      "alt": "Confident AI dataset editor for a Single-Turn Sales Agent dataset, listing goldens with input, expected output and context columns",
+      "width": 2400,
+      "height": 1345,
+      "source": {
+        "urls": [
+          "/img/confident-dataset-management.png"
+        ]
+      }
+    },
+    {
+      "file": "trace-ingestion-task.webp",
+      "title": "Ingestion task mapping traces to goldens",
+      "alt": "Confident AI Add ingestion task panel that maps trace input, output, context and tools called into the golden fields of a dataset",
+      "width": 2400,
+      "height": 1234,
+      "source": {
+        "urls": [
+          "/img/confident-trace-to-dataset.png"
+        ]
+      }
+    }
+  ]
+}

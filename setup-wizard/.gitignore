@@ -1,0 +1,10 @@
+node_modules/
+dist/
+release/
+coverage/
+*.blob
+deepeval-setup
+.env.local
+examples/
+.deepeval/
+.pytest_cache/

@@ -1,13 +1,11 @@
 import { Api, Endpoints, HttpMethods } from "@/confident/api";
-import { getCurrentTrace } from "@/tracing/tracing";
 import {
   EvaluateTraceRequestBody,
   EvaluateTraceRequestBodySchema,
 } from "@/tracing/offline-evals/api";
 
 function getApi(): Api {
-  const trace = getCurrentTrace();
-  return new Api(trace?.confidentApiKey);
+  return new Api();
 }
 
 export function evaluateTrace({

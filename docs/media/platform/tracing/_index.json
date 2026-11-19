@@ -1,0 +1,16 @@
+{
+  "images": [
+    {
+      "file": "trace-execution-tree.webp",
+      "title": "Trace execution tree with metric scores",
+      "alt": "Confident AI trace view with a sales agent's span tree of tool calls, answer relevancy, task completion and verbosity scores, and a comment",
+      "width": 2400,
+      "height": 1359,
+      "source": {
+        "urls": [
+          "/img/confident-tracing-observability.png"
+        ]
+      }
+    }
+  ]
+}

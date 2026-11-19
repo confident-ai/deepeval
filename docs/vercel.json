@@ -2,6 +2,16 @@
   "framework": "nextjs",
   "redirects": [
     {
+      "source": "/docs/metrics-conversational-g-eval",
+      "destination": "/docs/metrics-llm-evals",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/metrics-conversational-jev-eval",
+      "destination": "/docs/metrics-jev-eval",
+      "statusCode": 301
+    },
+    {
       "source": "/guides/guides-llm-as-a-judge",
       "destination": "/blog/llm-as-a-judge",
       "statusCode": 301

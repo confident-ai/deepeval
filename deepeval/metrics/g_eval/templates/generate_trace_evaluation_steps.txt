@@ -1,0 +1,20 @@
+You will be judging an AI agent by its execution trace rather than by a single input and output. The trace is a nested JSON tree of spans. Each span has a `name`, a `type` (`agent`, `llm`, `tool`, `retriever`, or `custom`), an `input`, an `output`, and `children` (the spans it invoked, in execution order). Agent spans may also list `available_tools` and `agent_handoffs`; tool spans may carry a `description`; retriever spans may carry a `retrievalContext`. The root span's input is what the agent was asked to do, and its output is what it finally returned.
+
+Given the evaluation criteria below, generate 3-4 concise evaluation steps for judging the trace. The steps MUST:
+- Say which parts of the trace are evidence for the criteria (e.g. specific span types, tool arguments, retrieved content, intermediate LLM outputs, the root output).
+- Say how intermediate steps should be judged in relation to one another and to the final root output, not just the final output on its own.
+- Stay grounded in what a trace can show; do not ask for information that is not recorded in spans.
+{% if multimodal %}{{ _fragments.multimodal_input_rules }}{% endif %}
+
+Evaluation Criteria:
+{{ criteria }}
+
+**
+IMPORTANT: Please make sure to only return in JSON format, with the "steps" key as a list of strings. No words or explanation is needed.
+Example JSON:
+{
+  "steps": <list_of_strings>
+}
+**
+
+JSON:

@@ -52,13 +52,13 @@ def dependency_absent(dep_prefix, integration_module):
 
 
 def test_crewai_integration_imports_without_crewai():
-    """`import deepeval.integrations.crewai` must not raise NameError when crewai
-    is not installed; every public entry point raises a helpful ImportError.
+    """`import deepeval.integrations.crewai` must succeed when crewai is not
+    installed; every public entry point raises a helpful ImportError.
 
-    Previously the module crashed at import (``NameError: name
-    'BaseEventListener'`` in handler.py, and undefined ``Crew``/``Agent``/``LLM``
-    at the bottom of subs.py), and the ``is_crewai_installed()`` guard in subs.py
-    was shadowed by a same-named flag, so it could never raise.
+    Previously the import failed with ``ImportError: cannot import name
+    'DeepEvalCrew'``, because subs.py only built its classes when crewai was
+    installed, and tool.py imported crewai unconditionally. So the
+    ``is_crewai_installed()`` checks in those classes could never run.
     """
     with dependency_absent("crewai", "deepeval.integrations.crewai"):
         ci = importlib.import_module("deepeval.integrations.crewai")
@@ -67,6 +67,8 @@ def test_crewai_integration_imports_without_crewai():
 
         with pytest.raises(ImportError, match="CrewAI is not installed"):
             ci.Crew()
+        with pytest.raises(ImportError, match="CrewAI is not installed"):
+            ci.LLM()
         with pytest.raises(ImportError, match="CrewAI is not installed"):
             ci.tool()
         with pytest.raises(ImportError, match="CrewAI is not installed"):

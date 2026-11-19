@@ -1,102 +1,48 @@
 import functools
 from typing import Callable
 
-from deepeval.tracing.context import current_span_context
-from deepeval.tracing.types import ToolSpan
+from deepeval.integrations.crewai.subs import is_crewai_installed
+from deepeval.tracing.context import update_current_span
 
 try:
     from crewai.tools import tool as crewai_tool
-
-    crewai_installed = True
 except ImportError:
-    crewai_installed = False
     crewai_tool = None
 
 
-def tool(*args, metric=None, metric_collection=None, **kwargs) -> Callable:
+def tool(
+    *args,
+    metric=None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
+    metric_collection=None,
+    **kwargs,
+) -> Callable:
     """
     Simple wrapper around crewai.tools.tool that:
-      - attaches metric and metric_collection as function attributes
-      - accepts additional parameters: metric and metric_collection
+      - sets ``metric`` (the metrics) on the span the tool runs in
       - remains backward compatible with CrewAI's decorator usage patterns
     """
-    if not crewai_installed:
-        raise ImportError(
-            "CrewAI is not installed. Please install it with `pip install crewai`."
-        )
+    is_crewai_installed()
     crewai_kwargs = kwargs
+
+    def build(tool_name: str, f: Callable):
+        @functools.wraps(f)
+        def wrapped(*f_args, **f_kwargs):
+            update_current_span(metrics=metric)
+            return f(*f_args, **f_kwargs)
+
+        return crewai_tool(tool_name, **crewai_kwargs)(wrapped)
 
     # Case 1: @tool (function passed directly)
     if len(args) == 1 and callable(args[0]):
-        f = args[0]
-        tool_name = f.__name__
-
-        @functools.wraps(f)
-        def wrapped(*f_args, **f_kwargs):
-            result = f(*f_args, **f_kwargs)
-            return result
-
-        # Attach metrics as attributes to the wrapped function
-        # These will be read by the event listener in handler.py
-        wrapped._metric_collection = metric_collection
-        wrapped._metrics = metric
-
-        # Pass the wrapped function to CrewAI's tool decorator
-        tool_instance = crewai_tool(tool_name, **crewai_kwargs)(wrapped)
-
-        # Also attach to the tool instance itself for redundancy
-        tool_instance._metric_collection = metric_collection
-        tool_instance._metrics = metric
-
-        return tool_instance
+        return build(args[0].__name__, args[0])
 
     # Case 2: @tool("name")
     if len(args) == 1 and isinstance(args[0], str):
-        tool_name = args[0]
-
-        def _decorator(f: Callable) -> Callable:
-            @functools.wraps(f)
-            def wrapped(*f_args, **f_kwargs):
-                result = f(*f_args, **f_kwargs)
-                return result
-
-            # Attach metrics as attributes
-            wrapped._metric_collection = metric_collection
-            wrapped._metrics = metric
-
-            tool_instance = crewai_tool(tool_name, **crewai_kwargs)(wrapped)
-
-            # Also attach to the tool instance
-            tool_instance._metric_collection = metric_collection
-            tool_instance._metrics = metric
-
-            return tool_instance
-
-        return _decorator
+        return functools.partial(build, args[0])
 
     # Case 3: @tool(result_as_answer=True, ...) – kwargs only
     if len(args) == 0:
-
-        def _decorator(f: Callable) -> Callable:
-            tool_name = f.__name__
-
-            @functools.wraps(f)
-            def wrapped(*f_args, **f_kwargs):
-                result = f(*f_args, **f_kwargs)
-                return result
-
-            # Attach metrics as attributes
-            wrapped._metric_collection = metric_collection
-            wrapped._metrics = metric
-
-            tool_instance = crewai_tool(tool_name, **crewai_kwargs)(wrapped)
-
-            # Also attach to the tool instance
-            tool_instance._metric_collection = metric_collection
-            tool_instance._metrics = metric
-
-            return tool_instance
-
-        return _decorator
+        return lambda f: build(f.__name__, f)
 
     raise ValueError("Invalid arguments")

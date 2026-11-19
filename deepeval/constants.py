@@ -12,7 +12,6 @@ LOGIN_PROMPT = "\n✨👀 Looking for a place for your LLM test data to live �
 
 
 CONFIDENT_TRACE_VERBOSE = "CONFIDENT_TRACE_VERBOSE"
-CONFIDENT_TRACE_FLUSH = "CONFIDENT_TRACE_FLUSH"
 CONFIDENT_TRACE_SAMPLE_RATE = "CONFIDENT_TRACE_SAMPLE_RATE"
 CONFIDENT_TRACE_ENVIRONMENT = "CONFIDENT_TRACE_ENVIRONMENT"
 CONFIDENT_TRACING_ENABLED = "CONFIDENT_TRACING_ENABLED"
@@ -42,6 +41,8 @@ class ProviderSlug(str, Enum):
     OLLAMA = "ollama"
     OPENROUTER = "openrouter"
     PORTKEY = "portkey"
+    # System One (typed decision) provider; not an LLM.
+    TYPESAFE = "typesafe"
     # Speech (TTS/STT) providers. They serve no LLMs, so they appear here only
     # to carry a retry policy, not as selectable LLM providers.
     ASSEMBLYAI = "assemblyai"

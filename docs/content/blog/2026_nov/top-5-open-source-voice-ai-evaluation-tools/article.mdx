@@ -1,0 +1,586 @@
+---
+title: Top 5 Open-Source Voice AI Evaluation Tools in 2026, Compared
+description: A practical comparison of the top open-source voice AI evaluation tools in 2026 for testing voice agents on audio quality, latency, turn-taking, and task success.
+date: 2026-11-02
+authors: [penguine]
+category: comparisons
+---
+
+Voice agents fail in ways text agents can't. In human conversation, the gap
+between one person finishing and the next starting is
+[typically 200 milliseconds or less](https://www.pnas.org/doi/10.1073/pnas.0903616106),
+so an agent that takes two seconds to reply feels broken even when every word
+it eventually says is right. Talk over a caller who paused to think, or hear
+"fifteen" as "fifty", and the call is lost before the LLM gets a chance to be
+smart.
+
+None of those failures live in the transcript. The delay, the overlap, the
+garbled audio, and the mishearing all happen before or between the words, which
+is exactly what transcript-based evals throw away when they turn a call into
+text and grade it. Open-source tooling has caught up fast in 2026: voice agent
+frameworks now ship their own test suites, eval frameworks have added
+audio-native metrics, and research teams have published full voice benchmarks.
+They measure very different things, though, and picking the wrong one leaves
+your biggest failure modes untested.
+
+This guide compares the five best open-source voice AI evaluation tools in 2026
+by what they actually score, from the audio and the timing to what the agent
+heard, and where each one fits in your workflow.
+
+## What is a voice AI evaluation tool?
+
+A **voice AI evaluation tool** tests a voice agent against repeatable scenarios
+and scores the resulting calls. Because a voice agent is a live call rather
+than a function you call with a string, a complete evaluation covers three
+things at once: **what was said** (the transcript), **how it sounded** (the
+audio on both sides of the call), and **when it happened** (latency,
+turn-taking, and interruptions).
+
+In practice, that means placing simulated calls to your agent, speaking each
+caller turn out loud, capturing the agent's spoken replies, and scoring the
+conversation with both conversational metrics and audio metrics. The best
+tools do this against the agent you actually deploy, over the same transport it
+uses in production.
+
+A voice AI evaluation tool is not the same thing as:
+
+- **A speech model benchmark**, which compares STT or TTS providers on word
+  error rate or naturalness, independent of your agent.
+- **A voice agent framework**, such as LiveKit Agents or Pipecat, which you use
+  to build the agent. Some frameworks ship testing modules, which is why two of
+  them appear on this list.
+- **A managed voice testing platform**, which runs closed-source simulations
+  and dashboards as a hosted service. This comparison only covers tools you can
+  install, inspect, and run yourself.
+- **An LLM evaluation framework** that only scores text. If your agent is
+  text-first, see our
+  [Top 5 LLM evaluation frameworks](/blog/top-5-llm-evaluation-frameworks)
+  comparison instead.
+
+The primary job of a voice AI evaluation tool is to tell you whether a new
+prompt, model, voice, or pipeline change made your voice agent better or worse
+before real callers find out.
+
+## What to look for in a voice AI evaluation tool
+
+These are the criteria worth checking before committing to a tool:
+
+1. **Audio-native scoring** – does it score the audio itself, such as voice
+   naturalness, intelligibility, and glitches, or only the transcript?
+2. **Timing** – can it measure response latency, turn-taking, and how the agent
+   handles barge-in and overlapping speech?
+3. **Transcription accuracy** – can it tell you whether the agent's own
+   speech-to-text heard the caller correctly, so you can separate "misheard"
+   from "misunderstood"?
+4. **Simulated callers** – can it generate realistic callers with personas,
+   voices, background noise, and interruption behavior, rather than replaying
+   one clean script?
+5. **Stack coverage** – does it work across voice platforms and transports
+   such as Vapi, ElevenLabs, LiveKit, Pipecat, and raw WebSockets, or only with
+   one framework?
+6. **Conversation-level metrics** – can the same run also score task
+   completion, role adherence, tool use, and relevancy across every turn?
+7. **Developer workflow** – can evals run locally, in pytest or CI, and inside
+   AI coding agents such as Claude Code, Cursor, and Codex?
+8. **Path to production** – can the same metrics follow your agent into
+   production monitoring once it takes real calls?
+
+Most tools in this category are strong on two or three of these and silent on
+the rest. The biggest dividing line is the first criterion: many "voice" eval
+tools turn the call into text and then run text evals, which means they cannot
+catch the failures that make callers hang up.
+
+## Top voice AI evaluation tools at a glance
+
+This table maps each tool to the eight criteria above.
+
+<span className="comparison-status comparison-status--strong">✓ Strong</span>
+means the capability is native and central to the product,
+<span className="comparison-status comparison-status--partial">~ Partial</span>
+means it is narrower or requires additional setup, and
+<span className="comparison-status comparison-status--unsupported">
+  ✕ Not supported
+</span>
+means the capability is unavailable as a native workflow.
+
+<div className="framework-comparison-table">
+
+| Capability                       | DeepEval                                                                                                                      | LiveKit Agents                                                                                                                 | Pipecat Evals                                                                                                                | LangWatch                                                                                                                   | ServiceNow EVA                                                                                                               |
+| -------------------------------- | ----------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| **Audio-native scoring**         | <span className="comparison-status comparison-status--strong">✓ Strong:</span> naturalness, intelligibility, consistency, glitches | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> judges grade text                  | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> judges grade transcripts         | <span className="comparison-status comparison-status--partial">~ Partial:</span> criteria judges, no dedicated audio metrics | <span className="comparison-status comparison-status--partial">~ Partial:</span> speech fidelity audio judge (beta)         |
+| **Timing**                       | <span className="comparison-status comparison-status--strong">✓ Strong:</span> turn-taking, responsiveness, interruptions     | <span className="comparison-status comparison-status--partial">~ Partial:</span> audio simulations on LiveKit Cloud           | <span className="comparison-status comparison-status--partial">~ Partial:</span> latency budgets and barge-in checks         | <span className="comparison-status comparison-status--partial">~ Partial:</span> interruption recipes, no latency metric    | <span className="comparison-status comparison-status--strong">✓ Strong:</span> turn-taking and latency                      |
+| **Transcription accuracy**       | <span className="comparison-status comparison-status--strong">✓ Strong:</span> dedicated metric against the agent's own STT   | <span className="comparison-status comparison-status--partial">~ Partial:</span> audio simulations on LiveKit Cloud           | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no dedicated metric              | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no dedicated metric             | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> no dedicated metric              |
+| **Simulated callers**            | <span className="comparison-status comparison-status--strong">✓ Strong:</span> personas, voices, noise, barge-in              | <span className="comparison-status comparison-status--partial">~ Partial:</span> persona and goal, scenarios from YAML        | <span className="comparison-status comparison-status--partial">~ Partial:</span> persona and goal from YAML                  | <span className="comparison-status comparison-status--strong">✓ Strong:</span> personas, voices, noise, phone quality      | <span className="comparison-status comparison-status--partial">~ Partial:</span> fixed enterprise scenarios                 |
+| **Stack coverage**               | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Vapi, ElevenLabs, LiveKit, Pipecat, WebSocket  | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> LiveKit agents only                | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> Pipecat agents only              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> seven platforms and realtime APIs            | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> Pipecat-based harness           |
+| **Conversation-level metrics**   | <span className="comparison-status comparison-status--strong">✓ Strong:</span> full multi-turn metric library                 | <span className="comparison-status comparison-status--strong">✓ Strong:</span> eight built-in judges                          | <span className="comparison-status comparison-status--partial">~ Partial:</span> per-scenario judge criteria                 | <span className="comparison-status comparison-status--partial">~ Partial:</span> per-scenario judge criteria                | <span className="comparison-status comparison-status--strong">✓ Strong:</span> task completion, faithfulness, progression   |
+| **Developer workflow**           | <span className="comparison-status comparison-status--strong">✓ Strong:</span> Python, pytest, CLI, CI, Agent Skill           | <span className="comparison-status comparison-status--strong">✓ Strong:</span> pytest, Vitest, and CLI                        | <span className="comparison-status comparison-status--strong">✓ Strong:</span> YAML scenarios, CLI, local judge              | <span className="comparison-status comparison-status--strong">✓ Strong:</span> pytest and Vitest                            | <span className="comparison-status comparison-status--partial">~ Partial:</span> benchmark CLI, not a test suite            |
+| **Path to production**           | <span className="comparison-status comparison-status--strong">✓ Strong:</span> connects to Confident AI                       | <span className="comparison-status comparison-status--partial">~ Partial:</span> LiveKit Cloud                                | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> hands off to third parties       | <span className="comparison-status comparison-status--strong">✓ Strong:</span> LangWatch platform                          | <span className="comparison-status comparison-status--unsupported">✕ Not supported:</span> research benchmark               |
+
+</div>
+
+## 1. DeepEval
+
+### What is DeepEval and why should voice teams consider it?
+
+[DeepEval](https://github.com/confident-ai/deepeval) is an open-source
+evaluation framework for AI agents, voice agents, multi-turn chatbots, RAG
+pipelines, and more. It works like pytest for AI applications, and with more
+than 19,000 GitHub stars it is the most-starred tool in this comparison.
+
+Its main advantage for voice teams is voice-native evals: DeepEval scores the
+call itself, not just a transcript of it. In one run, it checks
+[what your agent said, how it sounded, and when it spoke](/docs/evaluation-voice),
+catching the slow replies, talking over callers, garbled audio, and misheard
+words that text-only evals miss, alongside whether the agent actually solved
+the caller's problem. One eval answers both "did it work" and "would a caller
+have stayed on the line".
+
+DeepEval also places the calls for you. It
+[simulates realistic callers](/docs/conversation-simulator-voice-mode) who
+phone your deployed agent on
+[Vapi, ElevenLabs, LiveKit, Pipecat](/integrations/voice-agent-connectors/vapi),
+or a custom stack, each with their own
+[persona](/docs/conversation-simulator-voice-personas): voice, background noise,
+and how often they interrupt. You can test the impatient caller in a noisy car
+as easily as the patient one in a quiet room, before any real caller does.
+
+Voice support is currently in beta. If you're already in
+production, [Confident AI](https://www.confident-ai.com/products/voice-ai)
+surfaces failing production calls before anyone has written an eval for them
+and turns them into goldens for your next DeepEval run. DeepEval and Confident
+AI are separate products: the former is the open-source framework for
+evaluating in development, while the latter adds voice-native monitoring once
+your agent takes real calls.
+
+### Key features
+
+- **Nine voice-native metrics** scored on call audio, from voice naturalness and
+  audio glitches to [turn-taking naturalness](/docs/metrics-turn-taking-naturalness)
+- **Transcription accuracy** that compares what the caller said with what the
+  agent's own speech-to-text heard
+- **Voice simulation** that places live calls to your deployed agent
+- **Personas** with voice, background noise, speak-first, hang-up, and
+  [interruption](/docs/conversation-simulator-voice-interruptions) behavior
+- **Connectors** for Vapi, ElevenLabs, LiveKit, Pipecat, WebSockets, and
+  in-process callables
+- **Pluggable TTS and STT models**, with integrations for ElevenLabs, Cartesia,
+  Deepgram, AssemblyAI, and OpenAI
+- **Conversation metrics** such as task completion, role adherence, and tool
+  use, scored on the same call
+- **Pytest integration** through `deepeval test run`, plus an Agent Skill for
+  Claude Code, Cursor, and Codex
+- **Call recordings and per-turn audio** saved locally for debugging failures
+
+### Getting started
+
+Install DeepEval and point the simulator at your voice agent. This example
+calls an ElevenLabs conversational agent and scores turn-taking:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import TurnTakingNaturalnessMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+golden = ConversationalGolden(
+    scenario="The user asks three short follow-up questions about a delivery.",
+    expected_outcome="The agent answers each question in turn.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+evaluate(test_cases=test_cases, metrics=[TurnTakingNaturalnessMetric(threshold=0.6)])
+```
+
+Swap in a `LiveKitConnector` or a WebSocket connector to test agents built on
+other stacks. Using an AI coding agent? Follow the
+[5-minute Agent Skill quickstart](/docs/vibe-coder-quickstart) and ask it to add
+voice evals to your repo.
+
+### Pricing
+
+| Product      | Price                           | Includes                                                                         |
+| ------------ | ------------------------------- | -------------------------------------------------------------------------------- |
+| DeepEval     | Free and open source            | Voice and multi-turn metrics, voice simulation, connectors, pytest, and CI/CD    |
+
+**DeepEval is for you if...**
+
+- You need to score how your voice agent sounded and when it spoke, not just
+  what the transcript says
+- Your agent runs on Vapi, ElevenLabs, LiveKit, Pipecat, or a custom WebSocket,
+  or you may switch stacks later
+- You want simulated callers with realistic voices, noise, and interruptions
+- You want voice, text, and multi-turn evals in one framework and one CI job
+- You want a natural path to production: when you go live, DeepEval connects to
+  Confident AI without rewriting your evals
+
+**DeepEval is not for you if...**
+
+- You only need quick in-framework unit tests for a single LiveKit or Pipecat
+  agent
+- You need voice-native monitoring or evals on production calls. Pair DeepEval
+  with [Confident AI](https://www.confident-ai.com/products/voice-ai), a separate
+  product it connects to natively, so failing production calls become goldens
+  for your next DeepEval run
+
+## 2. LiveKit Agents
+
+### What is LiveKit Agents and why should voice teams consider it?
+
+[LiveKit Agents](https://github.com/livekit/agents) is an open-source framework
+for building realtime voice AI agents, with about 15,000 GitHub stars and an
+Apache 2.0 license. It ships its own [testing and
+evaluation](https://docs.livekit.io/agents/start/testing/) tools, which makes it
+the most natural starting point if your agent already runs on LiveKit.
+
+Its value is speed inside the framework you already use. You can write quick
+tests that check your agent says the right thing, calls the right tools, and
+hands off correctly, then grade full conversations with eight built-in judges
+for accuracy, relevancy, safety, tool use, and task completion.
+[Agent simulations](https://docs.livekit.io/agents/start/testing/simulations/)
+add a simulated caller with a persona and goal, and LiveKit can even draft test
+scenarios from your agent's code.
+
+The trade-off is that the open-source tools grade text. Hearing how a call
+actually went, including turn-taking, interruptions, transcription, and
+latency, requires audio simulations on LiveKit Cloud, which cost more than text
+runs. LiveKit itself recommends text simulations on every commit and audio runs
+nightly or before release.
+
+### Key features
+
+- Text-mode unit tests in pytest and Vitest with message, tool call, and
+  handoff assertions
+- Eight built-in LLM judges, plus your own custom judges
+- Multi-turn simulations with LLM-driven callers from YAML scenarios
+- Scenario generation from agent source code
+- Repeated sampling with a configurable pass rate for non-deterministic runs
+- Audio-mode simulations for timing and transcription on LiveKit Cloud
+
+### Pricing
+
+| Product                 | Price                     | Includes                                                       |
+| ----------------------- | ------------------------- | -------------------------------------------------------------- |
+| LiveKit Agents          | Free and open source      | Agent framework, unit tests, judges, and text-mode evaluation  |
+| LiveKit Cloud simulations | Usage-based             | Hosted simulations, with audio runs metered at a higher rate   |
+
+**LiveKit Agents is for you if...**
+
+- Your voice agent is built on LiveKit and will stay there
+- You want fast, cheap text-mode tests that run with your existing pytest or
+  Vitest suite
+- You are comfortable running audio evaluations on LiveKit Cloud
+
+**LiveKit Agents is not for you if...**
+
+- Your agent runs on Vapi, ElevenLabs, Pipecat, or a custom stack
+- You need open-source audio-quality metrics such as naturalness or glitches
+- You want one evaluation suite across voice and non-voice applications
+
+## 3. Pipecat Evals
+
+### What is Pipecat Evals and why should voice teams consider it?
+
+[Pipecat](https://github.com/pipecat-ai/pipecat) is an open-source framework for
+voice and multimodal agents, with about 17,000 GitHub stars and a BSD 2-Clause
+license. [Pipecat Evals](https://docs.pipecat.ai/pipecat/evals/overview) is its
+built-in testing system, and it runs scenarios against the same pipeline and
+services you deploy.
+
+Its value is simple, readable test scenarios that live next to your pipeline.
+You can script exactly what the caller says and what should happen next, such
+as the right answer, the right tool call, or a reply within a latency budget,
+or let a simulated caller with a persona and goal drive the conversation
+instead. Tests can run in fast text mode or in audio mode with a spoken caller,
+and the harness can barge in mid-response to check how your agent recovers.
+
+Pipecat Evals is deliberately local-first: the judge and the simulated caller
+run on a local model by default, so a suite costs nothing beyond your agent's
+own services. Its scope is development, and Pipecat's own docs point teams to
+third-party platforms for production testing and monitoring.
+
+### Key features
+
+- YAML scenarios that mix scripted turns and LLM-simulated callers
+- Assertions on text, function calls and arguments, and latency budgets
+- Barge-in testing that interrupts the agent mid-response
+- Text and audio modes, with audio-only evaluation for speech-to-speech agents
+- Local judge and persona models through Ollama by default
+- Concurrent suites from a manifest, plus a Python library
+
+### Pricing
+
+| Product       | Price                | Includes                                                        |
+| ------------- | -------------------- | --------------------------------------------------------------- |
+| Pipecat Evals | Free and open source | YAML scenarios, simulations, judges, and text and audio modes   |
+| Model usage   | Your provider costs  | STT, TTS, and LLM usage, or free local judges through Ollama    |
+
+**Pipecat Evals is for you if...**
+
+- Your voice agent is built on Pipecat
+- You want scenario files that live next to your pipeline and run locally
+- You want latency budgets and barge-in checks without extra infrastructure
+
+**Pipecat Evals is not for you if...**
+
+- Your agent is not built on Pipecat
+- You need audio-quality or transcription-accuracy metrics
+- You want a path from development tests to production monitoring
+
+## 4. LangWatch
+
+### What is LangWatch and why should voice teams consider it?
+
+[LangWatch](https://github.com/langwatch/langwatch) is an open-source LLM
+observability and evaluation platform under the Apache 2.0 license. Its
+[agent simulation library](https://github.com/langwatch/scenario), with about
+1,000 GitHub stars, added [voice agent
+testing](https://scenario-docs.langwatch.ai/voice/getting-started) in 2026.
+
+Its value is breadth of platforms. LangWatch can call agents on ElevenLabs,
+OpenAI Realtime, Gemini Live, Vapi, LiveKit, Pipecat, and Twilio, so one test
+suite covers several voice stacks. Its simulated callers can sound like real
+customers, with their own voice, persona, background noise, and phone-line
+quality, and every run keeps a recording of the call.
+
+The trade-off is that you define what good looks like. A judge checks each
+conversation against criteria you write, but there are no standard metrics for
+how the agent sounded, how fast it answered, or whether it heard the caller
+correctly. Tests run alongside your existing test suite, and results can flow
+into the wider LangWatch platform.
+
+### Key features
+
+- Voice adapters for ElevenLabs, OpenAI Realtime, Gemini Live, Vapi, LiveKit,
+  Pipecat, and Twilio
+- Simulated callers with voices, personas, background noise, and phone quality
+- Judge agents with per-turn verdicts against custom criteria
+- Interruption recipes for barge-in and cancellation
+- Python and TypeScript SDKs with pytest and Vitest
+- Call recordings and live transcripts for debugging
+
+### Pricing
+
+| Product            | Price                | Includes                                                   |
+| ------------------ | -------------------- | ---------------------------------------------------------- |
+| LangWatch Scenario | Free and open source | Voice simulations, judge agents, pytest and Vitest         |
+| LangWatch platform | Self-hosted or cloud | Observability, evaluations, and team workflows             |
+
+**LangWatch is for you if...**
+
+- You test agents across several voice platforms and realtime APIs
+- You want simulated callers with noisy, phone-quality audio
+- You prefer writing your own pass criteria over a metric library
+
+**LangWatch is not for you if...**
+
+- You need standardized audio-quality, timing, or transcription metrics
+- You want research-backed conversational metrics out of the box
+- You want voice-native scoring rather than criteria-based judging
+
+## 5. ServiceNow EVA
+
+### What is ServiceNow EVA and why should voice teams consider it?
+
+[EVA](https://github.com/ServiceNow/eva) is an MIT-licensed framework from
+ServiceNow for evaluating conversational voice agents end to end, released
+alongside a [research paper](https://arxiv.org/abs/2605.13841) in 2026. A
+simulated caller and the agent under test talk to each other live, with no
+humans in the loop.
+
+Its value is a rigorous, published benchmark. EVA scores every call on accuracy,
+meaning whether the task got done correctly and the agent's speech was
+faithful, and on experience, meaning whether the agent was concise, took turns
+well, kept the conversation moving, and answered quickly. It ships 213
+enterprise scenarios across airline customer service, healthcare HR, and IT
+service management, and has published results for 12 voice systems, including
+both traditional pipelines and speech-to-speech models.
+
+That makes EVA a benchmark first. It is excellent for choosing between voice
+architectures and models on a fixed, enterprise-flavored test set, but it is
+built around Pipecat and is not designed as a test suite for your own agent's
+scenarios on every pull request.
+
+### Key features
+
+- Bot-to-bot evaluation over live WebSocket audio
+- Accuracy and experience scores, including an audio speech-fidelity judge
+- 213 enterprise scenarios across three domains
+- Cascade and speech-to-speech architecture support
+- Published leaderboard results for 12 voice systems
+- CLI and Docker Compose for reproducible runs
+
+### Pricing
+
+| Product        | Price                | Includes                                          |
+| -------------- | -------------------- | ------------------------------------------------- |
+| ServiceNow EVA | Free and open source | Benchmark scenarios, metrics, and evaluation CLI  |
+| Model usage    | Your provider costs  | STT, TTS, LLM, and speech-to-speech API usage     |
+
+**ServiceNow EVA is for you if...**
+
+- You are choosing between voice architectures or models
+- You want a published, reproducible benchmark to compare against
+- Your use case resembles customer service, HR, or IT service desks
+
+**ServiceNow EVA is not for you if...**
+
+- You need to test your own agent's scenarios on every change
+- Your agent is not built on, or cannot be reached through, Pipecat
+- You need a developer test workflow or a path to production
+
+## Which voice AI evaluation tool should you choose?
+
+### Step 1: Decide whether you are scoring transcripts or calls
+
+Transcript-based evaluation turns a call into text and judges the text. It is
+fast and cheap, and it catches wrong answers, missed tool calls, and policy
+violations. Call-based evaluation also scores the audio and the timeline, which
+is where latency, talking over callers, garbled speech, and mishearing show up.
+
+If your callers' main complaints are about what the agent said, LiveKit Agents
+or Pipecat Evals in text mode may be enough. If they hang up because of how the
+agent sounded or when it spoke, you need voice-native scoring, which is where
+DeepEval is strongest.
+
+### Step 2: Check how locked-in your stack is
+
+- **One framework, forever:** LiveKit Agents and Pipecat Evals are the
+  lowest-friction options because they live inside the framework you already
+  use.
+- **Several platforms, or a likely migration:** DeepEval and LangWatch reach
+  agents across Vapi, ElevenLabs, LiveKit, Pipecat, and custom transports, so
+  your eval suite survives a change of voice platform.
+
+### Step 3: Separate testing from benchmarking
+
+A test suite runs your own scenarios against your own agent on every change.
+A benchmark runs fixed scenarios to compare systems. ServiceNow EVA is a
+benchmark; DeepEval, LiveKit Agents, Pipecat Evals, and LangWatch are test
+suites. Many teams use a benchmark once to pick an architecture, then a test
+suite every day after.
+
+### Step 4: Plan the path to production
+
+Pre-release tests only cover the calls you thought to simulate. Once real
+callers arrive, you need production calls scored with the same metrics, and the
+failing ones turned into new test cases. If you're already in production,
+[Confident AI](https://www.confident-ai.com/products/voice-ai) provides
+voice-native observability on top of DeepEval's metrics: it surfaces failing
+production calls before anyone has written an eval for them and turns them into
+goldens for your next run. LangWatch and LiveKit Cloud offer managed paths for
+their own ecosystems.
+
+## Final comparison
+
+| Tool               | Open source  | Primary interface        | Best for                                              | You may also need                                   |
+| ------------------ | ------------ | ------------------------ | ----------------------------------------------------- | --------------------------------------------------- |
+| **DeepEval**       | Apache 2.0   | Python + pytest + CLI    | Voice-native evals across any voice stack             | Confident AI once you're in production              |
+| **LiveKit Agents** | Apache 2.0   | Python/Node + pytest/Vitest | In-framework tests for LiveKit agents              | Audio-quality metrics and cross-stack coverage      |
+| **Pipecat Evals**  | BSD 2-Clause | YAML + CLI               | Local scenario tests for Pipecat agents               | Audio and transcription metrics, production path    |
+| **LangWatch**      | Apache 2.0   | Python/TypeScript SDKs   | Criteria-based simulations across voice platforms     | Standardized audio, timing, and transcription metrics |
+| **ServiceNow EVA** | MIT          | CLI + Docker             | Benchmarking voice architectures                      | A test suite for your own agent                     |
+
+### Recommendations by team type
+
+**For teams building on Vapi or ElevenLabs**
+
+- **DeepEval** for voice-native metrics and simulated calls against your
+  deployed agent
+- **LangWatch** if criteria-based judging is enough
+
+**For teams building on LiveKit**
+
+- **LiveKit Agents** for fast text-mode tests inside the framework
+- **DeepEval** when you need open-source audio, timing, and transcription
+  metrics on top
+
+**For teams building on Pipecat**
+
+- **Pipecat Evals** for YAML scenarios next to your pipeline
+- **DeepEval** when you need audio-quality metrics or plan to support other
+  stacks
+
+**For teams choosing a voice architecture**
+
+- **ServiceNow EVA** to compare cascade and speech-to-speech systems on a
+  published benchmark
+- **DeepEval** to rerun the shortlist against your own scenarios
+
+**For enterprise teams**
+
+- **DeepEval + Confident AI** for voice-native evals in development and
+  voice-native monitoring in production, where failing calls become the next
+  eval
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "What is the best open-source voice AI evaluation tool in 2026?",
+      answer: (
+        <>
+          DeepEval is the strongest general-purpose option because it scores the
+          call audio itself, including voice quality, turn-taking,
+          responsiveness, and transcription accuracy, and simulates calls
+          against agents on Vapi, ElevenLabs, LiveKit, Pipecat, and custom
+          WebSockets. LiveKit Agents and Pipecat Evals are good choices for
+          in-framework tests if you are committed to one of those stacks.
+        </>
+      ),
+    },
+    {
+      question: "Can I evaluate a voice agent with transcripts alone?",
+      answer: (
+        <>
+          Partly. Transcripts let you judge what was said, such as task
+          completion and tool use, but they hide latency, talking over the
+          caller, garbled speech, and mishearing. Those failures need metrics
+          that read the audio and the call timeline.
+        </>
+      ),
+    },
+    {
+      question: "How do I test how my voice agent handles interruptions?",
+      answer: (
+        <>
+          Use a simulated caller that can barge in over a full-duplex
+          connection. DeepEval configures interruptions on the caller's persona,
+          Pipecat Evals can cut in mid-response, and
+          LangWatch provides interruption recipes. LiveKit covers interruptions
+          in its audio simulations on LiveKit Cloud.
+        </>
+      ),
+    },
+    {
+      question: "Should I run voice evals in text mode or audio mode?",
+      answer: (
+        <>
+          Both. Text mode is faster, cheaper, and more deterministic, so it suits
+          every commit. Audio mode exercises speech recognition, synthesis, and
+          turn-taking, so run it before releases or nightly, and whenever you
+          change voices, speech models, or transport.
+        </>
+      ),
+    },
+    {
+      question: "Can I run voice evals in CI/CD?",
+      answer: (
+        <>
+          Yes. DeepEval runs voice evals through <code>deepeval test run</code>{" "}
+          and pytest, LiveKit Agents through pytest or Vitest, Pipecat Evals
+          through its CLI, and LangWatch through pytest or Vitest. A common
+          pattern is text-mode runs on every pull request and full audio runs
+          nightly or before each release.
+        </>
+      ),
+    },
+  ]}
+/>

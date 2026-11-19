@@ -13,8 +13,11 @@
     "sdk-versions": "node scripts/generate-sdk-versions.mjs",
     "page-languages": "node scripts/generate-page-languages.mjs",
     "validate-terms": "node scripts/validate-terms.mjs",
+    "validate-content": "node scripts/validate-content.mjs",
+    "media:publish": "node scripts/media/publish.mjs",
     "agent-skills": "node scripts/generate-agent-skills.mjs",
-    "prebuild": "npm run validate-terms && npm run repo-contributors && npm run contributors && npm run changelog-contributors && npm run sdk-versions && npm run page-languages && npm run agent-skills",
+    "predev": "npm run media:publish",
+    "prebuild": "npm run validate-terms && npm run validate-content && npm run media:publish && npm run repo-contributors && npm run contributors && npm run changelog-contributors && npm run sdk-versions && npm run page-languages && npm run agent-skills",
     "postinstall": "fumadocs-mdx"
   },
   "dependencies": {
@@ -30,6 +33,7 @@
     "next-themes": "^0.4.6",
     "react": "^19.2.5",
     "react-dom": "^19.2.5",
+    "react-intersection-observer": "^9.16.0",
     "rehype-katex": "^7.0.1",
     "remark-directive": "^4.0.0",
     "remark-math": "^6.0.0",

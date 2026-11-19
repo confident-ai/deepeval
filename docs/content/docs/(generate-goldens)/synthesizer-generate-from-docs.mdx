@@ -6,8 +6,6 @@ languages: [python]
 ---
 
 
-import { ASSETS } from "@site/src/assets";
-
 If your application is a Retrieval-Augmented Generation (RAG) system, generating Goldens from documents can be particularly useful, especially if you already have access to the **documents that make up your knowledge base**.
 
 By simply providing these documents, `deepeval`'s Synthesizer will automatically handle generating the relevant contexts needed for synthesizing test Goldens.
@@ -19,7 +17,7 @@ By simply providing these documents, `deepeval`'s Synthesizer will automatically
     justifyContent: "center",
   }}
 >
-  <ImageDisplayer src={ASSETS.synthesizeFromDocs} />
+  <ImageDisplayer id="diagrams/in-house/datasets/goldens-from-docs" />
 </div>
 
 :::tip[DID YOU KNOW?]
@@ -108,7 +106,7 @@ synthesizer.generate_goldens_from_docs(
 )
 ```
 
-There are **SEVEN** optional parameters when creating a `ContextConstructionConfig`:
+There are **FIFTEEN** optional parameters when creating a `ContextConstructionConfig`:
 
 - [Optional] `critic_model`: a string specifying which of OpenAI's GPT models to use to determine context `quality_score`s, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to the **model used in the `Synthesizer`**, else <DefaultLLMModel /> when initialized as a standalone instance.
 - [Optional] `encoding`: the encoding to use to decode plain text–based files (`.txt`, `.md`, `.markdown`, `.mdx`). Defaulted to autodetecting the encoding.
@@ -122,6 +120,9 @@ There are **SEVEN** optional parameters when creating a `ContextConstructionConf
 - [Optional] `context_similarity_threshold`: a float representing the minimum similarity score required for [context grouping](synthesizer-generate-from-docs#context-grouping). Contexts with similarity scores below this threshold will be rejected. Defaulted to `0.5`.
 - [Optional] `max_retries`: an integer that specifies the number of times to retry context selection **OR** grouping if it does not meet the required quality **OR** similarity threshold. Defaulted to `3`.
 - [Optional] `embedder`: a string specifying which of OpenAI's embedding models to during document parsing and context grouping, **OR** [any custom embedding model](/guides/guides-using-custom-embedding-models) of type `DeepEvalBaseEmbeddingModel`. Defaulted to 'text-embedding-3-small'.
+- [Optional] `allow_cross_file_contexts`: a boolean that specifies if context construction is allowed to be sourced from different files. Defaulted to `False`.
+- [Optional] `target_files_per_context`: an integer specifying the exact number of files to be used per context. It cannot be less than 2. Defaulted to `None`.
+- [Optional] `max_files_per_context`: an integer specifying the maximum number of files that can be used per context. It cannot be less than 2. Defaulted to `3`.
 
 :::caution
 **Unlike other customizations where configurations to your `Synthesizer` generation pipeline is defined at point of instantiating a `Synthesizer`**, customizing context construction happens at the generation level because context construction is unique to the `generate_goldens_from_docs()` method.
@@ -185,7 +186,7 @@ Similar to the context selection step, if the cosine similarity is still lower t
     justifyContent: "start",
   }}
 >
-  <ImageDisplayer src={ASSETS.filteringContext} />
+  <ImageDisplayer id="diagrams/in-house/datasets/synthetic-context-filtering" />
 </div>
 
 ## FAQs
@@ -229,13 +230,17 @@ Similar to the context selection step, if the cosine similarity is still lower t
       ),
     },
     {
-      question: "Can my team generate goldens from our documents without code?",
+      question: "What comes after goldens generated from documents?",
       answer: (
         <>
-          Yes. On <a href="https://www.confident-ai.com">Confident AI</a> you
-          can connect your knowledge bases and run the generation pipeline
-          no-code — tweak filtration, evolutions, and styling, experiment with
-          variations, and collaborate on the resulting dataset as a team.
+          Synthetic goldens from your documents are a starting point before
+          you have users. Once your app is live, the most useful goldens come
+          from what actually breaks:{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          catches failing production traces, routes them to the right
+          annotators, and turns them into goldens for your next eval.
         </>
       ),
     },

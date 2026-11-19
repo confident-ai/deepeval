@@ -4,16 +4,27 @@ from deepeval.utils import (
     get_or_create_event_loop,
     prettify_list,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO_BORDERLINE
 from deepeval.metrics.utils import (
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    SystemOneEvalSpec,
+    SystemOneVerdictSpec,
+    initialize_system_one_model,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    score_qag_verdicts,
     construct_verbose_logs,
-    check_llm_test_case_params,
+    prepare_measure,
     initialize_model,
     generate_with_schema_and_extract,
     a_generate_with_schema_and_extract,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.test_case import LLMTestCase, SingleTurnParams, MLLMImage
 from deepeval.metrics import BaseMetric
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.answer_relevancy.schema import (
     Statements,
@@ -37,6 +48,10 @@ class AnswerRelevancyMetric(BaseMetric):
         self,
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -47,8 +62,16 @@ class AnswerRelevancyMetric(BaseMetric):
         ] = AnswerRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -62,20 +85,7 @@ class AnswerRelevancyMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -89,6 +99,9 @@ class AnswerRelevancyMetric(BaseMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 input = test_case.input
                 actual_output = test_case.actual_output
 
@@ -118,26 +131,16 @@ class AnswerRelevancyMetric(BaseMetric):
         _show_indicator: bool = True,
         _in_component: bool = False,
     ) -> float:
-
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
             async_mode=True,
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             input = test_case.input
             actual_output = test_case.actual_output
 
@@ -168,7 +171,7 @@ class AnswerRelevancyMetric(BaseMetric):
 
         irrelevant_statements = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if verdict.verdict == Verdict.NO:
                 irrelevant_statements.append(verdict.reason)
 
         prompt = self._get_prompt(
@@ -193,7 +196,7 @@ class AnswerRelevancyMetric(BaseMetric):
 
         irrelevant_statements = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if verdict.verdict == Verdict.NO:
                 irrelevant_statements.append(verdict.reason)
 
         prompt = self._get_prompt(
@@ -225,14 +228,13 @@ class AnswerRelevancyMetric(BaseMetric):
             statements=self.statements,
         )
 
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda r: list(r.verdicts),
-            extract_json=lambda data: [
-                AnswerRelevancyVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=AnswerRelevancyVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO_BORDERLINE,
+            system_one=self._experimental_system_one_spec(input),
         )
 
     def _generate_verdicts(
@@ -248,14 +250,35 @@ class AnswerRelevancyMetric(BaseMetric):
             statements=self.statements,
         )
 
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=Verdicts,
-            extract_schema=lambda r: list(r.verdicts),
-            extract_json=lambda data: [
-                AnswerRelevancyVerdict(**item) for item in data["verdicts"]
-            ],
+            verdict_cls=AnswerRelevancyVerdict,
+            verdicts_cls=Verdicts,
+            allowed=YES_NO_BORDERLINE,
+            system_one=self._experimental_system_one_spec(input),
+        )
+
+    def _experimental_system_one_spec(self, input: str) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=self.statements,
+            item_key="statement",
+            state={"input": input},
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole metric as one Jev request over
+        `input` and `actual_output`; see EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=self._required_params,
+            questions=parse_questions(
+                self._get_prompt("_experimental_system_one_questions")
+            ),
         )
 
     def _generate_statements(
@@ -301,17 +324,11 @@ class AnswerRelevancyMetric(BaseMetric):
         )
 
     def _calculate_score(self):
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        relevant_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "no":
-                relevant_count += 1
-
-        score = relevant_count / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=(Verdict.YES, Verdict.BORDERLINE),
+        )
 
     @property
     def __name__(self):

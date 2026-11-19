@@ -4,9 +4,7 @@ from langchain_openai import ChatOpenAI
 from deepeval.integrations.langchain import tool, CallbackHandler
 from deepeval.prompt import Prompt
 import os
-from tests.test_integrations.utils import (
-    assert_trace_json,
-)
+from tests.test_integrations.utils import trace_json
 
 prompt = Prompt(alias="asd")
 prompt._version = "00.00.01"
@@ -36,8 +34,7 @@ _current_dir = os.path.dirname(os.path.abspath(__file__))
 json_path = os.path.join(_current_dir, "langchain.json")
 
 
-# @generate_trace_json(json_path)
-@assert_trace_json(json_path)
+@trace_json(json_path)
 def test_execute_agent():
     agent_executor.invoke(
         {"messages": [HumanMessage(content="What is 8 multiplied by 6?")]},

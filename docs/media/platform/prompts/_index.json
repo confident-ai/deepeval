@@ -1,0 +1,16 @@
+{
+  "images": [
+    {
+      "file": "prompt-editor.webp",
+      "title": "Prompt editor with system and user messages",
+      "alt": "Confident AI prompt editor showing a System Prompt on the main branch, with a system message, a user message and a {query} variable",
+      "width": 2400,
+      "height": 1350,
+      "source": {
+        "urls": [
+          "/img/confident-prompt-versioning.png"
+        ]
+      }
+    }
+  ]
+}

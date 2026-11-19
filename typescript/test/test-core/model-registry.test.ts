@@ -301,7 +301,7 @@ describe("thinking resolution", () => {
   it("sends a budget that leaves room for the response when enabled", () => {
     process.env.DEEPEVAL_MODEL_THINKING = "1";
     const { maxTokens, thinking } = resolve(
-      new AnthropicModel({ model: "claude-opus-5" }),
+      new AnthropicModel({ model: "claude-opus-4-6" }),
     );
     expect(thinking?.type).toBe("enabled");
     expect(thinking?.budget_tokens as number).toBeLessThan(maxTokens);
@@ -338,7 +338,61 @@ describe("thinking resolution", () => {
   it("throws when maxTokens cannot hold thinking and a response", () => {
     process.env.DEEPEVAL_MODEL_THINKING = "1";
     expect(() =>
-      resolve(new AnthropicModel({ model: "claude-opus-5", maxTokens: 512 })),
+      resolve(new AnthropicModel({ model: "claude-opus-4-6", maxTokens: 512 })),
     ).toThrow(/maxTokens/);
+  });
+
+  it("uses adaptive thinking on models that reject a manual budget", () => {
+    process.env.DEEPEVAL_MODEL_THINKING = "1";
+    for (const model of [
+      "claude-opus-4-7",
+      "claude-opus-4-8",
+      "claude-opus-5",
+      "claude-sonnet-5",
+    ]) {
+      expect(resolve(new AnthropicModel({ model })).thinking).toEqual({
+        type: "adaptive",
+      });
+    }
+  });
+});
+
+describe("Gemini 3 temperature", () => {
+  const resolve = (model: object) =>
+    (
+      model as { resolveGeminiTemperature(): number | undefined }
+    ).resolveGeminiTemperature();
+
+  let saved: string | undefined;
+
+  beforeEach(() => {
+    saved = process.env.TEMPERATURE;
+    delete process.env.TEMPERATURE;
+  });
+
+  afterEach(() => {
+    if (saved === undefined) delete process.env.TEMPERATURE;
+    else process.env.TEMPERATURE = saved;
+  });
+
+  it("leaves Google's default in place when nothing is configured", () => {
+    expect(
+      resolve(new GeminiModel({ model: "gemini-3.8-flash" })),
+    ).toBeUndefined();
+  });
+
+  it("sends an explicit temperature", () => {
+    expect(
+      resolve(new GeminiModel({ model: "gemini-3.8-flash", temperature: 0 })),
+    ).toBe(0);
+  });
+
+  it("honors the TEMPERATURE setting", () => {
+    process.env.TEMPERATURE = "0.3";
+    expect(resolve(new GeminiModel({ model: "gemini-3.8-flash" }))).toBe(0.3);
+  });
+
+  it("still defaults older models to 0", () => {
+    expect(resolve(new GeminiModel({ model: "gemini-2.5-flash" }))).toBe(0);
   });
 });

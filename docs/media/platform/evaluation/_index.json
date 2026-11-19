@@ -1,0 +1,64 @@
+{
+  "images": [
+    {
+      "file": "experiment-comparison.webp",
+      "title": "Experiment comparing three prompt runs",
+      "alt": "Confident AI experiment page comparing a base run with two comparison runs on correctness, semantic similarity and markdown structure",
+      "width": 2400,
+      "height": 1353,
+      "source": {
+        "urls": [
+          "/img/confident-experimentation.png"
+        ]
+      }
+    },
+    {
+      "file": "metric-scores-radar.webp",
+      "title": "Metric scores radar chart for a test run",
+      "alt": "Confident AI test run overview for a RAG QA Agent with a radar chart of average scores across five contextual and G-Eval metrics",
+      "width": 2400,
+      "height": 1308,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/tutorials:rag-qa-agent:eval-results.png"
+        ]
+      }
+    },
+    {
+      "file": "metrics-library.webp",
+      "title": "Metrics library of single-turn metrics",
+      "alt": "Confident AI Metrics library listing single-turn metrics such as Answer Relevancy and Brand Voice with their required test case parameters",
+      "width": 2400,
+      "height": 1223,
+      "source": {
+        "urls": [
+          "/img/confident-centralized-metrics.png"
+        ]
+      }
+    },
+    {
+      "file": "regression-test-cases.webp",
+      "title": "Side-by-side test case regression comparison",
+      "alt": "Confident AI A/B comparison of one test case across two runs, showing brand voice, correctness and semantic similarity scores and outputs",
+      "width": 2400,
+      "height": 1137,
+      "source": {
+        "urls": [
+          "/img/confident-regression-testing.png"
+        ]
+      }
+    },
+    {
+      "file": "test-run-overview.webp",
+      "title": "Test run overview with passing test cases",
+      "alt": "Confident AI test run overview for a Summarization Agent showing 2/2 passing test cases and score distributions for two G-Eval metrics",
+      "width": 2400,
+      "height": 1308,
+      "source": {
+        "urls": [
+          "https://deepeval-docs.s3.amazonaws.com/tutorials:summarization-agent:eval-results.png"
+        ]
+      }
+    }
+  ]
+}

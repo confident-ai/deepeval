@@ -7,19 +7,30 @@ from deepeval.utils import (
     prettify_list,
     get_per_task_timeout,
 )
+from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    prepare_measure,
+    generate_qag_verdicts,
+    a_generate_qag_verdicts,
+    SystemOneEvalSpec,
+    SystemOneVerdictSpec,
+    initialize_system_one_model,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    score_qag_verdicts,
     construct_verbose_logs,
-    check_llm_test_case_params,
     initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.test_case import (
     LLMTestCase,
     SingleTurnParams,
 )
 from deepeval.metrics import BaseMetric
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.prompt_alignment import schema as paschema
 from deepeval.templates import make_template_class
@@ -40,6 +51,10 @@ class PromptAlignmentMetric(BaseMetric):
         prompt_instructions: List[str],
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -54,8 +69,16 @@ class PromptAlignmentMetric(BaseMetric):
 
         self.prompt_instructions = prompt_instructions
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -70,19 +93,7 @@ class PromptAlignmentMetric(BaseMetric):
         _in_component: bool = False,
     ) -> float:
 
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -100,6 +111,9 @@ class PromptAlignmentMetric(BaseMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 self.verdicts: List[paschema.PromptAlignmentVerdict] = (
                     self._generate_verdicts(
                         test_case.input, test_case.actual_output
@@ -128,25 +142,16 @@ class PromptAlignmentMetric(BaseMetric):
         _in_component: bool = False,
     ) -> float:
 
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
             async_mode=True,
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             self.verdicts: List[paschema.PromptAlignmentVerdict] = (
                 await self._a_generate_verdicts(
                     test_case.input, test_case.actual_output
@@ -175,7 +180,7 @@ class PromptAlignmentMetric(BaseMetric):
 
         unalignment_reasons = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if verdict.verdict == Verdict.NO:
                 unalignment_reasons.append(verdict.reason)
 
         prompt = self._get_prompt(
@@ -200,7 +205,7 @@ class PromptAlignmentMetric(BaseMetric):
 
         unalignment_reasons = []
         for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() == "no":
+            if verdict.verdict == Verdict.NO:
                 unalignment_reasons.append(verdict.reason)
 
         prompt = self._get_prompt(
@@ -228,15 +233,13 @@ class PromptAlignmentMetric(BaseMetric):
             input=input,
             actual_output=actual_output,
         )
-        return await a_generate_with_schema_and_extract(
+        return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=paschema.Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                paschema.PromptAlignmentVerdict(**item)
-                for item in data["verdicts"]
-            ],
+            verdict_cls=paschema.PromptAlignmentVerdict,
+            verdicts_cls=paschema.Verdicts,
+            allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(input, actual_output),
         )
 
     def _generate_verdicts(
@@ -248,29 +251,49 @@ class PromptAlignmentMetric(BaseMetric):
             input=input,
             actual_output=actual_output,
         )
-        return generate_with_schema_and_extract(
+        return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            schema_cls=paschema.Verdicts,
-            extract_schema=lambda s: list(s.verdicts),
-            extract_json=lambda data: [
-                paschema.PromptAlignmentVerdict(**item)
-                for item in data["verdicts"]
-            ],
+            verdict_cls=paschema.PromptAlignmentVerdict,
+            verdicts_cls=paschema.Verdicts,
+            allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(input, actual_output),
+        )
+
+    def _experimental_system_one_spec(
+        self, input: str, actual_output: str
+    ) -> SystemOneVerdictSpec:
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=self.prompt_instructions,
+            item_key="instruction",
+            state={"input": input, "actual_output": actual_output},
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: one Noul per prompt instruction over
+        `input` and `actual_output`, in a single Jev request; see
+        EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=self._required_params,
+            questions=parse_questions(
+                self._get_prompt(
+                    "_experimental_system_one_questions",
+                    prompt_instructions=self.prompt_instructions,
+                )
+            ),
         )
 
     def _calculate_score(self) -> float:
-        number_of_verdicts = len(self.verdicts)
-        if number_of_verdicts == 0:
-            return 1
-
-        alignment_count = 0
-        for verdict in self.verdicts:
-            if verdict.verdict.strip().lower() != "no":
-                alignment_count += 1
-
-        score = alignment_count / number_of_verdicts
-        return 0 if self.strict_mode and score < self.threshold else score
+        return score_qag_verdicts(
+            self,
+            self.verdicts,
+            passing=(Verdict.YES,),
+        )
 
     @property
     def __name__(self):

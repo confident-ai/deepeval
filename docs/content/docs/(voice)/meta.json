@@ -1,5 +1,5 @@
 {
-  "title": "Voice",
+  "title": "Voice Agents",
   "pages": [
     "metrics-voice-naturalness",
     "metrics-speech-intelligibility",
@@ -7,6 +7,8 @@
     "metrics-turn-taking-naturalness",
     "metrics-agent-responsiveness",
     "metrics-audio-integrity",
-    "metrics-voice-reliability"
+    "metrics-audio-glitch",
+    "metrics-voice-reliability",
+    "metrics-transcription-accuracy"
   ]
 }

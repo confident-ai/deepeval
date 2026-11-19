@@ -21,7 +21,7 @@ _APP_NAME = "deepeval-googleadk-simple"
 
 def _build_agent() -> LlmAgent:
     return LlmAgent(
-        model="gemini-2.0-flash",
+        model="gemini-2.5-flash",
         name="simple_assistant",
         instruction=(
             "You are a concise assistant. Reply with one short sentence only."

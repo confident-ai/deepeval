@@ -1,14 +1,17 @@
+import { expectationEvidence } from "@/evaluate/expectations";
 // Metric result caching, the TS counterpart of Python's
 // `deepeval/test_run/cache.py`. A result is reusable only when both the test
 // case content and the metric's configuration are unchanged.
 
 import * as fs from "fs";
 import * as path from "path";
+import type { ZodType } from "zod";
 import { CACHE_FILE, HIDDEN_DIR } from "@/constants";
 import { isReadOnlyFileSystem } from "@/config/utils";
 import { getLogger } from "@/logger";
 import { ConversationalTestCase, resolveRetrievalContext } from "@/test-case";
 import type { BaseMetricCore } from "@/metrics/base-metrics";
+import { toJsonSchema } from "@/models/utils";
 import type { AnyTestCase, MetricData } from "@/evaluate/types";
 
 const logger = getLogger("deepeval.cache");
@@ -16,10 +19,25 @@ const CACHE_VERSION = 1;
 
 /** The metric knobs that change a score. */
 interface MetricConfiguration {
+  evalMode?: string;
   threshold?: number | null;
   evaluationModel?: string;
   strictMode: boolean;
   includeReason: boolean;
+  criteria?: string | null;
+  evaluationSteps?: string[] | null;
+  evaluationParams?: string[] | null;
+  rubric?: unknown[] | null;
+  expectedSchema?: Record<string, unknown> | null;
+}
+
+/** Read off a metric without importing the metric classes into the cache. */
+interface MetricDefinition {
+  criteria?: string;
+  evaluationSteps?: string[];
+  evaluationParams?: string[];
+  rubric?: unknown[];
+  expectedSchema?: ZodType;
 }
 
 interface CachedMetric {
@@ -60,6 +78,11 @@ function readCache(): CacheFile {
 
 /** Identity for a test case: every field a metric can read. */
 export function testCaseCacheKey(testCase: AnyTestCase): string {
+  if (testCase.expectations)
+    return JSON.stringify({
+      expectations: testCase.expectations.toJSON(),
+      evidence: expectationEvidence(testCase),
+    });
   if (testCase instanceof ConversationalTestCase) {
     return JSON.stringify({
       turns: testCase.turns.map((turn) => ({
@@ -83,12 +106,27 @@ export function testCaseCacheKey(testCase: AnyTestCase): string {
 }
 
 function metricConfiguration(metric: BaseMetricCore): MetricConfiguration {
+  const definition = metric as BaseMetricCore & MetricDefinition;
   return {
+    evalMode: metric.evalMode,
     threshold: metric.threshold,
     evaluationModel: metric.evaluationModel,
     strictMode: metric.strictMode,
     includeReason: metric.includeReason,
+    criteria: definition.criteria ?? null,
+    evaluationSteps:
+      definition.criteria == null ? (definition.evaluationSteps ?? null) : null,
+    evaluationParams: definition.evaluationParams ?? null,
+    rubric: definition.rubric ?? null,
+    expectedSchema: definition.expectedSchema
+      ? toJsonSchema(definition.expectedSchema)
+      : null,
   };
+}
+
+/** Compares JSON values, so a configuration read back from disk still matches. */
+function sameValue(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 }
 
 function sameConfiguration(
@@ -96,10 +134,16 @@ function sameConfiguration(
   b: MetricConfiguration,
 ): boolean {
   return (
+    a.evalMode === b.evalMode &&
     a.threshold === b.threshold &&
     a.evaluationModel === b.evaluationModel &&
     a.strictMode === b.strictMode &&
-    a.includeReason === b.includeReason
+    a.includeReason === b.includeReason &&
+    sameValue(a.criteria, b.criteria) &&
+    sameValue(a.evaluationSteps, b.evaluationSteps) &&
+    sameValue(a.evaluationParams, b.evaluationParams) &&
+    sameValue(a.rubric, b.rubric) &&
+    sameValue(a.expectedSchema, b.expectedSchema)
   );
 }
 

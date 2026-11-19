@@ -183,3 +183,6 @@ voice_simulations/
 
 # Local voice QA runs
 voice_qa/
+
+# Local Claude Code instructions
+CLAUDE.md
