@@ -232,11 +232,15 @@ def trimAndLoadJson(input_string: str) -> Any:
     try:
         return json.loads(stripped)
     except json.JSONDecodeError:
-        # Strip a trailing comma before a closing ] or } and retry, but only
-        # after a direct parse fails, so valid JSON string values containing
-        # ", ]" or ", }" are never corrupted.
+        # Match quoted strings first, including escaped quotes/backslashes,
+        # so repairing a structural comma never rewrites string contents.
         try:
-            return json.loads(re.sub(r",\s*([\]}])", r"\1", stripped))
+            repaired = re.sub(
+                r'("(?:\\.|[^"\\])*")|,\s*(?=[\]}])',
+                lambda match: match.group(1) or "",
+                stripped,
+            )
+            return json.loads(repaired)
         except json.JSONDecodeError as e:
             raise ValueError(f"Invalid JSON: {input_string}. Error: {str(e)}")
     except Exception as e:
