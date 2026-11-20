@@ -1,0 +1,37 @@
+"""GitHub Action: run DeepEval and post the results as a pull-request comment."""
+
+name: "DeepEval PR Comment"
+description: "Run DeepEval and post evaluation results as a PR comment"
+author: "gautamkishore"
+inputs:
+  github_token:
+    description: "GitHub token used to post the comment (e.g. secrets.GITHUB_TOKEN)."
+    required: true
+  test_command:
+    description: "Command used to run your DeepEval tests."
+    required: false
+    default: "deepeval test run ."
+  pr_number:
+    description: "Pull-request number. Auto-detected from GITHUB_REF when omitted."
+    required: false
+  summary_only:
+    description: "Only post the metrics summary table (skip the per-test-case list)."
+    required: false
+    default: "false"
+  fail_on_failure:
+    description: "Fail the action if any DeepEval test case failed."
+    required: false
+    default: "false"
+runs:
+  using: composite
+  steps:
+    - name: Run DeepEval and post PR comment
+      shell: bash
+      env:
+        INPUT_GITHUB_TOKEN: ${{ inputs.github_token }}
+        INPUT_TEST_COMMAND: ${{ inputs.test_command }}
+        INPUT_PR_NUMBER: ${{ inputs.pr_number }}
+        INPUT_SUMMARY_ONLY: ${{ inputs.summary_only }}
+        INPUT_FAIL_ON_FAILURE: ${{ inputs.fail_on_failure }}
+        PYTHONPATH: ${{ github.action_path }}
+      run: python -m deepeval_comment.runner
