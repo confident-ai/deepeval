@@ -20,6 +20,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         self,
         tasks: List[EquityMedQATask] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        n_problems_per_task: Optional[int] = 10,
         **kwargs,
     ):
         from deepeval.scorer import Scorer
@@ -29,6 +30,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
         self.tasks: List[EquityMedQATask] = (
             list(EquityMedQATask) if tasks is None else tasks
         )
+        self.n_problems_per_task: Optional[int] = n_problems_per_task
         self.scorer = Scorer()
         self.predictions: Optional[pd.DataFrame] = None
         self.task_scores: Optional[pd.DataFrame] = None
@@ -50,13 +52,16 @@ class EquityMedQA(DeepEvalBaseBenchmark):
 
             for task in self.tasks:
                 goldens = self.load_benchmark_dataset(task)
+                if (
+                    self.n_problems_per_task is not None
+                    and self.n_problems_per_task < len(goldens)
+                ):
+                    goldens = goldens[: self.n_problems_per_task]
                 task_correct_predictions = 0
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)
 
-                for golden in tqdm(
-                    goldens[:10], desc=f"Processing {task.value}"
-                ):
+                for golden in tqdm(goldens, desc=f"Processing {task.value}"):
                     prediction, score = self.predict(model, golden).values()
                     if score:
                         task_correct_predictions += 1
