@@ -33,6 +33,10 @@ from deepeval.constants import ProviderSlug as PS
 
 retry_azure = create_retry_decorator(PS.AZURE)
 
+# Azure OpenAI rejects top_logprobs values above 5, unlike the OpenAI API's
+# limit of 20. GEval defaults to 20, so cap it before sending the request.
+_AZURE_MAX_TOP_LOGPROBS = 5
+
 _ALIAS_MAP = {
     "api_key": ["azure_openai_api_key"],
     "base_url": ["azure_endpoint"],
@@ -344,6 +348,9 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
     # Other generate functions
     ###############################################
 
+    def _cap_top_logprobs(self, top_logprobs: int) -> int:
+        return min(top_logprobs, _AZURE_MAX_TOP_LOGPROBS)
+
     @retry_azure
     def generate_raw_response(
         self,
@@ -352,6 +359,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         audio: Optional[List[Audio]] = None,
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
+        top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=False)
         content = self._prompt_content(prompt, audio)
         completion = client.chat.completions.create(
@@ -385,6 +393,7 @@ class AzureOpenAIModel(DeepEvalBaseLLM):
         audio: Optional[List[Audio]] = None,
     ) -> Tuple[ChatCompletion, float]:
         # Generate completion
+        top_logprobs = self._cap_top_logprobs(top_logprobs)
         client = self.load_model(async_mode=True)
         content = self._prompt_content(prompt, audio)
         completion = await client.chat.completions.create(
