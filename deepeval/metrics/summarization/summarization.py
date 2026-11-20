@@ -44,7 +44,6 @@ from deepeval.metrics.summarization.schema import (
 from deepeval.metrics.faithfulness.schema import Truths, Claims
 from deepeval.templates import make_template_class
 
-
 SummarizationTemplate = make_template_class("SummarizationMetric")
 
 
@@ -91,6 +90,9 @@ class SummarizationMetric(BaseMetric):
             self.assessment_questions = None
         else:
             self.assessment_questions = assessment_questions
+        # Auto-generated questions are per-test-case (they are mined from the
+        # current input); only user-supplied ones may survive across measures.
+        self._user_supplied_questions = self.assessment_questions is not None
 
         self.include_reason = include_reason
         self.n = n
@@ -389,7 +391,7 @@ class SummarizationMetric(BaseMetric):
     async def _a_generate_coverage_verdicts(
         self, test_case: LLMTestCase
     ) -> List[SummarizationCoverageVerdict]:
-        if self.assessment_questions is None:
+        if not self._user_supplied_questions:
             self.assessment_questions = (
                 await self._a_generate_assessment_questions(test_case.input)
             )
@@ -419,7 +421,7 @@ class SummarizationMetric(BaseMetric):
     def _generate_coverage_verdicts(
         self, test_case: LLMTestCase
     ) -> List[SummarizationCoverageVerdict]:
-        if self.assessment_questions is None:
+        if not self._user_supplied_questions:
             self.assessment_questions = self._generate_assessment_questions(
                 test_case.input
             )
