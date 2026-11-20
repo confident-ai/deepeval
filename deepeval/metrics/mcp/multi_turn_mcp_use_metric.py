@@ -25,6 +25,7 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.mcp.utils import (
+    NO_TASKS_REASON,
     available_mcp_servers_block,
     mcp_servers_state,
     task_steps_taken_text,
@@ -401,8 +402,6 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
     def _get_tasks(self, unit_interactions: List) -> List[Task]:
         tasks = []
         for unit_interaction in unit_interactions:
-            if len(unit_interaction) <= 2:
-                continue
             user_messages = ""
             for turn in unit_interaction:
                 if turn.role == "user":
@@ -425,17 +424,15 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
         tool_accuracy_score: List[ToolScore],
         args_accuracy_score: List[ArgsScore],
     ) -> float:
-        tool_divisor = (
-            len(tool_accuracy_score) if len(tool_accuracy_score) > 0 else 1
+        # One primitive score and one args score is produced per task, so
+        # both lists are empty exactly when no task was built.
+        if len(tool_accuracy_score) == 0 or len(args_accuracy_score) == 0:
+            return 1
+        tool_score = sum(score.score for score in tool_accuracy_score) / len(
+            tool_accuracy_score
         )
-        args_divisor = (
-            len(args_accuracy_score) if len(args_accuracy_score) > 0 else 1
-        )
-        tool_score = (
-            sum(score.score for score in tool_accuracy_score) / tool_divisor
-        )
-        args_score = (
-            sum(score.score for score in args_accuracy_score) / args_divisor
+        args_score = sum(score.score for score in args_accuracy_score) / len(
+            args_accuracy_score
         )
         score = min(tool_score, args_score)
         return 0 if self.strict_mode and score < self.threshold else score
@@ -447,6 +444,8 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
     ) -> Optional[str]:
         if not self.include_reason:
             return None
+        if len(tool_accuracy_score) == 0 or len(args_accuracy_score) == 0:
+            return NO_TASKS_REASON
 
         reasons = []
         for task_score in tool_accuracy_score:
@@ -478,6 +477,8 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
     ) -> Optional[str]:
         if not self.include_reason:
             return None
+        if len(tool_accuracy_score) == 0 or len(args_accuracy_score) == 0:
+            return NO_TASKS_REASON
 
         reasons = []
         for task_score in tool_accuracy_score:
