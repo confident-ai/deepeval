@@ -1,0 +1,94 @@
+## Keep execution coverage separate from semantic scores
+
+Keep a fixed, nonempty manifest of intended cases and an attempt ledger outside DeepEval. A client deadline is a flag, not evidence that a request never started. Disable hidden SDK retries in the application and judge wrappers so each provider request can be recorded with its own attempt ID.
+
+The illustrative Python ledger below rejects reused attempt IDs, preserves the first admitted result, distinguishes identical replay from conflicting payloads, and blocks future attempts once a case has an admitted result. `send()` records permission to initiate a request; it does not call a provider.
+
+The example assumes unique attempt IDs, case IDs from the fixed manifest, comparable immutable result payloads, and events applied one at a time in one process. Keep the provider evidence and raw event history separately. A provider-confirmed `not_started` report is required to authorize another attempt. The conflict field describes the shown contradictions; this is not a durable event log or a complete recovery implementation.
+
+```python
+# Illustrative ledger reconstructed from Discussion #3650; no provider calls.
+from dataclasses import dataclass, field
+
+class Conflict(Exception):
+    pass
+
+@dataclass
+class Attempt:
+    attempt_id: str
+    case_id: str
+    start: str = 'unknown'
+    deadline_expired: bool = False
+    outcome: str = 'unresolved'
+    result: object = None
+    conflict: str | None = None
+
+@dataclass
+class Ledger:
+    intended: set
+    attempts: dict = field(default_factory=dict)
+    admitted: dict = field(default_factory=dict)
+
+    def confirm_start(self, attempt_id):
+        self.attempts[attempt_id].start = 'confirmed'
+
+    def client_deadline(self, attempt_id):
+        self.attempts[attempt_id].deadline_expired = True
+
+    def coverage(self):
+        return len(self.admitted.keys() & self.intended) / len(self.intended)
+
+    def send(self, attempt_id, case_id):
+        if attempt_id in self.attempts:
+            raise Conflict(f'{attempt_id}: attempt id already bound')
+        if case_id in self.admitted:
+            raise ValueError(f'{case_id}: already has an admitted result, no new draw')
+        if any((a.case_id == case_id and a.start != 'not_started' for a in self.attempts.values())):
+            raise ValueError(f'{case_id}: earlier attempt may have started, no new draw')
+        self.attempts[attempt_id] = Attempt(attempt_id, case_id)
+
+    def confirm_not_started(self, attempt_id):
+        a = self.attempts[attempt_id]
+        if a.start == 'confirmed':
+            a.conflict = 'start_confirmed_vs_not_started'
+            return
+        if a.outcome == 'completed':
+            a.conflict = 'completed_vs_not_started'
+            return
+        a.start = 'not_started'
+
+    def complete(self, attempt_id, result):
+        a = self.attempts[attempt_id]
+        if a.outcome == 'completed':
+            if a.result != result:
+                a.conflict = 'conflicting_completion'
+            return
+        if a.start == 'not_started':
+            a.conflict = 'not_started_vs_completed'
+        a.outcome, a.result = ('completed', result)
+        self.admitted.setdefault(a.case_id, attempt_id)
+```
+
+### A late result cannot undo an initiated retry
+
+The order `confirm_not_started(a1) → complete(a1, result) → send(a2, same_case)` blocks `a2`. In the order below, `a2` has already been initiated before the contradictory result arrives. Both attempts remain visible, and the recovered case contributes once to coverage:
+
+```python
+ledger = Ledger(intended={"case-1", "case-2"})
+ledger.send("a1", "case-1")
+ledger.confirm_not_started("a1")  # Requires provider evidence, not a client timeout.
+ledger.send("a2", "case-1")
+ledger.complete("a1", "late answer")
+
+assert set(ledger.attempts) == {"a1", "a2"}
+assert ledger.attempts["a1"].conflict == "not_started_vs_completed"
+assert ledger.coverage() == 0.5
+# a2 has already been initiated; admitting a1 cannot undo it.
+ledger.complete("a2", "retry answer")
+assert ledger.admitted == {"case-1": "a1"}
+assert ledger.coverage() == 0.5
+```
+
+Blocking future attempts after admission does not guarantee that no repeated trial occurred when an earlier provider report was wrong. Report coverage over the full manifest separately from semantic scores and separately from eligibility for an analysis that forbids repeated trials. Flag this case for exclusion or adjudication under that analysis protocol; its 0.5 coverage is not proof of eligibility.
+
+For DeepEval, construct `LLMTestCase` objects from admitted valid outputs using the original input for each case. Report unresolved cases, conflicts, and all attempt IDs alongside coverage. First-result-wins is an admission rule, not a rule for selecting the best output. Apply the same accounting to any LLM judge calls.
