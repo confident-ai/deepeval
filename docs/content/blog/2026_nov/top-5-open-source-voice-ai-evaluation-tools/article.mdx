@@ -474,8 +474,13 @@ failing ones turned into new test cases. If you're already in production,
 [Confident AI](https://www.confident-ai.com/products/voice-ai) provides
 voice-native observability on top of DeepEval's metrics: it surfaces failing
 production calls before anyone has written an eval for them and turns them into
-goldens for your next run. LangWatch and LiveKit Cloud offer managed paths for
+goldens for your next run. Every call lands as a trace with its recording
+attached, audio issues are marked on the call's timeline, and flagged calls
+route to domain experts for review, on the same platform as your evals,
+annotation and text agents. LangWatch and LiveKit Cloud offer managed paths for
 their own ecosystems.
+
+<ImageDisplayer id="platform/tracing/voice-call-trace-audio" />
 
 ## Final comparison
 
@@ -517,7 +522,7 @@ their own ecosystems.
 
 - **DeepEval + Confident AI** for voice-native evals in development and
   voice-native monitoring in production, where failing calls become the next
-  eval
+  eval, with annotation and your text agents on the same platform
 
 ## FAQs
 
