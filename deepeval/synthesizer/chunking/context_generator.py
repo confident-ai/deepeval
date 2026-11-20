@@ -844,11 +844,15 @@ class ContextGenerator:
                 res: ContextScore = self.model.generate(
                     prompt, schema=ContextScore
                 )
+                if isinstance(res, tuple):
+                    res = res[0]
                 return (
                     res.clarity + res.depth + res.structure + res.relevance
                 ) / 4
             except TypeError:
                 res = self.model.generate(prompt)
+                if isinstance(res, tuple):
+                    res = res[0]
                 data = trimAndLoadJson(res, self)
                 score = (
                     data["clarity"]
@@ -870,11 +874,15 @@ class ContextGenerator:
                 res: ContextScore = await self.model.a_generate(
                     prompt, schema=ContextScore
                 )
+                if isinstance(res, tuple):
+                    res = res[0]
                 return (
                     res.clarity + res.depth + res.structure + res.relevance
                 ) / 4
             except TypeError:
                 res: ContextScore = await self.model.a_generate(prompt)
+                if isinstance(res, tuple):
+                    res = res[0]
                 data = trimAndLoadJson(res, self)
                 score = (
                     data["clarity"]
