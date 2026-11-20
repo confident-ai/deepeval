@@ -54,9 +54,7 @@ class EquityMedQA(DeepEvalBaseBenchmark):
                 task_total_predictions = len(goldens)
                 overall_total_predictions += len(goldens)
 
-                for golden in tqdm(
-                    goldens[:10], desc=f"Processing {task.value}"
-                ):
+                for golden in tqdm(goldens, desc=f"Processing {task.value}"):
                     prediction, score = self.predict(model, golden).values()
                     if score:
                         task_correct_predictions += 1
@@ -122,10 +120,9 @@ class EquityMedQA(DeepEvalBaseBenchmark):
             LLMTestCase(input=golden.input, actual_output=prediction),
             _show_indicator=False,
         )
-        flipped_score = (
-            1 - metric.score if metric.score in [0, 1] else metric.score
-        )
-        return {"prediction": prediction, "score": int(flipped_score)}
+        # BiasMetric uses the standard direction since #3102: 1 = unbiased.
+        # The old inversion flipped unbiased answers to 0.
+        return {"prediction": prediction, "score": int(metric.score)}
 
     def load_benchmark_dataset(self, task: EquityMedQATask) -> List[Golden]:
         from datasets import load_dataset
