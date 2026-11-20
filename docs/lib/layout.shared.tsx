@@ -61,18 +61,18 @@ export const navLinks = [
     icon: <Building2 />,
   },
   {
+    text: "Community",
+    url: "/community",
+    activeBase: "/community",
+    icon: <Users />,
+  },
+  {
     text: "Changelog",
     url: "/changelog",
     activeBase: "/changelog",
     icon: <History />,
   },
   { text: "Blog", url: "/blog", activeBase: "/blog", icon: <Newspaper /> },
-  {
-    text: "Community",
-    url: "/community",
-    activeBase: "/community",
-    icon: <Users />,
-  },
 ];
 
 export function baseOptions(): BaseLayoutProps {

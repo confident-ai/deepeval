@@ -32,6 +32,7 @@ import EnterpriseComparisonTable from "@site/src/sections/enterprise/EnterpriseC
 import EnterprisePlatformMockup from "@site/src/sections/enterprise/EnterprisePlatformMockup";
 import RepoContributors from "@site/src/sections/home/RepoContributors";
 import CommunityEvents from "@site/src/sections/community/CommunityEvents";
+import CommunityNumbers from "@site/src/sections/community/CommunityNumbers";
 
 export const getMDXComponents = (components?: MDXComponents) =>
   ({
@@ -64,6 +65,7 @@ export const getMDXComponents = (components?: MDXComponents) =>
     EnterpriseComparisonTable,
     EnterprisePlatformMockup,
     CommunityEvents,
+    CommunityNumbers,
     RepoContributors,
     DefaultLLMModel,
     DefaultSystemOneModel,

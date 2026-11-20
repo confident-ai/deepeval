@@ -1,13 +1,39 @@
 import { ArrowUpRight } from "lucide-react";
 import { PrimaryButton, SecondaryButton } from "@site/src/components/Buttons";
-import { DiscordMark } from "@/src/components/DiscordButton";
+import { PauseOffscreen } from "@site/src/components/PauseOffscreen";
+import MascotRail, { type Walker } from "@site/src/components/MascotRail";
 import styles from "@site/src/sections/home/HomeSection.module.scss";
 import { communityEvents, countCities } from "@/lib/community/events";
-import { communitySubmitUrl, discordUrl } from "@/lib/shared";
+import {
+  contributorCount,
+  contributionCount,
+  topContributors,
+} from "@/lib/community/contributors";
+import { communitySubmitUrl, gitConfig } from "@/lib/shared";
 import communityStyles from "./CommunityHeroSection.module.scss";
+
+// A meetup is a crowd, so the rail walks five mascots in different colors
+// and hats instead of the homepage's single one.
+const WALKERS: Walker[] = [
+  { color: "color-mix(in srgb, #760eff 45%, white)", speed: 5, hover: "wave", at: 0.08 },
+  { color: "#ff8a3d", speed: 4, accessory: "headphones", hover: "wave", at: 0.3 },
+  { color: "#2ec4a6", speed: 6, accessory: "snapback", hover: "wave", at: 0.5 },
+  { color: "#ff5c8a", speed: 3, accessory: "sprout", hover: "wave", at: 0.7 },
+  { color: "#f2c230", speed: 5, accessory: "gradcap", hover: "wave", at: 0.9 },
+];
+
+const compact = (n: number) =>
+  new Intl.NumberFormat("en-US", { notation: "compact", maximumFractionDigits: 1 }).format(n);
 
 const CommunityHeroSection: React.FC = () => {
   const cities = countCities(communityEvents);
+  const bannerItems = [
+    `${contributorCount} contributors`,
+    `${compact(contributionCount)} contributions on GitHub`,
+    "Used by 150K+ developers",
+    `Meetups in ${cities} ${cities === 1 ? "city" : "cities"}, yours next`,
+  ];
+  const contributorsUrl = `https://github.com/${gitConfig.user}/${gitConfig.repo}/graphs/contributors`;
 
   return (
     <section className={styles.hero}>
@@ -29,31 +55,52 @@ const CommunityHeroSection: React.FC = () => {
           >
             Submit your event
           </PrimaryButton>
-          <SecondaryButton
-            href={discordUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-            startIcon={<DiscordMark />}
-          >
-            Join Discord
+          <SecondaryButton href="#list-your-event-in-four-steps">
+            How to host
           </SecondaryButton>
         </div>
       </div>
 
-      <dl className={communityStyles.stats}>
-        <div className={communityStyles.stat}>
-          <dt>Events</dt>
-          <dd>{communityEvents.length}</dd>
+      <div className={styles.bannerWalkway}>
+        <MascotRail walkers={WALKERS} edge="top" />
+        <PauseOffscreen className={styles.banner} aria-label="The DeepEval community in numbers">
+          <div className={styles.bannerTrack}>
+            {[...bannerItems, ...bannerItems].map((item, i) => (
+              <span key={i} className={styles.bannerItem} aria-hidden={i >= bannerItems.length}>
+                {item}
+              </span>
+            ))}
+          </div>
+        </PauseOffscreen>
+      </div>
+
+      <div className={communityStyles.wall}>
+        <a
+          className={communityStyles.wallLabel}
+          href={contributorsUrl}
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Built in the open by {contributorCount} contributors
+          <ArrowUpRight aria-hidden />
+        </a>
+        <div className={communityStyles.grid}>
+          {topContributors(20).map((c) => (
+            <a
+              key={c.login}
+              className={communityStyles.cell}
+              href={c.url}
+              target="_blank"
+              rel="noopener noreferrer"
+              title={`${c.login}, ${c.contributions.toLocaleString("en-US")} contributions`}
+            >
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img src={`${c.avatarUrl}&s=64`} alt={c.login} width={24} height={24} loading="lazy" />
+              <span>{c.login}</span>
+            </a>
+          ))}
         </div>
-        <div className={communityStyles.stat}>
-          <dt>Cities</dt>
-          <dd>{cities}</dd>
-        </div>
-        <div className={communityStyles.stat}>
-          <dt>Listed in</dt>
-          <dd>2 days</dd>
-        </div>
-      </dl>
+      </div>
     </section>
   );
 };

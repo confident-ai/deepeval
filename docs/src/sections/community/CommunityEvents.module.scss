@@ -1,15 +1,64 @@
-// Event list: square corners, 1px hairlines, no shadows, monochrome.
+// Event list in the same window frame as the homepage code cards:
+// traffic-light dots, a file name, square corners, hairlines.
+.window {
+  margin-top: 1.25rem;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-card, var(--color-fd-background));
+}
+
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 2.4rem;
+  padding: 0 0.9rem;
+  border-bottom: 1px solid var(--color-fd-border);
+  font-size: 12px;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 6px;
+
+  i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff5f57;
+  }
+
+  i:nth-child(2) {
+    background: #febc2e;
+  }
+
+  i:nth-child(3) {
+    background: #28c840;
+  }
+}
+
+.file {
+  color: var(--color-fd-muted-foreground);
+  font-family: var(--font-mono, ui-monospace), monospace;
+}
+
+.count {
+  margin-left: auto;
+  color: var(--color-fd-muted-foreground);
+}
+
 .list {
-  margin: 1.25rem 0 0;
-  padding: 0;
+  margin: 0;
+  padding: 0 0.75rem;
   list-style: none;
-  border-top: 1px solid var(--color-fd-border);
 }
 
 .row {
   margin: 0;
   padding: 0;
-  border-bottom: 1px solid var(--color-fd-border);
+
+  & + & {
+    border-top: 1px solid var(--color-fd-border);
+  }
 }
 
 .link {
@@ -74,8 +123,13 @@
 
 .tag {
   padding: 0.1rem 0.4rem;
-  border: 1px solid var(--color-fd-border);
-  color: var(--color-fd-muted-foreground);
+  border: 1px solid #6d28d9;
+  color: #6d28d9;
+
+  :global(.dark) & {
+    border-color: #b794ff;
+    color: #b794ff;
+  }
   font-family: var(--font-sans), sans-serif;
   font-size: 10px;
   font-weight: 400;

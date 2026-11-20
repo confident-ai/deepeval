@@ -1,0 +1,57 @@
+// Stat tiles share one hairline. A 3px colored bar on top of each tile
+// carries the color, so the numbers stay in the site ink.
+.grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1px;
+  margin-top: 1.25rem;
+  background: var(--color-fd-border);
+  border: 1px solid var(--color-fd-border);
+}
+
+.tile {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  padding: 1.1rem 1rem 1rem;
+  background: var(--color-fd-background);
+
+  &::before {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: 3px;
+    background: var(--accent);
+  }
+}
+
+.value {
+  color: var(--color-fd-foreground);
+  font-family: var(--font-heading), sans-serif;
+  font-size: 30px;
+  font-weight: 500;
+  letter-spacing: -0.03em;
+  line-height: 1.05;
+  font-variant-numeric: tabular-nums;
+}
+
+.label {
+  color: var(--color-fd-foreground);
+  font-size: 13px;
+  line-height: 1.3;
+}
+
+.source {
+  color: var(--color-fd-muted-foreground);
+  font-size: 11px;
+  line-height: 1.35;
+}
+
+@media (max-width: 720px) {
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}

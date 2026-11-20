@@ -1,45 +1,87 @@
-// Three touching stat tiles that share one hairline, like the enterprise
-// logo grid under its hero.
-.stats {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
+// Contributor wall: the community version of the homepage logo grid.
+// Same 5-column hairline grid, with GitHub avatars instead of logos.
+.wall {
   width: 100%;
-  margin: 0;
-  border-top: 1px solid var(--color-fd-border);
+  min-width: 0;
 }
 
-.stat {
+.wallLabel {
   display: flex;
-  flex-direction: column;
+  align-items: center;
   gap: 0.35rem;
-  padding: 0.9rem 1rem;
+  width: 100%;
+  height: 2rem;
+  padding: 0 1rem;
+  border-top: 1px solid var(--color-fd-border);
+  color: var(--color-fd-muted-foreground);
+  font-size: 12px;
+  letter-spacing: 0.02em;
+  text-decoration: none;
 
-  & + & {
-    border-left: 1px solid var(--color-fd-border);
+  svg {
+    width: 12px;
+    height: 12px;
   }
 
-  dt {
-    color: var(--color-fd-muted-foreground);
-    font-size: 11px;
-    letter-spacing: 0.14em;
-    text-transform: uppercase;
-  }
-
-  dd {
-    margin: 0;
+  &:hover {
     color: var(--color-fd-foreground);
-    font-family: var(--font-heading), sans-serif;
-    font-size: 24px;
-    font-weight: 500;
-    letter-spacing: -0.02em;
-    line-height: 1;
+  }
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 1px;
+  width: 100%;
+  background: var(--color-fd-border);
+  border-top: 1px solid var(--color-fd-border);
+  border-bottom: 1px solid var(--color-fd-border);
+}
+
+.cell {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-width: 0;
+  height: 2.75rem;
+  padding: 0 0.75rem;
+  background: var(--color-fd-background);
+  color: var(--color-fd-muted-foreground);
+  font-size: 12px;
+  text-decoration: none;
+  transition: color 160ms ease;
+
+  img {
+    flex: none;
+    width: 24px;
+    height: 24px;
+    filter: saturate(1.1);
+  }
+
+  span {
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  &:hover {
+    color: var(--color-fd-foreground);
   }
 }
 
 @media (max-width: 1023px) {
-  .stats {
+  .wall {
     width: 100vw;
     margin-left: calc(50% - 50vw);
     margin-right: calc(50% - 50vw);
+  }
+
+  .grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  // Ten avatars are enough on a phone.
+  .cell:nth-child(n + 11) {
+    display: none;
   }
 }

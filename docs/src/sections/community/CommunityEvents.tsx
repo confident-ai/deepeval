@@ -72,11 +72,24 @@ const CommunityEvents: React.FC<CommunityEventsProps> = ({ when }) => {
   }
 
   return (
-    <ul className={`not-prose ${styles.list}`}>
-      {list.map((event) => (
-        <EventRow key={event.id} event={event} past={when === "past"} />
-      ))}
-    </ul>
+    <div className={`not-prose ${styles.window}`}>
+      <div className={styles.chrome} aria-hidden>
+        <span className={styles.dots}>
+          <i />
+          <i />
+          <i />
+        </span>
+        <span className={styles.file}>meetups/{when}.json</span>
+        <span className={styles.count}>
+          {list.length} {list.length === 1 ? "event" : "events"}
+        </span>
+      </div>
+      <ul className={styles.list}>
+        {list.map((event) => (
+          <EventRow key={event.id} event={event} past={when === "past"} />
+        ))}
+      </ul>
+    </div>
   );
 };
 
