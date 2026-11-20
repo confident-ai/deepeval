@@ -376,7 +376,9 @@ The [`ArenaGEval` metric](/docs/metrics-arena-g-eval) is the only metric that us
 <Case id="python">
 
 ```python
-from deepeval.metrics import ArenaTestCase, SingleTurnParams
+from deepeval import compare
+from deepeval.metrics import ArenaGEval
+from deepeval.test_case import ArenaTestCase, SingleTurnParams
 ...
 
 arena_geval = ArenaGEval(
