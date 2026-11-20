@@ -1,0 +1,116 @@
+---
+id: metrics-agent-interruption
+title: Agent Interruption
+sidebar_label: Agent Interruption
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The agent interruption metric checks whether your voice agent **waits for the caller to finish** before it starts talking, rather than answering over the caller's question. It returns the share of agent replies that did not talk over the caller, between 0 and 1.
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import AgentInterruptionMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = AgentInterruptionMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **FIVE** optional parameters when creating an `AgentInterruptionMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+`score_breakdown` lists the replies where the issue was found:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.75
+print(metric.score_breakdown)
+```
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 1,
+    "events": [{"type": "agent_overlap", "turn": 3, "overlap_seconds": 1.4}],
+    "skipped": [],
+}
+```
+
+`turn` is the agent reply's zero-based position in the conversation, and `overlap_seconds` is how long before the end of the caller's audio the agent started. An agent that starts, then stops to let the caller finish, still counts: it talked over the caller. Agent replies whose audio, or the caller's audio before them, could not be decoded are listed under `skipped`.
+
+## How Is It Calculated?
+
+`AgentInterruptionMetric` checks every agent reply that follows a caller turn, and scores the share that waited for the caller:
+
+<Equation formula="\text{Agent Interruption} = \frac{\text{Agent replies that did not start over the caller}}{\text{Agent replies that follow a caller turn}}" />
+
+A reply counts as talking over the caller when it starts more than **half a second** before the caller's audio ends. Brief overlaps are an ordinary part of conversation (Heldner & Edlund, 2010), and the allowance also covers the quiet tail at the end of a caller's clip. The caller cutting in on the agent is not counted: that is the caller's choice, not the agent's. Every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from turn-taking naturalness?",
+      answer: (
+        <>
+          <a href="/docs/metrics-turn-taking-naturalness">
+            TurnTakingNaturalnessMetric
+          </a>{" "}
+          scores both kinds of overlap on a sliding curve together with the gaps. This metric checks only the agent starting over the caller and points to the replies where it did.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. It only reads when each turn starts and how long its audio
+          lasts, so it has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the simulated user's audio too?",
+      answer: (
+        <>
+          No. It uses the caller's turns only to know when the caller was
+          speaking. Only the agent is judged.
+        </>
+      ),
+    },
+  ]}
+/>

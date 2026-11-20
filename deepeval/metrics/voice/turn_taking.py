@@ -2,6 +2,7 @@ import math
 from statistics import mean, pstdev
 from typing import Dict, List
 
+from deepeval.metrics.voice._analysis import CONTIGUOUS_CLIP_TOLERANCE_SECONDS
 from deepeval.metrics.voice.base_metric import (
     BaseVoiceMetric,
     VoiceMetricResult,
@@ -15,7 +16,6 @@ from deepeval.voice.timeline import build_audio_timeline
 RESPONSE_DELAY_MIN_COUNT = 3
 RESPONSE_DELAY_SPREAD_TAU = 2.0
 RESPONSE_DELAY_WEIGHT = 0.2
-CONTIGUOUS_CLIP_TOLERANCE_SECONDS = 0.001
 
 
 class TurnTakingNaturalnessMetric(BaseVoiceMetric):
