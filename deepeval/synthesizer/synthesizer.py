@@ -2946,11 +2946,13 @@ class Synthesizer:
                         progress=progress,
                         pbar_evolve_scenario_id=pbar_evolve_scenario_id,
                     )
-                    evolved_scenarios.append(evolved_scenario)
+                    evolved_scenarios.append(
+                        (evolved_scenario, evolutions_used)
+                    )
                     update_pbar(progress, pbar_id)
 
                 # Synthesize ConversationalGoldens
-                for evolved_scenario in evolved_scenarios:
+                for evolved_scenario, evolutions_used in evolved_scenarios:
                     golden = ConversationalGolden(
                         scenario=evolved_scenario,
                         additional_metadata={"evolutions": evolutions_used},
