@@ -3,7 +3,10 @@ name: Community event
 # A maintainer adds the `event-approved` label to a `community-event`
 # issue after checking the Luma co-host invite. This job adds the event to
 # docs/lib/community/events.json, saves its Luma cover under
-# docs/public/community, and opens a PR that closes the issue on merge.
+# docs/public/community, pushes the branch community-event-<issue>, and
+# comments a prefilled "compare" link on the issue. A maintainer opens the
+# PR with one click. That way the repo does not need the setting "Allow
+# GitHub Actions to create and approve pull requests".
 # Only users with triage access can add labels, so only maintainers can
 # start it.
 
@@ -13,7 +16,7 @@ on:
 
 permissions:
   contents: write
-  pull-requests: write
+  pull-requests: read
   issues: write
 
 concurrency:
@@ -55,7 +58,7 @@ jobs:
           echo "exit=${code}" >> "$GITHUB_OUTPUT"
           exit "$code"
 
-      - name: Open or update the PR
+      - name: Push the branch and post the PR link
         id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -71,17 +74,18 @@ jobs:
           git add docs/lib/community/events.json docs/public/community
           git commit -m "docs(community): add event ${EVENT_ID}" -m "Closes #${ISSUE_NUMBER}"
           git push --force origin "$branch"
-          # A re-approval (label removed and added again) reuses the open PR.
+          # A re-approval (label removed and added again) updates the open PR.
           url=$(gh pr list --head "$branch" --state open --json url --jq '.[0].url // empty')
           if [ -n "$url" ]; then
-            verb="Updated"
-          else
-            printf 'Adds the community event from #%s to deepeval.com/community.\n\n%s\n\nCloses #%s\n' \
-              "$ISSUE_NUMBER" "$COVER_NOTE" "$ISSUE_NUMBER" > pr-body.txt
-            url=$(gh pr create --base main --head "$branch" --title "docs(community): add event ${EVENT_ID}" --body-file pr-body.txt)
-            verb="Approved"
+            gh issue comment "$ISSUE_NUMBER" --body "Updated. The listing PR ${url} now has the new details."
+            exit 0
           fi
-          gh issue comment "$ISSUE_NUMBER" --body "${verb}. The listing PR is ${url}. The event appears on https://deepeval.com/community after the merge."
+          title="docs(community): add event ${EVENT_ID}"
+          body=$(printf 'Adds the community event from #%s to deepeval.com/community.\n\n%s\n\nCloses #%s\n' \
+            "$ISSUE_NUMBER" "$COVER_NOTE" "$ISSUE_NUMBER")
+          query="expand=1&title=$(jq -rn --arg v "$title" '$v|@uri')&body=$(jq -rn --arg v "$body" '$v|@uri')"
+          compare="${GITHUB_SERVER_URL}/${GITHUB_REPOSITORY}/compare/main...${branch}?${query}"
+          gh issue comment "$ISSUE_NUMBER" --body "Approved. Maintainers: [open the listing PR](${compare}) (one click, the text is filled in). The event appears on https://deepeval.com/community after the merge."
 
       - name: Report invalid input to the organizer
         if: failure() && steps.add.outputs.exit == '1'
