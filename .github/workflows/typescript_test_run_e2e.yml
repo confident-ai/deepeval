@@ -32,6 +32,7 @@ jobs:
         run: npm run build
 
       - name: Single-turn + traced suites — expect exit 0 and a posted TestRun
+        shell: bash
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
@@ -42,6 +43,7 @@ jobs:
             || (echo "::error::TestRun was not posted to Confident AI" && exit 1)
 
       - name: Conversational suite — separate run (LLM + conversational can't mix)
+        shell: bash
         env:
           OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
           CONFIDENT_API_KEY: ${{ secrets.CONFIDENT_API_KEY }}
