@@ -62,6 +62,8 @@ PITCH_MIN_FRAMES = int(PITCH_MIN_VOICED_SECONDS * 1000 / PITCH_FRAME_MS)
 # Gaps under 200 ms are part of articulating words, not pauses.
 PAUSE_MIN_MS = 200
 SPEECH_SPAN_MIN_SECONDS = 2.0
+# Clips this close are treated as touching, with no measurable gap.
+CONTIGUOUS_CLIP_TOLERANCE_SECONDS = 0.001
 
 # Lazy import cache
 _numpy_mod = None

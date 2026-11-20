@@ -24,6 +24,10 @@
     "metrics-loudness-consistency",
     "metrics-speaking-rate",
     "metrics-pauses",
+    "metrics-response-latency",
+    "metrics-response-delay-consistency",
+    "metrics-time-to-first-response",
+    "metrics-agent-interruption",
     "metrics-voice-reliability",
     "metrics-transcription-accuracy"
   ]

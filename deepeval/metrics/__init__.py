@@ -79,6 +79,7 @@ from .multimodal_metrics import (
 from .voice import (
     AbruptCutoffMetric,
     AbruptPitchJumpMetric,
+    AgentInterruptionMetric,
     AgentResponsivenessMetric,
     AudioClippingMetric,
     AudioDropoutMetric,
@@ -93,8 +94,11 @@ from .voice import (
     PausesMetric,
     PitchConsistencyMetric,
     PitchVariationMetric,
+    ResponseDelayConsistencyMetric,
+    ResponseLatencyMetric,
     SpeakingRateMetric,
     SpeechIntelligibilityMetric,
+    TimeToFirstResponseMetric,
     TurnTakingNaturalnessMetric,
     VoiceConsistencyMetric,
     VoiceNaturalnessMetric,
@@ -197,4 +201,8 @@ __all__ = [
     "LoudnessConsistencyMetric",
     "SpeakingRateMetric",
     "PausesMetric",
+    "ResponseLatencyMetric",
+    "ResponseDelayConsistencyMetric",
+    "TimeToFirstResponseMetric",
+    "AgentInterruptionMetric",
 ]

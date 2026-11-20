@@ -1,5 +1,5 @@
-"""Synthetic audio for the audio-glitch, audio-defect, audio-level and
-audio-prosody metric tests."""
+"""Synthetic audio for the audio-glitch, audio-defect, audio-level,
+audio-prosody and audio-timing metric tests."""
 
 import math
 import random
@@ -220,4 +220,49 @@ def clean_turns(count=6):
                 ),
             )
         )
+    return turns
+
+
+def timed_call(gaps, *, greeting_at=None, line_seconds=2.0, reply_seconds=2.0):
+    """Caller lines each answered by the agent ``gaps[i]`` seconds after the
+    line ends (negative when the agent starts over it). With ``greeting_at``
+    the agent greets first, that many seconds after the call connects."""
+    turns = []
+    cursor = 0.0
+    if greeting_at is not None:
+        turns.append(
+            Turn(
+                role="assistant",
+                content="Hi, thanks for calling.",
+                audio=to_audio(
+                    speech_like(reply_seconds, base_hz=230.0),
+                    start_time=greeting_at,
+                ),
+            )
+        )
+        cursor = greeting_at + reply_seconds + 0.5
+    for index, gap in enumerate(gaps):
+        line_end = cursor + line_seconds
+        reply_start = line_end + gap
+        turns.append(
+            Turn(
+                role="user",
+                content=f"Caller line {index}.",
+                audio=to_audio(
+                    speech_like(line_seconds, base_hz=200.0, seed=index),
+                    start_time=cursor,
+                ),
+            )
+        )
+        turns.append(
+            Turn(
+                role="assistant",
+                content=f"Agent reply {index}.",
+                audio=to_audio(
+                    speech_like(reply_seconds, base_hz=230.0, seed=index),
+                    start_time=reply_start,
+                ),
+            )
+        )
+        cursor = reply_start + reply_seconds + 0.5
     return turns

@@ -1,3 +1,4 @@
+from deepeval.metrics.voice.agent_interruption import AgentInterruptionMetric
 from deepeval.metrics.voice.background_noise import BackgroundNoiseMetric
 from deepeval.metrics.voice.clipping import AudioClippingMetric
 from deepeval.metrics.voice.consistency import VoiceConsistencyMetric
@@ -19,8 +20,15 @@ from deepeval.metrics.voice.pitch_consistency import PitchConsistencyMetric
 from deepeval.metrics.voice.pitch_jump import AbruptPitchJumpMetric
 from deepeval.metrics.voice.pitch_variation import PitchVariationMetric
 from deepeval.metrics.voice.reliability import VoiceReliabilityMetric
+from deepeval.metrics.voice.response_delay_consistency import (
+    ResponseDelayConsistencyMetric,
+)
+from deepeval.metrics.voice.response_latency import ResponseLatencyMetric
 from deepeval.metrics.voice.responsiveness import AgentResponsivenessMetric
 from deepeval.metrics.voice.speaking_rate import SpeakingRateMetric
+from deepeval.metrics.voice.time_to_first_response import (
+    TimeToFirstResponseMetric,
+)
 from deepeval.metrics.voice.turn_taking import TurnTakingNaturalnessMetric
 from deepeval.metrics.voice.volume_variance import VolumeVarianceMetric
 
@@ -48,4 +56,8 @@ __all__ = [
     "LoudnessConsistencyMetric",
     "SpeakingRateMetric",
     "PausesMetric",
+    "ResponseLatencyMetric",
+    "ResponseDelayConsistencyMetric",
+    "TimeToFirstResponseMetric",
+    "AgentInterruptionMetric",
 ]
