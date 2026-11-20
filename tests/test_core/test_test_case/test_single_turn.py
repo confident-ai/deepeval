@@ -45,6 +45,15 @@ class TestLLMTestCaseInitialization:
         assert test_case._dataset_id is None
         assert isinstance(test_case._identifier, str)
 
+    def test_output_whitespace_stripping(self):
+        test_case = LLMTestCase(
+            input="Question?",
+            actual_output="   Paris is the capital.  \n ",
+            expected_output="\t Paris \n",
+        )
+        assert test_case.actual_output == "Paris is the capital."
+        assert test_case.expected_output == "Paris"
+
     def test_full_initialization(self):
         tool_call = ToolCall(
             name="search_tool",
