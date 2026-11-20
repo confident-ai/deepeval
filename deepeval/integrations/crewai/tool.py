@@ -1,9 +1,13 @@
 import functools
 from typing import Callable
 
-from crewai.tools import tool as crewai_tool
-
+from deepeval.integrations.crewai.subs import is_crewai_installed
 from deepeval.tracing.context import update_current_span
+
+try:
+    from crewai.tools import tool as crewai_tool
+except ImportError:
+    crewai_tool = None
 
 
 def tool(
@@ -18,6 +22,7 @@ def tool(
       - sets ``metric`` (the metrics) on the span the tool runs in
       - remains backward compatible with CrewAI's decorator usage patterns
     """
+    is_crewai_installed()
     crewai_kwargs = kwargs
 
     def build(tool_name: str, f: Callable):
