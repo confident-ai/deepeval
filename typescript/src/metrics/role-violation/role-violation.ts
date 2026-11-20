@@ -180,7 +180,8 @@ export class RoleViolationMetric extends BaseMetric {
   private calculateScore(): number {
     if (this.verdicts.length === 0) return 1;
     for (const v of this.verdicts) {
-      if (v.verdict.trim().toLowerCase() === "yes") return 0;
+      const verdict = v.verdict.trim().toLowerCase();
+      if (verdict === "yes" || verdict !== "no") return 0;
     }
     return 1;
   }

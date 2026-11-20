@@ -3,7 +3,7 @@ import { z } from "zod";
 // Mirrors deepeval/metrics/prompt_alignment/schema.py.
 
 export const PromptAlignmentVerdictSchema = z.object({
-  verdict: z.string(),
+  verdict: z.enum(["yes", "no"]),
   reason: z.string().nullish(),
 });
 

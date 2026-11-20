@@ -7,7 +7,7 @@ export const RoleViolationsSchema = z.object({
 });
 
 export const RoleViolationVerdictSchema = z.object({
-  verdict: z.string(),
+  verdict: z.enum(["yes", "no"]),
   reason: z.string(),
 });
 
