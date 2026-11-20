@@ -283,15 +283,18 @@ After each test run, analyze which scenarios consistently fail and which metrics
 The built-in metrics cover common quality dimensions, but your application likely has specific requirements. Use [`ConversationalGEval`](/docs/metrics-llm-evals) to define custom evaluation criteria in plain English:
 
 ```python
+from deepeval.test_case import MultiTurnParams
 from deepeval.metrics import ConversationalGEval
 
 empathy = ConversationalGEval(
     name="Empathy",
+    evaluation_params=[MultiTurnParams.CONTENT],
     criteria="Evaluate whether the assistant demonstrates empathy and emotional awareness when the user expresses frustration, confusion, or dissatisfaction."
 )
 
 policy_compliance = ConversationalGEval(
     name="Policy Compliance",
+    evaluation_params=[MultiTurnParams.CONTENT],
     criteria="Evaluate whether the assistant follows company policies, such as not offering unauthorized discounts, not making promises outside its authority, and always directing sensitive issues to human agents."
 )
 
