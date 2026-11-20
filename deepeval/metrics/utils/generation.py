@@ -99,6 +99,23 @@ def resolve_judge(
     return model, is_native_model(model)
 
 
+def _unpack_result_and_cost(
+    metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
+    result: Any,
+) -> Any:
+    """Unpack the ``(result, cost)`` tuple some custom models return from
+    ``generate``/``a_generate`` even when not native, accruing the cost on
+    the metric. Native judges already unpack their cost above, so anything
+    that is not such a tuple is returned unchanged."""
+    if isinstance(result, tuple) and len(result) == 2:
+        actual_result, cost = result
+        if hasattr(metric, "_accrue_cost"):
+            metric._accrue_cost(cost)
+            accrue_token_usage(metric, cost)
+        return actual_result
+    return result
+
+
 def generate_with_schema_and_extract(
     metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
     prompt: Any,
@@ -127,6 +144,7 @@ def generate_with_schema_and_extract(
         result = judge.generate_with_schema(
             prompt, schema=schema_cls, **audio_kwargs(audio)
         )
+    result = _unpack_result_and_cost(metric, result)
     if isinstance(result, schema_cls):
         return extract_schema(result)
     data = trimAndLoadJson(result, metric)
@@ -155,13 +173,7 @@ async def a_generate_with_schema_and_extract(
             prompt, schema=schema_cls, **audio_kwargs(audio)
         )
 
-    # Handle models that return (result, cost) tuple even when not native
-    if isinstance(result, tuple) and len(result) == 2:
-        actual_result, cost = result
-        if hasattr(metric, "_accrue_cost"):
-            metric._accrue_cost(cost)
-            accrue_token_usage(metric, cost)
-        result = actual_result
+    result = _unpack_result_and_cost(metric, result)
 
     if isinstance(result, schema_cls):
         return extract_schema(result)
