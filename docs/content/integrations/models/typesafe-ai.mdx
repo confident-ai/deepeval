@@ -95,6 +95,12 @@ There are **ZERO** mandatory and **THREE** optional parameters when creating a `
 
 Extra `**kwargs` passed to `TypeSafeModel(...)` are forwarded to the underlying `TypeSafeClient`.
 
+When Python `evaluate()` batches `system_one` metrics, separate `TypeSafeModel`
+instances share a request only when the model name, API key, client options, and
+pricing match. For a custom `DeepEvalBaseSystemOneModel` or a `TypeSafeModel`
+subclass, reuse the same model instance across metrics to allow batching; separate
+instances are evaluated independently even if their display names match.
+
 </Tab>
 <Tab value="ENV">
 
