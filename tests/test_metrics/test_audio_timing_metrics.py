@@ -14,9 +14,9 @@ CLEAN_GAPS = [0.5, 0.5, 0.5]
 TIMING_ISSUES = [
     (
         ResponseLatencyMetric,
-        "a wait over 2 seconds before replying",
+        "a wait over 4 seconds before replying",
         "slow_response",
-        [0.5, 4.0, 0.5],
+        [0.5, 6.0, 0.5],
     ),
     (
         ResponseDelayConsistencyMetric,
@@ -131,12 +131,12 @@ def test_an_undecodable_greeting_is_still_timed():
 
 def test_touching_clips_fall_back_to_the_recorded_latency():
     turns = timed_call([0.5, 0.0, 0.5])
-    turns[3].latency_ms = 3000.0
+    turns[3].latency_ms = 5000.0
     [event] = _measure(ResponseLatencyMetric(), turns).score_breakdown["events"]
     assert event == {
         "type": "slow_response",
         "turn": 3,
-        "response_delay_seconds": 3.0,
+        "response_delay_seconds": 5.0,
     }
 
 
@@ -217,8 +217,8 @@ def test_a_call_the_caller_opens_has_no_first_response_score():
 def test_timing_limits_are_configurable():
     slow = timed_call([0.5, 4.0, 0.5])
     assert (
-        _measure(ResponseLatencyMetric(max_latency_seconds=5), slow).score
-        == 1.0
+        _measure(ResponseLatencyMetric(max_latency_seconds=3), slow).score
+        == pytest.approx(2 / 3)
     )
     assert (
         _measure(

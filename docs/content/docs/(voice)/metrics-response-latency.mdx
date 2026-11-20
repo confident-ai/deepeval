@@ -39,7 +39,7 @@ simulator = ConversationSimulator(
 )
 test_cases = simulator.simulate([golden])
 
-metric = ResponseLatencyMetric(threshold=0.8, max_latency_seconds=2)
+metric = ResponseLatencyMetric(threshold=0.8, max_latency_seconds=4)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
@@ -49,7 +49,7 @@ There are **SIX** optional parameters when creating a `ResponseLatencyMetric`:
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `max_latency_seconds`: an integer for the longest wait, in seconds, between the caller finishing and the agent starting to speak. Defaulted to `2`.
+- [Optional] `max_latency_seconds`: an integer for the longest wait, in seconds, between the caller finishing and the agent starting to speak. Defaulted to `4`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 `score_breakdown` lists the replies where the issue was found:
@@ -80,7 +80,7 @@ print(metric.score_breakdown)
 
 The wait runs from the end of the caller's audio to the moment the agent starts speaking, both placed on the call timeline by each turn's `start_time`. When the two clips touch with no gap, the `latency_ms` your connector recorded for the reply is used instead; a reply with neither is listed under `skipped`. An overlap under half a second counts as no wait. Every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
 
-People answer each other in about **0.2 seconds** (Stivers et al., 2009), and conversation treats about **one second** of silence as the standard maximum (Jefferson, 1989). The default of **2 seconds** is twice that longest normal silence.
+People answer each other in about **0.2 seconds** (Stivers et al., 2009), and conversation treats about **one second** of silence as the standard maximum (Jefferson, 1989). A voice agent also has to transcribe, think and speak before it can answer, so the default of **4 seconds** allows for that. On real phone calls labelled by human reviewers, 4 seconds matched their judgement best, while 2 seconds flagged almost every call.
 
 ## FAQs
 

@@ -12,8 +12,8 @@ from deepeval.test_case import ConversationalTestCase
 
 
 class ResponseLatencyMetric(BaseVoiceMetric):
-    # People answer in about 0.2 s and rarely leave over 1 s of silence;
-    # 2 s is twice that longest normal silence.
+    # Voice agents need time to transcribe, think and speak; on human-labelled
+    # phone calls, 4 s matched reviewers best (2 s flagged almost every call).
     def __init__(
         self,
         *,
@@ -21,7 +21,7 @@ class ResponseLatencyMetric(BaseVoiceMetric):
         include_reason: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        max_latency_seconds: int = 2,
+        max_latency_seconds: int = 4,
         flaky: bool = False,
     ):
         if max_latency_seconds <= 0:
