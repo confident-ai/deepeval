@@ -1,0 +1,22 @@
+[
+  {
+    "task": "Count 'r's in 'strawberry' and return the count as int.",
+    "expected": "3"
+  },
+  {
+    "task": "Calculate fibonacci(8) and return the result.",
+    "expected": "21"
+  },
+  {
+    "task": "Reverse string 'radar' and return result.",
+    "expected": "radar"
+  },
+  {
+    "task": "Find prime numbers between 1-20, return as list.",
+    "expected": "[2, 3, 5, 7, 11, 13, 17, 19]"
+  },
+  {
+    "task": "Calculate factorial of 6 and return the result.",
+    "expected": "720"
+  }
+]
