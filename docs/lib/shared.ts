@@ -53,7 +53,7 @@ export const gitConfig = {
 /** Community Discord invite — used by the `<DiscordButton>` CTA and
  *  referenced from the Kapa disclaimer copy. Single source of truth so
  *  rotating the invite is a one-line change. */
-export const discordUrl = 'https://discord.gg/a3K9c8GRGt';
+export const discordUrl = 'https://discord.gg/3SEyvpgu2f';
 
 /** Community subreddit — used by the `<RedditButton>` CTA. */
 export const redditUrl = 'https://www.reddit.com/r/deepeval/';
@@ -83,11 +83,11 @@ export const kapaConfig = {
     'https://pbs.twimg.com/profile_images/1888060560161574912/qbw1-_2g_400x400.png',
   modalTitle: 'Ask DeepEval',
   chatDisclaimer:
-    "All the following results are AI generated, if you can't find the solution you're looking for, ping us in [Discord](https://discord.gg/a3K9c8GRGt) we'd be happy to have you!",
+    "All the following results are AI generated, if you can't find the solution you're looking for, ping us in [Discord](https://discord.gg/3SEyvpgu2f) we'd be happy to have you!",
   exampleQuestions:
     'Can I create a dataset using my knowledge base?, Can I create a custom metrics for my use-case?',
   uncertainAnswerCallout:
-    "It would be better to ask this question directly in DeepEval's [Discord](https://discord.gg/a3K9c8GRGt) channel.",
+    "It would be better to ask this question directly in DeepEval's [Discord](https://discord.gg/3SEyvpgu2f) channel.",
   /**
    * Any element that carries this class opens the Kapa modal on click.
    * Stored as a bare class name (no leading dot) because Kapa's
