@@ -190,6 +190,26 @@ class EvaluationDataset:
         self,
         test_cases: Union[List[LLMTestCase], List[ConversationalTestCase]],
     ):
+        test_cases = list(test_cases)
+        has_single_turn = any(
+            isinstance(case, LLMTestCase) for case in test_cases
+        )
+        has_multi_turn = any(
+            isinstance(case, ConversationalTestCase) for case in test_cases
+        )
+        if has_single_turn and has_multi_turn:
+            raise TypeError(
+                "You cannot mix single-turn and multi-turn test cases in a dataset."
+            )
+        if has_single_turn and self._conversational_goldens:
+            raise TypeError(
+                "You cannot add 'LLMTestCase' to a multi-turn dataset."
+            )
+        if has_multi_turn and self._goldens:
+            raise TypeError(
+                "You cannot add 'ConversationalTestCase' to a single-turn dataset."
+            )
+
         llm_test_cases = []
         conversational_test_cases = []
         for test_case in test_cases:
@@ -210,6 +230,8 @@ class EvaluationDataset:
 
         self._llm_test_cases = llm_test_cases
         self._conversational_test_cases = conversational_test_cases
+        if has_single_turn or has_multi_turn:
+            self._multi_turn = has_multi_turn
 
     def add_test_case(
         self,
