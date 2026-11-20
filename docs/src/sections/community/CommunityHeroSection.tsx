@@ -35,8 +35,9 @@ const CommunityHeroSection: React.FC = () => {
         <h1 className={styles.title}>Host a DeepEval meetup in your city.</h1>
 
         <p className={styles.description}>
-          Engineers around the world run meetups about DeepEval and LLM evals.
-          List your event here, and we help with swag, a remote speaker and
+          Engineers around the world meet to show how they test AI agents
+          before release and find failures in production with tracing. List
+          your event here, and we help with swag, a remote speaker and
           free credits.
         </p>
 
