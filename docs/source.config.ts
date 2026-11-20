@@ -7,6 +7,7 @@ import remarkMath from "remark-math";
 import remarkDirective from "remark-directive";
 import rehypeKatex from "rehype-katex";
 import { remarkAdmonitions } from "./lib/remark-admonitions";
+import { remarkAgentNote } from "./lib/remark-agent-note";
 import { AUTHOR_IDS } from "./lib/authors";
 import { BLOG_CATEGORY_IDS } from "./lib/blog-categories";
 import { LANGUAGE_IDS } from "./lib/lang/languages";
@@ -139,6 +140,7 @@ export default defineConfig({
       remarkMath,
       remarkDirective,
       remarkAdmonitions,
+      remarkAgentNote,
       remarkMdxMermaid,
     ],
     // rehypeKatex must run before the syntax highlighter

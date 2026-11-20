@@ -11,6 +11,7 @@ import { Switch, Case } from "@/components/lang/switch";
 import { Only } from "@/components/lang/only";
 import { NotImplemented } from "@/components/lang/not-implemented";
 import { ListItem } from "@/components/lang/list-item";
+import { AgentNote } from "@/components/agent-note";
 
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import ImageDisplayer from "@site/src/components/ImageDisplayer";
@@ -70,6 +71,7 @@ export const getMDXComponents = (components?: MDXComponents) =>
     Case,
     Only,
     NotImplemented,
+    AgentNote,
     ...components,
   }) satisfies MDXComponents;
 
