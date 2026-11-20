@@ -1,0 +1,79 @@
+name: Community event
+
+# A maintainer adds the `event-approved` label to a `community-event`
+# issue after checking the Luma co-host invite. This job adds the event
+# to docs/lib/community/events.json and opens a PR that closes the issue.
+# Only users with triage access can add labels, so only maintainers can
+# start it.
+
+on:
+  issues:
+    types: [labeled]
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+concurrency:
+  group: community-event-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  add-event:
+    if: >-
+      github.event.label.name == 'event-approved' &&
+      contains(github.event.issue.labels.*.name, 'community-event')
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # The issue body is untrusted. It goes in through env only and is
+      # never placed inside a `run:` script.
+      - name: Add the event
+        id: add
+        working-directory: docs
+        env:
+          ISSUE_BODY: ${{ github.event.issue.body }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
+        run: node scripts/community/add-event.mjs 2> ../add-event-error.txt
+
+      - name: Open the PR
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          EVENT_ID: ${{ steps.add.outputs.id }}
+        run: |
+          branch="community-event-${ISSUE_NUMBER}"
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git checkout -b "$branch"
+          git add docs/lib/community/events.json
+          git commit -m "docs(community): add event ${EVENT_ID}" -m "Closes #${ISSUE_NUMBER}"
+          git push --force origin "$branch"
+          printf 'Adds the community event from #%s to deepeval.com/community.\n\nCloses #%s\n' "$ISSUE_NUMBER" "$ISSUE_NUMBER" > pr-body.txt
+          url=$(gh pr create --base main --head "$branch" --title "docs(community): add event ${EVENT_ID}" --body-file pr-body.txt)
+          gh issue comment "$ISSUE_NUMBER" --body "Approved. The listing PR is ${url}. The event appears on https://deepeval.com/community after the merge."
+
+      - name: Report a problem on the issue
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+        run: |
+          {
+            echo "We could not add this event automatically. Please fix the issue fields, and a maintainer will add the label again."
+            echo
+            echo '```'
+            cat add-event-error.txt 2>/dev/null || echo "See the workflow log."
+            echo '```'
+          } > comment.txt
+          gh issue comment "$ISSUE_NUMBER" --body-file comment.txt
+          gh issue edit "$ISSUE_NUMBER" --remove-label event-approved

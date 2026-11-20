@@ -1,0 +1,159 @@
+#!/usr/bin/env node
+/**
+ * Adds one approved community event to lib/community/events.json.
+ *
+ * Run by .github/workflows/community-event.yml when a maintainer adds the
+ * `event-approved` label to a `community-event` issue. The issue body is
+ * untrusted input: it only arrives through the ISSUE_BODY env var, every
+ * field is validated, and nothing from it reaches a shell.
+ *
+ * Env: ISSUE_BODY, ISSUE_NUMBER, ISSUE_AUTHOR, GITHUB_OUTPUT (optional).
+ * Run from docs/. Exits 1 with a reason on stderr if the issue is not valid.
+ */
+import fs from "node:fs";
+import { EVENTS_FILE, isTimeZone, validateEvent, validateEvents } from "../../lib/community/event-schema.mjs";
+
+// Labels in .github/ISSUE_TEMPLATE/community-event.yml. Keep them in sync.
+const FIELDS = {
+  title: "Event title",
+  url: "Luma link",
+  date: "Date",
+  time: "Start time",
+  timezone: "Time zone",
+  city: "City",
+  country: "Country",
+  talk: "DeepEval talk",
+  host: "Organizer name",
+};
+const REQUIRED_CHECKS = [
+  "co-host",
+  "opt-in",
+  "free",
+  "Code of Conduct",
+];
+
+/** Issue forms render as "### Label\n\nvalue" blocks. */
+export function parseIssueForm(body) {
+  const out = {};
+  const parts = body.replace(/\r\n/g, "\n").split(/^### /m).slice(1);
+  for (const part of parts) {
+    const nl = part.indexOf("\n");
+    const label = part.slice(0, nl).trim();
+    const value = part.slice(nl + 1).trim();
+    // First block wins, so a "### Label" typed inside the free-text
+    // "Anything else" field cannot replace a real field.
+    if (label in out) continue;
+    out[label] = value === "_No response_" ? "" : value;
+  }
+  return out;
+}
+
+/** Offset in minutes of `timeZone` at the UTC instant `ms`. */
+function zoneOffset(ms, timeZone) {
+  const parts = Object.fromEntries(
+    new Intl.DateTimeFormat("en-US", {
+      timeZone,
+      hourCycle: "h23",
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    })
+      .formatToParts(new Date(ms))
+      .map((p) => [p.type, p.value]),
+  );
+  const local = Date.UTC(+parts.year, +parts.month - 1, +parts.day, +parts.hour, +parts.minute, +parts.second);
+  return Math.round((local - ms) / 60000);
+}
+
+/** "2026-11-20" + "17:00" in America/Los_Angeles → "2026-11-20T17:00:00-08:00". */
+export function toIsoWithOffset(date, time, timeZone) {
+  const [y, m, d] = date.split("-").map(Number);
+  const [h, min] = time.split(":").map(Number);
+  const wall = Date.UTC(y, m - 1, d, h, min);
+  let offset = zoneOffset(wall, timeZone);
+  offset = zoneOffset(wall - offset * 60000, timeZone);
+  const sign = offset < 0 ? "-" : "+";
+  const abs = Math.abs(offset);
+  const hh = String(Math.floor(abs / 60)).padStart(2, "0");
+  const mm = String(abs % 60).padStart(2, "0");
+  return `${date}T${time}:00${sign}${hh}:${mm}`;
+}
+
+const slug = (s) =>
+  s
+    .normalize("NFKD")
+    .replace(/[̀-ͯ]/g, "")
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-+|-+$/g, "")
+    .slice(0, 40)
+    .replace(/-+$/g, "");
+
+export function eventFromIssue(body, issueNumber, author) {
+  const form = parseIssueForm(body);
+  const problems = [];
+  const get = (key) => (form[FIELDS[key]] ?? "").trim();
+
+  for (const key of Object.keys(FIELDS)) if (!get(key)) problems.push(`"${FIELDS[key]}" is empty`);
+
+  const checks = form["Confirmations"] ?? "";
+  for (const word of REQUIRED_CHECKS) {
+    const line = checks.split("\n").find((l) => l.includes(word));
+    if (!line || !/^- \[[xX]\]/.test(line.trim())) problems.push(`the "${word}" confirmation is not checked`);
+  }
+
+  const date = get("date");
+  const time = get("time");
+  const timezone = get("timezone");
+  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) problems.push("Date must be YYYY-MM-DD");
+  if (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) problems.push("Start time must be HH:MM in 24-hour time");
+  if (timezone && !isTimeZone(timezone)) problems.push("Time zone must be an IANA name, e.g. Europe/London");
+  if (problems.length) return { problems };
+
+  const city = get("city");
+  const event = {
+    id: `${date}-${slug(city) || "online"}`,
+    title: get("title"),
+    start: toIsoWithOffset(date, time, timezone),
+    timezone,
+    city,
+    country: get("country"),
+    url: get("url").replace(/\/+$/, "").split(/[?#]/)[0],
+    talk: get("talk"),
+    host: get("host"),
+    hostGithub: author,
+    official: false,
+    issue: Number(issueNumber),
+  };
+  return { event, problems: validateEvent(event) };
+}
+
+function main() {
+  const { ISSUE_BODY = "", ISSUE_NUMBER = "", ISSUE_AUTHOR = "" } = process.env;
+  const { event, problems } = eventFromIssue(ISSUE_BODY, ISSUE_NUMBER, ISSUE_AUTHOR);
+  const fail = (list) => {
+    console.error(list.map((p) => `- ${p}`).join("\n"));
+    process.exit(1);
+  };
+  if (problems.length) fail(problems);
+
+  const list = JSON.parse(fs.readFileSync(EVENTS_FILE, "utf8"));
+  if (list.some((e) => e.url === event.url)) fail([`${event.url} is already listed`]);
+  let id = event.id;
+  for (let n = 2; list.some((e) => e.id === id); n++) id = `${event.id}-${n}`;
+  event.id = id;
+
+  list.push(event);
+  list.sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
+  const all = validateEvents(list);
+  if (all.length) fail(all);
+
+  fs.writeFileSync(EVENTS_FILE, `${JSON.stringify(list, null, 2)}\n`);
+  if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `id=${event.id}\n`);
+  console.log(`Added ${event.id}`);
+}
+
+if (import.meta.url === `file://${process.argv[1]}`) main();

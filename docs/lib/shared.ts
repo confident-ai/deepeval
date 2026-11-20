@@ -50,6 +50,14 @@ export const gitConfig = {
   branch: 'main',
 };
 
+/** Community meetups: the /community page and the GitHub issue form. Organizers
+ * add this Luma account as a co-host so we can see who registers. */
+export const communityCohostEmail = 'tony@confident-ai.com';
+export const communitySubmitUrl =
+  'https://github.com/confident-ai/deepeval/issues/new?template=community-event.yml';
+export const codeOfConductUrl =
+  'https://github.com/confident-ai/deepeval/blob/main/CODE_OF_CONDUCT.md';
+
 /** Community Discord invite — used by the `<DiscordButton>` CTA and
  *  referenced from the Kapa disclaimer copy. Single source of truth so
  *  rotating the invite is a one-line change. */

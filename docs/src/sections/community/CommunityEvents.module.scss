@@ -1,0 +1,129 @@
+// Event list: square corners, 1px hairlines, no shadows, monochrome.
+.list {
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+  border-top: 1px solid var(--color-fd-border);
+}
+
+.row {
+  margin: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--color-fd-border);
+}
+
+.link {
+  display: grid;
+  grid-template-columns: 9.5rem minmax(0, 1fr) auto;
+  column-gap: 1.25rem;
+  align-items: start;
+  padding: 1rem 0.25rem;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--color-fd-accent);
+  }
+
+  &:hover .arrow {
+    color: var(--color-fd-foreground);
+  }
+
+  &[data-past] .title,
+  &[data-past] .day {
+    color: var(--color-fd-muted-foreground);
+  }
+}
+
+.when {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  font-family: var(--font-mono, ui-monospace), monospace;
+  font-size: 12px;
+}
+
+.day {
+  color: var(--color-fd-foreground);
+}
+
+.time {
+  color: var(--color-fd-muted-foreground);
+}
+
+.what {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-fd-foreground);
+  font-family: var(--font-heading), sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+.tag {
+  padding: 0.1rem 0.4rem;
+  border: 1px solid var(--color-fd-border);
+  color: var(--color-fd-muted-foreground);
+  font-family: var(--font-sans), sans-serif;
+  font-size: 10px;
+  font-weight: 400;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.talk {
+  color: var(--color-fd-foreground);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.meta {
+  color: var(--color-fd-muted-foreground);
+  font-size: 12px;
+}
+
+.arrow {
+  width: 15px;
+  height: 15px;
+  margin-top: 0.2rem;
+  color: var(--color-fd-muted-foreground);
+}
+
+.empty {
+  margin-top: 1.25rem;
+  padding: 1.25rem 1rem;
+  border: 1px solid var(--color-fd-border);
+  color: var(--color-fd-muted-foreground);
+  font-size: 14px;
+
+  a {
+    color: var(--color-fd-foreground);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+@media (max-width: 640px) {
+  .link {
+    grid-template-columns: minmax(0, 1fr) auto;
+    row-gap: 0.5rem;
+  }
+
+  .when {
+    grid-column: 1 / -1;
+    flex-direction: row;
+    gap: 0.6rem;
+  }
+}

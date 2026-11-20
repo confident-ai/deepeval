@@ -1,0 +1,45 @@
+// Three touching stat tiles that share one hairline, like the enterprise
+// logo grid under its hero.
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  width: 100%;
+  margin: 0;
+  border-top: 1px solid var(--color-fd-border);
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  padding: 0.9rem 1rem;
+
+  & + & {
+    border-left: 1px solid var(--color-fd-border);
+  }
+
+  dt {
+    color: var(--color-fd-muted-foreground);
+    font-size: 11px;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+  }
+
+  dd {
+    margin: 0;
+    color: var(--color-fd-foreground);
+    font-family: var(--font-heading), sans-serif;
+    font-size: 24px;
+    font-weight: 500;
+    letter-spacing: -0.02em;
+    line-height: 1;
+  }
+}
+
+@media (max-width: 1023px) {
+  .stats {
+    width: 100vw;
+    margin-left: calc(50% - 50vw);
+    margin-right: calc(50% - 50vw);
+  }
+}

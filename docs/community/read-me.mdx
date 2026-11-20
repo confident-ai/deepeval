@@ -1,0 +1,97 @@
+import { communityCohostEmail, communitySubmitUrl, codeOfConductUrl, discordUrl } from "@/lib/shared";
+
+<br />
+
+<br />
+
+<SectionLabel>Upcoming</SectionLabel>
+
+## Meetups near you
+
+<CommunityEvents when="upcoming" />
+
+<br />
+
+<SectionLabel>Past</SectionLabel>
+
+## Past meetups
+
+<CommunityEvents when="past" />
+
+<br />
+
+<br />
+
+<SectionLabel>Host a meetup</SectionLabel>
+
+## List your event in four steps
+
+<Steps>
+<Step>
+
+### Create the event on Luma
+
+We list events on [Luma](https://luma.com) only. If you use another tool, create a Luma page for the event too.
+
+</Step>
+<Step>
+
+### Add <code>{communityCohostEmail}</code> as a co-host
+
+On the Luma event, open **Manage**, then **Hosts**, and invite the address. We use the access to check the event and to follow registrations.
+
+</Step>
+<Step>
+
+### Add the opt-in question
+
+Add this optional registration question: "Share my details with DeepEval (Confident AI) for product updates." We contact only the guests who say yes.
+
+</Step>
+<Step>
+
+### Submit the event
+
+<a href={communitySubmitUrl} target="_blank" rel="noopener noreferrer">Open the submission form</a> on GitHub. We review it and list the event within 2 business days.
+
+</Step>
+</Steps>
+
+<br />
+
+<SectionLabel>Rules</SectionLabel>
+
+## What we list
+
+- At least one talk or workshop covers DeepEval or LLM evals.
+- The event is free to attend.
+- The event follows the <a href={codeOfConductUrl} target="_blank" rel="noopener noreferrer">DeepEval Code of Conduct</a>.
+
+Events by the Confident AI team have the **Official** tag.
+
+<br />
+
+<SectionLabel>Support</SectionLabel>
+
+## What we can send you
+
+Ask for support in the submission form. We decide for each event and reply in your GitHub issue.
+
+- **A listing on this page** and a post from the DeepEval account on X.
+- **Swag** for your attendees.
+- **A remote speaker** from the DeepEval team, for a short talk or a Q&A.
+- **Confident AI credits** for the organizers and the attendees.
+
+<br />
+
+<SectionLabel>Host kit</SectionLabel>
+
+## Everything for your first meetup
+
+- **Logos:** the <a href="/icons/DeepEval.svg" download>DeepEval wordmark</a> and the <a href="/icons/deepeval-icon.svg" download>app icon</a>, as SVG.
+- **Talk ideas:**
+  - Evaluate an AI agent end to end, with the [AI agent evaluation guide](/guides/guides-ai-agent-evaluation).
+  - Trace an agent and find the failing step, with the [tracing guide](/guides/guides-tracing-ai-agents).
+  - Block a bad prompt in CI, with the [regression testing guide](/guides/guides-regression-testing-in-cicd).
+- **A live demo:** the [quickstart](/docs/getting-started) runs in about 5 minutes on a laptop.
+- **Questions:** ask in <a href={discordUrl} target="_blank" rel="noopener noreferrer">Discord</a>.

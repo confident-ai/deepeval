@@ -7,6 +7,7 @@ import {
   Building2,
   History,
   Newspaper,
+  Users,
 } from "lucide-react";
 import { gitConfig } from "./shared";
 import Wordmark from "@/src/components/Wordmark";
@@ -27,6 +28,7 @@ import Wordmark from "@/src/components/Wordmark";
 //   Enterprise   → Building2     (organization / deployment)
 //   Changelog    → History       (time-ordered records)
 //   Blog         → Newspaper     (articles / posts)
+//   Community    → Users         (meetups run by people)
 export const navLinks = [
   {
     text: "Docs",
@@ -65,6 +67,12 @@ export const navLinks = [
     icon: <History />,
   },
   { text: "Blog", url: "/blog", activeBase: "/blog", icon: <Newspaper /> },
+  {
+    text: "Community",
+    url: "/community",
+    activeBase: "/community",
+    icon: <Users />,
+  },
 ];
 
 export function baseOptions(): BaseLayoutProps {

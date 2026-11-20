@@ -6,6 +6,7 @@
 import fs from "node:fs";
 import path from "node:path";
 import { BLOG_DIR, COVER_FILE, MONTH_FOLDER, SLUG, monthFolder } from "../lib/post-folders.mjs";
+import { EVENTS_FILE, validateEvents } from "../lib/community/event-schema.mjs";
 import { IMAGE_FILE, IMAGE_FOLDERS, INDEX_FILE, MEDIA_DIR, NAME, indexFolders, loadLibrary } from "../lib/media/library.mjs";
 
 const ROOT = process.cwd();
@@ -69,6 +70,11 @@ for (const post of posts) {
 for (const page of meta.pages) {
   if (/^\d{4}_/.test(page) && !fs.existsSync(path.join(BLOG_DIR, `${page}.mdx`))) fail(path.join(BLOG_DIR, "meta.json"), `"${page}" has no post`);
 }
+
+// ---- Community events ----
+
+const eventsFile = path.join(ROOT, EVENTS_FILE);
+for (const problem of validateEvents(JSON.parse(fs.readFileSync(eventsFile, "utf8")))) fail(eventsFile, problem);
 
 // ---- Media library ----
 
