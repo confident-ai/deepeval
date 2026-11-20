@@ -31,6 +31,7 @@ import SectionLabel from "@site/src/components/SectionLabel";
 import EnterpriseComparisonTable from "@site/src/sections/enterprise/EnterpriseComparisonTable";
 import EnterprisePlatformMockup from "@site/src/sections/enterprise/EnterprisePlatformMockup";
 import RepoContributors from "@site/src/sections/home/RepoContributors";
+import CommunityEvents from "@site/src/sections/community/CommunityEvents";
 
 export const getMDXComponents = (components?: MDXComponents) =>
   ({
@@ -62,6 +63,7 @@ export const getMDXComponents = (components?: MDXComponents) =>
     SectionLabel,
     EnterpriseComparisonTable,
     EnterprisePlatformMockup,
+    CommunityEvents,
     RepoContributors,
     DefaultLLMModel,
     DefaultSystemOneModel,
