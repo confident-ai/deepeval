@@ -77,13 +77,23 @@ from .multimodal_metrics import (
     ImageReferenceMetric,
 )
 from .voice import (
+    AbruptCutoffMetric,
     AgentResponsivenessMetric,
+    AudioClippingMetric,
+    AudioDropoutMetric,
     AudioIntegrityMetric,
+    AudioLoopMetric,
+    BackgroundNoiseMetric,
+    DeadStreamMetric,
+    EchoMetric,
+    HeldToneMetric,
+    LoudnessMetric,
     SpeechIntelligibilityMetric,
     TurnTakingNaturalnessMetric,
     VoiceConsistencyMetric,
     VoiceNaturalnessMetric,
     VoiceReliabilityMetric,
+    VolumeVarianceMetric,
 )
 
 __all__ = [
@@ -165,4 +175,14 @@ __all__ = [
     "AgentResponsivenessMetric",
     "AudioIntegrityMetric",
     "VoiceReliabilityMetric",
+    "AudioDropoutMetric",
+    "AudioClippingMetric",
+    "AudioLoopMetric",
+    "AbruptCutoffMetric",
+    "HeldToneMetric",
+    "DeadStreamMetric",
+    "EchoMetric",
+    "BackgroundNoiseMetric",
+    "LoudnessMetric",
+    "VolumeVarianceMetric",
 ]

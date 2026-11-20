@@ -15,7 +15,30 @@ from deepeval.voice.connectors import audio_utils
 DROPOUT_MAX_FRAMES = 10
 DROPOUT_FLOOR_RATIO = 0.1
 MIN_PAUSE_FLOOR_RMS = 8.0
+# With no pause noise to compare against, a dropout is a near-zero run whose
+# edges stay near speech level; on real TTS, natural pauses fade to <= 0.012.
+DROPOUT_NEAR_ZERO_SAMPLE = 8
+DROPOUT_MIN_MS = 10
+DROPOUT_EDGE_MS = 5
+DROPOUT_CONTEXT_MS = 60
+DROPOUT_EDGE_RATIO = 0.25
 CLIPPING_ABS_SAMPLE = 32760
+# Whitened autocorrelation: on real TTS, clean replies peak at <= 0.0099 and
+# echoes at >= 20% of the reply's level at >= 0.0179.
+ECHO_MIN_DELAY_S = 0.06
+ECHO_MAX_DELAY_S = 0.5
+ECHO_WHITENING = 0.75
+ECHO_MIN_STRENGTH = 0.015
+SPEECH_LEVEL_PERCENTILE = 0.9
+NOISE_LEVEL_PERCENTILE = 0.1
+NOISE_MIN_SECONDS = 2.0
+# A cut-off ends mid-sound: the last 20 ms must stand this far above the
+# reply's background noise, not just above a fixed level.
+EDGE_ABOVE_NOISE_DB = 10.0
+VOLUME_WINDOW_SECONDS = 1.0
+VOLUME_PEAK_FRAMES = 5
+VOLUME_MIN_SPEECH_FRAMES = 15
+VOLUME_MIN_WINDOWS = 3
 
 # Lazy import cache
 _numpy_mod = None
@@ -43,6 +66,7 @@ def get_numpy() -> Any:
 class AudioMeasurements:
     duration: float
     rms_dbfs: float
+    speech_dbfs: float
     clipping_fraction: float
     silence_fraction: float
     longest_silence_ms: float
@@ -203,6 +227,133 @@ def pitch_and_periodicity(
     return rate / (best_lag + offset), best
 
 
+def _hard_edged_gaps(samples: Sequence[int], sample_rate: int) -> int:
+    np = get_numpy()
+    values = np.asarray(samples).astype(np.int64)
+    quiet = np.abs(values) <= DROPOUT_NEAR_ZERO_SAMPLE
+    changes = np.diff(np.concatenate(([0], quiet.astype(np.int8), [0])))
+    starts = np.flatnonzero(changes == 1)
+    ends = np.flatnonzero(changes == -1)
+    min_length = sample_rate * DROPOUT_MIN_MS // 1000
+    max_length = sample_rate * DROPOUT_MAX_FRAMES * 20 // 1000
+    edge = max(1, sample_rate * DROPOUT_EDGE_MS // 1000)
+    context = max(1, sample_rate * DROPOUT_CONTEXT_MS // 1000)
+
+    def level(start: int, end: int) -> float:
+        window = values[start:end]
+        return math.sqrt(int(window @ window) / len(window))
+
+    count = 0
+    for start, end in zip(starts.tolist(), ends.tolist()):
+        if not (
+            min_length <= end - start <= max_length
+            and start >= context
+            and end + context <= len(values)
+        ):
+            continue
+        before = level(start - context, start)
+        after = level(end, end + context)
+        if (
+            min(before, after) >= audio_utils.DEFAULT_SILENCE_RMS
+            and level(start - edge, start) >= DROPOUT_EDGE_RATIO * before
+            and level(end, end + edge) >= DROPOUT_EDGE_RATIO * after
+        ):
+            count += 1
+    return count
+
+
+def echo_delay_and_strength(audio: Audio) -> Tuple[float, float]:
+    samples, sample_rate = decode_audio(audio)
+    np = get_numpy()
+    step = max(1, sample_rate // 8000)
+    rate = sample_rate / step
+    values = np.asarray(samples[::step], dtype=np.float64)
+    values -= values.mean()
+    min_lag = int(ECHO_MIN_DELAY_S * rate)
+    max_lag = min(len(values), int(ECHO_MAX_DELAY_S * rate))
+    if max_lag <= min_lag:
+        return 0.0, 0.0
+    size = 1 << int(math.ceil(math.log2(2 * len(values))))
+    spectrum = np.fft.rfft(values, size)
+    magnitude = np.abs(spectrum)
+    whitened = magnitude**2 / np.maximum(magnitude, 1e-9) ** (
+        2 * ECHO_WHITENING
+    )
+    correlation = np.fft.irfft(whitened, size)
+    if correlation[0] <= 0:
+        return 0.0, 0.0
+    candidates = correlation[min_lag:max_lag] / correlation[0]
+    best = int(candidates.argmax())
+    return (min_lag + best) / rate, float(candidates[best])
+
+
+def _percentile(values: Sequence[float], fraction: float) -> float:
+    ordered = sorted(values)
+    return ordered[int(fraction * (len(ordered) - 1))] if ordered else 0.0
+
+
+def _speech_and_noise_levels(frame_rms: Sequence[float]) -> Tuple[float, float]:
+    # Noise is a low percentile of every frame, so noise louder than the
+    # silence cutoff still reads as noise instead of as speech.
+    levels = [value for value in frame_rms if value > 0]
+    voiced = [
+        value for value in levels if value >= audio_utils.DEFAULT_SILENCE_RMS
+    ]
+    return (
+        _percentile(voiced or levels, SPEECH_LEVEL_PERCENTILE),
+        _percentile(levels, NOISE_LEVEL_PERCENTILE),
+    )
+
+
+def _snr_from_quiet_frames(frame_rms: Sequence[float]) -> float:
+    # Too short for a pause-based noise level; keeps the earlier estimate so
+    # short clips score as they always have.
+    voiced = [
+        value
+        for value in frame_rms
+        if value > 0 and value >= audio_utils.DEFAULT_SILENCE_RMS
+    ]
+    quiet = [
+        value
+        for value in frame_rms
+        if value > 0 and value < audio_utils.DEFAULT_SILENCE_RMS
+    ]
+    speech_level = _percentile(voiced, 0.75)
+    noise_level = (
+        _percentile(quiet, 0.25) if quiet else max(1.0, speech_level / 100.0)
+    )
+    if not speech_level:
+        return 0.0
+    return 20.0 * math.log10(max(speech_level, 1.0) / max(noise_level, 1.0))
+
+
+def volume_drift_db(audio: Audio) -> Optional[float]:
+    samples, sample_rate = decode_audio(audio)
+    frame_rms = [rms(frame) for frame in frame_samples(samples, sample_rate)]
+    per_window = int(VOLUME_WINDOW_SECONDS * 1000 / 20)
+    levels = []
+    for start in range(0, len(frame_rms) - per_window + 1, per_window):
+        window = frame_rms[start : start + per_window]
+        # A window holding only a word's tail would read as a fake fade.
+        speech_frames = sum(
+            value >= audio_utils.DEFAULT_SILENCE_RMS for value in window
+        )
+        if speech_frames >= VOLUME_MIN_SPEECH_FRAMES:
+            # The loudest few frames give the speech level however much of
+            # the window is pause.
+            levels.append(dbfs(median(sorted(window)[-VOLUME_PEAK_FRAMES:])))
+    if len(levels) < VOLUME_MIN_WINDOWS:
+        return None
+    # Median of pairwise slopes, so one odd window at a word's tail can't
+    # tilt the line the way a least-squares fit would.
+    slope = median(
+        (levels[end] - levels[begin]) / (end - begin)
+        for begin in range(len(levels))
+        for end in range(begin + 1, len(levels))
+    )
+    return slope * (len(levels) - 1)
+
+
 def analyze_audio(audio: Audio) -> AudioMeasurements:
     samples, sample_rate = decode_audio(audio)
     frames = frame_samples(samples, sample_rate)
@@ -240,32 +391,18 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
             and min(frame_rms[start:index]) <= DROPOUT_FLOOR_RATIO * pause_floor
         ):
             dropout_events += 1
+    if pause_floor < MIN_PAUSE_FLOOR_RMS:
+        dropout_events = _hard_edged_gaps(samples, sample_rate)
 
-    voiced_rms = [
-        value
-        for value in frame_rms
-        if value > 0 and value >= audio_utils.DEFAULT_SILENCE_RMS
-    ]
-    quiet_rms = [
-        value
-        for value in frame_rms
-        if value > 0 and value < audio_utils.DEFAULT_SILENCE_RMS
-    ]
-    speech_level = (
-        sorted(voiced_rms)[int(0.75 * (len(voiced_rms) - 1))]
-        if voiced_rms
-        else 0.0
-    )
-    noise_level = (
-        sorted(quiet_rms)[int(0.25 * (len(quiet_rms) - 1))]
-        if quiet_rms
-        else max(1.0, speech_level / 100.0)
-    )
-    snr_db = (
-        20.0 * math.log10(max(speech_level, 1.0) / max(noise_level, 1.0))
-        if speech_level
-        else 0.0
-    )
+    speech_level, noise_level = _speech_and_noise_levels(frame_rms)
+    if len(samples) / sample_rate >= NOISE_MIN_SECONDS:
+        snr_db = (
+            20.0 * math.log10(max(speech_level, 1.0) / max(noise_level, 1.0))
+            if speech_level
+            else 0.0
+        )
+    else:
+        snr_db = _snr_from_quiet_frames(frame_rms)
 
     np = get_numpy()
     values = np.asarray(samples).astype(np.int32)
@@ -291,9 +428,16 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
 
     edge_size = max(1, int(sample_rate * 0.02))
     edge_threshold = max(audio_utils.DEFAULT_SILENCE_RMS * 2, 1000)
+    end_threshold = edge_threshold
+    if len(samples) / sample_rate >= NOISE_MIN_SECONDS:
+        # A reply that simply ends inside steady background noise isn't cut.
+        end_threshold = max(
+            edge_threshold, noise_level * 10 ** (EDGE_ABOVE_NOISE_DB / 20)
+        )
     return AudioMeasurements(
         duration=len(samples) / sample_rate,
         rms_dbfs=dbfs(rms(samples)),
+        speech_dbfs=dbfs(speech_level),
         clipping_fraction=int(
             np.count_nonzero(np.abs(values) >= CLIPPING_ABS_SAMPLE)
         )
@@ -307,7 +451,7 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         pitch_mean_hz=mean(pitches) if pitches else None,
         pitch_variation_hz=pstdev(pitches) if len(pitches) > 1 else None,
         starts_abruptly=rms(samples[:edge_size]) > edge_threshold,
-        ends_abruptly=rms(samples[-edge_size:]) > edge_threshold,
+        ends_abruptly=rms(samples[-edge_size:]) > end_threshold,
     )
 
 
