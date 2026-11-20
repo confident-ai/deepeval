@@ -27,7 +27,18 @@ class MathQA(DeepEvalBaseBenchmark):
         from deepeval.scorer import Scorer
         import pandas as pd
 
-        assert n_shots <= 5, "MathQA only supports n_shots <= 5"
+        # Validate arguments explicitly instead of with bare `assert` (which is
+        # stripped under `python -O` and raises AssertionError). `n_shots` may be
+        # 0 (zero-shot), but it must be an integer within [0, 5].
+        if type(n_shots) is not int:
+            raise TypeError(
+                f"'n_shots' must be an integer, got {type(n_shots).__name__}."
+            )
+        if not 0 <= n_shots <= 5:
+            raise ValueError(
+                f"'n_shots' must be between 0 and 5 (MathQA only supports "
+                f"n_shots <= 5), got {n_shots}."
+            )
         super().__init__(**kwargs)
         self.tasks: List[MathQATask] = (
             list(MathQATask) if tasks is None else tasks

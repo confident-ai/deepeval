@@ -24,8 +24,26 @@ class LAMBADA(DeepEvalBaseBenchmark):
         from deepeval.scorer import Scorer
         import pandas as pd
 
-        assert n_shots <= 5, "LAMBADA only supports n_shots <= 5"
-        assert n_problems <= 5153, "LAMBADA only supports n_problems <= 5153"
+        # Validate arguments explicitly instead of with bare `assert` (which is
+        # stripped under `python -O` and raises AssertionError). `n_shots` may be
+        # 0 (zero-shot), but `n_problems` must be >= 1: evaluate() divides the
+        # number of correct predictions by it, so 0 would crash with a
+        # ZeroDivisionError.
+        for name, value in (("n_shots", n_shots), ("n_problems", n_problems)):
+            if type(value) is not int:
+                raise TypeError(
+                    f"'{name}' must be an integer, got {type(value).__name__}."
+                )
+        if not 0 <= n_shots <= 5:
+            raise ValueError(
+                f"'n_shots' must be between 0 and 5 (LAMBADA only supports "
+                f"n_shots <= 5), got {n_shots}."
+            )
+        if not 1 <= n_problems <= 5153:
+            raise ValueError(
+                f"'n_problems' must be between 1 and 5153 (LAMBADA only "
+                f"supports n_problems <= 5153), got {n_problems}."
+            )
         super().__init__(**kwargs)
         self.scorer = Scorer()
         self.n_shots: int = n_shots
