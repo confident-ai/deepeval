@@ -1,0 +1,168 @@
+---
+id: metrics-redundant-tool-call
+title: Redundant Tool Call
+sidebar_label: Redundant Tool Call
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} agent={true} usesLLMs={false} referenceless={true} />
+
+The Redundant Tool Call metric is a **fully deterministic** (no LLM required) agentic metric that detects **wasted tool work** in an agent's execution trace. It combines two independent sub-signals and returns a score from **0.0** (all tool work wasted) to **1.0** (no waste detected).
+
+::::info
+Redundant Tool Call analyzes your **agent's full execution trace**, which requires [setting up tracing](/docs/evaluation-llm-tracing). Because it is fully deterministic, it runs in production without any API key or LLM call.
+::::
+
+## Required Arguments
+
+The `RedundantToolCallMetric` is a **trace-only** metric. It reads from the agent trace and does **not** require `tools_called` or `expected_tools`. It only requires the standard trace-based fields:
+
+- `input`
+- `actual_output`
+
+## Usage
+
+To begin, [set up tracing](/docs/evaluation-llm-tracing) and supply the `RedundantToolCallMetric()` to your `evals_iterator`.
+
+```python
+from deepeval.tracing import observe, update_current_trace
+from deepeval.dataset import Golden, EvaluationDataset
+from deepeval.metrics.community import RedundantToolCallMetric
+
+
+@observe()
+def search_kb(query: str) -> str:
+    # A read-only, cacheable tool
+    return f"Results for: {query}"
+
+
+@observe()
+def my_agent(input: str) -> str:
+    result = search_kb(input)
+    update_current_trace(input=input, output=result)
+    return result
+
+
+# Create dataset
+dataset = EvaluationDataset(goldens=[Golden(input="What is your refund policy?")])
+
+# Initialize metric — no model or API key needed
+redundancy_metric = RedundantToolCallMetric(
+    read_only_tools=["search_kb"],  # only these are treated as cacheable
+    threshold=1.0,
+    verbose_mode=True,
+)
+
+for golden in dataset.evals_iterator(metrics=[redundancy_metric]):
+    my_agent(golden.input)
+```
+
+There are **SIX** optional parameters when creating a `RedundantToolCallMetric`:
+
+- [Optional] `read_only_tools`: a list of tool names that are safe to cache (i.e. calling them twice with the same arguments cannot produce new information). Only these tools are considered for duplicate detection. Defaulted to `None`, which treats **every** tool as read-only.
+- [Optional] `check_duplicate_calls`: a boolean which enables the duplicate call sub-signal. Defaulted to `True`.
+- [Optional] `check_unconsumed_output`: a boolean which enables the unconsumed output sub-signal. Defaulted to `True`.
+- [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 1.0 (any redundancy fails).
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason naming the redundant and unconsumed tools. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric to the console. Defaulted to `False`.
+
+At least one of `check_duplicate_calls` or `check_unconsumed_output` must be enabled.
+
+:::caution
+If your agent calls tools that have **side effects** (sending an email, issuing a refund, writing to a database), you should pass an explicit `read_only_tools` list. Calling a write tool twice is usually intentional, not redundant, and the default (`None`, meaning *all* tools are cacheable) would report it as waste.
+:::
+
+### As a Standalone
+
+You can also run the `RedundantToolCallMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The `RedundantToolCallMetric` score is the **minimum** of its two enabled sub-signals, so either form of waste is enough to fail the gate:
+
+<Equation formula="\text{Redundant Tool Call Score} = \min(\text{Duplicate Calls Score}, \text{Unconsumed Output Score})" />
+
+| Sub-signal            | Score                                                                   | What it catches                                                             |
+| --------------------- | ----------------------------------------------------------------------- | --------------------------------------------------------------------------- |
+| **Duplicate Calls**   | `(read-only calls − redundant re-fetches) / read-only calls`             | The same `(name, arguments)` cacheable call made more than once.             |
+| **Unconsumed Output** | `(consumed tool outputs − unconsumed) / consumed tool outputs`           | A tool output that never reached any LLM span — data fetched and thrown away. |
+
+A call is a **redundant re-fetch** when an identical `(name, arguments)` read-only call already appeared in the trace. Arguments are normalized before comparison (JSON strings are parsed, dict key order is ignored), so `{"a": 1, "b": 2}` and `{"b": 2, "a": 1}` are the same call.
+
+A tool output is **consumed** when its normalized text appears in the input of an LLM span that is not one of its own ancestors. Ancestor spans are excluded because a parent span's input was fixed *before* its child tool ran, so it cannot have consumed that tool's result. Outputs shorter than 12 characters are not judged, since a short string like `OK` would match unrelated text by coincidence.
+
+When no tools were called, the score is `1`. The metric is successful when the score is greater than or equal to the `threshold`.
+
+## Design Decisions
+
+- **Fully deterministic.** Every sub-signal is computed with plain string and dictionary operations, so the metric costs nothing and adds no latency. There is no `model` parameter, because accepting one would be misleading.
+- **Read-only scoping is opt-in per tool.** Side effects cannot be inferred from a trace. Rather than guess, the metric asks you to declare which tools are cacheable.
+- **Consumption is existence-based, not time-ordered.** See *Limitations* below.
+
+## Limitations
+
+- **Read-only classification is user-supplied.** The metric cannot tell a read from a write by looking at a trace. A tool misdeclared in `read_only_tools` will have its intentional repeat calls reported as redundant.
+- **Consumption uses substring matching.** A tool output that the agent summarized, reformatted, or quoted only in part before passing it to the next LLM call is reported as unconsumed even though it was genuinely used. An LLM-as-judge check would understand paraphrase, but would sacrifice the deterministic, zero-cost properties that make this metric usable as a CI gate.
+- **No temporal ordering.** The trace dictionary strips `start_time` and `end_time`, so spans cannot be ordered in time. The metric therefore cannot distinguish "consumed by a later call" from "consumed by an unrelated branch of the trace", and it cannot report *when* the waste occurred.
+- **Structural, not semantic.** Two calls with different arguments that return the same information (`search("refund")` and `search("refunds")`) are not detected as redundant.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from the Agent Loop Detection metric?",
+      answer: (
+        <>
+          They measure different failures.{" "}
+          <code>AgentLoopDetectionMetric</code> measures <em>volume</em>: it
+          asks whether the agent is <em>stuck</em>, and only alarms once a call
+          repeats <code>repetition_threshold</code> times (3 by default).{" "}
+          <code>RedundantToolCallMetric</code> measures <em>waste</em>: it
+          alarms on the <em>first</em> redundant pair, only for tools you
+          declare read-only, and additionally catches output that was fetched
+          but never used. An agent that calls <code>search_kb</code> twice and
+          then finishes is not looping — Agent Loop Detection scores it{" "}
+          <code>1.0</code> — but it did burn a redundant call, which this
+          metric reports as <code>0.5</code>. Use both: one catches runaway
+          agents, the other catches inefficient ones.
+        </>
+      ),
+    },
+    {
+      question: "Why does re-calling a write tool not count as redundant?",
+      answer: (
+        <>
+          Because it usually isn't. Sending two emails or issuing two refunds
+          are two distinct actions with two distinct effects, even if the
+          arguments match. Only a <em>cacheable</em> tool — one whose repeated
+          call cannot return new information — wastes work when repeated. Pass{" "}
+          <code>read_only_tools</code> to declare which of your tools those
+          are. Passing an empty list disables duplicate detection entirely.
+        </>
+      ),
+    },
+    {
+      question: "Why is my tool output reported as unconsumed?",
+      answer: (
+        <>
+          The check looks for the tool's output text inside a later LLM span's
+          input. If your agent summarizes or reformats a tool result before
+          passing it to the model, the original text will not appear verbatim
+          and the output is reported as unconsumed. This is a known
+          false-positive documented under <em>Limitations</em>. If it is noisy
+          for your agent, disable that sub-signal with{" "}
+          <code>check_unconsumed_output=False</code> and keep duplicate
+          detection.
+        </>
+      ),
+    },
+  ]}
+/>
