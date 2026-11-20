@@ -71,6 +71,13 @@ jobs:
       #              run test suite
       #----------------------------------------------
 
+      # NLTK is optional at runtime; exercise the BLEU scorer offline in CI.
+      - name: Run BLEU scorer tests
+        run: |
+          poetry run pip install nltk==3.9.2
+          poetry run pytest -q tests/test_core/test_scorer_bleu.py
+
+
       # Run tests (with secrets): full suite
       - name: Run tests
         if: ${{ env.OPENAI_API_KEY != '' }}
