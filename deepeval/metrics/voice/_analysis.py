@@ -42,6 +42,7 @@ def get_numpy() -> Any:
 @dataclass
 class AudioMeasurements:
     duration: float
+    sample_rate: int
     rms_dbfs: float
     clipping_fraction: float
     silence_fraction: float
@@ -293,6 +294,7 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
     edge_threshold = max(audio_utils.DEFAULT_SILENCE_RMS * 2, 1000)
     return AudioMeasurements(
         duration=len(samples) / sample_rate,
+        sample_rate=sample_rate,
         rms_dbfs=dbfs(rms(samples)),
         clipping_fraction=int(
             np.count_nonzero(np.abs(values) >= CLIPPING_ABS_SAMPLE)

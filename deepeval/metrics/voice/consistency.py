@@ -25,6 +25,10 @@ class VoiceConsistencyMetric(BaseVoiceMetric):
                     "rms_dbfs": measurements.rms_dbfs,
                     "pitch_mean_hz": measurements.pitch_mean_hz,
                     "zero_crossing_rate": measurements.zero_crossing_rate,
+                    "zero_crossings_per_second": (
+                        measurements.zero_crossing_rate
+                        * measurements.sample_rate
+                    ),
                 }
             )
         if len(records) < 2:
@@ -41,7 +45,9 @@ class VoiceConsistencyMetric(BaseVoiceMetric):
             for record in records
             if record["pitch_mean_hz"] is not None
         ]
-        zcr_values = [record["zero_crossing_rate"] for record in records]
+        # Crossings per sample vary with the recording rate, even when the
+        # underlying sound is unchanged. Compare a common time unit instead.
+        zcr_values = [record["zero_crossings_per_second"] for record in records]
         loudness_score = clamp_score(1.0 - pstdev(loudness_values) / 12.0)
         zcr_mean = max(mean(zcr_values), 1e-6)
         timbre_score = clamp_score(1.0 - pstdev(zcr_values) / zcr_mean)
