@@ -2,7 +2,7 @@ import type { ReactNode } from "react";
 import type { Metadata } from "next";
 import type { MDXComponents } from "mdx/types";
 import { notFound } from "next/navigation";
-import { Banner } from "fumadocs-ui/components/banner";
+import { AnnouncementBar } from "@/lib/announcement-bar";
 import { MeetupBanner } from "@/lib/announcement";
 import {
   DocsBody,
@@ -123,10 +123,10 @@ export function createSection(config: SectionConfig) {
     return (
       <>
         <MeetupBanner />
-        <Banner id="docs-announcement" height="30px">
+        <AnnouncementBar id="docs-announcement" height="30px">
           💥 Introducing JevEval: Jev-as-a-Judge for LLM evaluation.{" "}
           <Link href="/blog/introducing-jev-as-a-judge">Read the post →</Link>
-        </Banner>
+        </AnnouncementBar>
         <LanguageScopedDocsLayout
           {...rest}
           nav={{ ...nav, mode: "top" }}
