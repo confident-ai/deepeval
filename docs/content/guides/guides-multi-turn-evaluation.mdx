@@ -185,7 +185,7 @@ Here's how to set it up:
 
 ```python
 from deepeval.test_case import Turn
-from deepeval.conversation_simulator import ConversationSimulator
+from deepeval.simulator import ConversationSimulator
 
 # Wrap your LLM application in a callback
 async def model_callback(input: str, turns: list, thread_id: str) -> Turn:
