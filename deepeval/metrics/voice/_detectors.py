@@ -12,6 +12,9 @@ class DetectorReport:
     events: List[Dict] = field(default_factory=list)
 
 
+# Platform end reasons that mean the call did not end normally.
+UNEXPECTED_END_REASONS = {"AGENT_HANGUP", "ERROR", "IDLE_TIMEOUT"}
+
 _NON_RESPONSE_ENDINGS = (
     "bye",
     "goodbye",
@@ -22,7 +25,7 @@ _NON_RESPONSE_ENDINGS = (
 )
 
 
-def _response_was_owed(content: str) -> bool:
+def response_was_owed(content: str) -> bool:
     normalized = content.strip().lower().rstrip(".!")
     return not any(
         normalized.endswith(ending) for ending in _NON_RESPONSE_ENDINGS
@@ -35,7 +38,7 @@ def detect_responsiveness(test_case: ConversationalTestCase) -> DetectorReport:
     reprompts = 0
     turns = test_case.turns
     for index, turn in enumerate(turns):
-        if turn.role != "user" or not _response_was_owed(turn.content):
+        if turn.role != "user" or not response_was_owed(turn.content):
             continue
         next_turn = turns[index + 1] if index + 1 < len(turns) else None
         if next_turn is None:
@@ -70,11 +73,10 @@ def detect_responsiveness(test_case: ConversationalTestCase) -> DetectorReport:
 
     metadata = test_case.metadata or {}
     end_reason = metadata.get("end_reason") or metadata.get("endReason")
-    if isinstance(end_reason, str) and end_reason.upper() in {
-        "AGENT_HANGUP",
-        "ERROR",
-        "IDLE_TIMEOUT",
-    }:
+    if (
+        isinstance(end_reason, str)
+        and end_reason.upper() in UNEXPECTED_END_REASONS
+    ):
         critical = True
         events.append(
             {
