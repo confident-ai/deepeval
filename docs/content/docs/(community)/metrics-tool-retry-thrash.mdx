@@ -1,0 +1,106 @@
+---
+id: metrics-tool-retry-thrash
+title: Tool Retry Thrash
+sidebar_label: Tool Retry Thrash
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} rag={false} />
+
+The Tool Retry Thrash metric catches agents that repeat identical tool calls or flip-flop between tools (`search, fetch, search, fetch…`). It averages a retry sub-score and a thrash sub-score from the trace's tool spans. Use it next to `AgentLoopDetectionMetric`: this one fires earlier, on wasteful repetition rather than full loops.
+
+:::note
+The `ToolRetryThrashMetric` does **not** rely on an LLM for evaluation, so it is deterministic, requires no API key, and has zero token cost.
+:::
+
+## Required Arguments
+
+To use the `ToolRetryThrashMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+
+The metric additionally requires trace data from `@observe` (it sets `requires_trace=True`). Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import ToolRetryThrashMetric
+from deepeval.test_case import LLMTestCase
+
+metric = ToolRetryThrashMetric(repetition_threshold=3)
+
+test_case = LLMTestCase(
+    input="Find the cheapest flight.",
+    actual_output="Found it.",
+)
+
+# To run metric as a standalone (needs test_case._trace_dict from @observe)
+# metric.measure(test_case)
+# print(metric.score, metric.score_breakdown, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **EIGHT** optional parameters when creating a `ToolRetryThrashMetric`:
+
+- [Optional] `repetition_threshold`: repeats of the same tool with identical arguments that degrade the retry score to `0.5` (`0.0` at twice that). Defaulted to `3`.
+- [Optional] `alternation_threshold`: `A, B, A` flip-flops allowed before the thrash score drops to `0.5` (`0.0` beyond). Defaulted to `2`.
+- [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason naming the repeated or thrashed tools. Defaulted to `True`.
+- [Optional] `async_mode`: kept for metric conventions; the deterministic path is reused either way. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `ToolRetryThrashMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The `ToolRetryThrashMetric` score is the mean of its two sub-signals:
+
+<Equation
+  formula="\text{Score} = \frac{\text{Retry Score} + \text{Thrash Score}}{2}"
+/>
+
+Calls with the same tool name *and* arguments count as repeats — retrying with new arguments is exploration, not thrash. `score_breakdown` reports both sub-scores for dashboards.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from Agent Loop Detection?",
+      answer: (
+        <>
+          Agent Loop Detection also watches reasoning stagnation and
+          call-graph cycles. Tool Retry Thrash is the cheaper,
+          narrower gate: pure tool-call repetition and flip-flopping,
+          with tunable thresholds.
+        </>
+      ),
+    },
+    {
+      question: "My agent retries with backoff on purpose. Won't this flag it?",
+      answer: (
+        <>
+          Identical-argument retries trip the retry signal by design —
+          raise <code>repetition_threshold</code> or set{" "}
+          <code>ignore_recovered_failures</code>-style forgiveness via{" "}
+          <code>ToolOutcomeMetric</code> alongside it if retries are
+          your recovery strategy.
+        </>
+      ),
+    },
+  ]}
+/>
