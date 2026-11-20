@@ -1,7 +1,8 @@
+import re
 from pathlib import Path
 from deepeval.evaluate.console_report import EvaluationConsoleReport
 from deepeval.evaluate.types import TestResult as EvalTestResult
-from deepeval.test_run.api import MetricData
+from deepeval.test_run.api import Classification, MetricData
 
 
 def test_evaluation_console_report_exports(tmp_path: Path):
@@ -253,3 +254,90 @@ def test_display_option_passing_all_hidden_shows_all_failed_note():
 
     assert "failing_case" not in text
     assert "All 1 test case failed — no passing test cases to display." in text
+
+
+def _markdown_table(md: str, heading: str) -> list:
+    """Cells of every row of the table under ``heading``, split the way
+    GitHub splits them: a ``|`` preceded by a backslash stays in its cell."""
+    lines = md.splitlines()
+    rows = []
+    for line in lines[lines.index(heading) + 1 :]:
+        if not line.strip():
+            if rows:
+                break
+            continue
+        rows.append(re.split(r"(?<!\\)\|", line.strip())[1:-1])
+    return rows
+
+
+def test_markdown_export_keeps_pipes_and_line_breaks_inside_their_cells(
+    tmp_path: Path,
+):
+    metric = MetricData(
+        name="Style | Tone",
+        score=0.4,
+        threshold=0.5,
+        reason="Offers 'a | b' instead of one.\r\nSecond line",
+        success=False,
+        strictMode=False,
+        evaluationModel=None,
+        error=None,
+        evaluationCost=None,
+        verboseLogs=None,
+    )
+    classification = Classification(
+        name="Tone | Safety",
+        label="a|b",
+        expectedLabel="c|d",
+        success=False,
+        reason="picked a|b\nnot c|d",
+    )
+    case = EvalTestResult(
+        name="demo",
+        success=False,
+        input="test input",
+        actual_output="test output",
+        conversational=False,
+        metrics_data=[metric],
+        turns=None,
+        classifications=[classification],
+    )
+
+    EvaluationConsoleReport([case]).export_to_markdown(
+        output_dir=str(tmp_path), evaluation_name="pipes"
+    )
+    md = next(tmp_path.glob("pipes_*.md")).read_text(encoding="utf-8")
+
+    # Header, separator and the one data row must all have the same width.
+    for heading, columns in (
+        ("### Metrics", 5),
+        ("### Classifiers", 5),
+        ("## Aggregate Metrics", 4),
+        ("## Aggregate Classifiers", 5),
+    ):
+        rows = _markdown_table(md, heading)
+        assert len(rows) == 3, heading
+        assert [len(row) for row in rows] == [columns] * 3, heading
+
+    *_, metric_row = _markdown_table(md, "### Metrics")
+    assert metric_row[1].strip() == "**Style \\| Tone**"
+    assert (
+        metric_row[4].strip()
+        == "Offers 'a \\| b' instead of one. <br> Second line"
+    )
+
+    *_, classifier_row = _markdown_table(md, "### Classifiers")
+    assert classifier_row[1].strip() == "**Tone \\| Safety**"
+    assert classifier_row[2].strip() == "a\\|b"
+    assert classifier_row[3].strip() == "c\\|d"
+    assert classifier_row[4].strip() == "picked a\\|b <br> not c\\|d"
+
+    *_, metric_aggregate = _markdown_table(md, "## Aggregate Metrics")
+    assert metric_aggregate[2].strip() == "0.00% \\| passed=0 \\| failed=1"
+    assert metric_aggregate[3].strip() == "1"
+
+    *_, classifier_aggregate = _markdown_table(md, "## Aggregate Classifiers")
+    assert classifier_aggregate[1].strip() == "a\\|b=1"
+    assert classifier_aggregate[2].strip() == "0.00% \\| passed=0 \\| failed=1"
+    assert classifier_aggregate[3].strip() == "0"
+    assert classifier_aggregate[4].strip() == "1"
