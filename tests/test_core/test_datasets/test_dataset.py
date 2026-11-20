@@ -102,6 +102,70 @@ class TestSaveAndLoad:
                 assert header[0] == "input"
                 assert data_row[0] == "Test input"
 
+    @pytest.mark.parametrize("file_type", ["json", "csv", "jsonl"])
+    @pytest.mark.parametrize(
+        "token_cost,input_token_count,output_token_count",
+        [(0.0123, 42, 7), (0.0, 0, 0), (None, None, None)],
+        ids=["positive", "zero", "missing"],
+    )
+    def test_save_as_preserves_golden_token_usage(
+        self,
+        file_type,
+        token_cost,
+        input_token_count,
+        output_token_count,
+        tmp_path,
+    ):
+        usage = {
+            "token_cost": token_cost,
+            "input_token_count": input_token_count,
+            "output_token_count": output_token_count,
+        }
+        golden = Golden(
+            input="How long is the warranty?",
+            actual_output="Two years.",
+            expected_output="Two years.",
+            **usage,
+        )
+        dataset = EvaluationDataset([golden])
+        path = dataset.save_as(
+            file_type, directory=str(tmp_path), file_name="warranty"
+        )
+
+        with open(path, encoding="utf-8", newline="") as stream:
+            if file_type == "csv":
+                row = next(csv.DictReader(stream))
+                exported_usage = {
+                    key: (
+                        None
+                        if row[key] == ""
+                        else (
+                            float(row[key])
+                            if key == "token_cost"
+                            else int(row[key])
+                        )
+                    )
+                    for key in usage
+                }
+            else:
+                row = (
+                    json.load(stream)[0]
+                    if file_type == "json"
+                    else json.loads(next(stream))
+                )
+                exported_usage = {key: row[key] for key in usage}
+
+        assert exported_usage == usage
+        assert row["input"] == golden.input
+        assert row["expected_output"] == golden.expected_output
+        assert {key: getattr(golden, key) for key in usage} == usage
+
+        reloaded = EvaluationDataset()
+        getattr(reloaded, f"add_goldens_from_{file_type}_file")(path)
+        assert {
+            key: getattr(reloaded.goldens[0], key) for key in usage
+        } == usage
+
     def test_save_as_conversational_goldens_creates_valid_json_and_csv(self):
         """Test saving ConversationalGoldens as JSON and CSV to temp files."""
         convo_goldens = [
