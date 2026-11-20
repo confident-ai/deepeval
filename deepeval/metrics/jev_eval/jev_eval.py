@@ -93,7 +93,10 @@ class JevEval(BaseMetric):
         return not self.evaluation_params
 
     def _check_params(self, test_case: LLMTestCase) -> None:
-        if test_case.multimodal:
+        if (
+            test_case.multimodal
+            and not self.system_one_model.supports_multimodal()
+        ):
             raise ValueError(
                 f"{self.__name__} evaluates text only: Jev has no image "
                 "input. Pass a text-only LLMTestCase."

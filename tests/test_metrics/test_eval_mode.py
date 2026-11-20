@@ -634,6 +634,36 @@ def test_builtin_system_one_rejects_multimodal():
     assert jev.calls == []
 
 
+def test_builtin_system_one_sends_images_to_a_model_that_reads_them():
+    class ImageReadingModel(FakeSystemOneModel):
+        def supports_multimodal(self):
+            return True
+
+    model = ImageReadingModel(
+        answer_fn=lambda qs: SystemOneAnswers(
+            nouls={
+                key: NoulAnswer(probability=0.9) for key in qs if key != "q_2"
+            },
+            scores={
+                "q_2": ScoreAnswer(
+                    score=3.0,
+                    probabilities={0: 0.0, 1: 0.0, 2: 0.0, 3: 1.0},
+                    confidence=1.0,
+                )
+            },
+        )
+    )
+    metric = _answer_relevancy(system_one_model=model, eval_mode="system_one")
+    multimodal = LLMTestCase(
+        input="what is this? [DEEPEVAL:IMAGE:https://x/y.png]",
+        actual_output="a cat",
+        multimodal=True,
+    )
+    assert metric.measure(multimodal) > 0
+    assert len(model.calls) == 1
+    assert "[DEEPEVAL:IMAGE:https://x/y.png]" in json.dumps(model.calls[0][0])
+
+
 @pytest.mark.asyncio
 async def test_builtin_system_one_async():
     jev = FakeSystemOneModel(

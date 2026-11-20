@@ -485,6 +485,20 @@ def test_multimodal_test_case_rejected_up_front():
     assert metric.system_one_model.calls == []
 
 
+def test_multimodal_test_case_goes_to_a_model_that_reads_images():
+    metric = make_metric()
+    metric.system_one_model.supports_multimodal = lambda: True
+    metric.measure(
+        LLMTestCase(
+            input="what is this? [DEEPEVAL:IMAGE:https://x/y.png]",
+            actual_output="a cat",
+            tools_called=TEST_CASE.tools_called,
+            multimodal=True,
+        )
+    )
+    assert len(metric.system_one_model.calls) == 1
+
+
 def test_verbalise_bands():
     def noul(p):
         return outcomes_from_answers(
