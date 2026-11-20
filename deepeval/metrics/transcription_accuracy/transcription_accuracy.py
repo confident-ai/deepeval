@@ -21,6 +21,7 @@ from deepeval.metrics.utils import (
     SystemOneVerdictSpec,
 )
 from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
+from deepeval.metrics.transcription_accuracy.utils import word_errors
 from deepeval.metrics.transcription_accuracy.schema import (
     TranscriptionAccuracyScoreReason,
     TranscriptionAccuracyVerdict,
@@ -51,6 +52,10 @@ TranscriptionAccuracyTemplate = make_template_class(
 # caller's scripted `content` (voice simulations) or each turn's `audio`,
 # re-transcribed (recorded calls).
 TranscriptionComparison = Literal["content", "audio"]
+
+# Microsoft's speech-to-text guidance rates a 20% word error rate acceptable,
+# 5-10% good and 30% or more poor.
+DEFAULT_MAX_WORD_ERROR_PERCENT = 20
 
 # Without it, gpt-4o-transcribe cleans gibberish out of what it hears, so the
 # judge never sees the noise it is meant to catch. whisper-1 is left out: on
@@ -140,39 +145,47 @@ def get_audio_exchanges(
     return pairs
 
 
-def _verdict_for_exchange(
-    exchange: Dict[str, str], verdict: Verdict, probability: float
-) -> TranscriptionAccuracyVerdict:
+def _exchange_detail(exchange: Dict[str, str], verdict: Verdict) -> str:
     if verdict == Verdict.NO:
-        detail = (
+        return (
             f"The caller said {exchange['spoken']!r} but the agent heard "
             f"{exchange['transcribed']!r}."
         )
-    else:
-        detail = f"The agent heard {exchange['spoken']!r} faithfully."
+    return f"The agent heard {exchange['spoken']!r} faithfully."
+
+
+def _audio_exchange_detail(exchange: Dict[str, Any], verdict: Verdict) -> str:
+    who = "caller" if exchange["role"] == "user" else "agent"
+    start_time = exchange.get("start_time")
+    when = f" at {start_time:.1f}s" if start_time is not None else ""
+    if verdict == Verdict.NO:
+        return (
+            f"The {who} was heard saying {exchange['spoken']!r}{when} but "
+            f"the transcript has {exchange['transcribed']!r}."
+        )
+    return (
+        f"The transcript accounts for what the {who} was heard "
+        f"saying{when}."
+    )
+
+
+def _verdict_for_exchange(
+    exchange: Dict[str, str], verdict: Verdict, probability: float
+) -> TranscriptionAccuracyVerdict:
     return TranscriptionAccuracyVerdict(
-        verdict=verdict, reason=f"{detail} (P(yes)={probability:.2f})"
+        verdict=verdict,
+        reason=f"{_exchange_detail(exchange, verdict)} "
+        f"(P(yes)={probability:.2f})",
     )
 
 
 def _verdict_for_audio_exchange(
     exchange: Dict[str, Any], verdict: Verdict, probability: float
 ) -> TranscriptionAccuracyVerdict:
-    who = "caller" if exchange["role"] == "user" else "agent"
-    start_time = exchange.get("start_time")
-    when = f" at {start_time:.1f}s" if start_time is not None else ""
-    if verdict == Verdict.NO:
-        detail = (
-            f"The {who} was heard saying {exchange['spoken']!r}{when} but "
-            f"the transcript has {exchange['transcribed']!r}."
-        )
-    else:
-        detail = (
-            f"The transcript accounts for what the {who} was heard "
-            f"saying{when}."
-        )
     return TranscriptionAccuracyVerdict(
-        verdict=verdict, reason=f"{detail} (P(yes)={probability:.2f})"
+        verdict=verdict,
+        reason=f"{_audio_exchange_detail(exchange, verdict)} "
+        f"(P(yes)={probability:.2f})",
     )
 
 
@@ -191,6 +204,8 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
             Union[str, DeepEvalBaseSystemOneModel]
         ] = None,
         eval_mode: Optional[EvalModeName] = None,
+        use_llm: bool = True,
+        max_word_error_percent: Optional[int] = None,
         compare_against: TranscriptionComparison = "content",
         stt_model: Optional[Union[str, DeepEvalBaseSTT]] = None,
         include_reason: bool = True,
@@ -203,16 +218,46 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
         ] = TranscriptionAccuracyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.eval_mode = resolve_eval_mode(eval_mode)
-        self.model, self.using_native_model = initialize_model(
-            model, self.eval_mode
+        if not use_llm and (
+            model is not None
+            or system_one_model is not None
+            or eval_mode is not None
+        ):
+            raise ValueError(
+                "`model`, `system_one_model` and `eval_mode` pick the judge, "
+                "so they are only used when use_llm=True."
+            )
+        if use_llm and max_word_error_percent is not None:
+            raise ValueError(
+                "`max_word_error_percent` is only used when use_llm=False."
+            )
+        if max_word_error_percent is not None and max_word_error_percent < 0:
+            raise ValueError("max_word_error_percent must be 0 or more.")
+        self.use_llm = use_llm
+        self.max_word_error_percent = (
+            DEFAULT_MAX_WORD_ERROR_PERCENT
+            if max_word_error_percent is None
+            else max_word_error_percent
         )
-        self.system_one_model = initialize_system_one_model(
-            system_one_model, self.eval_mode
-        )
-        self.evaluation_model = (
-            self.model or self.system_one_model
-        ).get_model_name()
+        if use_llm:
+            self.eval_mode = resolve_eval_mode(eval_mode)
+            self.model, self.using_native_model = initialize_model(
+                model, self.eval_mode
+            )
+            self.system_one_model = initialize_system_one_model(
+                system_one_model, self.eval_mode
+            )
+            self.evaluation_model = (
+                self.model or self.system_one_model
+            ).get_model_name()
+        else:
+            # Nothing is judged by a model, so cost starts at zero and only
+            # speech-to-text, under compare_against="audio", adds to it.
+            self.eval_mode = None
+            self.model = None
+            self.using_native_model = True
+            self.system_one_model = None
+            self.evaluation_model = None
         if compare_against not in ("content", "audio"):
             raise ValueError(
                 "compare_against must be 'content' or 'audio', got "
@@ -261,7 +306,7 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
                     )
                 )
             else:
-                if run_system_one_eval(self, test_case):
+                if self.use_llm and run_system_one_eval(self, test_case):
                     return self.score
 
                 self.exchanges = self._get_exchanges(test_case)
@@ -297,7 +342,7 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
-            if await a_run_system_one_eval(self, test_case):
+            if self.use_llm and await a_run_system_one_eval(self, test_case):
                 return self.score
 
             self.exchanges = await self._a_get_exchanges(test_case)
@@ -375,6 +420,8 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
     async def _a_generate_verdicts(
         self,
     ) -> List[TranscriptionAccuracyVerdict]:
+        if not self.use_llm:
+            return self._word_error_verdicts()
         if len(self.exchanges) == 0:
             return []
 
@@ -388,6 +435,8 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
         )
 
     def _generate_verdicts(self) -> List[TranscriptionAccuracyVerdict]:
+        if not self.use_llm:
+            return self._word_error_verdicts()
         if len(self.exchanges) == 0:
             return []
 
@@ -455,6 +504,8 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
     async def _a_generate_reason(self) -> Optional[str]:
         if self.include_reason is False:
             return None
+        if not self.use_llm:
+            return self._word_error_reason()
 
         return await a_generate_with_schema_and_extract(
             metric=self,
@@ -467,6 +518,8 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
     def _generate_reason(self) -> Optional[str]:
         if self.include_reason is False:
             return None
+        if not self.use_llm:
+            return self._word_error_reason()
 
         return generate_with_schema_and_extract(
             metric=self,
@@ -474,6 +527,66 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
             schema_cls=TranscriptionAccuracyScoreReason,
             extract_schema=lambda score_reason: score_reason.reason,
             extract_json=lambda data: data["reason"],
+        )
+
+    def _word_error_verdicts(
+        self,
+    ) -> List[Optional[TranscriptionAccuracyVerdict]]:
+        detail = (
+            _audio_exchange_detail
+            if self.compare_against == "audio"
+            else _exchange_detail
+        )
+        verdicts: List[Optional[TranscriptionAccuracyVerdict]] = []
+        total_errors = total_words = lines_over_limit = 0
+        for exchange in self.exchanges:
+            errors, words = word_errors(
+                exchange["spoken"] or "", exchange["transcribed"] or ""
+            )
+            if words == 0:
+                # Nothing was said, so there is no word to mishear.
+                verdicts.append(None)
+                continue
+            percent = errors / words * 100
+            verdict = (
+                Verdict.YES
+                if percent <= self.max_word_error_percent
+                else Verdict.NO
+            )
+            lines_over_limit += verdict == Verdict.NO
+            total_errors += errors
+            total_words += words
+            verdicts.append(
+                TranscriptionAccuracyVerdict(
+                    verdict=verdict,
+                    reason=f"{detail(exchange, verdict)} ({errors} of "
+                    f"{words} words wrong, {percent:.0f}%)",
+                )
+            )
+        self.score_breakdown = {
+            "word_error_percent": (
+                round(total_errors / total_words * 100, 1)
+                if total_words
+                else None
+            ),
+            "lines": sum(verdict is not None for verdict in verdicts),
+            "lines_over_limit": lines_over_limit,
+        }
+        return verdicts
+
+    def _word_error_reason(self) -> str:
+        breakdown = self.score_breakdown
+        if not breakdown["lines"]:
+            return "No line had spoken words to compare with its transcript."
+        over = (
+            f"{breakdown['lines_over_limit']} of {breakdown['lines']} lines"
+            if breakdown["lines_over_limit"]
+            else "No line"
+        )
+        return (
+            f"{over} had over {self.max_word_error_percent}% of words "
+            f"misheard; {breakdown['word_error_percent']:g}% of words were "
+            "misheard overall."
         )
 
     def _calculate_score(self) -> float:

@@ -19,6 +19,7 @@ MIN_COMPARED_REPLIES = 3
 # Brief overlaps between speakers are normal; this also covers the quiet tail
 # of the caller's clip.
 AGENT_OVERLAP_ALLOWANCE_SECONDS = 0.5
+NO_CALL_AUDIO_REASON = "The call has no audio to evaluate."
 
 
 def agent_reply_measurements(
@@ -73,6 +74,10 @@ def untimed_call_reason(test_case: ConversationalTestCase) -> Optional[str]:
             "was inferred."
         )
     return None
+
+
+def call_has_audio(test_case: ConversationalTestCase) -> bool:
+    return any(turn.audio is not None for turn in test_case.turns)
 
 
 def call_timeline(
@@ -181,6 +186,7 @@ def defect_share_result(
         "No decodable assistant audio was available to evaluate."
     ),
     min_eligible_turns: int = 1,
+    counted: Tuple[str, str] = ("agent reply", "agent replies"),
 ) -> VoiceMetricResult:
     defective_turns = {defect["turn"] for defect in defects}
     breakdown = {
@@ -192,10 +198,10 @@ def defect_share_result(
     if len(eligible_turns) < min_eligible_turns:
         return None, no_eligible_reason, breakdown
     if not defective_turns:
-        return 1.0, f"No agent reply had {defect_label}.", breakdown
+        return 1.0, f"No {counted[0]} had {defect_label}.", breakdown
     return (
         1.0 - len(defective_turns) / len(eligible_turns),
-        f"{len(defective_turns)} of {len(eligible_turns)} agent replies "
+        f"{len(defective_turns)} of {len(eligible_turns)} {counted[1]} "
         f"had {defect_label}.",
         breakdown,
     )

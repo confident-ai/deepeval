@@ -28,6 +28,9 @@
     "metrics-response-delay-consistency",
     "metrics-time-to-first-response",
     "metrics-agent-interruption",
+    "metrics-failed-response",
+    "metrics-silent-reply",
+    "metrics-unexpected-call-end",
     "metrics-voice-reliability",
     "metrics-transcription-accuracy"
   ]

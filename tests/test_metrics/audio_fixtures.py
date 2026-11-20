@@ -1,5 +1,5 @@
 """Synthetic audio for the audio-glitch, audio-defect, audio-level,
-audio-prosody and audio-timing metric tests."""
+audio-prosody, audio-timing and audio-responsiveness metric tests."""
 
 import math
 import random
