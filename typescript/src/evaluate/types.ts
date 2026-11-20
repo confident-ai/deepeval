@@ -48,6 +48,7 @@ export interface MetricData {
   evaluationModel?: string;
   evaluationCost?: number;
   verboseLogs?: string;
+  scoreBreakdown?: Record<string, any> | Array<Record<string, any>>;
   error?: string;
   skipped: boolean;
   expectationsData?: ExpectationsData;
@@ -56,6 +57,13 @@ export interface MetricData {
 /** Every uploaded metrics list goes through this. */
 export function withoutExpectations(metricsData: MetricData[]): MetricData[] {
   return metricsData.filter((m) => m.expectationsData == null);
+}
+
+export function withoutScoreBreakdown({
+  scoreBreakdown: _,
+  ...metricData
+}: MetricData): MetricData {
+  return metricData;
 }
 
 /** Flaky and score-only metrics don't vote. */

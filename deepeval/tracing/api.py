@@ -77,6 +77,9 @@ class MetricData(BaseModel):
     input_tokens: Optional[int] = Field(None, alias="inputTokenCount")
     output_tokens: Optional[int] = Field(None, alias="outputTokenCount")
     verbose_logs: Optional[str] = Field(None, alias="verboseLogs")
+    score_breakdown: Optional[Any] = Field(
+        None, alias="scoreBreakdown", exclude=True
+    )
     expectations_data: Optional[ExpectationsData] = Field(
         None, alias="expectationsData"
     )
