@@ -1,0 +1,92 @@
+---
+id: metrics-thought-action-consistency
+title: Thought Action Consistency
+sidebar_label: Thought Action Consistency
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={true} referenceless={true} />
+
+The Thought Action Consistency metric evaluates whether each tool call in a ReAct-style agent trace actually executes the intent the model's reasoning step declared for it. It flags the step-local failure where the reasoning says one thing and the executed call does another — for example, the reasoning says "query the payment service logs" but the call passes `service="auth-api"`.
+
+This is an **internal, reference-free** consistency check. It does not compare the trace against an expected plan, a golden tool sequence, or a target output:
+
+- The `ToolCorrectnessMetric` compares the tools called against a golden `expected_tools` list.
+- The `PlanAdherenceMetric` compares execution against an expected plan.
+- The `StepEfficiencyMetric` asks a judge for one holistic efficiency score over the whole trace.
+
+None of them attribute a *which step* to the failure. This metric judges every step that carries a `reasoning`, so a mismatch is localized to the exact tool call that drifted.
+
+::::note
+Every judged step needs a `reasoning`. Tool calls that carry no `reasoning` are skipped (routed or deterministic calls have no thought to compare against). If **no** call carries a `reasoning`, the metric raises a `MissingTestCaseParamsError` — in that case, consider the `ToolCorrectnessMetric` instead.
+
+DeepEval's tracing integrations do **not** populate `ToolCall.reasoning` automatically — with the official integrations, `reasoning` stays `None` for every call. To use this metric, attach the model's intermediate thought to each `ToolCall.reasoning` when you build the test case (as in the example below). If the framework you instrument exposes it (for example a ReAct agent's `thought` field), forward it; otherwise leave the call without `reasoning` and it will be skipped.
+::::
+
+## Required Arguments
+
+To use the `ThoughtActionConsistencyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `tools_called` — a list of [`ToolCall`](/docs/evaluation-test-cases#llm-test-case)s, where each judged call also sets `reasoning` (the model's stated intent for that step)
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how the judged steps are scored.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import ThoughtActionConsistencyMetric
+from deepeval.test_case import LLMTestCase, ToolCall
+
+metric = ThoughtActionConsistencyMetric(
+    threshold=0.5,
+    model="gpt-4o",
+    async_mode=True,
+)
+
+test_case = LLMTestCase(
+    input="Diagnose why checkouts are failing.",
+    actual_output="The payment service is returning 500s.",
+    tools_called=[
+        ToolCall(
+            name="query_database",
+            reasoning="I need to inspect the payment service's error logs.",
+            input_parameters={
+                "service": "payment-service",
+                "query": "error logs last 1h",
+            },
+        ),
+        ToolCall(
+            name="get_service_metrics",
+            # This step is inconsistent: the reasoning names the payment
+            # service but the argument points at auth-api.
+            reasoning="Now I will check the payment service error rate.",
+            input_parameters={"service": "auth-api", "metric": "error_rate"},
+        ),
+    ],
+)
+
+# To run metric as a standalone
+# metric.measure(test_case)
+
+# Or run in bulk with the evaluate() API
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+## How Is It Calculated
+
+For each tool call that carries a `reasoning`, the metric asks a judge whether the executed call — tool choice and arguments — is a reasonable direct execution of the intent that the reasoning declared. A step is `consistent` when it is; a step is `inconsistent` when the call:
+
+1. **Uses a different tool than the reasoning calls for** (e.g. reasoning says "query the database logs" but a metrics API is called);
+2. **Passes arguments that contradict or ignore what the reasoning stated** (e.g. reasoning says "check the payment service" but the `service` argument is `auth-api`);
+3. **Is unmotivated** — the reasoning declares no action, yet a tool call happened.
+
+The judge is explicitly scoped to internal consistency only: it does not judge whether the step was the most efficient way to progress the task, and it does not judge whether the tool result was correct.
+
+The score is the fraction of judged steps that are consistent:
+
+```text
+score = consistent steps / judged steps
+```
+
+With `strict_mode=True`, the threshold becomes `1.0` and any shortfall scores `0`.
