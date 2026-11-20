@@ -6,7 +6,8 @@ import { X } from "lucide-react";
 // Same markup, storage key and CSS contract as the fumadocs <Banner>, minus
 // its inline <script>. React 19 logs "Encountered a script tag while
 // rendering React component" for that script on every client render. The
-// dismissed check runs in <head> instead (meetupEndScript in announcement.tsx).
+// dismissed check runs in <head> instead: add each bar id to
+// lib/banner-restore.ts.
 export function AnnouncementBar({
   id,
   height,

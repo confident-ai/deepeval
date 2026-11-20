@@ -85,7 +85,7 @@
   }
 }
 
-// Luma covers are 4:5 posters.
+// Cards crop every cover to 4:5, the shape of most Luma posters.
 .cover {
   aspect-ratio: 4 / 5;
   overflow: hidden;

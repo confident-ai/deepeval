@@ -8,14 +8,17 @@
  * field is validated, and nothing from it reaches a shell.
  *
  * It also saves the Luma cover to public/community/<id>.jpg, so the site
- * never loads images from Luma. A missing cover is not an error.
+ * never loads images from Luma. A missing cover is not an error; the reason
+ * goes to the listing PR.
  *
  * Env: ISSUE_BODY, ISSUE_NUMBER, ISSUE_AUTHOR, GITHUB_OUTPUT (optional).
- * Run from docs/. Exits 1 with a reason on stderr if the issue is not valid.
+ * Run from docs/. Exits 1 with reasons on stderr if the issue is not valid,
+ * and 2 on an internal error.
  */
 import fs from "node:fs";
 import path from "node:path";
-import { EVENTS_FILE, isTimeZone, validateEvent, validateEvents } from "../../lib/community/event-schema.mjs";
+import { pathToFileURL } from "node:url";
+import { EVENTS_FILE, isCalendarDate, isTimeZone, validateEvent, validateEvents } from "../../lib/community/event-schema.mjs";
 
 // Labels in .github/ISSUE_TEMPLATE/community-event.yml. Keep them in sync.
 const FIELDS = {
@@ -44,9 +47,11 @@ export function parseIssueForm(body) {
     const nl = part.indexOf("\n");
     const label = part.slice(0, nl).trim();
     const value = part.slice(nl + 1).trim();
-    // First block wins, so a "### Label" typed inside the free-text
-    // "Anything else" field cannot replace a real field.
-    if (label in out) continue;
+    // The free-text "Anything else" field sits after every input and before
+    // "Confirmations", which is the last block of the form. So the first
+    // block wins for inputs, and the last block wins for Confirmations: a
+    // "### Label" typed in the free text cannot replace either.
+    if (label in out && label !== "Confirmations") continue;
     out[label] = value === "_No response_" ? "" : value;
   }
   return out;
@@ -112,7 +117,7 @@ export function eventFromIssue(body, issueNumber, author) {
   const date = get("date");
   const time = get("time");
   const timezone = get("timezone");
-  if (date && !/^\d{4}-\d{2}-\d{2}$/.test(date)) problems.push("Date must be YYYY-MM-DD");
+  if (date && !isCalendarDate(date)) problems.push("Date must be a real date in YYYY-MM-DD");
   if (time && !/^([01]\d|2[0-3]):[0-5]\d$/.test(time)) problems.push("Start time must be HH:MM in 24-hour time");
   if (timezone && !isTimeZone(timezone)) problems.push("Time zone must be an IANA name, e.g. Europe/London");
   if (problems.length) return { problems };
@@ -125,7 +130,7 @@ export function eventFromIssue(body, issueNumber, author) {
     timezone,
     city,
     country: get("country"),
-    url: get("url").replace(/\/+$/, "").split(/[?#]/)[0],
+    url: get("url").split(/[?#]/)[0].replace(/\/+$/, ""),
     talk: get("talk"),
     host: get("host"),
     hostGithub: author,
@@ -138,27 +143,33 @@ export function eventFromIssue(body, issueNumber, author) {
 const COVER_URL = /"cover_url":"(https:\/\/images\.lumacdn\.com\/[A-Za-z0-9/._-]+\.(?:png|jpe?g|webp|gif))"/;
 const MAX_COVER_BYTES = 2 * 1024 * 1024;
 
-/** Saves the Luma cover as public/community/<id>.jpg. Returns the site path, or undefined. */
+/**
+ * Saves the Luma cover as public/community/<id>.jpg.
+ * Returns { image } on success, or { reason } so the listing PR can say why
+ * the cover is missing (a Luma page change would otherwise stop every cover
+ * without a signal).
+ */
 export async function saveCover(eventUrl, id) {
   try {
     const page = await fetch(eventUrl, { headers: { "user-agent": "deepeval-community-bot" }, signal: AbortSignal.timeout(15000) });
-    if (!page.ok) return undefined;
+    if (!page.ok) return { reason: `the Luma page returned HTTP ${page.status}` };
     const match = (await page.text()).match(COVER_URL);
-    if (!match) return undefined;
+    if (!match) return { reason: "no cover_url on the Luma page" };
     // Luma's CDN resizes the upload to 640px wide and returns a JPEG.
     const resized = match[1].replace("https://images.lumacdn.com/", "https://images.lumacdn.com/cdn-cgi/image/format=jpeg,fit=cover,quality=80,width=640/");
     const img = await fetch(resized, { signal: AbortSignal.timeout(15000) });
     const type = img.headers.get("content-type") ?? "";
-    if (!img.ok || !type.startsWith("image/jpeg")) return undefined;
+    if (!img.ok) return { reason: `the cover returned HTTP ${img.status}` };
+    if (!type.startsWith("image/jpeg")) return { reason: `the cover has content-type ${type || "none"}` };
     const bytes = Buffer.from(await img.arrayBuffer());
-    if (bytes.length === 0 || bytes.length > MAX_COVER_BYTES) return undefined;
+    if (bytes.length === 0 || bytes.length > MAX_COVER_BYTES) return { reason: `the cover is ${bytes.length} bytes` };
     // JPEG files start with FF D8 FF.
-    if (bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff) return undefined;
+    if (bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff) return { reason: "the cover is not a JPEG file" };
     fs.mkdirSync(path.join("public", "community"), { recursive: true });
     fs.writeFileSync(path.join("public", "community", `${id}.jpg`), bytes);
-    return `/community/${id}.jpg`;
-  } catch {
-    return undefined;
+    return { image: `/community/${id}.jpg` };
+  } catch (err) {
+    return { reason: `error: ${err?.message ?? err}` };
   }
 }
 
@@ -177,9 +188,12 @@ async function main() {
   for (let n = 2; list.some((e) => e.id === id); n++) id = `${event.id}-${n}`;
   event.id = id;
 
-  const image = await saveCover(event.url, event.id);
-  if (image) event.image = image;
-  else console.log("No cover saved; the card shows the city initials.");
+  const cover = await saveCover(event.url, event.id);
+  const coverNote = cover.image
+    ? "Cover: saved from Luma."
+    : `Cover: not saved (${cover.reason}). The card shows the first two letters of the city.`;
+  if (cover.image) event.image = cover.image;
+  console.log(coverNote);
 
   list.push(event);
   list.sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
@@ -187,8 +201,20 @@ async function main() {
   if (all.length) fail(all);
 
   fs.writeFileSync(EVENTS_FILE, `${JSON.stringify(list, null, 2)}\n`);
-  if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, `id=${event.id}\n`);
+  if (process.env.GITHUB_OUTPUT) {
+    // One line each: the reason text comes from fetch errors, never from the issue.
+    fs.appendFileSync(process.env.GITHUB_OUTPUT, `id=${event.id}\ncover=${coverNote.replace(/[\r\n]+/g, " ")}\n`);
+  }
   console.log(`Added ${event.id}`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) await main();
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
+  try {
+    await main();
+  } catch (err) {
+    // Exit 2 = a bug or an infrastructure problem, not bad input. The
+    // workflow reports it as an automation error, not to the organizer.
+    console.error(`internal error: ${err?.message ?? err}`);
+    process.exit(2);
+  }
+}

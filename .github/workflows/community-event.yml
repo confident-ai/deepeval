@@ -1,8 +1,9 @@
 name: Community event
 
 # A maintainer adds the `event-approved` label to a `community-event`
-# issue after checking the Luma co-host invite. This job adds the event
-# to docs/lib/community/events.json and opens a PR that closes the issue.
+# issue after checking the Luma co-host invite. This job adds the event to
+# docs/lib/community/events.json, saves its Luma cover under
+# docs/public/community, and opens a PR that closes the issue on merge.
 # Only users with triage access can add labels, so only maintainers can
 # start it.
 
@@ -25,6 +26,9 @@ jobs:
       github.event.label.name == 'event-approved' &&
       contains(github.event.issue.labels.*.name, 'community-event')
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
     steps:
       - uses: actions/checkout@v4
         with:
@@ -35,7 +39,8 @@ jobs:
           node-version: 20
 
       # The issue body is untrusted. It goes in through env only and is
-      # never placed inside a `run:` script.
+      # never placed inside a `run:` script. Exit 1 = invalid input (the
+      # reasons go to the organizer); exit 2 = internal error.
       - name: Add the event
         id: add
         working-directory: docs
@@ -43,14 +48,22 @@ jobs:
           ISSUE_BODY: ${{ github.event.issue.body }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           ISSUE_AUTHOR: ${{ github.event.issue.user.login }}
-        run: node scripts/community/add-event.mjs 2> ../add-event-error.txt
+        run: |
+          set +e
+          node scripts/community/add-event.mjs 2> >(tee ../add-event-error.txt >&2)
+          code=$?
+          echo "exit=${code}" >> "$GITHUB_OUTPUT"
+          exit "$code"
 
-      - name: Open the PR
+      - name: Open or update the PR
+        id: pr
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
           EVENT_ID: ${{ steps.add.outputs.id }}
+          COVER_NOTE: ${{ steps.add.outputs.cover }}
         run: |
+          set -euo pipefail
           branch="community-event-${ISSUE_NUMBER}"
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
@@ -58,22 +71,39 @@ jobs:
           git add docs/lib/community/events.json docs/public/community
           git commit -m "docs(community): add event ${EVENT_ID}" -m "Closes #${ISSUE_NUMBER}"
           git push --force origin "$branch"
-          printf 'Adds the community event from #%s to deepeval.com/community.\n\nCloses #%s\n' "$ISSUE_NUMBER" "$ISSUE_NUMBER" > pr-body.txt
-          url=$(gh pr create --base main --head "$branch" --title "docs(community): add event ${EVENT_ID}" --body-file pr-body.txt)
-          gh issue comment "$ISSUE_NUMBER" --body "Approved. The listing PR is ${url}. The event appears on https://deepeval.com/community after the merge."
+          # A re-approval (label removed and added again) reuses the open PR.
+          url=$(gh pr list --head "$branch" --state open --json url --jq '.[0].url // empty')
+          if [ -n "$url" ]; then
+            verb="Updated"
+          else
+            printf 'Adds the community event from #%s to deepeval.com/community.\n\n%s\n\nCloses #%s\n' \
+              "$ISSUE_NUMBER" "$COVER_NOTE" "$ISSUE_NUMBER" > pr-body.txt
+            url=$(gh pr create --base main --head "$branch" --title "docs(community): add event ${EVENT_ID}" --body-file pr-body.txt)
+            verb="Approved"
+          fi
+          gh issue comment "$ISSUE_NUMBER" --body "${verb}. The listing PR is ${url}. The event appears on https://deepeval.com/community after the merge."
 
-      - name: Report a problem on the issue
-        if: failure()
+      - name: Report invalid input to the organizer
+        if: failure() && steps.add.outputs.exit == '1'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           ISSUE_NUMBER: ${{ github.event.issue.number }}
         run: |
           {
-            echo "We could not add this event automatically. Please fix the issue fields, and a maintainer will add the label again."
+            echo "We could not add this event. Please fix these fields, and a maintainer will add the label again."
             echo
             echo '```'
-            cat add-event-error.txt 2>/dev/null || echo "See the workflow log."
+            cat add-event-error.txt
             echo '```'
           } > comment.txt
           gh issue comment "$ISSUE_NUMBER" --body-file comment.txt
           gh issue edit "$ISSUE_NUMBER" --remove-label event-approved
+
+      - name: Report an automation error
+        if: failure() && steps.add.outputs.exit != '1'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          ISSUE_NUMBER: ${{ github.event.issue.number }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+        run: |
+          gh issue comment "$ISSUE_NUMBER" --body "The listing automation hit an error on our side. A maintainer will check the run: ${RUN_URL}"

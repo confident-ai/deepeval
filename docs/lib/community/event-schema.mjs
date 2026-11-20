@@ -10,13 +10,21 @@ export const EVENTS_FILE = "lib/community/events.json";
 export const LUMA_URL = /^https:\/\/(lu\.ma|luma\.com)\/[A-Za-z0-9-]{3,64}$/;
 export const EVENT_ID = /^\d{4}-\d{2}-\d{2}-[a-z0-9]+(-[a-z0-9]+)*$/;
 export const GITHUB_LOGIN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/;
-// Covers are saved next to the site (public/community/<id>.<ext>), never
-// loaded from Luma at view time.
+// Covers live under public/community/ (the approval script writes <id>.jpg;
+// a maintainer may add a png or webp by hand) and are never loaded from Luma
+// at view time.
 export const IMAGE_PATH = /^\/community\/[a-z0-9-]+\.(jpg|png|webp)$/;
 // ISO 8601 with an explicit offset, e.g. 2026-11-20T17:00:00-08:00.
 export const START = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/;
 
 const TEXT_LIMITS = { title: 100, city: 60, country: 60, talk: 140, host: 80 };
+
+/** True for a real YYYY-MM-DD date. Date.parse accepts 2026-02-31, so round-trip it. */
+export function isCalendarDate(date) {
+  if (typeof date !== "string" || !/^\d{4}-\d{2}-\d{2}$/.test(date)) return false;
+  const [y, m, d] = date.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d)).toISOString().slice(0, 10) === date;
+}
 
 export function isTimeZone(tz) {
   if (typeof tz !== "string" || !tz) return false;
@@ -39,7 +47,7 @@ export function validateEvent(e) {
     else if (v.length > max) out.push(`${key} must be ${max} characters or less`);
     else if (/[<>]/.test(v)) out.push(`${key} must not contain < or >`);
   }
-  if (!START.test(e.start ?? "") || Number.isNaN(Date.parse(e.start))) {
+  if (!START.test(e.start ?? "") || Number.isNaN(Date.parse(e.start)) || !isCalendarDate(e.start.slice(0, 10))) {
     out.push("start must be ISO 8601 with an offset, e.g. 2026-11-20T17:00:00-08:00");
   }
   if (!isTimeZone(e.timezone)) out.push("timezone must be an IANA name, e.g. Europe/London");

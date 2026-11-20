@@ -3,8 +3,11 @@ import { AnnouncementBar } from "./announcement-bar";
 
 // SF meetup banner. Pages are prerendered, so meetupEndScript (in <head>)
 // marks <html> once the event is over and global.css swaps back to JevEval.
-// Remove this file and its imports after the event.
-export const meetupEndScript = `if(Date.now()>=${Date.parse("2026-11-20T19:00:00-08:00")})document.documentElement.classList.add("meetup-ended");try{for(const id of ["sf-meetup","docs-announcement"])if(localStorage.getItem("nd-banner-"+id)==="true")document.documentElement.classList.add("nd-banner-"+id)}catch(e){}`;
+// After the event, remove this file, its imports, and the meetup block in
+// app/global.css (it hides #docs-announcement until meetup-ended is set).
+// Keep lib/banner-restore.ts and lib/announcement-bar.tsx: the JevEval bar
+// uses them.
+export const meetupEndScript = `if(Date.now()>=${Date.parse("2026-11-20T19:00:00-08:00")})document.documentElement.classList.add("meetup-ended")`;
 
 export function MeetupBanner({ changeLayout = true }: { changeLayout?: boolean }) {
   return (

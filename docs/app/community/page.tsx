@@ -7,7 +7,7 @@ import HomeLayout from "@/src/layouts/HomeLayout";
 import CommunityHeroSection from "@/src/sections/community/CommunityHeroSection";
 
 // Rebuild the page each hour, so an event moves from "Upcoming" to "Past"
-// on time without a new deploy.
+// within an hour, without a new deploy.
 export const revalidate = 3600;
 
 export const metadata: Metadata = {
