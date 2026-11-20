@@ -412,10 +412,11 @@ class Scorer:
             if not target_list:
                 return 0  # Return 0 if target list is empty to avoid division by zero
 
-            # Count the number of correct matches
-            correct_matches = sum(
-                1 for item in prediction_list if item in target_list
-            )
+            # Count the number of distinct correct answers identified. Counting
+            # the raw prediction list would score a repeated correct index
+            # multiple times, inflating this recall metric above the true value
+            # (and even past 100%).
+            correct_matches = len(set(prediction_list) & set(target_list))
 
             # Calculate percentage
             score_percentage = (correct_matches / len(target_list)) * 100
