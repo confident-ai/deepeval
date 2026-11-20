@@ -17,7 +17,11 @@ import {
 
 import { LLMTestCase, ToolCall, resolveRetrievalContext } from "@/test-case";
 import type { BaseMetric } from "@/metrics/base-metrics";
-import { type MetricData, withoutExpectations } from "@/evaluate/types";
+import {
+  type MetricData,
+  withoutExpectations,
+  withoutScoreBreakdown,
+} from "@/evaluate/types";
 import { Prompt } from "@/prompt";
 import {
   SpanApiType,
@@ -694,7 +698,9 @@ export class TraceManager {
       input: trace.input,
       output: trace.output,
       toolsCalled: trace.toolsCalled,
-      metricsData: trace.metricsData && withoutExpectations(trace.metricsData),
+      metricsData:
+        trace.metricsData &&
+        withoutExpectations(trace.metricsData).map(withoutScoreBreakdown),
       status:
         trace.status === TraceSpanStatus.SUCCESS
           ? TraceSpanApiStatus.SUCCESS
@@ -738,7 +744,7 @@ export class TraceManager {
       input: span.input,
       output: span.output,
       error: span.error,
-      metricsData: span.metricsData,
+      metricsData: span.metricsData?.map(withoutScoreBreakdown),
       expectedOutput: span.expectedOutput,
       retrievalContext: span.retrievalContext,
       context: span.context,

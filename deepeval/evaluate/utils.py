@@ -128,6 +128,7 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
             inputTokenCount=metric.input_tokens,
             outputTokenCount=metric.output_tokens,
             verboseLogs=metric.verbose_logs,
+            scoreBreakdown=metric.score_breakdown,
         )
     if isinstance(metric, _ExpectationEvaluator):
         metric_data.expectations_data = create_expectations_data(

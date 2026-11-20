@@ -275,6 +275,28 @@ describe("Tracing Module", () => {
     expect(traceApi.status).toBe(TraceSpanApiStatus.SUCCESS);
   });
 
+  test("Should leave scoreBreakdown out of the uploaded trace and spans", async () => {
+    await observe({ type: "CUSTOM", name: "scored", fn: async () => "" })();
+    const traces = traceManager.getAllTraces();
+    const trace = traces[traces.length - 1];
+    const metricData = {
+      name: "M",
+      threshold: 0.5,
+      strictMode: false,
+      flaky: false,
+      skipped: false,
+      scoreBreakdown: { alignment: 0.5 },
+    };
+    trace.metricsData = [metricData];
+    trace.rootSpans[0].metricsData = [metricData];
+
+    const traceApi = traceManager.createTraceApi(trace);
+    expect(traceApi.metricsData?.[0]).not.toHaveProperty("scoreBreakdown");
+    expect(traceApi.baseSpans[0].metricsData?.[0]).not.toHaveProperty(
+      "scoreBreakdown",
+    );
+  });
+
   test("Should update trace with input and output", async () => {
     const testFunction = observe({
       type: "CUSTOM",
