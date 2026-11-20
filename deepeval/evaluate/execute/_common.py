@@ -8,9 +8,7 @@ from typing import (
 )
 import asyncio
 
-from deepeval.evaluate.configs import (
-    ErrorConfig,
-)
+from deepeval.evaluate.configs import AsyncConfig, ErrorConfig
 from deepeval.tracing.tracing import (
     trace_manager,
     Trace,
