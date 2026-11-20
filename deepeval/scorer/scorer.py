@@ -378,51 +378,47 @@ class Scorer:
         return scorer(text)
 
     @classmethod
-    def truth_identification_score(cls, target: str, prediction: str) -> int:
+    def truth_identification_score(
+        cls, target: str, prediction: str
+    ) -> float:
         """
-        Metrics that calculates the number of correct true answers identified in the prediction.
+        Recall-style metric for TruthfulQA MC2: fraction of unique target indices
+        identified by the prediction, in [0, 1].
 
-        This method assumes both target and prediction are strings representing lists of integers,
-        formatted like '1,2,3'. It converts these strings to lists of integers, counts how many items
-        in the prediction list are also in the target list, and returns this count as the score.
+        Both `target` and `prediction` are strings representing lists of integers
+        (e.g. '1,2,3' or '[1, 2, 3]'). Each is parsed into a set of integers; the
+        score is |target ∩ prediction| / |target|. Duplicates in either input are
+        collapsed, so the score is bounded by 1.0 even when the prediction repeats
+        the same index. Extra prediction indices not in the target do not penalize
+        the score.
 
         Args:
-            target (str): The target string representing the list of correct answers.
-            prediction (str): The predicted string from the LLM, representing the guessed answers.
+            target (str): The target string listing correct answer indices.
+            prediction (str): The predicted string from the LLM.
 
         Returns:
-            int: The number of correct answers identified.
+            float: Fraction in [0, 1]. Returns 0.0 for empty target/prediction or
+            any parsing failure.
         """
         try:
             if not prediction or not target:
-                return 0  # Return score as 0 if prediction or target is empty
+                return 0.0
 
-            # Convert strings to sorted lists of integers
-            target_list = sorted(
-                [int(item) for item in target.strip("[]").split(",") if item]
-            )
-            prediction_list = sorted(
-                [
-                    int(item)
-                    for item in prediction.strip("[]").split(",")
-                    if item
-                ]
-            )
+            target_set = {
+                int(item) for item in target.strip("[]").split(",") if item.strip()
+            }
+            prediction_set = {
+                int(item)
+                for item in prediction.strip("[]").split(",")
+                if item.strip()
+            }
 
-            if not target_list:
-                return 0  # Return 0 if target list is empty to avoid division by zero
+            if not target_set:
+                return 0.0
 
-            # Count the number of correct matches
-            correct_matches = sum(
-                1 for item in prediction_list if item in target_list
-            )
-
-            # Calculate percentage
-            score_percentage = (correct_matches / len(target_list)) * 100
-
-            return round(score_percentage)  # Return rounded percentage
-        except Exception as e:
-            return 0  # Return score as 0 in case of any exception
+            return len(prediction_set & target_set) / len(target_set)
+        except Exception:
+            return 0.0
 
     def pass_at_k(self, n, c, k):
         import numpy as np
