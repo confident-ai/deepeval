@@ -3,6 +3,8 @@
 All tests are fully deterministic — no API key, no network, no LLM required.
 """
 
+import asyncio
+
 import pytest
 
 from deepeval.test_case import LLMTestCase
@@ -53,6 +55,48 @@ def _make_test_case(trace_dict: dict) -> LLMTestCase:
     tc = LLMTestCase(input="test input", actual_output="test output")
     tc._trace_dict = trace_dict
     return tc
+
+
+@pytest.mark.parametrize("entry_point", ["sync", "async_mode", "a_measure"])
+@pytest.mark.parametrize("include_reason", [True, False])
+@pytest.mark.parametrize(
+    "trace, expected_score, expected_reason",
+    [
+        (_make_agent_span("agent", []), 1.0, "No loop patterns detected"),
+        (
+            _make_agent_span(
+                "agent",
+                [_make_tool_span("search", {"query": "q"}) for _ in range(6)],
+            ),
+            0.0,
+            "identical arguments",
+        ),
+        (None, 0.0, "No trace data"),
+    ],
+    ids=["clean", "looping", "missing-trace"],
+)
+def test_include_reason_controls_reason_without_changing_score(
+    entry_point, include_reason, trace, expected_score, expected_reason
+):
+    metric = AgentLoopDetectionMetric(
+        include_reason=include_reason,
+        async_mode=entry_point == "async_mode",
+        check_reasoning_stagnation=False,
+        check_call_graph_cycles=False,
+    )
+    test_case = _make_test_case(trace)
+
+    if entry_point == "a_measure":
+        score = asyncio.run(metric.a_measure(test_case, _show_indicator=False))
+    else:
+        score = metric.measure(test_case, _show_indicator=False)
+
+    assert score == expected_score
+    assert metric.success is (expected_score == 1.0)
+    if include_reason:
+        assert expected_reason in metric.reason
+    else:
+        assert metric.reason is None
 
 
 # ---------------------------------------------------------------------------
