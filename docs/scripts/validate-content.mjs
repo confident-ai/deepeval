@@ -74,7 +74,11 @@ for (const page of meta.pages) {
 // ---- Community events ----
 
 const eventsFile = path.join(ROOT, EVENTS_FILE);
-for (const problem of validateEvents(JSON.parse(fs.readFileSync(eventsFile, "utf8")))) fail(eventsFile, problem);
+const events = JSON.parse(fs.readFileSync(eventsFile, "utf8"));
+for (const problem of validateEvents(events)) fail(eventsFile, problem);
+for (const e of Array.isArray(events) ? events : []) {
+  if (e?.image && !fs.existsSync(path.join(ROOT, "public", e.image))) fail(eventsFile, `${e.id}: ${e.image} is missing in public/`);
+}
 
 // ---- Media library ----
 

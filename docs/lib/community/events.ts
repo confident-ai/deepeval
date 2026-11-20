@@ -14,6 +14,8 @@ export type CommunityEvent = {
   talk: string;
   host: string;
   hostGithub?: string;
+  /** Cover from the Luma event, saved under public/community */
+  image?: string;
   /** Run by Confident AI */
   official: boolean;
   /** GitHub issue the event was submitted in */

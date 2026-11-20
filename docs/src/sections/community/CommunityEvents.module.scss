@@ -63,7 +63,7 @@
 
 .link {
   display: grid;
-  grid-template-columns: 9.5rem minmax(0, 1fr) auto;
+  grid-template-columns: 6.5rem minmax(0, 1fr) auto;
   column-gap: 1.25rem;
   align-items: start;
   padding: 1rem 0.25rem;
@@ -85,10 +85,43 @@
   }
 }
 
+// Luma covers are 4:5 posters.
+.cover {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-muted);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    object-fit: cover;
+    transition: transform 240ms ease;
+  }
+}
+
+.link:hover .cover img {
+  transform: scale(1.03);
+}
+
+.coverFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-fd-muted-foreground);
+  font-family: var(--font-heading), sans-serif;
+  font-size: 22px;
+}
+
 .when {
   display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.15rem;
   font-family: var(--font-mono, ui-monospace), monospace;
   font-size: 12px;
 }
@@ -171,13 +204,11 @@
 
 @media (max-width: 640px) {
   .link {
-    grid-template-columns: minmax(0, 1fr) auto;
-    row-gap: 0.5rem;
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    column-gap: 0.9rem;
   }
 
-  .when {
-    grid-column: 1 / -1;
-    flex-direction: row;
-    gap: 0.6rem;
+  .arrow {
+    display: none;
   }
 }

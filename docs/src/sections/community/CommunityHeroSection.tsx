@@ -4,13 +4,8 @@ import { PauseOffscreen } from "@site/src/components/PauseOffscreen";
 import MascotRail, { type Walker } from "@site/src/components/MascotRail";
 import styles from "@site/src/sections/home/HomeSection.module.scss";
 import { communityEvents, countCities } from "@/lib/community/events";
-import {
-  contributorCount,
-  contributionCount,
-  topContributors,
-} from "@/lib/community/contributors";
-import { communitySubmitUrl, gitConfig } from "@/lib/shared";
-import communityStyles from "./CommunityHeroSection.module.scss";
+import { contributorCount, contributionCount } from "@/lib/community/contributors";
+import { communitySubmitUrl } from "@/lib/shared";
 
 // A meetup is a crowd, so the rail walks five mascots in different colors
 // and hats instead of the homepage's single one.
@@ -33,7 +28,6 @@ const CommunityHeroSection: React.FC = () => {
     "Used by 150K+ developers",
     `Meetups in ${cities} ${cities === 1 ? "city" : "cities"}, yours next`,
   ];
-  const contributorsUrl = `https://github.com/${gitConfig.user}/${gitConfig.repo}/graphs/contributors`;
 
   return (
     <section className={styles.hero}>
@@ -43,7 +37,7 @@ const CommunityHeroSection: React.FC = () => {
         <p className={styles.description}>
           Engineers around the world run meetups about DeepEval and LLM evals.
           List your event here, and we help with swag, a remote speaker and
-          Confident AI credits.
+          free credits.
         </p>
 
         <div className={styles.actions}>
@@ -72,34 +66,6 @@ const CommunityHeroSection: React.FC = () => {
             ))}
           </div>
         </PauseOffscreen>
-      </div>
-
-      <div className={communityStyles.wall}>
-        <a
-          className={communityStyles.wallLabel}
-          href={contributorsUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Built in the open by {contributorCount} contributors
-          <ArrowUpRight aria-hidden />
-        </a>
-        <div className={communityStyles.grid}>
-          {topContributors(20).map((c) => (
-            <a
-              key={c.login}
-              className={communityStyles.cell}
-              href={c.url}
-              target="_blank"
-              rel="noopener noreferrer"
-              title={`${c.login}, ${c.contributions.toLocaleString("en-US")} contributions`}
-            >
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={`${c.avatarUrl}&s=64`} alt={c.login} width={24} height={24} loading="lazy" />
-              <span>{c.login}</span>
-            </a>
-          ))}
-        </div>
       </div>
     </section>
   );

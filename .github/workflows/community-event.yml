@@ -55,7 +55,7 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git checkout -b "$branch"
-          git add docs/lib/community/events.json
+          git add docs/lib/community/events.json docs/public/community
           git commit -m "docs(community): add event ${EVENT_ID}" -m "Closes #${ISSUE_NUMBER}"
           git push --force origin "$branch"
           printf 'Adds the community event from #%s to deepeval.com/community.\n\nCloses #%s\n' "$ISSUE_NUMBER" "$ISSUE_NUMBER" > pr-body.txt

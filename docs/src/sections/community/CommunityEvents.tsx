@@ -29,11 +29,21 @@ function EventRow({ event, past }: { event: CommunityEvent; past: boolean }) {
         // data-card opts out of the global .prose link style (app/global.css).
         data-card
       >
-        <div className={styles.when}>
-          <span className={styles.day}>{day}</span>
-          <span className={styles.time}>{time}</span>
+        <div className={styles.cover}>
+          {event.image ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={event.image} alt={`${event.title} cover`} loading="lazy" />
+          ) : (
+            <span className={styles.coverFallback} aria-hidden>
+              {event.city.slice(0, 2).toUpperCase()}
+            </span>
+          )}
         </div>
         <div className={styles.what}>
+          <span className={styles.when}>
+            <span className={styles.day}>{day}</span>
+            <span className={styles.time}>{time}</span>
+          </span>
           <span className={styles.title}>
             {event.title}
             {event.official && <span className={styles.tag}>Official</span>}

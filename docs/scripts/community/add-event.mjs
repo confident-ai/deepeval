@@ -7,10 +7,14 @@
  * untrusted input: it only arrives through the ISSUE_BODY env var, every
  * field is validated, and nothing from it reaches a shell.
  *
+ * It also saves the Luma cover to public/community/<id>.jpg, so the site
+ * never loads images from Luma. A missing cover is not an error.
+ *
  * Env: ISSUE_BODY, ISSUE_NUMBER, ISSUE_AUTHOR, GITHUB_OUTPUT (optional).
  * Run from docs/. Exits 1 with a reason on stderr if the issue is not valid.
  */
 import fs from "node:fs";
+import path from "node:path";
 import { EVENTS_FILE, isTimeZone, validateEvent, validateEvents } from "../../lib/community/event-schema.mjs";
 
 // Labels in .github/ISSUE_TEMPLATE/community-event.yml. Keep them in sync.
@@ -131,7 +135,34 @@ export function eventFromIssue(body, issueNumber, author) {
   return { event, problems: validateEvent(event) };
 }
 
-function main() {
+const COVER_URL = /"cover_url":"(https:\/\/images\.lumacdn\.com\/[A-Za-z0-9/._-]+\.(?:png|jpe?g|webp|gif))"/;
+const MAX_COVER_BYTES = 2 * 1024 * 1024;
+
+/** Saves the Luma cover as public/community/<id>.jpg. Returns the site path, or undefined. */
+export async function saveCover(eventUrl, id) {
+  try {
+    const page = await fetch(eventUrl, { headers: { "user-agent": "deepeval-community-bot" }, signal: AbortSignal.timeout(15000) });
+    if (!page.ok) return undefined;
+    const match = (await page.text()).match(COVER_URL);
+    if (!match) return undefined;
+    // Luma's CDN resizes the upload to 640px wide and returns a JPEG.
+    const resized = match[1].replace("https://images.lumacdn.com/", "https://images.lumacdn.com/cdn-cgi/image/format=jpeg,fit=cover,quality=80,width=640/");
+    const img = await fetch(resized, { signal: AbortSignal.timeout(15000) });
+    const type = img.headers.get("content-type") ?? "";
+    if (!img.ok || !type.startsWith("image/jpeg")) return undefined;
+    const bytes = Buffer.from(await img.arrayBuffer());
+    if (bytes.length === 0 || bytes.length > MAX_COVER_BYTES) return undefined;
+    // JPEG files start with FF D8 FF.
+    if (bytes[0] !== 0xff || bytes[1] !== 0xd8 || bytes[2] !== 0xff) return undefined;
+    fs.mkdirSync(path.join("public", "community"), { recursive: true });
+    fs.writeFileSync(path.join("public", "community", `${id}.jpg`), bytes);
+    return `/community/${id}.jpg`;
+  } catch {
+    return undefined;
+  }
+}
+
+async function main() {
   const { ISSUE_BODY = "", ISSUE_NUMBER = "", ISSUE_AUTHOR = "" } = process.env;
   const { event, problems } = eventFromIssue(ISSUE_BODY, ISSUE_NUMBER, ISSUE_AUTHOR);
   const fail = (list) => {
@@ -146,6 +177,10 @@ function main() {
   for (let n = 2; list.some((e) => e.id === id); n++) id = `${event.id}-${n}`;
   event.id = id;
 
+  const image = await saveCover(event.url, event.id);
+  if (image) event.image = image;
+  else console.log("No cover saved; the card shows the city initials.");
+
   list.push(event);
   list.sort((a, b) => Date.parse(a.start) - Date.parse(b.start));
   const all = validateEvents(list);
@@ -156,4 +191,4 @@ function main() {
   console.log(`Added ${event.id}`);
 }
 
-if (import.meta.url === `file://${process.argv[1]}`) main();
+if (import.meta.url === `file://${process.argv[1]}`) await main();

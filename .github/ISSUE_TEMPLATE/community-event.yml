@@ -91,7 +91,7 @@ body:
       options:
         - label: DeepEval swag for attendees
         - label: A remote speaker from the DeepEval team
-        - label: Confident AI credits
+        - label: Free credits
   - type: textarea
     id: notes
     attributes:

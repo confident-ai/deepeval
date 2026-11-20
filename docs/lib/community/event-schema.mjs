@@ -10,6 +10,9 @@ export const EVENTS_FILE = "lib/community/events.json";
 export const LUMA_URL = /^https:\/\/(lu\.ma|luma\.com)\/[A-Za-z0-9-]{3,64}$/;
 export const EVENT_ID = /^\d{4}-\d{2}-\d{2}-[a-z0-9]+(-[a-z0-9]+)*$/;
 export const GITHUB_LOGIN = /^[A-Za-z0-9](?:[A-Za-z0-9-]{0,38})$/;
+// Covers are saved next to the site (public/community/<id>.<ext>), never
+// loaded from Luma at view time.
+export const IMAGE_PATH = /^\/community\/[a-z0-9-]+\.(jpg|png|webp)$/;
 // ISO 8601 with an explicit offset, e.g. 2026-11-20T17:00:00-08:00.
 export const START = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(Z|[+-]\d{2}:\d{2})$/;
 
@@ -43,8 +46,9 @@ export function validateEvent(e) {
   if (!LUMA_URL.test(e.url ?? "")) out.push("url must be a Luma event link, e.g. https://luma.com/abc123");
   if (typeof e.official !== "boolean") out.push("official must be true or false");
   if (e.hostGithub !== undefined && !GITHUB_LOGIN.test(e.hostGithub)) out.push("hostGithub must be a GitHub username");
+  if (e.image !== undefined && !IMAGE_PATH.test(e.image)) out.push("image must be /community/<id>.jpg|png|webp");
   if (e.issue !== undefined && !(Number.isInteger(e.issue) && e.issue > 0)) out.push("issue must be a positive integer");
-  const allowed = new Set(["id", "title", "start", "timezone", "city", "country", "url", "talk", "host", "hostGithub", "official", "issue"]);
+  const allowed = new Set(["id", "title", "start", "timezone", "city", "country", "url", "talk", "host", "hostGithub", "official", "issue", "image"]);
   for (const key of Object.keys(e)) if (!allowed.has(key)) out.push(`unknown field "${key}"`);
   return out;
 }
