@@ -80,7 +80,7 @@ print(metric.score_breakdown)
 A dropout is a gap of **200 ms or less** in the middle of speech. How it is told apart from a natural pause depends on the audio:
 
 - **Audio with background noise** (most real recordings): the gap counts when its level falls below 10% of the reply's normal pause noise. Pauses between words keep that background noise, so they are not counted.
-- **Clean audio with silent pauses** (typical TTS output): the gap counts when it is at least 10 ms of near-zero samples and the speech on both sides stops and starts abruptly, at 25% or more of the surrounding speech level. Natural pauses fade out and back in, so their edges sit far below that.
+- **Clean audio with silent pauses** (typical TTS output): the gap counts when it is at least 20 ms of near-zero samples (one lost network packet; consonants like "p" and "t" leave shorter near-silent gaps) and the speech on both sides stops and starts abruptly, at 25% or more of the surrounding speech level. Natural pauses fade out and back in, so their edges sit far below that.
 
 If no agent reply has decodable audio, the metric is skipped.
 

@@ -18,7 +18,8 @@ MIN_PAUSE_FLOOR_RMS = 8.0
 # With no pause noise to compare against, a dropout is a near-zero run whose
 # edges stay near speech level; on real TTS, natural pauses fade to <= 0.012.
 DROPOUT_NEAR_ZERO_SAMPLE = 8
-DROPOUT_MIN_MS = 10
+# A lost packet is 20 ms; consonants like "p" and "t" leave 10-15 ms gaps.
+DROPOUT_MIN_MS = 20
 DROPOUT_EDGE_MS = 5
 DROPOUT_CONTEXT_MS = 60
 DROPOUT_EDGE_RATIO = 0.25

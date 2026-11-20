@@ -4,6 +4,7 @@ from deepeval.metrics import (
     AudioClippingMetric,
     BackgroundNoiseMetric,
     LoudnessMetric,
+    SilentReplyMetric,
     SpeechIntelligibilityMetric,
     VolumeVarianceMetric,
 )
@@ -17,6 +18,7 @@ from tests.test_metrics.audio_fixtures import (
     to_audio,
     with_gain,
     with_noise,
+    zeros,
 )
 
 
@@ -104,6 +106,19 @@ def test_undecodable_agent_audio_is_skipped_not_failed(metric_class):
     assert metric.score == 1.0
     assert metric.score_breakdown["eligible_turns"] == 2
     assert [entry["turn"] for entry in metric.score_breakdown["skipped"]] == [1]
+
+
+@pytest.mark.parametrize(
+    "metric_class", [BackgroundNoiseMetric, LoudnessMetric]
+)
+def test_an_inaudible_reply_is_left_to_silent_reply(metric_class):
+    turns = _with_reply(1, zeros(3.0))
+    metric = _measure(metric_class(), turns)
+    assert metric.score == 1.0
+    assert metric.score_breakdown["skipped"] == [
+        {"turn": 1, "error": "Reply has no audible sound to measure."}
+    ]
+    assert _measure(SilentReplyMetric(), turns).score == pytest.approx(2 / 3)
 
 
 def test_noise_louder_than_the_silence_cutoff_still_lowers_the_snr():

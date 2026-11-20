@@ -5,6 +5,7 @@ from deepeval.metrics.voice._defects import (
     agent_reply_measurements,
     defect_share_result,
     shifts_from_typical,
+    audible_replies,
 )
 from deepeval.metrics.voice.base_metric import (
     BaseVoiceMetric,
@@ -38,6 +39,7 @@ class LoudnessConsistencyMetric(BaseVoiceMetric):
 
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
         measurements, skipped = agent_reply_measurements(test_case)
+        measurements = audible_replies(measurements, skipped)
         levels = {
             turn: reply.speech_dbfs for turn, reply in measurements.items()
         }

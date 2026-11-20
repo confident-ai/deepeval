@@ -85,7 +85,7 @@ The defaults come from telephone audio. ITU-T test speech is normalized to an ac
 
 A reply that is too loud and also distorted counts here and in [Audio Clipping](/docs/metrics-audio-clipping): the level and the distortion are separate problems.
 
-If no agent reply has decodable audio, the metric is skipped.
+A reply with no audible sound at all is skipped; [`SilentReplyMetric`](/docs/metrics-silent-reply) reports it. If no agent reply has decodable audio, the metric is skipped.
 
 ## FAQs
 

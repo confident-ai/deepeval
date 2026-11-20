@@ -19,6 +19,7 @@ from tests.test_metrics.audio_fixtures import (
     with_gain,
     with_noise,
     with_pause,
+    zeros,
 )
 
 
@@ -227,6 +228,14 @@ def test_a_quiet_outlier_fails_loudness_and_loudness_consistency():
     assert _measure(LoudnessConsistencyMetric(), turns).score == pytest.approx(
         2 / 3
     )
+
+
+def test_an_inaudible_reply_is_not_a_loudness_shift():
+    turns = _with_reply(1, _set_audio(zeros(3.0)), clean_turns(8))
+    metric = _measure(LoudnessConsistencyMetric(), turns)
+    assert metric.score == 1.0
+    assert metric.score_breakdown["eligible_turns"] == 3
+    assert [entry["turn"] for entry in metric.score_breakdown["skipped"]] == [1]
 
 
 def test_digits_are_counted_as_spoken_words():

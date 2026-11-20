@@ -104,6 +104,18 @@ A reply counts as talking over the caller when it starts more than **half a seco
       ),
     },
     {
+      question: "What if my turn timestamps are inaccurate?",
+      answer: (
+        <>
+          The metric trusts each turn's <code>start_time</code> and the
+          length of the caller's audio. If a caller turn is stamped to end
+          after the agent started, or one caller turn holds speech from both
+          before and after the agent's reply, it reports overlaps that did
+          not happen. Listen to a flagged reply before acting on it.
+        </>
+      ),
+    },
+    {
       question: "Does it check the simulated user's audio too?",
       answer: (
         <>

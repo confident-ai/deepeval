@@ -3,6 +3,7 @@ from typing import Optional
 from deepeval.metrics.voice._defects import (
     agent_reply_measurements,
     defect_share_result,
+    audible_replies,
 )
 from deepeval.metrics.voice.base_metric import (
     BaseVoiceMetric,
@@ -41,6 +42,7 @@ class LoudnessMetric(BaseVoiceMetric):
 
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
         measurements, skipped = agent_reply_measurements(test_case)
+        measurements = audible_replies(measurements, skipped)
         defects = []
         for turn, reply in measurements.items():
             if reply.speech_dbfs < self.min_dbfs:

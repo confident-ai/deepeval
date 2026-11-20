@@ -124,6 +124,12 @@ def test_a_break_inside_a_word_is_a_dropout_when_pauses_are_digital():
     assert analyze_audio(to_audio(clip)).dropout_events == 1
 
 
+def test_a_consonant_length_gap_is_not_a_dropout():
+    clip = spoken_words(noise=0)
+    clip[int(1.1 * RATE) : int(1.115 * RATE)] = zeros(0.015)
+    assert analyze_audio(to_audio(clip)).dropout_events == 0
+
+
 # ----------------------------------------------------------- held tones
 
 
