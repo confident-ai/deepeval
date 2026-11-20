@@ -473,10 +473,26 @@ class Cache:
         if schema is None:
             return None
         try:
-            return schema.model_json_schema()
+            # Normalize to JSON-ready primitives so a schema read back from
+            # the cache file compares equal (e.g. tuples in json_schema_extra).
+            return json.loads(
+                json.dumps(schema.model_json_schema(), cls=CustomEncoder)
+            )
         except Exception:
-            # Types JSON Schema can't express: key on the model's name.
-            return {"title": getattr(schema, "__qualname__", repr(schema))}
+            # Types JSON Schema can't express: key on model name and fields.
+            model_cls = (
+                type(schema) if isinstance(schema, BaseModel) else schema
+            )
+            fallback: Dict[str, Any] = {
+                "title": getattr(model_cls, "__qualname__", repr(schema))
+            }
+            model_fields = getattr(model_cls, "model_fields", None)
+            if isinstance(model_fields, dict):
+                fallback["fields"] = {
+                    name: repr(field.annotation)
+                    for name, field in model_fields.items()
+                }
+            return fallback
 
     @staticmethod
     def create_metric_configuration(metric: BaseMetric) -> MetricConfiguration:
