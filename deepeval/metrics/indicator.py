@@ -1,11 +1,12 @@
 import asyncio
+import inspect
 import logging
 import sys
 import time
 from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from contextlib import contextmanager
-from typing import TYPE_CHECKING, List, Optional, Union
+from typing import TYPE_CHECKING, Any, Callable, List, Optional, Union
 
 from deepeval.errors import (
     ContextWindowExceededError,
@@ -50,6 +51,45 @@ def _is_context_window_exceeded(error: Optional[BaseException]) -> bool:
             return True
         error = error.__cause__ or error.__context__
     return False
+
+
+def _call_metric_measure(
+    measure: Callable[..., Any],
+    test_case: Union[LLMTestCase, ConversationalTestCase],
+    *,
+    _show_indicator: bool,
+    _in_component: bool,
+) -> Any:
+    """Pass only supported internal options, then invoke the metric once.
+
+    Custom metrics may only accept a test case. Inspect the signature before
+    calling so a TypeError inside the metric is handled as an evaluation
+    error, rather than retried as though an internal option was unsupported.
+    """
+    kwargs = {
+        "_show_indicator": _show_indicator,
+        "_in_component": _in_component,
+    }
+    try:
+        parameters = inspect.signature(measure).parameters
+    except (TypeError, ValueError):
+        # Opaque callables get the standard options, without an error retry.
+        return measure(test_case, **kwargs)
+
+    if not any(
+        p.kind == inspect.Parameter.VAR_KEYWORD for p in parameters.values()
+    ):
+        kwargs = {
+            name: value
+            for name, value in kwargs.items()
+            if name in parameters
+            and parameters[name].kind
+            in (
+                inspect.Parameter.POSITIONAL_OR_KEYWORD,
+                inspect.Parameter.KEYWORD_ONLY,
+            )
+        }
+    return measure(test_case, **kwargs)
 
 
 def format_metric_description(
@@ -155,7 +195,8 @@ async def measure_metric_task(
             finish_text = "Read from Cache"
         else:
             try:
-                await metric.a_measure(
+                await _call_metric_measure(
+                    metric.a_measure,
                     test_case,
                     _show_indicator=False,
                     _in_component=_in_component,
@@ -172,24 +213,6 @@ async def measure_metric_task(
                         finish_text = "Errored"
                     else:
                         raise
-            except TypeError:
-                try:
-                    await metric.a_measure(
-                        test_case,
-                        _in_component=_in_component,
-                    )
-                    finish_text = "Done"
-                except MissingTestCaseParamsError as e:
-                    if skip_on_missing_params:
-                        metric.skipped = True
-                        return
-                    else:
-                        if ignore_errors:
-                            metric.error = str(e)
-                            metric.success = False  # Override metric success
-                            finish_text = "Errored"
-                        else:
-                            raise
             except Exception as e:
                 if ignore_errors:
                     metric.error = str(e)
@@ -417,7 +440,8 @@ async def safe_a_measure(
     _in_component: bool = False,
 ):
     try:
-        await metric.a_measure(
+        await _call_metric_measure(
+            metric.a_measure,
             tc,
             _show_indicator=False,
             _in_component=_in_component,
@@ -451,19 +475,6 @@ async def safe_a_measure(
                 metric.success = False
             else:
                 raise
-    except TypeError:
-        try:
-            await metric.a_measure(tc)
-        except MissingTestCaseParamsError as e:
-            if skip_on_missing_params:
-                metric.skipped = True
-                return
-            else:
-                if ignore_errors:
-                    metric.error = str(e)
-                    metric.success = False
-                else:
-                    raise
     except Exception as e:
         if ignore_errors:
             metric.error = str(e)
