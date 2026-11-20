@@ -1,0 +1,34 @@
+---
+id: benchmarks-pub-med-qa
+title: PubMedQA
+sidebar_label: PubMedQA
+---
+
+**PubMedQA** evaluates biomedical question answering using questions derived from PubMed abstracts. DeepEval uses the 1,000 expert-labeled examples in **PQA-L**, where each answer is `yes`, `no`, or `maybe`.
+
+:::info
+To learn more about the dataset and its construction, read the [original PubMedQA paper](https://arxiv.org/abs/1909.06146) or view the [dataset on Hugging Face](https://huggingface.co/datasets/qiaojin/PubMedQA).
+:::
+
+## Arguments
+
+There are **TWO** optional arguments when using the `PubMedQA` benchmark:
+
+- [Optional] `n_problems`: the number of problems to evaluate. It defaults to 1,000 (all expert-labeled problems).
+- [Optional] `verbose_mode`: whether to print the prompt, prediction, expected output, and score for each problem. It defaults to `False`.
+
+## Usage
+
+The code below evaluates a custom model on 10 PubMedQA problems.
+
+```python
+from deepeval.benchmarks import PubMedQA
+
+benchmark = PubMedQA(n_problems=10)
+
+# Replace 'mistral_7b' with your own custom model
+benchmark.evaluate(model=mistral_7b)
+print(benchmark.overall_score)
+```
+
+The `overall_score` ranges from 0 to 1 and is the proportion of questions for which the model's `yes`, `no`, or `maybe` answer exactly matches the expert label. Predictions are normalized to lowercase and stripped of surrounding whitespace before scoring.
