@@ -313,15 +313,26 @@ def get_per_task_timeout() -> Optional[float]:
     return None if are_timeouts_disabled() else get_per_task_timeout_seconds()
 
 
-def get_gather_timeout_seconds() -> float:
+def get_gather_timeout_seconds(
+    n_tasks: int = 1, max_concurrent: int = 1
+) -> float:
+    # Each task's deadline starts once it holds a semaphore slot, so a batch
+    # of n_tasks needs one per-task budget per round of max_concurrent.
+    rounds = max(1, math.ceil(n_tasks / max_concurrent))
     return (
-        get_per_task_timeout_seconds()
+        get_per_task_timeout_seconds() * rounds
         + get_settings().DEEPEVAL_TASK_GATHER_BUFFER_SECONDS
     )
 
 
-def get_gather_timeout() -> Optional[float]:
-    return None if are_timeouts_disabled() else get_gather_timeout_seconds()
+def get_gather_timeout(
+    n_tasks: int = 1, max_concurrent: int = 1
+) -> Optional[float]:
+    return (
+        None
+        if are_timeouts_disabled()
+        else get_gather_timeout_seconds(n_tasks, max_concurrent)
+    )
 
 
 def login(api_key: str):
