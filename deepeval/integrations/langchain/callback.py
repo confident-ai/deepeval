@@ -30,6 +30,15 @@ try:
 except ImportError:
     langchain_installed = False
 
+    # Fallbacks so this module still imports without LangChain. Otherwise
+    # `class CallbackHandler(BaseCallbackHandler)` raises a NameError at import
+    # time, before `is_langchain_installed()` can raise its helpful ImportError.
+    BaseCallbackHandler = object
+
+    def tool(*args, **kwargs):
+        is_langchain_installed()
+
+
 INSTRUMENTATIONS = ("langchain", "langgraph")
 # Keys in a model's ``metadata`` that configure its LLM span.
 _LLM_METADATA_KEYS = ("metrics",)
