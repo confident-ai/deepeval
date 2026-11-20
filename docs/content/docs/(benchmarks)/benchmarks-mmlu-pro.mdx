@@ -1,0 +1,127 @@
+---
+id: benchmarks-mmlu-pro
+title: MMLU-Pro
+sidebar_label: MMLU-Pro
+---
+
+**MMLU-Pro** is an enhanced version of MMLU, designed to be more challenging and more robust. It expands the answer set from 4 to **10 options** per question and removes trivial or noisy items, spanning **14 broad categories** such as math, physics, law, and engineering. For more information, [visit the MMLU-Pro dataset page](https://huggingface.co/datasets/TIGER-Lab/MMLU-Pro).
+
+:::tip
+`MMLU-Pro` reduces the chance of a model scoring well by guessing, since random guessing yields roughly **10%** rather than 25%. It is a better choice than `MMLU` when evaluating stronger models that have saturated the original benchmark.
+:::
+
+## Arguments
+
+There are **FOUR** optional arguments when using the `MMLU-Pro` benchmark:
+
+- [Optional] `tasks`: a list of tasks (`MMLUProTask` enums), specifying which of the **14 categories** to evaluate in the language model. By default, this is set to all tasks. Detailed descriptions of the `MMLUProTask` enum can be found [here](#mmlu-pro-tasks).
+- [Optional] `n_shots`: the number of "shots" to use for few-shot learning. This is set to **5 by default**.
+- [Optional] `n_problems_per_task`: the number of problems to evaluate per task. By default, all problems in a category are used.
+- [Optional] `verbose_mode`: a boolean which prints each problem, prediction, and expected output as the benchmark runs. Defaults to `False`.
+
+## Usage
+
+The code below evaluates a custom `mistral_7b` model ([click here to learn how to use **ANY** custom LLM](/docs/benchmarks-introduction#benchmarking-your-llm)) and assesses its performance on Computer Science and Physics using 3-shot learning.
+
+```python
+from deepeval.benchmarks import MMLUPro
+from deepeval.benchmarks.mmlu_pro.task import MMLUProTask
+
+# Define benchmark with specific tasks and shots
+benchmark = MMLUPro(
+    tasks=[MMLUProTask.COMPUTER_SCIENCE, MMLUProTask.PHYSICS],
+    n_shots=3
+)
+
+# Replace 'mistral_7b' with your own custom model
+benchmark.evaluate(model=mistral_7b)
+print(benchmark.overall_score)
+```
+
+The `overall_score` for this benchmark ranges from 0 to 1, where 1 signifies perfect performance and 0 indicates no correct answers. The model's score, based on **exact matching**, is calculated by determining the proportion of multiple-choice questions for which the model produces the precise correct letter answer (e.g. 'A') in relation to the total number of questions.
+
+As a result, utilizing more few-shot prompts (`n_shots`) can greatly improve the model's robustness in generating answers in the exact correct format and boost the overall score.
+
+## MMLU-Pro Tasks
+
+The `MMLUProTask` enum classifies the 14 categories covered in the MMLU-Pro benchmark.
+
+```python
+from deepeval.benchmarks.mmlu_pro.task import MMLUProTask
+
+mmlu_pro_tasks = [MMLUProTask.BIOLOGY]
+```
+
+Below is the comprehensive list of all available tasks:
+
+- `MATH`
+- `PHYSICS`
+- `CHEMISTRY`
+- `BIOLOGY`
+- `LAW`
+- `ENGINEERING`
+- `OTHER`
+- `ECONOMICS`
+- `HEALTH`
+- `PSYCHOLOGY`
+- `BUSINESS`
+- `PHILOSOPHY`
+- `HISTORY`
+- `COMPUTER_SCIENCE`
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is `MMLU-Pro` different from `MMLU`?",
+      answer: (
+        <>
+          <code>MMLU-Pro</code> expands each question from 4 to{" "}
+          <strong>10 answer options</strong>, removes noisy and trivial
+          questions, and groups content into <strong>14 broad categories</strong>{" "}
+          instead of 57 narrow subjects. This makes it substantially harder and
+          less susceptible to correct answers arrived at by guessing.
+        </>
+      ),
+    },
+    {
+      question: "How is `MMLU-Pro` scored?",
+      answer: (
+        <>
+          The <code>overall_score</code> ranges from 0 to 1 and is based on{" "}
+          <strong>exact matching</strong>: it is the proportion of
+          multiple-choice questions for which the model produces the precise
+          correct letter answer (e.g. 'A'). See the{" "}
+          <a href="/docs/benchmarks-introduction">benchmarks introduction</a> for
+          how scoring works across benchmarks.
+        </>
+      ),
+    },
+    {
+      question: "Do all questions have 10 options?",
+      answer: (
+        <>
+          Most do, but a small number of questions have fewer. The benchmark
+          formats each question using however many options it actually has, so
+          no placeholder choices are shown to the model.
+        </>
+      ),
+    },
+    {
+      question: "How do I run `MMLU-Pro` on a custom LLM?",
+      answer: (
+        <>
+          Wrap your model in <code>DeepEvalBaseLLM</code>, create a benchmark
+          with <code>MMLUPro(tasks=[...], n_shots=3)</code>, and call{" "}
+          <code>benchmark.evaluate(model=mistral_7b)</code>. You can then read{" "}
+          <code>benchmark.overall_score</code>. See the{" "}
+          <a href="/docs/benchmarks-introduction#benchmarking-your-llm">
+            benchmarking guide
+          </a>{" "}
+          for using any custom LLM.
+        </>
+      ),
+    },
+  ]}
+/>

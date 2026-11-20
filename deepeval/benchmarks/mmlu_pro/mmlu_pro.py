@@ -1,0 +1,289 @@
+from typing import List, Optional, Dict, Union
+from tqdm import tqdm
+
+from deepeval.dataset import Golden
+from deepeval.benchmarks.base_benchmark import (
+    DeepEvalBaseBenchmark,
+    DeepEvalBaseBenchmarkResult,
+)
+from deepeval.models import DeepEvalBaseLLM
+from deepeval.benchmarks.mmlu_pro.task import MMLUProTask
+from deepeval.benchmarks.mmlu_pro.template import MMLUProTemplate
+from deepeval.benchmarks.utils import should_use_batch
+from deepeval.benchmarks.schema import MultipleChoiceSchemaTenOptions
+from deepeval.telemetry import capture_benchmark_run
+
+
+class MMLUPro(DeepEvalBaseBenchmark):
+    def __init__(
+        self,
+        tasks: Optional[List[MMLUProTask]] = None,
+        n_shots: int = 5,
+        n_problems_per_task: Optional[int] = None,
+        verbose_mode: bool = False,
+        confinement_instructions: Optional[str] = None,
+        **kwargs,
+    ):
+        from deepeval.scorer import Scorer
+
+        super().__init__(**kwargs)
+        self.tasks: List[MMLUProTask] = (
+            list(MMLUProTask) if tasks is None else tasks
+        )
+        self.n_problems_per_task: Optional[int] = n_problems_per_task
+        self.scorer = Scorer()
+        self.shots_dataset: List[Dict] = None
+        self.n_shots: int = n_shots
+        self.predictions = None
+        self.task_scores = None
+        self.overall_score = None
+        self.verbose_mode: bool = verbose_mode
+        if not confinement_instructions:
+            self.confinement_instructions = (
+                "Output only the letter of your answer: "
+                "'A', 'B', 'C', 'D', 'E', 'F', 'G', 'H', 'I', or 'J'. "
+                "Full answer not needed."
+            )
+        else:
+            self.confinement_instructions = confinement_instructions
+
+    def evaluate(
+        self,
+        model: DeepEvalBaseLLM,
+        *args,
+        batch_size: Union[int, None] = None,
+        **kwargs,
+    ) -> DeepEvalBaseBenchmarkResult:
+        import pandas as pd
+
+        with capture_benchmark_run("MMLU-Pro", len(self.tasks)):
+            overall_correct_predictions = 0
+            overall_total_predictions = 0
+            predictions_row = []
+            scores_row = []
+            use_batch = should_use_batch(model, batch_size)
+
+            for task in self.tasks:
+                goldens = self.load_benchmark_dataset(task)
+                if (
+                    self.n_problems_per_task is not None
+                    and self.n_problems_per_task < len(goldens)
+                ):
+                    goldens = goldens[: self.n_problems_per_task]
+                task_correct_predictions = 0
+                task_total_predictions = len(goldens)
+                overall_total_predictions += len(goldens)
+
+                if use_batch:
+                    for i in tqdm(
+                        range(0, len(goldens), batch_size),
+                        desc=f"Batch Processing {task.value} (batch_size={batch_size})",
+                    ):
+                        goldens_batch = goldens[i : i + batch_size]
+                        batch_predictions = self.batch_predict(
+                            model, task, goldens_batch
+                        )
+                        for golden, prediction_dict in zip(
+                            goldens_batch, batch_predictions
+                        ):
+                            prediction = prediction_dict["prediction"]
+                            score = prediction_dict["score"]
+                            if score:
+                                task_correct_predictions += 1
+                                overall_correct_predictions += 1
+                            predictions_row.append(
+                                (
+                                    task.value,
+                                    golden.input,
+                                    prediction,
+                                    golden.expected_output,
+                                    score,
+                                )
+                            )
+                else:
+                    for idx, golden in enumerate(
+                        tqdm(goldens, desc=f"Processing {task.value}")
+                    ):
+                        prediction, score = self.predict(
+                            model, task, golden
+                        ).values()
+                        if score:
+                            task_correct_predictions += 1
+                            overall_correct_predictions += 1
+                        predictions_row.append(
+                            (
+                                task.value,
+                                golden.input,
+                                prediction,
+                                golden.expected_output,
+                                score,
+                            )
+                        )
+                        if self.verbose_mode:
+                            self.print_verbose_logs(
+                                idx,
+                                task.value,
+                                golden.input,
+                                golden.expected_output,
+                                prediction,
+                                score,
+                            )
+
+                task_accuracy = (
+                    task_correct_predictions / task_total_predictions
+                )
+                print(
+                    f"MMLU-Pro Task Accuracy (task={task.value}): {task_accuracy}"
+                )
+                scores_row.append((task.value, task_accuracy))
+
+            overall_accuracy = (
+                overall_correct_predictions / overall_total_predictions
+            )
+            print(f"Overall MMLU-Pro Accuracy: {overall_accuracy}")
+
+            self.predictions = pd.DataFrame(
+                predictions_row,
+                columns=[
+                    "Task",
+                    "Input",
+                    "Prediction",
+                    "Expected Output",
+                    "Correct",
+                ],
+            )
+            self.task_scores = pd.DataFrame(
+                scores_row, columns=["Task", "Score"]
+            )
+            self.overall_score = overall_accuracy
+
+            return DeepEvalBaseBenchmarkResult(
+                overall_accuracy=overall_accuracy
+            )
+
+    def predict(
+        self, model: DeepEvalBaseLLM, task: MMLUProTask, golden: Golden
+    ) -> Dict:
+        assert (
+            self.shots_dataset is not None
+        ), "Example dataset is empty. Call load_benchmark_dataset."
+        prompt = MMLUProTemplate.generate_output(
+            train_set=self.shots_dataset,
+            input=golden.input,
+            task=task,
+            n_shots=self.n_shots,
+        )
+
+        try:
+            res = model.generate(
+                prompt=prompt, schema=MultipleChoiceSchemaTenOptions
+            )
+            if isinstance(res, (tuple, list)):
+                prediction = res[0].answer
+            else:
+                prediction = res.answer
+        except TypeError:
+            prompt += f"\n\n{self.confinement_instructions}"
+            prediction = model.generate(prompt)
+
+        if isinstance(prediction, tuple):
+            prediction = prediction[0]
+        prediction = str(prediction)
+
+        score = self.scorer.exact_match_score(
+            golden.expected_output, prediction
+        )
+        return {"prediction": prediction, "score": score}
+
+    def batch_predict(
+        self, model: DeepEvalBaseLLM, task: MMLUProTask, goldens: List[Golden]
+    ) -> List[Dict]:
+        assert (
+            self.shots_dataset is not None
+        ), "Example dataset is empty. Call load_benchmark_dataset."
+
+        prompts = []
+        for golden in goldens:
+            prompt = MMLUProTemplate.generate_output(
+                train_set=self.shots_dataset,
+                input=golden.input,
+                task=task,
+                n_shots=self.n_shots,
+            )
+            prompts.append(prompt)
+
+        try:
+            responses = model.batch_generate(
+                prompts=prompts,
+                schemas=[MultipleChoiceSchemaTenOptions for i in prompts],
+            )
+            if not isinstance(responses, list):
+                raise TypeError(
+                    "batch_generate must return List[MultipleChoiceSchemaTenOptions]"
+                )
+            predictions = [res.answer for res in responses]
+        except TypeError:
+            prompts = [
+                prompt + f"\n\n{self.confinement_instructions}"
+                for prompt in prompts
+            ]
+            predictions = model.batch_generate(prompts)
+
+        if len(predictions) is not len(goldens):
+            raise ValueError(
+                "Custom `batch_generate` method did not return the same number of generations as the number of prompts."
+            )
+
+        res = []
+        for i in range(len(predictions)):
+            score = self.scorer.exact_match_score(
+                goldens[i].expected_output, predictions[i]
+            )
+            res.append({"prediction": predictions[i], "score": score})
+        return res
+
+    def load_benchmark_dataset(self, task: MMLUProTask) -> List[Golden]:
+        from datasets import load_dataset
+
+        if not hasattr(self, "dataset") or self.dataset is None:
+            self.dataset = load_dataset("TIGER-Lab/MMLU-Pro")
+
+        self.shots_dataset = [
+            data
+            for data in self.dataset["validation"]
+            if data["category"] == task.value
+        ]
+
+        goldens: List[Golden] = []
+        for data in self.dataset["test"]:
+            if data["category"] != task.value:
+                continue
+            input = MMLUProTemplate.format_question(data, include_answer=False)
+            goldens.append(Golden(input=input, expected_output=data["answer"]))
+        return goldens
+
+    def print_verbose_logs(
+        self,
+        idx: int,
+        task_value: str,
+        input: str,
+        expected_output: str,
+        prediction: str,
+        score: int,
+    ) -> str:
+        steps = [
+            f"Input:\n{input}",
+            f"Score: {score}\nPrediction: {prediction}\nExpected Output: {expected_output}",
+        ]
+        verbose_logs = steps[0]
+
+        if self.verbose_mode:
+            print("*" * 50)
+            print(f"Problem {idx + 1} (Task = {task_value})")
+            print("*" * 50)
+            print("")
+            print(verbose_logs + f"\n \n{steps[-1]}")
+            print("")
+            print("=" * 70)
+
+        return verbose_logs
