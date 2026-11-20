@@ -1,13 +1,17 @@
-from .evaluate import evaluate, assert_test
 from .compare import compare
-from .configs import AsyncConfig, DisplayConfig, CacheConfig, ErrorConfig
+from .configs import AsyncConfig, CacheConfig, DisplayConfig, ErrorConfig
+from .evaluate import assert_test, evaluate
+from .judge import a_compare_test_runs, compare_test_runs, judge
 
 __all__ = [
-    "evaluate",
+    "AsyncConfig",
+    "CacheConfig",
+    "DisplayConfig",
+    "ErrorConfig",
+    "a_compare_test_runs",
     "assert_test",
     "compare",
-    "AsyncConfig",
-    "DisplayConfig",
-    "CacheConfig",
-    "ErrorConfig",
+    "compare_test_runs",
+    "evaluate",
+    "judge",
 ]
