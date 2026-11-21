@@ -43,12 +43,14 @@ export interface AnswerRelevancyMetricOptions {
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
+  penalizeAmbiguousClaims?: boolean;
   evaluationTemplate?: AnswerRelevancyTemplateOverride;
 }
 
 export class AnswerRelevancyMetric extends BaseMetric {
   statements: string[] = [];
   verdicts: AnswerRelevancyVerdict[] = [];
+  private readonly penalizeAmbiguousClaims: boolean;
 
   constructor(options: AnswerRelevancyMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
@@ -67,6 +69,7 @@ export class AnswerRelevancyMetric extends BaseMetric {
       SingleTurnParams.ACTUAL_OUTPUT,
     ];
     initializeMetricModels(this, options);
+    this.penalizeAmbiguousClaims = options.penalizeAmbiguousClaims ?? false;
   }
 
   async measure(testCase: LLMTestCase): Promise<number> {
@@ -150,9 +153,13 @@ export class AnswerRelevancyMetric extends BaseMetric {
 
   private async generateReason(input: string): Promise<string | undefined> {
     if (!this.includeReason) return undefined;
-    const irrelevantStatements = this.verdicts
-      .filter((v) => v.verdict.trim().toLowerCase() === "no")
-      .map((v) => v.reason);
+    const irrelevantStatements: (string | null | undefined)[] = [];
+    for (const v of this.verdicts) {
+      const vd = v.verdict.trim().toLowerCase();
+      if (vd === "no") irrelevantStatements.push(v.reason);
+      else if (vd === "idk" && this.penalizeAmbiguousClaims)
+        irrelevantStatements.push(`(Ambiguous) ${v.reason}`);
+    }
     const prompt = this.getPrompt("generate_reason", {
       irrelevant_statements: irrelevantStatements,
       input,
@@ -171,7 +178,9 @@ export class AnswerRelevancyMetric extends BaseMetric {
     if (total === 0) return 1;
     let relevant = 0;
     for (const v of this.verdicts) {
-      if (v.verdict.trim().toLowerCase() !== "no") relevant++;
+      const vd = v.verdict.trim().toLowerCase();
+      if (vd !== "no") relevant++;
+      if (this.penalizeAmbiguousClaims && vd === "idk") relevant--;
     }
     const score = relevant / total;
     return this.applyStrictMode(score);
