@@ -126,7 +126,9 @@ class CachedTestRun(BaseModel):
     def load(cls, data):
         return cls(**data)
 
-    def get_cached_api_test_case(self, key: str) -> CachedTestCase:
+    def get_cached_api_test_case(self, key: str) -> Optional[CachedTestCase]:
+        if self.test_cases_lookup_map is None:
+            return None
         return self.test_cases_lookup_map.get(key, None)
 
 
@@ -145,6 +147,8 @@ class TestRunCacheManager:
             return None
 
         cached_test_run = self.get_cached_test_run()
+        if cached_test_run is None:
+            return None
         cache_dict = {
             SingleTurnParams.INPUT.value: test_case.input,
             SingleTurnParams.ACTUAL_OUTPUT.value: test_case.actual_output,
@@ -202,6 +206,11 @@ class TestRunCacheManager:
             cache_dict["expectation_evidence"] = expectation_evidence(test_case)
         test_case_cache_key = serialize(cache_dict)
         cached_test_run = self.get_cached_test_run(from_temp=to_temp)
+        if cached_test_run is None:
+            cached_test_run = CachedTestRun()
+            self.set_cached_test_run(cached_test_run, temp=to_temp)
+        if cached_test_run.test_cases_lookup_map is None:
+            cached_test_run.test_cases_lookup_map = {}
         cached_test_run.test_cases_lookup_map[test_case_cache_key] = (
             new_cache_test_case
         )
@@ -284,13 +293,23 @@ class TestRunCacheManager:
                     f"In get_cached_test_run, temp={from_temp}, Lock acquisition failed: {e}",
                     file=sys.stderr,
                 )
+                if self.temp_cached_test_run is None:
+                    self.temp_cached_test_run = CachedTestRun()
 
             if should_create_cached_test_run:
                 self.create_cached_test_run(temp=from_temp)
 
+            if (
+                self.temp_cached_test_run
+                and self.temp_cached_test_run.test_cases_lookup_map is None
+            ):
+                self.temp_cached_test_run.test_cases_lookup_map = {}
+
             return self.temp_cached_test_run
         else:
             if self.cached_test_run:
+                if self.cached_test_run.test_cases_lookup_map is None:
+                    self.cached_test_run.test_cases_lookup_map = {}
                 return self.cached_test_run
 
             if not os.path.exists(self.cache_file_name):
@@ -314,9 +333,17 @@ class TestRunCacheManager:
                     f"In get_cached_test_run, temp={from_temp}, Lock acquisition failed: {e}",
                     file=sys.stderr,
                 )
+                if self.cached_test_run is None:
+                    self.cached_test_run = CachedTestRun()
 
             if should_create_cached_test_run:
                 self.create_cached_test_run(temp=from_temp)
+
+            if (
+                self.cached_test_run
+                and self.cached_test_run.test_cases_lookup_map is None
+            ):
+                self.cached_test_run.test_cases_lookup_map = {}
 
             return self.cached_test_run
 
