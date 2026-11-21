@@ -729,6 +729,31 @@ class TestSaveAndLoad:
             assert reloaded.test_cases[1].tools_called == []
             assert reloaded.test_cases[1].expected_tools == []
 
+    def test_json_test_case_loader_reads_additional_metadata(self):
+        """The JSON test case loader takes a metadata key name, so metadata has
+        to survive the round trip the way it already does for CSV."""
+        goldens = [
+            Golden(
+                input="What's the weather?",
+                actual_output="Sunny",
+                additional_metadata={"k": "v"},
+            )
+        ]
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = EvaluationDataset(goldens).save_as(
+                "json", tmpdir, file_name="meta"
+            )
+
+            reloaded = EvaluationDataset()
+            reloaded.add_test_cases_from_json_file(
+                file_path=path,
+                input_key_name="input",
+                actual_output_key_name="actual_output",
+                addtional_metadata_key_name="additional_metadata",
+            )
+
+            assert reloaded.test_cases[0].metadata == {"k": "v"}
+
 
 class TestDatasetVersion:
     def _pulled_dataset(self) -> EvaluationDataset:
