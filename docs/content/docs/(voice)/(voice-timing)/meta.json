@@ -1,0 +1,10 @@
+{
+  "title": "Timing",
+  "pages": [
+    "metrics-response-latency",
+    "metrics-response-delay-consistency",
+    "metrics-time-to-first-response",
+    "metrics-agent-interruption",
+    "metrics-turn-taking-naturalness"
+  ]
+}

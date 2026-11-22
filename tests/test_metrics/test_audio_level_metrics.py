@@ -8,7 +8,7 @@ from deepeval.metrics import (
     SpeechIntelligibilityMetric,
     VolumeVarianceMetric,
 )
-from deepeval.metrics.voice._analysis import analyze_audio
+from deepeval.metrics.voice.utils.analysis import analyze_audio
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from tests.test_metrics.helpers import (
     clean_turns,

@@ -321,7 +321,7 @@ def test_audio_integrity_fails_undecodable_assistant_audio():
 def test_audio_analysis_without_numpy_says_numpy_is_required(monkeypatch):
     import builtins
 
-    from deepeval.metrics.voice import _analysis
+    from deepeval.metrics.voice.utils import analysis as _analysis
 
     real_import = builtins.__import__
 

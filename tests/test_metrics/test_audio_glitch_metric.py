@@ -4,21 +4,25 @@ import pytest
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import AudioGlitchMetric
-from deepeval.metrics.voice._analysis import (
+from deepeval.metrics.voice.utils.analysis import (
     analyze_audio,
     pitch_and_periodicity,
 )
-from deepeval.metrics.audio_glitch import AudioGlitchTemplate
-from deepeval.metrics.audio_glitch._detectors import (
+from deepeval.metrics.voice.audio_defects.audio_glitch import (
+    AudioGlitchTemplate,
+)
+from deepeval.metrics.voice.audio_defects.audio_glitch.utils import (
     _silence_profile,
     _stable_runs,
     _tone_frames,
     detect_audio_glitches,
 )
-from deepeval.metrics.audio_glitch.audio_glitch import (
+from deepeval.metrics.voice.audio_defects.audio_glitch.audio_glitch import (
     DEFAULT_CLEAN_REASON,
 )
-from deepeval.metrics.audio_glitch.schema import AudioGlitchReason
+from deepeval.metrics.voice.audio_defects.audio_glitch.schema import (
+    AudioGlitchReason,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from tests.test_metrics.helpers import (

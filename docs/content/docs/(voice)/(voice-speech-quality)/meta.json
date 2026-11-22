@@ -1,0 +1,9 @@
+{
+  "title": "Speech Quality",
+  "pages": [
+    "metrics-voice-naturalness",
+    "metrics-speech-intelligibility",
+    "metrics-voice-consistency",
+    "metrics-transcription-accuracy"
+  ]
+}

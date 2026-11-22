@@ -9,7 +9,10 @@ from deepeval.metrics import (
     PitchVariationMetric,
     SpeakingRateMetric,
 )
-from deepeval.metrics.voice._analysis import analyze_audio, speech_span_rate_wpm
+from deepeval.metrics.voice.prosody.speaking_rate.utils import (
+    speech_span_rate_wpm,
+)
+from deepeval.metrics.voice.utils.analysis import analyze_audio
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from tests.test_metrics.helpers import (
     clean_turns,
