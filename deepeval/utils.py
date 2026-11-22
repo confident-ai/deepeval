@@ -975,25 +975,14 @@ def create_console(**kwargs) -> Console:
     On Windows, when stdout is redirected (CI, > log.txt), the default encoding
     may not support emoji characters (✨🚀). This causes UnicodeEncodeError.
 
-    Returns a Console configured with error-tolerant output.
+    Returns a Console configured to avoid encoding errors on Windows.
     """
     import sys
-    from io import TextIOWrapper
+    import platform
 
-    # If stdout is redirected and not a terminal, wrap it with errors='replace'
-    file = kwargs.get('file', sys.stdout)
-    if file is sys.stdout and not sys.stdout.isatty() and hasattr(sys.stdout, 'buffer'):
-        try:
-            # Create a wrapper that replaces unencodable characters
-            # This doesn't modify global stdout, just creates a wrapped version for Console
-            file = TextIOWrapper(
-                sys.stdout.buffer,
-                encoding=sys.stdout.encoding or 'utf-8',
-                errors='replace',
-                line_buffering=True
-            )
-            kwargs['file'] = file
-        except Exception:
-            pass  # Best effort - use default if wrapping fails
+    # On Windows with redirected stdout, use legacy mode to avoid emoji
+    if platform.system() == 'Windows' and not sys.stdout.isatty():
+        # legacy_windows=True disables emoji and uses ASCII-safe output
+        kwargs.setdefault('legacy_windows', True)
 
     return Console(**kwargs)
