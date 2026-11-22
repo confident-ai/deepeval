@@ -14,8 +14,6 @@ from typing import Optional, Tuple, TYPE_CHECKING
 
 from pydantic import BaseModel, Field
 
-from deepeval.voice.interruption import InterruptionPolicy
-
 if TYPE_CHECKING:
     from deepeval.dataset.golden import OverlapBehavior
 
@@ -121,9 +119,9 @@ class FloorController:
     overlap_yield_ms: float = 600.0
     awkward_silence_ms: float = 800.0
     restart_backoff_ms: Tuple[float, float] = (200.0, 1200.0)
-    policy: Optional[InterruptionPolicy] = None
     overlap_behavior: OverlapBehavior = "adaptive"
     retry_after_yield: bool = True
+    max_retries_per_agent_turn: int = 1
 
     state: FloorState = FloorState.LISTENING
     agent_speaking: bool = False
@@ -136,10 +134,7 @@ class FloorController:
 
     @classmethod
     def from_overlap_behavior(
-        cls,
-        overlap: OverlapBehavior,
-        *,
-        policy: Optional[InterruptionPolicy] = None,
+        cls, overlap: OverlapBehavior
     ) -> "FloorController":
         try:
             preset = _OVERLAP_PRESETS[overlap]
@@ -150,7 +145,6 @@ class FloorController:
             ) from exc
         return cls(
             **preset.model_dump(),
-            policy=policy,
             overlap_behavior=overlap,
         )
 
@@ -181,7 +175,7 @@ class FloorController:
         return self.state in _BARGE_STATES
 
     @property
-    def can_run_judge(self) -> bool:
+    def can_barge(self) -> bool:
         return (
             self.state == FloorState.LISTENING
             and self.agent_speaking
@@ -308,12 +302,10 @@ class FloorController:
                     delay = random.uniform(lo, hi) / 1000.0
                     self.timers.restart_at = now + delay
                 elif now >= self.timers.restart_at:
-                    max_retries = (
-                        self.policy.max_barges_per_agent_turn
-                        if self.policy is not None
-                        else 1
-                    )
-                    if self.timers.retries_this_agent_turn < max_retries:
+                    if (
+                        self.timers.retries_this_agent_turn
+                        < self.max_retries_per_agent_turn
+                    ):
                         self.timers.retries_this_agent_turn += 1
                         self.reset_barge_attempt()
                         self.state = FloorState.RESTART_BARGE

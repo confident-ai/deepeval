@@ -16,6 +16,7 @@ import {
   FACE_ROW,
   FACES,
   GRID,
+  HELD,
   ICE,
   LEGS,
   NOTES,
@@ -25,6 +26,7 @@ import {
   POSES,
   WALK_LEGS,
   type MascotAccessory,
+  type MascotHolding,
   type MascotOverlay,
   type MascotExpression,
   type MascotPose,
@@ -33,7 +35,7 @@ import {
 import { pixelPaths } from "./_pixels";
 import styles from "./Mascot.module.scss";
 
-export type { MascotAccessory, MascotExpression, MascotOverlay, MascotPose };
+export type { MascotAccessory, MascotExpression, MascotHolding, MascotOverlay, MascotPose };
 export type MascotLook = "left" | "center" | "right";
 export type MascotMotion = "jump" | "shake" | "dance" | "fly";
 export type MascotEffect = "freeze" | "music" | "book" | "vein";
@@ -106,6 +108,7 @@ const PALETTE: Record<string, string> = {
   Q: "#d6dbe1",
   Y: "#ffd84a",
   R: "#e5484d",
+  L: "#e3b26b",
 };
 
 const LOOK_SHIFT: Record<MascotLook, number> = {
@@ -124,6 +127,8 @@ const MOTION_CLASS: Record<MascotMotion, string> = {
 export interface MascotProps {
   accessory?: MascotAccessory;
   overlay?: MascotOverlay;
+  // Optional; nothing is held by default.
+  holding?: MascotHolding;
   expression?: MascotExpression;
   look?: MascotLook;
   pose?: MascotPose;
@@ -199,6 +204,7 @@ const Frames = ({
 const Mascot = ({
   accessory = "none",
   overlay,
+  holding,
   expression = "neutral",
   look = "center",
   pose = "idle",
@@ -272,6 +278,8 @@ const Mascot = ({
         .filter(Boolean)
         .join(" ")}
       viewBox={`0 0 ${GRID} ${GRID}`}
+      // Held things can stick out past the sprite's edge.
+      overflow={holding ? "visible" : undefined}
       shapeRendering="crispEdges"
       role={label && !isButton ? "img" : undefined}
       aria-label={isButton ? undefined : label}
@@ -332,6 +340,7 @@ const Mascot = ({
           >
             {toPaths(BOWTIE.rows)}
           </g>
+          {holding && toPaths(HELD[holding])}
           {reaction?.effect === "book" && toPaths(BOOK)}
           {reaction?.effect === "vein" && (
             <g className={styles.vein}>{toPaths(VEIN.rows, VEIN.y, VEIN.x)}</g>

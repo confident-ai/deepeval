@@ -29,7 +29,7 @@ class TestPersonaPrompt:
             name="Dana",
             characteristics="You are blunt and short-tempered.",
             interruption_behavior=InterruptionBehavior(
-                frequency="frequent", overlap="insist"
+                every=2, overlap="insist"
             ),
             speaks_first=False,
         )
@@ -38,7 +38,9 @@ class TestPersonaPrompt:
 
         assert block.startswith("<persona>\nName: Dana")
         assert "You are blunt and short-tempered." in block
-        assert "You often cut in while the agent is still speaking." in block
+        assert (
+            "You sometimes cut in while the agent is still speaking." in block
+        )
         assert "you keep talking until the agent stops." in block
         assert "You wait for the agent to speak first" in block
 
@@ -87,9 +89,9 @@ class TestPersonaVoice:
 
 
 class TestInterruptionBehavior:
-    def test_rejects_an_unknown_frequency(self):
-        with pytest.raises(ValueError, match="interruption frequency"):
-            InterruptionBehavior(frequency="always")
+    def test_rejects_an_invalid_cadence(self):
+        with pytest.raises(ValueError, match="interruption cadence"):
+            InterruptionBehavior(every=0)
 
     def test_rejects_an_unknown_overlap(self):
         with pytest.raises(ValueError, match="overlap behavior"):

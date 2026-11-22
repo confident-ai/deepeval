@@ -4,16 +4,15 @@ import time
 import pytest
 
 from deepeval.dataset import ConversationalGolden
-from deepeval.test_case import Audio, AudioChunk, Turn
+from deepeval.test_case import Audio, Turn
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.connectors.transports.base import BaseVoiceConnector
 from deepeval.voice.connectors.transports.callback import CallbackVoiceConnector
 from deepeval.voice.connectors.types import AgentEvent, ConnectorTurn
 from deepeval.voice.duplex import DuplexExchange, _spoken_prefix
 from deepeval.voice.floor_control import FloorController
-from deepeval.voice.interruption import interruption_policy
+from deepeval.voice.interruption import InterruptionSchedule
 from deepeval.voice.protocol import VoiceProtocol
-from deepeval.voice.streaming import PcmRecorder, UplinkResult
 from deepeval.voice.timeline import audio_duration
 
 
@@ -39,14 +38,12 @@ async def test_duplex_waits_for_delayed_callback_event_without_closing_stream():
         return ConnectorTurn(audio=reply_audio, transcript="Agent reply")
 
     connector = CallbackVoiceConnector(delayed_agent)
-    policy = interruption_policy("normal")
-    assert policy is not None
     exchange = DuplexExchange(
         connector=connector,
         tts_model=object(),
         stt_model=FailIfCalledSTT(),
-        policy=policy,
-        floor=FloorController(policy=policy),
+        schedule=InterruptionSchedule(),
+        floor=FloorController(),
         golden=ConversationalGolden(scenario="Test"),
         language="English",
         a_generate_schema=None,
@@ -61,7 +58,6 @@ async def test_duplex_waits_for_delayed_callback_event_without_closing_stream():
             exchange.run(
                 turns=turns,
                 sent_at=time.perf_counter(),
-                barges_this_conversation=0,
             ),
             timeout=2,
         )
@@ -155,13 +151,12 @@ async def test_pauses_within_a_reply_do_not_add_up_to_end_of_turn():
         )
 
     connector = CallbackVoiceConnector(agent, turn_detection="eager")
-    policy = interruption_policy("normal")
     exchange = DuplexExchange(
         connector=connector,
         tts_model=object(),
         stt_model=FailIfCalledSTT(),
-        policy=policy,
-        floor=FloorController(policy=policy),
+        schedule=InterruptionSchedule(),
+        floor=FloorController(),
         golden=ConversationalGolden(scenario="Test"),
         language="English",
         a_generate_schema=None,
@@ -178,8 +173,6 @@ async def test_pauses_within_a_reply_do_not_add_up_to_end_of_turn():
             exchange.run(
                 turns=[Turn(role="user", content="Hello", audio=probe)],
                 sent_at=time.perf_counter(),
-                # Past the barge cap, so the judge stays out of this.
-                barges_this_conversation=policy.max_barges_per_conversation,
             ),
             timeout=15,
         )
@@ -190,13 +183,12 @@ async def test_pauses_within_a_reply_do_not_add_up_to_end_of_turn():
 
 
 def _exchange(connector, **overrides):
-    policy = interruption_policy("normal")
     kwargs = dict(
         connector=connector,
         tts_model=object(),
         stt_model=FailIfCalledSTT(),
-        policy=policy,
-        floor=FloorController(policy=policy),
+        schedule=InterruptionSchedule(),
+        floor=FloorController(),
         golden=ConversationalGolden(scenario="Test"),
         language="English",
         a_generate_schema=None,
@@ -217,10 +209,6 @@ async def _run_one_turn(exchange, connector, *, timeout: float = 15):
             exchange.run(
                 turns=[Turn(role="user", content="Hello", audio=probe)],
                 sent_at=time.perf_counter(),
-                # Past the barge cap, so the judge stays out of this.
-                barges_this_conversation=(
-                    exchange.policy.max_barges_per_conversation
-                ),
             ),
             timeout=timeout,
         )
@@ -375,119 +363,26 @@ class _StubSTT:
         return "what the caller heard", None
 
 
-@pytest.mark.asyncio
-async def test_agent_holds_the_floor_until_the_barge_is_ready_to_speak():
-    """Deciding to interrupt is not the same moment as interrupting.
-
-    A caller settles on what to say and then says it, and the agent talks
-    through the gap between. Silencing the agent when the judge decides instead
-    leaves the whole synthesis round trip as dead air in the recording — the
-    agent stops, nobody speaks, and the barge arrives seconds later.
-    """
-
-    replies = iter([_tone(6000)])
-
-    async def agent(_audio):
-        # Only the first reply is long enough to interrupt; the follow-up just
-        # lets the exchange finish.
-        return ConnectorTurn(
-            audio=Audio.from_bytes(
-                audio_utils.pcm16_to_wav_bytes(
-                    next(replies, _tone(200)), sample_rate=24000
-                ),
-                "audio/wav",
-            ),
-            transcript="I need your order number before I can look into any of "
-            "this for you, and it will take a moment to pull up once you do.",
-        )
-
-    async def a_generate_schema(prompt, schema):
-        return schema(
-            should_interrupt=True,
-            utterance="Just check it.",
-            reason="The caller has waited long enough.",
-        )
-
-    connector = CallbackVoiceConnector(agent, turn_detection="eager")
-    policy = interruption_policy("frequent")
-    exchange = DuplexExchange(
-        connector=connector,
-        tts_model=_SlowTTS(),
-        stt_model=_StubSTT(),
-        policy=policy,
-        floor=FloorController(policy=policy),
-        golden=ConversationalGolden(scenario="Test"),
-        language="English",
-        a_generate_schema=a_generate_schema,
-        call_started_at=time.perf_counter(),
-    )
-    probe = Audio.from_bytes(
-        audio_utils.pcm16_to_wav_bytes(_tone(10), sample_rate=24000),
-        "audio/wav",
-    )
-    turns = [Turn(role="user", content="Hello", audio=probe)]
-
-    async with connector:
-        await connector.stream_uplink(probe)
-        await asyncio.wait_for(
-            exchange.run(
-                turns=turns,
-                sent_at=time.perf_counter(),
-                barges_this_conversation=0,
-            ),
-            timeout=20,
-        )
-
-    barge = next(
-        t
-        for t in turns
-        if t.role == "user" and (t.metadata or {}).get("barge_in")
-    )
-    assistant = next(t for t in turns if t.role == "assistant")
-    agent_ends_at = assistant.audio.start_time + audio_duration(assistant.audio)
-    # Anything approaching the synthesis delay means the agent was muted when
-    # the barge was decided rather than when it was spoken.
-    assert barge.audio.start_time - agent_ends_at < _SlowTTS.delay_s / 2
+async def _write_line(prompt, schema):
+    return schema(utterance="Just check it.")
 
 
-class _StreamingTTS:
-    """Speech that goes out in frames while the rest is still being made."""
-
-    frame_delay = 0.3
-    frames = 3
-
-    def supports_streaming(self) -> bool:
-        return True
-
-    def synthesis_cost(self, text: str):
-        return None
-
-    async def a_synthesize_stream(self, text, **kwargs):
-        for index in range(self.frames):
-            await asyncio.sleep(self.frame_delay)
-            yield AudioChunk.from_bytes(
-                _tone(200),
-                "audio/pcm",
-                sampleRate=24000,
-                encoding="pcm",
-                final=index == self.frames - 1,
-            )
-
-
-class _StreamingWire(BaseVoiceConnector):
-    """A transport that forwards each frame the moment it is synthesized."""
+class _LiveWire(BaseVoiceConnector):
 
     protocol = VoiceProtocol.WEBSOCKET
     end_of_turn_silence_ms = 500
     max_turn_timeout_s = 20.0
+    signals_turn_complete = True
 
-    def __init__(self, reply_pcm: bytes, *, sample_rate: int = 24000):
+    def __init__(
+        self, reply_pcm: bytes, *, yields: bool = True, sample_rate: int = 24000
+    ):
         self.sample_rate = sample_rate
         self.reply_pcm = reply_pcm
+        self.yields = yields
         self.frames_at: list = []
         self._events = asyncio.Queue()
         self._reply_task = None
-        self._cancelled = False
 
     @property
     def audio_format(self):
@@ -511,9 +406,7 @@ class _StreamingWire(BaseVoiceConnector):
             await asyncio.sleep(delay)
         await self._events.put(
             AgentEvent(
-                transcript="I need your order number before I can look into "
-                "any of this, and it will take a moment to pull up.",
-                received_at=time.perf_counter(),
+                transcript="Agent reply", received_at=time.perf_counter()
             )
         )
         for frame in audio_utils.iter_pcm16_frames(pcm, self.sample_rate):
@@ -538,115 +431,242 @@ class _StreamingWire(BaseVoiceConnector):
 
     async def stream_uplink(self, audio, *, trailing_silence: bool = True):
         self.frames_at.append(time.perf_counter())
+        if not self.yields:
+            return
         await self._end_reply()
-
-    async def stream_uplink_chunks(
-        self, chunks, *, trailing_silence: bool = True, on_first_frame=None
-    ):
-        self._cancelled = False
-        recorder = PcmRecorder()
-        async for chunk in chunks:
-            recorder.add(chunk)
-            if self._cancelled:
-                continue
-            first = not self.frames_at
-            self.frames_at.append(time.perf_counter())
-            if first:
-                if on_first_frame is not None:
-                    on_first_frame(self.frames_at[0])
-                # Speech arriving ends the reply, as a real agent's would. It
-                # happens here rather than when this call began: nothing has
-                # reached the agent until a frame does.
-                await self._end_reply()
-                # And the agent answers what it was interrupted with, so the
-                # exchange can finish rather than wait out its timeout.
-                self._reply_task = asyncio.create_task(
-                    self._play_reply(_tone(300), delay=0.8)
-                )
-        return UplinkResult(
-            audio=recorder.to_audio(),
-            first_frame_at=self.frames_at[0] if self.frames_at else None,
+        self._reply_task = asyncio.create_task(
+            self._play_reply(_tone(300), delay=0.8)
         )
 
     async def stop_uplink(self) -> None:
-        self._cancelled = True
+        return None
 
 
-@pytest.mark.asyncio
-async def test_a_barge_is_heard_from_its_first_frame_not_its_last():
-    """The agent hears the caller cut in while the rest is still being made.
+def _scheduled_on_next_reply() -> InterruptionSchedule:
+    schedule = InterruptionSchedule(3)
+    schedule.on_agent_reply_start()
+    schedule.on_agent_reply_start()
+    return schedule
 
-    Holding the barge back until the whole clip exists puts the entire synthesis
-    round trip between the agent going quiet and the caller speaking, and places
-    the caller's voice on the recording seconds after they started talking.
-    """
 
-    async def a_generate_schema(prompt, schema):
-        return schema(
-            should_interrupt=True,
-            utterance="Just check it.",
-            reason="The caller has waited long enough.",
-        )
-
-    wire = _StreamingWire(_tone(6000))
-    policy = interruption_policy("frequent")
+async def _run_scheduled(wire: _LiveWire, schedule, *, floor=None, tts=None):
     call_started_at = time.perf_counter()
     exchange = DuplexExchange(
         connector=wire,
-        tts_model=_StreamingTTS(),
+        tts_model=tts or _SlowTTS(),
         stt_model=_StubSTT(),
-        policy=policy,
-        floor=FloorController(policy=policy),
+        schedule=schedule,
+        floor=floor or FloorController(),
         golden=ConversationalGolden(scenario="Test"),
         language="English",
-        a_generate_schema=a_generate_schema,
+        a_generate_schema=_write_line,
         call_started_at=call_started_at,
     )
-    probe = Audio.from_bytes(
-        audio_utils.pcm16_to_wav_bytes(_tone(10), sample_rate=24000),
-        "audio/wav",
-    )
-    turns = [Turn(role="user", content="Hello", audio=probe)]
-
+    turns = [Turn(role="user", content="Hello")]
+    prepared = exchange.prepare_barge(turns)
+    assert prepared is not None
     await wire.connect()
     try:
-        await asyncio.wait_for(
+        result = await asyncio.wait_for(
             exchange.run(
                 turns=turns,
                 sent_at=time.perf_counter(),
-                barges_this_conversation=0,
+                prepared_barge=prepared,
             ),
             timeout=20,
         )
     finally:
         await wire.disconnect()
+    return turns, result
 
-    barge = next(
+
+def _barge_turns(turns):
+    return [
         t
         for t in turns
         if t.role == "user" and (t.metadata or {}).get("barge_in")
+    ]
+
+
+@pytest.mark.asyncio
+async def test_a_prepared_barge_cuts_into_the_scheduled_reply():
+    schedule = _scheduled_on_next_reply()
+
+    turns, _ = await _run_scheduled(_LiveWire(_tone(6000)), schedule)
+
+    [barge] = _barge_turns(turns)
+    cut, answer = [t for t in turns if t.role == "assistant"]
+    assert barge.content == "Just check it."
+    assert cut.interrupted is True
+    assert 0.5 <= barge.audio.start_time - cut.audio.start_time < 1.2
+    cut_ends_at = cut.audio.start_time + audio_duration(cut.audio)
+    assert barge.audio.start_time - cut_ends_at < 0.3
+    assert answer.interrupted is None
+    assert schedule.interrupts_next_reply is False
+
+
+@pytest.mark.asyncio
+async def test_a_reply_over_before_the_line_is_ready_keeps_it_owed():
+    schedule = _scheduled_on_next_reply()
+    wire = _LiveWire(_tone(300))
+
+    turns, _ = await _run_scheduled(wire, schedule)
+
+    assert _barge_turns(turns) == []
+    assert wire.frames_at == []
+    [reply] = [t for t in turns if t.role == "assistant"]
+    assert reply.interrupted is None
+    assert schedule.interrupts_next_reply is True
+
+
+class _SilenceEndsTheTurn(_LiveWire):
+    signals_turn_complete = False
+
+    async def _play_reply(self, pcm: bytes, *, delay: float = 0.0) -> None:
+        if delay:
+            await asyncio.sleep(delay)
+        for frame in audio_utils.iter_pcm16_frames(pcm, self.sample_rate):
+            await self._events.put(
+                AgentEvent(audio=frame, received_at=time.perf_counter())
+            )
+            await asyncio.sleep(audio_utils.DEFAULT_FRAME_MS / 1000)
+
+
+class _HearsTheCallerLate(_SilenceEndsTheTurn):
+
+    end_of_turn_silence_ms = 800
+
+    async def stream_uplink(self, audio, *, trailing_silence: bool = True):
+        self.frames_at.append(time.perf_counter())
+        asyncio.create_task(self._yield_then_answer())
+
+    async def _yield_then_answer(self) -> None:
+        await asyncio.sleep(1.4)
+        await self._end_reply()
+        self._reply_task = asyncio.create_task(
+            self._play_reply(_tone(500), delay=2.0)
+        )
+
+    async def _end_reply(self) -> None:
+        if self._reply_task is not None and not self._reply_task.done():
+            self._reply_task.cancel()
+            try:
+                await self._reply_task
+            except (asyncio.CancelledError, Exception):
+                pass
+
+
+@pytest.mark.asyncio
+async def test_an_agent_that_stops_within_the_grace_gives_way_to_the_caller():
+    schedule = _scheduled_on_next_reply()
+    floor = FloorController.from_overlap_behavior("adaptive")
+
+    turns, _ = await _run_scheduled(
+        _HearsTheCallerLate(_tone(6000)), schedule, floor=floor
     )
-    # Frames left over a stretch of time, so sending overlapped synthesis
-    # instead of following it.
-    assert len(wire.frames_at) == _StreamingTTS.frames
-    spread = wire.frames_at[-1] - wire.frames_at[0]
-    assert spread >= _StreamingTTS.frame_delay * 1.5
-    # The clip sits where the caller started talking, and holds all they said.
-    assert barge.audio is not None
-    assert barge.audio.start_time == pytest.approx(
-        wire.frames_at[0] - call_started_at, abs=0.05
+
+    cut, barge, answer = turns[1:]
+    assert cut.interrupted is True
+    assert barge.metadata == {"barge_in": True}
+    assert answer.role == "assistant" and answer.interrupted is None
+
+
+@pytest.mark.asyncio
+async def test_a_reply_that_ends_before_the_cut_in_keeps_it_owed():
+    schedule = _scheduled_on_next_reply()
+    wire = _SilenceEndsTheTurn(_tone(500))
+
+    turns, _ = await _run_scheduled(wire, schedule)
+
+    assert _barge_turns(turns) == []
+    [reply] = [t for t in turns if t.role == "assistant"]
+    assert reply.interrupted is None
+    assert schedule.interrupts_next_reply is True
+
+
+@pytest.mark.asyncio
+async def test_an_agent_that_talks_through_the_barge_was_not_cut_off():
+    schedule = _scheduled_on_next_reply()
+    wire = _LiveWire(_tone(3000), yields=False)
+
+    turns, _ = await _run_scheduled(
+        wire, schedule, floor=FloorController.from_overlap_behavior("yield")
     )
-    assert audio_duration(barge.audio) == pytest.approx(0.6, abs=0.01)
+
+    [barge] = _barge_turns(turns)
+    [reply] = [t for t in turns if t.role == "assistant"]
+    assert barge.metadata.get("frustrated") is True
+    assert reply.interrupted is None
+    assert audio_duration(reply.audio) == pytest.approx(3.0, abs=0.15)
+    assert schedule.interrupts_next_reply is False
+
+
+class _AnswersOverTheCaller(_StillTalking):
+
+    signals_turn_complete = False
+    max_turn_timeout_s = 5.0
+
+    def __init__(self, early_ms: int):
+        self.early_ms = early_ms
+
+    async def iter_agent_events(self):
+        yield AgentEvent(
+            audio=_tone(self.early_ms), received_at=time.perf_counter()
+        )
+        for _ in range(12):
+            await asyncio.sleep(0.05)
+            yield AgentEvent(audio=_quiet(50), received_at=time.perf_counter())
+        yield AgentEvent(audio=_tone(500), received_at=time.perf_counter())
+        while True:
+            await asyncio.sleep(0.05)
+            yield AgentEvent(audio=_quiet(50), received_at=time.perf_counter())
+
+
+async def _run_over_the_caller(early_ms: int, caller_started_s: float = -1.0):
+    connector = _AnswersOverTheCaller(early_ms)
+    exchange = _exchange(connector, stt_model=_StubSTT())
+    now = time.perf_counter()
+    return await asyncio.wait_for(
+        exchange.run(
+            turns=[Turn(role="user", content="Hello")],
+            sent_at=now + 0.5,
+            caller_spoke=(now + caller_started_s, now + 0.5),
+        ),
+        timeout=5,
+    )
+
+
+@pytest.mark.asyncio
+async def test_speech_the_caller_talked_over_is_an_interrupted_turn():
+    result = await _run_over_the_caller(400)
+
+    cut, answer = result.turns
+    assert cut.interrupted is True
+    assert answer.interrupted is None
+    assert answer.audio.start_time > cut.audio.start_time
+
+
+@pytest.mark.asyncio
+async def test_speech_that_ended_before_the_caller_began_was_not_cut_off():
+    result = await _run_over_the_caller(300, caller_started_s=0.45)
+
+    assert result.turns[0].interrupted is None
+
+
+@pytest.mark.asyncio
+async def test_a_blip_the_caller_talked_over_is_dropped():
+    result = await _run_over_the_caller(100)
+
+    [answer] = result.turns
+    assert answer.interrupted is None
+    assert audio_duration(answer.audio) >= 0.5
 
 
 class TestSpokenPrefix:
-    """The judge may only see the reply as far as the caller has heard it."""
 
     transcript = "What is your order number? I will look it up."
 
     def test_text_beyond_the_delivered_audio_is_withheld(self):
-        # A connector that sends the whole reply up front must not let the
-        # judge answer a question the agent has not reached yet.
         assert "order number" not in _spoken_prefix(self.transcript, 0.5)
 
     def test_grows_as_the_audio_plays(self):
@@ -683,8 +703,7 @@ class _EndsQuietlyWhileCallerTalks(_StillTalking):
 
 @pytest.mark.asyncio
 async def test_a_reply_ended_without_speech_still_has_a_start_time():
-    policy = interruption_policy("normal")
-    floor = FloorController(policy=policy)
+    floor = FloorController()
     connector = _EndsQuietlyWhileCallerTalks(floor)
     exchange = _exchange(connector, stt_model=_StubSTT(), floor=floor)
 
@@ -693,3 +712,4 @@ async def test_a_reply_ended_without_speech_still_has_a_start_time():
     assistant = next(t for t in result.turns if t.role == "assistant")
     assert assistant.audio is not None
     assert assistant.audio.start_time is not None
+    assert assistant.interrupted is None
