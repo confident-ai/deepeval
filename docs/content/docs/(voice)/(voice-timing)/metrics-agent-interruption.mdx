@@ -1,0 +1,152 @@
+---
+id: metrics-agent-interruption
+title: Agent Interruption
+sidebar_label: Agent Interruption
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The agent interruption metric checks whether your voice agent **starts speaking into the caller**: either a false start, where it starts as the caller speaks and backs off, or talking over the caller. It returns the share of the agent's starts that interrupted no one, between 0 and 1.
+
+<AudioSample name="agent-interruption" />
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import AgentInterruptionMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = AgentInterruptionMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **SEVEN** optional parameters when creating an `AgentInterruptionMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `caller_start_window_ms`: an integer. An agent start collides with the caller when the caller starts speaking within this many milliseconds of it. Must be greater than 0. Defaulted to `500`.
+- [Optional] `max_caller_silence_seconds`: an integer. A false start is not counted when the caller's pause, from when they stopped speaking to when they started again, was longer than this. Must be greater than 0. Defaulted to `4`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+`score_breakdown` lists the agent starts where the issue was found:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.75
+print(metric.score_breakdown)
+```
+
+```python
+{
+    "eligible_turns": 6,
+    "turns_with_events": 1,
+    "events": [{"type": "false_start", "duration_seconds": 0.66, "start_time": 74.32, "reply_start": 74.32, "agent_seconds": 0.66, "overlap_seconds": 0.66}],
+    "skipped": [],
+    "timing_source": "call_recording",
+}
+```
+
+`type` names the condition that fired (`false_start` or `talk_over`; `false_start` when both did). `reply_start` is where in the call recording the agent started; when the turn timestamps were used, events carry `turn`, the reply's zero-based position in the conversation, instead. `start_time` and `duration_seconds` place the agent's interrupting stretch on the call's clock. `agent_seconds` is how long the agent kept speaking and `overlap_seconds` how much of that the caller was making sound. Without a recording, agent replies whose audio could not be decoded are listed under `skipped`.
+
+## How Is It Calculated?
+
+`AgentInterruptionMetric` checks every time the agent starts speaking after at least one second of its own silence, leaving out its first start on the call (even when it answers a caller who spoke first), and scores the share that interrupted no one:
+
+<Equation formula="\text{Agent Interruption} = \frac{\text{Agent starts that are neither a false start nor a talk-over}}{\text{Agent starts after the opening line}}" />
+
+An interruption is a **false start** or a **talk-over**:
+
+- **False start:** the agent starts speaking, the caller is already talking or starts within `caller_start_window_ms`, and the agent stops within **1.5 seconds**. It is not counted when the caller's pause, from when they stopped speaking to when they started again, was longer than `max_caller_silence_seconds`, since after a long silence the agent is expected to fill it.
+- **Talk-over:** the agent starts speaking while the caller is already talking, and the caller makes **1 second** or more of sound while the agent keeps speaking.
+
+The two settings both shape the false start. Below, the caller pauses for less than `max_caller_silence_seconds` between speaking and starting again, and the agent starts during that pause, less than `caller_start_window_ms` before the caller starts again. The agent backs off within 1.5 seconds, so this counts as a false start. Had the caller paused for longer, or started again later after the agent, it would not.
+
+<ImageDisplayer id="diagrams/in-house/metrics/agent-interruption-settings" />
+
+The caller is already talking when they made sound in at least 0.2 of the 0.3 seconds before the agent started. Pauses under a second do not end the agent's stretch of speech. The caller cutting in on the agent is not counted: that is the caller's choice, not the agent's. The half-second window, the 1.5-second stop and the 1-second overlap were chosen on human-labelled phone calls, where reviewers also excused an agent that spoke after about four seconds of caller silence.
+
+### Where the timing comes from
+
+When the test case has a `call_recording_path`, a stereo WAV of the whole call with the caller on the left channel and the agent on the right (the simulator writes one when [`record_call=True`](/docs/conversation-simulator-voice-mode)), the metric reads who was making sound when from each channel's loudness: 20 ms frames, pauses under 0.3 seconds closed, sounds under 0.15 seconds dropped. This does not depend on how the turns were cut, so it is the more reliable source. Without one, or with a mono file, the metric falls back to each turn's `start_time` and audio length. `timing_source` on `score_breakdown` says which was used.
+
+Loudness cannot tell speech from other sound: steady noise, ringback or hold music on the caller's channel reads as the caller talking.
+
+Without a recording, every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from turn-taking naturalness?",
+      answer: (
+        <>
+          <a href="/docs/metrics-turn-taking-naturalness">
+            TurnTakingNaturalnessMetric
+          </a>{" "}
+          scores both kinds of overlap on a sliding curve together with the gaps. This metric checks only the agent starting over the caller and points to the replies where it did.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. It only reads when each speaker is making sound, so it has no
+          model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "What if my turn timestamps are inaccurate?",
+      answer: (
+        <>
+          Attach the stereo call recording as{" "}
+          <code>call_recording_path</code> and the metric ignores the turn
+          timestamps. Without one it trusts each turn's{" "}
+          <code>start_time</code> and audio length, so a caller turn stamped
+          to end after the agent started reports an interruption that did
+          not happen. Listen to a flagged moment before acting on it.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the simulated user's audio too?",
+      answer: (
+        <>
+          No. It uses the caller's turns only to know when the caller was
+          speaking. Only the agent is judged.
+        </>
+      ),
+    },
+  ]}
+/>

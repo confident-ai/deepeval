@@ -2473,7 +2473,7 @@
       "commits": 1
     }
   ],
-  "content/docs/(voice)/metrics-agent-responsiveness.mdx": [
+  "content/docs/(voice)/(voice-responsiveness)/metrics-agent-responsiveness.mdx": [
     {
       "login": "penguine-ip",
       "name": "Jeffrey Ip",
@@ -2482,7 +2482,7 @@
       "commits": 3
     }
   ],
-  "content/docs/(voice)/metrics-audio-integrity.mdx": [
+  "content/docs/(voice)/(voice-audio-defects)/metrics-audio-integrity.mdx": [
     {
       "login": "penguine-ip",
       "name": "Jeffrey Ip",
@@ -2491,7 +2491,7 @@
       "commits": 3
     }
   ],
-  "content/docs/(voice)/metrics-speech-intelligibility.mdx": [
+  "content/docs/(voice)/(voice-speech-quality)/metrics-speech-intelligibility.mdx": [
     {
       "login": "penguine-ip",
       "name": "Jeffrey Ip",
@@ -2500,7 +2500,7 @@
       "commits": 3
     }
   ],
-  "content/docs/(voice)/metrics-turn-taking-naturalness.mdx": [
+  "content/docs/(voice)/(voice-timing)/metrics-turn-taking-naturalness.mdx": [
     {
       "login": "penguine-ip",
       "name": "Jeffrey Ip",
@@ -2509,7 +2509,7 @@
       "commits": 3
     }
   ],
-  "content/docs/(voice)/metrics-voice-consistency.mdx": [
+  "content/docs/(voice)/(voice-speech-quality)/metrics-voice-consistency.mdx": [
     {
       "login": "penguine-ip",
       "name": "Jeffrey Ip",
@@ -2518,7 +2518,7 @@
       "commits": 3
     }
   ],
-  "content/docs/(voice)/metrics-voice-naturalness.mdx": [
+  "content/docs/(voice)/(voice-speech-quality)/metrics-voice-naturalness.mdx": [
     {
       "login": "penguine-ip",
       "name": "Jeffrey Ip",
@@ -2527,7 +2527,7 @@
       "commits": 4
     }
   ],
-  "content/docs/(voice)/metrics-voice-reliability.mdx": [
+  "content/docs/(voice)/(voice-responsiveness)/metrics-voice-reliability.mdx": [
     {
       "login": "penguine-ip",
       "name": "Jeffrey Ip",

@@ -143,10 +143,14 @@ def test_touching_clips_fall_back_to_the_recorded_latency():
     turns = timed_call([0.5, 0.0, 0.5])
     turns[3].latency_ms = 5000.0
     [event] = _measure(ResponseLatencyMetric(), turns).score_breakdown["events"]
+    reply_start = turns[3].audio.start_time
     assert event == {
         "type": "slow_response",
         "turn": 3,
         "response_delay_seconds": 5.0,
+        # The wait the caller sat through, ending where the reply starts.
+        "start_time": reply_start - 5.0,
+        "duration_seconds": 5.0,
     }
 
 
@@ -242,6 +246,8 @@ def test_a_slow_greeting_fails_time_to_first_response():
             "type": "slow_first_response",
             "turn": 0,
             "first_response_seconds": 5.0,
+            "start_time": 0.0,
+            "duration_seconds": 5.0,
         }
     ]
 
@@ -317,8 +323,11 @@ def test_a_recording_replaces_the_turn_timestamps(tmp_path):
     )
     assert metric.score_breakdown["timing_source"] == "call_recording"
     [event] = metric.score_breakdown["events"]
-    assert event["at_seconds"] == pytest.approx(8.0, abs=0.05)
+    assert event["reply_start"] == pytest.approx(8.0, abs=0.05)
     assert event["response_delay_seconds"] == pytest.approx(4.25, abs=0.05)
+    assert event["start_time"] + event["duration_seconds"] == pytest.approx(
+        event["reply_start"], abs=0.01
+    )
 
 
 def test_delay_consistency_reads_the_same_waits_from_a_recording(tmp_path):
@@ -351,7 +360,11 @@ def test_a_false_start_on_a_recording(tmp_path):
     assert metric.score == 0.5
     [event] = metric.score_breakdown["events"]
     assert event["type"] == "false_start"
-    assert event["at_seconds"] == pytest.approx(3.0, abs=0.05)
+    assert event["reply_start"] == pytest.approx(3.0, abs=0.05)
+    assert event["start_time"] == pytest.approx(3.0, abs=0.05)
+    assert event["duration_seconds"] == pytest.approx(
+        event["agent_seconds"], abs=0.01
+    )
 
 
 def test_talking_over_the_caller_on_a_recording(tmp_path):

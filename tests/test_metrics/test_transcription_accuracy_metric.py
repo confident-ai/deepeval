@@ -10,19 +10,19 @@ import pytest
 
 from deepeval.metrics import TranscriptionAccuracyMetric
 from deepeval.errors import MissingTestCaseParamsError
-from deepeval.metrics.transcription_accuracy.schema import (
+from deepeval.metrics.voice.speech_quality.transcription_accuracy.schema import (
     TranscriptionAccuracyScoreReason,
     TranscriptionAccuracyVerdict,
     Verdicts,
 )
 from deepeval.metrics.base_metric import Verdict
-from deepeval.metrics.transcription_accuracy.transcription_accuracy import (
+from deepeval.metrics.voice.speech_quality.transcription_accuracy.transcription_accuracy import (
     VERBATIM_TRANSCRIPTION_PROMPT,
     _verdict_for_audio_exchange,
     get_audio_exchanges,
     get_transcribed_exchanges,
 )
-from deepeval.metrics.transcription_accuracy.utils import (
+from deepeval.metrics.voice.speech_quality.transcription_accuracy.utils import (
     word_errors,
     words_for_error_rate,
 )

@@ -4,21 +4,25 @@ import pytest
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import AudioGlitchMetric
-from deepeval.metrics.voice._analysis import (
+from deepeval.metrics.voice.utils.analysis import (
     analyze_audio,
     pitch_and_periodicity,
 )
-from deepeval.metrics.audio_glitch import AudioGlitchTemplate
-from deepeval.metrics.audio_glitch._detectors import (
+from deepeval.metrics.voice.audio_defects.audio_glitch import (
+    AudioGlitchTemplate,
+)
+from deepeval.metrics.voice.audio_defects.audio_glitch.utils import (
     _silence_profile,
     _stable_runs,
     _tone_frames,
     detect_audio_glitches,
 )
-from deepeval.metrics.audio_glitch.audio_glitch import (
+from deepeval.metrics.voice.audio_defects.audio_glitch.audio_glitch import (
     DEFAULT_CLEAN_REASON,
 )
-from deepeval.metrics.audio_glitch.schema import AudioGlitchReason
+from deepeval.metrics.voice.audio_defects.audio_glitch.schema import (
+    AudioGlitchReason,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from tests.test_metrics.helpers import (
@@ -326,6 +330,22 @@ def test_a_stream_cut_is_inferred_when_the_same_speaker_resumes():
     assert event["evidence"] == "abrupt_end"
     assert event["gap_seconds"] == pytest.approx(0.5, abs=0.01)
     assert event["resumed_turn"] == 3
+
+
+def test_a_stream_cut_starts_where_a_trailing_dead_run_begins():
+    turns = clean_turns()
+    # The caller's clip goes dead for its last 1.2 s, then the caller resumes.
+    turns[2].audio = to_audio(speech_like(1.5) + zeros(1.2), start_time=7.0)
+    turns[3] = Turn(
+        role="user",
+        content="...and that is what I did.",
+        audio=to_audio(speech_like(1.5, seed=6), start_time=10.2),
+    )
+    metric, _ = _measure(turns)
+    (event,) = _events(metric)
+    assert event["type"] == "stream_cut"
+    assert event["evidence"] == "trailing_dead_run"
+    assert event["offset_seconds"] == pytest.approx(1.5, abs=0.05)
 
 
 def test_a_stream_cut_is_not_inferred_without_start_times():

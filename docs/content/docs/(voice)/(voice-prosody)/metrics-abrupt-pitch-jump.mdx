@@ -1,0 +1,137 @@
+---
+id: metrics-abrupt-pitch-jump
+title: Abrupt Pitch Jump
+sidebar_label: Abrupt Pitch Jump
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The abrupt pitch jump metric checks whether your voice agent's voice **cracks or squeaks**: a sudden leap in pitch, faster than a human voice can move. It returns the share of agent replies without one, between 0 and 1.
+
+<AudioSample name="abrupt-pitch-jump" />
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import AbruptPitchJumpMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = AbruptPitchJumpMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **FIVE** optional parameters when creating an `AbruptPitchJumpMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+`score_breakdown` lists the replies where the issue was found:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.75
+print(metric.score_breakdown)
+```
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 1,
+    "events": [
+        {"type": "pitch_jump", "turn": 3, "offset_seconds": 1.84, "duration_seconds": 0.08, "start_time": 12.34},
+        {"type": "pitch_jump", "turn": 3, "offset_seconds": 2.16, "duration_seconds": 0.08, "start_time": 12.66},
+    ],
+    "skipped": [],
+}
+```
+
+`turn` is the turn's zero-based position in the conversation. Each jump is its own event: `offset_seconds` and `duration_seconds` cover the two 40 ms pitch frames either side of the step, and `start_time` places them on the call's clock (left out when the clip has no `Audio.start_time`). A crack that goes up and comes back down is two events, and a reply with several jumps still counts once toward the score. Agent replies whose audio could not be decoded, or that have no voiced speech, are listed under `skipped`.
+
+## How Is It Calculated?
+
+`AbruptPitchJumpMetric` checks every agent reply with voiced speech and scores the share of them without a jump:
+
+<Equation formula="\text{Abrupt Pitch Jump} = \frac{\text{Agent replies without a pitch jump}}{\text{Agent replies with voiced speech}}" />
+
+The pitch of every 40 ms frame is tracked with the YIN method (de Cheveigné & Kawahara, 2002). A jump is a step of **6 semitones or more** from one frame to the next, with at least two steady frames on both sides. That is 150 semitones a second, about 2.5 times the fastest pitch change a speaker can make on purpose (Xu & Sun, 2002), so normal intonation never reaches it.
+
+Two kinds of tracking slips are not counted. A stretch of up to three frames (120 ms) sitting within 3 semitones of an octave off its neighbours is folded back, since pitch trackers often lock onto the octave for a moment. A step next to a single isolated frame is ignored, since the frame on a voicing edge is often misread. The limit is fixed: this metric reports a defect, not a matter of taste.
+
+If no agent reply has voiced speech, the metric is skipped.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from pitch variation?",
+      answer: (
+        <>
+          <a href="/docs/metrics-pitch-variation">PitchVariationMetric</a> looks
+          at how widely pitch moves across the whole reply and ignores single
+          spikes. This metric looks for the spikes themselves, so one cracked
+          word fails this metric only.
+        </>
+      ),
+    },
+    {
+      question: "Can it miss a crack of exactly one octave?",
+      answer: (
+        <>
+          A crack of about an octave that lasts 120 ms or less looks like a
+          tracking slip and is not counted. Longer ones, and jumps of any other
+          size, are.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Detection is deterministic and runs locally over the audio
+          samples, so it has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the simulated user's audio too?",
+      answer: (
+        <>
+          No. Only assistant turns are inspected. The caller's audio is produced
+          by your own TTS model, so defects there are a problem with the test
+          harness rather than with the agent under test.
+        </>
+      ),
+    },
+  ]}
+/>

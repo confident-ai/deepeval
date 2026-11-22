@@ -1,6 +1,6 @@
 import pytest
 
-from deepeval.metrics.voice._call_activity import (
+from deepeval.metrics.voice.utils.call_activity import (
     agent_starts,
     call_activity,
     recording_activity,

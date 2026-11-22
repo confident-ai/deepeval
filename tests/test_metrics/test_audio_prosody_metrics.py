@@ -9,7 +9,10 @@ from deepeval.metrics import (
     PitchVariationMetric,
     SpeakingRateMetric,
 )
-from deepeval.metrics.voice._analysis import analyze_audio, speech_span_rate_wpm
+from deepeval.metrics.voice.prosody.speaking_rate.utils import (
+    speech_span_rate_wpm,
+)
+from deepeval.metrics.voice.utils.analysis import analyze_audio
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from tests.test_metrics.helpers import (
     clean_turns,
@@ -109,9 +112,11 @@ def test_score_is_the_share_of_agent_replies_without_the_issue(
     metric = _measure(metric_class(), _with_reply(1, build()))
     assert metric.score == pytest.approx(2 / 3)
     assert metric.reason == f"1 of 3 agent replies had {label}."
-    [event] = metric.score_breakdown["events"]
-    assert event["type"] == event_type
-    assert event["turn"] == 1
+    events = metric.score_breakdown["events"]
+    assert {event["type"] for event in events} == {event_type}
+    assert {event["turn"] for event in events} == {1}
+    for event in events:
+        assert event["duration_seconds"] > 0
 
 
 @pytest.mark.parametrize("metric_class,_,__,build", PROSODY_ISSUES)

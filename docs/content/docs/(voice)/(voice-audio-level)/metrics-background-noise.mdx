@@ -1,0 +1,137 @@
+---
+id: metrics-background-noise
+title: Background Noise
+sidebar_label: Background Noise
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The background noise metric checks whether your voice agent's speech has **a constant hiss, hum or room noise behind it**. It compares how loud the agent's speech is with the noise underneath it, and returns the share of agent replies where the speech stands well clear of the noise, between 0 and 1.
+
+<AudioSample name="background-noise" />
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import BackgroundNoiseMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = BackgroundNoiseMetric(threshold=0.8, min_snr_db=20)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **SIX** optional parameters when creating a `BackgroundNoiseMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `min_snr_db`: an integer for the lowest signal-to-noise ratio, in dB, that a reply may have before its noise counts as an issue. Must be `0` or more. Defaulted to `20`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+`score_breakdown` lists the replies where the issue was found:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.75
+print(metric.score_breakdown)
+```
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 1,
+    "events": [{"type": "background_noise", "turn": 3, "estimated_snr_db": 14.2, "offset_seconds": 0.0, "duration_seconds": 4.2, "start_time": 10.5}],
+    "skipped": [],
+}
+```
+
+`turn` is the turn's zero-based position in the conversation, and `estimated_snr_db` is the reply's estimated signal-to-noise ratio. The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, that have no audible sound, or that are under two seconds long, are listed under `skipped`.
+
+## How Is It Calculated?
+
+`BackgroundNoiseMetric` checks every audible agent reply with at least two seconds of audio and scores the share of them without the issue:
+
+<Equation formula="\text{Background Noise} = \frac{\text{Agent replies at or above min\_snr\_db}}{\text{Audible agent replies with two or more seconds of audio}}" />
+
+Each reply is cut into 20 ms frames. The **speech level** is the 90th percentile of the frames loud enough to be speech (about −41 dBFS or louder), and the **noise level** is the 10th percentile of all frames that are not digital silence, which lands in the pauses between words. The signal-to-noise ratio is the gap between the two in dB. A reply with a ratio below `min_snr_db` has background noise.
+
+The default of **20 dB** sits 5 dB above the +15 dB speech-to-noise ratio that speech-intelligibility guidance treats as the minimum for clearly understood speech, so it flags noise that starts to get in the way. Produced speech, such as audiobooks, keeps its noise about 40 dB below the voice, and clean synthetic speech usually measures above 60 dB. Noise at −45 dBFS behind normal speech measures about 30 dB and passes.
+
+Noise is measured in the pauses between words, and a reply under **two seconds** rarely has one, so shorter replies are skipped. A reply with no audible sound at all (an overall level of −70 dBFS or lower) is skipped too; [`SilentReplyMetric`](/docs/metrics-silent-reply) reports it. If no agent reply is long enough, the metric is skipped.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from speech intelligibility?",
+      answer: (
+        <>
+          <a href="/docs/metrics-speech-intelligibility">
+            SpeechIntelligibilityMetric
+          </a>{" "}
+          blends noise with volume, clipping and dropouts into one score. This
+          metric reports noise alone, so you can see whether it is the reason a
+          call sounded bad.
+        </>
+      ),
+    },
+    {
+      question: "What should I set min_snr_db to?",
+      answer: (
+        <>
+          Keep the default of 20 dB for most agents. Raise it, to 25 or 30 dB,
+          if your agent should sound studio-clean; lower it if your agent
+          deliberately plays ambient sound, like a busy call center.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Detection is deterministic and runs locally over the audio
+          samples, so it has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the simulated user's audio too?",
+      answer: (
+        <>
+          No. Only assistant turns are inspected. The caller's audio is produced
+          by your own TTS model, so defects there are a problem with the test
+          harness rather than with the agent under test.
+        </>
+      ),
+    },
+  ]}
+/>

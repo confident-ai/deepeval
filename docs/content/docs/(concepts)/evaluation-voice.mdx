@@ -78,7 +78,7 @@ Voice metrics follow the same three-part model as the test case:
 
 [`VoiceReliabilityMetric`](/docs/metrics-voice-reliability) is the optional operational summary. It combines the responsiveness and audio-integrity checks, but a critical failure such as missing agent audio or a complete failure to respond always forces its score to zero. Minor checks cannot average away a catastrophic failure.
 
-All thirty-two voice metrics return a score from 0 to 1, where higher is better. Measurements such as latency, loudness, clipping rate, pause duration, and speaking rate appear in metric reasons and breakdowns as diagnostic evidence. They are not universal quality scores: whether a pause or response delay sounds natural depends on what was happening in the conversation.
+All thirty-two voice metrics return a score from 0 to 1, where higher is better. Measurements such as latency, loudness, clipping rate, pause duration, and speaking rate appear in metric reasons and breakdowns as diagnostic evidence. They are not universal quality scores: whether a pause or response delay sounds natural depends on what was happening in the conversation. Events in a breakdown are placed in time: `offset_seconds` and `duration_seconds` locate the problem inside the turn's audio, and `start_time` places it on the call's clock when that is known.
 
 The metrics use different parts of the same `ConversationalTestCase`:
 
