@@ -325,18 +325,33 @@ class ToolCorrectnessMetric(BaseMetric):
                     issues.append(f"tool type mismatches {type_mismatches}")
                 return f"Incorrect tool usage: {' and '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
         else:
-            used_expected = set(self.tools_called).intersection(
-                set(self.expected_tools)
-            )
-            missing = set(self.expected_tools) - used_expected
+            # Compare by tool NAME, not by whole-object equality. Two ToolCalls
+            # with the same name and type but different arguments are not equal,
+            # so object-identity set maths reports a tool as "missing" when it
+            # was in fact called with different arguments (issue #1410).
+            called_names = {tool.name for tool in self.tools_called}
+            missing = {
+                tool.name
+                for tool in self.expected_tools
+                if tool.name not in called_names
+            }
             if self._calculate_non_exact_match_score() == 1:
                 return f"All expected tools {expected_tools_names} were called (order not considered)."
             else:
                 issues = []
-                if missing or not type_mismatches:
+                if missing:
                     issues.append(f"missing tools {list(missing)}")
                 if type_mismatches:
                     issues.append(f"tool type mismatches {type_mismatches}")
+                if not issues:
+                    # Every expected tool was called by name with the right type,
+                    # yet the score is below 1, so the arguments or output of an
+                    # expected tool did not match. Reporting "missing tools []"
+                    # here is misleading (issue #1410).
+                    issues.append(
+                        "tool arguments or output did not match for "
+                        f"{expected_tools_names}"
+                    )
                 return f"Incomplete tool usage: {'; '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
 
     def _get_type_mismatches(self) -> List[str]:
