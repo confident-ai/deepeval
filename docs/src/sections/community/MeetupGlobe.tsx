@@ -30,6 +30,7 @@ const TILT = (-16 * Math.PI) / 180;
 const SPIN_PER_TICK = 0.6; // degrees
 const TICK_MS = 90;
 const MAX_FLAGS = 45;
+const START_LNG = 12; // degrees east: central Europe faces the viewer first
 const MIN_APART = 3; // degrees of arc; only near-identical spots are merged
 
 const rad = (d: number) => (d * Math.PI) / 180;
@@ -178,9 +179,9 @@ function pickSpots(): Spot[] {
 
 const MeetupGlobe: React.FC = () => {
   const { ref, inView } = useInView({ rootMargin: "100px" });
-  // Start with the first meetup a little right of center.
+  // Start centered on Europe, where most of the flags are.
   const spots = useMemo(pickSpots, []);
-  const [spin, setSpin] = useState(() => (spots.find((s) => s.events.length)?.lng ?? 0) - 30);
+  const [spin, setSpin] = useState(START_LNG);
   const [still, setStill] = useState(false);
   const [hovered, setHovered] = useState<string | null>(null);
   const drag = useRef<{ x: number; spin: number; id: number; perDeg: number } | null>(null);
