@@ -14,7 +14,7 @@ That pattern does not scale when you need to have multi-language templates or ne
 - Let contributors run **`deepeval translate`** to add keys to those JSON files without forking Python code
 - Keep **one standardized shape** for all metrics (`class_name` → `method_name` → template string) for tooling and multi-language layouts
 
-So shipped prompts now live in a single bundled [`templates.json`](../metric_templates/templates.json). Metrics render them by calling `self._get_prompt(...)` (a thin helper on the metric/node base classes that delegates to [`resolve_template`](../metric_templates/resolver.py)) instead of building prompts in Python.
+So shipped prompts now live in a single bundled [`templates.json`](../templates/metrics/templates.json). Metrics render them by calling `self._get_prompt(...)` (a thin helper on the metric/node base classes that delegates to [`resolve_template`](../templates/resolver.py)) instead of building prompts in Python.
 
 ### Why `.txt` files live next to each metric
 
@@ -28,8 +28,8 @@ That gives you:
 
 | Layer                            | Role                                                                 | Example paths                                           |
 | -------------------------------- | -------------------------------------------------------------------- | ------------------------------------------------------- |
-| **`.txt` on disk**               | Editable prompt sources in this repo                                 | `metrics/.../templates/`, `metric_templates/fragments/` |
-| **`templates.json`**             | Compiled English bundle shipped with the package                     | `metric_templates/templates.json`                       |
+| **`.txt` on disk**               | Editable prompt sources in this repo                                 | `metrics/.../templates/`, `templates/metrics/fragments/` |
+| **`templates.json`**             | Compiled English bundle shipped with the package                     | `templates/metrics/templates.json`                       |
 | **`community/templates.*.json`** | Shipped translations per language (enum value in filename)           | `metric_templates/community/templates.hindi.json`       |
 
 Do not hand-edit `templates.json` for routine prompt changes — edit `.txt`, run the compile script, and commit both.
@@ -83,7 +83,7 @@ deepeval/cli/translate/templates/TranslateCLI/prompt.txt
 Reusable Jinja snippets (multimodal rules, faithfulness verdict blocks, etc.) live in:
 
 ```
-deepeval/metric_templates/fragments/<fragment_name>.txt
+deepeval/templates/metrics/fragments/<fragment_name>.txt
 ```
 
 Metric templates include them at render time with:
@@ -103,9 +103,9 @@ See [Shared fragments](#shared-fragments) below.
    python scripts/compile_metric_templates.py
    ```
 
-3. Commit **both** the `.txt` change and the updated `deepeval/metric_templates/templates.json`.
+3. Commit **both** the `.txt` change and the updated `deepeval/templates/metrics/templates.json`.
 
-The compile script scans all `**/templates/<MetricClassName>/*.txt` files under `deepeval/` plus `metric_templates/fragments/*.txt`, then rewrites `templates.json`. Existing class and method order in JSON is preserved; new classes/methods are appended.
+The compile script scans all `**/templates/<MetricClassName>/*.txt` files under `deepeval/` plus `templates/metrics/fragments/*.txt`, then rewrites `templates.json`. Existing class and method order in JSON is preserved; new classes/methods are appended.
 
 ## Adding templates for a new metric
 
@@ -141,8 +141,8 @@ The compile script scans all `**/templates/<MetricClassName>/*.txt` files under 
 | Field    | Details                                                                                                      |
 | -------- | ------------------------------------------------------------------------------------------------------------ |
 | Script   | [`scripts/compile_metric_templates.py`](../../scripts/compile_metric_templates.py)                           |
-| Input    | All `deepeval/**/templates/<MetricClassName>/*.txt` and `deepeval/metric_templates/fragments/*.txt`          |
-| Output   | [`deepeval/metric_templates/templates.json`](../metric_templates/templates.json)                             |
+| Input    | All `deepeval/**/templates/<MetricClassName>/*.txt` and `deepeval/templates/metrics/fragments/*.txt`          |
+| Output   | [`deepeval/templates/metrics/templates.json`](../templates/metrics/templates.json)                             |
 
 ```bash
 # From the deepeval repo root
@@ -160,7 +160,7 @@ flowchart LR
   Txt[".txt sources on disk"]
   Compile["compile_metric_templates.py"]
   JSON["templates.json"]
-  Resolver["metric_templates.resolver"]
+  Resolver["deepeval.templates.resolver"]
   Metric["Metric.measure / _generate_*"]
   Txt --> Compile --> JSON --> Resolver --> Metric
 ```
@@ -176,7 +176,7 @@ flowchart LR
 
 3. The rendered string is sent to the evaluation LLM.
 
-Relevant code: [`deepeval/metric_templates/resolver.py`](../metric_templates/resolver.py).
+Relevant code: [`deepeval/templates/resolver.py`](../templates/resolver.py).
 
 Example (from answer relevancy):
 
@@ -206,7 +206,7 @@ prompt = self._get_prompt(
 | `faithfulness_verdicts_guidelines_multimodal` | Multimodal faithfulness scoring rules                           |
 | `faithfulness_verdicts_guidelines_text_only`  | Text-only faithfulness scoring rules                            |
 
-Edit files in `deepeval/metric_templates/fragments/`, then run the compile script. Fragments are stored under `"_fragments"` in `templates.json` and passed into every `resolve_template` call.
+Edit files in `deepeval/templates/metrics/fragments/`, then run the compile script. Fragments are stored under `"_fragments"` in `templates.json` and passed into every `resolve_template` call.
 
 ## Translations and community languages
 
@@ -222,7 +222,7 @@ Centralizing prompts in JSON is what makes translation practical: the CLI can wa
 - [ ] Ran `python scripts/compile_metric_templates.py`
 - [ ] Committed updated `templates.json`
 - [ ] New Jinja variables match what the metric passes into `self._get_prompt(...)`
-- [ ] Fragment references use names that exist under `metric_templates/fragments/`
+- [ ] Fragment references use names that exist under `templates/metrics/fragments/`
 - [ ] Tests pass: `pytest tests/test_templates/test_metric_templates.py` (metrics + simulator sync)
 
 ## Related files
@@ -230,7 +230,7 @@ Centralizing prompts in JSON is what makes translation practical: the CLI can wa
 | File                                                                                 | Role                                       |
 | ------------------------------------------------------------------------------------ | ------------------------------------------ |
 | [`scripts/compile_metric_templates.py`](../../scripts/compile_metric_templates.py)   | Build `templates.json` from `.txt` sources |
-| [`deepeval/metric_templates/templates.json`](../metric_templates/templates.json)     | Bundled prompts (runtime)                  |
-| [`deepeval/metric_templates/resolver.py`](../metric_templates/resolver.py)           | Load community/English bundles and render  |
+| [`deepeval/templates/metrics/templates.json`](../templates/metrics/templates.json)     | Bundled prompts (runtime)                  |
+| [`deepeval/templates/resolver.py`](../templates/resolver.py)           | Load community/English bundles and render  |
 | [`deepeval/metric_templates/community/`](../metric_templates/community/)             | Per-language translation JSON + enum       |
-| [`deepeval/metric_templates/fragments/`](../metric_templates/fragments/)             | Shared snippet sources                     |
+| [`deepeval/templates/metrics/fragments/`](../templates/metrics/fragments/)             | Shared snippet sources                     |
