@@ -55,8 +55,12 @@ export function validateEvent(e) {
   if (typeof e.official !== "boolean") out.push("official must be true or false");
   if (e.hostGithub !== undefined && !GITHUB_LOGIN.test(e.hostGithub)) out.push("hostGithub must be a GitHub username");
   if (e.image !== undefined && !IMAGE_PATH.test(e.image)) out.push("image must be /community/<id>.jpg|png|webp");
+  // Optional; an event with both places a mascot on the community globe.
+  if (e.lat !== undefined && !(typeof e.lat === "number" && e.lat >= -90 && e.lat <= 90)) out.push("lat must be a number from -90 to 90");
+  if (e.lng !== undefined && !(typeof e.lng === "number" && e.lng >= -180 && e.lng <= 180)) out.push("lng must be a number from -180 to 180");
+  if ((e.lat === undefined) !== (e.lng === undefined)) out.push("lat and lng must be set together");
   if (e.issue !== undefined && !(Number.isInteger(e.issue) && e.issue > 0)) out.push("issue must be a positive integer");
-  const allowed = new Set(["id", "title", "start", "timezone", "city", "country", "url", "talk", "host", "hostGithub", "official", "issue", "image"]);
+  const allowed = new Set(["id", "title", "start", "timezone", "city", "country", "url", "talk", "host", "hostGithub", "official", "issue", "image", "lat", "lng"]);
   for (const key of Object.keys(e)) if (!allowed.has(key)) out.push(`unknown field "${key}"`);
   return out;
 }

@@ -14,3 +14,7 @@ const list = (contributors as RepoContributor[]).filter(
 
 export const contributorCount = list.length;
 export const contributionCount = list.reduce((sum, c) => sum + c.contributions, 0);
+
+/** The top contributors by contributions, most first. */
+export const topContributors = (n: number) =>
+  [...list].sort((a, b) => b.contributions - a.contributions).slice(0, n);

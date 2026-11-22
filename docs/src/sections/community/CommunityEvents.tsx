@@ -1,20 +1,22 @@
 import { ArrowUpRight } from "lucide-react";
 import {
+  countryFlag,
   formatEventDate,
   splitEvents,
   type CommunityEvent,
 } from "@/lib/community/events";
-import { communitySubmitUrl } from "@/lib/shared";
 import styles from "./CommunityEvents.module.scss";
 
 type CommunityEventsProps = {
   when: "upcoming" | "past";
 };
 
+const isOnline = (e: CommunityEvent) => e.city.toLowerCase() === "online";
+
 function EventRow({ event, past }: { event: CommunityEvent; past: boolean }) {
   const { day, time } = formatEventDate(event);
   const place =
-    event.city.toLowerCase() === "online"
+    isOnline(event)
       ? "Online"
       : `${event.city}, ${event.country}`;
 
@@ -50,6 +52,11 @@ function EventRow({ event, past }: { event: CommunityEvent; past: boolean }) {
           </span>
           <span className={styles.talk}>{event.talk}</span>
           <span className={styles.meta}>
+            {isOnline(event) ? null : (
+              <span className={styles.flag} role="img" aria-label={event.country}>
+                {countryFlag(event.country)}
+              </span>
+            )}
             {place} · Hosted by {event.host}
           </span>
         </div>
@@ -69,13 +76,11 @@ const CommunityEvents: React.FC<CommunityEventsProps> = ({ when }) => {
         {when === "upcoming" ? (
           <>
             No upcoming meetups yet.{" "}
-            <a href={communitySubmitUrl} target="_blank" rel="noopener noreferrer">
-              Host the first one in your city
-            </a>
-            .
+            {/* Same target as the hero's "Full guide" button. */}
+            <a href="#list-your-event-in-four-steps">Host the first one in your city</a>.
           </>
         ) : (
-          "Past meetups appear here."
+          "Past meetups will show up here."
         )}
       </div>
     );

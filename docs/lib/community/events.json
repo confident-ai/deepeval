@@ -10,6 +10,8 @@
     "talk": "What is new in DeepEval, live demos and hands-on onboarding",
     "host": "Confident AI",
     "image": "/community/2026-11-20-san-francisco.jpg",
-    "official": true
+    "official": true,
+    "lat": 37.7749,
+    "lng": -122.4194
   }
 ]

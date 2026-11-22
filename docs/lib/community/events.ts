@@ -16,6 +16,8 @@ export type CommunityEvent = {
   hostGithub?: string;
   /** Cover from the Luma event, saved under public/community */
   image?: string;
+  lat?: number;
+  lng?: number;
   /** Run by Confident AI */
   official: boolean;
   /** GitHub issue the event was submitted in */
@@ -66,4 +68,46 @@ export function formatEventDate(e: CommunityEvent) {
     timeZoneName: "short",
   }).format(d);
   return { day, time };
+}
+
+// Country name -> flag emoji, from the region names Intl knows, so a new
+// country in events.json needs no lookup table here.
+// Retired or grouping codes that Intl still names like a current country
+// (DD is "Germany", FX "France", VD "Vietnam", ...); never map to them.
+const RETIRED = new Set(["AN", "BU", "CS", "DD", "DY", "EU", "EZ", "FX", "HV", "NH", "NT", "QO", "RH", "SU", "TP", "UK", "UN", "VD", "XA", "XB", "YD", "YU", "ZR", "ZZ"]);
+
+const REGION_BY_NAME = (() => {
+  const names = new Intl.DisplayNames(["en"], { type: "region" });
+  const map = new Map<string, string>();
+  const A = 65;
+  for (let i = 0; i < 26; i++) {
+    for (let j = 0; j < 26; j++) {
+      const code = String.fromCharCode(A + i, A + j);
+      try {
+        const name = names.of(code);
+        if (name && name !== code && !RETIRED.has(code)) map.set(name.toLowerCase(), code);
+      } catch {
+        // Not a region code.
+      }
+    }
+  }
+  map.set("usa", "US").set("uk", "GB");
+  return map;
+})();
+
+/** The ISO 3166-1 alpha-2 code for a country name, or undefined (e.g. "Online"). */
+export const countryCode = (country: string) => REGION_BY_NAME.get(country.trim().toLowerCase());
+
+/** The flag emoji for an alpha-2 code. */
+export const flagOf = (code: string) =>
+  String.fromCodePoint(...[...code.toUpperCase()].map((c) => 0x1f1e6 + c.charCodeAt(0) - 65));
+
+const REGION_NAMES = new Intl.DisplayNames(["en"], { type: "region" });
+/** The English name for an alpha-2 code. */
+export const countryName = (code: string) => REGION_NAMES.of(code) ?? code;
+
+/** The flag emoji for a country name, or "" when it is not a known country (e.g. "Online"). */
+export function countryFlag(country: string): string {
+  const code = countryCode(country);
+  return code ? flagOf(code) : "";
 }

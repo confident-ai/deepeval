@@ -13,7 +13,7 @@ export const revalidate = 3600;
 export const metadata: Metadata = {
   title: "Community",
   description:
-    "Community meetups where engineers show how they test AI agents before release and find failures in production with tracing. Find one near you, or host one in your city.",
+    "Find a DeepEval meetup near you, or host one in your city. Engineers get together to show how they test and debug their AI agents.",
   alternates: { canonical: "/community" },
 };
 

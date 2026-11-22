@@ -154,20 +154,38 @@
   line-height: 1.25;
 }
 
+// A compact filled badge: a purple pixel, then the word, on a light tint.
 .tag {
-  padding: 0.1rem 0.4rem;
-  border: 1px solid #6d28d9;
-  color: #6d28d9;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px 2px 6px;
+  background: color-mix(in srgb, #760eff 10%, transparent);
+  color: #5b21b6;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+
+  // Centered on the lowercase letters (x-height), not the full text box,
+  // which sits about 1px higher.
+  &::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    background: #760eff;
+    transform: translateY(1px);
+  }
 
   :global(.dark) & {
-    border-color: #b794ff;
-    color: #b794ff;
+    background: color-mix(in srgb, #9d6bff 18%, transparent);
+    color: #cdb4ff;
+
+    &::before {
+      background: #b794ff;
+    }
   }
-  font-family: var(--font-sans), sans-serif;
-  font-size: 10px;
-  font-weight: 400;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
 }
 
 .talk {
@@ -211,4 +229,10 @@
   .arrow {
     display: none;
   }
+}
+
+.flag {
+  margin-right: 0.35em;
+  font-size: 1.1em;
+  line-height: 1;
 }
