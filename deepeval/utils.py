@@ -971,19 +971,29 @@ def require_dependency(
 def create_console(**kwargs) -> Console:
     """
     Create a Rich Console with proper encoding handling for redirected output.
-    
+
     On Windows, when stdout is redirected (CI, > log.txt), the default encoding
     may not support emoji characters (✨🚀). This causes UnicodeEncodeError.
-    
-    Returns a Console that uses errors="replace" when stdout is redirected.
+
+    Returns a Console configured with error-tolerant output.
     """
     import sys
-    
-    # If stdout is redirected and not a terminal, reconfigure with error handling
-    if not sys.stdout.isatty() and hasattr(sys.stdout, "reconfigure"):
+    from io import TextIOWrapper
+
+    # If stdout is redirected and not a terminal, wrap it with errors='replace'
+    file = kwargs.get('file', sys.stdout)
+    if file is sys.stdout and not sys.stdout.isatty() and hasattr(sys.stdout, 'buffer'):
         try:
-            sys.stdout.reconfigure(errors="replace")
+            # Create a wrapper that replaces unencodable characters
+            # This doesn't modify global stdout, just creates a wrapped version for Console
+            file = TextIOWrapper(
+                sys.stdout.buffer,
+                encoding=sys.stdout.encoding or 'utf-8',
+                errors='replace',
+                line_buffering=True
+            )
+            kwargs['file'] = file
         except Exception:
-            pass  # Best effort - some environments don't support reconfigure
-    
+            pass  # Best effort - use default if wrapping fails
+
     return Console(**kwargs)
