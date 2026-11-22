@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
+import { Star } from "lucide-react";
 import { useInView } from "@site/src/components/Mascot/_useInView";
 import {
   countryCode,
@@ -319,25 +320,28 @@ const MeetupGlobe: React.FC = () => {
             <strong className={styles.tipTitle}>
               {flagOf(tip.spot.code)} {countryName(tip.spot.code)}
             </strong>
-            <span>
-              {[
-                tip.spot.contributors &&
-                  `${tip.spot.contributors.count} contributor${tip.spot.contributors.count > 1 ? "s" : ""}`,
-                tip.spot.stars &&
-                  `${tip.spot.stars.toLocaleString("en-US")} star${tip.spot.stars > 1 ? "s" : ""}`,
-                tip.spot.events.length > 0
+            <span className={styles.tipStats}>
+              {tip.spot.stars && (
+                <span title="GitHub stars">
+                  <Star size={11} strokeWidth={2} aria-label="GitHub stars" />
+                  {tip.spot.stars.toLocaleString("en-US")}
+                </span>
+              )}
+              {tip.spot.contributors && (
+                <span>
+                  {tip.spot.contributors.count} contributor
+                  {tip.spot.contributors.count > 1 ? "s" : ""}
+                </span>
+              )}
+              <span>
+                {tip.spot.events.length > 0
                   ? `${tip.spot.events.length} meetup${tip.spot.events.length > 1 ? "s" : ""}`
-                  : "no meetup yet",
-              ]
-                .filter(Boolean)
-                .join(" · ")}
+                  : "no meetup yet"}
+              </span>
             </span>
           </div>
         )}
       </div>
-      <span className={styles.hint} aria-hidden>
-        Drag to spin
-      </span>
     </div>
   );
 };

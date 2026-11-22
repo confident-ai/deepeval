@@ -12,7 +12,7 @@
   overflow: hidden;
 
   &:hover .track {
-    animation-play-state: paused;
+    animation-play-state: paused !important;
   }
 }
 
@@ -20,11 +20,13 @@
   overflow: hidden;
 }
 
-.track:hover .face img {
-  opacity: 0.45;
+// Hovering anywhere on the strip pauses both rows and dims every avatar
+// except the one under the pointer.
+.marquee:hover .face img {
+  opacity: 0.4;
 }
 
-.track:hover .face:hover img {
+.marquee:hover .face:hover img {
   opacity: 1;
 }
 
