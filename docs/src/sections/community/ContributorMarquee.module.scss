@@ -1,6 +1,11 @@
 // A bottom panel of contributor avatars, two rows scrolling in opposite
 // directions. It sits under the planet, so the planet's horizon meets it.
 .marquee {
+  // The rows hold ~200 avatars (several thousand px). Without this, that
+  // width becomes the hero's minimum width on mobile, where the left pane
+  // is an auto-sized grid column, and the whole hero overflows the screen.
+  contain: inline-size;
+  width: 100%;
   position: relative;
   z-index: 1;
   display: flex;
