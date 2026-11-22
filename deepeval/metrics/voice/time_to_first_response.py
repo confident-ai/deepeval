@@ -1,6 +1,14 @@
 from typing import Optional
 
+from deepeval.metrics.voice._call_activity import (
+    SPEAKER_PAUSE_SECONDS,
+    CallActivity,
+    call_recording_activity,
+    stretches,
+)
 from deepeval.metrics.voice._defects import (
+    CALL_RECORDING,
+    TURN_TIMESTAMPS,
     defect_share_result,
     untimed_call_reason,
 )
@@ -36,6 +44,9 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
         self.max_wait_seconds = max_wait_seconds
 
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+        recording = call_recording_activity(test_case)
+        if recording is not None:
+            return self._evaluate_recording(recording)
         defect_label = (
             f"a first response over {self.max_wait_seconds} seconds after "
             "the call connected"
@@ -58,6 +69,7 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
                 defect_label,
                 no_eligible_reason=untimed_reason
                 or "The call had no timed audio.",
+                timing_source=TURN_TIMESTAMPS,
             )
         greeting_at, greeting_turn = audio_turns[0]
         if test_case.turns[greeting_turn].role != "assistant":
@@ -68,6 +80,7 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
                 defect_label,
                 no_eligible_reason="The caller spoke first, so the agent was "
                 "not expected to greet.",
+                timing_source=TURN_TIMESTAMPS,
             )
         defects = []
         if greeting_at > self.max_wait_seconds:
@@ -78,7 +91,60 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
                     "first_response_seconds": round(greeting_at, 2),
                 }
             )
-        return defect_share_result([greeting_turn], defects, [], defect_label)
+        return defect_share_result(
+            [greeting_turn],
+            defects,
+            [],
+            defect_label,
+            timing_source=TURN_TIMESTAMPS,
+        )
+
+    def _evaluate_recording(self, recording: CallActivity) -> VoiceMetricResult:
+        if not recording.agent:
+            return defect_share_result(
+                [],
+                [],
+                [],
+                "a slow first response",
+                no_eligible_reason="The agent made no sound on the call "
+                "recording.",
+                event_key="at_seconds",
+                timing_source=CALL_RECORDING,
+            )
+        agent_at = recording.agent[0].start
+        caller_first = next(
+            iter(stretches(recording.caller, SPEAKER_PAUSE_SECONDS)), None
+        )
+        if caller_first is not None and caller_first.start < agent_at:
+            wait = max(0.0, agent_at - caller_first.end)
+            defect_label = (
+                f"a first response over {self.max_wait_seconds} seconds after "
+                "the caller's first words"
+            )
+        else:
+            wait = agent_at
+            defect_label = (
+                f"a first response over {self.max_wait_seconds} seconds after "
+                "the call connected"
+            )
+        at = round(agent_at, 2)
+        defects = []
+        if wait > self.max_wait_seconds:
+            defects.append(
+                {
+                    "type": "slow_first_response",
+                    "at_seconds": at,
+                    "first_response_seconds": round(wait, 2),
+                }
+            )
+        return defect_share_result(
+            [at],
+            defects,
+            [],
+            defect_label,
+            event_key="at_seconds",
+            timing_source=CALL_RECORDING,
+        )
 
     @property
     def __name__(self):

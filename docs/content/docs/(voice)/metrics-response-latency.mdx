@@ -67,10 +67,11 @@ print(metric.score_breakdown)
     "turns_with_events": 1,
     "events": [{"type": "slow_response", "turn": 3, "response_delay_seconds": 4.12}],
     "skipped": [{"turn": 7, "error": "Agent started before the caller finished."}],
+    "timing_source": "turn_timestamps",
 }
 ```
 
-`turn` is the agent reply's zero-based position in the conversation, and `response_delay_seconds` is how long the caller waited for it. Agent replies whose audio, or the caller's audio before them, could not be decoded are listed under `skipped`. So are replies the agent started while the caller was still talking; those are judged by [`AgentInterruptionMetric`](/docs/metrics-agent-interruption) instead.
+`turn` is the agent reply's zero-based position in the conversation, and `response_delay_seconds` is how long the caller waited for it. Agent replies whose audio, or the caller's audio before them, could not be decoded are listed under `skipped`. So are replies the agent started while the caller was still talking; those are judged by [`AgentInterruptionMetric`](/docs/metrics-agent-interruption) instead. With a call recording, events and `skipped` entries carry `at_seconds`, where in the recording the agent started, instead of `turn`.
 
 ## How Is It Calculated?
 
@@ -78,7 +79,15 @@ print(metric.score_breakdown)
 
 <Equation formula="\text{Response Latency} = \frac{\text{Agent replies that started within max\_latency\_seconds}}{\text{Agent replies that follow a caller turn}}" />
 
-The wait runs from the end of the caller's audio to the moment the agent starts speaking, both placed on the call timeline by each turn's `start_time`. When the two clips touch with no gap, the `latency_ms` your connector recorded for the reply is used instead; a reply with neither is listed under `skipped`. An overlap under half a second counts as no wait. Every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
+With a call recording, the wait runs from the caller's last sound to the agent's first sound, every time the agent starts speaking after at least one second of its own silence and the caller spoke last. The opening line is left out, and a start where the caller's sound runs on more than half a second past it is skipped.
+
+### Where the timing comes from
+
+When the test case has a `call_recording_path`, a stereo WAV of the whole call with the caller on the left channel and the agent on the right (the simulator writes one when [`record_call=True`](/docs/conversation-simulator-voice-mode)), the metric reads who was making sound when from each channel's loudness: 20 ms frames, pauses under 0.3 seconds closed, sounds under 0.15 seconds dropped. This does not depend on how the turns were cut, so it is the more reliable source. Without one, or with a mono file, the metric falls back to each turn's `start_time` and audio length. `timing_source` on `score_breakdown` says which was used.
+
+Loudness cannot tell speech from other sound: steady noise, ringback or hold music on the caller's channel reads as the caller talking.
+
+Without a recording, the wait runs from the end of the caller's audio to the moment the agent starts speaking, both placed on the call timeline by each turn's `start_time`. When the two clips touch with no gap, the `latency_ms` your connector recorded for the reply is used instead; a reply with neither is listed under `skipped`. An overlap under half a second counts as no wait. Every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
 
 People answer each other in about **0.2 seconds** (Stivers et al., 2009), and conversation treats about **one second** of silence as the standard maximum (Jefferson, 1989). A voice agent also has to transcribe, think and speak before it can answer, so the default of **4 seconds** allows for that. On real phone calls labelled by human reviewers, 4 seconds matched their judgement best, while 2 seconds flagged almost every call.
 
@@ -101,8 +110,8 @@ People answer each other in about **0.2 seconds** (Stivers et al., 2009), and co
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. It only reads when each turn starts and how long its audio
-          lasts, so it has no model or token cost.
+          No. It only reads when each speaker is making sound, so it has no
+          model or token cost.
         </>
       ),
     },

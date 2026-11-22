@@ -94,6 +94,13 @@
       "alt": "A caller asks to move a cardiology appointment, gives their name and date of birth, and mentions their chest has been hurting all morning. The voice agent ignores it and offers a new slot. A judge asked whether the agent handed off to clinical staff when the caller reported chest pain answers no: it kept scheduling.",
       "width": 2136,
       "height": 1080
+    },
+    {
+      "file": "agent-interruption-settings.webp",
+      "title": "Agent Interruption settings on a false start",
+      "alt": "Caller and agent timelines: the caller pauses for up to max_caller_silence_seconds between speaking and starting again, and the agent starts during the pause, within caller_start_window_ms of the caller starting again, then backs off",
+      "width": 2400,
+      "height": 700
     }
   ]
 }

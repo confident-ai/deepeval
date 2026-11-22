@@ -23,6 +23,9 @@ NO_CALL_AUDIO_REASON = "The call has no audio to evaluate."
 # Below this a reply carries no audible sound at all.
 INAUDIBLE_MAX_DBFS = -70
 INAUDIBLE_ERROR = "Reply has no audible sound to measure."
+# Where the timing metrics read who spoke when.
+CALL_RECORDING = "call_recording"
+TURN_TIMESTAMPS = "turn_timestamps"
 
 
 def agent_reply_measurements(
@@ -203,21 +206,30 @@ def defect_share_result(
     ),
     min_eligible_turns: int = 1,
     counted: Tuple[str, str] = ("agent reply", "agent replies"),
+    event_key: str = "turn",
+    timing_source: Optional[str] = None,
 ) -> VoiceMetricResult:
-    defective_turns = {defect["turn"] for defect in defects}
+    defective_turns = {defect[event_key] for defect in defects}
     breakdown = {
         "eligible_turns": len(eligible_turns),
         "turns_with_events": len(defective_turns),
-        "events": sorted(defects, key=lambda defect: defect["turn"]),
+        "events": sorted(defects, key=lambda defect: defect[event_key]),
         "skipped": skipped,
     }
+    if timing_source is not None:
+        breakdown["timing_source"] = timing_source
     if len(eligible_turns) < min_eligible_turns:
         return None, no_eligible_reason, breakdown
     if not defective_turns:
-        return 1.0, f"No {counted[0]} had {defect_label}.", breakdown
-    return (
-        1.0 - len(defective_turns) / len(eligible_turns),
-        f"{len(defective_turns)} of {len(eligible_turns)} {counted[1]} "
-        f"had {defect_label}.",
-        breakdown,
-    )
+        reason = f"No {counted[0]} had {defect_label}."
+    else:
+        reason = (
+            f"{len(defective_turns)} of {len(eligible_turns)} {counted[1]} "
+            f"had {defect_label}."
+        )
+    if timing_source == TURN_TIMESTAMPS:
+        reason += (
+            " Judged from each turn's own audio and timestamps, as no stereo "
+            "call recording was available."
+        )
+    return 1.0 - len(defective_turns) / len(eligible_turns), reason, breakdown

@@ -36,6 +36,14 @@ NOISE_MIN_SECONDS = 2.0
 # A cut-off ends mid-sound: the last 20 ms must stand this far above the
 # reply's background noise, not just above a fixed level.
 EDGE_ABOVE_NOISE_DB = 10.0
+# Where sound stops is found on a 5 ms grid; a 20 ms grid misses cuts that
+# land mid-frame.
+STOP_FRAME_MS = 5
+EDGE_MS = 20
+STOP_CONTEXT_SECONDS = 1.0
+# On real calls pushed through Opus, mid-sound cuts end at >= 80% of the
+# speech before them; natural endings fade below that.
+ABRUPT_END_LEVEL_RATIO = 0.8
 # A pause sits within this much of the background noise; a wider margin would
 # count the quiet ends of words in a noisy reply as pause.
 PAUSE_ABOVE_NOISE_DB = 6.0
@@ -501,6 +509,41 @@ def volume_drift_db(audio: Audio) -> Optional[float]:
     return slope * (len(levels) - 1)
 
 
+def _edge_threshold() -> float:
+    return max(audio_utils.DEFAULT_SILENCE_RMS * 2, 1000)
+
+
+def ends_abruptly(
+    samples: Sequence[int], sample_rate: int, noise_level: float
+) -> bool:
+    """Whether the sound stops at near full volume instead of fading out."""
+    np = get_numpy()
+    width = max(1, sample_rate * STOP_FRAME_MS // 1000)
+    values = np.asarray(samples, dtype=np.float64)
+    usable = len(values) // width * width
+    if not usable:
+        return False
+    levels = np.sqrt((values[:usable].reshape(-1, width) ** 2).mean(axis=1))
+    sounding = np.flatnonzero(levels >= audio_utils.DEFAULT_SILENCE_RMS)
+    if not sounding.size:
+        return False
+    stop = int(sounding[-1]) + 1
+    edge_frames = EDGE_MS // STOP_FRAME_MS
+    edge = math.sqrt(
+        float((levels[max(0, stop - edge_frames) : stop] ** 2).mean())
+    )
+    context = levels[
+        max(0, stop - int(STOP_CONTEXT_SECONDS * 1000 / STOP_FRAME_MS)) : stop
+    ]
+    speech_level = float(
+        np.median(context[context >= audio_utils.DEFAULT_SILENCE_RMS])
+    )
+    floor = max(
+        _edge_threshold(), noise_level * 10 ** (EDGE_ABOVE_NOISE_DB / 20)
+    )
+    return edge > floor and edge >= ABRUPT_END_LEVEL_RATIO * speech_level
+
+
 def analyze_audio(audio: Audio) -> AudioMeasurements:
     samples, sample_rate = decode_audio(audio)
     frames = frame_samples(samples, sample_rate)
@@ -580,14 +623,12 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
     loop_events = sum(count - 1 for count in fingerprints.values() if count > 2)
 
     edge_size = max(1, int(sample_rate * 0.02))
-    edge_threshold = max(audio_utils.DEFAULT_SILENCE_RMS * 2, 1000)
-    end_threshold = edge_threshold
+    edge_threshold = _edge_threshold()
+    end_noise_level = 0.0
     speaking = audio_utils.DEFAULT_SILENCE_RMS
     if len(samples) / sample_rate >= NOISE_MIN_SECONDS:
         # A reply that simply ends inside steady background noise isn't cut.
-        end_threshold = max(
-            edge_threshold, noise_level * 10 ** (EDGE_ABOVE_NOISE_DB / 20)
-        )
+        end_noise_level = noise_level
         pause_ceiling = noise_level * 10 ** (PAUSE_ABOVE_NOISE_DB / 20)
         # With no quieter stretch to call noise, the "noise" is the speech.
         if pause_ceiling < speech_level:
@@ -623,7 +664,7 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         pitch_mean_hz=mean(pitches) if pitches else None,
         pitch_variation_hz=pstdev(pitches) if len(pitches) > 1 else None,
         starts_abruptly=rms(samples[:edge_size]) > edge_threshold,
-        ends_abruptly=rms(samples[-edge_size:]) > end_threshold,
+        ends_abruptly=ends_abruptly(samples, sample_rate, end_noise_level),
         pitch_median_hz=pitch_median,
         pitch_spread_semitones=pitch_spread,
         voiced_pitch_frames=len(pitches),

@@ -1,9 +1,7 @@
 from typing import Optional
 
-from deepeval.metrics.voice._defects import (
-    agent_reply_delays,
-    defect_share_result,
-)
+from deepeval.metrics.voice._call_activity import EVENT_KEYS, reply_delays
+from deepeval.metrics.voice._defects import defect_share_result
 from deepeval.metrics.voice.base_metric import (
     BaseVoiceMetric,
     VoiceMetricResult,
@@ -36,14 +34,15 @@ class ResponseLatencyMetric(BaseVoiceMetric):
         self.max_latency_seconds = max_latency_seconds
 
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
-        delays, skipped, untimed_reason = agent_reply_delays(test_case)
+        delays, skipped, untimed_reason, source = reply_delays(test_case)
+        event_key = EVENT_KEYS[source]
         defects = [
             {
                 "type": "slow_response",
-                "turn": turn,
+                event_key: key,
                 "response_delay_seconds": round(delay, 2),
             }
-            for turn, delay in delays.items()
+            for key, delay in delays.items()
             if delay > self.max_latency_seconds
         ]
         return defect_share_result(
@@ -53,6 +52,8 @@ class ResponseLatencyMetric(BaseVoiceMetric):
             f"a wait over {self.max_latency_seconds} seconds before replying",
             no_eligible_reason=untimed_reason
             or "No assistant reply followed a timed caller turn.",
+            event_key=event_key,
+            timing_source=source,
         )
 
     @property

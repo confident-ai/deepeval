@@ -266,3 +266,29 @@ def timed_call(gaps, *, greeting_at=None, line_seconds=2.0, reply_seconds=2.0):
         )
         cursor = reply_start + reply_seconds + 0.5
     return turns
+
+
+def stereo_recording(path, *, caller=(), agent=(), seconds=None) -> str:
+    """A whole-call recording, caller left and agent right; `caller` and
+    `agent` are (start seconds, clip) pairs."""
+    end = max(
+        (start + len(clip) / RATE for start, clip in (*caller, *agent)),
+        default=0.0,
+    )
+    length = int((seconds if seconds is not None else end + 0.5) * RATE)
+    channels = []
+    for placed in (caller, agent):
+        channel = array("h", [0]) * length
+        for start, clip in placed:
+            offset = int(start * RATE)
+            channel[offset : offset + len(clip)] = clip[: length - offset]
+        channels.append(channel)
+    stereo = array("h", [0]) * (2 * length)
+    stereo[0::2], stereo[1::2] = channels
+    with open(path, "wb") as file:
+        file.write(
+            audio_utils.pcm16_to_wav_bytes(
+                stereo.tobytes(), RATE, num_channels=2
+            )
+        )
+    return str(path)

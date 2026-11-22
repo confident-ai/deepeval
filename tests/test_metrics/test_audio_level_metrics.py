@@ -10,7 +10,7 @@ from deepeval.metrics import (
 )
 from deepeval.metrics.voice._analysis import analyze_audio
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
-from tests.test_metrics.audio_fixtures import (
+from tests.test_metrics.helpers import (
     clean_turns,
     clipped,
     faded,

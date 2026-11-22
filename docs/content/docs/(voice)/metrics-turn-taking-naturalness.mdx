@@ -87,7 +87,7 @@ For `TurnTakingNaturalnessMetric` the breakdown is one entry per speaker change:
 }
 ```
 
-A negative `gap_seconds` is overlap: the next speaker started before the previous one finished. `response_delays` summarises the caller-to-agent gaps only — how long the agent waited before replying each time, and how much that wait varied.
+A negative `gap_seconds` is overlap: the next speaker started before the previous one finished. `response_delays` summarises the caller-to-agent gaps only — how long the agent waited before replying each time, and how much that wait varied. `timing_source` says whether the call recording or the turn timestamps were used; with a recording, transitions carry `at_seconds`, `from` and `to` instead of `from_turn` and `to_turn`.
 
 ## How Is It Calculated?
 
@@ -115,7 +115,16 @@ Once the call has at least three caller-to-agent gaps, the metric also scores ho
 
 A perfectly even agent keeps the full score; a 1s spread costs about 0.08, a 3s spread about 0.16. With fewer than three caller-to-agent gaps the first term is the whole score and `response_delays.score` is `None`.
 
-The metric returns no score and marks the evaluation as skipped when any audio turn is missing `start_time`, when fewer than two clips are placed on the timeline, or when no two consecutive turns change speaker.
+### With a call recording
+
+When the test case has a stereo `call_recording_path` (caller on the left channel, agent on the right), transitions come from the recording instead of the turns. A hand-over is a **gap** or an **overlap**, and a speaker starts when they make sound after at least half a second of their own silence:
+
+- **Gap:** a speaker starts while the other is silent, and the other spoke last. Δ is the silence in between.
+- **Overlap:** a speaker starts while the other is talking. Δ is how long both keep talking.
+
+Not counted: the same speaker carrying on, overlaps under 0.3 seconds, the agent's opening line, and a caller sound under one second that starts while the agent is talking (an "mm-hm"). The scoring above is unchanged. Loudness cannot tell speech from other sound, so steady noise, ringback or hold music on the caller's channel reads as the caller talking.
+
+Without a recording, the metric returns no score and marks the evaluation as skipped when any audio turn is missing `start_time`, when fewer than two clips are placed on the timeline, or when no two consecutive turns change speaker.
 
 :::caution
 Silence-based end-of-turn detection is part of what this metric measures. A `turn_detection="patient"` preset waits longer before the caller replies, which shows up here as larger gaps — that is real dead air on the recording, but it is your harness's, not your agent's. For the same reason, timings only compare within a `VoiceProtocol`: keep the connector fixed when tracking this score over time.

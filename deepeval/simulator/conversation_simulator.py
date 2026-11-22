@@ -766,6 +766,8 @@ class ConversationSimulator:
                 )
                 await stack.enter_async_context(session.connector)
                 session.started_at = time.perf_counter()
+                if session.recorder is not None:
+                    session.recorder.start(session.started_at)
                 logger.debug(
                     "Voice connector connected after %.2fs",
                     time.perf_counter() - connect_started,

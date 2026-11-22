@@ -1,8 +1,8 @@
 from typing import Optional
 
+from deepeval.metrics.voice._call_activity import EVENT_KEYS, reply_delays
 from deepeval.metrics.voice._defects import (
     MIN_COMPARED_REPLIES,
-    agent_reply_delays,
     defect_share_result,
     shifts_from_typical,
 )
@@ -14,8 +14,8 @@ from deepeval.test_case import ConversationalTestCase
 
 
 class ResponseDelayConsistencyMetric(BaseVoiceMetric):
-    # A reply 2 s slower or faster than usual is as noticeable as a reply
-    # over the 2 s latency limit.
+    # A reply 2 s slower or faster than usual is as noticeable as a long
+    # wait.
     def __init__(
         self,
         *,
@@ -38,15 +38,16 @@ class ResponseDelayConsistencyMetric(BaseVoiceMetric):
         self.max_shift_seconds = max_shift_seconds
 
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
-        delays, skipped, untimed_reason = agent_reply_delays(test_case)
+        delays, skipped, untimed_reason, source = reply_delays(test_case)
+        event_key = EVENT_KEYS[source]
         defects = [
             {
                 "type": "delay_shift",
-                "turn": turn,
-                "response_delay_seconds": round(delays[turn], 2),
+                event_key: key,
+                "response_delay_seconds": round(delays[key], 2),
                 "shift_seconds": round(shift, 2),
             }
-            for turn, shift in shifts_from_typical(delays).items()
+            for key, shift in shifts_from_typical(delays).items()
             if abs(shift) > self.max_shift_seconds
         ]
         return defect_share_result(
@@ -59,6 +60,8 @@ class ResponseDelayConsistencyMetric(BaseVoiceMetric):
             or f"At least {MIN_COMPARED_REPLIES} timed assistant replies are "
             "needed to compare their delays.",
             min_eligible_turns=MIN_COMPARED_REPLIES,
+            event_key=event_key,
+            timing_source=source,
         )
 
     @property

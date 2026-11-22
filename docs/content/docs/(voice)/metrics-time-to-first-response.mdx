@@ -70,7 +70,7 @@ print(metric.score_breakdown)
 }
 ```
 
-`turn` is the greeting's zero-based position in the conversation, and `first_response_seconds` is how long after the call connected the agent started speaking.
+`turn` is the greeting's zero-based position in the conversation, and `first_response_seconds` is how long the caller waited for the agent's first word. With a call recording, the event carries `at_seconds`, where in the recording the agent first made sound, instead of `turn`, and `timing_source` says which was used.
 
 ## How Is It Calculated?
 
@@ -78,7 +78,18 @@ print(metric.score_breakdown)
 
 <Equation formula="\text{Time to First Response} = \begin{cases} 1 & \text{if the agent's greeting starts within max\_wait\_seconds} \\ 0 & \text{otherwise} \end{cases}" />
 
-The wait is the greeting's `start_time`, which counts from the moment the call connected. The metric only applies when the agent speaks first. When the caller opens the call, the agent was not expected to greet, so the metric is skipped; its reply is judged by [`ResponseLatencyMetric`](/docs/metrics-response-latency) instead. Every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
+With a call recording, the wait depends on who spoke first:
+
+- **The agent speaks first:** from the start of the recording to the agent's first sound.
+- **The caller speaks first:** from the end of the caller's first words (pauses under half a second kept inside them) to the agent's first sound, or, if longer, the silence the caller sat through before those words. A caller who waits ten seconds and then asks "hello?" was kept waiting ten seconds, however quickly the agent answers.
+
+### Where the timing comes from
+
+When the test case has a `call_recording_path`, a stereo WAV of the whole call with the caller on the left channel and the agent on the right (the simulator writes one when [`record_call=True`](/docs/conversation-simulator-voice-mode)), the metric reads who was making sound when from each channel's loudness: 20 ms frames, pauses under 0.3 seconds closed, sounds under 0.15 seconds dropped. This does not depend on how the turns were cut, so it is the more reliable source. Without one, or with a mono file, the metric falls back to each turn's `start_time` and audio length. `timing_source` on `score_breakdown` says which was used.
+
+Loudness cannot tell speech from other sound: steady noise, ringback or hold music on the caller's channel reads as the caller talking.
+
+Without a recording, the wait is the greeting's `start_time`, which counts from the moment the call connected. Read from turn timestamps, the metric only applies when the agent speaks first. When the caller opens the call, the agent was not expected to greet, so the metric is skipped; its reply is judged by [`ResponseLatencyMetric`](/docs/metrics-response-latency) instead. Every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
 
 The default of **3 seconds** is the two-second response-latency limit plus one second for the line to connect, since the clock starts at connection rather than at a caller's last word. It is a practical allowance rather than a published norm, so tune it to your telephony setup.
 
@@ -101,8 +112,8 @@ The default of **3 seconds** is the two-second response-latency limit plus one s
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. It only reads when each turn starts and how long its audio
-          lasts, so it has no model or token cost.
+          No. It only reads when each speaker is making sound, so it has no
+          model or token cost.
         </>
       ),
     },

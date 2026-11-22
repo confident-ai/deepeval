@@ -123,7 +123,7 @@ Each clip is cut into short frames and measured for loudness, pitch and how peri
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `held_tone`         | One pitch is held for at least 0.8 s with no frame-to-frame jitter and no glide, and the hold is at least three times as long as anything that speaker otherwise holds, at least 1.3× the pitch of their voice, or 2.5 s long outright. |
 | `dead_stream`       | At least 0.5 s of exact digital zero between two stretches of speech in the same clip (1 s when the run reaches the end of the clip). Real pauses are quiet, not zero — so this only fires for a speaker whose pauses normally carry noise. |
-| `stream_cut`        | A clip stops while the speaker is still loud, or ends in digital zero, and the **same** speaker starts again within 15 s. Needs `Audio.start_time` on every clip.          |
+| `stream_cut`        | A clip's sound stops at near full volume (its last 20 ms at least 80% as loud as the second before), or ends in digital zero, and the **same** speaker starts again within 15 s. Needs `Audio.start_time` on every clip.          |
 | `clipping`          | More than 1% of samples sit at full scale. Carries the clipped span and `fraction`.                                                                                        |
 | `audio_undecodable` | The clip could not be decoded to PCM. Carries a `reason`.                                                                                                                  |
 

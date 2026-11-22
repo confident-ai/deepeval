@@ -90,3 +90,16 @@ def test_recording_off_by_default():
     )
 
     assert cases[0].call_recording_path is None
+
+
+def test_recorder_starts_the_tape_when_the_call_connects():
+    recorder = CallRecorder(sample_rate=RATE)
+    recorder.start(10.0)
+    recorder.add("agent", b"\xf0\xd8" * RATE, RATE, 11.0)
+    recorder.start(10.5)
+    path = recorder.finish()
+
+    frames, _, _ = _read(path)
+    assert len(frames) // 4 == 2 * RATE
+    assert set(frames[2 : RATE * 4 : 4]) == {0}
+    os.unlink(path)

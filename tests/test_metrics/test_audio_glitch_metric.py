@@ -21,7 +21,7 @@ from deepeval.metrics.audio_glitch.audio_glitch import (
 from deepeval.metrics.audio_glitch.schema import AudioGlitchReason
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
-from tests.test_metrics.audio_fixtures import (
+from tests.test_metrics.helpers import (
     RATE,
     clean_turns,
     clipped,
@@ -32,6 +32,7 @@ from tests.test_metrics.audio_fixtures import (
     to_audio,
     tone,
     vowel,
+    with_noise,
     zeros,
 )
 
@@ -122,6 +123,27 @@ def test_a_break_inside_a_word_is_a_dropout_when_pauses_are_digital():
     assert analyze_audio(to_audio(clip)).dropout_events == 0
     clip[int(1.1 * RATE) : int(1.2 * RATE)] = zeros(0.1)
     assert analyze_audio(to_audio(clip)).dropout_events == 1
+
+
+@pytest.mark.parametrize("cut_at", [1.09, 1.11, 1.125, 1.1337, 1.15])
+def test_a_reply_cut_mid_sound_ends_abruptly(cut_at):
+    clip = cut_short(speech_like(3.0), cut_at)
+    assert analyze_audio(to_audio(clip)).ends_abruptly is True
+
+
+def test_a_cut_followed_by_silence_still_ends_abruptly():
+    clip = cut_short(speech_like(3.0), 1.125) + zeros(0.5)
+    assert analyze_audio(to_audio(clip)).ends_abruptly is True
+
+
+def test_a_reply_that_fades_out_does_not_end_abruptly():
+    assert analyze_audio(to_audio(speech_like(3.0))).ends_abruptly is False
+    assert analyze_audio(to_audio(tone(1.0, 300.0))).ends_abruptly is False
+
+
+def test_a_reply_ending_in_steady_background_noise_does_not_end_abruptly():
+    clip = with_noise(speech_like(1.0) + zeros(1.5), -30)
+    assert analyze_audio(to_audio(clip)).ends_abruptly is False
 
 
 def test_a_consonant_length_gap_is_not_a_dropout():

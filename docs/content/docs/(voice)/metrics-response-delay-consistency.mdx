@@ -72,7 +72,7 @@ print(metric.score_breakdown)
 }
 ```
 
-`turn` is the agent reply's zero-based position in the conversation, `response_delay_seconds` is how long the caller waited for it, and `shift_seconds` is how far that sits from the agent's typical wait (negative when faster). Agent replies whose audio, or the caller's audio before them, could not be decoded, and replies the agent started while the caller was still talking, are listed under `skipped`.
+`turn` is the agent reply's zero-based position in the conversation, `response_delay_seconds` is how long the caller waited for it, and `shift_seconds` is how far that sits from the agent's typical wait (negative when faster). Agent replies whose audio, or the caller's audio before them, could not be decoded, and replies the agent started while the caller was still talking, are listed under `skipped`. With a call recording, events and `skipped` entries carry `at_seconds`, where in the recording the agent started, instead of `turn`. `timing_source` says whether the call recording or the turn timestamps were used.
 
 ## How Is It Calculated?
 
@@ -80,9 +80,9 @@ print(metric.score_breakdown)
 
 <Equation formula="\text{Response Delay Consistency} = \frac{\text{Agent replies within max\_shift\_seconds of the typical wait}}{\text{Agent replies that follow a caller turn}}" />
 
-Each wait is measured the same way as in [`ResponseLatencyMetric`](/docs/metrics-response-latency). The agent's typical wait is the median across its replies, so one odd reply is flagged on its own rather than shifting the rest. This needs at least **three** timed replies to tell which one is off; with fewer, the metric is skipped. Every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
+Each wait is measured the same way as in [`ResponseLatencyMetric`](/docs/metrics-response-latency), from the stereo call recording when the test case has one. The agent's typical wait is the median across its replies, so one odd reply is flagged on its own rather than shifting the rest. This needs at least **three** timed replies to tell which one is off; with fewer, the metric is skipped. Every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
 
-The default of **2 seconds** matches the response-latency limit: a reply that is suddenly two seconds slower, or faster, than usual stands out as much as a slow reply does. This default has the weakest outside reference of the timing metrics, so tune it to your agent.
+The default of **2 seconds** reflects that a reply suddenly two seconds slower, or faster, than usual stands out as much as a slow reply does. This default has the weakest outside reference of the timing metrics, so tune it to your agent.
 
 ## FAQs
 

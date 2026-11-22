@@ -6,7 +6,7 @@ from deepeval.metrics import (
     UnexpectedCallEndMetric,
 )
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
-from tests.test_metrics.audio_fixtures import (
+from tests.test_metrics.helpers import (
     clean_turns,
     speech_like,
     to_audio,

@@ -103,13 +103,13 @@ Non-critical events subtract a bounded severity:
 
 | Event           | Detected when                                     | Severity                         |
 | --------------- | ------------------------------------------------- | -------------------------------- |
-| `abrupt_cutoff` | The clip still has energy at its very last frame. | 0.12 flat                        |
+| `abrupt_cutoff` | The clip's sound stops at near full volume instead of fading out. | 0.12 flat                        |
 | `audio_loop`    | One or two repeated 0.25s windows.                | 0.15 each                        |
 | `audio_dropout` | Short silences interrupting continuous speech.    | 0.08 each, capped at 0.35        |
 | `clipping`      | More than 1% of samples are clipped.              | 10× the fraction, capped at 0.35 |
 
 :::caution
-`abrupt_cutoff` fires on any clip ending at full energy, which is exactly what a successful [barge-in](/docs/conversation-simulator-voice-interruptions) produces. When interruptions are enabled, expect this event on interrupted turns and read it as evidence the interruption landed rather than as a defect.
+`abrupt_cutoff` fires on any clip whose sound stops at full volume, which is exactly what a successful [barge-in](/docs/conversation-simulator-voice-interruptions) produces. When interruptions are enabled, expect this event on interrupted turns and read it as evidence the interruption landed rather than as a defect.
 :::
 
 ## FAQs
