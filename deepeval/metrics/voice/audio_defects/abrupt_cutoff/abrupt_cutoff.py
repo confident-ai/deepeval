@@ -1,3 +1,5 @@
+from typing import Optional
+
 from deepeval.metrics.voice.utils.call_activity import (
     AGENT_PAUSE_SECONDS,
     CallActivity,
@@ -67,8 +69,29 @@ def _recording_result(recording: CallActivity) -> VoiceMetricResult:
 
 
 class AbruptCutoffMetric(BaseVoiceMetric):
+    def __init__(
+        self,
+        *,
+        threshold: Optional[float] = 0.5,
+        include_reason: bool = True,
+        strict_mode: bool = False,
+        verbose_mode: bool = False,
+        use_speech_detection: bool = True,
+        flaky: bool = False,
+    ):
+        super().__init__(
+            threshold=threshold,
+            include_reason=include_reason,
+            strict_mode=strict_mode,
+            verbose_mode=verbose_mode,
+            flaky=flaky,
+        )
+        self.use_speech_detection = use_speech_detection
+
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
-        recording = call_recording_activity(test_case)
+        recording = call_recording_activity(
+            test_case, self.use_speech_detection
+        )
         if recording is not None:
             return _recording_result(recording)
         measurements, skipped = agent_reply_measurements(test_case)

@@ -1,6 +1,6 @@
 import math
 from statistics import mean, pstdev
-from typing import Dict, List, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from deepeval.metrics.voice.utils.analysis import (
     CONTIGUOUS_CLIP_TOLERANCE_SECONDS,
@@ -168,8 +168,29 @@ def _naturalness_result(
 
 
 class TurnTakingNaturalnessMetric(BaseVoiceMetric):
+    def __init__(
+        self,
+        *,
+        threshold: Optional[float] = 0.5,
+        include_reason: bool = True,
+        strict_mode: bool = False,
+        verbose_mode: bool = False,
+        use_speech_detection: bool = True,
+        flaky: bool = False,
+    ):
+        super().__init__(
+            threshold=threshold,
+            include_reason=include_reason,
+            strict_mode=strict_mode,
+            verbose_mode=verbose_mode,
+            flaky=flaky,
+        )
+        self.use_speech_detection = use_speech_detection
+
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
-        recording = call_recording_activity(test_case)
+        recording = call_recording_activity(
+            test_case, self.use_speech_detection
+        )
         if recording is None:
             score, reason, breakdown = self._evaluate_turns(test_case)
             return (

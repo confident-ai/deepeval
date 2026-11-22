@@ -20,6 +20,7 @@ class ResponseLatencyMetric(BaseVoiceMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         max_latency_seconds: int = 4,
+        use_speech_detection: bool = True,
         flaky: bool = False,
     ):
         if max_latency_seconds <= 0:
@@ -32,9 +33,12 @@ class ResponseLatencyMetric(BaseVoiceMetric):
             flaky=flaky,
         )
         self.max_latency_seconds = max_latency_seconds
+        self.use_speech_detection = use_speech_detection
 
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
-        delays, skipped, untimed_reason, source = reply_delays(test_case)
+        delays, skipped, untimed_reason, source = reply_delays(
+            test_case, self.use_speech_detection
+        )
         event_key = EVENT_KEYS[source]
         defects = [
             {

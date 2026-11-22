@@ -24,6 +24,7 @@ class ResponseDelayConsistencyMetric(BaseVoiceMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         max_shift_seconds: int = 2,
+        use_speech_detection: bool = True,
         flaky: bool = False,
     ):
         if max_shift_seconds <= 0:
@@ -36,9 +37,12 @@ class ResponseDelayConsistencyMetric(BaseVoiceMetric):
             flaky=flaky,
         )
         self.max_shift_seconds = max_shift_seconds
+        self.use_speech_detection = use_speech_detection
 
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
-        delays, skipped, untimed_reason, source = reply_delays(test_case)
+        delays, skipped, untimed_reason, source = reply_delays(
+            test_case, self.use_speech_detection
+        )
         event_key = EVENT_KEYS[source]
         defects = [
             {

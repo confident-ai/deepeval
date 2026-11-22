@@ -351,7 +351,7 @@ def test_turn_taking_reads_hand_overs_from_a_recording(tmp_path):
             (6.0, speech_like(2.0)),
         ],
     )
-    metric = TurnTakingNaturalnessMetric()
+    metric = TurnTakingNaturalnessMetric(use_speech_detection=False)
     metric.measure(
         ConversationalTestCase(
             turns=voice_case().turns, call_recording_path=path

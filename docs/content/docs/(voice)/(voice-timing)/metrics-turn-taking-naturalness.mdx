@@ -47,6 +47,7 @@ There are **FIVE** optional parameters when creating a `TurnTakingNaturalnessMet
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`. Defaulted to `True`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
@@ -122,7 +123,9 @@ When the test case has a stereo `call_recording_path` (caller on the left channe
 - **Gap:** a speaker starts while the other is silent, and the other spoke last. Δ is the silence in between.
 - **Overlap:** a speaker starts while the other is talking. Δ is how long both keep talking.
 
-Not counted: the same speaker carrying on, overlaps under 0.3 seconds, the agent's opening line, and a caller sound under one second that starts while the agent is talking (an "mm-hm"). The scoring above is unchanged. Loudness cannot tell speech from other sound, so steady noise, ringback or hold music on the caller's channel reads as the caller talking.
+Not counted: the same speaker carrying on, overlaps under 0.3 seconds, the agent's opening line, and a caller sound under one second that starts while the agent is talking (an "mm-hm"). The scoring above is unchanged.
+
+With `use_speech_detection` on (the default), the caller only counts as talking when the sound on their channel is both loud enough for that caller (at least 15% of their typical speech level) and heard as speech by the [Silero VAD](https://github.com/snakers4/silero-vad) model, so background noise, bangs and hold music are not mistaken for the caller. Background voices, such as a TV, are still speech and still count. It needs `onnxruntime` (`pip install onnxruntime`), and the 2 MB model is downloaded once into `~/.cache/deepeval/models` (or `$XDG_CACHE_HOME/deepeval/models`). Set `use_speech_detection=False` to judge by loudness alone, where any sound on the caller's channel reads as the caller talking.
 
 Without a recording, the metric returns no score and marks the evaluation as skipped when any audio turn is missing `start_time`, when fewer than two clips are placed on the timeline, or when no two consecutive turns change speaker.
 

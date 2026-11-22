@@ -30,6 +30,7 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         max_wait_seconds: int = 3,
+        use_speech_detection: bool = True,
         flaky: bool = False,
     ):
         if max_wait_seconds <= 0:
@@ -42,9 +43,12 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
             flaky=flaky,
         )
         self.max_wait_seconds = max_wait_seconds
+        self.use_speech_detection = use_speech_detection
 
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
-        recording = call_recording_activity(test_case)
+        recording = call_recording_activity(
+            test_case, self.use_speech_detection
+        )
         if recording is not None:
             return self._evaluate_recording(recording)
         defect_label = (

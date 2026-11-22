@@ -86,6 +86,20 @@ def get_numpy() -> Any:
         )
 
 
+def resample(samples: Any, sample_rate: int, target_rate: int) -> Any:
+    """`samples` as float32 at `target_rate`, by linear interpolation."""
+    np = get_numpy()
+    values = np.asarray(samples, dtype=np.float32)
+    if sample_rate == target_rate or not len(values):
+        return values
+    count = int(round(len(values) * target_rate / sample_rate))
+    return np.interp(
+        np.arange(count) * sample_rate / target_rate,
+        np.arange(len(values)),
+        values,
+    ).astype(np.float32)
+
+
 @dataclass
 class AudioMeasurements:
     duration: float

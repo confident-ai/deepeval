@@ -13,35 +13,29 @@ beta: true
   referenceless={true}
 />
 
-The echo metric checks whether your voice agent's audio carries **a fainter, delayed copy of itself**, as when the agent's own voice bleeds back through a microphone or echo cancellation fails. It returns the share of agent replies with no echo, between 0 and 1.
+The echo metric checks whether **the agent's own voice comes back through the caller's side of the call**, as when the caller's speaker is loud enough for their microphone to pick the agent up again. It returns the share of agent replies that were not heard back, between 0 and 1.
 
 ## Usage
 
-Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+Echo reads a stereo recording of the whole call, with the caller on the left channel and the agent on the right. For a real call, attach yours as `call_recording_path`:
 
 ```python
-from deepeval import evaluate
-from deepeval.dataset import ConversationalGolden
 from deepeval.metrics import EchoMetric
-from deepeval.simulator import ConversationSimulator
-from deepeval.voice import ElevenLabsConnector, VoiceConfig
+from deepeval.test_case import ConversationalTestCase, Turn
 
-
-golden = ConversationalGolden(
-    scenario="The user asks the agent to look up an order by its number.",
-    expected_outcome="The agent reads back the order status.",
+test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="assistant", content="Hi, thanks for calling. How can I help?"),
+        Turn(role="user", content="I'd like to check on an order."),
+    ],
+    call_recording_path="call.wav",
 )
-
-simulator = ConversationSimulator(
-    voice_config=VoiceConfig(
-        connector=ElevenLabsConnector(agent_id="your-agent-id"),
-    )
-)
-test_cases = simulator.simulate([golden])
 
 metric = EchoMetric(threshold=0.8)
-evaluate(test_cases=test_cases, metrics=[metric])
+metric.measure(test_case)
 ```
+
+The [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode) writes the same recording when `record_call=True`. A simulated caller never plays the agent's voice back, so simulated calls are expected to pass.
 
 There are **FIVE** optional parameters when creating an `EchoMetric`:
 
@@ -51,62 +45,74 @@ There are **FIVE** optional parameters when creating an `EchoMetric`:
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
-`score_breakdown` lists the replies where the defect was found:
+`score_breakdown` lists the replies that came back:
 
 ```python
-metric.measure(test_cases[0])
-
-print(metric.score)  # e.g. 0.75
+print(metric.score)  # e.g. 0.9
 print(metric.score_breakdown)
 ```
 
 ```python
 {
-    "eligible_turns": 4,
+    "eligible_turns": 10,
     "turns_with_events": 1,
-    "events": [{"type": "echo", "turn": 3, "delay_seconds": 0.18, "strength": 0.0312}],
+    "events": [{"type": "echo", "at_seconds": 343.2, "delay_seconds": 0.506, "level_db": -5.8}],
     "skipped": [],
+    "timing_source": "call_recording",
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. `delay_seconds` is how far behind the original the echo plays, and `strength` is how clearly it stands out (higher is a louder echo). Agent replies whose audio could not be decoded are listed under `skipped` with the error.
+`at_seconds` is where in the recording the agent's reply started. `delay_seconds` is how long after the agent its voice came back on the caller's side, and `level_db` is how loud that copy was compared with the agent (0 is as loud, −40 is barely audible).
 
 ## How Is It Calculated?
 
-`EchoMetric` checks every agent reply that has audio and scores the share of them without the defect:
+`EchoMetric` checks every stretch of the agent's speech lasting **2 seconds** or more and scores the share of them that did not come back:
 
-<Equation formula="\text{Echo} = \frac{\text{Agent replies without the defect}}{\text{Agent replies with decodable audio}}" />
+<Equation formula="\text{Echo} = \frac{\text{Agent replies not heard back}}{\text{Agent replies of 2 seconds or more}}" />
 
-An echo makes the reply look like itself shifted in time. The metric compares each reply with delayed versions of itself, from **60 ms to 500 ms** behind, after flattening the reply's frequency balance so that the ordinary similarity of speech to itself does not count. A reply has an echo when one delay stands out with a strength of **0.015 or more**.
+For each reply, the metric looks for the same sound on the caller's channel up to 1.5 seconds later, comparing only the timing of the two signals so that the phone line and the room changing the sound does not matter. A reply came back when all three hold:
 
-On real agent speech, clean replies stay below 0.01, and an echo at 20% of the reply's loudness or more (about −14 dB) scores above 0.017. Fainter echoes are hard to hear and are not reported.
+- **The match stands out.** Its correlation peak is at least 12 times the typical correlation, so background noise that happens to line up does not count.
+- **It came back 0.3 to 0.6 seconds later**, the round trip from the agent out of the caller's speaker and into their microphone.
+- **It was loud enough to hear**: the part of the caller's channel that matches the agent is no more than 40 dB below the agent.
 
-A reply that also loops is left to [Audio Loop](/docs/metrics-audio-loop): a replayed buffer repeats at a fixed delay too, and is reported there once.
+These limits come from phone calls labelled by a human reviewer, where real leaks returned 0.37 to 0.51 seconds after the agent and copies more than 40 dB down were inaudible. A phone setup with a much longer round trip would need a wider delay range.
 
-If no agent reply has decodable audio, the metric is skipped.
+Without a stereo call recording the metric is skipped, as the leak is only visible on the caller's own channel.
 
 ## FAQs
 
 <FAQs
   qas={[
     {
-      question: "How is this different from audio loop?",
+      question: "Is this the agent's fault?",
       answer: (
         <>
-          <a href="/docs/metrics-audio-loop">AudioLoopMetric</a> catches the
-          exact same chunk of audio played again, back to back. An echo is a
-          quieter, delayed copy layered on top of the original speech, so it is
-          never an exact repeat and needs its own check.
+          Not directly. The leak comes from the caller's speaker and microphone,
+          but it still harms the call: the caller hears a delayed copy of the
+          agent, and the agent's own speech detection can hear itself and stop
+          or reply to its own words.
         </>
       ),
     },
     {
-      question: "Will room reverb be reported as an echo?",
+      question: "Will background noise be reported as an echo?",
       answer: (
         <>
-          Usually not. Reverb arrives within a few tens of milliseconds and
-          blurs into the voice, while this metric looks for a distinct copy 60
-          to 500 ms later.
+          Rarely. Noise has to repeat the agent's sound at a steady 0.3 to 0.6
+          second delay and stand out clearly to count. Noise that happens to
+          line up with the agent lands at random delays and is ignored.
+        </>
+      ),
+    },
+    {
+      question: "How is this different from audio loop?",
+      answer: (
+        <>
+          <a href="/docs/metrics-audio-loop">AudioLoopMetric</a> catches the
+          same chunk of the agent's audio played again in the agent's own
+          stream. Echo looks for the agent's voice arriving on the caller's
+          side.
         </>
       ),
     },
@@ -114,18 +120,8 @@ If no agent reply has decodable audio, the metric is skipped.
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio
-          samples, so it has no model or token cost.
-        </>
-      ),
-    },
-    {
-      question: "Does it check the simulated user's audio too?",
-      answer: (
-        <>
-          No. Only assistant turns are inspected. The caller's audio is produced
-          by your own TTS model, so defects there are a problem with the test
-          harness rather than with the agent under test.
+          No. Detection is deterministic and runs locally over the recording,
+          so it has no model or token cost.
         </>
       ),
     },

@@ -1,10 +1,12 @@
 """When each speaker made sound on a call. With a stereo recording of the
-whole call (caller left, agent right) it comes from each channel's loudness;
+whole call (caller left, agent right) it comes from each channel's loudness,
+and with speech detection on, the caller must also be heard as speaking;
 without one, from the turns' timestamps."""
 
-import functools
-import os
+import hashlib
+import threading
 import wave
+from collections import OrderedDict
 from dataclasses import dataclass
 from typing import Any, Dict, List, Optional, Sequence, Tuple
 
@@ -23,6 +25,7 @@ from deepeval.metrics.voice.utils.defects import (
     agent_reply_delays,
     call_timeline,
 )
+from deepeval.metrics.voice.utils.speech_detection import speech_frames
 from deepeval.test_case import ConversationalTestCase
 from deepeval.voice.connectors import audio_utils
 
@@ -41,6 +44,7 @@ CALLER_TALKING_WINDOW_SECONDS = 0.3
 CALLER_TALKING_MIN_SECONDS = 0.2
 # Room past the last 20 ms frame to find where the sound really stops.
 STOP_MARGIN_SECONDS = 0.02
+RECORDING_CACHE_SIZE = 32
 
 
 @dataclass(frozen=True)
@@ -166,11 +170,15 @@ def agent_starts(activity: CallActivity) -> List[AgentStart]:
     return starts
 
 
-def _channel_spans(levels: Sequence[float]) -> List[Span]:
+def _loud_frames(levels: Sequence[float]) -> List[bool]:
+    return [level >= audio_utils.DEFAULT_SILENCE_RMS for level in levels]
+
+
+def _channel_spans(talking: Sequence[bool]) -> List[Span]:
     frame_seconds = audio_utils.DEFAULT_FRAME_MS / 1000
     bounds: List[List[float]] = []
-    for index, level in enumerate(levels):
-        if level < audio_utils.DEFAULT_SILENCE_RMS:
+    for index, is_talking in enumerate(talking):
+        if not is_talking:
             continue
         start = index * frame_seconds
         if bounds and start - bounds[-1][1] < SOUND_GAP_SECONDS:
@@ -193,13 +201,10 @@ def _frame_levels(samples: Any, sample_rate: int) -> List[float]:
     ]
 
 
-def _read_channels(path: str) -> Optional[Tuple[Any, Any, int]]:
+def _read_channels(wav: bytes) -> Optional[Tuple[Any, Any, int]]:
     try:
-        with open(path, "rb") as file:
-            pcm, sample_rate, channels = audio_utils.wav_bytes_to_pcm16(
-                file.read()
-            )
-    except (OSError, EOFError, ValueError, wave.Error):
+        pcm, sample_rate, channels = audio_utils.wav_bytes_to_pcm16(wav)
+    except (EOFError, ValueError, wave.Error):
         return None
     if channels != 2 or not sample_rate:
         return None
@@ -208,17 +213,27 @@ def _read_channels(path: str) -> Optional[Tuple[Any, Any, int]]:
     return frames[:, 0], frames[:, 1], sample_rate
 
 
-@functools.lru_cache(maxsize=4)
+def read_call_recording(path: Optional[str]) -> Optional[Tuple[Any, Any, int]]:
+    """The caller and agent channels of a 16-bit stereo WAV, and its rate."""
+    if not path:
+        return None
+    try:
+        with open(path, "rb") as file:
+            return _read_channels(file.read())
+    except OSError:
+        return None
+
+
 def _recording_activity(
-    path: str, modified_ns: int, size: int
+    wav: bytes, use_speech_detection: bool
 ) -> Optional[CallActivity]:
-    channels = _read_channels(path)
+    channels = _read_channels(wav)
     if channels is None:
         return None
     caller_samples, agent_samples, sample_rate = channels
     agent_levels = _frame_levels(agent_samples, sample_rate)
     _, noise_level = speech_and_noise_levels(agent_levels)
-    agent = _channel_spans(agent_levels)
+    agent = _channel_spans(_loud_frames(agent_levels))
     stops = []
     for span in agent:
         begin = max(span.start, span.end - STOP_CONTEXT_SECONDS)
@@ -230,32 +245,75 @@ def _recording_activity(
         stops.append(
             SoundStop(span.end, ends_abruptly(sound, sample_rate, noise_level))
         )
+    caller_levels = _frame_levels(caller_samples, sample_rate)
+    caller_talking = (
+        speech_frames(caller_samples, sample_rate, caller_levels)
+        if use_speech_detection
+        else _loud_frames(caller_levels)
+    )
     return CallActivity(
         source=CALL_RECORDING,
         agent=tuple(agent),
-        caller=tuple(
-            _channel_spans(_frame_levels(caller_samples, sample_rate))
-        ),
+        caller=tuple(_channel_spans(caller_talking)),
         duration=len(agent_samples) / sample_rate,
         agent_stops=tuple(stops),
     )
 
 
-def recording_activity(path: Optional[str]) -> Optional[CallActivity]:
+# Keyed by the recording's content, so metrics handed separate copies of the
+# same call share one reading of it.
+_recording_cache: "OrderedDict[Tuple[str, bool], Optional[CallActivity]]" = (
+    OrderedDict()
+)
+_recording_cache_lock = threading.Lock()
+_recording_key_locks: Dict[Tuple[str, bool], threading.Lock] = {}
+
+
+def _cached_activity(key: Tuple[str, bool]) -> Tuple[bool, Any]:
+    with _recording_cache_lock:
+        if key in _recording_cache:
+            _recording_cache.move_to_end(key)
+            return True, _recording_cache[key]
+        return False, None
+
+
+def recording_activity(
+    path: Optional[str], use_speech_detection: bool
+) -> Optional[CallActivity]:
     """None unless `path` is a readable 16-bit stereo WAV."""
     if not path:
         return None
     try:
-        stat = os.stat(path)
+        with open(path, "rb") as file:
+            wav = file.read()
     except OSError:
         return None
-    return _recording_activity(path, stat.st_mtime_ns, stat.st_size)
+    key = (hashlib.sha256(wav).hexdigest(), use_speech_detection)
+    found, activity = _cached_activity(key)
+    if found:
+        return activity
+    with _recording_cache_lock:
+        key_lock = _recording_key_locks.setdefault(key, threading.Lock())
+    # Metrics measuring the same call at once wait for one reading of it.
+    with key_lock:
+        found, activity = _cached_activity(key)
+        if found:
+            return activity
+        activity = _recording_activity(wav, use_speech_detection)
+        with _recording_cache_lock:
+            _recording_cache[key] = activity
+            while len(_recording_cache) > RECORDING_CACHE_SIZE:
+                _recording_cache.popitem(last=False)
+            _recording_key_locks.pop(key, None)
+    return activity
 
 
 def call_recording_activity(
-    test_case: ConversationalTestCase,
+    test_case: ConversationalTestCase, use_speech_detection: bool
 ) -> Optional[CallActivity]:
-    return recording_activity(test_case.call_recording_path)
+    return recording_activity(
+        test_case.call_recording_path, use_speech_detection
+    )
 
 
 def turn_activity(test_case: ConversationalTestCase) -> CallActivity:
@@ -278,17 +336,21 @@ def turn_activity(test_case: ConversationalTestCase) -> CallActivity:
     )
 
 
-def call_activity(test_case: ConversationalTestCase) -> CallActivity:
-    return call_recording_activity(test_case) or turn_activity(test_case)
+def call_activity(
+    test_case: ConversationalTestCase, use_speech_detection: bool
+) -> CallActivity:
+    return call_recording_activity(
+        test_case, use_speech_detection
+    ) or turn_activity(test_case)
 
 
 def reply_delays(
-    test_case: ConversationalTestCase,
+    test_case: ConversationalTestCase, use_speech_detection: bool
 ) -> Tuple[Dict, List[Dict], Optional[str], str]:
     """How long the agent waited before each reply, the replies left out, why
     the call could not be timed, and where the timing came from. Replies that
     started over the caller had no wait and are left to Agent Interruption."""
-    recording = call_recording_activity(test_case)
+    recording = call_recording_activity(test_case, use_speech_detection)
     if recording is None:
         delays, skipped, untimed_reason = agent_reply_delays(test_case)
         return delays, skipped, untimed_reason, TURN_TIMESTAMPS

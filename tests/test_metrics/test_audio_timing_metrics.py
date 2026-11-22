@@ -306,7 +306,7 @@ def _measure_recording(metric, tmp_path, *, caller, agent):
 
 def test_a_recording_replaces_the_turn_timestamps(tmp_path):
     metric = _measure_recording(
-        ResponseLatencyMetric(),
+        ResponseLatencyMetric(use_speech_detection=False),
         tmp_path,
         agent=[(0.0, speech_like(1.5)), (8.0, speech_like(2.0))],
         caller=[(2.0, speech_like(2.0))],
@@ -330,7 +330,10 @@ def test_delay_consistency_reads_the_same_waits_from_a_recording(tmp_path):
         agent.append((cursor + 0.75 + wait, speech_like(1.0)))
         cursor += 0.75 + wait + 2.0
     metric = _measure_recording(
-        ResponseDelayConsistencyMetric(), tmp_path, caller=caller, agent=agent
+        ResponseDelayConsistencyMetric(use_speech_detection=False),
+        tmp_path,
+        caller=caller,
+        agent=agent,
     )
     assert metric.score == 0.75
     [event] = metric.score_breakdown["events"]
@@ -339,7 +342,7 @@ def test_delay_consistency_reads_the_same_waits_from_a_recording(tmp_path):
 
 def test_a_false_start_on_a_recording(tmp_path):
     metric = _measure_recording(
-        AgentInterruptionMetric(),
+        AgentInterruptionMetric(use_speech_detection=False),
         tmp_path,
         agent=[
             (0.0, speech_like(1.5)),
@@ -356,7 +359,7 @@ def test_a_false_start_on_a_recording(tmp_path):
 
 def test_talking_over_the_caller_on_a_recording(tmp_path):
     metric = _measure_recording(
-        AgentInterruptionMetric(),
+        AgentInterruptionMetric(use_speech_detection=False),
         tmp_path,
         agent=[(0.0, speech_like(1.5)), (3.0, speech_like(3.0))],
         caller=[(2.0, speech_like(4.0))],
@@ -370,7 +373,7 @@ def test_a_short_reply_after_the_caller_finished_is_not_a_false_start(
     tmp_path,
 ):
     metric = _measure_recording(
-        AgentInterruptionMetric(),
+        AgentInterruptionMetric(use_speech_detection=False),
         tmp_path,
         agent=[(0.0, speech_like(1.5)), (4.0, speech_like(0.5))],
         caller=[(2.0, speech_like(1.5)), (6.0, speech_like(1.0))],
@@ -383,7 +386,10 @@ def test_a_false_start_after_four_seconds_of_caller_silence_is_excused(
     tmp_path, silence_limit, score
 ):
     metric = _measure_recording(
-        AgentInterruptionMetric(max_caller_silence_seconds=silence_limit),
+        AgentInterruptionMetric(
+            max_caller_silence_seconds=silence_limit,
+            use_speech_detection=False,
+        ),
         tmp_path,
         agent=[(0.0, speech_like(1.5)), (8.0, speech_like(0.5))],
         caller=[(2.0, speech_like(1.5)), (8.2, speech_like(1.5))],
@@ -396,7 +402,7 @@ def test_the_callers_whole_pause_decides_whether_a_false_start_is_excused(
 ):
     # Silent 3.8 s before the agent starts, 4.2 s before speaking again.
     metric = _measure_recording(
-        AgentInterruptionMetric(),
+        AgentInterruptionMetric(use_speech_detection=False),
         tmp_path,
         agent=[(0.0, speech_like(1.5)), (7.05, speech_like(0.5))],
         caller=[(2.0, speech_like(1.5)), (7.45, speech_like(1.5))],
@@ -406,7 +412,7 @@ def test_the_callers_whole_pause_decides_whether_a_false_start_is_excused(
 
 def test_a_slow_answer_to_the_callers_first_words(tmp_path):
     metric = _measure_recording(
-        TimeToFirstResponseMetric(),
+        TimeToFirstResponseMetric(use_speech_detection=False),
         tmp_path,
         caller=[(0.5, speech_like(1.0))],
         agent=[(5.0, speech_like(2.0))],
@@ -419,7 +425,7 @@ def test_a_slow_answer_to_the_callers_first_words(tmp_path):
 
 def test_a_prompt_greeting_on_a_recording(tmp_path):
     metric = _measure_recording(
-        TimeToFirstResponseMetric(),
+        TimeToFirstResponseMetric(use_speech_detection=False),
         tmp_path,
         agent=[(1.0, speech_like(2.0))],
         caller=[(4.0, speech_like(1.0))],
@@ -435,7 +441,7 @@ def test_a_caller_left_in_silence_before_saying_hello_waited_for_the_agent(
     tmp_path,
 ):
     metric = _measure_recording(
-        TimeToFirstResponseMetric(),
+        TimeToFirstResponseMetric(use_speech_detection=False),
         tmp_path,
         caller=[(6.0, speech_like(0.5))],
         agent=[(6.5, speech_like(2.0))],

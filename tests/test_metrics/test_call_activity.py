@@ -19,7 +19,7 @@ TAIL = 0.25
 
 
 def _starts(path):
-    return agent_starts(recording_activity(path))
+    return agent_starts(recording_activity(path, use_speech_detection=False))
 
 
 def test_spans_come_from_each_channels_loudness(tmp_path):
@@ -28,7 +28,7 @@ def test_spans_come_from_each_channels_loudness(tmp_path):
         caller=[(0.5, speech_like(2.0))],
         agent=[(3.0, speech_like(2.0, base_hz=230.0))],
     )
-    activity = recording_activity(path)
+    activity = recording_activity(path, use_speech_detection=False)
     assert activity.source == "call_recording"
     [caller] = activity.caller
     [agent] = activity.agent
@@ -46,11 +46,11 @@ def test_a_missing_or_mono_recording_falls_back_to_turn_timestamps(
         audio_utils.pcm16_to_wav_bytes(speech_like(1.0).tobytes(), RATE, 1)
     )
     for path in (str(tmp_path / "missing.wav"), str(mono)):
-        assert recording_activity(path) is None
+        assert recording_activity(path, use_speech_detection=False) is None
         test_case = ConversationalTestCase(
             turns=timed_call([0.5]), call_recording_path=path
         )
-        activity = call_activity(test_case)
+        activity = call_activity(test_case, use_speech_detection=False)
         assert activity.source == "turn_timestamps"
         assert [span.turn for span in activity.agent] == [1]
 

@@ -84,7 +84,7 @@ The metrics use different parts of the same `ConversationalTestCase`:
 
 - `VoiceNaturalnessMetric`, `SpeechIntelligibilityMetric`, and `AudioIntegrityMetric` analyze each assistant `Turn.audio`.
 - `VoiceConsistencyMetric` compares assistant audio across multiple turns.
-- The seven single-defect metrics (`AudioDropoutMetric` through `EchoMetric`) analyze each assistant `Turn.audio`. `AbruptCutoffMetric` also uses `Turn.audio.start_time` to recognize a reply the agent picked up again, and skips turns marked `interrupted`.
+- The single-defect metrics `AudioDropoutMetric` through `DeadStreamMetric` analyze each assistant `Turn.audio`. `EchoMetric` reads the stereo `call_recording_path` instead, since the agent's voice leaking back only shows on the caller's channel. `AbruptCutoffMetric` also uses `Turn.audio.start_time` to recognize a reply the agent picked up again, and skips turns marked `interrupted`.
 - `BackgroundNoiseMetric`, `LoudnessMetric`, and `VolumeVarianceMetric` analyze each assistant `Turn.audio`. Their limits (`min_snr_db`, `min_dbfs`/`max_dbfs`, `max_drift_db`) can be changed when you create the metric.
 - `PitchVariationMetric`, `AbruptPitchJumpMetric`, and `PausesMetric` analyze each assistant `Turn.audio`. `PitchConsistencyMetric` and `LoudnessConsistencyMetric` compare assistant audio across at least three turns. `SpeakingRateMetric` also uses each assistant `Turn.content` to count the words spoken.
 - `AudioGlitchMetric` analyzes every `Turn.audio` of both roles for held tones, dead stream and clipping, and uses `Turn.audio.start_time` only to infer stream cuts.

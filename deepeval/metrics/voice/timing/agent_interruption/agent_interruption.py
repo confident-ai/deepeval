@@ -67,6 +67,7 @@ class AgentInterruptionMetric(BaseVoiceMetric):
         verbose_mode: bool = False,
         caller_start_window_ms: int = 500,
         max_caller_silence_seconds: int = 4,
+        use_speech_detection: bool = True,
         flaky: bool = False,
     ):
         if caller_start_window_ms <= 0:
@@ -84,9 +85,10 @@ class AgentInterruptionMetric(BaseVoiceMetric):
         )
         self.caller_start_window_ms = caller_start_window_ms
         self.max_caller_silence_seconds = max_caller_silence_seconds
+        self.use_speech_detection = use_speech_detection
 
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
-        activity = call_activity(test_case)
+        activity = call_activity(test_case, self.use_speech_detection)
         event_key = EVENT_KEYS[activity.source]
         eligible = []
         defects = []
