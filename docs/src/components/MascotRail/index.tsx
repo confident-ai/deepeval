@@ -64,7 +64,10 @@ const MascotRail = ({ walkers, edge = "bottom" }: MascotRailProps) => {
     if (window.matchMedia("(prefers-reduced-motion: reduce)").matches) return;
     if (!walkers.some(walks)) return;
 
-    const size = () => nodes.current[0]?.offsetWidth || 40;
+    // One mascot's width, and each walker's own (a walker can be wider).
+    const size = () =>
+      nodes.current[0]?.querySelector("svg")?.getBoundingClientRect().width || 40;
+    const widthOf = (i: number) => nodes.current[i]?.offsetWidth || size();
 
     if (state.current.length !== walkers.length) {
       const railLeft = rail.getBoundingClientRect().left;
@@ -96,10 +99,14 @@ const MascotRail = ({ walkers, edge = "bottom" }: MascotRailProps) => {
       last = now;
       const width = size();
       const pixel = width / 16;
-      const limit = Math.max(0, rail.clientWidth - width);
+      const limitOf = (i: number) => Math.max(0, rail.clientWidth - widthOf(i));
       const walkersState = state.current;
 
       walkersState.forEach((w, i) => {
+        const limit = limitOf(i);
+        // The rail can shrink (window or pane resized) while a walker is
+        // resting or hovered; keep everyone inside it on every frame.
+        if (w.x > limit) w.x = limit;
         if (w.still) {
           const at = walkers[i].at;
           w.x = at === undefined ? Math.min(w.x, limit) : at * limit;
@@ -124,7 +131,8 @@ const MascotRail = ({ walkers, edge = "bottom" }: MascotRailProps) => {
         walkersState.forEach((b, j) => {
           if (i === j || a.still || a.resting || held.current[i]) return;
           const gap = b.x - a.x;
-          if (Math.abs(gap) < width * 0.9 && Math.sign(gap) === a.dir) {
+          const reach = (gap > 0 ? widthOf(i) : widthOf(j)) * 0.9;
+          if (Math.abs(gap) < reach && Math.sign(gap) === a.dir) {
             a.dir = a.dir === 1 ? -1 : 1;
           }
         })

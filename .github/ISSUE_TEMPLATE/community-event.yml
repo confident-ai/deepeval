@@ -1,0 +1,112 @@
+name: List a community meetup
+description: Submit a DeepEval meetup to the Community page on deepeval.com
+title: "[Event] "
+labels: ["community-event"]
+assignees: ["tony-confidentai"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for hosting a DeepEval meetup. Before you submit:
+
+        1. Create the event on [Luma](https://luma.com). We list Luma events only.
+        2. Add **tony@confident-ai.com** as a co-host on the Luma event.
+        3. Add this registration question to the Luma event: "Share my details with DeepEval (Confident AI) for product updates." Make it optional.
+
+        We review each event and list it within 2 business days. This issue is public, so do not add phone numbers or private emails.
+  - type: input
+    id: title
+    attributes:
+      label: Event title
+      placeholder: DeepEval Meetup London
+    validations:
+      required: true
+  - type: input
+    id: url
+    attributes:
+      label: Luma link
+      placeholder: https://luma.com/abc123
+    validations:
+      required: true
+  - type: input
+    id: date
+    attributes:
+      label: Date
+      description: YYYY-MM-DD
+      placeholder: "2027-01-14"
+    validations:
+      required: true
+  - type: input
+    id: time
+    attributes:
+      label: Start time
+      description: Local time at the venue, 24-hour HH:MM
+      placeholder: "18:30"
+    validations:
+      required: true
+  - type: input
+    id: timezone
+    attributes:
+      label: Time zone
+      description: IANA name of the venue's time zone
+      placeholder: Europe/London
+    validations:
+      required: true
+  - type: input
+    id: city
+    attributes:
+      label: City
+      description: Write "Online" for a virtual event
+      placeholder: London
+    validations:
+      required: true
+  - type: input
+    id: country
+    attributes:
+      label: Country
+      placeholder: United Kingdom
+    validations:
+      required: true
+  - type: input
+    id: talk
+    attributes:
+      label: DeepEval talk
+      description: Title of the talk or workshop about DeepEval or LLM evals
+      placeholder: Testing a RAG agent with DeepEval in CI
+    validations:
+      required: true
+  - type: input
+    id: host
+    attributes:
+      label: Organizer name
+      description: The person or group shown as the host
+      placeholder: London AI Engineers
+    validations:
+      required: true
+  - type: checkboxes
+    id: perks
+    attributes:
+      label: Support you want from us
+      description: Optional. We decide for each event and reply in this issue.
+      options:
+        - label: DeepEval swag for attendees
+        - label: A remote speaker from the DeepEval team
+        - label: Free credits
+  - type: textarea
+    id: notes
+    attributes:
+      label: Anything else
+      description: Optional. Expected attendance, venue, other speakers.
+  - type: checkboxes
+    id: confirmations
+    attributes:
+      label: Confirmations
+      options:
+        - label: I added tony@confident-ai.com as a co-host on the Luma event
+          required: true
+        - label: I added the optional opt-in registration question to the Luma event
+          required: true
+        - label: The event is free to attend
+          required: true
+        - label: The event follows the DeepEval Code of Conduct (https://github.com/confident-ai/deepeval/blob/main/CODE_OF_CONDUCT.md)
+          required: true
