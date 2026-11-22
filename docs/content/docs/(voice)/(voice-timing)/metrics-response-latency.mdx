@@ -82,7 +82,7 @@ print(metric.score_breakdown)
 
 <Equation formula="\text{Response Latency} = \frac{\text{Agent replies that started within max\_latency\_seconds}}{\text{Agent replies that follow a caller turn}}" />
 
-With a call recording, the wait runs from the caller's last sound to the agent's first sound, every time the agent starts speaking after at least one second of its own silence and the caller spoke last. The agent's first start on the recording is always left out, even when it answers a caller who spoke first; [`TimeToFirstResponseMetric`](/docs/metrics-time-to-first-response) times it instead. A start where the caller's sound runs on more than half a second past it is skipped.
+With a call recording, the wait runs from the caller's last sound to the agent's first sound, every time the agent starts speaking after at least one second of its own silence and the caller spoke last. When the agent speaks before the caller makes any sound, that opening line answers no one and is left out; [`TimeToFirstResponseMetric`](/docs/metrics-time-to-first-response) times it instead. When the caller opens the call, the agent's first reply is timed like any other. A start where the caller's sound runs on more than half a second past it is skipped.
 
 ### Where the timing comes from
 

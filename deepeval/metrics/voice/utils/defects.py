@@ -21,8 +21,6 @@ MIN_COMPARED_REPLIES = 3
 # of the caller's clip.
 AGENT_OVERLAP_ALLOWANCE_SECONDS = 0.5
 NO_CALL_AUDIO_REASON = "The call has no audio to evaluate."
-# Below this a reply carries no audible sound at all.
-INAUDIBLE_MAX_DBFS = -70
 INAUDIBLE_ERROR = "Reply has no audible sound to measure."
 # Where the timing metrics read who spoke when.
 CALL_RECORDING = "call_recording"
@@ -44,13 +42,16 @@ def agent_reply_measurements(
     return measurements, skipped
 
 
-# An inaudible reply fails Silent Reply, so level metrics skip it.
+def is_inaudible(reply: AudioMeasurements) -> bool:
+    return reply.silence_fraction >= 1.0
+
+
 def audible_replies(
     measurements: Dict[int, AudioMeasurements], skipped: List[Dict]
 ) -> Dict[int, AudioMeasurements]:
     replies = {}
     for turn, reply in measurements.items():
-        if reply.rms_dbfs > INAUDIBLE_MAX_DBFS:
+        if not is_inaudible(reply):
             replies[turn] = reply
         else:
             skipped.append({"turn": turn, "error": INAUDIBLE_ERROR})

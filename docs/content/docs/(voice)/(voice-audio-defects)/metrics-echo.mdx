@@ -97,9 +97,10 @@ If no agent reply has decodable audio, the metric is skipped.
       answer: (
         <>
           <a href="/docs/metrics-audio-loop">AudioLoopMetric</a> catches the
-          exact same chunk of audio played again within a reply. An echo is a
-          quieter, delayed copy layered on top of the original speech, so it is
-          never an exact repeat and needs its own check.
+          same chunk of audio played again, in full, after itself within a
+          reply. An echo is a quieter, delayed copy layered on top of the
+          original speech, so it never replaces the speech with a repeat and
+          needs its own check.
         </>
       ),
     },

@@ -173,9 +173,17 @@ def test_talking_over_the_caller_fails_only_agent_interruption():
 
 
 def test_the_agents_opening_line_is_not_an_interruption():
-    metric = _measure(AgentInterruptionMetric(), timed_call([-1.5, 0.5]))
+    metric = _measure(
+        AgentInterruptionMetric(), timed_call([0.5, 0.5], greeting_at=0.5)
+    )
     assert metric.score == 1.0
-    assert metric.score_breakdown["eligible_turns"] == 1
+    assert metric.score_breakdown["eligible_turns"] == 2
+
+
+def test_a_first_reply_over_a_caller_who_opened_the_call_is_an_interruption():
+    metric = _measure(AgentInterruptionMetric(), timed_call([-1.5, 0.5]))
+    assert metric.score == 0.5
+    assert metric.score_breakdown["eligible_turns"] == 2
 
 
 def test_an_agent_that_backs_off_from_the_caller_made_a_false_start():

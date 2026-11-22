@@ -97,7 +97,7 @@ where _N_ is the number of eligible assistant turns and _p_ ranges over these pe
 | --------------- | ------------------------------------------------------------------------------- | --------------------------------------- | ------- |
 | Clipping        | Samples reach the ceiling of the format (an absolute value of 32760 or more).   | 25 × the fraction of clipped samples    | 0.35    |
 | Dropouts        | Short silences interrupt continuous speech.                                     | 0.08 per dropout                        | 0.25    |
-| Repeated audio  | The same non-silent 0.25s window appears three or more times — a stuck buffer.  | 0.1 per repeat after the first          | 0.2     |
+| Repeated audio  | A stretch of 0.2–2 s plays three or more times, matched by similarity as in [Audio Loop](/docs/metrics-audio-loop) — a stuck buffer. | 0.1 per extra play                      | 0.2     |
 | Excess silence  | Silence occupies more than 45% of the clip.                                     | 0.5 × (silence fraction − 0.45)         | 0.2     |
 | Low SNR         | Estimated signal-to-noise ratio falls below 15 dB.                              | (15 − SNR in dB) / 50                   | 0.2     |
 | Speaking rate   | Speech runs below 80 or above 240 words per minute.                             | (80 − wpm) / 300, or (wpm − 240) / 500  | 0.2     |

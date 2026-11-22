@@ -790,3 +790,17 @@ def test_audio_mode_without_an_llm_counts_words_in_each_clip():
     assert "The caller was heard saying 'I need fifteen boxes'" in (
         metric.verdicts[0].reason
     )
+
+
+def test_a_call_with_nothing_to_compare_raises_instead_of_passing():
+    turns = [
+        Turn(role="assistant", content="Hi, how can I help?"),
+        Turn(
+            role="user",
+            content="I need a refund.",
+            provider_transcript="I need a refund.",
+        ),
+        Turn(role="assistant", content="Sure."),
+    ]
+    with pytest.raises(MissingTestCaseParamsError, match="nothing"):
+        _measure_without_llm(turns)

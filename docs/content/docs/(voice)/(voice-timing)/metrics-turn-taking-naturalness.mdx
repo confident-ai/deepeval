@@ -127,7 +127,7 @@ When the test case has a stereo `call_recording_path` (caller on the left channe
 - **Gap:** a speaker starts while the other is silent, and the other spoke last. Δ is the silence in between.
 - **Overlap:** a speaker starts while the other is talking. Δ is how long both keep talking.
 
-Not counted: the same speaker carrying on, overlaps under 0.3 seconds, the agent's first stretch of speech on the call (even when it answers a caller who spoke first), and a caller sound under one second that starts while the agent is talking (an "mm-hm"). The scoring above is unchanged; with no hand-over found, the metric is skipped. Loudness cannot tell speech from other sound, so steady noise, ringback or hold music on the caller's channel reads as the caller talking.
+Not counted: the same speaker carrying on, overlaps under 0.3 seconds, the agent's first stretch of speech on the call when it starts before the caller makes any sound (an opening line answers no one; when the caller opens the call, the agent's first reply is scored as a hand-over), and a caller sound under one second that starts while the agent is talking (an "mm-hm"). The scoring above is unchanged; with no hand-over found, the metric is skipped. Loudness cannot tell speech from other sound, so steady noise, ringback or hold music on the caller's channel reads as the caller talking.
 
 Without a recording, the metric returns no score and marks the evaluation as skipped when any audio turn is missing `start_time`, when fewer than two clips are placed on the timeline, when no two consecutive turns change speaker, or when every speaker change has touching clips with no `latency_ms` to time it.
 

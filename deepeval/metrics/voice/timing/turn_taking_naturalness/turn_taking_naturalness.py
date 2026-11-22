@@ -46,7 +46,15 @@ def _recording_transitions(
         "assistant": stretches(recording.agent, SPEAKER_PAUSE_SECONDS),
         "user": stretches(recording.caller, SPEAKER_PAUSE_SECONDS),
     }
-    opening = floors["assistant"][0] if floors["assistant"] else None
+    opening = (
+        floors["assistant"][0]
+        if floors["assistant"]
+        and not (
+            floors["user"]
+            and floors["user"][0].start < floors["assistant"][0].start
+        )
+        else None
+    )
     transitions: List[Dict] = []
     scores: List[float] = []
     response_delay_seconds: List[float] = []

@@ -37,7 +37,7 @@ LEVEL_ISSUES = [
         LoudnessMetric,
         "speech outside -32 to -6 dBFS",
         "too_quiet",
-        lambda: with_gain(agent_speech(), 0.05),
+        lambda: with_gain(agent_speech(), 0.15),
     ),
     (
         VolumeVarianceMetric,

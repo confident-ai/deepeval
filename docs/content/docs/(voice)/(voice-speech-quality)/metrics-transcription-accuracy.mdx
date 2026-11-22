@@ -24,7 +24,7 @@ To use the `TranscriptionAccuracyMetric`, you'll have to provide the following a
 You must provide the `role` and `content` for every turn, and `provider_transcript` on at least one `"assistant"` turn. With `compare_against="audio"` you instead provide `audio` on at least one turn, of either role. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
 
 :::caution
-Only [voice connectors](/docs/conversation-simulator-voice-connectors) that report the agent's own transcription populate `provider_transcript`. A text conversation, or a phone call over SIP, never will — the agent's speech-to-text output does not cross the phone line. The metric raises rather than scoring such a test case 0, so a call it cannot measure is never mistaken for a call the agent failed. The same holds in audio mode when no turn has `audio`.
+Only [voice connectors](/docs/conversation-simulator-voice-connectors) that report the agent's own transcription populate `provider_transcript`. A text conversation, or a phone call over SIP, never will — the agent's speech-to-text output does not cross the phone line. The metric raises rather than scoring such a test case 0, so a call it cannot measure is never mistaken for a call the agent failed. The same holds in audio mode when no turn has `audio`, and in either mode when nothing can be compared (see below).
 :::
 
 ## Usage
@@ -147,7 +147,7 @@ The `TranscriptionAccuracyMetric` score is calculated according to the following
 
 <Equation formula="\text{Transcription Accuracy} = \frac{\text{Number of Exchanges Heard Faithfully}}{\text{Total Number of Exchanges}}" />
 
-If no exchange can be formed — for example, the only `provider_transcript` sits on an assistant turn with no caller speech before it — there is nothing to mishear and the score is 1.
+If no exchange can be formed — for example, the only `provider_transcript` sits on an assistant turn with no caller speech before it, or in audio mode no turn could be compared — there is nothing to judge, and the metric raises a `MissingTestCaseParamsError` instead of returning a score.
 
 An LLM judges each exchange, and deliberately **does not** count these as errors, because they are the same utterance written differently:
 

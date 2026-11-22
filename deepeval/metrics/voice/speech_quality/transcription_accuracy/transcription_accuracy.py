@@ -1,6 +1,7 @@
 import asyncio
 from typing import Any, Dict, List, Literal, Optional, Tuple, Type, Union
 
+from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -311,7 +312,9 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
                 if self.use_llm and run_system_one_eval(self, test_case):
                     return self.score
 
-                self.exchanges = self._get_exchanges(test_case)
+                self.exchanges = self._require_exchanges(
+                    self._get_exchanges(test_case)
+                )
                 self.verdicts = self._generate_verdicts()
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
@@ -347,7 +350,9 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
             if self.use_llm and await a_run_system_one_eval(self, test_case):
                 return self.score
 
-            self.exchanges = await self._a_get_exchanges(test_case)
+            self.exchanges = self._require_exchanges(
+                await self._a_get_exchanges(test_case)
+            )
             self.verdicts = await self._a_generate_verdicts()
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
@@ -366,6 +371,26 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
                 ],
             )
             return self.score
+
+    def _require_exchanges(
+        self, exchanges: List[Dict[str, Any]]
+    ) -> List[Dict[str, Any]]:
+        if exchanges:
+            return exchanges
+        if self.compare_against == "audio":
+            error = (
+                "No turn with audio could be compared with the call's "
+                "transcript, so there is nothing for the "
+                f"'{self.__name__}' metric to judge."
+            )
+        else:
+            error = (
+                "No assistant turn has a 'provider_transcript' that follows "
+                "something the caller said, so there is nothing for the "
+                f"'{self.__name__}' metric to compare."
+            )
+        self.error = error
+        raise MissingTestCaseParamsError(error)
 
     def _get_exchanges(
         self, test_case: ConversationalTestCase

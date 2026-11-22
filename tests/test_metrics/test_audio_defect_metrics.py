@@ -297,3 +297,9 @@ def test_sound_running_to_the_end_of_the_recording_is_not_judged(tmp_path):
         seconds=4.125,
     )
     assert metric.score == 1.0
+
+
+def test_a_loop_is_found_after_the_audio_is_re_encoded():
+    turns = _with_defect(1, lambda: with_noise(loop_clip(), -40))
+    metric = _measure(AudioLoopMetric, turns)
+    assert metric.score == pytest.approx(2 / 3)

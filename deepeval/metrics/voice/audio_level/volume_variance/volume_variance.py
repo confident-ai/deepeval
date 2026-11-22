@@ -6,6 +6,7 @@ from deepeval.metrics.voice.audio_level.volume_variance.utils import (
 )
 from deepeval.metrics.voice.utils.defects import (
     agent_reply_measurements,
+    audible_replies,
     defect_share_result,
 )
 from deepeval.metrics.voice.base_metric import (
@@ -41,6 +42,7 @@ class VolumeVarianceMetric(BaseVoiceMetric):
 
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
         measurements, skipped = agent_reply_measurements(test_case)
+        measurements = audible_replies(measurements, skipped)
         eligible_turns = []
         defects = []
         for turn in measurements:

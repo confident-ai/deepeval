@@ -76,11 +76,11 @@ print(metric.score_breakdown)
 
 ## How Is It Calculated?
 
-`SilentReplyMetric` checks every agent turn that has text to say, and scores the share the caller could hear:
+`SilentReplyMetric` checks every agent turn that has text to say or audio, and scores the share the caller could hear:
 
-<Equation formula="\text{Silent Reply} = \frac{\text{Agent replies with audible speech}}{\text{Agent replies with text}}" />
+<Equation formula="\text{Silent Reply} = \frac{\text{Agent replies with audible speech}}{\text{Agent replies with text or audio}}" />
 
-A reply is silent when it carries no audio at all, or when every 20 ms frame of its audio sits below the level counted as speech. An agent turn with neither text nor audio is not a silent reply but no reply at all, and is reported by [`FailedResponseMetric`](/docs/metrics-failed-response). A reply that goes dead partway through is reported by [`DeadStreamMetric`](/docs/metrics-dead-stream). A conversation with no audio on any turn is not a voice call, so the metric is skipped, as it is when no agent turn has text to say.
+A reply is silent when it carries no audio at all, or when its audio is inaudible: no 20 ms frame reaches speech level (an RMS of 300, about −41 dBFS). A turn with audio but no text is checked too, so an empty clip sent without a transcript still counts as a silent reply. The level metrics, such as [`LoudnessMetric`](/docs/metrics-loudness), skip inaudible replies and leave them to this metric. An agent turn with neither text nor audio is not a silent reply but no reply at all, and is reported by [`FailedResponseMetric`](/docs/metrics-failed-response). A reply that goes dead partway through is reported by [`DeadStreamMetric`](/docs/metrics-dead-stream). A conversation with no audio on any turn is not a voice call, so the metric is skipped, as it is when no agent turn has text or audio (`No assistant turn had text or audio.`).
 
 ## FAQs
 

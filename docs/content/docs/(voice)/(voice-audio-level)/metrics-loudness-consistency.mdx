@@ -83,7 +83,7 @@ print(metric.score_breakdown)
 
 <Equation formula="\text{Loudness Consistency} = \frac{\text{Agent replies within max\_shift\_db of the typical loudness}}{\text{Audible agent replies with decodable audio}}" />
 
-Each reply's level is the same speech level [`LoudnessMetric`](/docs/metrics-loudness) uses: the 90th percentile of its 20 ms speech frames, so pauses don't pull it down. The agent's typical level is the median across its replies, so a single odd reply is flagged on its own rather than dragging the reply after it down too. This needs at least **three** audible replies to tell which one is off; with fewer, the metric is skipped. A reply with no audible sound at all (an overall level of −70 dBFS or lower) is skipped and left out of the median; [`SilentReplyMetric`](/docs/metrics-silent-reply) reports it.
+Each reply's level is the same speech level [`LoudnessMetric`](/docs/metrics-loudness) uses: the 90th percentile of its 20 ms speech frames, so pauses don't pull it down. The agent's typical level is the median across its replies, so a single odd reply is flagged on its own rather than dragging the reply after it down too. This needs at least **three** audible replies to tell which one is off; with fewer, the metric is skipped. A reply with no audible sound at all (no 20 ms frame reaches speech level, about −41 dBFS) is skipped and left out of the median; [`SilentReplyMetric`](/docs/metrics-silent-reply) reports it.
 
 The default of **5 dB** is the change listeners clearly notice; 3 dB is only just perceptible. On real agent calls, replies stay within about 2.5 dB of each other.
 
