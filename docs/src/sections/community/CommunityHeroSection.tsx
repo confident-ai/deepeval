@@ -88,8 +88,8 @@ const CommunityHeroSection: React.FC = () => {
         <h1 className={styles.title}>Host a DeepEval{"\u00a0"}meetup in your{"\u00a0"}city.</h1>
 
         <p className={styles.description}>
-          Engineers get together to show how they test and debug their AI
-          agents. Run one where you live and we'll send swag, a speaker and
+          Engineers get together to show how they test and debug AI agents.
+          Host one in your city, and we'll help with swag, speakers and
           credits.
         </p>
 
