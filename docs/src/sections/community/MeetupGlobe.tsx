@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useMemo, useRef, useState, type PointerEvent } from "react";
-import { Star, Users } from "lucide-react";
+import { Star } from "lucide-react";
 import { useInView } from "@site/src/components/Mascot/_useInView";
 import {
   countryCode,
@@ -321,16 +321,16 @@ const MeetupGlobe: React.FC = () => {
               {flagOf(tip.spot.code)} {countryName(tip.spot.code)}
             </strong>
             <span className={styles.tipStats}>
-              {tip.spot.contributors && (
-                <span title="Contributors">
-                  <Users size={11} strokeWidth={2} aria-label="Contributors" />
-                  {tip.spot.contributors.count}
-                </span>
-              )}
               {tip.spot.stars && (
                 <span title="GitHub stars">
                   <Star size={11} strokeWidth={2} aria-label="GitHub stars" />
                   {tip.spot.stars.toLocaleString("en-US")}
+                </span>
+              )}
+              {tip.spot.contributors && (
+                <span>
+                  {tip.spot.contributors.count} contributor
+                  {tip.spot.contributors.count > 1 ? "s" : ""}
                 </span>
               )}
               <span>

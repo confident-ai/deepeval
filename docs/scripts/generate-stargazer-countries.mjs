@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 /**
- * Generator (run by hand, not pre-build): pages through every stargazer of
+ * Generator (weekly in .github/workflows/community-data.yml, not
+ * pre-build): pages through every stargazer of
  * the deepeval repo with the GitHub GraphQL API, 100 per request, resolves
  * each free-text profile location to a country, and writes
  * `lib/generated/stargazer-countries.json`:
@@ -11,7 +12,7 @@
  * counts are a floor. Used by the community page globe (stars per country).
  *
  * It takes a few minutes for ~20k stars, which is why it is not part of
- * `prebuild`; the output is committed. Rerun now and then.
+ * `prebuild`; the workflow commits the output to main once a week.
  *
  * Failure modes (exit 0): no token, or a request still failing after
  * retries, keeps the previous JSON file.

@@ -162,16 +162,22 @@
   pointer-events: none;
 }
 
-// Counts with icons: contributors, stars, then meetups in words.
+// Stars (icon + number), then contributors and meetups in words.
 .tipStats {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
 
   > span {
     display: inline-flex;
     align-items: center;
     gap: 3px;
+  }
+
+  > span + span::before {
+    content: "·";
+    margin-right: 5px;
+    color: var(--color-fd-muted-foreground);
   }
 
   svg {
