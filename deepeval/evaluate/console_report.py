@@ -9,6 +9,7 @@ from rich.panel import Panel
 from rich.tree import Tree
 from rich.terminal_theme import TerminalTheme
 
+from deepeval.utils import create_console
 from deepeval.evaluate.types import TestResult
 from deepeval.test_run.test_run import TestRunResultDisplay
 
@@ -140,7 +141,7 @@ class EvaluationConsoleReport:
                 _natural_sort_key(x.name),
             ),
         )
-        self.console = Console()
+        self.console = create_console()
 
     @staticmethod
     def _should_skip_case(
@@ -449,7 +450,7 @@ class EvaluationConsoleReport:
         filepath = os.path.join(output_dir, f"{safe_name}_{timestamp}.html")
 
         dummy_file = io.StringIO()
-        html_console = Console(
+        html_console = create_console(
             record=True, file=dummy_file, force_terminal=True
         )
         html_console.print(self._build_display_elements(truncate=False))

@@ -9,6 +9,7 @@ from typing import (
 from rich.console import Console
 import time
 
+from deepeval.utils import create_console
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.evaluate.api import APIEvaluate
 from deepeval.evaluate.configs import (
@@ -259,7 +260,7 @@ def evaluate(
         start_time = time.perf_counter()
 
         if display_config.show_indicator:
-            console = Console()
+            console = create_console()
             for metric in metrics or []:
                 console.print(
                     format_metric_description(
@@ -420,7 +421,7 @@ def evaluate(
             body=body,
         )
         if link:
-            console = Console()
+            console = create_console()
             console.print(
                 "✅ Evaluation successfully pushed to Confident AI! View at "
                 f"[link={link}]{link}[/link]"

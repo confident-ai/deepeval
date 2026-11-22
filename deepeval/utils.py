@@ -966,3 +966,24 @@ def require_dependency(
         raise DeepEvalError(
             f"{provider_label} requires the `{module_name}` package. {hint}"
         ) from exc
+
+
+def create_console(**kwargs) -> Console:
+    """
+    Create a Rich Console with proper encoding handling for redirected output.
+    
+    On Windows, when stdout is redirected (CI, > log.txt), the default encoding
+    may not support emoji characters (✨🚀). This causes UnicodeEncodeError.
+    
+    Returns a Console that uses errors="replace" when stdout is redirected.
+    """
+    import sys
+    
+    # If stdout is redirected and not a terminal, reconfigure with error handling
+    if not sys.stdout.isatty() and hasattr(sys.stdout, "reconfigure"):
+        try:
+            sys.stdout.reconfigure(errors="replace")
+        except Exception:
+            pass  # Best effort - some environments don't support reconfigure
+    
+    return Console(**kwargs)

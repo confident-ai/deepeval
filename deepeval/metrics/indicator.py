@@ -21,6 +21,7 @@ from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import record_metric
 from deepeval.utils import update_pbar
 from deepeval.config.settings import get_settings
+from deepeval.utils import create_console
 
 if TYPE_CHECKING:
     from deepeval.classifiers.base_classifier import BaseClassifier
@@ -97,7 +98,7 @@ def metric_progress_indicator(
     _in_component: bool = False,
 ):
     start_measure(metric, async_mode=async_mode, in_component=_in_component)
-    console = Console(file=sys.stderr)  # Direct output to standard error
+    console = create_console(file=sys.stderr)  # Direct output to standard error
     try:
         if _show_indicator:
             with Progress(
