@@ -5,7 +5,7 @@ from __future__ import annotations
 import hashlib
 import math
 from array import array
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from statistics import mean, median, pstdev
 from typing import Any, List, Optional, Sequence, Tuple
 
@@ -123,6 +123,13 @@ class AudioMeasurements:
     speech_span_seconds: float
     longest_pause_ms: float
     pause_fraction: float
+    # Where in the clip each problem sits, in seconds from its start:
+    # (offset, duration) spans, and the time of each pitch jump.
+    dropout_spans: List[Tuple[float, float]] = field(default_factory=list)
+    loop_spans: List[Tuple[float, float]] = field(default_factory=list)
+    pitch_jump_times: List[float] = field(default_factory=list)
+    longest_pause_span: Optional[Tuple[float, float]] = None
+    sound_end_seconds: Optional[float] = None
 
 
 def clamp_score(value: float) -> float:
@@ -294,11 +301,16 @@ def pitch_track(
 
 
 def count_pitch_jumps(track: Sequence[Optional[float]]) -> int:
-    """Steps of 6+ semitones between two stretches of steady pitch; a lone
-    frame on either side is more likely a tracking slip than a crack."""
+    return len(pitch_jump_frames(track))
+
+
+def pitch_jump_frames(track: Sequence[Optional[float]]) -> List[int]:
+    """Frames where pitch steps 6+ semitones between two stretches of steady
+    pitch; a lone frame on either side is more likely a tracking slip than a
+    crack."""
     stretches = _pitch_stretches(track)
-    return sum(
-        1
+    return [
+        next_start
         for (start, end), (next_start, next_end) in zip(
             stretches, stretches[1:]
         )
@@ -307,7 +319,7 @@ def count_pitch_jumps(track: Sequence[Optional[float]]) -> int:
         and next_end - next_start >= 2
         and abs(semitones(track[next_start], track[end - 1]))
         >= PITCH_JUMP_SEMITONES
-    )
+    ]
 
 
 def _centered(data: Sequence[int]) -> Any:
@@ -386,7 +398,9 @@ def pitch_and_periodicity(
     return rate / (best_lag + offset), best
 
 
-def _hard_edged_gaps(samples: Sequence[int], sample_rate: int) -> int:
+def _hard_edged_gaps(
+    samples: Sequence[int], sample_rate: int
+) -> List[Tuple[float, float]]:
     np = get_numpy()
     values = np.asarray(samples).astype(np.int64)
     quiet = np.abs(values) <= DROPOUT_NEAR_ZERO_SAMPLE
@@ -402,7 +416,7 @@ def _hard_edged_gaps(samples: Sequence[int], sample_rate: int) -> int:
         window = values[start:end]
         return math.sqrt(int(window @ window) / len(window))
 
-    count = 0
+    gaps = []
     for start, end in zip(starts.tolist(), ends.tolist()):
         if not (
             min_length <= end - start <= max_length
@@ -417,8 +431,8 @@ def _hard_edged_gaps(samples: Sequence[int], sample_rate: int) -> int:
             and level(start - edge, start) >= DROPOUT_EDGE_RATIO * before
             and level(end, end + edge) >= DROPOUT_EDGE_RATIO * after
         ):
-            count += 1
-    return count
+            gaps.append((start / sample_rate, (end - start) / sample_rate))
+    return gaps
 
 
 def _percentile(values: Sequence[float], fraction: float) -> float:
@@ -469,17 +483,26 @@ def ends_abruptly(
     samples: Sequence[int], sample_rate: int, noise_level: float
 ) -> bool:
     """Whether the sound stops at near full volume instead of fading out."""
+    return sound_stop(samples, sample_rate, noise_level)[0]
+
+
+def sound_stop(
+    samples: Sequence[int], sample_rate: int, noise_level: float
+) -> Tuple[bool, Optional[float]]:
+    """Whether the sound stops at near full volume, and where it stops in
+    seconds from the start of `samples`."""
     np = get_numpy()
     width = max(1, sample_rate * STOP_FRAME_MS // 1000)
     values = np.asarray(samples, dtype=np.float64)
     usable = len(values) // width * width
     if not usable:
-        return False
+        return False, None
     levels = np.sqrt((values[:usable].reshape(-1, width) ** 2).mean(axis=1))
     sounding = np.flatnonzero(levels >= audio_utils.DEFAULT_SILENCE_RMS)
     if not sounding.size:
-        return False
+        return False, None
     stop = int(sounding[-1]) + 1
+    stop_seconds = stop * width / sample_rate
     edge_frames = EDGE_MS // STOP_FRAME_MS
     edge = math.sqrt(
         float((levels[max(0, stop - edge_frames) : stop] ** 2).mean())
@@ -493,7 +516,10 @@ def ends_abruptly(
     floor = max(
         _edge_threshold(), noise_level * 10 ** (EDGE_ABOVE_NOISE_DB / 20)
     )
-    return edge > floor and edge >= ABRUPT_END_LEVEL_RATIO * speech_level
+    return (
+        edge > floor and edge >= ABRUPT_END_LEVEL_RATIO * speech_level,
+        stop_seconds,
+    )
 
 
 def analyze_audio(audio: Audio) -> AudioMeasurements:
@@ -514,7 +540,7 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         value for value, is_silent in zip(frame_rms, silent) if is_silent
     ]
     pause_floor = median(pause_levels) if pause_levels else 0.0
-    dropout_events = 0
+    dropout_spans = []
     index = 1
     while pause_floor >= MIN_PAUSE_FLOOR_RMS and index < len(silent) - 1:
         if not silent[index]:
@@ -532,9 +558,9 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
             and length <= DROPOUT_MAX_FRAMES
             and min(frame_rms[start:index]) <= DROPOUT_FLOOR_RATIO * pause_floor
         ):
-            dropout_events += 1
+            dropout_spans.append((start * 0.02, length * 0.02))
     if pause_floor < MIN_PAUSE_FLOOR_RMS:
-        dropout_events = _hard_edged_gaps(samples, sample_rate)
+        dropout_spans = _hard_edged_gaps(samples, sample_rate)
 
     speech_level, noise_level = speech_and_noise_levels(frame_rms)
     if len(samples) / sample_rate >= NOISE_MIN_SECONDS:
@@ -551,6 +577,7 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
     negative = values < 0
     crossings = int(np.count_nonzero(negative[:-1] != negative[1:]))
     track = pitch_track(samples, sample_rate)
+    jump_frames = pitch_jump_frames(track)
     pitches = [pitch for pitch in track if pitch is not None]
     pitch_median = median(pitches) if pitches else None
     pitch_spread = (
@@ -563,7 +590,7 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
     )
 
     loop_window = max(1, int(sample_rate * 0.25))
-    fingerprints = {}
+    fingerprints: dict = {}
     for start in range(0, len(samples) - loop_window + 1, loop_window):
         window = samples[start : start + loop_window]
         if rms(window) < audio_utils.DEFAULT_SILENCE_RMS:
@@ -571,8 +598,18 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         fingerprint = hashlib.blake2b(
             array("h", window).tobytes(), digest_size=8
         ).digest()
-        fingerprints[fingerprint] = fingerprints.get(fingerprint, 0) + 1
-    loop_events = sum(count - 1 for count in fingerprints.values() if count > 2)
+        fingerprints.setdefault(fingerprint, []).append(start)
+    repeats = [starts for starts in fingerprints.values() if len(starts) > 2]
+    loop_events = sum(len(starts) - 1 for starts in repeats)
+    # The audio played again: every copy after the first, merged where the
+    # copies of neighbouring windows touch.
+    loop_spans: List[Tuple[float, float]] = []
+    for start in sorted(begin for starts in repeats for begin in starts[1:]):
+        begin, end = start / sample_rate, (start + loop_window) / sample_rate
+        if loop_spans and begin <= sum(loop_spans[-1]) + 1e-9:
+            loop_spans[-1] = (loop_spans[-1][0], end - loop_spans[-1][0])
+        else:
+            loop_spans.append((begin, end - begin))
 
     edge_size = max(1, int(sample_rate * 0.02))
     edge_threshold = _edge_threshold()
@@ -589,16 +626,19 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         index for index, value in enumerate(frame_rms) if value >= speaking
     ]
     pauses = []
+    pause_spans = []
     if spoken:
         current = 0
-        for value in frame_rms[spoken[0] : spoken[-1] + 1]:
-            if value < speaking:
+        for index in range(spoken[0], spoken[-1] + 1):
+            if frame_rms[index] < speaking:
                 current += 1
                 continue
             if current * 20 >= PAUSE_MIN_MS:
                 pauses.append(current * 20)
+                pause_spans.append(((index - current) * 0.02, current * 0.02))
             current = 0
     speech_span_ms = (spoken[-1] - spoken[0] + 1) * 20 if spoken else 0
+    stop = sound_stop(samples, sample_rate, end_noise_level)
     return AudioMeasurements(
         duration=len(samples) / sample_rate,
         rms_dbfs=dbfs(rms(samples)),
@@ -609,19 +649,28 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         / len(samples),
         silence_fraction=sum(silent) / len(silent) if silent else 1.0,
         longest_silence_ms=float(longest_silence * 20),
-        dropout_events=dropout_events,
+        dropout_events=len(dropout_spans),
         loop_events=loop_events,
         estimated_snr_db=snr_db,
         zero_crossing_rate=crossings / max(1, len(samples) - 1),
         pitch_mean_hz=mean(pitches) if pitches else None,
         pitch_variation_hz=pstdev(pitches) if len(pitches) > 1 else None,
         starts_abruptly=rms(samples[:edge_size]) > edge_threshold,
-        ends_abruptly=ends_abruptly(samples, sample_rate, end_noise_level),
+        ends_abruptly=stop[0],
         pitch_median_hz=pitch_median,
         pitch_spread_semitones=pitch_spread,
         voiced_pitch_frames=len(pitches),
-        pitch_jumps=count_pitch_jumps(track),
+        pitch_jumps=len(jump_frames),
         speech_span_seconds=speech_span_ms / 1000,
         longest_pause_ms=float(max(pauses, default=0)),
         pause_fraction=sum(pauses) / speech_span_ms if speech_span_ms else 0.0,
+        dropout_spans=dropout_spans,
+        loop_spans=loop_spans,
+        pitch_jump_times=[
+            frame * PITCH_FRAME_MS / 1000 for frame in jump_frames
+        ],
+        longest_pause_span=(
+            max(pause_spans, key=lambda span: span[1]) if pause_spans else None
+        ),
+        sound_end_seconds=stop[1],
     )

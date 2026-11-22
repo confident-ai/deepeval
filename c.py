@@ -361,7 +361,7 @@ CALLER_STAGES = (
     "caller TTS (whole utterance)",
     "user turn (LLM)",
     "stopping check (LLM)",
-    "barge judge (LLM)",
+    "barge line (LLM)",
     "agent STT",
 )
 
@@ -412,7 +412,7 @@ class TimedSimulatorModel(OpenAIModel):
     _STAGE_BY_SCHEMA = {
         "ConversationCompletion": "stopping check (LLM)",
         "SimulatedInput": "user turn (LLM)",
-        "InterruptDecision": "barge judge (LLM)",
+        "InterruptUtterance": "barge line (LLM)",
     }
 
     async def a_generate(self, prompt: str, *args, **kwargs):
@@ -512,7 +512,7 @@ def run_simulation() -> None:
                     ),
                     voice="coral",
                     interruption_behavior=InterruptionBehavior(
-                        frequency="rare", overlap="adaptive"
+                        every=(2, 4), overlap="adaptive"
                     ),
                 ),
                 expected_outcome="A replacement order is confirmed.",

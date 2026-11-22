@@ -78,7 +78,7 @@ Voice metrics follow the same three-part model as the test case:
 
 [`VoiceReliabilityMetric`](/docs/metrics-voice-reliability) is the optional operational summary. It combines the responsiveness and audio-integrity checks, but a critical failure such as missing agent audio or a complete failure to respond always forces its score to zero. Minor checks cannot average away a catastrophic failure.
 
-All thirty-two voice metrics return a score from 0 to 1, where higher is better. Measurements such as latency, loudness, clipping rate, pause duration, and speaking rate appear in metric reasons and breakdowns as diagnostic evidence. They are not universal quality scores: whether a pause or response delay sounds natural depends on what was happening in the conversation.
+All thirty-two voice metrics return a score from 0 to 1, where higher is better. Measurements such as latency, loudness, clipping rate, pause duration, and speaking rate appear in metric reasons and breakdowns as diagnostic evidence. They are not universal quality scores: whether a pause or response delay sounds natural depends on what was happening in the conversation. Events in a breakdown are placed in time: `offset_seconds` and `duration_seconds` locate the problem inside the turn's audio, and `start_time` places it on the call's clock when that is known.
 
 The metrics use different parts of the same `ConversationalTestCase`:
 
@@ -123,7 +123,7 @@ Two separate things decide what happens on the line:
 - **The connector** decides whether audio can flow both ways at once. A full-duplex connector like `LiveKitConnector` lets the caller listen while it speaks; one that can't, like `CallbackVoiceConnector`, takes turns.
 - **The persona** decides whether the caller uses that to barge in. Enable interruptions and the caller can speak over the agent, with either side yielding when speech overlaps.
 
-Whether the simulated caller interrupts is configured on its [persona](/docs/conversation-simulator-voice-personas), because interruption frequency and overlap behavior are caller traits. See [Interruptions](/docs/conversation-simulator-voice-interruptions) for configuration and duplex connector requirements.
+Whether the simulated caller interrupts is configured on its [persona](/docs/conversation-simulator-voice-personas), because how often the caller interrupts and how it handles overlap are caller traits. See [Interruptions](/docs/conversation-simulator-voice-interruptions) for configuration and duplex connector requirements.
 
 ## Transports and Connectors
 

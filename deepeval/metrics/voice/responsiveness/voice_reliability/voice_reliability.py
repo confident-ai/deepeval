@@ -1,3 +1,4 @@
+from deepeval.metrics.voice.utils.events import events_to_dicts
 from deepeval.metrics.voice.base_metric import (
     BaseVoiceMetric,
     VoiceMetricResult,
@@ -38,12 +39,12 @@ class VoiceReliabilityMetric(BaseVoiceMetric):
                 "responsiveness": {
                     "score": responsiveness.score,
                     "critical_failure": responsiveness.critical,
-                    "events": responsiveness.events,
+                    "events": events_to_dicts(responsiveness.events),
                 },
                 "audio_integrity": {
                     "score": integrity.score,
                     "critical_failure": integrity.critical,
-                    "events": integrity.events,
+                    "events": events_to_dicts(integrity.events),
                 },
             },
         )

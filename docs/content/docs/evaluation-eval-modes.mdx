@@ -103,13 +103,15 @@ const metrics = [
 
 `hybrid` and `system_one` need a TypeSafe AI key: see [setting up Jev](/integrations/models/typesafe-ai#setting-up-your-api-key). Every metric that supports Jev also takes a <Term py="system_one_model" ts="systemOneModel"/> argument to choose the Jev model; it defaults to <DefaultSystemOneModel />.
 
-<Only id="python">
+<Switch>
 
-You can also pass an `OpenAIDecisionModel` as the <Term py="system_one_model" ts="systemOneModel"/> to make these decisions with OpenAI's Decisions API instead of Jev: see [OpenAI as a decision model](/integrations/models/openai#as-a-decision-model).
+<Case id="python">
 
-</Only>
+You can also pass an `OpenAIDecisionModel` as the `system_one_model` to make these decisions with OpenAI's Decisions API instead of Jev: see [OpenAI as a decision model](/integrations/models/openai#as-a-decision-model).
 
-<Only id="typescript">
+</Case>
+
+<Case id="typescript">
 
 The TypeScript SDK talks to Jev through TypeSafe AI's official client, an optional peer dependency. Install it alongside `deepeval`, then configure your key:
 
@@ -118,7 +120,9 @@ npm install @typesafe-ai/sdk
 npx deepeval set-typesafe --prompt-api-key
 ```
 
-</Only>
+</Case>
+
+</Switch>
 
 ### LLM-as-a-judge
 

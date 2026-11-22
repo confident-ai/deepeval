@@ -56,7 +56,7 @@ def test_a_question_left_at_the_end_of_the_call_fails():
     metric = _measure(FailedResponseMetric(), turns)
     assert metric.score == pytest.approx(3 / 4)
     assert metric.reason == "1 of 4 caller lines had no reply from the agent."
-    assert metric.score_breakdown["events"] == [
+    assert [_without_place(e) for e in metric.score_breakdown["events"]] == [
         {"type": "call_ended_without_reply", "turn": 6}
     ]
 
@@ -72,7 +72,11 @@ def test_an_empty_agent_turn_is_no_reply():
     turns = clean_turns()
     turns[3] = Turn(role="assistant", content="")
     [event] = _measure(FailedResponseMetric(), turns).score_breakdown["events"]
-    assert event == {"type": "empty_reply", "turn": 2, "reply_turn": 3}
+    assert _without_place(event) == {
+        "type": "empty_reply",
+        "turn": 2,
+        "reply_turn": 3,
+    }
 
 
 def test_every_caller_line_after_the_last_reply_fails():
@@ -92,14 +96,17 @@ def test_a_reply_with_text_but_no_audio_is_silent():
     assert metric.reason == (
         "1 of 3 agent replies had a reply the caller could not hear."
     )
-    assert metric.score_breakdown["events"] == [{"type": "no_audio", "turn": 3}]
+    assert [_without_place(e) for e in metric.score_breakdown["events"]] == [
+        {"type": "no_audio", "turn": 3}
+    ]
 
 
 def test_a_reply_whose_audio_holds_no_speech_is_silent():
     turns = clean_turns()
     turns[3].audio = to_audio(zeros(2.0), start_time=turns[3].audio.start_time)
     [event] = _measure(SilentReplyMetric(), turns).score_breakdown["events"]
-    assert event == {"type": "no_speech", "turn": 3}
+    assert _without_place(event) == {"type": "no_speech", "turn": 3}
+    assert event["offset_seconds"] == 0.0
 
 
 def test_undecodable_agent_audio_is_skipped_not_failed():
@@ -124,7 +131,7 @@ def test_the_agent_hanging_up_on_a_question_is_an_unexpected_end():
     metric = _measure(UnexpectedCallEndMetric(), turns, AGENT_HUNG_UP)
     assert metric.score == 0.0
     assert metric.reason == "1 of 1 calls had an unexpected end."
-    assert metric.score_breakdown["events"] == [
+    assert [_without_place(e) for e in metric.score_breakdown["events"]] == [
         {"type": "unexpected_end", "turn": 6, "end_reason": "agent_ended_call"}
     ]
 
@@ -144,6 +151,15 @@ def test_the_agent_hanging_up_after_a_goodbye_is_a_normal_end(last_turn):
     metric = _measure(UnexpectedCallEndMetric(), turns, AGENT_HUNG_UP)
     assert metric.score == 1.0
     assert metric.reason == "No call had an unexpected end."
+
+
+def _without_place(event):
+    """The event minus where it sits, which is the turn's own audio span."""
+    return {
+        key: value
+        for key, value in event.items()
+        if key not in ("offset_seconds", "duration_seconds", "start_time")
+    }
 
 
 @pytest.mark.parametrize("end_reason", ["ERROR", "idle_timeout"])

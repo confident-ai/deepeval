@@ -1,6 +1,10 @@
 from typing import Optional
 
-from deepeval.metrics.voice.utils.call_activity import EVENT_KEYS, reply_delays
+from deepeval.metrics.voice.utils.call_activity import (
+    EVENT_KEYS,
+    reply_delays,
+    wait_span,
+)
 from deepeval.metrics.voice.utils.defects import (
     MIN_COMPARED_REPLIES,
     defect_share_result,
@@ -11,6 +15,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 class ResponseDelayConsistencyMetric(BaseVoiceMetric):
@@ -45,12 +50,13 @@ class ResponseDelayConsistencyMetric(BaseVoiceMetric):
         )
         event_key = EVENT_KEYS[source]
         defects = [
-            {
-                "type": "delay_shift",
-                event_key: key,
-                "response_delay_seconds": round(delays[key], 2),
-                "shift_seconds": round(shift, 2),
-            }
+            VoiceEvent(
+                type="delay_shift",
+                **{event_key: key},
+                **wait_span(test_case, event_key, key, delays[key]),
+                response_delay_seconds=round(delays[key], 2),
+                shift_seconds=round(shift, 2),
+            )
             for key, shift in shifts_from_typical(delays).items()
             if abs(shift) > self.max_shift_seconds
         ]

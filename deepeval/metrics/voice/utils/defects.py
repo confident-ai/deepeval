@@ -5,6 +5,7 @@ the timing metrics only read when the caller's turns start and end."""
 from statistics import median
 from typing import Dict, List, Optional, Tuple
 
+from deepeval.metrics.voice.utils.events import VoiceEvent, events_to_dicts
 from deepeval.metrics.voice.utils.analysis import (
     CONTIGUOUS_CLIP_TOLERANCE_SECONDS,
     AudioMeasurements,
@@ -71,17 +72,15 @@ def agent_glitch_events(
         if test_case.turns[index].role == "assistant"
     ]
     skipped = [
-        {"turn": event["turn"], "error": event["reason"]}
+        {"turn": event.turn, "error": event.reason}
         for event in report.events
-        if event["type"] == "audio_undecodable" and event["turn"] in agent_turns
+        if event.type == "audio_undecodable" and event.turn in agent_turns
     ]
     undecodable = {entry["turn"] for entry in skipped}
     eligible_turns = [
         index for index in agent_turns if index not in undecodable
     ]
-    events = [
-        event for event in report.events if event["turn"] in eligible_turns
-    ]
+    events = [event for event in report.events if event.turn in eligible_turns]
     return eligible_turns, events, skipped
 
 
@@ -200,7 +199,7 @@ def shifts_from_typical(levels: Dict[int, float]) -> Dict[int, float]:
 
 def defect_share_result(
     eligible_turns: List[int],
-    defects: List[Dict],
+    defects: List[VoiceEvent],
     skipped: List[Dict],
     defect_label: str,
     no_eligible_reason: str = (
@@ -211,11 +210,13 @@ def defect_share_result(
     event_key: str = "turn",
     timing_source: Optional[str] = None,
 ) -> VoiceMetricResult:
-    defective_turns = {defect[event_key] for defect in defects}
+    defective_turns = {getattr(defect, event_key) for defect in defects}
     breakdown = {
         "eligible_turns": len(eligible_turns),
         "turns_with_events": len(defective_turns),
-        "events": sorted(defects, key=lambda defect: defect[event_key]),
+        "events": events_to_dicts(
+            sorted(defects, key=lambda defect: getattr(defect, event_key))
+        ),
         "skipped": skipped,
     }
     if timing_source is not None:

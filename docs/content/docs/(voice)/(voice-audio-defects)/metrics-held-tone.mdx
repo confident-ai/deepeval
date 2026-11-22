@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The held tone metric checks whether your voice agent's audio contains a **stuck tone or drone**, such as a vowel stretched for two seconds or a steady beep. It returns the share of agent replies with no held tone, between 0 and 1.
+
+<AudioSample name="held-tone" />
 
 ## Usage
 
@@ -69,7 +72,7 @@ print(metric.score_breakdown)
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. `pitch_hz` is the tone's pitch. `hold_ratio` and `pitch_ratio` compare it with how long and how high the agent's voice normally holds a sound. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
+`turn` is the turn's zero-based position in the conversation. `offset_seconds` and `duration_seconds` place the tone inside the reply, and `start_time` places it on the call's clock (left out when the clip has no `Audio.start_time`). `pitch_hz` is the tone's pitch. `hold_ratio` and `pitch_ratio` compare it with how long and how high the agent's voice normally holds a sound. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
 
 ## How Is It Calculated?
 
@@ -77,9 +80,9 @@ print(metric.score_breakdown)
 
 <Equation formula="\text{Held Tone} = \frac{\text{Agent replies without the defect}}{\text{Agent replies with decodable audio}}" />
 
-A held tone is a run of at least **0.8 s** at one steady pitch, with almost no wobble or glide, that also stands out from the agent's own voice. It must be either:
+A held tone is a run of at least **0.8 s** at one steady pitch (60–1000 Hz, periodicity at least 0.85), with almost no wobble (frame-to-frame jitter at most 0.2% of the pitch) or glide (at most 1%), that also stands out from the agent's own voice. It must be either:
 
-- at least 3× longer than the agent normally holds a sound,
+- at least 3× longer than the agent's typical hold (the 90th percentile of how long it holds any steady pitch),
 - at least 1.3× higher than the agent's usual pitch, or
 - at least 2.5 s long.
 

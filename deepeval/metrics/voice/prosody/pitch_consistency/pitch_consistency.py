@@ -16,6 +16,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 class PitchConsistencyMetric(BaseVoiceMetric):
@@ -58,12 +59,12 @@ class PitchConsistencyMetric(BaseVoiceMetric):
                 continue
             levels[turn] = semitones(reply.pitch_median_hz, 1.0)
         defects = [
-            {
-                "type": "pitch_shift",
-                "turn": turn,
-                "pitch_median_hz": round(measurements[turn].pitch_median_hz, 1),
-                "shift_semitones": round(shift, 1),
-            }
+            VoiceEvent(
+                type="pitch_shift",
+                turn=turn,
+                pitch_median_hz=round(measurements[turn].pitch_median_hz, 1),
+                shift_semitones=round(shift, 1),
+            )
             for turn, shift in shifts_from_typical(levels).items()
             if abs(shift) > self.max_shift_semitones
         ]

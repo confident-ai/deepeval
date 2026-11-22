@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The agent interruption metric checks whether your voice agent **starts speaking into the caller**: either a false start, where it starts as the caller speaks and backs off, or talking over the caller. It returns the share of the agent's starts that interrupted no one, between 0 and 1.
+
+<AudioSample name="agent-interruption" />
 
 ## Usage
 
@@ -49,8 +52,8 @@ There are **SEVEN** optional parameters when creating an `AgentInterruptionMetri
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `caller_start_window_ms`: an integer. An agent start collides with the caller when the caller starts speaking within this many milliseconds of it. Defaulted to `500`.
-- [Optional] `max_caller_silence_seconds`: an integer. A false start is not counted when the caller's pause, from when they stopped speaking to when they started again, was longer than this. Defaulted to `4`.
+- [Optional] `caller_start_window_ms`: an integer. An agent start collides with the caller when the caller starts speaking within this many milliseconds of it. Must be greater than 0. Defaulted to `500`.
+- [Optional] `max_caller_silence_seconds`: an integer. A false start is not counted when the caller's pause, from when they stopped speaking to when they started again, was longer than this. Must be greater than 0. Defaulted to `4`.
 - [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`. Defaulted to `True`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
@@ -67,24 +70,24 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 6,
     "turns_with_events": 1,
-    "events": [{"type": "false_start", "at_seconds": 74.32, "agent_seconds": 0.66, "overlap_seconds": 0.66}],
+    "events": [{"type": "false_start", "duration_seconds": 0.66, "start_time": 74.32, "reply_start": 74.32, "agent_seconds": 0.66, "overlap_seconds": 0.66}],
     "skipped": [],
     "timing_source": "call_recording",
 }
 ```
 
-`type` names the condition that fired. `at_seconds` is where in the call recording the agent started; when the turn timestamps were used, events carry `turn`, the reply's zero-based position in the conversation, instead. `agent_seconds` is how long the agent kept speaking and `overlap_seconds` how much of that the caller was making sound. Without a recording, agent replies whose audio could not be decoded are listed under `skipped`.
+`type` names the condition that fired (`false_start` or `talk_over`; `false_start` when both did). `reply_start` is where in the call recording the agent started; when the turn timestamps were used, events carry `turn`, the reply's zero-based position in the conversation, instead. `start_time` and `duration_seconds` place the agent's interrupting stretch on the call's clock. `agent_seconds` is how long the agent kept speaking and `overlap_seconds` how much of that the caller was making sound. Without a recording, agent replies whose audio could not be decoded are listed under `skipped`.
 
 ## How Is It Calculated?
 
-`AgentInterruptionMetric` checks every time the agent starts speaking after at least one second of its own silence, leaving out its opening line, and scores the share that interrupted no one:
+`AgentInterruptionMetric` checks every time the agent starts speaking after at least one second of its own silence, leaving out its first start on the call (even when it answers a caller who spoke first), and scores the share that interrupted no one:
 
 <Equation formula="\text{Agent Interruption} = \frac{\text{Agent starts that are neither a false start nor a talk-over}}{\text{Agent starts after the opening line}}" />
 
 An interruption is a **false start** or a **talk-over**:
 
 - **False start:** the agent starts speaking, the caller is already talking or starts within `caller_start_window_ms`, and the agent stops within **1.5 seconds**. It is not counted when the caller's pause, from when they stopped speaking to when they started again, was longer than `max_caller_silence_seconds`, since after a long silence the agent is expected to fill it.
-- **Talk-over:** the agent starts speaking while the caller is already talking, and both keep talking for **1 second** or more.
+- **Talk-over:** the agent starts speaking while the caller is already talking, and the caller makes **1 second** or more of sound while the agent keeps speaking.
 
 The two settings both shape the false start. Below, the caller pauses for less than `max_caller_silence_seconds` between speaking and starting again, and the agent starts during that pause, less than `caller_start_window_ms` before the caller starts again. The agent backs off within 1.5 seconds, so this counts as a false start. Had the caller paused for longer, or started again later after the agent, it would not.
 

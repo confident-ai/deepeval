@@ -5,7 +5,8 @@ sidebar_label: Voice Reliability
 languages: [python]
 beta: true
 ---
-<MetricTagsDisplayer multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
+<MetricTagsDisplayer
+  voice={true} multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
 
 The voice reliability metric is the **operational summary** of a call: did the agent answer, and did its audio arrive intact? It combines [agent responsiveness](/docs/metrics-agent-responsiveness) and [audio integrity](/docs/metrics-audio-integrity) into a single score between 0 and 1.
 
@@ -84,7 +85,7 @@ For `VoiceReliabilityMetric` the breakdown nests both halves, each with its own 
 
 <Equation formula="\text{Voice Reliability} = 0.5 \times \text{Responsiveness} + 0.5 \times \text{Audio Integrity}" />
 
-**A critical failure on either side forces the score to 0**, regardless of how well the other half did. Missing agent audio, an undecodable clip, a badly looping buffer, a reply that never came, or a call that ended in a hangup, error, or idle timeout are all catastrophic — averaging them against a clean second half would hide exactly the failures this metric exists to surface.
+**A critical failure on either side forces the score to 0**, regardless of how well the other half did. A call with no agent turn, missing agent audio, an undecodable clip, a buffer that loops three or more times, a reply that never came, or a call that ended in a hangup, error, or idle timeout are all catastrophic — averaging them against a clean second half would hide exactly the failures this metric exists to surface.
 
 The two halves are the same detectors used by `AgentResponsivenessMetric` and `AudioIntegrityMetric`, so their pages document what each event means and what it costs.
 
@@ -132,17 +133,10 @@ Run this alongside a quality metric — [`VoiceNaturalnessMetric`](/docs/metrics
         <>
           No. It always returns a score — a conversation with no assistant turns
           at all is a critical audio-integrity failure and scores 0, rather than
-          being skipped as unevaluable. Only{" "}
-          <a href="/docs/metrics-voice-naturalness">VoiceNaturalnessMetric</a>,{" "}
-          <a href="/docs/metrics-speech-intelligibility">
-            SpeechIntelligibilityMetric
-          </a>
-          , <a href="/docs/metrics-voice-consistency">VoiceConsistencyMetric</a>
-          , and{" "}
-          <a href="/docs/metrics-turn-taking-naturalness">
-            TurnTakingNaturalnessMetric
-          </a>{" "}
-          skip a test case, and only when there is nothing in it to measure.
+          being skipped as unevaluable. Many other voice metrics, such as{" "}
+          <a href="/docs/metrics-failed-response">FailedResponseMetric</a> and{" "}
+          <a href="/docs/metrics-silent-reply">SilentReplyMetric</a>, skip a
+          test case when there is nothing in it to measure.
         </>
       ),
     },

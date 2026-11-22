@@ -40,7 +40,7 @@ TIMINGS: Dict[str, List[float]] = defaultdict(list)
 STAGE_SIDES = {
     "stopping check (LLM)": "simulator",
     "user turn (LLM)": "simulator",
-    "barge judge (LLM)": "simulator",
+    "barge line (LLM)": "simulator",
     "caller TTS": "simulator",
     "agent STT": "simulator",
     "caller STT": "walter",
@@ -86,13 +86,13 @@ class TimedSimulatorModel(OpenAIModel):
 
     The simulator asks for `ConversationCompletion` to decide whether the
     conversation is over, `SimulatedInput` to write the caller's next line, and
-    `InterruptDecision` while the agent is mid-sentence.
+    `InterruptUtterance` to write the line it cuts in with ahead of time.
     """
 
     _STAGE_BY_SCHEMA = {
         "ConversationCompletion": "stopping check (LLM)",
         "SimulatedInput": "user turn (LLM)",
-        "InterruptDecision": "barge judge (LLM)",
+        "InterruptUtterance": "barge line (LLM)",
     }
 
     async def a_generate(self, prompt: str, *args, **kwargs):
@@ -212,7 +212,7 @@ def main() -> None:
                     ),
                     voice="coral",
                     interruption_behavior=InterruptionBehavior(
-                        frequency="rare",
+                        every=(2, 4),
                         overlap="adaptive",
                     ),
                 ),
@@ -255,7 +255,7 @@ def print_stage_breakdown(wall_seconds: float) -> None:
         # time (one frame per 20ms) plus end-of-turn silence detection.
         print(f"{'playback / waiting':<24}{unaccounted:>8.1f}s")
     else:
-        # Stages ran concurrently: the barge judge polls while the agent
+        # Stages ran concurrently: the barge line is written while the caller
         # speaks, and the connector streams the downlink in the background.
         print(f"{'stage overlap':<24}{-unaccounted:>8.1f}s")
 

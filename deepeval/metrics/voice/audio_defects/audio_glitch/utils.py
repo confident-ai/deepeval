@@ -23,6 +23,7 @@ from deepeval.metrics.voice.utils.analysis import (
 from deepeval.test_case import Audio, ConversationalTestCase
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.timeline import build_audio_timeline
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 # Tones are tracked on audio downsampled to this rate: the artifacts of
 # interest sit far below its Nyquist frequency.
@@ -137,7 +138,7 @@ class SpeakerBaseline:
 
 @dataclass
 class GlitchReport:
-    events: List[Dict]
+    events: List[VoiceEvent]
     turns_with_audio: List[int]
     baselines: Dict[str, Dict]
     timeline_available: bool
@@ -389,26 +390,26 @@ def _event(
     offset: float,
     duration: float,
     **extra,
-) -> Dict:
-    return {
-        "type": event_type,
-        "turn": analysis.turn,
-        "role": analysis.role,
-        "offset_seconds": round(offset, 3),
-        "duration_seconds": round(duration, 3),
-        "start_time": (
+) -> VoiceEvent:
+    return VoiceEvent(
+        type=event_type,
+        turn=analysis.turn,
+        role=analysis.role,
+        offset_seconds=round(offset, 3),
+        duration_seconds=round(duration, 3),
+        start_time=(
             None
             if audio.start_time is None
             else round(audio.start_time + offset, 3)
         ),
-        "position": _position(offset, duration, analysis.duration),
+        position=_position(offset, duration, analysis.duration),
         **extra,
-    }
+    )
 
 
 def held_tone_events(
     analysis: ClipAnalysis, audio: Audio, baseline: SpeakerBaseline
-) -> List[Dict]:
+) -> List[VoiceEvent]:
     events = []
     for run in analysis.stable_runs:
         if (
@@ -458,7 +459,7 @@ def held_tone_events(
 def detect_audio_glitches(test_case: ConversationalTestCase) -> GlitchReport:
     turns = test_case.turns
     analyses: Dict[int, ClipAnalysis] = {}
-    events: List[Dict] = []
+    events: List[VoiceEvent] = []
     turns_with_audio: List[int] = []
     for index, turn in enumerate(turns):
         if turn.audio is None:
@@ -468,16 +469,16 @@ def detect_audio_glitches(test_case: ConversationalTestCase) -> GlitchReport:
             analyses[index] = analyze_clip(index, turn.role, turn.audio)
         except (TypeError, ValueError) as error:
             events.append(
-                {
-                    "type": "audio_undecodable",
-                    "turn": index,
-                    "role": turn.role,
-                    "offset_seconds": 0.0,
-                    "duration_seconds": 0.0,
-                    "start_time": turn.audio.start_time,
-                    "position": "start",
-                    "reason": str(error),
-                }
+                VoiceEvent(
+                    type="audio_undecodable",
+                    turn=index,
+                    role=turn.role,
+                    offset_seconds=0.0,
+                    duration_seconds=0.0,
+                    start_time=turn.audio.start_time,
+                    position="start",
+                    reason=str(error),
+                )
             )
 
     baselines = speaker_baselines(list(analyses.values()))
@@ -530,9 +531,9 @@ def detect_audio_glitches(test_case: ConversationalTestCase) -> GlitchReport:
             trailing = [
                 event
                 for event in events
-                if event["type"] == "dead_stream"
-                and event["turn"] == current.turn_index
-                and event["runs_to_end"]
+                if event.type == "dead_stream"
+                and event.turn == current.turn_index
+                and event.runs_to_end
             ]
             for event in trailing:
                 events.remove(event)
@@ -542,7 +543,7 @@ def detect_audio_glitches(test_case: ConversationalTestCase) -> GlitchReport:
                     turns[current.turn_index].audio,
                     "stream_cut",
                     (
-                        trailing[0]["offset_seconds"]
+                        trailing[0].offset_seconds
                         if trailing
                         else analysis.duration
                     ),
@@ -553,7 +554,7 @@ def detect_audio_glitches(test_case: ConversationalTestCase) -> GlitchReport:
                 )
             )
 
-    events.sort(key=lambda event: (event["turn"], event["offset_seconds"]))
+    events.sort(key=lambda event: (event.turn, event.offset_seconds))
     return GlitchReport(
         events=events,
         turns_with_audio=turns_with_audio,

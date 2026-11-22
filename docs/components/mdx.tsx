@@ -14,6 +14,7 @@ import { ListItem } from "@/components/lang/list-item";
 
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import ImageDisplayer from "@site/src/components/ImageDisplayer";
+import AudioSample from "@site/src/components/AudioSample";
 import Callout from "@site/src/components/Callout";
 import Equation from "@site/src/components/Equation";
 import Mermaid from "@site/src/components/Mermaid";
@@ -31,6 +32,8 @@ import SectionLabel from "@site/src/components/SectionLabel";
 import EnterpriseComparisonTable from "@site/src/sections/enterprise/EnterpriseComparisonTable";
 import EnterprisePlatformMockup from "@site/src/sections/enterprise/EnterprisePlatformMockup";
 import RepoContributors from "@site/src/sections/home/RepoContributors";
+import CommunityEvents from "@site/src/sections/community/CommunityEvents";
+import PastMeetupScene from "@site/src/sections/community/PastMeetupScene";
 
 export const getMDXComponents = (components?: MDXComponents) =>
   ({
@@ -46,6 +49,7 @@ export const getMDXComponents = (components?: MDXComponents) =>
     Step,
     VideoDisplayer,
     ImageDisplayer,
+    AudioSample,
     Callout,
     Equation,
     Mermaid,
@@ -62,6 +66,8 @@ export const getMDXComponents = (components?: MDXComponents) =>
     SectionLabel,
     EnterpriseComparisonTable,
     EnterprisePlatformMockup,
+    CommunityEvents,
+    PastMeetupScene,
     RepoContributors,
     DefaultLLMModel,
     DefaultSystemOneModel,

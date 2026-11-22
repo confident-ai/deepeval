@@ -18,6 +18,7 @@ from deepeval.voice.connectors.transports.webrtc import (
     parse_answer_sdp,
     signaling_kind,
 )
+from deepeval.voice.connectors.types import AgentEvent
 from tests.test_core.test_voice.helpers import wav_audio
 
 OFFER_URL = "https://agent.example.com/offer"
@@ -273,6 +274,18 @@ def test_connector_declares_the_webrtc_protocol_and_duplex():
     assert connector.signals_turn_complete is False
     assert connector.recv_sample_rate == 48000
     assert connector.audio_format == (24000, "wav")
+
+
+@pytest.mark.asyncio
+async def test_pending_agent_audio_is_handed_over_and_the_call_end_kept():
+    connector = WebRTCConnector(OFFER_URL)
+    connector._inbound = asyncio.Queue()
+    said = AgentEvent(audio=b"\x10\x00" * 480)
+    connector._inbound.put_nowait(said)
+    connector._inbound.put_nowait(AgentEvent(turn_complete=True))
+
+    assert connector.take_pending_agent_events() == [said]
+    assert connector._inbound.get_nowait().turn_complete is True
 
 
 def test_connector_rejects_unknown_signaling_schemes():

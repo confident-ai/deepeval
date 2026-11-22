@@ -9,6 +9,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 class SilentReplyMetric(BaseVoiceMetric):
@@ -35,9 +36,9 @@ class SilentReplyMetric(BaseVoiceMetric):
                 continue
             eligible_turns.append(index)
             if turn.audio is None:
-                defects.append({"type": "no_audio", "turn": index})
+                defects.append(VoiceEvent(type="no_audio", turn=index))
             elif measurements[index].silence_fraction >= 1.0:
-                defects.append({"type": "no_speech", "turn": index})
+                defects.append(VoiceEvent(type="no_speech", turn=index))
         return defect_share_result(
             eligible_turns,
             defects,

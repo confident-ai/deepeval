@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The pauses metric checks whether your voice agent **pauses naturally while it speaks**: no long gap in the middle of a sentence, and not more silence than speech. It returns the share of agent replies with natural pauses, between 0 and 1.
+
+<AudioSample name="pauses" />
 
 ## Usage
 
@@ -50,8 +53,10 @@ There are **SEVEN** optional parameters when creating a `PausesMetric`:
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
 - [Optional] `max_pause_ms`: an integer for the longest pause, in milliseconds, allowed inside a reply. Defaulted to `2000`.
-- [Optional] `max_pause_percent`: an integer for the largest share of a reply, in percent, that may be pauses. Defaulted to `50`.
+- [Optional] `max_pause_percent`: an integer for the largest share of a reply, in percent of the time from its first to its last spoken sound, that may be pauses. Defaulted to `50`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+`max_pause_ms` must be greater than 0 and `max_pause_percent` must be above 0 and at most 100, or a `ValueError` is raised.
 
 `score_breakdown` lists the replies where the issue was found:
 
@@ -66,18 +71,18 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 4,
     "turns_with_events": 1,
-    "events": [{"type": "long_pause", "turn": 3, "longest_pause_ms": 3120}],
+    "events": [{"type": "long_pause", "turn": 3, "offset_seconds": 1.46, "duration_seconds": 3.12, "start_time": 11.96, "longest_pause_ms": 3120}],
     "skipped": [{"turn": 5, "error": "Reply has under 2 seconds of speech."}],
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. An event's `type` is `long_pause`, with the reply's `longest_pause_ms`, or `too_much_silence`, with its `pause_fraction`. A reply with both counts once, as a long pause. Agent replies whose audio could not be decoded, or that have under two seconds of speech, are listed under `skipped`.
+`turn` is the turn's zero-based position in the conversation. An event's `type` is `long_pause`, with the reply's `longest_pause_ms` and that pause's place in the reply (`offset_seconds`, `duration_seconds`), or `too_much_silence`, with its `pause_fraction` (the share of the reply that was pauses, from 0 to 1), which covers the whole reply (`offset_seconds` 0, `duration_seconds` the reply's length). `start_time` places either on the call's clock (left out when the clip has no `Audio.start_time`). A reply with both counts once, as a long pause. Agent replies whose audio could not be decoded, or whose speech spans under two seconds from first to last sound, are listed under `skipped`.
 
 ## How Is It Calculated?
 
-`PausesMetric` checks every agent reply with at least two seconds of speech, and scores the share of them with natural pauses:
+`PausesMetric` checks every agent reply with at least two seconds from its first to its last spoken sound, and scores the share of them with natural pauses:
 
-<Equation formula="\text{Pauses} = \frac{\text{Agent replies without a long pause or too much silence}}{\text{Agent replies with two or more seconds of speech}}" />
+<Equation formula="\text{Pauses} = \frac{\text{Agent replies without a long pause or too much silence}}{\text{Agent replies spanning two or more seconds of speech}}" />
 
 Only the time from the reply's first spoken sound to its last is checked. Silence before the agent starts talking is response time, not a pause. A pause is a stretch of at least 200 ms with no speech in it; shorter gaps are part of saying words (Campione & Véronis, 2002). On a reply with background noise, anything within 6 dB of the noise counts as pause, so a pause is still found when the line is never truly silent.
 

@@ -15,6 +15,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent, on_call
 
 DEFECT_LABEL = "an echo"
 
@@ -34,7 +35,7 @@ class EchoMetric(BaseVoiceMetric):
                 no_eligible_reason="Echo needs a stereo call recording "
                 "(call_recording_path) with the caller on the left channel "
                 "and the agent on the right.",
-                event_key="at_seconds",
+                event_key="reply_start",
             )
         caller, agent, sample_rate = channels
         eligible = []
@@ -50,12 +51,13 @@ class EchoMetric(BaseVoiceMetric):
             if leak is not None:
                 delay, level = leak
                 defects.append(
-                    {
-                        "type": "echo",
-                        "at_seconds": at,
-                        "delay_seconds": round(delay, 3),
-                        "level_db": round(level, 1),
-                    }
+                    VoiceEvent(
+                        type="echo",
+                        reply_start=at,
+                        delay_seconds=round(delay, 3),
+                        level_db=round(level, 1),
+                        **on_call(span.start + delay, span.end - span.start),
+                    )
                 )
         return defect_share_result(
             eligible,
@@ -64,7 +66,7 @@ class EchoMetric(BaseVoiceMetric):
             DEFECT_LABEL,
             no_eligible_reason="The agent never spoke for "
             f"{ECHO_MIN_REPLY_SECONDS:g} seconds or more on the call recording.",
-            event_key="at_seconds",
+            event_key="reply_start",
             timing_source=CALL_RECORDING,
         )
 

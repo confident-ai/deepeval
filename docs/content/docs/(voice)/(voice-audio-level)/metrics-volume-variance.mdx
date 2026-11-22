@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The volume variance metric checks whether your voice agent's volume **drifts within a reply**, like a sentence that starts loud and fades to a mumble, or one that swells as it goes. It returns the share of agent replies that hold a steady volume, between 0 and 1.
+
+<AudioSample name="volume-variance" />
 
 ## Usage
 
@@ -49,7 +52,7 @@ There are **SIX** optional parameters when creating a `VolumeVarianceMetric`:
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `max_drift_db`: an integer for how far, in dB, a reply's volume may rise or fall from start to end. Defaulted to `10`.
+- [Optional] `max_drift_db`: an integer for how far, in dB, a reply's volume may rise or fall from start to end. Must be greater than `0`. Defaulted to `10`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 `score_breakdown` lists the replies where the issue was found:
@@ -65,20 +68,20 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 4,
     "turns_with_events": 1,
-    "events": [{"type": "volume_drift", "turn": 3, "drift_db": -14.8}],
+    "events": [{"type": "volume_drift", "turn": 3, "drift_db": -14.8, "offset_seconds": 0.0, "duration_seconds": 4.2, "start_time": 10.5}],
     "skipped": [{"turn": 5, "error": "Reply has under 3 seconds of speech to follow."}],
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation, and `drift_db` is how much the volume changed from the start to the end of the reply (negative for a fade, positive for a swell). Agent replies whose audio could not be decoded, or that have under three seconds of speech to follow, are listed under `skipped`.
+`turn` is the turn's zero-based position in the conversation, and `drift_db` is how much the volume changed from the start to the end of the reply (negative for a fade, positive for a swell). The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, or that have under three seconds of speech to follow, are listed under `skipped`.
 
 ## How Is It Calculated?
 
-`VolumeVarianceMetric` checks every agent reply with at least three seconds of speech and scores the share of them without the issue:
+`VolumeVarianceMetric` checks every agent reply with at least three one-second windows of speech and scores the share of them without the issue:
 
-<Equation formula="\text{Volume Variance} = \frac{\text{Agent replies drifting by max\_drift\_db or less}}{\text{Agent replies with three or more seconds of speech}}" />
+<Equation formula="\text{Volume Variance} = \frac{\text{Agent replies drifting by max\_drift\_db or less}}{\text{Agent replies with three or more one-second windows of speech}}" />
 
-Each reply is cut into one-second windows. A window's level is the median of its five loudest 20 ms frames, so a window that is half pause still reads at its speech level. Windows with under 0.3 seconds of speech, such as one holding only the tail of a word, are left out. The metric fits a line through the levels with a method that ignores single outlier windows, such as the fading tail of a word, and reports the line's rise or fall from the first window to the last.
+Each reply is cut into one-second windows. A window's level is the median of its five loudest 20 ms frames, so a window that is half pause still reads at its speech level. Windows with under 0.3 seconds of speech (fewer than 15 frames at about −41 dBFS or louder), such as one holding only the tail of a word, are left out, and so is a final window shorter than one second. A reply needs at least **three** windows left to follow; otherwise it is skipped. The metric fits a line through the levels with a method that ignores single outlier windows, such as the fading tail of a word, and reports the line's rise or fall from the first window to the last.
 
 The default of **10 dB** is roughly the step at which a voice sounds half (or twice) as loud. Natural speech rises and falls between sentences, but on real agent replies that trend stays within about 5 dB.
 

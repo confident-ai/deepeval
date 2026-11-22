@@ -1,12 +1,17 @@
 from typing import Optional
 
-from deepeval.metrics.voice.utils.call_activity import EVENT_KEYS, reply_delays
+from deepeval.metrics.voice.utils.call_activity import (
+    EVENT_KEYS,
+    reply_delays,
+    wait_span,
+)
 from deepeval.metrics.voice.utils.defects import defect_share_result
 from deepeval.metrics.voice.base_metric import (
     BaseVoiceMetric,
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 class ResponseLatencyMetric(BaseVoiceMetric):
@@ -41,11 +46,12 @@ class ResponseLatencyMetric(BaseVoiceMetric):
         )
         event_key = EVENT_KEYS[source]
         defects = [
-            {
-                "type": "slow_response",
-                event_key: key,
-                "response_delay_seconds": round(delay, 2),
-            }
+            VoiceEvent(
+                type="slow_response",
+                **{event_key: key},
+                **wait_span(test_case, event_key, key, delay),
+                response_delay_seconds=round(delay, 2),
+            )
             for key, delay in delays.items()
             if delay > self.max_latency_seconds
         ]

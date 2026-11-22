@@ -7,15 +7,20 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent, placed
 
 
 class AudioLoopMetric(BaseVoiceMetric):
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
         measurements, skipped = agent_reply_measurements(test_case)
         defects = [
-            {"type": "audio_loop", "turn": turn, "count": reply.loop_events}
+            VoiceEvent(
+                type="audio_loop",
+                turn=turn,
+                **placed(test_case.turns[turn].audio, offset, duration),
+            )
             for turn, reply in measurements.items()
-            if reply.loop_events
+            for offset, duration in reply.loop_spans
         ]
         return defect_share_result(
             list(measurements), defects, skipped, "looping audio"

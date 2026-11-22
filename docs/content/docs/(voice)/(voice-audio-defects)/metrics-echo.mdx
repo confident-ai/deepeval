@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The echo metric checks whether **the agent's own voice comes back through the caller's side of the call**, as when the caller's speaker is loud enough for their microphone to pick the agent up again. It returns the share of agent replies that were not heard back, between 0 and 1.
+
+<AudioSample name="echo" />
 
 ## Usage
 
@@ -56,13 +59,13 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 10,
     "turns_with_events": 1,
-    "events": [{"type": "echo", "at_seconds": 343.2, "delay_seconds": 0.506, "level_db": -5.8}],
+    "events": [{"type": "echo", "start_time": 343.706, "duration_seconds": 4.1, "reply_start": 343.2, "delay_seconds": 0.506, "level_db": -5.8}],
     "skipped": [],
     "timing_source": "call_recording",
 }
 ```
 
-`at_seconds` is where in the recording the agent's reply started. `delay_seconds` is how long after the agent its voice came back on the caller's side, and `level_db` is how loud that copy was compared with the agent (0 is as loud, −40 is barely audible).
+`reply_start` is where in the recording the agent's reply started. `delay_seconds` is how long after the agent its voice came back on the caller's side, and `level_db` is how loud that copy was compared with the agent (0 is as loud, −40 is barely audible). `start_time` and `duration_seconds` place the copy on the caller's side, in seconds on the call's clock.
 
 ## How Is It Calculated?
 

@@ -332,6 +332,22 @@ def test_a_stream_cut_is_inferred_when_the_same_speaker_resumes():
     assert event["resumed_turn"] == 3
 
 
+def test_a_stream_cut_starts_where_a_trailing_dead_run_begins():
+    turns = clean_turns()
+    # The caller's clip goes dead for its last 1.2 s, then the caller resumes.
+    turns[2].audio = to_audio(speech_like(1.5) + zeros(1.2), start_time=7.0)
+    turns[3] = Turn(
+        role="user",
+        content="...and that is what I did.",
+        audio=to_audio(speech_like(1.5, seed=6), start_time=10.2),
+    )
+    metric, _ = _measure(turns)
+    (event,) = _events(metric)
+    assert event["type"] == "stream_cut"
+    assert event["evidence"] == "trailing_dead_run"
+    assert event["offset_seconds"] == pytest.approx(1.5, abs=0.05)
+
+
 def test_a_stream_cut_is_not_inferred_without_start_times():
     turns = _cut_call()
     turns[3].audio.start_time = None

@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={true}
@@ -50,13 +51,13 @@ evaluate(test_cases=test_cases, metrics=[metric])
 There are **EIGHT** optional parameters when creating an `AudioGlitchMetric`:
 
 - [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. The model only writes the reason; it never sees the audio and never changes the score. Defaulted to <DefaultLLMModel />.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#configure-llm-judges) of type `DeepEvalBaseLLM`. The model only writes the reason; it never sees the audio and never changes the score. Defaulted to <DefaultLLMModel />.
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a reason for the evaluation score. Defaulted to `True`.
-- [Optional] `async_mode`: a boolean which, when set to `True`, enables [concurrent execution within the `measure()` method](/docs/metrics-introduction#measuring-metrics-in-async). Defaulted to `True`.
+- [Optional] `async_mode`: a boolean which, when set to `True`, enables [concurrent execution within the `measure()` method](/docs/metrics-introduction#using-metrics-async). Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, prints the speaker baselines and every event during an `evaluate()` run. Defaulted to `False`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
-- [Optional] `evaluation_template`: a class of type `AudioGlitchTemplate`, which allows you to [override the default prompt](/docs/metrics-introduction#customizing-metric-prompts) used to write the reason. Defaulted to `deepeval`'s `AudioGlitchTemplate`.
+- [Optional] `evaluation_template`: a class of type `AudioGlitchTemplate`, which allows you to [override the default prompt](/docs/metrics-introduction#customize-metric-prompts) used to write the reason. Defaulted to `deepeval`'s `AudioGlitchTemplate`.
 
 Every event the metric found is recorded on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
 
@@ -85,7 +86,7 @@ The breakdown lists the turns it checked, the events, and the per-speaker baseli
             "pitch_hz": 190.8,
             "periodicity": 0.985,
             "level_dbfs": -24.0,
-            "jitter": 0.0039,
+            "jitter": 0.0012,
             "glide": 0.0008,
             "hold_ratio": 5.71,
             "pitch_ratio": 0.98,
@@ -121,15 +122,15 @@ Each clip is cut into short frames and measured for loudness, pitch and how peri
 
 | Event               | Detected when                                                                                                                                                              |
 | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `held_tone`         | One pitch is held for at least 0.8 s with no frame-to-frame jitter and no glide, and the hold is at least three times as long as anything that speaker otherwise holds, at least 1.3× the pitch of their voice, or 2.5 s long outright. |
-| `dead_stream`       | At least 0.5 s of exact digital zero between two stretches of speech in the same clip (1 s when the run reaches the end of the clip). Real pauses are quiet, not zero — so this only fires for a speaker whose pauses normally carry noise. |
+| `held_tone`         | One pitch (60–1000 Hz, periodicity at least 0.85) is held for at least 0.8 s with almost no frame-to-frame jitter (at most 0.2% of the pitch) and no glide (at most 1%), and the hold is at least three times that speaker's typical hold, at least 1.3× the pitch of their voice, or 2.5 s long outright. |
+| `dead_stream`       | At least 0.5 s of exact digital zero (every sample within ±2) between two stretches of speech in the same clip (1 s when the run reaches the end of the clip). Real pauses are quiet, not zero — so this only fires for a speaker whose pauses normally carry noise. |
 | `stream_cut`        | A clip's sound stops at near full volume (its last 20 ms at least 80% as loud as the second before), or ends in digital zero, and the **same** speaker starts again within 15 s. Needs `Audio.start_time` on every clip.          |
 | `clipping`          | More than 1% of samples sit at full scale. Carries the clipped span and `fraction`.                                                                                        |
 | `audio_undecodable` | The clip could not be decoded to PCM. Carries a `reason`.                                                                                                                  |
 
-The thresholds are relative to the speaker, not fixed: `typical_hold_seconds` is the 90th percentile of how long that speaker holds any steady pitch across their clips, `median_pitch_hz` is the pitch of their voice with tone-length runs left out, and `digital_silence` records whether that speaker's typical pause is partly exact zeros — true for some synthetic voices and never for a recording, in which case a zero run is how their audio is silenced rather than lost stream, and `dead_stream` is not raised for them. A deep voice or a slow talker therefore sets their own bar. The remaining constants (the 0.8 s minimum, the jitter and glide bounds, the 0.5 s dead-stream floor) are fixed in code, as they are for every other voice metric.
+The thresholds are relative to the speaker, not fixed: `typical_hold_seconds` is the 90th percentile of how long that speaker holds any steady pitch across their clips, `median_pitch_hz` is the pitch of their voice with tone-length runs left out, and `digital_silence` records whether that speaker's typical (median) pause is at least 20% exact zeros — true for some synthetic voices and never for a recording, in which case a zero run is how their audio is silenced rather than lost stream, and `dead_stream` is not raised for them. A deep voice or a slow talker therefore sets their own bar. The remaining constants (the 0.8 s minimum, the jitter and glide bounds, the 0.5 s dead-stream floor) are fixed in code, as they are for every other voice metric.
 
-A speaker with a single clip has no hold baseline, so a tone at their own pitch is only caught by the 2.5 s rule. A turn without audio is skipped; a test case where no turn has audio raises rather than scoring.
+A tone near the speaker's own pitch that is shorter than 2.5 s is only caught when it is at least three times their typical hold. A turn without audio is skipped; a test case where no turn has audio raises rather than scoring.
 
 :::caution
 Production clips are usually cut at the speech-to-text engine's turn boundaries. An artifact the agent's TTS emits _after_ the last word — the common case — lands after the agent's end timestamp, so make sure each clip runs until the next speaker starts, or it will never be inside a clip for this metric to find.
@@ -159,8 +160,8 @@ The reason is written by the LLM from the event list together with each event's 
         <>
           Check the run in <code>verbose_mode</code>. The usual reasons are
           that it is shorter than 0.8 s, that its pitch wobbles or slides the
-          way a voice does, or that the speaker has only one clip, so there is
-          no hold baseline and only the 2.5 s rule applies. Also check that the
+          way a voice does, or that it sits near the speaker's own pitch, is
+          under 2.5 s and is less than three times their typical hold. Also check that the
           tone is inside a clip at all: TTS artifacts after the last word often
           fall past the turn's end timestamp.
         </>

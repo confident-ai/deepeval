@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -70,19 +71,22 @@ Unlike `VoiceNaturalnessMetric` and `SpeechIntelligibilityMetric`, which score e
 {
     "critical_failure": False,
     "events": [
-        {"type": "abrupt_cutoff", "turn": 3, "critical": False},
+        {"type": "abrupt_cutoff", "turn": 3, "critical": False, "offset_seconds": 0.0, "duration_seconds": 4.2, "start_time": 10.5},
         {
             "type": "audio_dropout",
             "turn": 3,
             "count": 2,
             "severity": 0.16,
             "critical": False,
+            "offset_seconds": 0.0,
+            "duration_seconds": 4.2,
+            "start_time": 10.5,
         },
     ],
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. An empty `events` list means nothing was detected.
+`turn` is the turn's zero-based position in the conversation. An event with a decodable reply covers that whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`); `audio_missing` and `audio_undecodable` events carry no times. An empty `events` list means nothing was detected.
 
 ## How Is It Calculated?
 
@@ -97,14 +101,14 @@ Unlike `VoiceNaturalnessMetric` and `SpeechIntelligibilityMetric`, which score e
 | `assistant_turn_missing` | The conversation contains no assistant turns at all.        |
 | `audio_missing`          | An assistant turn has no audio attached.                    |
 | `audio_undecodable`      | The audio could not be decoded to PCM. Carries a `reason`.  |
-| `audio_loop`             | Three or more repeated windows — a stuck or looping buffer. |
+| `audio_loop`             | Three or more extra plays of repeated 0.25 s windows — a stuck or looping buffer. |
 
 Non-critical events subtract a bounded severity:
 
 | Event           | Detected when                                     | Severity                         |
 | --------------- | ------------------------------------------------- | -------------------------------- |
 | `abrupt_cutoff` | The clip's sound stops at near full volume instead of fading out. | 0.12 flat                        |
-| `audio_loop`    | One or two repeated 0.25s windows.                | 0.15 each                        |
+| `audio_loop`    | A 0.25 s window played three times (two extra plays; a window must appear at least three times to count). | 0.15 per extra play |
 | `audio_dropout` | Short silences interrupting continuous speech.    | 0.08 each, capped at 0.35        |
 | `clipping`      | More than 1% of samples are clipped.              | 10× the fraction, capped at 0.35 |
 

@@ -1,0 +1,68 @@
+name: Community data
+
+# Refreshes the data behind the /community page once a week (and on
+# demand): the contributor list, contributors per country, and stargazers
+# per country. The page reads these files at build time, so committing
+# them to main redeploys the docs with current numbers.
+#
+# Only the three generated files below are ever committed. If nothing
+# changed, nothing is committed. The scripts keep the previous file when
+# GitHub's API fails, so a bad run never empties the page.
+
+on:
+  schedule:
+    - cron: "0 6 * * 1" # Mondays 06:00 UTC
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+concurrency:
+  group: community-data
+  cancel-in-progress: false
+
+jobs:
+  refresh:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        shell: bash
+        working-directory: docs
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: main
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      # The scripts use only Node built-ins, so no install is needed.
+      - name: Contributors
+        run: node scripts/generate-repo-contributors.mjs
+
+      - name: Contributors per country
+        run: node scripts/generate-contributor-countries.mjs
+
+      - name: Stargazers per country
+        run: node scripts/generate-stargazer-countries.mjs
+
+      - name: Commit if anything changed
+        run: |
+          files=(
+            lib/generated/repo-contributors.json
+            lib/generated/contributor-countries.json
+            lib/generated/stargazer-countries.json
+          )
+          if git diff --quiet -- "${files[@]}"; then
+            echo "No changes."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add -- "${files[@]}"
+          git commit -m "chore(docs): refresh community contributor and stargazer data"
+          git pull --rebase origin main
+          git push origin HEAD:main

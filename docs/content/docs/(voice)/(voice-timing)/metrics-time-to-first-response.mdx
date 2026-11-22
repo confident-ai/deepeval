@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The time to first response metric checks whether your voice agent **greets the caller promptly** once the call connects, rather than leaving the line silent. It returns 1 when the greeting came in time and 0 when it did not.
+
+<AudioSample name="time-to-first-response" />
 
 ## Usage
 
@@ -49,7 +52,7 @@ There are **SIX** optional parameters when creating a `TimeToFirstResponseMetric
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `max_wait_seconds`: an integer for the longest wait, in seconds, between the call connecting and the agent starting to speak. Defaulted to `3`.
+- [Optional] `max_wait_seconds`: an integer for the longest wait, in seconds, between the call connecting and the agent starting to speak. Must be greater than 0. Defaulted to `3`.
 - [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`. Defaulted to `True`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
@@ -66,12 +69,13 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 1,
     "turns_with_events": 1,
-    "events": [{"type": "slow_first_response", "turn": 0, "first_response_seconds": 4.6}],
+    "events": [{"type": "slow_first_response", "turn": 0, "duration_seconds": 4.6, "start_time": 0.0, "first_response_seconds": 4.6}],
     "skipped": [],
+    "timing_source": "turn_timestamps",
 }
 ```
 
-`turn` is the greeting's zero-based position in the conversation, and `first_response_seconds` is how long the caller waited for the agent's first word. With a call recording, the event carries `at_seconds`, where in the recording the agent first made sound, instead of `turn`, and `timing_source` says which was used.
+`turn` is the greeting's zero-based position in the conversation, and `first_response_seconds` is how long the caller waited for the agent's first word. `start_time` and `duration_seconds` place that wait on the call's clock, ending at the agent's first sound. With a call recording, the event carries `reply_start`, where in the recording the agent first made sound, instead of `turn`, and when the caller spoke first the wait starts where their first words ended. `timing_source` says whether the call recording or the turn timestamps were used.
 
 ## How Is It Calculated?
 
@@ -82,7 +86,9 @@ print(metric.score_breakdown)
 With a call recording, the wait depends on who spoke first:
 
 - **The agent speaks first:** from the start of the recording to the agent's first sound.
-- **The caller speaks first:** from the end of the caller's first words (pauses under half a second kept inside them) to the agent's first sound, or, if longer, the silence the caller sat through before those words. A caller who waits ten seconds and then asks "hello?" was kept waiting ten seconds, however quickly the agent answers.
+- **The caller speaks first:** from the end of the caller's first words (pauses under half a second kept inside them) to the agent's first sound, or zero if the agent starts before those words end. The silence before the caller's first words is not counted.
+
+If the agent makes no sound on the recording, the metric is skipped.
 
 ### Where the timing comes from
 

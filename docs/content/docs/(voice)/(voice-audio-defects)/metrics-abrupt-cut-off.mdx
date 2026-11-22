@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The abrupt cut-off metric checks whether your voice agent's replies **stop mid-sound**, as in "Your balance is two hundred and" followed by nothing. It returns the share of agent replies that end cleanly, between 0 and 1.
+
+<AudioSample name="abrupt-cut-off" />
 
 ## Usage
 
@@ -67,10 +70,11 @@ print(metric.score_breakdown)
     "turns_with_events": 1,
     "events": [{"type": "stream_cut", "turn": 3, "role": "assistant", "offset_seconds": 1.125, "duration_seconds": 0.0, "start_time": 11.625, "position": "end", "evidence": "abrupt_end", "gap_seconds": 0.5, "resumed_turn": 4}],
     "skipped": [],
+    "timing_source": "turn_timestamps",
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. A reply that ends mid-sound and is picked up again by the agent within 15 seconds is reported as a `stream_cut`, with `gap_seconds` and the `resumed_turn`. Any other reply that ends mid-sound is reported as `{"type": "abrupt_cutoff", "turn": 3}`. Agent replies whose audio could not be decoded are listed under `skipped` with the error. With a call recording, events read `{"type": "abrupt_cutoff", "at_seconds": 41.2, "stopped_at_seconds": 44.86}`: where in the recording the reply started and where its sound stopped. `timing_source` says whether the call recording or each turn's own audio was used.
+`turn` is the turn's zero-based position in the conversation. A reply that ends mid-sound and is picked up again by the agent within 15 seconds (its next clip in the call, which needs `Audio.start_time` on every clip) is reported as a `stream_cut`, with `gap_seconds` and the `resumed_turn`. Any other reply that ends mid-sound is reported as `{"type": "abrupt_cutoff", "turn": 3, "offset_seconds": 3.42, "duration_seconds": 0.02, "start_time": 13.92}`, which places the last 20 ms before the sound stops inside the reply and on the call's clock (`start_time` is left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded are listed under `skipped` with the error. With a call recording, events read `{"type": "abrupt_cutoff", "duration_seconds": 0.02, "start_time": 44.84, "reply_start": 41.2, "stopped_at_seconds": 44.86}`: `reply_start` is where in the recording the reply started, `stopped_at_seconds` where its sound stopped, and `start_time` and `duration_seconds` the last 20 ms before that, all in seconds on the call's clock. `eligible_turns` then counts the agent's replies on the recording and `skipped` is always empty. `timing_source` says whether the call recording (`"call_recording"`) or each turn's own audio (`"turn_timestamps"`) was used.
 
 ## How Is It Calculated?
 
@@ -78,15 +82,15 @@ print(metric.score_breakdown)
 
 <Equation formula="\text{Abrupt Cut-off} = \frac{\text{Agent replies without the defect}}{\text{Agent replies with decodable audio}}" />
 
-A reply is cut off when its sound **stops at near full volume**: the last 20 ms of sound are at least 80% as loud as the speech in the second before them, and stand well above the reply's background noise. A finished reply fades out; a cut one does not. Only cuts in the middle of a sound can be heard this way: an agent that stops between two words sounds like a normal ending.
+A reply is cut off when its sound **stops at near full volume**: the last 20 ms of sound are at least 80% as loud as the speech in the second before them (its median level), and stand more than 10 dB above the background noise and above a fixed floor of about −30 dBFS. Where the sound stops is found on a 5 ms grid. A finished reply fades out; a cut one does not. Only cuts in the middle of a sound can be heard this way: an agent that stops between two words sounds like a normal ending.
 
-With a stereo call recording (`call_recording_path`, caller on the left channel, agent on the right), each stretch of the agent's speech is one reply, and every point where its sound stops is checked. A stop only counts while the caller is silent, with under 0.2 seconds of caller sound from one second before it to 0.2 seconds after: an agent that stops because the caller spoke up was not cut off. Sound still going when the recording ends is left to [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end).
+With a stereo call recording (`call_recording_path`, caller on the left channel, agent on the right), each stretch of the agent's speech is one reply (pauses shorter than 1 second do not split it), and every point where its sound stops is checked. A stop only counts while the caller is silent, with under 0.2 seconds of caller sound from one second before it to 0.2 seconds after: an agent that stops because the caller spoke up was not cut off. A stop within 0.05 seconds of the end of the recording (sound still going when the recording ends) is left to [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end).
 
 With `use_speech_detection` on (the default), the caller only counts as talking when the sound on their channel is both loud enough for that caller (at least 15% of their typical speech level) and heard as speech by the [Silero VAD](https://github.com/snakers4/silero-vad) model, so background noise, bangs and hold music are not mistaken for the caller. Background voices, such as a TV, are still speech and still count. It needs `onnxruntime` (`pip install onnxruntime`), and the 2 MB model is downloaded once into `~/.cache/deepeval/models` (or `$XDG_CACHE_HOME/deepeval/models`). Set `use_speech_detection=False` to judge by loudness alone, where any sound on the caller's channel reads as the caller talking.
 
 Without a recording, each agent turn's own audio is checked. Replies the simulated caller [barged into](/docs/conversation-simulator-voice-interruptions) (`interrupted=True` on the turn) are never counted: stopping mid-word is exactly what a successful interruption should cause.
 
-If no agent reply has decodable audio, the metric is skipped.
+If no agent reply has decodable audio, or the agent made no sound on the call recording, the metric is skipped.
 
 ## FAQs
 

@@ -11,6 +11,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 class BackgroundNoiseMetric(BaseVoiceMetric):
@@ -54,11 +55,11 @@ class BackgroundNoiseMetric(BaseVoiceMetric):
             eligible_turns.append(turn)
             if reply.estimated_snr_db < self.min_snr_db:
                 defects.append(
-                    {
-                        "type": "background_noise",
-                        "turn": turn,
-                        "estimated_snr_db": round(reply.estimated_snr_db, 1),
-                    }
+                    VoiceEvent(
+                        type="background_noise",
+                        turn=turn,
+                        estimated_snr_db=round(reply.estimated_snr_db, 1),
+                    )
                 )
         return defect_share_result(
             eligible_turns,

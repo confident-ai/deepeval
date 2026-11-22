@@ -171,7 +171,10 @@ def test_a_reply_ending_mid_sound_is_an_abrupt_cut_off_without_a_timeline():
         turn.audio.start_time = None
     metric = _measure(AbruptCutoffMetric, turns)
     (event,) = metric.score_breakdown["events"]
-    assert event == {"type": "abrupt_cutoff", "turn": 1}
+    assert event["type"] == "abrupt_cutoff"
+    assert event["turn"] == 1
+    assert event["duration_seconds"] == pytest.approx(0.02)
+    assert event["offset_seconds"] == pytest.approx(1.105, abs=0.01)
 
 
 def test_a_reply_the_caller_barged_into_is_not_an_abrupt_cut_off():
@@ -232,7 +235,8 @@ def test_the_agent_heard_back_through_the_callers_speaker_is_an_echo(
     assert metric.score_breakdown["timing_source"] == "call_recording"
     [event] = metric.score_breakdown["events"]
     assert event["type"] == "echo"
-    assert event["at_seconds"] == pytest.approx(1.0, abs=0.05)
+    assert event["reply_start"] == pytest.approx(1.0, abs=0.05)
+    assert event["start_time"] == pytest.approx(1.45, abs=0.05)
     assert event["delay_seconds"] == pytest.approx(0.45, abs=0.01)
     assert event["level_db"] == pytest.approx(-14.0, abs=1.5)
 
@@ -292,8 +296,12 @@ def test_a_reply_cut_mid_sound_on_a_recording_is_a_cutoff(tmp_path):
     assert metric.score == 0.5
     assert metric.score_breakdown["timing_source"] == "call_recording"
     [event] = metric.score_breakdown["events"]
-    assert event["at_seconds"] == pytest.approx(3.0, abs=0.05)
+    assert event["reply_start"] == pytest.approx(3.0, abs=0.05)
     assert event["stopped_at_seconds"] == pytest.approx(4.125, abs=0.05)
+    # The 20 ms the cut was judged on, ending where the sound stops.
+    assert event["start_time"] + event["duration_seconds"] == pytest.approx(
+        event["stopped_at_seconds"], abs=0.01
+    )
 
 
 def test_an_agent_cut_off_by_the_caller_speaking_is_excused(tmp_path):

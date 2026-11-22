@@ -10,6 +10,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 class LoudnessMetric(BaseVoiceMetric):
@@ -52,11 +53,11 @@ class LoudnessMetric(BaseVoiceMetric):
             else:
                 continue
             defects.append(
-                {
-                    "type": event_type,
-                    "turn": turn,
-                    "speech_dbfs": round(reply.speech_dbfs, 1),
-                }
+                VoiceEvent(
+                    type=event_type,
+                    turn=turn,
+                    speech_dbfs=round(reply.speech_dbfs, 1),
+                )
             )
         return defect_share_result(
             list(measurements),

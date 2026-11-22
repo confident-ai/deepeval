@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The silent reply metric checks whether your voice agent's replies **could actually be heard**: a reply that exists as text but was never played, or played as silence, leaves the caller hearing nothing. It returns the share of agent replies the caller could hear, between 0 and 1.
+
+<AudioSample name="silent-reply" />
 
 ## Usage
 
@@ -69,7 +72,7 @@ print(metric.score_breakdown)
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. An event's `type` is `no_audio` when the reply has text but no audio, or `no_speech` when its audio holds nothing above the speech floor. Agent replies whose audio could not be decoded are listed under `skipped`.
+`turn` is the turn's zero-based position in the conversation. An event's `type` is `no_audio` when the reply has text but no audio, or `no_speech` when its audio holds nothing above the speech floor. A `no_speech` event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded are listed under `skipped`.
 
 ## How Is It Calculated?
 
@@ -77,7 +80,7 @@ print(metric.score_breakdown)
 
 <Equation formula="\text{Silent Reply} = \frac{\text{Agent replies with audible speech}}{\text{Agent replies with text}}" />
 
-A reply is silent when it carries no audio at all, or when every 20 ms frame of its audio sits below the level counted as speech. An agent turn with neither text nor audio is not a silent reply but no reply at all, and is reported by [`FailedResponseMetric`](/docs/metrics-failed-response). A reply that goes dead partway through is reported by [`DeadStreamMetric`](/docs/metrics-dead-stream). A conversation with no audio on any turn is not a voice call, so the metric is skipped.
+A reply is silent when it carries no audio at all, or when every 20 ms frame of its audio sits below the level counted as speech. An agent turn with neither text nor audio is not a silent reply but no reply at all, and is reported by [`FailedResponseMetric`](/docs/metrics-failed-response). A reply that goes dead partway through is reported by [`DeadStreamMetric`](/docs/metrics-dead-stream). A conversation with no audio on any turn is not a voice call, so the metric is skipped, as it is when no agent turn has text to say.
 
 ## FAQs
 

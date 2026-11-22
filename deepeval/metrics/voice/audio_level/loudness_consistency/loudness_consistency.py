@@ -12,6 +12,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 class LoudnessConsistencyMetric(BaseVoiceMetric):
@@ -44,12 +45,12 @@ class LoudnessConsistencyMetric(BaseVoiceMetric):
             turn: reply.speech_dbfs for turn, reply in measurements.items()
         }
         defects = [
-            {
-                "type": "loudness_shift",
-                "turn": turn,
-                "speech_dbfs": round(levels[turn], 1),
-                "shift_db": round(shift, 1),
-            }
+            VoiceEvent(
+                type="loudness_shift",
+                turn=turn,
+                speech_dbfs=round(levels[turn], 1),
+                shift_db=round(shift, 1),
+            )
             for turn, shift in shifts_from_typical(levels).items()
             if abs(shift) > self.max_shift_db
         ]

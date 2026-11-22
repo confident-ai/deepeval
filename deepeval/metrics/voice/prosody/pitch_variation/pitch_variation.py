@@ -13,6 +13,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 class PitchVariationMetric(BaseVoiceMetric):
@@ -68,13 +69,13 @@ class PitchVariationMetric(BaseVoiceMetric):
             else:
                 continue
             defects.append(
-                {
-                    "type": event_type,
-                    "turn": turn,
-                    "pitch_spread_semitones": round(
+                VoiceEvent(
+                    type=event_type,
+                    turn=turn,
+                    pitch_spread_semitones=round(
                         reply.pitch_spread_semitones, 1
                     ),
-                }
+                )
             )
         return defect_share_result(
             eligible_turns,

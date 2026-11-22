@@ -1,15 +1,16 @@
 from dataclasses import dataclass, field
-from typing import Dict, List
+from typing import List
 
 from deepeval.metrics.voice.utils.analysis import analyze_audio, clamp_score
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 @dataclass
 class DetectorReport:
     score: float
     critical: bool
-    events: List[Dict] = field(default_factory=list)
+    events: List[VoiceEvent] = field(default_factory=list)
 
 
 # Platform end reasons that mean the call did not end normally.
@@ -33,7 +34,7 @@ def response_was_owed(content: str) -> bool:
 
 
 def detect_responsiveness(test_case: ConversationalTestCase) -> DetectorReport:
-    events: List[Dict] = []
+    events: List[VoiceEvent] = []
     critical = False
     reprompts = 0
     turns = test_case.turns
@@ -44,31 +45,27 @@ def detect_responsiveness(test_case: ConversationalTestCase) -> DetectorReport:
         if next_turn is None:
             critical = True
             events.append(
-                {
-                    "type": "agent_failed_to_respond",
-                    "turn": index,
-                    "critical": True,
-                }
+                VoiceEvent(
+                    type="agent_failed_to_respond", turn=index, critical=True
+                )
             )
             continue
         if next_turn.role == "user":
             reprompts += 1
             events.append(
-                {
-                    "type": "user_reprompted",
-                    "turn": index + 1,
-                    "critical": False,
-                }
+                VoiceEvent(
+                    type="user_reprompted", turn=index + 1, critical=False
+                )
             )
             continue
         if next_turn.audio is None:
             critical = True
             events.append(
-                {
-                    "type": "assistant_audio_missing",
-                    "turn": index + 1,
-                    "critical": True,
-                }
+                VoiceEvent(
+                    type="assistant_audio_missing",
+                    turn=index + 1,
+                    critical=True,
+                )
             )
 
     metadata = test_case.metadata or {}
@@ -79,18 +76,16 @@ def detect_responsiveness(test_case: ConversationalTestCase) -> DetectorReport:
     ):
         critical = True
         events.append(
-            {
-                "type": "unexpected_end",
-                "end_reason": end_reason,
-                "critical": True,
-            }
+            VoiceEvent(
+                type="unexpected_end", end_reason=end_reason, critical=True
+            )
         )
     score = 0.0 if critical else clamp_score(1.0 - reprompts * 0.25)
     return DetectorReport(score=score, critical=critical, events=events)
 
 
 def detect_audio_integrity(test_case: ConversationalTestCase) -> DetectorReport:
-    events: List[Dict] = []
+    events: List[VoiceEvent] = []
     critical = False
     penalty = 0.0
     assistant_turns = [
@@ -102,23 +97,14 @@ def detect_audio_integrity(test_case: ConversationalTestCase) -> DetectorReport:
         return DetectorReport(
             score=0.0,
             critical=True,
-            events=[
-                {
-                    "type": "assistant_turn_missing",
-                    "critical": True,
-                }
-            ],
+            events=[VoiceEvent(type="assistant_turn_missing", critical=True)],
         )
 
     for index, turn in assistant_turns:
         if turn.audio is None:
             critical = True
             events.append(
-                {
-                    "type": "audio_missing",
-                    "turn": index,
-                    "critical": True,
-                }
+                VoiceEvent(type="audio_missing", turn=index, critical=True)
             )
             continue
         try:
@@ -126,59 +112,55 @@ def detect_audio_integrity(test_case: ConversationalTestCase) -> DetectorReport:
         except (TypeError, ValueError) as error:
             critical = True
             events.append(
-                {
-                    "type": "audio_undecodable",
-                    "turn": index,
-                    "critical": True,
-                    "reason": str(error),
-                }
+                VoiceEvent(
+                    type="audio_undecodable",
+                    turn=index,
+                    critical=True,
+                    reason=str(error),
+                )
             )
             continue
         if measurements.ends_abruptly:
             penalty += 0.12
             events.append(
-                {
-                    "type": "abrupt_cutoff",
-                    "turn": index,
-                    "critical": False,
-                }
+                VoiceEvent(type="abrupt_cutoff", turn=index, critical=False)
             )
         if measurements.loop_events:
             severity = min(0.4, measurements.loop_events * 0.15)
             penalty += severity
             events.append(
-                {
-                    "type": "audio_loop",
-                    "turn": index,
-                    "count": measurements.loop_events,
-                    "severity": severity,
-                    "critical": measurements.loop_events >= 3,
-                }
+                VoiceEvent(
+                    type="audio_loop",
+                    turn=index,
+                    count=measurements.loop_events,
+                    severity=severity,
+                    critical=measurements.loop_events >= 3,
+                )
             )
             critical = critical or measurements.loop_events >= 3
         if measurements.dropout_events:
             severity = min(0.35, measurements.dropout_events * 0.08)
             penalty += severity
             events.append(
-                {
-                    "type": "audio_dropout",
-                    "turn": index,
-                    "count": measurements.dropout_events,
-                    "severity": severity,
-                    "critical": False,
-                }
+                VoiceEvent(
+                    type="audio_dropout",
+                    turn=index,
+                    count=measurements.dropout_events,
+                    severity=severity,
+                    critical=False,
+                )
             )
         if measurements.clipping_fraction > 0.01:
             severity = min(0.35, measurements.clipping_fraction * 10.0)
             penalty += severity
             events.append(
-                {
-                    "type": "clipping",
-                    "turn": index,
-                    "fraction": measurements.clipping_fraction,
-                    "severity": severity,
-                    "critical": False,
-                }
+                VoiceEvent(
+                    type="clipping",
+                    turn=index,
+                    fraction=measurements.clipping_fraction,
+                    severity=severity,
+                    critical=False,
+                )
             )
     score = 0.0 if critical else clamp_score(1.0 - penalty)
     return DetectorReport(score=score, critical=critical, events=events)

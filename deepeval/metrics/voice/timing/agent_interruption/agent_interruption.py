@@ -12,6 +12,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent, on_call
 
 FALSE_START_MAX_SECONDS = 1.5
 TALK_OVER_MIN_SECONDS = 1.0
@@ -103,12 +104,13 @@ class AgentInterruptionMetric(BaseVoiceMetric):
             ]
             if fired:
                 defects.append(
-                    {
-                        "type": fired[0],
-                        event_key: key,
-                        "agent_seconds": round(start.stops_at - start.at, 2),
-                        "overlap_seconds": round(start.overlap_seconds, 2),
-                    }
+                    VoiceEvent(
+                        type=fired[0],
+                        **{event_key: key},
+                        agent_seconds=round(start.stops_at - start.at, 2),
+                        **on_call(start.at, start.stops_at - start.at),
+                        overlap_seconds=round(start.overlap_seconds, 2),
+                    )
                 )
         return defect_share_result(
             eligible,

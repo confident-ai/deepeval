@@ -25,11 +25,12 @@ from deepeval.metrics.voice.utils.defects import (
     agent_reply_delays,
     call_timeline,
 )
+from deepeval.metrics.voice.utils.events import on_call
 from deepeval.metrics.voice.utils.speech_detection import speech_frames
 from deepeval.test_case import ConversationalTestCase
 from deepeval.voice.connectors import audio_utils
 
-EVENT_KEYS = {CALL_RECORDING: "at_seconds", TURN_TIMESTAMPS: "turn"}
+EVENT_KEYS = {CALL_RECORDING: "reply_start", TURN_TIMESTAMPS: "turn"}
 # Gaps shorter than this sit between syllables, not between utterances.
 SOUND_GAP_SECONDS = 0.3
 # Shorter bursts are clicks and breaths.
@@ -364,10 +365,25 @@ def reply_delays(
         if start.caller_runs_past > AGENT_OVERLAP_ALLOWANCE_SECONDS:
             skipped.append(
                 {
-                    "at_seconds": at,
+                    "reply_start": at,
                     "error": "Agent started before the caller finished.",
                 }
             )
             continue
         delays[at] = start.caller_silent_for
     return delays, skipped, None, CALL_RECORDING
+
+
+def wait_span(
+    test_case: ConversationalTestCase, event_key: str, key: Any, wait: float
+) -> Dict:
+    """The silence the caller sat through before a reply, on the call's
+    clock: it ends where the reply starts."""
+    if event_key == EVENT_KEYS[CALL_RECORDING]:
+        reply_start = key
+    else:
+        audio = test_case.turns[key].audio
+        reply_start = None if audio is None else audio.start_time
+    if reply_start is None:
+        return {}
+    return on_call(reply_start - wait, wait)

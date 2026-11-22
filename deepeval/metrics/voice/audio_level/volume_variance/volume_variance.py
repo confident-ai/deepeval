@@ -13,6 +13,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 class VolumeVarianceMetric(BaseVoiceMetric):
@@ -56,11 +57,9 @@ class VolumeVarianceMetric(BaseVoiceMetric):
             eligible_turns.append(turn)
             if abs(drift) > self.max_drift_db:
                 defects.append(
-                    {
-                        "type": "volume_drift",
-                        "turn": turn,
-                        "drift_db": round(drift, 1),
-                    }
+                    VoiceEvent(
+                        type="volume_drift", turn=turn, drift_db=round(drift, 1)
+                    )
                 )
         return defect_share_result(
             eligible_turns,

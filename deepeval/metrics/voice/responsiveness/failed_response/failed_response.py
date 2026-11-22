@@ -9,6 +9,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 CALLER_LINES = ("caller line", "caller lines")
 
@@ -42,18 +43,16 @@ class FailedResponseMetric(BaseVoiceMetric):
             )
             if reply_turn is None:
                 defects.append(
-                    {"type": "call_ended_without_reply", "turn": index}
+                    VoiceEvent(type="call_ended_without_reply", turn=index)
                 )
             elif (
                 not turns[reply_turn].content.strip()
                 and turns[reply_turn].audio is None
             ):
                 defects.append(
-                    {
-                        "type": "empty_reply",
-                        "turn": index,
-                        "reply_turn": reply_turn,
-                    }
+                    VoiceEvent(
+                        type="empty_reply", turn=index, reply_turn=reply_turn
+                    )
                 )
         return defect_share_result(
             eligible_turns,

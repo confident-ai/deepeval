@@ -14,6 +14,7 @@ from deepeval.metrics.voice.audio_defects.audio_glitch.utils import (
     GlitchReport,
     detect_audio_glitches,
 )
+from deepeval.metrics.voice.utils.events import events_to_dicts
 from deepeval.metrics.voice.audio_defects.audio_glitch.schema import (
     AudioGlitchReason,
 )
@@ -108,9 +109,9 @@ class AudioGlitchMetric(BaseConversationalMetric):
         self.score_breakdown = {
             "turns_with_audio": len(self.report.turns_with_audio),
             "turns_with_events": len(
-                {event["turn"] for event in self.report.events}
+                {event.turn for event in self.report.events}
             ),
-            "events": self.report.events,
+            "events": events_to_dicts(self.report.events),
             "baselines": self.report.baselines,
             "timeline_available": self.report.timeline_available,
         }
@@ -122,13 +123,13 @@ class AudioGlitchMetric(BaseConversationalMetric):
             steps=[
                 "Speaker baselines:\n"
                 + json.dumps(self.report.baselines, indent=2),
-                f"Events:\n{prettify_list(self.report.events)}",
+                f"Events:\n{prettify_list(events_to_dicts(self.report.events))}",
                 f"Score: {self.score}\nReason: {self.reason}",
             ],
         )
 
     def _calculate_score(self) -> float:
-        turns_with_events = {event["turn"] for event in self.report.events}
+        turns_with_events = {event.turn for event in self.report.events}
         score = 1 - len(turns_with_events) / len(self.report.turns_with_audio)
         return 0.0 if self.strict_mode and score < 1 else score
 
@@ -136,11 +137,11 @@ class AudioGlitchMetric(BaseConversationalMetric):
         turns = test_case.turns
         rows = []
         for event in self.report.events:
-            previous = turns[event["turn"] - 1] if event["turn"] > 0 else None
+            previous = turns[event.turn - 1] if event.turn > 0 else None
             rows.append(
                 {
-                    **event,
-                    "turn_text": turns[event["turn"]].content,
+                    **event.to_dict(),
+                    "turn_text": turns[event.turn].content,
                     "previous_turn_role": previous.role if previous else None,
                     "previous_turn_text": (
                         previous.content if previous else None

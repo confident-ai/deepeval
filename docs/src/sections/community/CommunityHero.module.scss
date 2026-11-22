@@ -1,0 +1,55 @@
+/* --------------------------------------------------------------------
+ * Community hero additions on top of the shared HomeSection hero.
+ * ------------------------------------------------------------------ */
+
+// A strip item: an icon or a flag, then the text.
+.stripItem {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+
+  svg {
+    flex-shrink: 0;
+    opacity: 0.8;
+  }
+}
+
+.stripFlag {
+  font-size: 13px;
+  line-height: 1;
+}
+
+
+
+// Room under the buttons for the walkers on the strip (doubled class to
+// beat the shared hero padding regardless of stylesheet order).
+.main.main {
+  padding-bottom: 3.25rem;
+  // Wide enough for "Host a DeepEval meetup" on the first line.
+  max-width: 38rem;
+
+  h1 {
+    font-size: clamp(31px, 3.05vw, 46px);
+  }
+}
+
+// The hero fills the pane. An empty spacer above the copy and the planet
+// below the strip share the leftover height equally, so the copy stays in
+// the middle (like the homepage) while the planet reaches the bottom edge.
+.hero {
+  // Nothing in the hero (walkers, flags, the strip) may spill sideways
+  // over the right-hand column.
+  overflow-x: clip;
+
+  @media (min-width: 1024px) {
+    align-self: stretch;
+    display: flex;
+    flex-direction: column;
+    min-height: 100%;
+
+    &::before {
+      content: "";
+      flex: 1;
+    }
+  }
+}

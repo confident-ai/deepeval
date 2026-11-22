@@ -98,8 +98,7 @@ class _StubSTT(DeepEvalBaseSTT):
 class _StaticVoiceModel(DeepEvalBaseLLM):
     """A simulator model that answers every schema the voice path asks for."""
 
-    def __init__(self, *, interrupt: bool = False):
-        self.interrupt = interrupt
+    def __init__(self):
         self.user_turns = 0
         self.schemas: List[str] = []
         super().__init__(model="static-voice-model")
@@ -118,12 +117,8 @@ class _StaticVoiceModel(DeepEvalBaseLLM):
             return schema(is_complete=False, reason="not done")
         if schema.__name__ == "EdgeChoice":
             return schema(index=None, reason="static")
-        if schema.__name__ == "InterruptDecision":
-            return schema(
-                should_interrupt=self.interrupt,
-                utterance="Actually, wait." if self.interrupt else "",
-                reason="static",
-            )
+        if schema.__name__ == "InterruptUtterance":
+            return schema(utterance="Actually, wait.")
         raise AssertionError(f"Unexpected schema: {schema.__name__}")
 
     async def a_generate(self, prompt: str, schema=None):
@@ -140,10 +135,20 @@ def _agent(reply: str = "the agent speaks", seconds: float = 0.4):
     return agent
 
 
+def _agent_with_lengths(seconds: List[float]):
+    replies = iter(seconds)
+
+    async def agent(_audio: Audio) -> ConnectorTurn:
+        length = next(replies, seconds[-1])
+        return ConnectorTurn(audio=_tone(length), transcript="the agent speaks")
+
+    return agent
+
+
 def _simulate(
     *,
     persona: Optional[Persona] = None,
-    interrupt: bool = False,
+    agent=None,
     output_dir: Optional[str] = None,
     max_user_simulations: int = 2,
     turn_detection: str = "eager",
@@ -152,7 +157,7 @@ def _simulate(
 ):
     tts, stt = _StubTTS(), _StubSTT()
     connector = CallbackVoiceConnector(
-        _agent(reply, reply_seconds), turn_detection=turn_detection
+        agent or _agent(reply, reply_seconds), turn_detection=turn_detection
     )
     simulator = ConversationSimulator(
         voice_config=VoiceConfig(
@@ -161,7 +166,7 @@ def _simulate(
             stt_model=stt,
             output_dir=output_dir,
         ),
-        simulator_model=_StaticVoiceModel(interrupt=interrupt),
+        simulator_model=_StaticVoiceModel(),
     )
     golden = ConversationalGolden(
         scenario="Ask the agent a question",
@@ -210,34 +215,59 @@ def test_costs_are_zero_for_a_text_simulator():
     assert simulator.stt_cost == 0.0
 
 
-def test_a_barging_persona_produces_a_barge_turn():
-    persona = Persona(
-        characteristics="An impatient caller.",
-        interruption_behavior=InterruptionBehavior(
-            frequency="frequent", overlap="insist"
-        ),
-    )
-    # The judge is only asked once enough of the reply has been *heard*, so the
-    # agent needs both a long sentence and long enough audio to carry it.
-    _, case = _simulate(
-        persona=persona,
-        interrupt=True,
-        max_user_simulations=1,
-        turn_detection="balanced",
-        reply=(
-            "I will need your order number before I can look into any of this, "
-            "and it takes a moment to pull up once you give it to me."
-        ),
-        reply_seconds=3.0,
-    )
-
-    barges = [
+def _barges(case) -> List[Turn]:
+    return [
         turn
         for turn in case.turns
         if turn.role == "user" and (turn.metadata or {}).get("barge_in")
     ]
-    assert barges, "the caller was configured to interrupt but never did"
+
+
+def test_a_barging_persona_cuts_into_the_scheduled_reply():
+    persona = Persona(
+        characteristics="An impatient caller.",
+        interruption_behavior=InterruptionBehavior(every=1, overlap="insist"),
+    )
+    _, case = _simulate(
+        persona=persona,
+        max_user_simulations=1,
+        turn_detection="balanced",
+        reply_seconds=3.0,
+    )
+
+    barges = _barges(case)
+    assert len(barges) == 1, "the caller was scheduled to interrupt"
     assert barges[0].content == "Actually, wait."
+    cut = case.turns[case.turns.index(barges[0]) - 1]
+    assert cut.role == "assistant" and cut.interrupted is True
+    lead = barges[0].audio.start_time - cut.audio.start_time
+    assert 0.5 <= lead < 1.5
+    assert cut.audio.duration < 3.0
+    answers = [
+        turn
+        for turn in case.turns[case.turns.index(barges[0]) + 1 :]
+        if turn.role == "assistant"
+    ]
+    assert answers and all(turn.interrupted is None for turn in answers)
+
+
+def test_a_reply_too_short_to_cut_into_carries_the_interruption():
+    persona = Persona(
+        characteristics="An impatient caller.",
+        interruption_behavior=InterruptionBehavior(every=2, overlap="insist"),
+    )
+    _, case = _simulate(
+        persona=persona,
+        agent=_agent_with_lengths([0.4, 0.2, 3.0, 3.0]),
+        max_user_simulations=3,
+        turn_detection="balanced",
+    )
+
+    replies = [turn for turn in case.turns if turn.role == "assistant"]
+    barges = _barges(case)
+    assert len(barges) == 1
+    assert [turn.interrupted for turn in replies[:3]] == [None, None, True]
+    assert case.turns.index(barges[0]) == case.turns.index(replies[2]) + 1
 
 
 def test_conversation_audio_is_written_to_disk(tmp_path):

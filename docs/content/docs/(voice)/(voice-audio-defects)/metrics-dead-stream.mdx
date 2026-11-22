@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The dead stream metric checks whether your voice agent's audio **goes completely dead** partway through a reply. It returns the share of agent replies with no dead stretch, between 0 and 1.
+
+<AudioSample name="dead-stream" />
 
 ## Usage
 
@@ -69,7 +72,7 @@ print(metric.score_breakdown)
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. `runs_to_end` is `true` when the stream died and never came back within the reply. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
+`turn` is the turn's zero-based position in the conversation. `offset_seconds` and `duration_seconds` place the dead stretch inside the reply, and `start_time` places it on the call's clock (left out when the clip has no `Audio.start_time`). `runs_to_end` is `True` when the stream died and never came back within the reply. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
 
 ## How Is It Calculated?
 
@@ -77,12 +80,12 @@ print(metric.score_breakdown)
 
 <Equation formula="\text{Dead Stream} = \frac{\text{Agent replies without the defect}}{\text{Agent replies with decodable audio}}" />
 
-A dead stream is a stretch of **exact digital silence** (not quiet speech or room noise) after the agent has started talking:
+A dead stream is a stretch of **exact digital silence** (every sample within ±2 of zero, in 20 ms frames; not quiet speech or room noise) after the agent has started talking:
 
-- at least 0.5 s in the middle of a reply, or
+- at least 0.5 s in the middle of a reply, with speech after it, or
 - at least 1 s that runs to the end of the reply.
 
-If the agent's voice uses digital silence for every pause, silence is normal for it and nothing is reported. A reply that dies and is picked up again by the agent counts as an [abrupt cut-off](/docs/metrics-abrupt-cut-off) instead.
+If the agent's typical pause (the median across all its replies in the call) is at least 20% digital silence, silence is normal for its voice and nothing is reported. A reply whose dead stretch runs to its end, and whose next clip in the call is the agent's again within 15 s, is a stream cut rather than a dead stream: it is reported by [abrupt cut-off](/docs/metrics-abrupt-cut-off) instead. This needs `Audio.start_time` on every clip.
 
 If no agent reply has decodable audio, the metric is skipped.
 
@@ -94,8 +97,8 @@ If no agent reply has decodable audio, the metric is skipped.
       question: "Why are digital-silence pauses ignored for some voices?",
       answer: (
         <>
-          Some synthetic voices write every pause as exact zeros. When that is
-          true of the agent's typical pause, silence is normal for that voice
+          Some synthetic voices write their pauses as exact zeros. When the
+          agent's typical pause is at least 20% zeros, silence is normal for that voice
           and cannot be told apart from a dropped stream, so nothing is
           reported.
         </>

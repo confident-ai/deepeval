@@ -1,0 +1,36 @@
+// Within the text column, like the rest of the page, with room below
+// before the footer.
+.scene {
+  margin: 1rem 0 4rem;
+
+  img {
+    display: block;
+    width: 100%;
+    height: auto;
+    margin: 0;
+    image-rendering: pixelated;
+  }
+}
+
+// One image per theme.
+.dark {
+  display: none !important;
+}
+
+:global(.dark) .scene,
+:global(html.dark) .scene {
+  .light {
+    display: none !important;
+  }
+
+  .dark {
+    display: block !important;
+  }
+}
+
+.caption {
+  margin-top: 0.5rem;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 12px;
+  color: var(--color-fd-muted-foreground);
+}

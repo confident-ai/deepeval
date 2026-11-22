@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The loudness metric checks whether your voice agent **speaks too quietly or too loudly**, for example so quietly that the caller has to turn the volume up. It returns the share of agent replies whose speech level falls inside an accepted range, between 0 and 1.
+
+<AudioSample name="loudness" />
 
 ## Usage
 
@@ -66,26 +69,26 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 4,
     "turns_with_events": 1,
-    "events": [{"type": "too_quiet", "turn": 3, "speech_dbfs": -37.5}],
+    "events": [{"type": "too_quiet", "turn": 3, "speech_dbfs": -37.5, "offset_seconds": 0.0, "duration_seconds": 4.2, "start_time": 10.5}],
     "skipped": [],
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. `type` is `too_quiet` or `too_loud`, and `speech_dbfs` is the reply's speech level. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
+`turn` is the turn's zero-based position in the conversation. `type` is `too_quiet` or `too_loud`, and `speech_dbfs` is the reply's speech level. The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, or that have no audible sound, are listed under `skipped` with the error.
 
 ## How Is It Calculated?
 
-`LoudnessMetric` checks every agent reply that has audio and scores the share of them without the issue:
+`LoudnessMetric` checks every agent reply that has audible audio and scores the share of them without the issue:
 
-<Equation formula="\text{Loudness} = \frac{\text{Agent replies with speech between min\_dbfs and max\_dbfs}}{\text{Agent replies with decodable audio}}" />
+<Equation formula="\text{Loudness} = \frac{\text{Agent replies with speech between min\_dbfs and max\_dbfs}}{\text{Audible agent replies with decodable audio}}" />
 
-Each reply is cut into 20 ms frames, and its **speech level** is the 90th percentile of the frames loud enough to be speech. Pauses are left out, so a reply with long silences is not mistaken for a quiet one. dBFS is decibels below the loudest level digital audio can hold, so 0 is the maximum and speech sits at negative values.
+Each reply is cut into 20 ms frames, and its **speech level** is the 90th percentile of the frames loud enough to be speech (about −41 dBFS or louder). Pauses are left out, so a reply with long silences is not mistaken for a quiet one. dBFS is decibels below the loudest level digital audio can hold, so 0 is the maximum and speech sits at negative values.
 
 The defaults come from telephone audio. ITU-T test speech is normalized to an active speech level of −26 dBov (ITU-T P.56), which is about −22 dBFS on this metric's scale. **−32 dBFS** is 10 dB below that, which sounds about half as loud, and **−6 dBFS** leaves under 6 dB of room before the loudest syllables clip.
 
 A reply that is too loud and also distorted counts here and in [Audio Clipping](/docs/metrics-audio-clipping): the level and the distortion are separate problems.
 
-A reply with no audible sound at all is skipped; [`SilentReplyMetric`](/docs/metrics-silent-reply) reports it. If no agent reply has decodable audio, the metric is skipped.
+A reply with no audible sound at all (an overall level of −70 dBFS or lower) is skipped; [`SilentReplyMetric`](/docs/metrics-silent-reply) reports it. If no agent reply has decodable, audible audio, the metric is skipped.
 
 ## FAQs
 

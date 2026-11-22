@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The audio dropout metric checks whether your voice agent's audio **cuts out mid-speech**: a fraction of a second goes missing, as in "Your appoint… is confirmed". It returns the share of agent replies with no dropout, between 0 and 1.
+
+<AudioSample name="audio-dropout" />
 
 ## Usage
 
@@ -64,12 +67,15 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 4,
     "turns_with_events": 1,
-    "events": [{"type": "audio_dropout", "turn": 3, "count": 2}],
+    "events": [
+        {"type": "audio_dropout", "turn": 3, "offset_seconds": 1.24, "duration_seconds": 0.06, "start_time": 11.74},
+        {"type": "audio_dropout", "turn": 3, "offset_seconds": 2.9, "duration_seconds": 0.08, "start_time": 13.4},
+    ],
     "skipped": [],
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. `count` is the number of dropouts in that reply. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
+`turn` is the turn's zero-based position in the conversation. Each dropout is its own event: `offset_seconds` and `duration_seconds` place the gap inside the reply, and `start_time` places it on the call's clock (left out when the clip has no `Audio.start_time`). A reply with several dropouts still counts once toward the score. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
 
 ## How Is It Calculated?
 
@@ -79,8 +85,8 @@ print(metric.score_breakdown)
 
 A dropout is a gap of **200 ms or less** in the middle of speech. How it is told apart from a natural pause depends on the audio:
 
-- **Audio with background noise** (most real recordings): the gap counts when its level falls below 10% of the reply's normal pause noise. Pauses between words keep that background noise, so they are not counted.
-- **Clean audio with silent pauses** (typical TTS output): the gap counts when it is at least 20 ms of near-zero samples (one lost network packet; consonants like "p" and "t" leave shorter near-silent gaps) and the speech on both sides stops and starts abruptly, at 25% or more of the surrounding speech level. Natural pauses fade out and back in, so their edges sit far below that.
+- **Audio with background noise** (most real recordings): the gap counts when its level falls to 10% or less of the reply's normal (median) pause noise. Pauses between words keep that background noise, so they are not counted.
+- **Clean audio with silent pauses** (typical TTS output): the gap counts when it is at least 20 ms of near-zero samples (one lost network packet; consonants like "p" and "t" leave shorter near-silent gaps) and the speech on both sides stops and starts abruptly: the 5 ms at each edge stay at 25% or more of the level of the 60 ms of speech beside them. Natural pauses fade out and back in, so their edges sit far below that.
 
 If no agent reply has decodable audio, the metric is skipped.
 

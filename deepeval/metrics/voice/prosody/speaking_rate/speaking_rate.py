@@ -13,6 +13,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 class SpeakingRateMetric(BaseVoiceMetric):
@@ -66,11 +67,9 @@ class SpeakingRateMetric(BaseVoiceMetric):
             else:
                 continue
             defects.append(
-                {
-                    "type": event_type,
-                    "turn": turn,
-                    "speech_rate_wpm": round(rate),
-                }
+                VoiceEvent(
+                    type=event_type, turn=turn, speech_rate_wpm=round(rate)
+                )
             )
         return defect_share_result(
             eligible_turns,

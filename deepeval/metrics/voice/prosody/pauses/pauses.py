@@ -10,6 +10,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent, placed
 
 
 class PausesMetric(BaseVoiceMetric):
@@ -57,19 +58,23 @@ class PausesMetric(BaseVoiceMetric):
             eligible_turns.append(turn)
             if reply.longest_pause_ms > self.max_pause_ms:
                 defects.append(
-                    {
-                        "type": "long_pause",
-                        "turn": turn,
-                        "longest_pause_ms": round(reply.longest_pause_ms),
-                    }
+                    VoiceEvent(
+                        type="long_pause",
+                        turn=turn,
+                        longest_pause_ms=round(reply.longest_pause_ms),
+                        **placed(
+                            test_case.turns[turn].audio,
+                            *reply.longest_pause_span,
+                        ),
+                    )
                 )
             elif reply.pause_fraction * 100 > self.max_pause_percent:
                 defects.append(
-                    {
-                        "type": "too_much_silence",
-                        "turn": turn,
-                        "pause_fraction": round(reply.pause_fraction, 2),
-                    }
+                    VoiceEvent(
+                        type="too_much_silence",
+                        turn=turn,
+                        pause_fraction=round(reply.pause_fraction, 2),
+                    )
                 )
         return defect_share_result(
             eligible_turns,

@@ -7,6 +7,10 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.analysis import PITCH_FRAME_MS
+from deepeval.metrics.voice.utils.events import VoiceEvent, placed
+
+PITCH_FRAME_SECONDS = PITCH_FRAME_MS / 1000
 
 
 class AbruptPitchJumpMetric(BaseVoiceMetric):
@@ -21,13 +25,18 @@ class AbruptPitchJumpMetric(BaseVoiceMetric):
                 )
                 continue
             eligible_turns.append(turn)
-            if reply.pitch_jumps:
+            for at in reply.pitch_jump_times:
+                # The step sits between two 40 ms frames; mark both.
                 defects.append(
-                    {
-                        "type": "pitch_jump",
-                        "turn": turn,
-                        "pitch_jumps": reply.pitch_jumps,
-                    }
+                    VoiceEvent(
+                        type="pitch_jump",
+                        turn=turn,
+                        **placed(
+                            test_case.turns[turn].audio,
+                            max(0.0, at - PITCH_FRAME_SECONDS),
+                            2 * PITCH_FRAME_SECONDS,
+                        ),
+                    )
                 )
         return defect_share_result(
             eligible_turns,

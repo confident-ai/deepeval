@@ -23,7 +23,7 @@ from deepeval.voice.connectors.transports.callback import (
 from deepeval.voice.connectors.types import ConnectorTurn
 from deepeval.voice.duplex import DuplexExchange
 from deepeval.voice.floor_control import FloorController
-from deepeval.voice.interruption import interruption_policy
+from deepeval.voice.interruption import InterruptionSchedule
 
 
 def _audio(samples: int = 2400) -> Audio:
@@ -167,14 +167,12 @@ async def test_duplex_records_what_the_agent_heard_on_the_reply_it_prompted():
         )
 
     connector = CallbackVoiceConnector(agent)
-    policy = interruption_policy("normal")
-    assert policy is not None
     exchange = DuplexExchange(
         connector=connector,
         tts_model=object(),
         stt_model=_FailIfCalledSTT(),
-        policy=policy,
-        floor=FloorController(policy=policy),
+        schedule=InterruptionSchedule(),
+        floor=FloorController(),
         golden=ConversationalGolden(scenario="Test"),
         language="English",
         a_generate_schema=None,
@@ -191,7 +189,6 @@ async def test_duplex_records_what_the_agent_heard_on_the_reply_it_prompted():
             exchange.run(
                 turns=turns,
                 sent_at=time.perf_counter(),
-                barges_this_conversation=0,
             ),
             timeout=2,
         )

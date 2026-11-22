@@ -1,3 +1,4 @@
+from deepeval.metrics.voice.utils.events import events_to_dicts
 from deepeval.metrics.voice.base_metric import (
     BaseVoiceMetric,
     VoiceMetricResult,
@@ -14,7 +15,7 @@ class AgentResponsivenessMetric(BaseVoiceMetric):
         elif report.critical:
             reason = (
                 "A critical responsiveness failure occurred: "
-                + ", ".join(event["type"] for event in report.events)
+                + ", ".join(event.type for event in report.events)
                 + "."
             )
         else:
@@ -27,7 +28,7 @@ class AgentResponsivenessMetric(BaseVoiceMetric):
             reason,
             {
                 "critical_failure": report.critical,
-                "events": report.events,
+                "events": events_to_dicts(report.events),
             },
         )
 

@@ -17,6 +17,7 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.events import VoiceEvent, on_call
 
 
 class TimeToFirstResponseMetric(BaseVoiceMetric):
@@ -89,11 +90,12 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
         defects = []
         if greeting_at > self.max_wait_seconds:
             defects.append(
-                {
-                    "type": "slow_first_response",
-                    "turn": greeting_turn,
-                    "first_response_seconds": round(greeting_at, 2),
-                }
+                VoiceEvent(
+                    type="slow_first_response",
+                    turn=greeting_turn,
+                    first_response_seconds=round(greeting_at, 2),
+                    **on_call(0.0, greeting_at),
+                )
             )
         return defect_share_result(
             [greeting_turn],
@@ -112,7 +114,7 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
                 "a slow first response",
                 no_eligible_reason="The agent made no sound on the call "
                 "recording.",
-                event_key="at_seconds",
+                event_key="reply_start",
                 timing_source=CALL_RECORDING,
             )
         agent_at = recording.agent[0].start
@@ -135,18 +137,19 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
         defects = []
         if wait > self.max_wait_seconds:
             defects.append(
-                {
-                    "type": "slow_first_response",
-                    "at_seconds": at,
-                    "first_response_seconds": round(wait, 2),
-                }
+                VoiceEvent(
+                    type="slow_first_response",
+                    reply_start=at,
+                    first_response_seconds=round(wait, 2),
+                    **on_call(agent_at - wait, wait),
+                )
             )
         return defect_share_result(
             [at],
             defects,
             [],
             defect_label,
-            event_key="at_seconds",
+            event_key="reply_start",
             timing_source=CALL_RECORDING,
         )
 

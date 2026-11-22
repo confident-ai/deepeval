@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The pitch variation metric checks whether your voice agent's pitch **moves naturally within a reply**: not a flat, robotic reading with no rise or fall, and not a voice swinging wildly up and down. It returns the share of agent replies whose pitch varies within range, between 0 and 1.
+
+<AudioSample name="pitch-variation" />
 
 ## Usage
 
@@ -55,6 +58,8 @@ There are **SEVEN** optional parameters when creating a `PitchVariationMetric`:
 - [Optional] `max_spread_semitones`: an integer for the most pitch spread, in semitones, a reply may have before it counts as erratic. Defaulted to `6`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
+`min_spread_semitones` must be 0 or more and lower than `max_spread_semitones`, or a `ValueError` is raised.
+
 `score_breakdown` lists the replies where the issue was found:
 
 ```python
@@ -68,12 +73,12 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 4,
     "turns_with_events": 1,
-    "events": [{"type": "monotone", "turn": 3, "pitch_spread_semitones": 0.6}],
+    "events": [{"type": "monotone", "turn": 3, "pitch_spread_semitones": 0.6, "offset_seconds": 0.0, "duration_seconds": 4.2, "start_time": 10.5}],
     "skipped": [{"turn": 5, "error": "Reply has under 1s of voiced speech to follow its pitch."}],
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. An event's `type` is `monotone` or `erratic`, and `pitch_spread_semitones` is how widely the reply's pitch moved. Agent replies whose audio could not be decoded, or that have under one second of voiced speech, are listed under `skipped`.
+`turn` is the turn's zero-based position in the conversation. An event's `type` is `monotone` or `erratic`, and `pitch_spread_semitones` is how widely the reply's pitch moved. The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, or that have under one second of voiced speech, are listed under `skipped`.
 
 ## How Is It Calculated?
 
@@ -81,7 +86,7 @@ print(metric.score_breakdown)
 
 <Equation formula="\text{Pitch Variation} = \frac{\text{Agent replies with a pitch spread from min to max}}{\text{Agent replies with one or more seconds of voiced speech}}" />
 
-The pitch of every 40 ms frame is tracked with the YIN method (de Cheveigné & Kawahara, 2002), and brief jumps of an octave, a common tracking slip, are folded back. The spread is how far the frames typically sit from the reply's median pitch, in semitones, so a deep voice and a high voice are judged the same way. It is computed from the median distance, so a single cracked word does not move it; cracks are reported by [`AbruptPitchJumpMetric`](/docs/metrics-abrupt-pitch-jump).
+The pitch of every 40 ms frame is tracked with the YIN method (de Cheveigné & Kawahara, 2002), and brief jumps of an octave, a common tracking slip, are folded back: a stretch of up to three frames sitting within 3 semitones of an octave off its neighbours. The spread is how far the frames typically sit from the reply's median pitch, in semitones, so a deep voice and a high voice are judged the same way. It is the median distance scaled by 1.4826 (so it reads like a standard deviation), so a single cracked word does not move it; cracks are reported by [`AbruptPitchJumpMetric`](/docs/metrics-abrupt-pitch-jump).
 
 Adults reading aloud vary their pitch by about **2.2 semitones** (the clinical "pitch sigma" measure). The default of **1 semitone** is flatter than normal speech; **6 semitones** is nearly three times the norm. Expressive TTS voices can run wider than people reading aloud, so raise `max_spread_semitones` if a lively voice is flagged as erratic.
 

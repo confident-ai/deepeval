@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The audio clipping metric checks whether your voice agent's audio is **distorted from being too loud**, so the voice turns crackly and harsh on loud syllables. It returns the share of agent replies with no clipping, between 0 and 1.
+
+<AudioSample name="audio-clipping" />
 
 ## Usage
 
@@ -69,7 +72,7 @@ print(metric.score_breakdown)
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. `offset_seconds` and `duration_seconds` give the clipped span inside the reply, and `fraction` is the share of the reply's samples that were clipped. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
+`turn` is the turn's zero-based position in the conversation. `offset_seconds` and `duration_seconds` give the clipped span inside the reply (from the first clipped sample to the last), `start_time` places it on the call's clock and is left out when the clip has no `Audio.start_time`, and `fraction` is the share of the reply's samples that were clipped. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
 
 ## How Is It Calculated?
 

@@ -1,0 +1,95 @@
+import { communityCohostEmail, communitySubmitUrl, codeOfConductUrl } from "@/lib/shared";
+
+<br />
+
+<br />
+
+<SectionLabel>Upcoming</SectionLabel>
+
+## Meetups near you
+
+<CommunityEvents when="upcoming" />
+
+<br />
+
+<SectionLabel>Past</SectionLabel>
+
+## Past meetups
+
+<CommunityEvents when="past" />
+
+<br />
+
+<br />
+
+<SectionLabel>Host a meetup</SectionLabel>
+
+## List your event in four steps
+
+<Steps>
+<Step>
+
+### Create the event on Luma
+
+We only list events on [Luma](https://luma.com). Using something else? Make a Luma page for it as well.
+
+</Step>
+<Step>
+
+### Add us as a co-host
+
+In Luma, go to **Manage**, then **Hosts**, and invite <code>{communityCohostEmail}</code>.
+
+</Step>
+<Step>
+
+### Add the opt-in question
+
+Add this as an optional registration question: "Share my details with DeepEval (Confident AI) for product updates."
+
+</Step>
+<Step>
+
+### Submit the event
+
+Fill in the <a href={communitySubmitUrl} target="_blank" rel="noopener noreferrer">submission form</a> on GitHub. We'll review it and get it listed within 2 business days.
+
+</Step>
+</Steps>
+
+<br />
+
+<SectionLabel>Rules</SectionLabel>
+
+## What we list
+
+- There's at least one talk or workshop on DeepEval or LLM evals.
+- It's free to attend.
+- It follows the <a href={codeOfConductUrl} target="_blank" rel="noopener noreferrer">DeepEval Code of Conduct</a>.
+
+Events run by the Confident AI team get an **Official** tag.
+
+<br />
+
+<SectionLabel>Host kit</SectionLabel>
+
+## Everything you need
+
+### Grab these now
+
+- **Logos:** the <a href="/icons/DeepEval.svg" download>DeepEval wordmark</a> and <a href="/icons/deepeval-icon.svg" download>app icon</a> (SVG).
+- **Talk ideas:** [evaluating an agent end to end](/guides/guides-ai-agent-evaluation), [tracing an agent to the step that broke](/guides/guides-tracing-ai-agents), or [catching a bad prompt in CI](/guides/guides-regression-testing-in-cicd).
+- **A live demo:** the [quickstart](/docs/getting-started) runs on a laptop in about 5 minutes.
+
+### Ask us for
+
+Mention it in the submission form and we'll get back to you on the GitHub issue. Ask us anything else there too.
+
+- **A listing on this page**, plus a post from the DeepEval X account.
+- **Swag** for everyone who comes.
+- **A speaker** from our team, joining remotely for a short talk or Q&A.
+- **Free credits** for organizers and attendees.
+
+<br />
+
+<PastMeetupScene />

@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The loudness consistency metric checks whether your voice agent **keeps the same volume from one reply to the next**, rather than one reply being clearly louder or quieter than the rest. It returns the share of agent replies that stay close to the agent's typical loudness, between 0 and 1.
+
+<AudioSample name="loudness-consistency" />
 
 ## Usage
 
@@ -49,7 +52,7 @@ There are **SIX** optional parameters when creating a `LoudnessConsistencyMetric
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `max_shift_db`: an integer for how far, in dB, a reply's loudness may sit from the agent's typical loudness. Defaulted to `5`.
+- [Optional] `max_shift_db`: an integer for how far, in dB, a reply's loudness may sit from the agent's typical loudness. Must be greater than `0`. Defaulted to `5`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 `score_breakdown` lists the replies where the issue was found:
@@ -66,21 +69,21 @@ print(metric.score_breakdown)
     "eligible_turns": 4,
     "turns_with_events": 1,
     "events": [
-        {"type": "loudness_shift", "turn": 3, "speech_dbfs": -9.1, "shift_db": 6.4}
+        {"type": "loudness_shift", "turn": 3, "speech_dbfs": -9.1, "shift_db": 6.4, "offset_seconds": 0.0, "duration_seconds": 4.2, "start_time": 10.5}
     ],
     "skipped": [],
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation, `speech_dbfs` is the reply's speech level, and `shift_db` is how far that sits from the agent's typical level (negative when quieter). Agent replies whose audio could not be decoded are listed under `skipped`.
+`turn` is the turn's zero-based position in the conversation, `speech_dbfs` is the reply's speech level, and `shift_db` is how far that sits from the agent's typical level (negative when quieter). The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, or that have no audible sound, are listed under `skipped`.
 
 ## How Is It Calculated?
 
 `LoudnessConsistencyMetric` compares every agent reply against the agent's typical reply, and scores the share that stay close:
 
-<Equation formula="\text{Loudness Consistency} = \frac{\text{Agent replies within max\_shift\_db of the typical loudness}}{\text{Agent replies with decodable audio}}" />
+<Equation formula="\text{Loudness Consistency} = \frac{\text{Agent replies within max\_shift\_db of the typical loudness}}{\text{Audible agent replies with decodable audio}}" />
 
-Each reply's level is the same speech level [`LoudnessMetric`](/docs/metrics-loudness) uses: the 90th percentile of its 20 ms speech frames, so pauses don't pull it down. The agent's typical level is the median across its replies, so a single odd reply is flagged on its own rather than dragging the reply after it down too. This needs at least **three** replies to tell which one is off; with fewer, the metric is skipped. A reply with no audible sound at all is skipped; [`SilentReplyMetric`](/docs/metrics-silent-reply) reports it.
+Each reply's level is the same speech level [`LoudnessMetric`](/docs/metrics-loudness) uses: the 90th percentile of its 20 ms speech frames, so pauses don't pull it down. The agent's typical level is the median across its replies, so a single odd reply is flagged on its own rather than dragging the reply after it down too. This needs at least **three** audible replies to tell which one is off; with fewer, the metric is skipped. A reply with no audible sound at all (an overall level of −70 dBFS or lower) is skipped and left out of the median; [`SilentReplyMetric`](/docs/metrics-silent-reply) reports it.
 
 The default of **5 dB** is the change listeners clearly notice; 3 dB is only just perceptible. On real agent calls, replies stay within about 2.5 dB of each other.
 

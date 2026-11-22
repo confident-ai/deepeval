@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The failed response metric checks whether your voice agent **answered every caller line that needed an answer**, rather than letting the call end, or replying with nothing, after the caller spoke. It returns the share of caller lines that got a reply, between 0 and 1.
+
+<AudioSample name="failed-response" />
 
 ## Usage
 
@@ -64,12 +67,12 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 4,
     "turns_with_events": 1,
-    "events": [{"type": "call_ended_without_reply", "turn": 7}],
+    "events": [{"type": "call_ended_without_reply", "turn": 7, "offset_seconds": 0.0, "duration_seconds": 2.4, "start_time": 38.6}],
     "skipped": [],
 }
 ```
 
-Unlike most voice metrics, `turn` here is the zero-based position of the **caller** line that went unanswered. An event's `type` is `call_ended_without_reply` when the call ended before the agent spoke again, or `empty_reply` when the agent's next turn had neither text nor audio; `reply_turn` then points to that empty turn.
+Unlike most voice metrics, `turn` here is the zero-based position of the **caller** line that went unanswered. An event's `type` is `call_ended_without_reply` when the call ended before the agent spoke again, or `empty_reply` when the agent's next turn had neither text nor audio; `reply_turn` then points to that empty turn. When the caller line has decodable audio, the event covers its whole clip: `offset_seconds` is 0, `duration_seconds` is the clip's length, and `start_time` is where it starts on the call's clock (left out when the clip has no `Audio.start_time`).
 
 ## How Is It Calculated?
 
@@ -77,7 +80,7 @@ Unlike most voice metrics, `turn` here is the zero-based position of the **calle
 
 <Equation formula="\text{Failed Response} = \frac{\text{Caller lines followed by an agent reply}}{\text{Caller lines that needed a reply}}" />
 
-A caller line needs a reply unless it closes the call, such as "thanks", "that's all" or "bye". Several caller lines in a row share the agent's next reply, so when the call ends after them, each of them counts as unanswered. A reply only has to exist; whether it was heard is checked by [`SilentReplyMetric`](/docs/metrics-silent-reply), and how long it took by [`ResponseLatencyMetric`](/docs/metrics-response-latency). When the agent hangs up right after a question, this metric and [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end) both fail: one reports the unanswered question, the other how the call ended. A conversation with no audio on any turn is not a voice call, so the metric is skipped.
+A caller line needs a reply unless it closes the call: once any trailing periods or exclamation marks are dropped, its text ends in "bye", "goodbye", "thank you", "thanks", "that's all" or "that is all". Several caller lines in a row share the agent's next reply, so when the call ends after them, each of them counts as unanswered. A reply only has to exist; whether it was heard is checked by [`SilentReplyMetric`](/docs/metrics-silent-reply), and how long it took by [`ResponseLatencyMetric`](/docs/metrics-response-latency). When the agent hangs up right after a question, this metric and [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end) both fail: one reports the unanswered question, the other how the call ended. A conversation with no audio on any turn is not a voice call, so the metric is skipped, as it is when no caller line needed a reply.
 
 ## FAQs
 
@@ -106,7 +109,7 @@ A caller line needs a reply unless it closes the call, such as "thanks", "that's
       question: "Does it check the simulated user's audio too?",
       answer: (
         <>
-          Only to know what the caller said and whether it needed a reply. The caller's audio itself is never judged.
+          No. It reads the text of the caller's lines to know whether each one needed a reply. The caller's audio itself is never read or judged.
         </>
       ),
     },

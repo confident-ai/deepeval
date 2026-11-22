@@ -19,6 +19,26 @@ from deepeval.metrics.voice.base_metric import (
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.analysis import EDGE_MS
+from deepeval.metrics.voice.utils.events import VoiceEvent, on_call, placed
+
+# The cut is judged on the last 20 ms before the sound stops.
+CUT_EDGE_SECONDS = EDGE_MS / 1000
+
+
+def _cut_event(test_case, turn, reply) -> VoiceEvent:
+    if reply.sound_end_seconds is None:
+        return VoiceEvent(type="abrupt_cutoff", turn=turn)
+    return VoiceEvent(
+        type="abrupt_cutoff",
+        turn=turn,
+        **placed(
+            test_case.turns[turn].audio,
+            max(0.0, reply.sound_end_seconds - CUT_EDGE_SECONDS),
+            min(CUT_EDGE_SECONDS, reply.sound_end_seconds),
+        ),
+    )
+
 
 # The agent stopping because the caller spoke up is not a cut-off.
 CALLER_BEFORE_STOP_SECONDS = 1.0
@@ -51,11 +71,12 @@ def _recording_result(recording: CallActivity) -> VoiceMetricResult:
         )
         if cut is not None:
             defects.append(
-                {
-                    "type": "abrupt_cutoff",
-                    "at_seconds": round(reply.start, 2),
-                    "stopped_at_seconds": round(cut.at, 2),
-                }
+                VoiceEvent(
+                    type="abrupt_cutoff",
+                    reply_start=round(reply.start, 2),
+                    stopped_at_seconds=round(cut.at, 2),
+                    **on_call(cut.at - CUT_EDGE_SECONDS, CUT_EDGE_SECONDS),
+                )
             )
     return defect_share_result(
         [round(reply.start, 2) for reply in replies],
@@ -63,7 +84,7 @@ def _recording_result(recording: CallActivity) -> VoiceMetricResult:
         [],
         DEFECT_LABEL,
         no_eligible_reason="The agent made no sound on the call recording.",
-        event_key="at_seconds",
+        event_key="reply_start",
         timing_source=CALL_RECORDING,
     )
 
@@ -97,12 +118,10 @@ class AbruptCutoffMetric(BaseVoiceMetric):
         measurements, skipped = agent_reply_measurements(test_case)
         _, events, _ = agent_glitch_events(test_case)
         stream_cuts = {
-            event["turn"]: event
-            for event in events
-            if event["type"] == "stream_cut"
+            event.turn: event for event in events if event.type == "stream_cut"
         }
         defects = [
-            stream_cuts.get(turn, {"type": "abrupt_cutoff", "turn": turn})
+            stream_cuts.get(turn, _cut_event(test_case, turn, reply))
             for turn, reply in measurements.items()
             if (turn in stream_cuts or reply.ends_abruptly)
             and not test_case.turns[turn].interrupted

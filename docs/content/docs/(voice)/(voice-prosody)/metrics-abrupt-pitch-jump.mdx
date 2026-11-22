@@ -7,6 +7,7 @@ beta: true
 ---
 
 <MetricTagsDisplayer
+  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -14,6 +15,8 @@ beta: true
 />
 
 The abrupt pitch jump metric checks whether your voice agent's voice **cracks or squeaks**: a sudden leap in pitch, faster than a human voice can move. It returns the share of agent replies without one, between 0 and 1.
+
+<AudioSample name="abrupt-pitch-jump" />
 
 ## Usage
 
@@ -64,12 +67,15 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 4,
     "turns_with_events": 1,
-    "events": [{"type": "pitch_jump", "turn": 3, "pitch_jumps": 2}],
+    "events": [
+        {"type": "pitch_jump", "turn": 3, "offset_seconds": 1.84, "duration_seconds": 0.08, "start_time": 12.34},
+        {"type": "pitch_jump", "turn": 3, "offset_seconds": 2.16, "duration_seconds": 0.08, "start_time": 12.66},
+    ],
     "skipped": [],
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation, and `pitch_jumps` counts the jumps in that reply (a crack that goes up and comes back down counts twice). Agent replies whose audio could not be decoded, or that have no voiced speech, are listed under `skipped`.
+`turn` is the turn's zero-based position in the conversation. Each jump is its own event: `offset_seconds` and `duration_seconds` cover the two 40 ms pitch frames either side of the step, and `start_time` places them on the call's clock (left out when the clip has no `Audio.start_time`). A crack that goes up and comes back down is two events, and a reply with several jumps still counts once toward the score. Agent replies whose audio could not be decoded, or that have no voiced speech, are listed under `skipped`.
 
 ## How Is It Calculated?
 
@@ -79,7 +85,7 @@ print(metric.score_breakdown)
 
 The pitch of every 40 ms frame is tracked with the YIN method (de Cheveigné & Kawahara, 2002). A jump is a step of **6 semitones or more** from one frame to the next, with at least two steady frames on both sides. That is 150 semitones a second, about 2.5 times the fastest pitch change a speaker can make on purpose (Xu & Sun, 2002), so normal intonation never reaches it.
 
-Two kinds of tracking slips are not counted. A stretch of up to three frames sitting an octave off its neighbours is folded back, since pitch trackers often lock onto the octave for a moment. A step next to a single isolated frame is ignored, since the frame on a voicing edge is often misread. The limit is fixed: this metric reports a defect, not a matter of taste.
+Two kinds of tracking slips are not counted. A stretch of up to three frames (120 ms) sitting within 3 semitones of an octave off its neighbours is folded back, since pitch trackers often lock onto the octave for a moment. A step next to a single isolated frame is ignored, since the frame on a voicing edge is often misread. The limit is fixed: this metric reports a defect, not a matter of taste.
 
 If no agent reply has voiced speech, the metric is skipped.
 
@@ -102,7 +108,7 @@ If no agent reply has voiced speech, the metric is skipped.
       question: "Can it miss a crack of exactly one octave?",
       answer: (
         <>
-          A crack of about an octave that lasts under 120 ms looks like a
+          A crack of about an octave that lasts 120 ms or less looks like a
           tracking slip and is not counted. Longer ones, and jumps of any other
           size, are.
         </>
