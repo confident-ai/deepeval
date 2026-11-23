@@ -5,6 +5,10 @@ from typing import TYPE_CHECKING, Any, List, Optional, Union
 from deepeval.classifiers.classifier.config import EvidenceConfig
 from deepeval.classifiers.classifier.schema import EvidenceItem
 from deepeval.classifiers.classifier.steps.truncate import ShownContent
+from deepeval.classifiers.utils import (
+    MULTI_TURN_CONTENT_PARAMS,
+    SINGLE_TURN_CONTENT_PARAMS,
+)
 from deepeval.test_case import ConversationalTestCase, LLMTestCase, ToolCall
 from deepeval.test_run.api import Evidence
 
@@ -14,6 +18,35 @@ if TYPE_CHECKING:
 _MIN_EVIDENCE_QUOTE_CHARS = 8
 _WHITESPACE_RE = re.compile(r"\s+")
 _TRUNCATION_TAIL_RE = re.compile(r"""…?\[truncated\][\s"'\\]*$""")
+
+
+_TURN_FIELDS = ["content", "retrieval_context", "tools_called"]
+_TRACE_FIELDS = [
+    "input",
+    "output",
+    "error",
+    "tools_called",
+    "retrieval_context",
+    "context",
+]
+
+
+def citable_fields(
+    test_case: Union[LLMTestCase, ConversationalTestCase],
+) -> List[str]:
+    if isinstance(test_case, ConversationalTestCase):
+        return _TURN_FIELDS + [
+            param.value
+            for param in MULTI_TURN_CONTENT_PARAMS
+            if getattr(test_case, param.value, None)
+        ]
+    if test_case._trace_dict is not None:
+        return _TRACE_FIELDS
+    return [
+        param.value
+        for param in SINGLE_TURN_CONTENT_PARAMS
+        if getattr(test_case, param.value, None)
+    ]
 
 
 def verify_evidence(

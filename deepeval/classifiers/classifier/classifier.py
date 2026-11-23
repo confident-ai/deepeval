@@ -25,7 +25,10 @@ from deepeval.classifiers.classifier.schema import (
     SuggestedEvidencedClassificationResult,
     as_classification_results,
 )
-from deepeval.classifiers.classifier.steps.evidence import verify_evidence
+from deepeval.classifiers.classifier.steps.evidence import (
+    citable_fields,
+    verify_evidence,
+)
 from deepeval.classifiers.classifier.steps.label_discovery import (
     LabelPool,
     MergedLabels,
@@ -48,8 +51,6 @@ from deepeval.classifiers.classifier.steps.truncate import (
     fit_turns,
 )
 from deepeval.classifiers.utils import (
-    MULTI_TURN_CONTENT_PARAMS,
-    SINGLE_TURN_CONTENT_PARAMS,
     LabelOrigin,
     ResolvedLabel,
     SystemOneClassifySpec,
@@ -85,21 +86,6 @@ from deepeval.templates import make_template_class
 from deepeval.test_case import ConversationalTestCase, LLMTestCase
 from deepeval.test_run.api import Classification
 from deepeval.utils import get_or_create_event_loop
-
-_RESULT_SCHEMAS = {
-    (True, False): SuggestedClassificationResult,
-    (False, True): EvidencedClassificationResult,
-    (True, True): SuggestedEvidencedClassificationResult,
-}
-_EVIDENCE_TURN_FIELDS = ["content", "retrieval_context", "tools_called"]
-_EVIDENCE_TRACE_FIELDS = [
-    "input",
-    "output",
-    "error",
-    "tools_called",
-    "retrieval_context",
-    "context",
-]
 
 ClassifierTemplate = make_template_class("Classifier", feature="classifiers")
 
@@ -409,15 +395,11 @@ class Classifier(BaseClassifier):
                 None,
             )
             if existing_classification is not None:
-                existing_classification.evidence = (
-                    existing_classification.evidence + evidence
-                )[
-                    : (
-                        self.evidence_config.max_items
-                        if self.evidence_config
-                        else None
-                    )
-                ]
+                if self.evidence_config:
+                    combined = existing_classification.evidence + evidence
+                    existing_classification.evidence = combined[
+                        : self.evidence_config.max_items
+                    ]
                 continue
 
             # New classification
@@ -450,9 +432,9 @@ class Classifier(BaseClassifier):
             )
 
     def _resolve_label_from_classification_result(
-        self, classification_result: ClassificationResult, reason: Optional[str]
+        self, classification_result: ClassificationResult, reason: str
     ) -> ResolvedLabel:
-        """Resolve one structured judge answer (a result or a list entry)."""
+        # Label discovery: a declared, candidate or new label
         if self.label_discovery_config:
             return resolve_suggested_label(
                 classification_result.label,
@@ -468,43 +450,30 @@ class Classifier(BaseClassifier):
                 candidate_labels=self.candidate_labels,
                 allow_none=self.allow_none,
             )
+
+        # Declared labels only
         label = resolve_label(
             classification_result.label, self.labels, self.allow_none
         )
         if label is None:
             return ResolvedLabel(None)
-        if label == NONE_LABEL:
-            return ResolvedLabel(NONE_LABEL, LabelOrigin.NONE)
-        return ResolvedLabel(label, LabelOrigin.DECLARED)
+        origin = (
+            LabelOrigin.NONE if label == NONE_LABEL else LabelOrigin.DECLARED
+        )
+        return ResolvedLabel(label, origin)
 
-    def _unresolved_error(self, raw_label: Optional[str]) -> str:
-        if raw_label is None:
+    def _unresolved_error(self, judge_label: Optional[str]) -> str:
+        if judge_label is None:
             return "Judge returned no usable label."
-        labels = self.labels
-        if self.label_discovery_config:
-            labels = labels + self.candidate_labels
-        allowed = ", ".join(str(label) for label in labels)
+        allowed_labels = self.labels + (
+            self.candidate_labels if self.label_discovery_config else []
+        )
+        allowed = ", ".join(label.name for label in allowed_labels)
         if self.allow_none:
             allowed += ", or no classification"
         return (
-            f"Judge returned '{raw_label}', which is not one of the allowed labels "
-            f"({allowed})."
-        )
-
-    ###############################################
-    # Evidence
-    ###############################################
-
-    def _cite_evidence(self, subject: str, fields: List[str]) -> str:
-        if not self.evidence_config:
-            return ""
-        return self._get_prompt(
-            "cite_evidence",
-            subject=subject,
-            fields=", ".join(f'"{field}"' for field in fields),
-            allow_none=self.allow_none,
-            max_items=self.evidence_config.max_items,
-            max_quote_chars=self.evidence_config.max_quote_chars,
+            f"Judge returned '{judge_label}', which is not one of the "
+            f"allowed labels ({allowed})."
         )
 
     ###############################################
@@ -514,8 +483,58 @@ class Classifier(BaseClassifier):
     def _build_prompt(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
     ) -> ClassificationPrompt:
+        shown: Optional[ShownContent] = None
+
+        # Conversation
+        if isinstance(test_case, ConversationalTestCase):
+            test_case_content = construct_multi_turn_content(test_case)
+            shown = fit_turns(
+                construct_turns(test_case), self.max_content_chars
+            )
+            template, subject = "classify_multi_turn", "conversation"
+            content = f"{test_case_content}\n\nTurns:\n{shown}"
+            content_variables = {
+                "test_case_content": test_case_content,
+                "turns": shown,
+            }
+
+        # Trace
+        elif test_case._trace_dict is not None:
+            shown = fit_trace(
+                construct_trace_dict(test_case), self.max_content_chars
+            )
+            template, subject = "classify_trace", "trace"
+            content = construct_trace_content(shown)
+            content_variables = {"trace_content": content}
+
+        # Single-turn test case
+        else:
+            template, subject = "classify_single_turn", "test case"
+            content = fit_text(
+                construct_single_turn_content(test_case),
+                self.max_content_chars,
+            )
+            content_variables = {"test_case_content": content}
+
+        # Prompt
+        evidence_fields = citable_fields(test_case)
+        return ClassificationPrompt(
+            text=self._get_prompt(
+                template,
+                **content_variables,
+                **self._shared_prompt_variables(subject, evidence_fields),
+            ),
+            subject=subject,
+            content=content,
+            evidence_fields=evidence_fields,
+            shown=shown,
+        )
+
+    def _shared_prompt_variables(
+        self, subject: str, evidence_fields: List[str]
+    ) -> Dict[str, Union[str, bool]]:
         context = self.classification_context
-        shared_variables = {
+        return {
             "labels": format_labels(self.labels),
             "allow_none": self.allow_none,
             "multi_label": self.multi_label,
@@ -531,6 +550,18 @@ class Classifier(BaseClassifier):
             ),
             "reason_rules": self._get_prompt("reason_rules"),
             "guidance": self._get_prompt("guidance"),
+            "cite_evidence": (
+                self._get_prompt(
+                    "cite_evidence",
+                    subject=subject,
+                    fields=", ".join(f'"{field}"' for field in evidence_fields),
+                    allow_none=self.allow_none,
+                    max_items=self.evidence_config.max_items,
+                    max_quote_chars=self.evidence_config.max_quote_chars,
+                )
+                if self.evidence_config
+                else ""
+            ),
             "suggest_labels": (
                 self._get_prompt(
                     "suggest_labels",
@@ -547,71 +578,6 @@ class Classifier(BaseClassifier):
                 else ""
             ),
         }
-        if isinstance(test_case, ConversationalTestCase):
-            evidence_fields = _EVIDENCE_TURN_FIELDS + [
-                param.value
-                for param in MULTI_TURN_CONTENT_PARAMS
-                if getattr(test_case, param.value, None)
-            ]
-            shared_variables["cite_evidence"] = self._cite_evidence(
-                "conversation", evidence_fields
-            )
-            content = construct_multi_turn_content(test_case)
-            turns = fit_turns(
-                construct_turns(test_case), self.max_content_chars
-            )
-            return ClassificationPrompt(
-                text=self._get_prompt(
-                    "classify_multi_turn",
-                    test_case_content=content,
-                    turns=turns,
-                    **shared_variables,
-                ),
-                subject="conversation",
-                content=f"{content}\n\nTurns:\n{turns}",
-                evidence_fields=evidence_fields,
-                shown=turns,
-            )
-        if test_case._trace_dict is not None:
-            shared_variables["cite_evidence"] = self._cite_evidence(
-                "trace", _EVIDENCE_TRACE_FIELDS
-            )
-            trace = fit_trace(
-                construct_trace_dict(test_case), self.max_content_chars
-            )
-            trace_content = construct_trace_content(trace)
-            return ClassificationPrompt(
-                text=self._get_prompt(
-                    "classify_trace",
-                    trace_content=trace_content,
-                    **shared_variables,
-                ),
-                subject="trace",
-                content=trace_content,
-                evidence_fields=_EVIDENCE_TRACE_FIELDS,
-                shown=trace,
-            )
-        evidence_fields = [
-            param.value
-            for param in SINGLE_TURN_CONTENT_PARAMS
-            if getattr(test_case, param.value, None)
-        ]
-        shared_variables["cite_evidence"] = self._cite_evidence(
-            "test case", evidence_fields
-        )
-        test_case_content = fit_text(
-            construct_single_turn_content(test_case), self.max_content_chars
-        )
-        return ClassificationPrompt(
-            text=self._get_prompt(
-                "classify_single_turn",
-                test_case_content=test_case_content,
-                **shared_variables,
-            ),
-            subject="test case",
-            content=test_case_content,
-            evidence_fields=evidence_fields,
-        )
 
     def _experimental_system_one_spec(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
@@ -648,15 +614,17 @@ class Classifier(BaseClassifier):
     def _choose_output_schema(
         self,
     ) -> Optional[Type[Union[ClassificationResult, ClassificationResults]]]:
-        schema = _RESULT_SCHEMAS.get(
-            (
-                self.label_discovery_config is not None,
-                self.evidence_config is not None,
-            )
-        )
-        if self.multi_label:
-            return LABEL_LIST_SCHEMAS[schema or ClassificationResult]
-        return schema
+        if self.label_discovery_config and self.evidence_config:
+            schema = SuggestedEvidencedClassificationResult
+        elif self.label_discovery_config:
+            schema = SuggestedClassificationResult
+        elif self.evidence_config:
+            schema = EvidencedClassificationResult
+        elif self.multi_label:
+            schema = ClassificationResult
+        else:
+            return None
+        return LABEL_LIST_SCHEMAS[schema] if self.multi_label else schema
 
     def _check_test_case(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]
