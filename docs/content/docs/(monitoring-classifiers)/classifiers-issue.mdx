@@ -50,16 +50,18 @@ There are **ONE** mandatory and **ELEVEN** optional parameters when creating an 
 
 - `name`: a string that identifies the classifier.
 - [Optional] `labels`: a list of `Label`s or plain strings naming the issues to look for. May be left empty when a `label_discovery_config` is set. Defaulted to `[]`.
-- [Optional] `description`: a string saying what the classifier looks for. Defaulted to `None`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/guides/guides-using-custom-llms) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `include_reason`: a boolean which when set to `True`, includes a reason for each issue. Defaulted to `True`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `classify()` method](/docs/classifiers-introduction#using-classifiers-async). Defaulted to `True`.
 - [Optional] `classification_template`: a subclass of `IssueClassifierTemplate` used to [override the default prompts](#customize-your-template). Defaulted to `IssueClassifierTemplate`.
+- [Optional] `description`: a string saying what the classifier looks for. Defaulted to `None`.
 - [Optional] `max_content_chars`: the most characters of content sent to the judge. Defaulted to `100000`.
 - [Optional] `evidence_config`: an [`EvidenceConfig`](/docs/classifiers-custom#evidence). Defaulted to `EvidenceConfig()`.
 - [Optional] `review_config`: a [`ReviewConfig`](/docs/classifiers-custom#review); its `min_confidence` is the issue threshold. Defaulted to `ReviewConfig()`.
 - [Optional] `label_discovery_config`: a [`LabelDiscoveryConfig`](/docs/classifiers-custom#label-discovery) to find issues you have not named yet. Defaulted to `None`.
 - [Optional] `classification_context`: a [`ClassificationContext`](/docs/classifiers-custom#classification-context). With an `app_description`, behaviour the application was designed to have is not flagged. Defaulted to `None`.
+
+Every parameter from `description` onwards is keyword-only.
 
 An `IssueClassifier` always returns every issue it finds (`multi_label=True`), and returns none for a correct, complete response (`allow_none=True`).
 
@@ -83,22 +85,17 @@ Discovered issues are named in 3 to 7 words that say exactly what happened, such
 An `IssueClassifier` runs the same steps as a [`Classifier`](/docs/classifiers-custom#how-does-it-work), with three differences:
 
 - **Issue guidance**: the judge is told to flag only failures on the agent's side, never the user's behaviour, and to return nothing for a correct, complete response.
-- **Issue review**: each issue is re-judged for real harm, and kept only if harm is shown, the agent was not told to do it, and its confidence is at least `min_confidence`.
-- **Truncation check**: an issue whose only evidence is the `…[truncated]` marker added to shortened content is dropped, since the marker is not the agent's output.
+- **Issue review**: each issue is re-judged for real harm, and kept only if its confidence is at least `min_confidence`.
 
 ### Issue review
 
-The review reads the content on its own and fills in what happened, a `harm` passage showing someone got something wrong, broken or not delivered, and any `instruction` that told the agent to behave that way:
+The review reads the content on its own and fills in what happened, a `harm` passage showing someone got something wrong, broken or not delivered, and any `instruction` that told the agent to behave that way. It then scores its `confidence` from those: low when no harm is shown or the agent was told to do it. Only the confidence decides:
 
 ```mermaid
 flowchart LR
-    issue[Each issue] --> review[Issue review]
-    review --> harm{Harm shown?}
-    harm -- no --> drop[Dropped]
-    harm -- yes --> told{Agent was told<br/>to do it?}
-    told -- yes --> drop
-    told -- no --> conf{confidence >=<br/>min_confidence?}
-    conf -- no --> drop
+    issue[Each issue] --> review[Issue review:<br/>what happened, harm,<br/>instruction]
+    review --> conf{confidence >=<br/>min_confidence?}
+    conf -- no --> drop[Dropped]
     conf -- yes --> keep[Kept]
 ```
 
@@ -108,7 +105,7 @@ A dropped issue explains itself in `reason`, for example: `Proposed "Wrong Refun
 
 `IssueClassifierTemplate` overrides these prompts of `ClassifierTemplate` and inherits the rest:
 
-- `issue_guidance()`: the paragraph that tells the judge what counts as an issue.
+- `guidance()`: the paragraph that tells the judge what counts as an issue.
 - `label_naming_rule()`: how discovered issues are named.
 - `review_label(subject: str, label: str, content: str, app_description: str, app_note: str)`: the issue review, which must keep asking for JSON with `what_happened`, `harm`, `instruction`, `confidence` and `reason` fields.
 

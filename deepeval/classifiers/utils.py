@@ -16,14 +16,6 @@ from typing import (
     Union,
 )
 
-from pydantic import BaseModel
-
-from deepeval.classifiers.classifier.steps.truncate import (
-    cap_field,
-    select_spans,
-    serialize,
-)
-
 from deepeval.classifiers.base_classifier import (
     NONE_LABEL,
     BaseClassifier,
@@ -179,40 +171,89 @@ _ABSENCE_LABEL_RE = re.compile(
 )
 
 
+class LabelOrigin(str, Enum):
+    DECLARED = "declared"
+    CANDIDATE = "candidate"
+    NEW = "new"
+    NONE = "none"
+
+
+@dataclass(frozen=True)
+class ResolvedLabel:
+    """A judge answer mapped onto a label.
+
+    ``name`` is ``None`` when the answer matched nothing (an error for the
+    caller to record). ``description`` is set only for candidate and new
+    labels, since declared labels already carry their own.
+    """
+
+    name: Optional[str]
+    origin: Optional[LabelOrigin] = None
+    description: Optional[str] = None
+
+    @property
+    def unresolved(self) -> bool:
+        return self.name is None
+
+    @property
+    def is_none(self) -> bool:
+        return self.origin is LabelOrigin.NONE
+
+
 def resolve_suggested_label(
     raw: Optional[str],
+    *,
     description: Optional[str],
     reason: Optional[str],
     labels: List[Label],
     candidate_labels: List[Label],
     allow_none: bool,
-) -> Tuple[Optional[str], Optional[str]]:
-    """Map a judge answer that may name a new label onto ``(label, description)``.
+) -> ResolvedLabel:
+    """Map a judge answer that may name a new label onto a ``ResolvedLabel``.
 
-    Existing labels win, then candidates (returned with their description),
-    then a new label with the judge's description. A name that only says
-    nothing applies is treated as ``NONE``.
+    Declared labels win, then candidates (with their description), then a new
+    label with the judge's description. A name that only says nothing applies
+    is treated as ``NONE``.
     """
     existing = resolve_label(raw, labels, allow_none)
-    if existing is not None or raw is None:
-        return existing, None
+    if existing == NONE_LABEL:
+        return ResolvedLabel(NONE_LABEL, LabelOrigin.NONE)
+    if existing is not None:
+        return ResolvedLabel(existing, LabelOrigin.DECLARED)
+    if raw is None:
+        return ResolvedLabel(None)
     name = str(raw).strip()
     if not name or name.upper() == NONE_LABEL or is_absence_label(name):
-        return (NONE_LABEL, None) if allow_none else (None, None)
+        return (
+            ResolvedLabel(NONE_LABEL, LabelOrigin.NONE)
+            if allow_none
+            else ResolvedLabel(None)
+        )
     candidate = next(
         (c for c in candidate_labels if c.name.lower() == name.lower()), None
     )
     if candidate is not None:
-        return candidate.name, candidate.description
+        return ResolvedLabel(
+            candidate.name, LabelOrigin.CANDIDATE, candidate.description
+        )
     if description and description.strip():
-        return name, description.strip()
+        return ResolvedLabel(name, LabelOrigin.NEW, description.strip())
+    return ResolvedLabel(
+        name, LabelOrigin.NEW, _fallback_description(name, reason)
+    )
+
+
+def _fallback_description(name: str, reason: Optional[str]) -> str:
     detail = (reason or "").strip().rstrip(
         "."
     ) or f'the evidence shows "{name}"'
+    # Lowercase the first letter to fit "Cases where ...", unless it starts an
+    # acronym such as "API".
+    if not detail[1:2].isupper():
+        detail = detail[:1].lower() + detail[1:]
     return (
-        name,
-        f"Cases where {detail[:1].lower() + detail[1:]}. "
-        "Does not apply when supporting evidence is absent.",
+        f"Cases where {detail}. "
+        "Does not apply when supporting evidence is absent."
     )
 
 
@@ -264,7 +305,7 @@ _TURN_PARAMS = [
 ]
 
 
-def _is_populated(value) -> bool:
+def is_populated(value) -> bool:
     if value is None:
         return False
     if isinstance(value, (str, list, dict)) and len(value) == 0:
@@ -276,7 +317,7 @@ def construct_single_turn_content(test_case: LLMTestCase) -> str:
     text = ""
     for param, display in SINGLE_TURN_CONTENT_PARAMS.items():
         value = getattr(test_case, param.value, None)
-        if not _is_populated(value):
+        if not is_populated(value):
             continue
         if isinstance(value, list) and value and isinstance(value[0], ToolCall):
             value = [repr(tool) for tool in value]
@@ -288,75 +329,11 @@ def construct_single_turn_content(test_case: LLMTestCase) -> str:
     return text.rstrip()
 
 
-_TRACE_FIELDS = {
-    "name": "name",
-    "input": "input",
-    "actual_output": "output",
-    "expected_output": "expectedOutput",
-    "retrieval_context": "retrievalContext",
-    "context": "context",
-    "tools_called": "toolsCalled",
-    "expected_tools": "expectedTools",
-}
-_CAPPED_SPAN_FIELDS = {
-    "error": "error",
-    "input": "input",
-    "output": "output",
-    "tools_called": "toolsCalled",
-}
-
-
-def construct_trace_content(content: Union[Dict[str, Any], str]) -> str:
-    return content if isinstance(content, str) else serialize(content)
-
-
-def construct_trace_dict(test_case: LLMTestCase) -> Dict[str, Any]:
-    trace = {
-        key: _jsonable_field(getattr(test_case, attr, None))
-        for attr, key in _TRACE_FIELDS.items()
-        if _is_populated(getattr(test_case, attr, None))
-    }
-    spans = select_spans(_flatten_spans(test_case._trace_dict, []))
-    if spans:
-        trace["spans"] = spans
-    return trace
-
-
-def _flatten_spans(span: Optional[Dict], spans: List[Dict]) -> List[Dict]:
-    if not isinstance(span, dict):
-        return spans
-    entry: Dict[str, Any] = {
-        "name": span.get("name") or "",
-        "type": _jsonable_field(span.get("type")),
-        "status": "ERRORED" if span.get("error") else "SUCCESS",
-    }
-    for attr, key in _CAPPED_SPAN_FIELDS.items():
-        capped = cap_field(_jsonable_field(span.get(attr)))
-        if capped is not None:
-            entry[key] = capped
-    spans.append(entry)
-    for child in span.get("children") or []:
-        _flatten_spans(child, spans)
-    return spans
-
-
-def _jsonable_field(value: Any) -> Any:
-    if isinstance(value, Enum):
-        return value.value
-    if isinstance(value, BaseModel):
-        return _jsonable(value.model_dump(exclude_none=True))
-    if isinstance(value, (list, tuple)):
-        return [_jsonable_field(item) for item in value]
-    if isinstance(value, dict):
-        return {str(k): _jsonable_field(v) for k, v in value.items()}
-    return _jsonable(value)
-
-
 def construct_multi_turn_content(test_case: ConversationalTestCase) -> str:
     text = ""
     for param, display in MULTI_TURN_CONTENT_PARAMS.items():
         value = getattr(test_case, param.value, None)
-        if not _is_populated(value):
+        if not is_populated(value):
             continue
         text += f"{display}:\n{value}\n\n"
     return text.rstrip()
@@ -501,7 +478,7 @@ def _experimental_system_one_fields(test_case, params) -> Dict:
     fields: Dict = {}
     for param in params:
         value = getattr(test_case, param.value, None)
-        if not _is_populated(value):
+        if not is_populated(value):
             continue
         if isinstance(value, list) and value and isinstance(value[0], ToolCall):
             value = [repr(tool) for tool in value]

@@ -27,7 +27,6 @@ from deepeval.metrics.conversational_dag import (
 from deepeval.metrics.dag.utils import is_valid_dag_from_roots
 from deepeval.test_case import SingleTurnParams, MultiTurnParams
 
-
 # ----------------------------------------------------------------------------
 # Single-turn structural round-trips (no LLM dependency)
 # ----------------------------------------------------------------------------

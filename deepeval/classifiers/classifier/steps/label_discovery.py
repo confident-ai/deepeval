@@ -1,6 +1,4 @@
 import json
-import logging
-import re
 import threading
 from typing import (
     TYPE_CHECKING,
@@ -9,13 +7,15 @@ from typing import (
     List,
     Optional,
     Sequence,
-    Set,
     Tuple,
     Union,
 )
 
-from deepeval.classifiers.base_classifier import NONE_LABEL, Label
+import numpy as np
+
+from deepeval.classifiers.base_classifier import Label
 from deepeval.classifiers.classifier.schema import LabelMergeResult
+from deepeval.classifiers.utils import LabelOrigin
 from deepeval.metrics.utils.generation import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
@@ -24,13 +24,30 @@ from deepeval.metrics.utils.generation import (
 if TYPE_CHECKING:
     from deepeval.classifiers.classifier.classifier import Classifier
 
-logger = logging.getLogger(__name__)
-
 _MERGE_EXTRACTION = dict(
     schema_cls=LabelMergeResult,
     extract_schema=lambda result: result.same_as,
     extract_json=lambda data: data.get("same_as"),
 )
+
+
+class LabelPool:
+    def __init__(self, labels: Sequence[Label] = ()):
+        self._labels: List[Label] = list(labels)
+        self.vectors: Dict[str, List[float]] = {}
+        self._lock = threading.Lock()
+
+    @property
+    def labels(self) -> List[Label]:
+        with self._lock:
+            return list(self._labels)
+
+    def add(self, label: Label, seen: int) -> List[Label]:
+        with self._lock:
+            additions = self._labels[seen:]
+            if not additions:
+                self._labels.append(label)
+            return list(additions)
 
 
 def merge_new_labels(classifier: "Classifier", result: Any) -> Dict[str, Label]:
@@ -57,47 +74,44 @@ async def a_merge_new_labels(
     }
 
 
-def merged_label(
-    classifier: "Classifier", match: Label
-) -> Tuple[str, Optional[str]]:
-    if any(label.name == match.name for label in classifier.labels):
-        return match.name, None
-    return match.name, match.description
-
-
-def is_new_label(classifier: "Classifier", label: str) -> bool:
-    return (
-        classifier.label_discovery_config is not None
-        and same_name(label, classifier.label_pool.labels) is None
-    )
-
-
-class LabelPool:
-    def __init__(self, labels: Sequence[Label] = ()):
-        self._labels: List[Label] = list(labels)
-        self.vectors: Dict[str, List[float]] = {}
-        self._lock = threading.Lock()
-
-    @property
-    def labels(self) -> List[Label]:
-        with self._lock:
-            return list(self._labels)
-
-    def add(self, label: Label, seen: int) -> List[Label]:
-        with self._lock:
-            additions = self._labels[seen:]
-            if not additions:
-                self._labels.append(label)
-            return list(additions)
-
-
 def _merge(classifier: "Classifier", proposed: Label, reason: str) -> Label:
-    candidates, seen = _merge_targets(classifier)
+    pool = classifier.label_pool
+    labels = pool.labels
+    declared = {label.name for label in classifier.labels}
+    candidates = [
+        *classifier.labels,
+        *(label for label in labels if label.name not in declared),
+    ]
+    seen = len(labels)
     while True:
-        match = _find_match(classifier, proposed, reason, candidates)
+        match = same_name(proposed.name, candidates)
+        if match is None and candidates:
+            missing = [
+                label.name
+                for label in [proposed, *candidates]
+                if label.name not in pool.vectors
+            ]
+            if missing:
+                pool.vectors.update(
+                    zip(
+                        missing,
+                        classifier.label_discovery_config.embedding_model.embed_texts(
+                            missing
+                        ),
+                    )
+                )
+            shortlist = _shortlist(classifier, proposed, candidates)
+            if isinstance(shortlist, Label):
+                return shortlist
+            same_as = generate_with_schema_and_extract(
+                metric=classifier,
+                prompt=_merge_prompt(classifier, proposed, reason, shortlist),
+                **_MERGE_EXTRACTION,
+            )
+            match = next((l for l in shortlist if l.name == same_as), None)
         if match is not None:
             return match
-        additions = classifier.label_pool.add(proposed, seen)
+        additions = pool.add(proposed, seen)
         if not additions:
             return proposed
         candidates, seen = additions, seen + len(additions)
@@ -106,91 +120,64 @@ def _merge(classifier: "Classifier", proposed: Label, reason: str) -> Label:
 async def _a_merge(
     classifier: "Classifier", proposed: Label, reason: str
 ) -> Label:
-    candidates, seen = _merge_targets(classifier)
+    pool = classifier.label_pool
+    labels = pool.labels
+    declared = {label.name for label in classifier.labels}
+    candidates = [
+        *classifier.labels,
+        *(label for label in labels if label.name not in declared),
+    ]
+    seen = len(labels)
     while True:
-        match = await _a_find_match(classifier, proposed, reason, candidates)
+        match = same_name(proposed.name, candidates)
+        if match is None and candidates:
+            missing = [
+                label.name
+                for label in [proposed, *candidates]
+                if label.name not in pool.vectors
+            ]
+            if missing:
+                pool.vectors.update(
+                    zip(
+                        missing,
+                        await classifier.label_discovery_config.embedding_model.a_embed_texts(
+                            missing
+                        ),
+                    )
+                )
+            shortlist = _shortlist(classifier, proposed, candidates)
+            if isinstance(shortlist, Label):
+                return shortlist
+            same_as = await a_generate_with_schema_and_extract(
+                metric=classifier,
+                prompt=_merge_prompt(classifier, proposed, reason, shortlist),
+                **_MERGE_EXTRACTION,
+            )
+            match = next((l for l in shortlist if l.name == same_as), None)
         if match is not None:
             return match
-        additions = classifier.label_pool.add(proposed, seen)
+        additions = pool.add(proposed, seen)
         if not additions:
             return proposed
         candidates, seen = additions, seen + len(additions)
 
 
-def _find_match(
-    classifier: "Classifier",
-    proposed: Label,
-    reason: str,
-    candidates: List[Label],
-) -> Optional[Label]:
-    exact = same_name(proposed.name, candidates)
-    if exact is not None or not candidates:
-        return exact
-    shortlist = _shortlist(
-        classifier,
-        proposed,
-        candidates,
-        _embed(classifier, [proposed, *candidates]),
-    )
-    if isinstance(shortlist, Label):
-        return shortlist
-    same_as = generate_with_schema_and_extract(
-        metric=classifier,
-        prompt=_merge_prompt(classifier, proposed, reason, shortlist),
-        **_MERGE_EXTRACTION,
-    )
-    return next((label for label in shortlist if label.name == same_as), None)
-
-
-async def _a_find_match(
-    classifier: "Classifier",
-    proposed: Label,
-    reason: str,
-    candidates: List[Label],
-) -> Optional[Label]:
-    exact = same_name(proposed.name, candidates)
-    if exact is not None or not candidates:
-        return exact
-    shortlist = _shortlist(
-        classifier,
-        proposed,
-        candidates,
-        await _a_embed(classifier, [proposed, *candidates]),
-    )
-    if isinstance(shortlist, Label):
-        return shortlist
-    same_as = await a_generate_with_schema_and_extract(
-        metric=classifier,
-        prompt=_merge_prompt(classifier, proposed, reason, shortlist),
-        **_MERGE_EXTRACTION,
-    )
-    return next((label for label in shortlist if label.name == same_as), None)
-
-
 def _shortlist(
-    classifier: "Classifier",
-    proposed: Label,
-    candidates: List[Label],
-    vectors: Optional[List[List[float]]],
+    classifier: "Classifier", proposed: Label, candidates: List[Label]
 ) -> Union[Label, List[Label]]:
     config = classifier.label_discovery_config
-    if vectors is None:
-        words = _words(proposed.name)
-        return sorted(
-            candidates,
-            key=lambda label: len(words & _words(label.name)),
-            reverse=True,
-        )[: config.top_k]
-    ranked = sorted(
-        zip(
-            (_cosine(vectors[0], vector) for vector in vectors[1:]), candidates
-        ),
-        key=lambda pair: pair[0],
-        reverse=True,
+    vectors = classifier.label_pool.vectors
+    matrix = np.array(
+        [vectors[label.name] for label in [proposed, *candidates]], dtype=float
     )
-    if ranked[0][0] >= config.similarity_threshold:
-        return ranked[0][1]
-    return [label for _, label in ranked[: config.top_k]]
+    norms = np.linalg.norm(matrix, axis=1)
+    norms[norms == 0] = 1
+    unit = matrix / norms[:, None]
+    scores = unit[1:] @ unit[0]
+    order = np.argsort(-scores)
+    if scores[order[0]] >= config.similarity_threshold:
+        return candidates[order[0]]
+    return [candidates[i] for i in order[: config.top_k]]
 
 
 def _proposed_new_labels(
@@ -200,18 +187,13 @@ def _proposed_new_labels(
         return []
     new = []
     for item in result.labels if classifier.multi_label else [result]:
-        label, description = classifier._resolve(
-            item.label,
-            item.reason,
-            getattr(item, "new_label_description", None),
-        )
+        resolved = classifier._resolve_item(item)
         if (
-            label not in (None, NONE_LABEL)
-            and description is not None
-            and same_name(label, classifier.label_pool.labels) is None
-            and all(label != name for name, _, _ in new)
+            resolved.origin is LabelOrigin.NEW
+            and same_name(resolved.name, classifier.label_pool.labels) is None
+            and all(resolved.name != name for name, _, _ in new)
         ):
-            new.append((label, description, item.reason))
+            new.append((resolved.name, resolved.description, item.reason))
     cap = classifier.label_discovery_config.max_new_labels
     return new if cap is None else new[:cap]
 
@@ -242,59 +224,8 @@ def _merge_prompt(
     )
 
 
-def _embed(
-    classifier: "Classifier", labels: List[Label]
-) -> Optional[List[List[float]]]:
-    model = classifier.label_discovery_config.embedding_model
-    if model is None:
-        return None
-    vectors = classifier.label_pool.vectors
-    missing = [label.name for label in labels if label.name not in vectors]
-    if missing:
-        try:
-            vectors.update(zip(missing, model.embed_texts(missing)))
-        except Exception as error:
-            logger.warning(f"Label embedding failed; comparing names: {error}")
-            return None
-    return [vectors[label.name] for label in labels]
-
-
-async def _a_embed(
-    classifier: "Classifier", labels: List[Label]
-) -> Optional[List[List[float]]]:
-    model = classifier.label_discovery_config.embedding_model
-    if model is None:
-        return None
-    vectors = classifier.label_pool.vectors
-    missing = [label.name for label in labels if label.name not in vectors]
-    if missing:
-        try:
-            vectors.update(zip(missing, await model.a_embed_texts(missing)))
-        except Exception as error:
-            logger.warning(f"Label embedding failed; comparing names: {error}")
-            return None
-    return [vectors[label.name] for label in labels]
-
-
-def _merge_targets(classifier: "Classifier") -> Tuple[List[Label], int]:
-    pool = classifier.label_pool.labels
-    names = {label.name for label in classifier.labels}
-    targets = [*classifier.labels, *(l for l in pool if l.name not in names)]
-    return targets, len(pool)
-
-
 def same_name(name: str, labels: Sequence[Label]) -> Optional[Label]:
     lowered = name.strip().lower()
     return next(
         (label for label in labels if label.name.lower() == lowered), None
     )
-
-
-def _cosine(a: List[float], b: List[float]) -> float:
-    dot = sum(x * y for x, y in zip(a, b))
-    norm = (sum(x * x for x in a) ** 0.5) * (sum(y * y for y in b) ** 0.5)
-    return dot / norm if norm else 0.0
-
-
-def _words(name: str) -> Set[str]:
-    return set(re.findall(r"\w+", name.lower()))

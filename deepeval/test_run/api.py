@@ -27,7 +27,8 @@ class Classification(BaseModel):
     """Classifier counterpart of ``MetricData``: one label a classifier gave
     one test case, or a single ``label=None`` entry when it gave none.
     ``success`` is ``None`` when the test case declared no expected label for
-    this classifier.
+    this classifier. ``confidence`` is the review step's score for the label,
+    set only when the classifier has a ``review_config``.
 
     Local-only: classifications live on ``TestResult`` and are never attached
     to the API test cases that are uploaded to Confident AI."""

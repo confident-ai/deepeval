@@ -89,33 +89,25 @@ def test_issue_prompts_add_guidance_and_cite_evidence():
     )
 
 
-def test_review_drops_issues_without_harm_or_that_were_instructed():
-    no_harm = {
-        "harm": "",
-        "confidence": 0.9,
-        "reason": "The customer still got help.",
-    }
+def test_review_keeps_issues_by_confidence_alone():
+    no_harm = {"harm": "", "confidence": 0.9, "reason": "Wrong window."}
+    classifier, _ = _classify([WRONG_WINDOW], {"Wrong Refund Window": no_harm})
+    assert classifier.label == "Wrong Refund Window"
+
     instructed = {
         "harm": "x",
         "instruction": "Always say 7 days.",
-        "confidence": 0.9,
+        "confidence": 0.3,
         "reason": "Scripted.",
     }
-    for review, reason in [
-        (no_harm, "The customer still got help."),
-        (
-            instructed,
-            'The agent was told to do this: "Always say 7 days". Scripted.',
-        ),
-    ]:
-        classifier, _ = _classify(
-            [WRONG_WINDOW], {"Wrong Refund Window": review}
-        )
-        assert classifier.classifications == [] and classifier.label is None
-        assert (
-            classifier.reason
-            == f'Proposed "Wrong Refund Window" but review dropped it. {reason}'
-        )
+    classifier, _ = _classify(
+        [WRONG_WINDOW], {"Wrong Refund Window": instructed}
+    )
+    assert classifier.classifications == [] and classifier.label is None
+    assert classifier.reason == (
+        'Proposed "Wrong Refund Window" but review dropped it. '
+        'The agent was told to do this: "Always say 7 days". Scripted.'
+    )
 
 
 def test_review_uses_min_confidence():
@@ -132,16 +124,19 @@ def test_review_uses_min_confidence():
     assert classifier.classifications == []
 
 
-def test_issues_citing_only_the_truncation_marker_are_dropped():
+def test_truncation_marker_is_stripped_from_quotes():
     truncated = {
         **WRONG_WINDOW,
         "evidence": [
-            {"field": "actual_output", "quote": "Refunds close…[truncated]"}
+            {"field": "actual_output", "quote": "Refunds close…[truncated]"},
+            {"field": "actual_output", "quote": "…[truncated]"},
         ],
     }
-    classifier, model = _classify([truncated], {}, review_config=None)
-    assert classifier.classifications == [] and classifier.error is None
-    assert "[truncated]" in classifier.reason
+    classifier, _ = _classify([truncated], {}, review_config=None)
+    [issue] = classifier.classifications
+    assert [(e.quote, e.matched) for e in issue.evidence] == [
+        ("Refunds close", True)
+    ]
 
 
 def test_discovered_issue_labels_use_the_issue_naming_rule_and_cap():

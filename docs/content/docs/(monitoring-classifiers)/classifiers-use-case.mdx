@@ -32,7 +32,7 @@ Which prints:
 Cancel Subscription 0.91
 ```
 
-It takes the same parameters as a [`Classifier`](/docs/classifiers-custom#usage), with these defaults:
+It takes the same parameters as a [`Classifier`](/docs/classifiers-custom#usage), except `system_one_model`, `eval_mode` and `multi_label`, with these defaults:
 
 - `evidence_config`: `EvidenceConfig()`, so each label cites the passages that support it.
 - `review_config`: `ReviewConfig()`, so each label is verified by the use-case review and dropped below `min_confidence`.

@@ -146,10 +146,7 @@ def create_classifications(
     error belong to the run, so only the first carries them."""
     success = classifier.is_successful(expected_label)
     assigned = (
-        [
-            c.model_copy(deep=True)
-            for c in getattr(classifier, "classifications", [])
-        ]
+        [c.model_copy(deep=True) for c in classifier.classifications or []]
         if classifier.error is None
         else []
     )

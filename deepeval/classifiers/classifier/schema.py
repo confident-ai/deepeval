@@ -66,6 +66,9 @@ class LabelReview(BaseModel):
     confidence: float = Field(ge=0, le=1)
     reason: str = ""
 
+    def explanation(self) -> str:
+        return self.reason
+
 
 def _label_list(item: Type[ClassificationResult]) -> Type[BaseModel]:
     class LabelList(BaseModel):

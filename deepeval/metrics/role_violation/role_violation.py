@@ -33,7 +33,6 @@ from deepeval.metrics.role_violation.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 RoleViolationTemplate = make_template_class("RoleViolationMetric")
 
 

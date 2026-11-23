@@ -1,4 +1,5 @@
 import json
+
 import pytest
 
 from deepeval.classifiers import Classifier, Label, LabelDiscoveryConfig

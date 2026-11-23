@@ -1,5 +1,5 @@
-from deepeval.dataset.expectations import expectation_evidence
 import dataclasses
+from deepeval.dataset.expectations import expectation_evidence
 import logging
 import sys
 import json
@@ -67,9 +67,6 @@ class MetricConfiguration(BaseModel):
 class CachedMetricData(BaseModel):
     metric_data: MetricData
     metric_configuration: MetricConfiguration
-
-
-_DEFAULT_MAX_CONTENT_CHARS = 100_000
 
 
 def _config_dict(config: Any) -> Optional[Dict[str, Any]]:
@@ -443,7 +440,7 @@ class Cache:
         cached row are stale by design and must be recomputed by the caller."""
         if not cached_test_case:
             return None
-        if getattr(classifier, "label_discovery_config", None) is not None:
+        if classifier.label_discovery_config is not None:
             return None
         configuration = Cache.create_classifier_configuration(classifier)
         for cached in cached_test_case.cached_classifications:
@@ -474,25 +471,27 @@ class Cache:
     def _classifier_options(
         classifier: "BaseClassifier",
     ) -> Optional[Dict[str, Any]]:
+        from deepeval.classifiers.classifier.steps.truncate import (
+            MAX_CONTENT_CHARS,
+        )
+
         options = {
-            "multi_label": getattr(classifier, "multi_label", False) or None,
-            "max_content_chars": getattr(classifier, "max_content_chars", None),
-            "evidence_config": _config_dict(
-                getattr(classifier, "evidence_config", None)
+            "multi_label": classifier.multi_label or None,
+            "max_content_chars": (
+                None
+                if classifier.max_content_chars == MAX_CONTENT_CHARS
+                else classifier.max_content_chars
             ),
-            "review_config": _config_dict(
-                getattr(classifier, "review_config", None)
-            ),
-            "description": getattr(classifier, "description", None),
+            "evidence_config": _config_dict(classifier.evidence_config),
+            "review_config": _config_dict(classifier.review_config),
+            "description": classifier.description,
             "classification_context": _config_dict(
-                getattr(classifier, "classification_context", None)
+                classifier.classification_context
             ),
         }
         options = {
             key: value for key, value in options.items() if value is not None
         }
-        if options.get("max_content_chars") == _DEFAULT_MAX_CONTENT_CHARS:
-            options.pop("max_content_chars")
         return options or None
 
     @staticmethod

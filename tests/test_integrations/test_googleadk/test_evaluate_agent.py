@@ -35,7 +35,6 @@ from tests.test_integrations.test_googleadk.apps.googleadk_eval_app import (
     init_evals_googleadk,
 )
 
-
 pytestmark = pytest.mark.skipif(
     not os.getenv("GOOGLE_API_KEY") or not os.getenv("OPENAI_API_KEY"),
     reason=(

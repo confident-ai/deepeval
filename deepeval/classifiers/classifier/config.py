@@ -15,24 +15,21 @@ class LabelDiscoveryConfig:
     max_new_labels: Optional[int] = None
 
     def __post_init__(self):
-        if isinstance(self.embedding_model, str):
-            self.embedding_model = initialize_embedding_model(
-                self.embedding_model
-            )
+        self.embedding_model = initialize_embedding_model(self.embedding_model)
 
 
-@dataclass
+@dataclass(frozen=True)
 class EvidenceConfig:
     max_items: int = 3
     max_quote_chars: int = 300
 
 
-@dataclass
+@dataclass(frozen=True)
 class ReviewConfig:
     min_confidence: float = 0.6
 
 
-@dataclass
+@dataclass(frozen=True)
 class ClassificationContext:
     app_description: Optional[str] = None
     trace_description: Optional[str] = None

@@ -25,7 +25,6 @@ from deepeval.models.system_one.schema import (
 from deepeval.test_case import LLMTestCase, SingleTurnParams, ToolCall
 from tests.test_metrics.system_one_fakes import FakeSystemOneModel
 
-
 ###############################################
 # The worked example from the docs: Tool Faithfulness
 ###############################################

@@ -32,7 +32,6 @@ from deepeval.metrics.goal_accuracy.schema import (
 )
 from deepeval.templates import make_template_class
 
-
 GoalAccuracyTemplate = make_template_class("GoalAccuracyMetric")
 
 GOAL_ACCURACY_LEVELS = [

@@ -3,12 +3,13 @@ import re
 from typing import Any, List, Optional, Union
 
 from deepeval.classifiers.classifier.schema import EvidenceItem
-from deepeval.test_run.api import Evidence
 from deepeval.test_case import ConversationalTestCase, LLMTestCase, ToolCall
+from deepeval.test_run.api import Evidence
 
 MAX_KEPT_EVIDENCE_ITEMS = 20
 MIN_EVIDENCE_QUOTE_CHARS = 8
 _WHITESPACE_RE = re.compile(r"\s+")
+_TRUNCATION_TAIL_RE = re.compile(r"""…?\[truncated\][\s"'\\]*$""")
 
 
 def verify_evidence(
@@ -19,7 +20,9 @@ def verify_evidence(
 ) -> List[Evidence]:
     verified = []
     for item in items[:MAX_KEPT_EVIDENCE_ITEMS]:
-        quote = item.quote.strip()[:max_quote_chars]
+        quote = _TRUNCATION_TAIL_RE.sub("", item.quote.strip()).rstrip()[
+            :max_quote_chars
+        ]
         if not quote:
             continue
         sources = _sources(item, test_case, shown)

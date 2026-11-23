@@ -16,7 +16,6 @@ from google.genai import types
 
 from deepeval.integrations.google_adk import instrument_google_adk
 
-
 _APP_NAME = "deepeval-googleadk-multiple-tools"
 
 

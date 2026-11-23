@@ -123,7 +123,7 @@ def _collect_classifications(
         if (
             new_cached_test_case is not None
             and classifier.error is None
-            and getattr(classifier, "label_discovery_config", None) is None
+            and classifier.label_discovery_config is None
         ):
             cached_classifications = deepcopy(created)
             cached_classifications[0].evaluation_cost = 0
@@ -132,7 +132,7 @@ def _collect_classifications(
                     classification=cached_classifications[0],
                     classifications=(
                         cached_classifications
-                        if getattr(classifier, "classifications", None)
+                        if classifier.classifications
                         else []
                     ),
                     classifier_configuration=Cache.create_classifier_configuration(

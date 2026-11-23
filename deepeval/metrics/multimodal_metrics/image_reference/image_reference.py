@@ -21,7 +21,6 @@ from deepeval.utils import (
 )
 from deepeval.templates import make_template_class
 
-
 ImageReferenceTemplate = make_template_class("ImageReferenceMetric")
 
 

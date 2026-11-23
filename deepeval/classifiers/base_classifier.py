@@ -9,9 +9,16 @@ from deepeval.metrics.base_metric import PromptMixin
 from deepeval.test_case import ConversationalTestCase, LLMTestCase
 
 if TYPE_CHECKING:
+    from deepeval.classifiers.classifier.config import (
+        ClassificationContext,
+        EvidenceConfig,
+        LabelDiscoveryConfig,
+        ReviewConfig,
+    )
     from deepeval.config.eval_mode import EvalMode
     from deepeval.models import DeepEvalBaseLLM
     from deepeval.models.base_model import DeepEvalBaseSystemOneModel
+    from deepeval.test_run.api import Classification
 
 
 # Sentinel label the judge returns when none of the declared labels fit.
@@ -63,8 +70,9 @@ class Label(BaseModel):
 class BaseClassifier(PromptMixin):
     """Classifier counterpart of ``BaseMetric``.
 
-    A classifier assigns exactly one label from a closed set to a test case.
-    It only produces a pass/fail verdict when the test case declares an
+    A classifier assigns a test case one label from its declared labels, or
+    several when ``multi_label`` is on; ``label`` is the first of them and
+    ``classifications`` holds them all. It only produces a pass/fail verdict when the test case declares an
     expected label for it (``test_case.expected_labels[classifier.name]``);
     otherwise ``success`` is ``None``, mirroring a metric with no threshold.
     """
@@ -74,7 +82,15 @@ class BaseClassifier(PromptMixin):
 
     name: str
     labels: List[Label]
+    description: Optional[str] = None
     label: Optional[str] = None
+    classifications: Optional[List[Classification]] = None
+    multi_label: bool = False
+    max_content_chars: Optional[int] = None
+    evidence_config: Optional[EvidenceConfig] = None
+    review_config: Optional[ReviewConfig] = None
+    label_discovery_config: Optional[LabelDiscoveryConfig] = None
+    classification_context: Optional[ClassificationContext] = None
     reason: Optional[str] = None
     success: Optional[bool] = None
     evaluation_model: Optional[str] = None

@@ -1,13 +1,21 @@
-"""LLM-judged classifier: assigns exactly one label from a closed set."""
+"""LLM-judged classifier: assigns one or more labels to a test case."""
 
 import asyncio
-import logging
-from typing import Any, Dict, List, Optional, Sequence, Tuple, Type, Union
+from dataclasses import dataclass
+from typing import Any, Dict, List, Optional, Sequence, Type, Union
+
+from pydantic import BaseModel
 
 from deepeval.classifiers.base_classifier import (
     NONE_LABEL,
     BaseClassifier,
     Label,
+)
+from deepeval.classifiers.classifier.config import (
+    ClassificationContext,
+    EvidenceConfig,
+    LabelDiscoveryConfig,
+    ReviewConfig,
 )
 from deepeval.classifiers.classifier.schema import (
     LABEL_LIST_SCHEMAS,
@@ -17,24 +25,20 @@ from deepeval.classifiers.classifier.schema import (
     SuggestedClassificationResult,
     SuggestedEvidencedClassificationResult,
 )
-from deepeval.classifiers.classifier.config import (
-    ClassificationContext,
-    EvidenceConfig,
-    LabelDiscoveryConfig,
-    ReviewConfig,
-)
 from deepeval.classifiers.classifier.steps.evidence import verify_evidence
-from deepeval.test_run.api import Classification, Evidence
 from deepeval.classifiers.classifier.steps.label_discovery import (
     LabelPool,
     a_merge_new_labels,
-    is_new_label,
     merge_new_labels,
-    merged_label,
+    same_name,
 )
 from deepeval.classifiers.classifier.steps.review import (
     a_review_classifications,
     review_classifications,
+)
+from deepeval.classifiers.classifier.steps.trace import (
+    construct_trace_content,
+    construct_trace_dict,
 )
 from deepeval.classifiers.classifier.steps.truncate import (
     MAX_CONTENT_CHARS,
@@ -43,27 +47,27 @@ from deepeval.classifiers.classifier.steps.truncate import (
     fit_turns,
 )
 from deepeval.classifiers.utils import (
+    MULTI_TURN_CONTENT_PARAMS,
+    SINGLE_TURN_CONTENT_PARAMS,
+    LabelOrigin,
+    ResolvedLabel,
     SystemOneClassifySpec,
     a_generate_classification,
+    clean_reason,
     construct_multi_turn_content,
     construct_multi_turn_state,
     construct_single_turn_content,
     construct_single_turn_state,
-    construct_trace_content,
-    construct_trace_dict,
     construct_turns,
-    MULTI_TURN_CONTENT_PARAMS,
-    SINGLE_TURN_CONTENT_PARAMS,
-    clean_reason,
     format_labels,
     generate_classification,
     normalize_labels,
     resolve_label,
     resolve_suggested_label,
 )
-from deepeval.metrics.utils.generation import (
-    a_generate_with_schema_and_extract,
-    generate_with_schema_and_extract,
+from deepeval.config.eval_mode import (
+    ClassifierEvalModeName,
+    resolve_classifier_eval_mode,
 )
 from deepeval.config.settings import get_settings
 from deepeval.metrics.indicator import metric_progress_indicator
@@ -71,19 +75,15 @@ from deepeval.metrics.utils import (
     initialize_model,
     initialize_system_one_model,
 )
-from deepeval.config.eval_mode import (
-    ClassifierEvalModeName,
-    resolve_classifier_eval_mode,
+from deepeval.metrics.utils.generation import (
+    a_generate_with_schema_and_extract,
+    generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.templates import make_template_class
 from deepeval.test_case import ConversationalTestCase, LLMTestCase
+from deepeval.test_run.api import Classification
 from deepeval.utils import get_or_create_event_loop
-
-_TRUNCATION_MARKER_REASON = (
-    'The only problem found was the "…[truncated]" marker added where long '
-    "fields are shortened, which is not part of the application's output."
-)
 
 _RESULT_SCHEMAS = {
     (True, False): SuggestedClassificationResult,
@@ -108,25 +108,37 @@ ClassifierTemplate = make_template_class("Classifier", feature="classifiers")
 # the bundle key explicitly.
 _EXPERIMENTAL_TEMPLATE_CLASS = "Classifier"
 
-logger = logging.getLogger(__name__)
+
+@dataclass(frozen=True)
+class ClassificationPrompt:
+    """A classify prompt with the content it shows the judge: ``subject``
+    names what that content is, ``content`` is its text, and ``shown`` is its
+    structured form when it has one (turns or a trace)."""
+
+    text: str
+    subject: str
+    content: str
+    shown: Any = None
 
 
 class Classifier(BaseClassifier):
+    review_schema: Type[LabelReview] = LabelReview
 
     def __init__(
         self,
         name: str,
         labels: Sequence[Union[str, Label]],
-        description: Optional[str] = None,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
         system_one_model: Optional[
             Union[str, DeepEvalBaseSystemOneModel]
         ] = None,
         eval_mode: Optional[ClassifierEvalModeName] = None,
         include_reason: bool = True,
+        allow_none: bool = False,
         async_mode: bool = True,
         classification_template: Type[ClassifierTemplate] = ClassifierTemplate,
-        allow_none: bool = False,
+        *,
+        description: Optional[str] = None,
         multi_label: bool = False,
         max_content_chars: int = MAX_CONTENT_CHARS,
         evidence_config: Optional[EvidenceConfig] = None,
@@ -158,8 +170,6 @@ class Classifier(BaseClassifier):
         self.review_config = review_config
         self.multi_label = multi_label
         self.max_content_chars = max_content_chars
-        self._shown = None
-        self._review_content = ("test case", "")
         self.label_discovery_config = label_discovery_config
         self.evidence_config = evidence_config
         self.label_pool = LabelPool(
@@ -213,29 +223,31 @@ class Classifier(BaseClassifier):
                 )
             else:
                 prompt = self._build_prompt(test_case)
-                schema = self._result_schema()
+                schema = self._choose_output_schema()
                 if schema is not None:
                     result = generate_with_schema_and_extract(
                         metric=self,
-                        prompt=prompt,
+                        prompt=prompt.text,
                         schema_cls=schema,
                         extract_schema=lambda result: result,
                         extract_json=schema.model_validate,
                     )
                     merges = merge_new_labels(self, result)
-                    self._build_classifications(result, test_case, merges)
+                    self._postprocess_classifications(
+                        result, test_case, merges, prompt.shown
+                    )
                 else:
                     raw_label, reason = generate_classification(
                         self,
-                        prompt,
+                        prompt.text,
                         schema_cls=ClassificationResult,
                         system_one=self._experimental_system_one_spec(
                             test_case
                         ),
                     )
-                    self._build_classification(raw_label, reason)
+                    self._postprocess_classification(raw_label, reason)
                 if self.review_config:
-                    review_classifications(self)
+                    review_classifications(self, prompt)
 
             return self.label
 
@@ -255,27 +267,29 @@ class Classifier(BaseClassifier):
             _in_component=_in_component,
         ):
             prompt = self._build_prompt(test_case)
-            schema = self._result_schema()
+            schema = self._choose_output_schema()
             if schema is not None:
                 result = await a_generate_with_schema_and_extract(
                     metric=self,
-                    prompt=prompt,
+                    prompt=prompt.text,
                     schema_cls=schema,
                     extract_schema=lambda result: result,
                     extract_json=schema.model_validate,
                 )
                 merges = await a_merge_new_labels(self, result)
-                self._build_classifications(result, test_case, merges)
+                self._postprocess_classifications(
+                    result, test_case, merges, prompt.shown
+                )
             else:
                 raw_label, reason = await a_generate_classification(
                     self,
-                    prompt,
+                    prompt.text,
                     schema_cls=ClassificationResult,
                     system_one=self._experimental_system_one_spec(test_case),
                 )
-                self._build_classification(raw_label, reason)
+                self._postprocess_classification(raw_label, reason)
             if self.review_config:
-                await a_review_classifications(self)
+                await a_review_classifications(self, prompt)
             return self.label
 
     def is_successful(
@@ -292,47 +306,52 @@ class Classifier(BaseClassifier):
         return clone
 
     ###############################################
-    # Classification
+    # Post-processing
     ###############################################
 
-    def _build_classifications(
+    def _postprocess_classifications(
         self,
         result: Any,
         test_case: Union[LLMTestCase, ConversationalTestCase],
         merges: Dict[str, Label],
+        shown: Any,
     ) -> None:
         items = result.labels if self.multi_label else [result]
         none_reason = None
         unresolved = []
+
         for item in items:
-            label, description = self._resolve(
-                item.label,
-                item.reason,
-                getattr(item, "new_label_description", None),
-            )
-            if label == NONE_LABEL:
-                none_reason = none_reason or clean_reason(item.reason)
+            reason = clean_reason(item.reason) if item.reason else item.reason
+            resolved = self._resolve_item(item)
+            if resolved.is_none:
+                none_reason = none_reason or reason
                 continue
-            if label is None:
+            if resolved.unresolved:
                 unresolved.append(item.label)
                 continue
+            label, description = resolved.name, resolved.description
             if label in merges:
-                label, description = merged_label(self, merges[label])
-            elif description is not None and is_new_label(self, label):
+                match = merges[label]
+                declared = any(l.name == match.name for l in self.labels)
+                label = match.name
+                description = None if declared else match.description
+            elif (
+                resolved.origin is LabelOrigin.NEW
+                and same_name(label, self.label_pool.labels) is None
+            ):
+                # Over the max_new_labels cap, so it was never merged or
+                # added to the pool.
                 continue
             evidence = (
                 verify_evidence(
                     getattr(item, "evidence", []),
                     test_case,
-                    self._shown,
+                    shown,
                     self.evidence_config.max_quote_chars,
                 )
                 if self.evidence_config
                 else []
             )
-            if self._rejects_evidence(evidence):
-                none_reason = none_reason or _TRUNCATION_MARKER_REASON
-                continue
             kept = next(
                 (r for r in self.classifications if r.label == label), None
             )
@@ -343,11 +362,7 @@ class Classifier(BaseClassifier):
                 Classification(
                     name=self.name,
                     label=label,
-                    reason=(
-                        clean_reason(item.reason)
-                        if self.include_reason
-                        else None
-                    ),
+                    reason=reason if self.include_reason else None,
                     new_label_description=description,
                     evidence=evidence,
                 )
@@ -361,11 +376,13 @@ class Classifier(BaseClassifier):
                 unresolved[0] if unresolved else None
             )
 
-    def _build_classification(
+    def _postprocess_classification(
         self, raw_label: Optional[str], reason: Optional[str]
     ) -> None:
         reason = clean_reason(reason) if reason else reason
-        label, _ = self._resolve(raw_label, reason, None)
+        # Only reached without label discovery (see _choose_output_schema),
+        # so the judge can only answer with a declared label or NONE.
+        label = resolve_label(raw_label, self.labels, self.allow_none)
         if label is None:
             self.error = self._unresolved_error(raw_label)
             self.label = None
@@ -384,30 +401,165 @@ class Classifier(BaseClassifier):
             ]
         self.reason = reason if self.include_reason else None
 
-    def _resolve(
-        self,
-        raw_label: Optional[str],
-        reason: Optional[str],
-        new_label_description: Optional[str],
-    ) -> Tuple[Optional[str], Optional[str]]:
+    def _resolve_item(self, item: Any) -> ResolvedLabel:
+        """Resolve one structured judge answer (a result or a list entry)."""
+        reason = clean_reason(item.reason) if item.reason else item.reason
         if self.label_discovery_config:
             return resolve_suggested_label(
-                raw_label,
-                new_label_description,
-                reason,
-                self.labels,
-                self.candidate_labels,
-                self.allow_none,
+                item.label,
+                description=getattr(item, "new_label_description", None),
+                reason=reason,
+                labels=self.labels,
+                candidate_labels=self.candidate_labels,
+                allow_none=self.allow_none,
             )
-        return resolve_label(raw_label, self.labels, self.allow_none), None
+        label = resolve_label(item.label, self.labels, self.allow_none)
+        if label is None:
+            return ResolvedLabel(None)
+        if label == NONE_LABEL:
+            return ResolvedLabel(NONE_LABEL, LabelOrigin.NONE)
+        return ResolvedLabel(label, LabelOrigin.DECLARED)
 
     def _unresolved_error(self, raw_label: Optional[str]) -> str:
-        allowed = ", ".join(str(label) for label in self.labels)
+        if raw_label is None:
+            return "Judge returned no usable label."
+        labels = self.labels
+        if self.label_discovery_config:
+            labels = labels + self.candidate_labels
+        allowed = ", ".join(str(label) for label in labels)
         if self.allow_none:
             allowed += ", or no classification"
         return (
-            f"Judge returned '{raw_label}', which is not one of the declared labels "
+            f"Judge returned '{raw_label}', which is not one of the allowed labels "
             f"({allowed})."
+        )
+
+    ###############################################
+    # Evidence
+    ###############################################
+
+    def _cite_evidence(self, subject: str, fields: List[str]) -> str:
+        if not self.evidence_config:
+            return ""
+        return self._get_prompt(
+            "cite_evidence",
+            subject=subject,
+            fields=", ".join(f'"{field}"' for field in fields),
+            allow_none=self.allow_none,
+            max_items=self.evidence_config.max_items,
+            max_quote_chars=self.evidence_config.max_quote_chars,
+        )
+
+    ###############################################
+    # Label Discovery
+    ###############################################
+
+    @property
+    def candidate_labels(self) -> List[Label]:
+        return self.label_pool.labels
+
+    ###############################################
+    # Prompt
+    ###############################################
+
+    def _build_prompt(
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+    ) -> ClassificationPrompt:
+        context = self.classification_context
+        shared_variables = {
+            "labels": format_labels(self.labels),
+            "allow_none": self.allow_none,
+            "multi_label": self.multi_label,
+            "context": self._get_prompt(
+                "classification_context",
+                name=self.name,
+                description=self.description,
+                has_context=context is not None,
+                app_description=context.app_description if context else None,
+                trace_description=(
+                    context.trace_description if context else None
+                ),
+            ),
+            "reason_rules": self._get_prompt("reason_rules"),
+            "guidance": self._get_prompt("guidance"),
+            "suggest_labels": (
+                self._get_prompt(
+                    "suggest_labels",
+                    allow_none=self.allow_none,
+                    candidate_labels=bool(self.candidate_labels),
+                    label_naming_rule=self._get_prompt("label_naming_rule"),
+                )
+                if self.label_discovery_config
+                else ""
+            ),
+            "candidate_labels": (
+                format_labels(self.candidate_labels)
+                if self.label_discovery_config and self.candidate_labels
+                else ""
+            ),
+        }
+        if isinstance(test_case, ConversationalTestCase):
+            shared_variables["cite_evidence"] = self._cite_evidence(
+                "conversation",
+                _EVIDENCE_TURN_FIELDS
+                + [
+                    param.value
+                    for param in MULTI_TURN_CONTENT_PARAMS
+                    if getattr(test_case, param.value, None)
+                ],
+            )
+            content = construct_multi_turn_content(test_case)
+            turns = fit_turns(
+                construct_turns(test_case), self.max_content_chars
+            )
+            return ClassificationPrompt(
+                text=self._get_prompt(
+                    "classify_multi_turn",
+                    test_case_content=content,
+                    turns=turns,
+                    **shared_variables,
+                ),
+                subject="conversation",
+                content=f"{content}\n\nTurns:\n{turns}",
+                shown=turns,
+            )
+        if test_case._trace_dict is not None:
+            shared_variables["cite_evidence"] = self._cite_evidence(
+                "trace", _EVIDENCE_TRACE_FIELDS
+            )
+            trace = fit_trace(
+                construct_trace_dict(test_case), self.max_content_chars
+            )
+            trace_content = construct_trace_content(trace)
+            return ClassificationPrompt(
+                text=self._get_prompt(
+                    "classify_trace",
+                    trace_content=trace_content,
+                    **shared_variables,
+                ),
+                subject="trace",
+                content=trace_content,
+                shown=trace,
+            )
+        shared_variables["cite_evidence"] = self._cite_evidence(
+            "test case",
+            [
+                param.value
+                for param in SINGLE_TURN_CONTENT_PARAMS
+                if getattr(test_case, param.value, None)
+            ],
+        )
+        test_case_content = fit_text(
+            construct_single_turn_content(test_case), self.max_content_chars
+        )
+        return ClassificationPrompt(
+            text=self._get_prompt(
+                "classify_single_turn",
+                test_case_content=test_case_content,
+                **shared_variables,
+            ),
+            subject="test case",
+            content=test_case_content,
         )
 
     def _experimental_system_one_spec(
@@ -442,155 +594,7 @@ class Classifier(BaseClassifier):
             include_reason=self.include_reason,
         )
 
-    ###############################################
-    # Evidence
-    ###############################################
-
-    def _cite_evidence(self, subject: str, fields: List[str]) -> str:
-        if not self.evidence_config:
-            return ""
-        return self._get_prompt(
-            "cite_evidence",
-            subject=subject,
-            fields=", ".join(f'"{field}"' for field in fields),
-            allow_none=self.allow_none,
-            max_items=self.evidence_config.max_items,
-            max_quote_chars=self.evidence_config.max_quote_chars,
-        )
-
-    def _rejects_evidence(self, evidence: List[Evidence]) -> bool:
-        return False
-
-    ###############################################
-    # Label Discovery
-    ###############################################
-
-    @property
-    def candidate_labels(self) -> List[Label]:
-        return self.label_pool.labels
-
-    ###############################################
-    # Review
-    ###############################################
-
-    def _passes_review(self, review: LabelReview) -> bool:
-        return review.confidence >= self.review_config.min_confidence
-
-    def _review_reason(self, review: LabelReview) -> str:
-        return review.reason
-
-    def _review_schema(self) -> Type[LabelReview]:
-        return LabelReview
-
-    ###############################################
-    # Prompt
-    ###############################################
-
-    def _build_prompt(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
-    ) -> str:
-        labels = format_labels(self.labels)
-        extras = {
-            "multi_label": self.multi_label,
-            "context": self._context_prompt(),
-            "reason_rules": self._get_prompt("reason_rules"),
-            "guidance": self._guidance_prompt(),
-            "suggest_labels": (
-                self._get_prompt(
-                    "suggest_labels",
-                    allow_none=self.allow_none,
-                    candidate_labels=bool(self.candidate_labels),
-                    label_naming_rule=self._get_prompt("label_naming_rule"),
-                )
-                if self.label_discovery_config
-                else ""
-            ),
-            "candidate_labels": (
-                format_labels(self.candidate_labels)
-                if self.label_discovery_config and self.candidate_labels
-                else ""
-            ),
-        }
-        if isinstance(test_case, ConversationalTestCase):
-            extras["cite_evidence"] = self._cite_evidence(
-                "conversation",
-                _EVIDENCE_TURN_FIELDS
-                + [
-                    param.value
-                    for param in MULTI_TURN_CONTENT_PARAMS
-                    if getattr(test_case, param.value, None)
-                ],
-            )
-            content = construct_multi_turn_content(test_case)
-            turns = self._remember_shown(
-                fit_turns(construct_turns(test_case), self.max_content_chars)
-            )
-            self._review_content = (
-                "conversation",
-                f"{content}\n\nTurns:\n{turns}",
-            )
-            return self._get_prompt(
-                "classify_multi_turn",
-                labels=labels,
-                test_case_content=content,
-                turns=turns,
-                allow_none=self.allow_none,
-                **extras,
-            )
-        if test_case._trace_dict is not None:
-            extras["cite_evidence"] = self._cite_evidence(
-                "trace", _EVIDENCE_TRACE_FIELDS
-            )
-            trace_content = construct_trace_content(
-                self._remember_shown(
-                    fit_trace(
-                        construct_trace_dict(test_case), self.max_content_chars
-                    )
-                )
-            )
-            self._review_content = ("trace", trace_content)
-            return self._get_prompt(
-                "classify_trace",
-                labels=labels,
-                trace_content=trace_content,
-                allow_none=self.allow_none,
-                **extras,
-            )
-        extras["cite_evidence"] = self._cite_evidence(
-            "test case",
-            [
-                param.value
-                for param in SINGLE_TURN_CONTENT_PARAMS
-                if getattr(test_case, param.value, None)
-            ],
-        )
-        test_case_content = fit_text(
-            construct_single_turn_content(test_case), self.max_content_chars
-        )
-        self._review_content = ("test case", test_case_content)
-        return self._get_prompt(
-            "classify_single_turn",
-            labels=labels,
-            test_case_content=test_case_content,
-            allow_none=self.allow_none,
-            **extras,
-        )
-
-    def _context_prompt(self) -> str:
-        context = self.classification_context
-        return self._get_prompt(
-            "classification_context",
-            name=self.name,
-            description=self.description,
-            has_context=context is not None,
-            app_description=context.app_description if context else None,
-            trace_description=context.trace_description if context else None,
-        )
-
-    def _guidance_prompt(self) -> str:
-        return ""
-
-    def _result_schema(self):
+    def _choose_output_schema(self) -> Optional[Type[BaseModel]]:
         item = _RESULT_SCHEMAS.get(
             (
                 self.label_discovery_config is not None,
@@ -600,10 +604,6 @@ class Classifier(BaseClassifier):
         if self.multi_label:
             return LABEL_LIST_SCHEMAS[item or ClassificationResult]
         return item
-
-    def _remember_shown(self, shown: Any) -> Any:
-        self._shown = shown
-        return shown
 
     def _check_test_case(
         self, test_case: Union[LLMTestCase, ConversationalTestCase]

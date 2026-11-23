@@ -40,20 +40,22 @@ There are **TWO** mandatory and **FOURTEEN** optional parameters when creating a
 
 - `name`: a string that identifies the classifier. It is the key a test case uses in `expected_labels`, so it must be unique within a run.
 - `labels`: a list of `Label`s or plain strings. At least one is required and names must be unique.
-- [Optional] `description`: a string saying what the classifier is for. When set, the judge is told the classifier's name and purpose. Defaulted to `None`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/guides/guides-using-custom-llms) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
-- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason for the chosen label. Defaulted to `True`.
-- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `classify()` method](/docs/classifiers-introduction#using-classifiers-async). Defaulted to `True`.
-- [Optional] `classification_template`: a subclass of `ClassifierTemplate` used to [override the default prompts](#customize-your-template). Defaulted to `ClassifierTemplate`.
 - [Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under the `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.
 - [Optional] `eval_mode`: `llm` or `system_one`, choosing whether an LLM or Jev picks the label. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason for the chosen label. Defaulted to `True`.
 - [Optional] `allow_none`: a boolean which when set to `True`, lets the classifier return no label when none of them fit (surfaced as `label=None`, with a reason). When `False`, the closest label is always chosen. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `classify()` method](/docs/classifiers-introduction#using-classifiers-async). Defaulted to `True`.
+- [Optional] `classification_template`: a subclass of `ClassifierTemplate` used to [override the default prompts](#customize-your-template). Defaulted to `ClassifierTemplate`.
+- [Optional] `description`: a string saying what the classifier is for. When set, the judge is told the classifier's name and purpose. Defaulted to `None`.
 - [Optional] `multi_label`: a boolean which when set to `True`, returns [every label that applies](#multi-label-classification) instead of exactly one. Defaulted to `False`.
 - [Optional] `max_content_chars`: the most characters of test case content sent to the judge; longer content is [truncated](#classification). Defaulted to `100000`.
 - [Optional] `evidence_config`: an `EvidenceConfig` that makes the judge [cite the passages](#evidence) that show each label applies. Defaulted to `None` (off).
 - [Optional] `review_config`: a `ReviewConfig` that [re-checks every label](#review) in a second judge call and gives it a `confidence`. Defaulted to `None` (off).
 - [Optional] `label_discovery_config`: a `LabelDiscoveryConfig` that lets the judge [propose new labels](#label-discovery) when none of yours fit. Defaulted to `None` (off).
 - [Optional] `classification_context`: a [`ClassificationContext`](#classification-context) describing the application being classified. Defaulted to `None`.
+
+Every parameter from `description` onwards is keyword-only.
 
 The same `Classifier` also accepts a `ConversationalTestCase`, in which case it reads every turn along with the scenario and expected outcome, and an `LLMTestCase` that carries a trace, in which case it reads every span as well.
 
@@ -367,8 +369,8 @@ Requests to move to a higher plan.
 There are **FOUR** optional parameters when creating a `LabelDiscoveryConfig`:
 
 - [Optional] `candidate_labels`: a list of `Label`s or strings proposed earlier but not adopted yet, used to seed the classifier's label pool. Defaulted to `[]`.
-- [Optional] `embedding_model`: a string or any `DeepEvalBaseEmbeddingModel`, used to [merge near-duplicates](#label-discovery) by similarity before asking the judge. Defaulted to `None`, which shortlists by shared words instead.
-- [Optional] `similarity_threshold`: the cosine similarity at or above which a new label is merged into an existing one without asking the judge. Only used with an `embedding_model`. Defaulted to `0.92`.
+- [Optional] `embedding_model`: a string or any `DeepEvalBaseEmbeddingModel`, used to [merge near-duplicates](#label-discovery) by similarity before asking the judge. Defaulted to deepeval's default embedding model, the same one the `Synthesizer` uses. Label discovery always embeds label names, so it needs an [embedding model](/guides/guides-using-custom-embedding-models) to be available.
+- [Optional] `similarity_threshold`: the cosine similarity at or above which a new label is merged into an existing one without asking the judge. Defaulted to `0.92`.
 - [Optional] `top_k`: how many of the most similar existing labels the judge compares a new label against when deciding whether to merge it. Defaulted to `15`.
 
 On each `Classification`, `new_label_description` is `None` for one of your labels, and is set for a new or candidate label. A suggested name that only says nothing applies, such as "Other" or "No Topic", is treated as no label.
@@ -391,7 +393,7 @@ flowchart LR
 ```
 
 1. A label with the same name (ignoring case) is reused as-is.
-2. With an `embedding_model`, the closest labels by name similarity are found; one at or above `similarity_threshold` is reused without further checks.
+2. The closest labels by name similarity are found; one at or above `similarity_threshold` is reused without further checks.
 3. Otherwise the judge compares it against the `top_k` most similar labels and picks the one whose fix would also fix the proposed problem, or none.
 4. Only when nothing matches is the new label added to the pool.
 

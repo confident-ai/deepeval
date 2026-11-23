@@ -1,9 +1,7 @@
 from typing import Type
 
 from deepeval.classifiers.classifier import ClassifierTemplate
-from deepeval.classifiers.topics.topics import (
-    TopicClassifier,
-)
+from deepeval.classifiers.topics.topics import TopicClassifier
 from deepeval.templates import make_template_class
 
 

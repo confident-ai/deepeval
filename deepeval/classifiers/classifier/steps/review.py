@@ -1,7 +1,7 @@
 import asyncio
 import json
 import logging
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Union
 
 from deepeval.classifiers.classifier.schema import LabelReview
 from deepeval.metrics.utils.generation import (
@@ -11,35 +11,70 @@ from deepeval.metrics.utils.generation import (
 from deepeval.test_run.api import Classification
 
 if TYPE_CHECKING:
-    from deepeval.classifiers.classifier.classifier import Classifier
+    from deepeval.classifiers.classifier.classifier import (
+        ClassificationPrompt,
+        Classifier,
+    )
 
 logger = logging.getLogger(__name__)
 
 
-def review_classifications(classifier: "Classifier") -> None:
-    _apply_reviews(
-        classifier,
-        [_review(classifier, c) for c in classifier.classifications],
-    )
+def review_classifications(
+    classifier: "Classifier", prompt: "ClassificationPrompt"
+) -> None:
+    schema = classifier.review_schema
+    reviews = []
+    for classification in classifier.classifications:
+        try:
+            reviews.append(
+                generate_with_schema_and_extract(
+                    metric=classifier,
+                    prompt=_review_prompt(classifier, classification, prompt),
+                    schema_cls=schema,
+                    extract_schema=lambda review: review,
+                    extract_json=schema.model_validate,
+                )
+            )
+        except ValueError as error:
+            reviews.append(error)
+    _apply_reviews(classifier, reviews)
 
 
-async def a_review_classifications(classifier: "Classifier") -> None:
-    _apply_reviews(
-        classifier,
-        await asyncio.gather(
-            *(_a_review(classifier, c) for c in classifier.classifications)
+async def a_review_classifications(
+    classifier: "Classifier", prompt: "ClassificationPrompt"
+) -> None:
+    schema = classifier.review_schema
+    reviews = await asyncio.gather(
+        *(
+            a_generate_with_schema_and_extract(
+                metric=classifier,
+                prompt=_review_prompt(classifier, classification, prompt),
+                schema_cls=schema,
+                extract_schema=lambda review: review,
+                extract_json=schema.model_validate,
+            )
+            for classification in classifier.classifications
         ),
+        return_exceptions=True,
     )
+    _apply_reviews(classifier, reviews)
 
 
 def _apply_reviews(
-    classifier: "Classifier", reviews: List[Optional[LabelReview]]
+    classifier: "Classifier", reviews: List[Union[LabelReview, BaseException]]
 ) -> None:
     kept, dropped = [], []
     for classification, review in zip(classifier.classifications, reviews):
-        if review is not None:
-            classification.confidence = review.confidence
-        if review is None or classifier._passes_review(review):
+        if isinstance(review, BaseException):
+            if not isinstance(review, ValueError):
+                raise review
+            logger.warning(
+                f"Unreadable review; keeping {classification.label!r}: {review}"
+            )
+            kept.append(classification)
+            continue
+        classification.confidence = review.confidence
+        if review.confidence >= classifier.review_config.min_confidence:
             kept.append(classification)
         else:
             dropped.append((classification, review))
@@ -57,54 +92,17 @@ def _apply_reviews(
             part
             for part in (
                 f'Proposed "{classification.label}" but review dropped it.',
-                classifier._review_reason(review),
+                review.explanation(),
             )
             if part
         )
 
 
-def _review(
-    classifier: "Classifier", classification: Classification
-) -> Optional[LabelReview]:
-    schema = classifier._review_schema()
-    try:
-        return generate_with_schema_and_extract(
-            metric=classifier,
-            prompt=_review_prompt(classifier, classification),
-            schema_cls=schema,
-            extract_schema=lambda review: review,
-            extract_json=schema.model_validate,
-        )
-    except ValueError as error:
-        logger.warning(
-            f"Unreadable review; keeping {classification.label!r}: {error}"
-        )
-        return None
-
-
-async def _a_review(
-    classifier: "Classifier", classification: Classification
-) -> Optional[LabelReview]:
-    schema = classifier._review_schema()
-    try:
-        return await a_generate_with_schema_and_extract(
-            metric=classifier,
-            prompt=_review_prompt(classifier, classification),
-            schema_cls=schema,
-            extract_schema=lambda review: review,
-            extract_json=schema.model_validate,
-        )
-    except ValueError as error:
-        logger.warning(
-            f"Unreadable review; keeping {classification.label!r}: {error}"
-        )
-        return None
-
-
 def _review_prompt(
-    classifier: "Classifier", classification: Classification
+    classifier: "Classifier",
+    classification: Classification,
+    prompt: "ClassificationPrompt",
 ) -> str:
-    subject, content = classifier._review_content
     context = classifier.classification_context
     app_description = context.app_description if context else None
     description = next(
@@ -117,7 +115,7 @@ def _review_prompt(
     )
     return classifier._get_prompt(
         "review_label",
-        subject=subject,
+        subject=prompt.subject,
         label=json.dumps(
             {
                 "name": classification.label,
@@ -126,7 +124,7 @@ def _review_prompt(
             },
             ensure_ascii=False,
         ),
-        content=content,
+        content=prompt.content,
         app_description=app_description,
         app_note=(
             classifier._get_prompt("review_app_note") if app_description else ""

@@ -106,7 +106,7 @@ ClassifierTemplateMethod = Literal[
     "merge_labels",
     "review_label",
     "label_naming_rule",
-    "issue_guidance",
+    "guidance",
     "classification_context",
     "review_app_note",
     "reason_rules",
