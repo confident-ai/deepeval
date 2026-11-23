@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import logging
+import re
+from enum import Enum
 from collections import Counter
 from dataclasses import dataclass
 from typing import (
@@ -12,6 +14,14 @@ from typing import (
     Tuple,
     Type,
     Union,
+)
+
+from pydantic import BaseModel
+
+from deepeval.classifiers.classifier.steps.truncate import (
+    cap_field,
+    select_spans,
+    serialize,
 )
 
 from deepeval.classifiers.base_classifier import (
@@ -110,6 +120,109 @@ def resolve_label(
     return None
 
 
+_META_NOUNS = (
+    r"(?:trace|content|interaction|conversation|input|output|data|message|"
+    r"payload|json|response|record|log)"
+)
+_META_VERBS = (
+    r"(?:shows|contains|reports|says|indicates|reveals|describes|presents|"
+    r"returns|is|reflects|demonstrates|depicts)"
+)
+_META_ADVERBS = (
+    r"(?:only|just|merely|simply|essentially|primarily|mostly|mainly)"
+)
+_META_PREFIX_RE = re.compile(
+    r"^\s*(?:"
+    rf"the content of the {_META_NOUNS}\s+(?:{_META_VERBS})\s+(?:that\s+)?"
+    rf"|the {_META_NOUNS}(?:\s+{_META_ADVERBS})?\s+{_META_VERBS}\s+"
+    r"(?:that\s+|a\s+|an\s+|only\s+|just\s+)?"
+    rf"|the only (?:visible\s+|actual\s+|real\s+)?(?:{_META_NOUNS})\s+"
+    rf"(?:is|shows|contains|{_META_VERBS})\s+"
+    rf"|according to the {_META_NOUNS}[,:]?\s*"
+    rf"|based on the {_META_NOUNS}[,:]?\s*"
+    r"|looking at the " + _META_NOUNS + r"[,:]?\s*"
+    rf"|from the {_META_NOUNS}[,:]?\s*"
+    r")",
+    re.IGNORECASE,
+)
+_MIN_CLEANED_LENGTH = 10
+
+
+def clean_reason(reason: str) -> str:
+    if not reason:
+        return reason
+    original = reason.strip()
+    cleaned = _META_PREFIX_RE.sub("", original).strip()
+    if cleaned == original or len(cleaned) < _MIN_CLEANED_LENGTH:
+        return original
+    return cleaned[:1].upper() + cleaned[1:]
+
+
+_ABSENCE_LABEL_NAMES = {
+    "none",
+    "n/a",
+    "na",
+    "nothing",
+    "other",
+    "others",
+    "unknown",
+    "unclassified",
+    "uncategorized",
+    "not applicable",
+    "miscellaneous",
+}
+_ABSENCE_LABEL_RE = re.compile(
+    r"^(?:no|none|nothing|without)\b.*\b(?:issues?|problems?|errors?|failures?|"
+    r"concerns?|complaints?|sentiments?|topics?|use cases?|intents?|labels?|"
+    r"categor(?:y|ies)|match(?:es)?|applicable|relevant|clear|specific|found)\b",
+    re.IGNORECASE,
+)
+
+
+def resolve_suggested_label(
+    raw: Optional[str],
+    description: Optional[str],
+    reason: Optional[str],
+    labels: List[Label],
+    candidate_labels: List[Label],
+    allow_none: bool,
+) -> Tuple[Optional[str], Optional[str]]:
+    """Map a judge answer that may name a new label onto ``(label, description)``.
+
+    Existing labels win, then candidates (returned with their description),
+    then a new label with the judge's description. A name that only says
+    nothing applies is treated as ``NONE``.
+    """
+    existing = resolve_label(raw, labels, allow_none)
+    if existing is not None or raw is None:
+        return existing, None
+    name = str(raw).strip()
+    if not name or name.upper() == NONE_LABEL or is_absence_label(name):
+        return (NONE_LABEL, None) if allow_none else (None, None)
+    candidate = next(
+        (c for c in candidate_labels if c.name.lower() == name.lower()), None
+    )
+    if candidate is not None:
+        return candidate.name, candidate.description
+    if description and description.strip():
+        return name, description.strip()
+    detail = (reason or "").strip().rstrip(
+        "."
+    ) or f'the evidence shows "{name}"'
+    return (
+        name,
+        f"Cases where {detail[:1].lower() + detail[1:]}. "
+        "Does not apply when supporting evidence is absent.",
+    )
+
+
+def is_absence_label(name: str) -> bool:
+    normalized = name.strip().lower()
+    return normalized in _ABSENCE_LABEL_NAMES or bool(
+        _ABSENCE_LABEL_RE.match(normalized)
+    )
+
+
 def format_labels(labels: List[Label]) -> str:
     lines = []
     for label in labels:
@@ -125,7 +238,7 @@ def format_labels(labels: List[Label]) -> str:
 ###############################################
 
 # Ordered (param -> display name). Every populated field is shown to the judge.
-_SINGLE_TURN_CONTENT_PARAMS = {
+SINGLE_TURN_CONTENT_PARAMS = {
     SingleTurnParams.INPUT: "Input",
     SingleTurnParams.ACTUAL_OUTPUT: "Actual Output",
     SingleTurnParams.EXPECTED_OUTPUT: "Expected Output",
@@ -135,7 +248,7 @@ _SINGLE_TURN_CONTENT_PARAMS = {
     SingleTurnParams.EXPECTED_TOOLS: "Expected Tools",
 }
 
-_MULTI_TURN_CONTENT_PARAMS = {
+MULTI_TURN_CONTENT_PARAMS = {
     MultiTurnParams.SCENARIO: "Scenario",
     MultiTurnParams.EXPECTED_OUTCOME: "Expected Outcome",
     MultiTurnParams.USER_DESCRIPTION: "User Description",
@@ -161,7 +274,7 @@ def _is_populated(value) -> bool:
 
 def construct_single_turn_content(test_case: LLMTestCase) -> str:
     text = ""
-    for param, display in _SINGLE_TURN_CONTENT_PARAMS.items():
+    for param, display in SINGLE_TURN_CONTENT_PARAMS.items():
         value = getattr(test_case, param.value, None)
         if not _is_populated(value):
             continue
@@ -175,9 +288,73 @@ def construct_single_turn_content(test_case: LLMTestCase) -> str:
     return text.rstrip()
 
 
+_TRACE_FIELDS = {
+    "name": "name",
+    "input": "input",
+    "actual_output": "output",
+    "expected_output": "expectedOutput",
+    "retrieval_context": "retrievalContext",
+    "context": "context",
+    "tools_called": "toolsCalled",
+    "expected_tools": "expectedTools",
+}
+_CAPPED_SPAN_FIELDS = {
+    "error": "error",
+    "input": "input",
+    "output": "output",
+    "tools_called": "toolsCalled",
+}
+
+
+def construct_trace_content(content: Union[Dict[str, Any], str]) -> str:
+    return content if isinstance(content, str) else serialize(content)
+
+
+def construct_trace_dict(test_case: LLMTestCase) -> Dict[str, Any]:
+    trace = {
+        key: _jsonable_field(getattr(test_case, attr, None))
+        for attr, key in _TRACE_FIELDS.items()
+        if _is_populated(getattr(test_case, attr, None))
+    }
+    spans = select_spans(_flatten_spans(test_case._trace_dict, []))
+    if spans:
+        trace["spans"] = spans
+    return trace
+
+
+def _flatten_spans(span: Optional[Dict], spans: List[Dict]) -> List[Dict]:
+    if not isinstance(span, dict):
+        return spans
+    entry: Dict[str, Any] = {
+        "name": span.get("name") or "",
+        "type": _jsonable_field(span.get("type")),
+        "status": "ERRORED" if span.get("error") else "SUCCESS",
+    }
+    for attr, key in _CAPPED_SPAN_FIELDS.items():
+        capped = cap_field(_jsonable_field(span.get(attr)))
+        if capped is not None:
+            entry[key] = capped
+    spans.append(entry)
+    for child in span.get("children") or []:
+        _flatten_spans(child, spans)
+    return spans
+
+
+def _jsonable_field(value: Any) -> Any:
+    if isinstance(value, Enum):
+        return value.value
+    if isinstance(value, BaseModel):
+        return _jsonable(value.model_dump(exclude_none=True))
+    if isinstance(value, (list, tuple)):
+        return [_jsonable_field(item) for item in value]
+    if isinstance(value, dict):
+        return {str(k): _jsonable_field(v) for k, v in value.items()}
+    return _jsonable(value)
+
+
 def construct_multi_turn_content(test_case: ConversationalTestCase) -> str:
     text = ""
-    for param, display in _MULTI_TURN_CONTENT_PARAMS.items():
+    for param, display in MULTI_TURN_CONTENT_PARAMS.items():
         value = getattr(test_case, param.value, None)
         if not _is_populated(value):
             continue
@@ -334,7 +511,7 @@ def _experimental_system_one_fields(test_case, params) -> Dict:
 
 def construct_single_turn_state(test_case: LLMTestCase) -> Dict:
     fields = _experimental_system_one_fields(
-        test_case, _SINGLE_TURN_CONTENT_PARAMS
+        test_case, SINGLE_TURN_CONTENT_PARAMS
     )
     if not fields:
         raise ValueError(
@@ -346,7 +523,7 @@ def construct_single_turn_state(test_case: LLMTestCase) -> Dict:
 def construct_multi_turn_state(test_case: ConversationalTestCase) -> Dict:
     state: Dict = {"turns": construct_turns(test_case)}
     fields = _experimental_system_one_fields(
-        test_case, _MULTI_TURN_CONTENT_PARAMS
+        test_case, MULTI_TURN_CONTENT_PARAMS
     )
     if fields:
         state["test_case"] = fields

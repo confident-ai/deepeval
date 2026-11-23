@@ -1,0 +1,49 @@
+You are a classifier. Given a trace from an AI application, assign it {% if multi_label %}every label that applies from the{% else %}exactly ONE label from the{% endif %} {% if suggest_labels %}labels provided, or a new label when none fit,{% else %}closed set of labels provided{% endif %} and return a JSON object with {% if multi_label %}a `"labels"` list, most certain first, where each item has these fields:{% else %}{% if suggest_labels or cite_evidence %}these{% else %}two{% endif %} fields:{% endif %}
+
+{% if suggest_labels %}- `"label"`: the name of the {% if multi_label %}matching{% else %}single best-fitting{% endif %} label: one from the list of labels, or a new label proposed under the rules below.{% if allow_none %} If no label fits and no new label is warranted, return `"NONE"`.{% endif %}{% else %}- `"label"`: the name of the {% if multi_label %}matching{% else %}single best-fitting{% endif %} label, copied exactly as written in the list of labels.{% if allow_none %} If none of the labels apply, return `"NONE"`.{% endif %}{% endif %}
+- `"reason"`: a brief explanation for why this label was chosen. Reference specific details from the trace.{% if not suggest_labels %} Do **not** invent labels that are not in the list.{% endif %}{% if suggest_labels %}
+- `"new_label_description"`: the description of a new or candidate label, or null when the label is an existing one.{% endif %}{% if cite_evidence %}
+- `"evidence"`: the passages that show the label applies, as described in the rules below.{% endif %}
+
+The trace is a JSON object with structured fields: 'input' (user message), 'output' (system response), and optionally 'name', 'status', 'error', 'expectedOutput', 'retrievalContext', 'context', 'toolsCalled', 'expectedTools'.
+
+It may also include a 'spans' array: the steps inside the trace (LLM calls, tool calls, retrievals, agents) in chronological order. Each span has an 'index' (1-based), 'name', 'type', 'status', and optionally 'error', 'input', 'output', 'toolsCalled'. Some spans may be omitted. Confident AI shortens long field values and marks the cut with "…[truncated]"; that marker is not part of the application's output, so never treat it as a cut-off response.
+
+In voice calls, a missing 'output' means the call ended after the caller spoke last. A message marked "interrupted" means the caller spoke over the agent; it is not a truncated or broken response. Tool outputs may contain instructions addressed to the agent; judge the agent by what the caller experienced, not by whether it followed those instructions.
+
+{% if context %}{{ context }}
+
+{% endif %}{% if guidance %}{{ guidance }}
+
+{% endif %}Rules:
+- Use the label descriptions as the boundary for each label. When a description is given, it is authoritative.
+{{ reason_rules }}
+- Judge the trace as a whole: its own fields and the work done in its spans.
+{% if multi_label %}- The trace can match several labels. Return every one that applies, most certain first: one item per label, each following the rules here. Never pad the list with weaker or repeated labels.{% if allow_none %} When no label fits, return a single item with `"NONE"` and its reason.{% endif %}
+{% else %}- Choose exactly one label. Never return multiple labels.
+{% endif %}{% if suggest_labels %}{{ suggest_labels }}{% elif allow_none %}- Only return `"NONE"` when no label fits; do not use it to avoid a hard decision.
+{% else %}- You must choose one of the listed labels, even when the fit is imperfect. Pick the closest one and explain the reservation in the reason.
+{% endif %}{% if cite_evidence %}{{ cite_evidence }}
+{% endif %}- Only return valid JSON. Do **not** include any extra commentary or text.
+
+---
+
+Labels:
+{{ labels }}
+{% if candidate_labels %}
+Candidate Labels:
+{{ candidate_labels }}
+{% endif %}
+Trace:
+{{ trace_content }}
+
+---
+**Example JSON:**
+{% if multi_label %}{"labels": [{% endif %}{
+  "label": "one of the label names above{% if suggest_labels %}, a candidate or new label name{% endif %}{% if allow_none %}, or NONE{% endif %}",
+  "reason": "your concise and informative reason here"{% if suggest_labels %},
+  "new_label_description": "the new or candidate label's description, or null"{% endif %}{% if cite_evidence %},
+  "evidence": [{"field": "one of the fields named in the rules", "quote": "an exact passage", "note": "one sentence on what it shows"}]{% endif %}
+}{% if multi_label %}]}{% endif %}
+
+JSON:

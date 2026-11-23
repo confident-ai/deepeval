@@ -1,4 +1,5 @@
 from deepeval.dataset.expectations import expectation_evidence
+import dataclasses
 import logging
 import sys
 import json
@@ -68,6 +69,13 @@ class CachedMetricData(BaseModel):
     metric_configuration: MetricConfiguration
 
 
+_DEFAULT_MAX_CONTENT_CHARS = 100_000
+
+
+def _config_dict(config: Any) -> Optional[Dict[str, Any]]:
+    return None if config is None else dataclasses.asdict(config)
+
+
 class CachedLabel(BaseModel):
     name: str
     description: Optional[str] = None
@@ -78,10 +86,12 @@ class ClassifierConfiguration(BaseModel):
     evaluation_model: Optional[str] = None
     include_reason: bool = True
     allow_none: bool = False
+    options: Optional[Dict[str, Any]] = None
 
 
 class CachedClassification(BaseModel):
     classification: Classification
+    classifications: List[Classification] = Field(default_factory=list)
     classifier_configuration: ClassifierConfiguration
 
 
@@ -433,6 +443,8 @@ class Cache:
         cached row are stale by design and must be recomputed by the caller."""
         if not cached_test_case:
             return None
+        if getattr(classifier, "label_discovery_config", None) is not None:
+            return None
         configuration = Cache.create_classifier_configuration(classifier)
         for cached in cached_test_case.cached_classifications:
             if (
@@ -455,7 +467,33 @@ class Cache:
             evaluation_model=classifier.evaluation_model,
             include_reason=classifier.include_reason,
             allow_none=getattr(classifier, "allow_none", False),
+            options=Cache._classifier_options(classifier),
         )
+
+    @staticmethod
+    def _classifier_options(
+        classifier: "BaseClassifier",
+    ) -> Optional[Dict[str, Any]]:
+        options = {
+            "multi_label": getattr(classifier, "multi_label", False) or None,
+            "max_content_chars": getattr(classifier, "max_content_chars", None),
+            "evidence_config": _config_dict(
+                getattr(classifier, "evidence_config", None)
+            ),
+            "review_config": _config_dict(
+                getattr(classifier, "review_config", None)
+            ),
+            "description": getattr(classifier, "description", None),
+            "classification_context": _config_dict(
+                getattr(classifier, "classification_context", None)
+            ),
+        }
+        options = {
+            key: value for key, value in options.items() if value is not None
+        }
+        if options.get("max_content_chars") == _DEFAULT_MAX_CONTENT_CHARS:
+            options.pop("max_content_chars")
+        return options or None
 
     @staticmethod
     def _serialize_rubric(rubric: Any) -> Optional[List[Dict[str, Any]]]:

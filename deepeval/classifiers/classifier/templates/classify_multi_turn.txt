@@ -1,21 +1,33 @@
-You are a classifier. Given the conversation below, assign it exactly ONE label from the closed set of labels provided and return a JSON object with two fields:
+You are a classifier. Given the conversation below, assign it {% if multi_label %}every label that applies from the{% else %}exactly ONE label from the{% endif %} {% if suggest_labels %}labels provided, or a new label when none fit,{% else %}closed set of labels provided{% endif %} and return a JSON object with {% if multi_label %}a `"labels"` list, most certain first, where each item has these fields:{% else %}{% if suggest_labels or cite_evidence %}these{% else %}two{% endif %} fields:{% endif %}
 
-- `"label"`: the name of the single best-fitting label, copied exactly as written in the list of labels.{% if allow_none %} If none of the labels apply, return `"NONE"`.{% endif %}
-- `"reason"`: a brief explanation for why this label was chosen. Reference specific turns or details from the conversation. Do **not** invent labels that are not in the list.
+{% if suggest_labels %}- `"label"`: the name of the {% if multi_label %}matching{% else %}single best-fitting{% endif %} label: one from the list of labels, or a new label proposed under the rules below.{% if allow_none %} If no label fits and no new label is warranted, return `"NONE"`.{% endif %}{% else %}- `"label"`: the name of the {% if multi_label %}matching{% else %}single best-fitting{% endif %} label, copied exactly as written in the list of labels.{% if allow_none %} If none of the labels apply, return `"NONE"`.{% endif %}{% endif %}
+- `"reason"`: a brief explanation for why this label was chosen. Reference specific turns or details from the conversation.{% if not suggest_labels %} Do **not** invent labels that are not in the list.{% endif %}{% if suggest_labels %}
+- `"new_label_description"`: the description of a new or candidate label, or null when the label is an existing one.{% endif %}{% if cite_evidence %}
+- `"evidence"`: the passages that show the label applies, as described in the rules below.{% endif %}
 
-Rules:
+{% if context %}{{ context }}
+
+{% endif %}{% if guidance %}{{ guidance }}
+
+{% endif %}Rules:
 - Use the label descriptions as the boundary for each label. When a description is given, it is authoritative.
+{{ reason_rules }}
 - Consider the conversation as a whole, not just the last turn, unless a label description says otherwise.
-- Choose exactly one label. Never return multiple labels.
-{% if allow_none %}- Only return `"NONE"` when no label fits; do not use it to avoid a hard decision.
+{% if multi_label %}- The conversation can match several labels. Return every one that applies, most certain first: one item per label, each following the rules here. Never pad the list with weaker or repeated labels.{% if allow_none %} When no label fits, return a single item with `"NONE"` and its reason.{% endif %}
+{% else %}- Choose exactly one label. Never return multiple labels.
+{% endif %}{% if suggest_labels %}{{ suggest_labels }}{% elif allow_none %}- Only return `"NONE"` when no label fits; do not use it to avoid a hard decision.
 {% else %}- You must choose one of the listed labels, even when the fit is imperfect. Pick the closest one and explain the reservation in the reason.
+{% endif %}{% if cite_evidence %}{{ cite_evidence }}
 {% endif %}- Only return valid JSON. Do **not** include any extra commentary or text.
 
 ---
 
 Labels:
 {{ labels }}
-{% if test_case_content %}
+{% if candidate_labels %}
+Candidate Labels:
+{{ candidate_labels }}
+{% endif %}{% if test_case_content %}
 {{ test_case_content }}
 {% endif %}
 Turns:
@@ -23,9 +35,11 @@ Turns:
 
 ---
 **Example JSON:**
-{
-  "label": "one of the label names above{% if allow_none %}, or NONE{% endif %}",
-  "reason": "your concise and informative reason here"
-}
+{% if multi_label %}{"labels": [{% endif %}{
+  "label": "one of the label names above{% if suggest_labels %}, a candidate or new label name{% endif %}{% if allow_none %}, or NONE{% endif %}",
+  "reason": "your concise and informative reason here"{% if suggest_labels %},
+  "new_label_description": "the new or candidate label's description, or null"{% endif %}{% if cite_evidence %},
+  "evidence": [{"field": "one of the fields named in the rules", "quote": "an exact passage", "note": "one sentence on what it shows"}]{% endif %}
+}{% if multi_label %}]}{% endif %}
 
 JSON:

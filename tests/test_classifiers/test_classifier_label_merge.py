@@ -1,7 +1,7 @@
 import asyncio
 import json
 
-from deepeval.classifiers import Classifier, Label
+from deepeval.classifiers import Classifier, Label, LabelDiscoveryConfig
 from deepeval.models import DeepEvalBaseEmbeddingModel, DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase
 
@@ -20,7 +20,11 @@ class ScriptedModel(DeepEvalBaseLLM):
         if "same underlying problem" in prompt:
             return json.dumps({"same_as": self.same_as, "reason": "r"})
         return json.dumps(
-            {"label": self.label, "reason": "r", "new_label_description": f"{self.label} cases."}
+            {
+                "label": self.label,
+                "reason": "r",
+                "new_label_description": f"{self.label} cases.",
+            }
         )
 
     async def a_generate(self, prompt, schema=None):
@@ -41,7 +45,8 @@ class WordEmbedding(DeepEvalBaseEmbeddingModel):
 
     def embed_texts(self, texts):
         return [
-            [1.0 if word in text.lower() else 0.0 for word in self.VOCAB] for text in texts
+            [1.0 if word in text.lower() else 0.0 for word in self.VOCAB]
+            for text in texts
         ]
 
     async def a_embed_text(self, text):
@@ -57,22 +62,26 @@ class WordEmbedding(DeepEvalBaseEmbeddingModel):
 CASE = LLMTestCase(input="I want my money back")
 
 
-def _classifier(model, **kwargs):
+def _classifier(model, **config):
     return Classifier(
         name="topics",
         labels=[Label("Pricing", "Asks a price.")],
         model=model,
         async_mode=False,
-        suggest_labels=True,
-        **kwargs,
+        label_discovery_config=LabelDiscoveryConfig(**config),
     )
 
 
 def test_new_label_is_remembered_for_later_calls():
     classifier = _classifier(ScriptedModel("Refund Request"))
     classifier.classify(CASE, _show_indicator=False)
-    assert classifier.new_label_description == "Refund Request cases."
-    assert [label.name for label in classifier.candidate_labels] == ["Refund Request"]
+    assert (
+        classifier.classifications[0].new_label_description
+        == "Refund Request cases."
+    )
+    assert [label.name for label in classifier.candidate_labels] == [
+        "Refund Request"
+    ]
 
     classifier.model.label = "Plan Upgrade"
     classifier.classify(CASE, _show_indicator=False)
@@ -81,10 +90,15 @@ def test_new_label_is_remembered_for_later_calls():
 
 def test_judge_merges_a_near_duplicate_into_a_candidate():
     model = ScriptedModel("Money Back Request", same_as="Refund Request")
-    classifier = _classifier(model, candidate_labels=[Label("Refund Request", "Asks for a refund.")])
+    classifier = _classifier(
+        model, candidate_labels=[Label("Refund Request", "Asks for a refund.")]
+    )
     classifier.classify(CASE, _show_indicator=False)
     assert classifier.label == "Refund Request"
-    assert classifier.new_label_description == "Asks for a refund."
+    assert (
+        classifier.classifications[0].new_label_description
+        == "Asks for a refund."
+    )
     assert len(classifier.candidate_labels) == 1
 
 
@@ -92,7 +106,10 @@ def test_judge_can_merge_into_an_existing_label():
     model = ScriptedModel("Cost Question", same_as="Pricing")
     classifier = _classifier(model)
     classifier.classify(CASE, _show_indicator=False)
-    assert classifier.label == "Pricing" and classifier.new_label_description is None
+    assert (
+        classifier.label == "Pricing"
+        and classifier.classifications[0].new_label_description is None
+    )
     assert classifier.candidate_labels == []
 
 
@@ -111,13 +128,20 @@ def test_close_embeddings_merge_without_a_judge_call():
 def test_copies_share_one_pool_and_converge_concurrently():
     model = ScriptedModel("Refund Request")
     classifier = Classifier(
-        name="topics", labels=["Pricing"], model=model, suggest_labels=True
+        name="topics",
+        labels=["Pricing"],
+        model=model,
+        label_discovery_config=LabelDiscoveryConfig(),
     )
     copies = [classifier.copy() for _ in range(5)]
 
     async def run():
-        await asyncio.gather(*(c.a_classify(CASE, _show_indicator=False) for c in copies))
+        await asyncio.gather(
+            *(c.a_classify(CASE, _show_indicator=False) for c in copies)
+        )
 
     asyncio.run(run())
     assert {c.label for c in copies} == {"Refund Request"}
-    assert [label.name for label in classifier.candidate_labels] == ["Refund Request"]
+    assert [label.name for label in classifier.candidate_labels] == [
+        "Refund Request"
+    ]

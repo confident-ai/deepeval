@@ -26,7 +26,10 @@ class ReplyModel(DeepEvalBaseLLM):
 def _classify(test_case):
     model = ReplyModel()
     classifier = Classifier(
-        name="topic", labels=["pricing", "support"], model=model, async_mode=False
+        name="topic",
+        labels=["pricing", "support"],
+        model=model,
+        async_mode=False,
     )
     assert classifier.classify(test_case, _show_indicator=False) == "pricing"
     return model.prompts[0]
@@ -37,7 +40,9 @@ def _trace_json(prompt):
 
 
 def test_test_case_without_trace_keeps_single_turn_prompt():
-    prompt = _classify(LLMTestCase(input="How much is Pro?", actual_output="$20."))
+    prompt = _classify(
+        LLMTestCase(input="How much is Pro?", actual_output="$20.")
+    )
     assert "Test Case:" in prompt and "Trace:" not in prompt
 
 
@@ -52,7 +57,12 @@ def test_trace_is_shown_with_flattened_spans():
         "type": "agent",
         "input": "How much is Pro?",
         "children": [
-            {"name": "lookup_price", "type": "tool", "output": "20", "children": []},
+            {
+                "name": "lookup_price",
+                "type": "tool",
+                "output": "20",
+                "children": [],
+            },
             {"name": "llm", "type": "llm", "error": "timeout", "children": []},
         ],
     }

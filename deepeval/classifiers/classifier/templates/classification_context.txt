@@ -1,0 +1,5 @@
+{% if description %}This classifier is named "{{ name }}". Its purpose: "{{ description }}".{% endif %}{% if has_context %}{% if description %}
+{% endif %}{% if app_description %}The application being traced is: {{ app_description }}
+Frame your analysis and reason from the perspective of this application.{% if trace_description %}
+{{ trace_description }}{% endif %}{% elif trace_description %}The application being traced is: {{ trace_description }}
+Frame your analysis and reason from the perspective of this application.{% else %}Infer the application's use case from the trace data (e.g. customer support bot, coding assistant, document summarizer) and frame the reason from that perspective.{% endif %}{% endif %}

@@ -100,6 +100,16 @@ SimulatorTemplateMethod = Literal[
 ClassifierTemplateMethod = Literal[
     "classify_single_turn",
     "classify_multi_turn",
+    "classify_trace",
+    "suggest_labels",
+    "cite_evidence",
+    "merge_labels",
+    "review_label",
+    "label_naming_rule",
+    "issue_guidance",
+    "classification_context",
+    "review_app_note",
+    "reason_rules",
     # System One eval modes (`DEEPEVAL_EVAL_MODE`); see EXPERIMENTAL.md.
     "_experimental_system_one_classify",
 ]

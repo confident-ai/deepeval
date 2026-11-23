@@ -1,5 +1,15 @@
 from .base_classifier import BaseClassifier, Label
-from .classifier import Classifier, ClassifierTemplate
+from .classifier import (
+    Classifier,
+    ClassifierTemplate,
+    ClassificationContext,
+    EvidenceConfig,
+    LabelDiscoveryConfig,
+    ReviewConfig,
+)
+from .issues import IssueClassifier, IssueClassifierTemplate
+from .topics import TopicClassifier, TopicClassifierTemplate
+from .use_cases import UseCaseClassifier, UseCaseClassifierTemplate
 
 from .refusal import RefusalClassifier
 from .escalation import EscalationClassifier
@@ -20,6 +30,16 @@ __all__ = [
     "Label",
     "BaseClassifier",
     "ClassifierTemplate",
+    "ClassificationContext",
+    "EvidenceConfig",
+    "LabelDiscoveryConfig",
+    "ReviewConfig",
+    "IssueClassifier",
+    "IssueClassifierTemplate",
+    "TopicClassifier",
+    "TopicClassifierTemplate",
+    "UseCaseClassifier",
+    "UseCaseClassifierTemplate",
     "RefusalClassifier",
     "EscalationClassifier",
     "ScopeAdherenceClassifier",
