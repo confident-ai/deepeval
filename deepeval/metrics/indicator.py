@@ -1,8 +1,6 @@
 import asyncio
 import logging
-import sys
 import time
-from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 from contextlib import contextmanager
 from typing import TYPE_CHECKING, List, Optional, Union
@@ -19,7 +17,7 @@ from deepeval.metrics import (
 from deepeval.test_case import LLMTestCase, ConversationalTestCase
 from deepeval.test_run.cache import CachedTestCase, Cache
 from deepeval.telemetry import record_metric
-from deepeval.utils import update_pbar
+from deepeval.utils import make_console, update_pbar
 from deepeval.config.settings import get_settings
 
 if TYPE_CHECKING:
@@ -97,7 +95,7 @@ def metric_progress_indicator(
     _in_component: bool = False,
 ):
     start_measure(metric, async_mode=async_mode, in_component=_in_component)
-    console = Console(file=sys.stderr)  # Direct output to standard error
+    console = make_console(stderr=True)  # Direct output to standard error
     try:
         if _show_indicator:
             with Progress(

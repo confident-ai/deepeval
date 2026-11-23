@@ -11,6 +11,7 @@ import nest_asyncio
 import uuid
 import math
 import logging
+import sys
 
 from contextvars import ContextVar
 from enum import Enum
@@ -873,7 +874,64 @@ my_theme = Theme(
         "progress.elapsed": "#5703ff",
     }
 )
-custom_console = Console(theme=my_theme)
+
+
+class _EncodingSafeStream:
+    """File-like proxy for ``sys.stdout``/``sys.stderr`` used by DeepEval's
+    Rich consoles.
+
+    When output is redirected on Windows, the stream encoding is the ANSI
+    code page (e.g. cp1252, cp949), which cannot represent the emoji that
+    DeepEval prints. Instead of raising ``UnicodeEncodeError``, characters
+    the stream cannot encode are replaced (e.g. with ``?``).
+
+    The target stream is looked up on every call, so ``redirect_stdout`` and
+    pytest's capture keep working, and the global stream is never
+    reconfigured.
+    """
+
+    def __init__(self, name: str):
+        self._name = name
+
+    @property
+    def _stream(self):
+        stream = getattr(sys, self._name)
+        # While a live display runs, Rich replaces sys.stdout/stderr with a
+        # FileProxy. Unwrap it here, the same way Rich does, so writes keep
+        # going through this proxy instead of bypassing it.
+        return getattr(stream, "rich_proxied_file", stream)
+
+    def write(self, text: str) -> int:
+        stream = self._stream
+        if stream is None:
+            return len(text)
+        encoding = getattr(stream, "encoding", None)
+        if encoding:
+            try:
+                text.encode(encoding)
+            except UnicodeEncodeError:
+                text = text.encode(encoding, errors="replace").decode(encoding)
+            except LookupError:
+                pass
+        return stream.write(text)
+
+    def isatty(self) -> bool:
+        stream = self._stream
+        return bool(stream is not None and stream.isatty())
+
+    def __getattr__(self, name: str):
+        return getattr(self._stream, name)
+
+
+def make_console(*, stderr: bool = False, **kwargs) -> Console:
+    """Create a Rich ``Console`` that writes to stdout (or stderr) without
+    crashing when the stream's encoding cannot represent some characters."""
+    return Console(
+        file=_EncodingSafeStream("stderr" if stderr else "stdout"), **kwargs
+    )
+
+
+custom_console = make_console(theme=my_theme)
 
 
 def format_error_text(

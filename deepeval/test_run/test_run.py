@@ -6,7 +6,6 @@ from pydantic import BaseModel, Field
 from typing import Any, Optional, List, Dict, Union, Tuple
 import sys
 from rich.table import Table
-from rich.console import Console
 from rich import print
 
 
@@ -30,6 +29,7 @@ from deepeval.utils import (
     shorten,
     format_turn,
     len_short,
+    make_console,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.telemetry import (
@@ -67,7 +67,7 @@ LATEST_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_test_run.json"
 LATEST_FULL_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_run_full.json"
 LATEST_TEST_RUN_DATA_KEY = "testRunData"
 LATEST_TEST_RUN_LINK_KEY = "testRunLink"
-console = Console()
+console = make_console()
 
 
 class TestRunResultDisplay(Enum):

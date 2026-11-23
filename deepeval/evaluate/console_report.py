@@ -10,6 +10,7 @@ from rich.tree import Tree
 from rich.terminal_theme import TerminalTheme
 
 from deepeval.evaluate.types import TestResult
+from deepeval.utils import make_console
 from deepeval.test_run.test_run import TestRunResultDisplay
 
 LIGHT_THEME = TerminalTheme(
@@ -140,7 +141,7 @@ class EvaluationConsoleReport:
                 _natural_sort_key(x.name),
             ),
         )
-        self.console = Console()
+        self.console = make_console()
 
     @staticmethod
     def _should_skip_case(
