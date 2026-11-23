@@ -49,7 +49,7 @@ Wrong Refund Window 0.93 - The agent said refunds close after 7 days, but the po
 There are **ONE** mandatory and **ELEVEN** optional parameters when creating an `IssueClassifier`:
 
 - `name`: a string that identifies the classifier.
-- [Optional] `labels`: a list of `Label`s or plain strings naming the issues to look for. May be left empty when a `label_discovery_config` is set. Defaulted to `[]`.
+- [Optional] `labels`: a list of `Label`s or plain strings naming the issues to look for. Required unless a `label_discovery_config` is set, in which case it may be left empty. Defaulted to `()`.
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/guides/guides-using-custom-llms) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `include_reason`: a boolean which when set to `True`, includes a reason for each issue. Defaulted to `True`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `classify()` method](/docs/classifiers-introduction#using-classifiers-async). Defaulted to `True`.
@@ -82,7 +82,7 @@ Discovered issues are named in 3 to 7 words that say exactly what happened, such
 
 ## How Does It Work?
 
-An `IssueClassifier` runs the same steps as a [`Classifier`](/docs/classifiers-custom#how-does-it-work), with three differences:
+An `IssueClassifier` runs the same steps as a [`Classifier`](/docs/classifiers-custom#how-does-it-work), with two differences:
 
 - **Issue guidance**: the judge is told to flag only failures on the agent's side, never the user's behaviour, and to return nothing for a correct, complete response.
 - **Issue review**: each issue is re-judged for real harm, and kept only if its confidence is at least `min_confidence`.

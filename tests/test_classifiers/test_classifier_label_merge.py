@@ -1,40 +1,50 @@
 import asyncio
-import json
 
 from deepeval.classifiers import Classifier, Label, LabelDiscoveryConfig
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase
+from tests.test_classifiers.fakes import ReplyModel
 
 
-class ScriptedModel(DeepEvalBaseLLM):
+class ScriptedModel(ReplyModel):
     def __init__(self, label, same_as=None):
+        super().__init__()
         self.label = label
         self.same_as = same_as
-        self.prompts = []
 
-    def load_model(self):
-        return self
-
-    def generate(self, prompt, schema=None):
-        self.prompts.append(prompt)
+    def respond(self, prompt):
         if "same underlying problem" in prompt:
-            return json.dumps({"same_as": self.same_as, "reason": "r"})
-        return json.dumps(
-            {
-                "label": self.label,
-                "reason": "r",
-                "new_label_description": f"{self.label} cases.",
-            }
-        )
-
-    async def a_generate(self, prompt, schema=None):
-        return self.generate(prompt, schema)
-
-    def get_model_name(self):
-        return "scripted"
+            return {"same_as": self.same_as, "reason": "r"}
+        return {
+            "label": self.label,
+            "reason": "r",
+            "new_label_description": f"{self.label} cases.",
+        }
 
 
 CASE = LLMTestCase(input="I want my money back")
+
+
+class MultiProposalModel(ReplyModel):
+    def respond(self, prompt):
+        if "same underlying problem" in prompt:
+            same_as = (
+                "Refund Request" if '"name": "Money Back"' in prompt else None
+            )
+            return {"same_as": same_as, "reason": "r"}
+        return {
+            "labels": [
+                {
+                    "label": "Shipping Delay",
+                    "reason": "r",
+                    "new_label_description": "Order arrives late.",
+                },
+                {
+                    "label": "Money Back",
+                    "reason": "r",
+                    "new_label_description": "Wants a refund.",
+                },
+            ]
+        }
 
 
 def _classifier(model, **config):
@@ -118,4 +128,27 @@ def test_copies_share_one_pool_and_converge_concurrently():
     assert {c.label for c in copies} == {"Refund Request"}
     assert [label.name for label in classifier.candidate_labels] == [
         "Refund Request"
+    ]
+
+
+def test_a_proposal_past_the_cap_can_still_merge():
+    classifier = Classifier(
+        name="topics",
+        labels=["Pricing"],
+        model=MultiProposalModel(),
+        async_mode=False,
+        multi_label=True,
+        label_discovery_config=LabelDiscoveryConfig(
+            candidate_labels=[Label("Refund Request", "Asks for a refund.")],
+            max_new_labels=1,
+        ),
+    )
+    classifier.classify(CASE, _show_indicator=False)
+    assert [c.label for c in classifier.classifications] == [
+        "Shipping Delay",
+        "Refund Request",
+    ]
+    assert [label.name for label in classifier.candidate_labels] == [
+        "Refund Request",
+        "Shipping Delay",
     ]

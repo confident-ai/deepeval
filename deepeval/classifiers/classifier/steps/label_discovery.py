@@ -1,21 +1,27 @@
 import json
 import threading
+from dataclasses import dataclass, field
 from typing import (
     TYPE_CHECKING,
-    Any,
     Dict,
     List,
     Optional,
     Sequence,
     Tuple,
-    Union,
 )
 
 import numpy as np
 
 from deepeval.classifiers.base_classifier import Label
-from deepeval.classifiers.classifier.schema import LabelMergeResult
-from deepeval.classifiers.utils import LabelOrigin, clean_reason
+from deepeval.classifiers.classifier.schema import (
+    ClassificationResult,
+    LabelMergeResult,
+)
+from deepeval.classifiers.utils import (
+    LabelOrigin,
+    ResolvedLabel,
+    clean_reason,
+)
 from deepeval.metrics.utils.generation import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
@@ -50,31 +56,73 @@ class LabelPool:
             return list(additions)
 
 
-def merge_new_labels(classifier: "Classifier", result: Any) -> Dict[str, Label]:
-    return {
-        name: _merge(
-            classifier, Label(name=name, description=description), reason
+@dataclass(frozen=True)
+class MergedLabels:
+    """The new label names the judge proposed, each mapped to the label it
+    became after merging: an existing label, or itself once added to the
+    pool. Names over ``max_new_labels`` are absent."""
+
+    by_name: Dict[str, ResolvedLabel] = field(default_factory=dict)
+
+    def get(self, name: Optional[str]) -> Optional[ResolvedLabel]:
+        return None if name is None else self.by_name.get(name)
+
+
+def merge_new_labels(
+    classifier: "Classifier",
+    classification_results: List[ClassificationResult],
+) -> MergedLabels:
+    config = classifier.label_discovery_config
+    merged: Dict[str, ResolvedLabel] = {}
+    added = 0
+    for proposed, reason in _proposed_new_labels(
+        classifier, classification_results
+    ):
+        may_add = (
+            config is None
+            or config.max_new_labels is None
+            or added < config.max_new_labels
         )
-        for name, description, reason in _proposed_new_labels(
-            classifier, result
-        )
-    }
+        label = _merge(classifier, proposed, reason, may_add)
+        if label is None:
+            continue
+        added += label is proposed
+        merged[proposed.name] = _resolved(classifier, label)
+    return MergedLabels(merged)
 
 
 async def a_merge_new_labels(
-    classifier: "Classifier", result: Any
-) -> Dict[str, Label]:
-    return {
-        name: await _a_merge(
-            classifier, Label(name=name, description=description), reason
+    classifier: "Classifier",
+    classification_results: List[ClassificationResult],
+) -> MergedLabels:
+    config = classifier.label_discovery_config
+    merged: Dict[str, ResolvedLabel] = {}
+    added = 0
+    for proposed, reason in _proposed_new_labels(
+        classifier, classification_results
+    ):
+        may_add = (
+            config is None
+            or config.max_new_labels is None
+            or added < config.max_new_labels
         )
-        for name, description, reason in _proposed_new_labels(
-            classifier, result
-        )
-    }
+        label = await _a_merge(classifier, proposed, reason, may_add)
+        if label is None:
+            continue
+        added += label is proposed
+        merged[proposed.name] = _resolved(classifier, label)
+    return MergedLabels(merged)
 
 
-def _merge(classifier: "Classifier", proposed: Label, reason: str) -> Label:
+def _resolved(classifier: "Classifier", label: Label) -> ResolvedLabel:
+    if any(declared.name == label.name for declared in classifier.labels):
+        return ResolvedLabel(label.name, LabelOrigin.DECLARED)
+    return ResolvedLabel(label.name, LabelOrigin.CANDIDATE, label.description)
+
+
+def _merge(
+    classifier: "Classifier", proposed: Label, reason: str, may_add: bool
+) -> Optional[Label]:
     pool = classifier.label_pool
     labels = pool.labels
     declared = {label.name for label in classifier.labels}
@@ -84,7 +132,7 @@ def _merge(classifier: "Classifier", proposed: Label, reason: str) -> Label:
     ]
     seen = len(labels)
     while True:
-        match = same_name(proposed.name, candidates)
+        match = _same_name(proposed.name, candidates)
         if match is None and candidates:
             missing = [
                 label.name
@@ -100,17 +148,23 @@ def _merge(classifier: "Classifier", proposed: Label, reason: str) -> Label:
                         ),
                     )
                 )
-            shortlist = _shortlist(classifier, proposed, candidates)
-            if isinstance(shortlist, Label):
-                return shortlist
+            close_match, shortlist = _shortlist(
+                classifier, proposed, candidates
+            )
+            if close_match is not None:
+                return close_match
             same_as = generate_with_schema_and_extract(
                 metric=classifier,
                 prompt=_merge_prompt(classifier, proposed, reason, shortlist),
                 **_MERGE_EXTRACTION,
             )
-            match = next((l for l in shortlist if l.name == same_as), None)
+            match = next(
+                (label for label in shortlist if label.name == same_as), None
+            )
         if match is not None:
             return match
+        if not may_add:
+            return None
         additions = pool.add(proposed, seen)
         if not additions:
             return proposed
@@ -118,8 +172,8 @@ def _merge(classifier: "Classifier", proposed: Label, reason: str) -> Label:
 
 
 async def _a_merge(
-    classifier: "Classifier", proposed: Label, reason: str
-) -> Label:
+    classifier: "Classifier", proposed: Label, reason: str, may_add: bool
+) -> Optional[Label]:
     pool = classifier.label_pool
     labels = pool.labels
     declared = {label.name for label in classifier.labels}
@@ -129,7 +183,7 @@ async def _a_merge(
     ]
     seen = len(labels)
     while True:
-        match = same_name(proposed.name, candidates)
+        match = _same_name(proposed.name, candidates)
         if match is None and candidates:
             missing = [
                 label.name
@@ -145,17 +199,23 @@ async def _a_merge(
                         ),
                     )
                 )
-            shortlist = _shortlist(classifier, proposed, candidates)
-            if isinstance(shortlist, Label):
-                return shortlist
+            close_match, shortlist = _shortlist(
+                classifier, proposed, candidates
+            )
+            if close_match is not None:
+                return close_match
             same_as = await a_generate_with_schema_and_extract(
                 metric=classifier,
                 prompt=_merge_prompt(classifier, proposed, reason, shortlist),
                 **_MERGE_EXTRACTION,
             )
-            match = next((l for l in shortlist if l.name == same_as), None)
+            match = next(
+                (label for label in shortlist if label.name == same_as), None
+            )
         if match is not None:
             return match
+        if not may_add:
+            return None
         additions = pool.add(proposed, seen)
         if not additions:
             return proposed
@@ -164,7 +224,7 @@ async def _a_merge(
 
 def _shortlist(
     classifier: "Classifier", proposed: Label, candidates: List[Label]
-) -> Union[Label, List[Label]]:
+) -> Tuple[Optional[Label], List[Label]]:
     config = classifier.label_discovery_config
     vectors = classifier.label_pool.vectors
     matrix = np.array(
@@ -176,26 +236,34 @@ def _shortlist(
     scores = unit[1:] @ unit[0]
     order = np.argsort(-scores)
     if scores[order[0]] >= config.similarity_threshold:
-        return candidates[order[0]]
-    return [candidates[i] for i in order[: config.top_k]]
+        return candidates[order[0]], []
+    return None, [candidates[i] for i in order[: config.top_k]]
 
 
 def _proposed_new_labels(
-    classifier: "Classifier", result: Any
-) -> List[Tuple[str, str, str]]:
+    classifier: "Classifier",
+    classification_results: List[ClassificationResult],
+) -> List[Tuple[Label, str]]:
     if not classifier.label_discovery_config:
         return []
-    new = []
-    for item in result.labels if classifier.multi_label else [result]:
-        resolved = classifier._resolve_item(item, clean_reason(item.reason))
+    proposed: Dict[str, Tuple[Label, str]] = {}
+    for classification_result in classification_results:
+        resolved_label = classifier._resolve_label_from_classification_result(
+            classification_result, clean_reason(classification_result.reason)
+        )
         if (
-            resolved.origin is LabelOrigin.NEW
-            and same_name(resolved.name, classifier.label_pool.labels) is None
-            and all(resolved.name != name for name, _, _ in new)
+            resolved_label.origin is LabelOrigin.NEW
+            and resolved_label.name is not None
+            and resolved_label.name not in proposed
         ):
-            new.append((resolved.name, resolved.description, item.reason))
-    cap = classifier.label_discovery_config.max_new_labels
-    return new if cap is None else new[:cap]
+            proposed[resolved_label.name] = (
+                Label(
+                    name=resolved_label.name,
+                    description=resolved_label.description,
+                ),
+                classification_result.reason,
+            )
+    return list(proposed.values())
 
 
 def _merge_prompt(
@@ -208,7 +276,10 @@ def _merge_prompt(
         "merge_labels",
         payload=json.dumps(
             {
-                "classifier": {"name": classifier.name},
+                "classifier": {
+                    "name": classifier.name,
+                    "description": classifier.description,
+                },
                 "proposed": {
                     "name": proposed.name,
                     "description": proposed.description,
@@ -224,7 +295,7 @@ def _merge_prompt(
     )
 
 
-def same_name(name: str, labels: Sequence[Label]) -> Optional[Label]:
+def _same_name(name: str, labels: Sequence[Label]) -> Optional[Label]:
     lowered = name.strip().lower()
     return next(
         (label for label in labels if label.name.lower() == lowered), None

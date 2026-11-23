@@ -1,5 +1,3 @@
-import json
-
 import pytest
 
 from deepeval.classifiers import (
@@ -7,29 +5,17 @@ from deepeval.classifiers import (
     TopicClassifier,
     UseCaseClassifier,
 )
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase
 
 CASE = LLMTestCase(
     input="How much is the Pro plan?", actual_output="Pro is $20 a month."
 )
+from tests.test_classifiers.fakes import ReplyModel
 
 
-class ScriptedModel(DeepEvalBaseLLM):
+class ScriptedModel(ReplyModel):
     def __init__(self, confidence):
-        self.confidence = confidence
-        self.prompts = []
-
-    def load_model(self):
-        return self
-
-    def generate(self, prompt, schema=None):
-        self.prompts.append(prompt)
-        if prompt.startswith("A classifier tagged"):
-            return json.dumps(
-                {"summary": "s", "confidence": self.confidence, "reason": "r"}
-            )
-        return json.dumps(
+        super().__init__(
             {
                 "label": "Pricing",
                 "reason": "Asked a price.",
@@ -38,12 +24,16 @@ class ScriptedModel(DeepEvalBaseLLM):
                 ],
             }
         )
+        self.confidence = confidence
 
-    async def a_generate(self, prompt, schema=None):
-        return self.generate(prompt, schema)
-
-    def get_model_name(self):
-        return "scripted"
+    def respond(self, prompt):
+        if prompt.startswith("A classifier tagged"):
+            return {
+                "summary": "s",
+                "confidence": self.confidence,
+                "reason": "r",
+            }
+        return self.reply
 
 
 @pytest.mark.parametrize(
@@ -98,3 +88,17 @@ def test_copies_keep_their_class_and_template():
     clone = classifier.copy()
     assert type(clone) is UseCaseClassifier
     assert clone.classification_template is classifier.classification_template
+
+
+def test_cache_tells_topic_and_use_case_classifiers_apart():
+    from deepeval.test_run.cache import Cache
+
+    configurations = [
+        Cache.create_classifier_configuration(
+            classifier_class(
+                name="c", labels=["Pricing"], model=ScriptedModel(0.9)
+            )
+        )
+        for classifier_class in (TopicClassifier, UseCaseClassifier)
+    ]
+    assert configurations[0] != configurations[1]

@@ -7,7 +7,7 @@ from deepeval.classifiers import (
     LabelDiscoveryConfig,
     ReviewConfig,
 )
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.classifiers.utils import validate_classifiers
 from deepeval.test_case import LLMTestCase
 
 CASE = LLMTestCase(
@@ -23,31 +23,21 @@ WRONG_WINDOW = {
         {"field": "actual_output", "quote": "Refunds close after 7 days."}
     ],
 }
+from tests.test_classifiers.fakes import ReplyModel
 
 
-class ScriptedModel(DeepEvalBaseLLM):
+class ScriptedModel(ReplyModel):
     def __init__(self, labels, reviews):
-        self.labels = labels
+        super().__init__({"labels": labels})
         self.reviews = reviews
-        self.prompts = []
 
-    def load_model(self):
-        return self
-
-    def generate(self, prompt, schema=None):
-        self.prompts.append(prompt)
-        if prompt.startswith("A classifier flagged a possible problem"):
-            name = json.loads(
-                prompt.split("Flag:\n", 1)[1].split("\n\nContent:", 1)[0]
-            )["name"]
-            return json.dumps(self.reviews[name])
-        return json.dumps({"labels": self.labels})
-
-    async def a_generate(self, prompt, schema=None):
-        return self.generate(prompt, schema)
-
-    def get_model_name(self):
-        return "scripted"
+    def respond(self, prompt):
+        if not prompt.startswith("A classifier flagged a possible problem"):
+            return self.reply
+        name = json.loads(
+            prompt.split("Flag:\n", 1)[1].split("\n\nContent:", 1)[0]
+        )["name"]
+        return self.reviews[name]
 
 
 def _classify(labels, reviews, **kwargs):
@@ -183,4 +173,32 @@ def test_template_overrides_only_the_issue_parts():
         content="c",
         app_description=None,
         app_note="",
+    )
+
+
+def test_issue_classifier_builds_under_a_global_system_one_mode(monkeypatch):
+    monkeypatch.setenv("DEEPEVAL_EVAL_MODE", "system_one")
+    classifier = IssueClassifier(
+        name="issues",
+        labels=["Wrong Refund Window"],
+        model=ScriptedModel([], {}),
+    )
+    assert not classifier.eval_mode.uses_system_one
+
+
+def test_expected_labels_may_name_a_discovered_issue():
+    classifier = IssueClassifier(
+        name="issues",
+        model=ScriptedModel([], {}),
+        label_discovery_config=LabelDiscoveryConfig(),
+    )
+    validate_classifiers(
+        [
+            LLMTestCase(
+                input="q",
+                actual_output="a",
+                expected_labels={"issues": "Wrong Refund Window"},
+            )
+        ],
+        [classifier],
     )

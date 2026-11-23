@@ -475,6 +475,11 @@ class Cache:
             MAX_CONTENT_CHARS,
         )
 
+        template_name = getattr(
+            getattr(classifier, "classification_template", None),
+            "__name__",
+            None,
+        )
         options = {
             "multi_label": classifier.multi_label or None,
             "max_content_chars": (
@@ -485,6 +490,9 @@ class Cache:
             "evidence_config": _config_dict(classifier.evidence_config),
             "review_config": _config_dict(classifier.review_config),
             "description": classifier.description,
+            "template": (
+                None if template_name == "ClassifierTemplate" else template_name
+            ),
             "classification_context": _config_dict(
                 classifier.classification_context
             ),

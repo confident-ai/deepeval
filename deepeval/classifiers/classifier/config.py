@@ -6,7 +6,7 @@ from deepeval.metrics.utils import initialize_embedding_model
 from deepeval.models import DeepEvalBaseEmbeddingModel
 
 
-@dataclass
+@dataclass(frozen=True)
 class LabelDiscoveryConfig:
     candidate_labels: List[Union[str, Label]] = field(default_factory=list)
     embedding_model: Optional[Union[str, DeepEvalBaseEmbeddingModel]] = None
@@ -15,7 +15,11 @@ class LabelDiscoveryConfig:
     max_new_labels: Optional[int] = None
 
     def __post_init__(self):
-        self.embedding_model = initialize_embedding_model(self.embedding_model)
+        object.__setattr__(
+            self,
+            "embedding_model",
+            initialize_embedding_model(self.embedding_model),
+        )
 
 
 @dataclass(frozen=True)

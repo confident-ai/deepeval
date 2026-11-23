@@ -2,11 +2,13 @@ from typing import List, Optional, Type, Union
 
 from deepeval.classifiers.base_classifier import Label
 from deepeval.classifiers.classifier import (
+    ClassificationContext,
     Classifier,
     ClassifierTemplate,
     EvidenceConfig,
     ReviewConfig,
 )
+from deepeval.classifiers.classifier.steps.truncate import MAX_CONTENT_CHARS
 from deepeval.config.eval_mode import ClassifierEvalModeName
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 
@@ -40,8 +42,11 @@ class RefusalClassifier(Classifier):
         allow_none: bool = False,
         async_mode: bool = True,
         classification_template: Type[ClassifierTemplate] = ClassifierTemplate,
+        *,
+        max_content_chars: int = MAX_CONTENT_CHARS,
         evidence_config: Optional[EvidenceConfig] = None,
         review_config: Optional[ReviewConfig] = None,
+        classification_context: Optional[ClassificationContext] = None,
     ):
         super().__init__(
             name="refusal",
@@ -53,6 +58,8 @@ class RefusalClassifier(Classifier):
             allow_none=allow_none,
             async_mode=async_mode,
             classification_template=classification_template,
+            max_content_chars=max_content_chars,
             evidence_config=evidence_config,
             review_config=review_config,
+            classification_context=classification_context,
         )

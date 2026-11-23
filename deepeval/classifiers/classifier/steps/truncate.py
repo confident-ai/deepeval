@@ -3,6 +3,7 @@ from typing import Any, Dict, List, Optional, Union
 
 TRUNCATION_MARKER = "…[truncated]"
 MAX_CONTENT_CHARS = 100_000
+ShownContent = Union[List[Dict[str, Any]], Dict[str, Any], str]
 SPAN_FIELD_CHAR_LIMIT = 1500
 SPAN_LIMIT = 40
 SPANS_CHAR_BUDGET = 60_000
@@ -24,16 +25,13 @@ def cap_field(value: Any) -> Optional[str]:
 
 def select_spans(spans: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
     ranked = sorted(
-        range(len(spans)), key=lambda i: (span_priority(spans[i]), i)
+        range(len(spans)), key=lambda i: (_span_priority(spans[i]), i)
     )
     kept = ranked[:SPAN_LIMIT]
     size = sum(len(serialize(spans[i])) for i in kept)
     while kept and size > SPANS_CHAR_BUDGET:
         size -= len(serialize(spans[kept.pop()]))
-    return [
-        {"index": position + 1, **spans[i]}
-        for position, i in enumerate(sorted(kept))
-    ]
+    return [{"index": i + 1, **spans[i]} for i in sorted(kept)]
 
 
 def fit_trace(trace: Dict[str, Any], budget: int) -> Union[Dict[str, Any], str]:
@@ -44,7 +42,7 @@ def fit_trace(trace: Dict[str, Any], budget: int) -> Union[Dict[str, Any], str]:
         rest = {key: value for key, value in trace.items() if key != "spans"}
         drop_order = sorted(
             range(len(spans)),
-            key=lambda i: (span_priority(spans[i]), i),
+            key=lambda i: (_span_priority(spans[i]), i),
             reverse=True,
         )
         dropped = set()
@@ -55,11 +53,17 @@ def fit_trace(trace: Dict[str, Any], budget: int) -> Union[Dict[str, Any], str]:
             if len(serialize(fitted)) <= budget:
                 return fitted
         trace = rest
-    return serialize(trace)[:budget]
+    return _cut(serialize(trace), budget)
 
 
 def fit_text(text: str, budget: int) -> str:
-    return text[:budget]
+    return _cut(text, budget)
+
+
+def _cut(text: str, budget: int) -> str:
+    if len(text) <= budget:
+        return text
+    return text[: max(budget - len(TRUNCATION_MARKER), 0)] + TRUNCATION_MARKER
 
 
 def fit_turns(turns: List[Dict[str, Any]], budget: int) -> List[Dict[str, Any]]:
@@ -69,7 +73,7 @@ def fit_turns(turns: List[Dict[str, Any]], budget: int) -> List[Dict[str, Any]]:
     return turns[start:]
 
 
-def span_priority(span: Any) -> int:
+def _span_priority(span: Dict[str, Any]) -> int:
     if not isinstance(span, dict):
         return _DEFAULT_SPAN_PRIORITY
     if span.get("status") == "ERRORED" or span.get("error"):

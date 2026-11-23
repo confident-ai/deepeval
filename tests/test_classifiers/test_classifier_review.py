@@ -10,42 +10,29 @@ from deepeval.classifiers import (
     RefusalClassifier,
     ReviewConfig,
 )
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase
+from tests.test_classifiers.fakes import ReplyModel
 
 
-class ReviewingModel(DeepEvalBaseLLM):
+class ReviewingModel(ReplyModel):
     def __init__(self, reply, confidences):
-        self.reply = reply
+        super().__init__(reply)
         self.confidences = confidences
-        self.prompts = []
 
-    def load_model(self):
-        return self
-
-    def generate(self, prompt, schema=None):
-        self.prompts.append(prompt)
-        if prompt.startswith("A classifier labelled"):
-            label = json.loads(
-                prompt.split("Label:\n", 1)[1].split("\n\nContent:", 1)[0]
-            )
-            confidence = self.confidences[label["name"]]
-            if confidence is None:
-                return "not json"
-            return json.dumps(
-                {
-                    "summary": "s",
-                    "confidence": confidence,
-                    "reason": f"{label['name']} checked.",
-                }
-            )
-        return json.dumps(self.reply)
-
-    async def a_generate(self, prompt, schema=None):
-        return self.generate(prompt, schema)
-
-    def get_model_name(self):
-        return "reviewing"
+    def respond(self, prompt):
+        if not prompt.startswith("A classifier labelled"):
+            return self.reply
+        label = json.loads(
+            prompt.split("Label:\n", 1)[1].split("\n\nContent:", 1)[0]
+        )
+        confidence = self.confidences[label["name"]]
+        if confidence is None:
+            return "not json"
+        return {
+            "summary": "s",
+            "confidence": confidence,
+            "reason": f"{label['name']} checked.",
+        }
 
 
 CASE = LLMTestCase(

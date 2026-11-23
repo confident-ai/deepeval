@@ -1,30 +1,12 @@
 import json
 
 from deepeval.classifiers import Classifier
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase, ToolCall
-
-
-class ReplyModel(DeepEvalBaseLLM):
-    def __init__(self):
-        self.prompts = []
-
-    def load_model(self):
-        return self
-
-    def generate(self, prompt, schema=None):
-        self.prompts.append(prompt)
-        return json.dumps({"label": "pricing", "reason": "Asked for a price."})
-
-    async def a_generate(self, prompt, schema=None):
-        return self.generate(prompt, schema)
-
-    def get_model_name(self):
-        return "reply-model"
+from tests.test_classifiers.fakes import ReplyModel
 
 
 def _classify(test_case):
-    model = ReplyModel()
+    model = ReplyModel({"label": "pricing", "reason": "Asked for a price."})
     classifier = Classifier(
         name="topic",
         labels=["pricing", "support"],

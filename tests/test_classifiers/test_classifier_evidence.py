@@ -1,5 +1,3 @@
-import json
-
 import pytest
 
 from deepeval.classifiers import (
@@ -8,27 +6,8 @@ from deepeval.classifiers import (
     Label,
     LabelDiscoveryConfig,
 )
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import ConversationalTestCase, LLMTestCase, Turn
-
-
-class ReplyModel(DeepEvalBaseLLM):
-    def __init__(self, reply):
-        self.reply = reply
-        self.prompts = []
-
-    def load_model(self):
-        return self
-
-    def generate(self, prompt, schema=None):
-        self.prompts.append(prompt)
-        return json.dumps(self.reply)
-
-    async def a_generate(self, prompt, schema=None):
-        return self.generate(prompt, schema)
-
-    def get_model_name(self):
-        return "reply-model"
+from tests.test_classifiers.fakes import ReplyModel
 
 
 def _classify(test_case, evidence, **kwargs):
@@ -40,8 +19,7 @@ def _classify(test_case, evidence, **kwargs):
         labels=[Label("pricing", "Asks what something costs."), "support"],
         model=model,
         async_mode=False,
-        evidence_config=EvidenceConfig(),
-        **kwargs,
+        **{"evidence_config": EvidenceConfig(), **kwargs},
     )
     classifier.classify(test_case, _show_indicator=False)
     return classifier, model.prompts[0]
@@ -225,3 +203,40 @@ def test_evidence_config_sets_the_limits():
         classifier.classifications[0].evidence[0].quote == "How much is "
         and classifier.classifications[0].evidence[0].matched
     )
+
+
+def test_evidence_is_capped_at_max_items():
+    classifier, _ = _classify(
+        LLMTestCase(input="How much is the Pro plan?"),
+        [{"field": "input", "quote": "How much is the Pro plan?"}] * 4,
+        evidence_config=EvidenceConfig(max_items=2),
+    )
+    assert len(classifier.classifications[0].evidence) == 2
+
+
+def test_evidence_from_a_field_the_judge_was_not_offered_never_matches():
+    classifier, _ = _classify(
+        LLMTestCase(input="How much is the Pro plan?"),
+        [{"field": "__dict__", "quote": "How much is the Pro plan?"}],
+    )
+    assert not classifier.classifications[0].evidence[0].matched
+
+
+@pytest.mark.asyncio
+async def test_async_classify_verifies_evidence():
+    classifier = Classifier(
+        name="topic",
+        labels=["pricing", "support"],
+        model=ReplyModel(
+            {
+                "label": "pricing",
+                "reason": "Asked a price.",
+                "evidence": [{"field": "input", "quote": "How much is it?"}],
+            }
+        ),
+        evidence_config=EvidenceConfig(),
+    )
+    await classifier.a_classify(
+        LLMTestCase(input="How much is it?"), _show_indicator=False
+    )
+    assert classifier.classifications[0].evidence[0].matched

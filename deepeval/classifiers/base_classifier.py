@@ -86,7 +86,7 @@ class BaseClassifier(PromptMixin):
     label: Optional[str] = None
     classifications: Optional[List[Classification]] = None
     multi_label: bool = False
-    max_content_chars: Optional[int] = None
+    max_content_chars: int = 100_000
     evidence_config: Optional[EvidenceConfig] = None
     review_config: Optional[ReviewConfig] = None
     label_discovery_config: Optional[LabelDiscoveryConfig] = None

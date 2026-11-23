@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, Type
+from typing import Any, List, Optional, Type, Union
 
 from pydantic import (
     BaseModel,
@@ -9,43 +9,14 @@ from pydantic import (
     model_validator,
 )
 
+###############################################
+# Classifications
+###############################################
+
 
 class ClassificationResult(BaseModel):
     label: str
     reason: str
-
-
-class EvidenceItem(BaseModel):
-    field: str
-    quote: str
-    note: str = ""
-    span_index: Optional[int] = None
-    turn_index: Optional[int] = None
-
-
-class SuggestedClassificationResult(ClassificationResult):
-    new_label_description: Optional[str]
-
-
-class EvidencedClassificationResult(ClassificationResult):
-    evidence: List[EvidenceItem] = Field(default_factory=list)
-
-    @field_validator("evidence", mode="before")
-    @classmethod
-    def _drop_invalid(cls, value: Any) -> Any:
-        if not isinstance(value, list):
-            return []
-        return [item for item in value if _is_evidence(item)]
-
-
-class SuggestedEvidencedClassificationResult(
-    SuggestedClassificationResult, EvidencedClassificationResult
-):
-    pass
-
-
-def _is_evidence(item: Any) -> bool:
-    return _is_valid(EvidenceItem, item)
 
 
 def _is_valid(model: Type[BaseModel], item: Any) -> bool:
@@ -56,9 +27,53 @@ def _is_valid(model: Type[BaseModel], item: Any) -> bool:
     return True
 
 
+###############################################
+# Evidence
+###############################################
+
+
+class EvidenceItem(BaseModel):
+    field: str
+    quote: str
+    note: str = ""
+    span_index: Optional[int] = None
+    turn_index: Optional[int] = None
+
+
+class EvidencedClassificationResult(ClassificationResult):
+    evidence: List[EvidenceItem] = Field(default_factory=list)
+
+    @field_validator("evidence", mode="before")
+    @classmethod
+    def _drop_invalid(cls, value: Any) -> Any:
+        if not isinstance(value, list):
+            return []
+        return [item for item in value if _is_valid(EvidenceItem, item)]
+
+
+###############################################
+# Label Discovery
+###############################################
+
+
+class SuggestedClassificationResult(ClassificationResult):
+    new_label_description: Optional[str] = None
+
+
+class SuggestedEvidencedClassificationResult(
+    SuggestedClassificationResult, EvidencedClassificationResult
+):
+    pass
+
+
 class LabelMergeResult(BaseModel):
     same_as: Optional[str] = None
     reason: str = ""
+
+
+###############################################
+# Review
+###############################################
 
 
 class LabelReview(BaseModel):
@@ -70,8 +85,27 @@ class LabelReview(BaseModel):
         return self.reason
 
 
-def _label_list(item: Type[ClassificationResult]) -> Type[BaseModel]:
-    class LabelList(BaseModel):
+###############################################
+# Multi-Label
+###############################################
+
+
+class ClassificationResults(BaseModel):
+    labels: List[ClassificationResult]
+
+
+def as_classification_results(
+    response: Union[ClassificationResult, ClassificationResults],
+) -> List[ClassificationResult]:
+    if isinstance(response, ClassificationResults):
+        return response.labels
+    return [response]
+
+
+def _label_list(
+    item: Type[ClassificationResult],
+) -> Type[ClassificationResults]:
+    class LabelList(ClassificationResults):
         model_config = ConfigDict(title=f"{item.__name__}List")
         labels: List[item]
 

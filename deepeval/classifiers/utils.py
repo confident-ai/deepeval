@@ -2,9 +2,9 @@ from __future__ import annotations
 
 import logging
 import re
-from enum import Enum
 from collections import Counter
 from dataclasses import dataclass
+from enum import Enum
 from typing import (
     Any,
     Dict,
@@ -53,7 +53,9 @@ logger = logging.getLogger(__name__)
 
 def normalize_labels(labels: Sequence[Union[str, Label]]) -> List[Label]:
     if not labels:
-        raise ValueError("A classifier needs at least one label.")
+        raise ValueError(
+            "A classifier needs at least one label, or a label_discovery_config to discover them."
+        )
 
     normalized: List[Label] = []
     for label in labels:
@@ -223,7 +225,7 @@ def resolve_suggested_label(
     if raw is None:
         return ResolvedLabel(None)
     name = str(raw).strip()
-    if not name or name.upper() == NONE_LABEL or is_absence_label(name):
+    if not name or name.upper() == NONE_LABEL or _is_absence_label(name):
         return (
             ResolvedLabel(NONE_LABEL, LabelOrigin.NONE)
             if allow_none
@@ -257,7 +259,7 @@ def _fallback_description(name: str, reason: Optional[str]) -> str:
     )
 
 
-def is_absence_label(name: str) -> bool:
+def _is_absence_label(name: str) -> bool:
     normalized = name.strip().lower()
     return normalized in _ABSENCE_LABEL_NAMES or bool(
         _ABSENCE_LABEL_RE.match(normalized)
@@ -566,7 +568,10 @@ def validate_classifiers(
             if classifier is None:
                 unknown_keys[key] += 1
                 continue
-            if value not in classifier.labels:
+            if (
+                classifier.label_discovery_config is None
+                and value not in classifier.labels
+            ):
                 raise ValueError(
                     f"expected_labels['{key}'] = '{value}' is not one of classifier '{key}' labels: {', '.join(str(l) for l in classifier.labels)}."
                 )

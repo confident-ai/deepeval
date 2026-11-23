@@ -8,27 +8,8 @@ from deepeval.classifiers.classifier.steps.truncate import (
     fit_trace,
     fit_turns,
 )
-from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import ConversationalTestCase, LLMTestCase, Turn
-
-
-class ReplyModel(DeepEvalBaseLLM):
-    def __init__(self, reply=None):
-        self.reply = reply or {"label": "pricing", "reason": "r"}
-        self.prompts = []
-
-    def load_model(self):
-        return self
-
-    def generate(self, prompt, schema=None):
-        self.prompts.append(prompt)
-        return json.dumps(self.reply)
-
-    async def a_generate(self, prompt, schema=None):
-        return self.generate(prompt, schema)
-
-    def get_model_name(self):
-        return "reply-model"
+from tests.test_classifiers.fakes import ReplyModel
 
 
 def _prompt(test_case, **kwargs):
@@ -84,7 +65,10 @@ def test_only_the_highest_priority_spans_are_kept_in_order():
     spans = _trace(_prompt(_traced(children))[1])["spans"]
     assert len(spans) == SPAN_LIMIT
     assert spans[0]["name"] == "root" and spans[-1]["name"] == "failed"
-    assert [s["index"] for s in spans] == list(range(1, SPAN_LIMIT + 1))
+    assert [s["index"] for s in spans] == [
+        *range(1, SPAN_LIMIT),
+        SPAN_LIMIT + 2,
+    ]
 
 
 def test_trace_over_budget_drops_low_priority_spans_first():
@@ -97,7 +81,9 @@ def test_trace_over_budget_drops_low_priority_spans_first():
     }
     fitted = fit_trace(trace, 160)
     assert [s["name"] for s in fitted["spans"]] == ["b"]
-    assert fit_trace(trace, 10) == '{"input":"q'[:10]
+    assert fit_trace({"input": "q" * 40}, 30) == (
+        '{"input":"qqqqqqqq' + TRUNCATION_MARKER
+    )
 
 
 def test_conversation_over_budget_keeps_latest_turns():
@@ -110,10 +96,10 @@ def test_conversation_over_budget_keeps_latest_turns():
 def test_single_turn_content_is_cut_to_budget():
     _, prompt = _prompt(LLMTestCase(input="q" * 500), max_content_chars=50)
     shown = prompt.split("Test Case:\n", 1)[1].split("\n\n---", 1)[0]
-    assert len(shown) == 50
+    assert len(shown) == 50 and shown.endswith(TRUNCATION_MARKER)
 
 
-def test_evidence_turn_index_follows_the_shown_turns():
+def test_evidence_turn_index_points_at_the_original_turn():
     turns = [
         Turn(role="user", content=f"turn number {i} " * 20) for i in range(5)
     ]
@@ -132,4 +118,5 @@ def test_evidence_turn_index_follows_the_shown_turns():
             ],
         },
     )
-    assert classifier.classifications[0].evidence[0].matched
+    [evidence] = classifier.classifications[0].evidence
+    assert evidence.matched and evidence.turn_index == 5

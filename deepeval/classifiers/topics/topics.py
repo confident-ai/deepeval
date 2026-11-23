@@ -48,6 +48,7 @@ class TopicClassifier(Classifier):
             name=name,
             labels=labels,
             model=model,
+            eval_mode="llm",
             include_reason=include_reason,
             allow_none=allow_none,
             async_mode=async_mode,
