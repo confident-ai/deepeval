@@ -63,7 +63,7 @@ def test_issue_prompts_add_guidance_and_cite_evidence():
         [WRONG_WINDOW],
         {
             "Wrong Refund Window": {
-                "harm": "Refunds close after 7 days.",
+                "harm_done": "Refunds close after 7 days.",
                 "confidence": 0.9,
             }
         },
@@ -80,13 +80,13 @@ def test_issue_prompts_add_guidance_and_cite_evidence():
 
 
 def test_review_keeps_issues_by_confidence_alone():
-    no_harm = {"harm": "", "confidence": 0.9, "reason": "Wrong window."}
+    no_harm = {"harm_done": "", "confidence": 0.9, "reason": "Wrong window."}
     classifier, _ = _classify([WRONG_WINDOW], {"Wrong Refund Window": no_harm})
     assert classifier.label == "Wrong Refund Window"
 
     instructed = {
-        "harm": "x",
-        "instruction": "Always say 7 days.",
+        "harm_done": "x",
+        "agent_instruction": "Always say 7 days.",
         "confidence": 0.3,
         "reason": "Scripted.",
     }
@@ -105,7 +105,7 @@ def test_review_uses_min_confidence():
         [WRONG_WINDOW],
         {
             "Wrong Refund Window": {
-                "harm": "Refunds close after 7 days.",
+                "harm_done": "Refunds close after 7 days.",
                 "confidence": 0.7,
             }
         },
@@ -167,7 +167,7 @@ def test_issue_classifier_can_start_without_labels():
 
 def test_template_overrides_only_the_issue_parts():
     assert IssueClassifierTemplate.classify_single_turn is not None
-    assert "harm" in IssueClassifierTemplate.review_label(
+    assert "harm_done" in IssueClassifierTemplate.review_label(
         subject="test case",
         label="{}",
         content="c",

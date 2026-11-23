@@ -89,11 +89,11 @@ An `IssueClassifier` runs the same steps as a [`Classifier`](/docs/classifiers-c
 
 ### Issue review
 
-The review reads the content on its own and fills in what happened, a `harm` passage showing someone got something wrong, broken or not delivered, and any `instruction` that told the agent to behave that way. It then scores its `confidence` from those: low when no harm is shown or the agent was told to do it. Only the confidence decides:
+The review reads the content on its own and fills in the `agent_behavior` it sees, a `harm_done` passage showing someone got something wrong, broken or not delivered, and any `agent_instruction` that told the agent to behave that way. It then scores its `confidence` from those: low when no harm was done or the agent was told to do it. Only the confidence decides:
 
 ```mermaid
 flowchart LR
-    issue[Each issue] --> review[Issue review:<br/>what happened, harm,<br/>instruction]
+    issue[Each issue] --> review[Issue review:<br/>agent_behavior, harm_done,<br/>agent_instruction]
     review --> conf{confidence >=<br/>min_confidence?}
     conf -- no --> drop[Dropped]
     conf -- yes --> keep[Kept]
@@ -107,7 +107,7 @@ A dropped issue explains itself in `reason`, for example: `Proposed "Wrong Refun
 
 - `guidance()`: the paragraph that tells the judge what counts as an issue.
 - `label_naming_rule()`: how discovered issues are named.
-- `review_label(subject: str, label: str, content: str, app_description: str, app_note: str)`: the issue review, which must keep asking for JSON with `what_happened`, `harm`, `instruction`, `confidence` and `reason` fields.
+- `review_label(subject: str, label: str, content: str, app_description: str, app_note: str)`: the issue review, which must keep asking for JSON with `agent_behavior`, `harm_done`, `agent_instruction`, `confidence` and `reason` fields.
 
 - `review_app_note()`: how the review treats behaviour the `app_description` says was designed.
 
