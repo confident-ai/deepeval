@@ -1,0 +1,194 @@
+---
+id: pixeltable
+title: Pixeltable
+sidebar_label: Pixeltable
+languages: [python]
+---
+
+## Quick Summary
+
+Pixeltable is an open-source, Apache-2.0 multimodal database that stores data in tables with computed columns and embedding indexes. Learn more about Pixeltable [here](https://github.com/pixeltable/pixeltable).
+
+When building your **Pixeltable** retriever, you'll have to define hyperparameters like `limit` (top-K) and the `embedding model` used by the embedding index. DeepEval can help you optimize these parameters by evaluating how well your Pixeltable retriever does under different hyperparameter combinations:
+
+:::info
+To get started, install Pixeltable and Sentence Transformers using the following command:
+
+```
+pip install pixeltable sentence-transformers
+```
+
+:::
+
+## Setup Pixeltable
+
+To store RAG chunks in Pixeltable, create a table with a `text` column and add an embedding index on that column. Pixeltable uses the embedding UDF you pass to `add_embedding_index()` both to embed inserted rows and to embed queries at search time.
+
+```python
+import pixeltable as pxt
+from pixeltable.functions.huggingface import sentence_transformer
+
+t = pxt.create_table("docs", {"text": pxt.String})
+t.add_embedding_index(
+    "text",
+    embedding=sentence_transformer.using(model_id="all-MiniLM-L6-v2"),
+)
+```
+
+Next, insert your document chunks. Embeddings are computed automatically on insert and kept up to date incrementally as rows are added, updated, or deleted — you do not encode vectors yourself.
+
+```python
+# Example document chunks
+document_chunks = [
+    "Pixeltable stores embeddings in multimodal tables with computed columns.",
+    "RAG improves AI-generated responses with retrieved context.",
+    "Vector search enables high-precision semantic retrieval.",
+    ...
+]
+
+t.insert([{"text": chunk} for chunk in document_chunks])
+```
+
+You'll query this table during generation to retrieve relevant contexts based on the user `input`, before passing them along with your input into your LLM's prompt template.
+
+:::note
+By default, Pixeltable embedding indexes use cosine similarity (`metric='cosine'`). You can also create an index with `metric='ip'` (inner product) or `metric='l2'`.
+:::
+
+Pixeltable functions as the **retrieval engine** in your RAG pipeline, efficiently fetching relevant document chunks to provide your LLM generator with grounded context.
+
+## Evaluating Pixeltable Retrieval
+
+Evaluating your Pixeltable retriever involves **two key steps**. First, you need to generate a test case by preparing an `input` query along with the expected LLM response. This `input` is then processed through your RAG pipeline to produce an `LLMTestCase`, which includes the query, actual output, expected output, and retrieved context.
+
+Once the test case is created, the next step is to assess retrieval performance using a selection of evaluation metrics designed to measure the precision, recall, and relevance of the retrieved context.
+
+### Preparing your Test Case
+
+Since retrieving relevant `retrieval_context` from your Pixeltable table is the first step in generating a response from your RAG pipeline, you need to perform a similarity search based on the `input` query. The function below embeds the query with the same index used at insert time, then retrieves the `top-K` most similar chunks.
+
+```python
+...
+
+def search(query, top_k=3):
+    sim = t.text.similarity(string=query)
+    results = t.order_by(sim, asc=False).limit(top_k).select(t.text).collect()
+    return [row["text"] for row in results]
+
+input = "How does Pixeltable work?"
+retrieval_context = search(input)
+```
+
+Next, we'll insert the `retrieval_context` retrieved from the vector database into our prompt template to generate an LLM response, referred to as `actual_output`. This step finalizes the required parameters needed to construct an `LLMTestCase`.
+
+```python
+from deepeval.test_case import LLMTestCase
+
+...
+
+prompt = """
+Answer the user question based on the supporting context
+
+User Question:
+{input}
+
+Supporting Context:
+{retrieval_context}
+"""
+
+actual_output = generate(prompt) # hypothetical function, replace with your own LLM
+print(actual_output)
+# Pixeltable incrementally embeds inserted text and retrieves similar chunks from an embedding index.
+
+test_case = LLMTestCase(
+    input=input,
+    actual_output=actual_output,
+    retrieval_context=retrieval_context,
+    expected_output="Pixeltable is an open-source multimodal database with computed columns and embedding indexes for semantic search.",
+)
+```
+
+### Running Evaluations
+
+Before evaluating the `LLMTestCase`, we need to define `deepeval` metrics that measure the effectiveness of the Pixeltable retriever. Key retrieval metrics include **contextual recall**, **contextual precision**, and **contextual relevancy**, which assesses how well the retrieved `retrieval_context`.
+
+:::info
+You can learn more about these contextual metrics and why they're relevant to retriever evaluation in this [guide](/guides/guides-rag-evaluation).
+:::
+
+```python
+from deepeval import evaluate
+from deepeval.metrics import (
+    ContextualRecallMetric,
+    ContextualPrecisionMetric,
+    ContextualRelevancyMetric,
+)
+
+...
+
+contextual_recall = ContextualRecallMetric()
+contextual_precision = ContextualPrecisionMetric()
+contextual_relevancy = ContextualRelevancyMetric()
+
+evaluate(
+    [test_case],
+    metrics=[contextual_recall, contextual_precision, contextual_relevancy]
+)
+```
+
+## Improving Pixeltable Retrieval
+
+After running multiple test cases, let's assume that the **Contextual Precision** score is lower than expected. This suggests that while our retriever is fetching relevant contexts, some of them may not be the best match for the query, introducing noise into the response.
+
+### Key Findings
+
+| Query                                         | Contextual Precision Score | Contextual Recall Score |
+| --------------------------------------------- | -------------------------- | ----------------------- |
+| "How does Pixeltable store embeddings?"       | 0.42                       | 0.91                    |
+| "Explain Pixeltable’s similarity search."     | 0.38                       | 0.87                    |
+| "What makes Pixeltable efficient for RAG?"    | 0.40                       | 0.85                    |
+
+### Addressing Low Precision
+
+Since **precision** measures how well the retrieved contexts align with the query, a lower score often means that some retrieved results are not as relevant as they should be. Possible improvements include:
+
+- **Using a More Domain-Specific Embedding Model**  
+  If your use case involves technical documentation, a general-purpose model like `all-MiniLM-L6-v2` may not be ideal. Consider adding another embedding index (or replacing the existing one) with a model such as:
+
+  - `BAAI/bge-small-en` for better retrieval ranking.
+  - `sentence-transformers/msmarco-distilbert-base-v4` for dense passage retrieval.
+  - `nomic-ai/nomic-embed-text-v1` for handling longer text chunks.
+
+- **Optimizing Retrieval Parameters**
+
+  - Adjust `limit` (top-K) in your similarity query to control the number of retrieved results.
+
+This can be as simple as writing a for loop to run evaluations many times:
+
+```python
+...
+
+# Iterate over different top-K values
+for top_k in [3, 5, 7]:
+    retrieval_context = search(input, top_k)
+
+    test_case = LLMTestCase(
+        input=input,
+        actual_output=generate(prompt),
+        retrieval_context=retrieval_context,
+        expected_output="Pixeltable is an open-source multimodal database with computed columns and embedding indexes for semantic search.",
+    )
+
+    evaluate(
+        [test_case],
+        metrics=[contextual_recall, contextual_precision, contextual_relevancy]
+    )
+```
+
+### Next Steps
+
+After refining your retrieval strategy—whether by adjusting embedding models or tuning retrieval parameters—it's crucial to generate new test cases and reassess performance. Focus on **Contextual Precision**, as improvements here indicate a more accurate and relevant retrieval process.
+
+:::info
+If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) catches the failing production traces from your Pixeltable pipeline and turns them into a dataset to rerun these metrics against.
+:::
