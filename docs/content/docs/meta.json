@@ -39,6 +39,8 @@
     "---[Tags]Classifiers---",
     "classifiers-introduction",
     "classifiers-custom",
+    "(insight-classifiers)",
+    "(failure-classifiers)",
     "(behavioral-classifiers)",
     "(grounding-classifiers)",
     "(security-classifiers)",
