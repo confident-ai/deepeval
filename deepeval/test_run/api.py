@@ -37,7 +37,9 @@ class Classification(BaseModel):
 
     name: str
     label: Optional[str] = None
-    expected_label: Optional[str] = Field(None, alias="expectedLabel")
+    expected_label: Optional[Union[str, List[str]]] = Field(
+        None, alias="expectedLabel"
+    )
     success: Optional[bool] = None
     reason: Optional[str] = None
     new_label_description: Optional[str] = Field(

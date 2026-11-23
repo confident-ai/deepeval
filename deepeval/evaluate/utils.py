@@ -137,7 +137,8 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
 
 
 def create_classifications(
-    classifier: "BaseClassifier", expected_label: Optional[str]
+    classifier: "BaseClassifier",
+    expected_label: Optional[Union[str, List[str]]],
 ) -> List[Classification]:
     """Classifier counterpart of ``create_metric_data``: one ``Classification``
     per label the classifier assigned, or a single one with ``label=None`` when

@@ -1,6 +1,6 @@
 from .classifier import Classifier, ClassifierTemplate
 from .config import (
-    ClassificationContext,
+    AgentProfile,
     EvidenceConfig,
     LabelDiscoveryConfig,
     ReviewConfig,
@@ -9,7 +9,7 @@ from .config import (
 __all__ = [
     "Classifier",
     "ClassifierTemplate",
-    "ClassificationContext",
+    "AgentProfile",
     "EvidenceConfig",
     "LabelDiscoveryConfig",
     "ReviewConfig",

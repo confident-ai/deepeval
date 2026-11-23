@@ -493,9 +493,7 @@ class Cache:
             "template": (
                 None if template_name == "ClassifierTemplate" else template_name
             ),
-            "classification_context": _config_dict(
-                classifier.classification_context
-            ),
+            "agent_profile": _config_dict(classifier.agent_profile),
         }
         options = {
             key: value for key, value in options.items() if value is not None

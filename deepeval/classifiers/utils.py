@@ -568,13 +568,17 @@ def validate_classifiers(
             if classifier is None:
                 unknown_keys[key] += 1
                 continue
-            if (
-                classifier.label_discovery_config is None
-                and value not in classifier.labels
-            ):
+            if isinstance(value, list) and not classifier.multi_label:
                 raise ValueError(
-                    f"expected_labels['{key}'] = '{value}' is not one of classifier '{key}' labels: {', '.join(str(l) for l in classifier.labels)}."
+                    f"expected_labels['{key}'] is a list, but classifier '{key}' assigns one label; set multi_label=True or expect a single label."
                 )
+            if classifier.label_discovery_config is not None:
+                continue
+            for label in value if isinstance(value, list) else [value]:
+                if label not in classifier.labels:
+                    raise ValueError(
+                        f"expected_labels['{key}'] = '{label}' is not one of classifier '{key}' labels: {', '.join(str(declared) for declared in classifier.labels)}."
+                    )
 
     if unknown_keys:
         details = ", ".join(

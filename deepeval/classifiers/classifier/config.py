@@ -34,6 +34,6 @@ class ReviewConfig:
 
 
 @dataclass(frozen=True)
-class ClassificationContext:
-    app_description: Optional[str] = None
+class AgentProfile:
+    description: Optional[str] = None
     trace_description: Optional[str] = None

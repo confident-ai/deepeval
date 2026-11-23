@@ -240,3 +240,50 @@ async def test_async_classify_verifies_evidence():
         LLMTestCase(input="How much is it?"), _show_indicator=False
     )
     assert classifier.classifications[0].evidence[0].matched
+
+
+class FlakyModel(ReplyModel):
+    """Answers with invalid JSON a set number of times, then with ``reply``."""
+
+    def __init__(self, reply, failures):
+        super().__init__(reply)
+        self.failures = failures
+
+    def respond(self, prompt):
+        if len(self.prompts) <= self.failures:
+            return "not json"
+        return self.reply
+
+
+@pytest.mark.parametrize("async_mode", [False, True])
+def test_an_unreadable_answer_is_asked_for_once_more(async_mode):
+    model = FlakyModel(
+        {"label": "pricing", "reason": "Asked a price.", "evidence": []},
+        failures=1,
+    )
+    classifier = Classifier(
+        name="topic",
+        labels=["pricing", "support"],
+        model=model,
+        async_mode=async_mode,
+        evidence_config=EvidenceConfig(),
+    )
+    classifier.classify(
+        LLMTestCase(input="How much is it?"), _show_indicator=False
+    )
+    assert classifier.label == "pricing" and classifier.error is None
+    assert len(model.prompts) == 2
+
+
+def test_two_unreadable_answers_raise():
+    classifier = Classifier(
+        name="topic",
+        labels=["pricing", "support"],
+        model=FlakyModel({}, failures=2),
+        async_mode=False,
+        evidence_config=EvidenceConfig(),
+    )
+    with pytest.raises(ValueError):
+        classifier.classify(
+            LLMTestCase(input="How much is it?"), _show_indicator=False
+        )

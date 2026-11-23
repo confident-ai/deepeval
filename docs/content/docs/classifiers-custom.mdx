@@ -7,7 +7,7 @@ languages: [python]
 
 <ClassifierTagsDisplayer jev={true} custom={true} singleTurn={true} multiTurn={true} />
 
-The `Classifier` in `deepeval` is a categorical LLM-as-a-judge that assigns one label from a set you define to any single-turn or multi-turn test case. It is the class every [built-in classifier](/docs/classifiers-refusal) is built on, and the one to reach for when the labels are specific to your application: topic, intent, product area, escalation category, or anything else you can name.
+The `Classifier` in `deepeval` is a categorical LLM-as-a-judge that assigns one label, or with `multi_label` every label that applies, from a set you define to any single-turn or multi-turn test case or trace. It is the class every [built-in classifier](/docs/classifiers-refusal) is built on, and the one to reach for when the labels are specific to your application: topic, intent, product area, escalation category, or anything else you can name.
 
 The whole classifier is the label set, so writing good labels is most of the work.
 
@@ -53,7 +53,7 @@ There are **TWO** mandatory and **FOURTEEN** optional parameters when creating a
 - [Optional] `evidence_config`: an `EvidenceConfig` that makes the judge [cite the passages](#evidence) that show each label applies. Defaulted to `None` (off).
 - [Optional] `review_config`: a `ReviewConfig` that [re-checks every label](#review) in a second judge call and gives it a `confidence`. Defaulted to `None` (off).
 - [Optional] `label_discovery_config`: a `LabelDiscoveryConfig` that lets the judge [propose new labels](#label-discovery) when none of yours fit. Defaulted to `None` (off).
-- [Optional] `classification_context`: a [`ClassificationContext`](#classification-context) describing the application being classified. Defaulted to `None`.
+- [Optional] `agent_profile`: an [`AgentProfile`](#agent-profile) describing the application being classified. Defaulted to `None`.
 
 Every parameter from `description` onwards is keyword-only.
 
@@ -119,30 +119,30 @@ from deepeval.classifiers import Classifier
 sentiment = Classifier(name="sentiment", labels=["positive", "neutral", "negative"])
 ```
 
-## Classification Context
+## Agent Profile
 
-Pass a `ClassificationContext` to tell the judge what application it is looking at, so it reasons from that application's point of view:
+Pass an `AgentProfile` to tell the judge what application it is looking at, so it reasons from that application's point of view:
 
 ```python
-from deepeval.classifiers import Classifier, ClassificationContext
+from deepeval.classifiers import Classifier, AgentProfile
 
 classifier = Classifier(
     name="topic",
     labels=["billing", "refund"],
     description="What the customer wants to talk about.",
-    classification_context=ClassificationContext(
-        app_description="A billing assistant for a SaaS product.",
+    agent_profile=AgentProfile(
+        description="A billing assistant for a SaaS product.",
         trace_description="Each trace is one support chat.",
     ),
 )
 ```
 
-There are **TWO** optional parameters when creating a `ClassificationContext`:
+There are **TWO** optional parameters when creating an `AgentProfile`:
 
-- [Optional] `app_description`: what the application is and does. The review also uses it to tell designed behaviour apart from mistakes. Defaulted to `None`.
+- [Optional] `description`: what the agent is and does. The review also uses it to tell designed behaviour apart from mistakes. Defaulted to `None`.
 - [Optional] `trace_description`: what one test case or trace represents. Defaulted to `None`.
 
-With a `ClassificationContext` but neither description, the judge is told to infer the application's use case from the content.
+With an `AgentProfile` but neither description, the judge is told to infer the application's use case from the content.
 
 ## Multi-Label Classification
 
@@ -260,7 +260,7 @@ billing - The user reports being charged twice this month.
 
 The judge's answer must be one of your labels (ignoring case); anything else is recorded as an error rather than guessed at, unless a `label_discovery_config` is set. With `allow_none=True` it may return no label, which gives `label=None` and an empty `classifications`. A test case that carries a trace is shown with its spans, and the judge is told to weigh the work done inside them, not just the final answer.
 
-If the test case has an `expected_labels` entry for this classifier, it passes when the expected label is among the `classifications`. Results are cached like metrics, keyed on the classifier's name, labels, `model` and options; classifiers with a `label_discovery_config` are never cached, since they keep state between calls.
+If the test case has an `expected_labels` entry for this classifier, a single expected label passes when it is among the `classifications`, and a list passes only when it is exactly the labels assigned, for example `expected_labels={"issues": ["Wrong Refund Window", "Ignored Tool Result"]}`. A list is only accepted for a `multi_label` classifier. Results are cached like metrics, keyed on the classifier's name, labels, `model` and options; classifiers with a `label_discovery_config` are never cached, since they keep state between calls.
 
 Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev, a System One model, decides the label instead, as one choice over your labels using each description as its boundary. The reason is built from Jev's per-label probabilities, no LLM is used, and Jev errors are raised. `system_one` needs `TYPESAFE_API_KEY` set and the [SDK installed](/integrations/models/typesafe-ai#setting-up-your-api-key), and cannot be combined with `multi_label` or the configs.
 
@@ -455,7 +455,7 @@ You can override the default prompts by subclassing `ClassifierTemplate` and pas
 - `classify_single_turn(labels: str, test_case_content: str)`
 - `classify_multi_turn(labels: str, test_case_content: str, turns: list)`
 - `classify_trace(labels: str, trace_content: str)`
-- `classification_context(name: str, description: str, has_context: bool, app_description: str, trace_description: str)`
+- `agent_profile(name: str, description: str, has_context: bool, app_description: str, trace_description: str)`
 - `reason_rules()`
 - `guidance()`, extra instructions for the judge, empty by default; `IssueClassifierTemplate` uses it for the issue guidance
 - `cite_evidence(subject: str, fields: str, allow_none: bool, max_items: int, max_quote_chars: int)`

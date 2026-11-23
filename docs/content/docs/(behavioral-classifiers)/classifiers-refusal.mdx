@@ -51,7 +51,7 @@ There are **ELEVEN** optional parameters when creating a `RefusalClassifier`:
 - [Optional] `max_content_chars`: the most characters of content sent to the judge; longer content is [truncated](/docs/classifiers-custom#classification). Defaulted to `100000`.
 - [Optional] `evidence_config`: an [`EvidenceConfig`](/docs/classifiers-custom#evidence) that makes the judge cite the passages that support the label. Defaulted to `None` (off).
 - [Optional] `review_config`: a [`ReviewConfig`](/docs/classifiers-custom#review) that verifies the label in a second judge call and gives it a `confidence`. Defaulted to `None` (off).
-- [Optional] `classification_context`: a [`ClassificationContext`](/docs/classifiers-custom#classification-context) describing the application being classified. Defaulted to `None`.
+- [Optional] `agent_profile`: an [`AgentProfile`](/docs/classifiers-custom#agent-profile) describing the application being classified. Defaulted to `None`.
 
 Every parameter from `max_content_chars` onwards is keyword-only.
 

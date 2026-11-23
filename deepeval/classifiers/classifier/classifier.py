@@ -10,7 +10,7 @@ from deepeval.classifiers.base_classifier import (
     Label,
 )
 from deepeval.classifiers.classifier.config import (
-    ClassificationContext,
+    AgentProfile,
     EvidenceConfig,
     LabelDiscoveryConfig,
     ReviewConfig,
@@ -23,7 +23,10 @@ from deepeval.classifiers.classifier.schema import (
     LabelReview,
     SuggestedClassificationResult,
     SuggestedEvidencedClassificationResult,
-    as_classification_results,
+)
+from deepeval.classifiers.classifier.steps.classification import (
+    a_generate_classification_results,
+    generate_classification_results,
 )
 from deepeval.classifiers.classifier.steps.evidence import (
     TRUNCATION_MARKER_REASON,
@@ -78,10 +81,6 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
     initialize_model,
     initialize_system_one_model,
-)
-from deepeval.metrics.utils.generation import (
-    a_generate_with_schema_and_extract,
-    generate_with_schema_and_extract,
 )
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.templates import make_template_class
@@ -139,7 +138,7 @@ class Classifier(BaseClassifier):
         evidence_config: Optional[EvidenceConfig] = None,
         review_config: Optional[ReviewConfig] = None,
         label_discovery_config: Optional[LabelDiscoveryConfig] = None,
-        classification_context: Optional[ClassificationContext] = None,
+        agent_profile: Optional[AgentProfile] = None,
     ):
         if not name or not name.strip():
             raise ValueError("Classifier 'name' cannot be empty.")
@@ -185,7 +184,7 @@ class Classifier(BaseClassifier):
         self.evidence_config = evidence_config
         self.review_config = review_config
         self.label_discovery_config = label_discovery_config
-        self.classification_context = classification_context
+        self.agent_profile = agent_profile
 
     @property
     def candidate_labels(self) -> List[Label]:
@@ -228,14 +227,8 @@ class Classifier(BaseClassifier):
                 prompt = self._build_prompt(test_case)
                 schema = self._choose_output_schema()
                 if schema is not None:
-                    classification_results = generate_with_schema_and_extract(
-                        metric=self,
-                        prompt=prompt.text,
-                        schema_cls=schema,
-                        extract_schema=as_classification_results,
-                        extract_json=lambda data: as_classification_results(
-                            schema.model_validate(data)
-                        ),
+                    classification_results = generate_classification_results(
+                        self, prompt.text, schema
                     )
                     merged_labels = merge_new_labels(
                         self, classification_results
@@ -286,14 +279,8 @@ class Classifier(BaseClassifier):
             schema = self._choose_output_schema()
             if schema is not None:
                 classification_results = (
-                    await a_generate_with_schema_and_extract(
-                        metric=self,
-                        prompt=prompt.text,
-                        schema_cls=schema,
-                        extract_schema=as_classification_results,
-                        extract_json=lambda data: as_classification_results(
-                            schema.model_validate(data)
-                        ),
+                    await a_generate_classification_results(
+                        self, prompt.text, schema
                     )
                 )
                 merged_labels = await a_merge_new_labels(
@@ -322,17 +309,6 @@ class Classifier(BaseClassifier):
             if self.review_config:
                 await a_review_classifications(self, prompt)
             return self.label
-
-    def is_successful(
-        self, expected_label: Optional[str] = None
-    ) -> Optional[bool]:
-        if not self.multi_label or expected_label is None or self.error:
-            return super().is_successful(expected_label)
-        self.success = any(
-            classification.label == expected_label
-            for classification in self.classifications
-        )
-        return self.success
 
     def copy(self) -> "Classifier":
         clone = cast("Classifier", super().copy())
@@ -542,19 +518,21 @@ class Classifier(BaseClassifier):
     def _shared_prompt_variables(
         self, subject: str, evidence_fields: List[str]
     ) -> Dict[str, Union[str, bool]]:
-        context = self.classification_context
+        agent_profile = self.agent_profile
         return {
             "labels": format_labels(self.labels),
             "allow_none": self.allow_none,
             "multi_label": self.multi_label,
             "context": self._get_prompt(
-                "classification_context",
+                "agent_profile",
                 name=self.name,
                 description=self.description,
-                has_context=context is not None,
-                app_description=context.app_description if context else None,
+                has_context=agent_profile is not None,
+                app_description=(
+                    agent_profile.description if agent_profile else None
+                ),
                 trace_description=(
-                    context.trace_description if context else None
+                    agent_profile.trace_description if agent_profile else None
                 ),
             ),
             "reason_rules": self._get_prompt("reason_rules"),

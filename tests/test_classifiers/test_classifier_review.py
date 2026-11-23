@@ -3,7 +3,7 @@ import json
 import pytest
 
 from deepeval.classifiers import (
-    ClassificationContext,
+    AgentProfile,
     Classifier,
     EvidenceConfig,
     Label,
@@ -167,8 +167,8 @@ def test_description_and_context_reach_the_prompts():
         description="What the customer wants to talk about.",
         model=model,
         review_config=ReviewConfig(),
-        classification_context=ClassificationContext(
-            app_description="A billing assistant for a SaaS product.",
+        agent_profile=AgentProfile(
+            description="A billing assistant for a SaaS product.",
             trace_description="Each trace is one support chat.",
         ),
         async_mode=False,
@@ -192,7 +192,7 @@ def test_context_without_descriptions_asks_to_infer_the_use_case():
         name="topic",
         labels=LABELS,
         model=model,
-        classification_context=ClassificationContext(),
+        agent_profile=AgentProfile(),
         async_mode=False,
     ).classify(CASE, _show_indicator=False)
     assert "Infer the application's use case" in model.prompts[0]

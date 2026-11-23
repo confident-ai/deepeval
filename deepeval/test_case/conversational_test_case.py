@@ -256,9 +256,10 @@ class ConversationalTestCase(BaseModel):
     tags: Optional[List[str]] = Field(default=None)
     flaky: bool = Field(default=False)
     expectations: Optional[Expectations] = Field(default=None)
-    # Classifier name -> label this test case should receive. A classifier
-    # only produces a pass/fail verdict when its name is present here.
-    expected_labels: Optional[Dict[str, str]] = Field(
+    # Classifier name -> the label, or for a multi_label classifier the
+    # exact list of labels, this test case should receive. A classifier only
+    # produces a pass/fail verdict when its name is present here.
+    expected_labels: Optional[Dict[str, Union[str, List[str]]]] = Field(
         default=None,
         serialization_alias="expectedLabels",
         validation_alias=AliasChoices("expectedLabels", "expected_labels"),

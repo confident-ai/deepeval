@@ -59,7 +59,7 @@ There are **ONE** mandatory and **ELEVEN** optional parameters when creating an 
 - [Optional] `evidence_config`: an [`EvidenceConfig`](/docs/classifiers-custom#evidence). Defaulted to `EvidenceConfig()`.
 - [Optional] `review_config`: a [`ReviewConfig`](/docs/classifiers-custom#review); its `min_confidence` is the issue threshold. Defaulted to `ReviewConfig()`.
 - [Optional] `label_discovery_config`: a [`LabelDiscoveryConfig`](/docs/classifiers-custom#label-discovery) to find issues you have not named yet. Defaulted to `None`.
-- [Optional] `classification_context`: a [`ClassificationContext`](/docs/classifiers-custom#classification-context). With an `app_description`, behaviour the application was designed to have is not flagged. Defaulted to `None`.
+- [Optional] `agent_profile`: an [`AgentProfile`](/docs/classifiers-custom#agent-profile). With an `app_description`, behaviour the application was designed to have is not flagged. Defaulted to `None`.
 
 Every parameter from `description` onwards is keyword-only.
 
@@ -109,6 +109,6 @@ A dropped issue explains itself in `reason`, for example: `Proposed "Wrong Refun
 - `label_naming_rule()`: how discovered issues are named.
 - `review_label(subject: str, label: str, content: str, app_description: str, app_note: str)`: the issue review, which must keep asking for JSON with `agent_behavior`, `harm_done`, `agent_instruction`, `confidence` and `reason` fields.
 
-- `review_app_note()`: how the review treats behaviour the `app_description` says was designed.
+- `review_app_note()`: how the review treats behaviour the `AgentProfile` `description` says was designed.
 
 Subclass `IssueClassifierTemplate` to change any of them, and pass it as `classification_template`.

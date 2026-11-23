@@ -2,7 +2,7 @@ from typing import Optional, Sequence, Type, Union
 
 from deepeval.classifiers.base_classifier import Label
 from deepeval.classifiers.classifier import (
-    ClassificationContext,
+    AgentProfile,
     Classifier,
     ClassifierTemplate,
     EvidenceConfig,
@@ -44,7 +44,7 @@ class IssueClassifier(Classifier):
         evidence_config: Optional[EvidenceConfig] = EvidenceConfig(),
         review_config: Optional[ReviewConfig] = ReviewConfig(),
         label_discovery_config: Optional[LabelDiscoveryConfig] = None,
-        classification_context: Optional[ClassificationContext] = None,
+        agent_profile: Optional[AgentProfile] = None,
     ):
         super().__init__(
             name=name,
@@ -63,5 +63,5 @@ class IssueClassifier(Classifier):
             evidence_config=evidence_config,
             review_config=review_config,
             label_discovery_config=label_discovery_config,
-            classification_context=classification_context,
+            agent_profile=agent_profile,
         )

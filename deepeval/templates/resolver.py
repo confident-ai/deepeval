@@ -107,7 +107,7 @@ ClassifierTemplateMethod = Literal[
     "review_label",
     "label_naming_rule",
     "guidance",
-    "classification_context",
+    "agent_profile",
     "review_app_note",
     "reason_rules",
     # System One eval modes (`DEEPEVAL_EVAL_MODE`); see EXPERIMENTAL.md.

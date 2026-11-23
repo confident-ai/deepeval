@@ -4,7 +4,7 @@ from .abstention import AbstentionClassifier
 from .base_classifier import BaseClassifier, Label
 from .clarification import ClarificationClassifier
 from .classifier import (
-    ClassificationContext,
+    AgentProfile,
     Classifier,
     ClassifierTemplate,
     EvidenceConfig,
@@ -33,7 +33,7 @@ __all__ = [
     "Label",
     "BaseClassifier",
     "ClassifierTemplate",
-    "ClassificationContext",
+    "AgentProfile",
     "EvidenceConfig",
     "LabelDiscoveryConfig",
     "ReviewConfig",

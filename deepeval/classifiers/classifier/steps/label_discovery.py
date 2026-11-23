@@ -174,13 +174,18 @@ def _merge_or_add_label(
                 return near_duplicate
 
             # Merge judge
-            duplicate_of = generate_with_schema_and_extract(
-                metric=classifier,
-                prompt=_build_merge_prompt(
-                    classifier, proposed_label, reason, similar_labels
-                ),
-                **_MERGE_EXTRACTION,
-            )
+            try:
+                duplicate_of = generate_with_schema_and_extract(
+                    metric=classifier,
+                    prompt=_build_merge_prompt(
+                        classifier, proposed_label, reason, similar_labels
+                    ),
+                    **_MERGE_EXTRACTION,
+                )
+            except ValueError:
+                # Unreadable merge answer: treat the label as new
+                classifier.error = None
+                duplicate_of = None
             matching_label = next(
                 (
                     label
@@ -243,13 +248,18 @@ async def _a_merge_or_add_label(
                 return near_duplicate
 
             # Merge judge
-            duplicate_of = await a_generate_with_schema_and_extract(
-                metric=classifier,
-                prompt=_build_merge_prompt(
-                    classifier, proposed_label, reason, similar_labels
-                ),
-                **_MERGE_EXTRACTION,
-            )
+            try:
+                duplicate_of = await a_generate_with_schema_and_extract(
+                    metric=classifier,
+                    prompt=_build_merge_prompt(
+                        classifier, proposed_label, reason, similar_labels
+                    ),
+                    **_MERGE_EXTRACTION,
+                )
+            except ValueError:
+                # Unreadable merge answer: treat the label as new
+                classifier.error = None
+                duplicate_of = None
             matching_label = next(
                 (
                     label

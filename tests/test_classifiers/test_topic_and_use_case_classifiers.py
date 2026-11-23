@@ -1,7 +1,7 @@
 import pytest
 
 from deepeval.classifiers import (
-    ClassificationContext,
+    AgentProfile,
     TopicClassifier,
     UseCaseClassifier,
 )
@@ -52,9 +52,7 @@ def test_review_uses_its_own_prompt_and_context_note(
         labels=["Pricing", "Support"],
         model=model,
         async_mode=False,
-        classification_context=ClassificationContext(
-            app_description="A billing assistant."
-        ),
+        agent_profile=AgentProfile(description="A billing assistant."),
     )
     classifier.classify(CASE, _show_indicator=False)
     classify, review = model.prompts

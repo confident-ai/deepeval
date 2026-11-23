@@ -109,8 +109,8 @@ def _build_review_prompt(
     classification: Classification,
     prompt: "ClassificationPrompt",
 ) -> str:
-    context = classifier.classification_context
-    app_description = context.app_description if context else None
+    agent_profile = classifier.agent_profile
+    app_description = agent_profile.description if agent_profile else None
     description = next(
         (
             label.description

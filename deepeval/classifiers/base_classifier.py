@@ -10,7 +10,7 @@ from deepeval.test_case import ConversationalTestCase, LLMTestCase
 
 if TYPE_CHECKING:
     from deepeval.classifiers.classifier.config import (
-        ClassificationContext,
+        AgentProfile,
         EvidenceConfig,
         LabelDiscoveryConfig,
         ReviewConfig,
@@ -73,7 +73,8 @@ class BaseClassifier(PromptMixin):
     A classifier assigns a test case one label from its declared labels, or
     several when ``multi_label`` is on; ``label`` is the first of them and
     ``classifications`` holds them all. It only produces a pass/fail verdict when the test case declares an
-    expected label for it (``test_case.expected_labels[classifier.name]``);
+    expected label, or list of labels, for it
+    (``test_case.expected_labels[classifier.name]``);
     otherwise ``success`` is ``None``, mirroring a metric with no threshold.
     """
 
@@ -90,7 +91,7 @@ class BaseClassifier(PromptMixin):
     evidence_config: Optional[EvidenceConfig] = None
     review_config: Optional[ReviewConfig] = None
     label_discovery_config: Optional[LabelDiscoveryConfig] = None
-    classification_context: Optional[ClassificationContext] = None
+    agent_profile: Optional[AgentProfile] = None
     reason: Optional[str] = None
     success: Optional[bool] = None
     evaluation_model: Optional[str] = None
@@ -144,14 +145,23 @@ class BaseClassifier(PromptMixin):
         )
 
     def is_successful(
-        self, expected_label: Optional[str] = None
+        self, expected_label: Optional[Union[str, List[str]]] = None
     ) -> Optional[bool]:
+        """``expected_label`` is one label, which must be among the labels
+        assigned, or a list, which must be exactly the labels assigned."""
         if expected_label is None:
             self.success = None
         elif self.error is not None:
             self.success = False
         else:
-            self.success = self.label == expected_label
+            assigned = [c.label for c in self.classifications or []] or (
+                [self.label] if self.label is not None else []
+            )
+            self.success = (
+                set(assigned) == set(expected_label)
+                if isinstance(expected_label, list)
+                else expected_label in assigned
+            )
         return self.success
 
     def copy(self) -> "BaseClassifier":

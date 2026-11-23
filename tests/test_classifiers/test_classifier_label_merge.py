@@ -152,3 +152,24 @@ def test_a_proposal_past_the_cap_can_still_merge():
         "Refund Request",
         "Shipping Delay",
     ]
+
+
+class UnreadableMergeModel(ScriptedModel):
+    def respond(self, prompt):
+        if "same underlying problem" in prompt:
+            return "not json"
+        return super().respond(prompt)
+
+
+def test_an_unreadable_merge_answer_keeps_the_label_as_new():
+    classifier = _classifier(
+        UnreadableMergeModel("Money Back Request"),
+        candidate_labels=[Label("Shipping Delay", "Order arrives late.")],
+    )
+    classifier.classify(CASE, _show_indicator=False)
+    assert classifier.label == "Money Back Request"
+    assert classifier.error is None
+    assert [label.name for label in classifier.candidate_labels] == [
+        "Shipping Delay",
+        "Money Back Request",
+    ]

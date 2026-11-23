@@ -307,7 +307,7 @@ Every classifier accepts a `classification_template`, a subclass of `ClassifierT
 
 ## Expected Labels
 
-A classifier on its own only produces a classification; it is `expected_labels` on the test case that decides whether that classification **passes or fails**. `expected_labels` is a `Dict[str, str]` from a classifier's `name` to the label that test case should receive:
+A classifier on its own only produces a classification; it is `expected_labels` on the test case that decides whether that classification **passes or fails**. `expected_labels` is a dict from a classifier's `name` to the label that test case should receive, or, for a [multi-label](/docs/classifiers-custom#multi-label-classification) classifier, a list of the labels it should receive:
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -321,7 +321,7 @@ test_case = LLMTestCase(
 
 For each classifier in the run, per test case:
 
-1. The test case has an entry for this classifier: the classification **passes** if it matches, otherwise it **fails**.
+1. The test case has an entry for this classifier: the classification **passes** if it matches, otherwise it **fails**. A single label matches when it is among the labels assigned; a list matches only when it is exactly the labels assigned, with none missing and none extra.
 2. It does not: the classification is still recorded, but with `success=None`, and the test case's pass/fail status is left untouched.
 
 :::info
