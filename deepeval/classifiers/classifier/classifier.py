@@ -241,8 +241,10 @@ class Classifier(BaseClassifier):
                         self,
                         prompt.text,
                         schema_cls=ClassificationResult,
-                        system_one=self._experimental_system_one_spec(
-                            test_case
+                        system_one=(
+                            self._experimental_system_one_spec(test_case)
+                            if self.eval_mode.uses_system_one
+                            else None
                         ),
                     )
                     self._postprocess_classifications(
@@ -294,7 +296,11 @@ class Classifier(BaseClassifier):
                     self,
                     prompt.text,
                     schema_cls=ClassificationResult,
-                    system_one=self._experimental_system_one_spec(test_case),
+                    system_one=(
+                        self._experimental_system_one_spec(test_case)
+                        if self.eval_mode.uses_system_one
+                        else None
+                    ),
                 )
                 self._postprocess_classifications(
                     [
@@ -488,7 +494,7 @@ class Classifier(BaseClassifier):
             shown = fit_trace(
                 construct_trace_dict(test_case), self.max_content_chars
             )
-            template, subject = "classify_trace", "trace"
+            template, subject = "classify_traced_single_turn", "trace"
             content = construct_trace_content(shown)
             content_variables = {"trace_content": content}
 
@@ -572,14 +578,21 @@ class Classifier(BaseClassifier):
         """Used when the eval mode is `system_one`; see EXPERIMENTAL.md.
 
         The label is one Choice over the declared labels (plus ``NONE`` when
-        ``allow_none``), and the reason is built from the answer.
+        ``allow_none``), and the reason is built from the answer. A test case
+        with a trace is shown as the same trace the LLM judge sees.
         """
         multi_turn = isinstance(test_case, ConversationalTestCase)
-        state = (
-            construct_multi_turn_state(test_case)
-            if multi_turn
-            else construct_single_turn_state(test_case)
-        )
+        traced = not multi_turn and test_case._trace_dict is not None
+        if multi_turn:
+            state = construct_multi_turn_state(test_case)
+        elif traced:
+            state = {
+                "trace": fit_trace(
+                    construct_trace_dict(test_case), self.max_content_chars
+                )
+            }
+        else:
+            state = construct_single_turn_state(test_case)
         options: Dict[str, Optional[str]] = {
             label.name: label.description for label in self.labels
         }
@@ -592,6 +605,7 @@ class Classifier(BaseClassifier):
                 template_class=_EXPERIMENTAL_TEMPLATE_CLASS,
                 allow_none=self.allow_none,
                 multi_turn=multi_turn,
+                traced=traced,
             ),
             options=options,
             state=state,

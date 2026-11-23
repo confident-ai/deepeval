@@ -454,7 +454,7 @@ You can override the default prompts by subclassing `ClassifierTemplate` and pas
 
 - `classify_single_turn(labels: str, test_case_content: str)`
 - `classify_multi_turn(labels: str, test_case_content: str, turns: list)`
-- `classify_trace(labels: str, trace_content: str)`
+- `classify_traced_single_turn(labels: str, trace_content: str)`
 - `agent_profile(name: str, description: str, has_context: bool, app_description: str, trace_description: str)`
 - `reason_rules()`
 - `guidance()`, extra instructions for the judge, empty by default; `IssueClassifierTemplate` uses it for the issue guidance

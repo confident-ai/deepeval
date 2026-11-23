@@ -100,7 +100,7 @@ SimulatorTemplateMethod = Literal[
 ClassifierTemplateMethod = Literal[
     "classify_single_turn",
     "classify_multi_turn",
-    "classify_trace",
+    "classify_traced_single_turn",
     "suggest_labels",
     "cite_evidence",
     "merge_labels",
