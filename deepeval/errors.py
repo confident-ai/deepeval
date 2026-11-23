@@ -9,6 +9,14 @@ class DeepEvalError(Exception):
     """
 
 
+class LogProbsUnsupportedError(DeepEvalError, AttributeError):
+    """The model cannot return token log probabilities.
+
+    It is also an `AttributeError` so callers that already fall back when a
+    model has no `generate_raw_response` treat both cases the same way.
+    """
+
+
 class UserAppError(Exception):
     """Represents exceptions thrown by user LLM apps/tools.
     We record these on traces or spans and keep the overall evaluation run alive.

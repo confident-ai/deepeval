@@ -647,6 +647,15 @@ class Settings(BaseSettings):
     GROK_COST_PER_OUTPUT_TOKEN: Optional[float] = Field(
         None, description="Grok output token cost (used for cost reporting)."
     )
+    # Default evaluation LLM
+    DEEPEVAL_LLM: Optional[str] = Field(
+        None,
+        description=(
+            "Default evaluation LLM, used when a metric is given no model. "
+            "Either an OpenAI model name or '<provider>/<model>' "
+            "(e.g. 'anthropic/claude-opus-5')."
+        ),
+    )
     # LiteLLM
     USE_LITELLM: Optional[bool] = Field(
         None, description="Select LiteLLM as the active LLM provider."
