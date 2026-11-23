@@ -47,11 +47,13 @@ class Winogrande(DeepEvalBaseBenchmark):
 
         with capture_benchmark_run("Winogrande", self.n_problems):
             overall_correct_predictions = 0
-            overall_total_predictions = self.n_problems
             predictions_row = []
 
             # Solving each problem
             goldens = self.load_benchmark_dataset()[: self.n_problems]
+            overall_total_predictions = self.n_problems
+            if goldens and self.n_problems > 0:
+                overall_total_predictions = len(goldens)
             for idx, golden in enumerate(
                 tqdm(goldens, desc=f"Processing {self.n_problems} problems")
             ):
