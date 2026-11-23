@@ -12,6 +12,7 @@ export enum Integration {
   PYDANTIC_AI = "PydanticAI",
   GOOGLE_ADK = "Google ADK",
   STRANDS = "Strands",
+  MICROSOFT_AGENT_FRAMEWORK = "Microsoft Agent Framework",
   OTEL = "OpenTelemetry",
   OPEN_INFERENCE = "OpenInference",
   AGENTCORE = "AgentCore",

@@ -25,6 +25,7 @@ A framework's own telemetry goes to the global tracer provider, which deepeval o
 | OpenAI Agents | `add_trace_processor(DeepEvalTracingProcessor())` | `openai_agents` (OpenInference), `openai`                    | `openinference` |
 | Pydantic AI   | `DeepEvalInstrumentationSettings(...)`            | `pydantic_ai` (Pydantic AI's own telemetry)                  | `pydantic_ai`   |
 | Strands       | `instrument_strands()`                            | `strands` (Strands' own telemetry)                           | `strands`       |
+| Microsoft Agent Framework | `instrument_microsoft_agent_framework()` | none: uses Agent Framework's native GenAI telemetry | — |
 | AgentCore     | `instrument_agentcore()`                          | `agentcore`, `strands`                                       | `strands`       |
 | Google ADK    | `instrument_google_adk()`                         | `google_adk` (ADK's own telemetry)                           | `google_adk`    |
 | OpenInference | `instrument_openinference()` / `deepeval.instrument()` | none: pair it with any `openinference-instrumentation-*` | `openinference` |
