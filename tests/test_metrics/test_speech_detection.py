@@ -14,6 +14,7 @@ from deepeval.metrics import (
     ResponseLatencyMetric,
     TimeToFirstResponseMetric,
     TurnTakingNaturalnessMetric,
+    UserInterruptionMetric,
 )
 from deepeval.metrics.voice.utils import call_activity as activity_module
 from deepeval.metrics.voice.utils import speech_detection
@@ -29,13 +30,14 @@ from tests.test_metrics.helpers import (
 WINDOW_SECONDS = (
     speech_detection.SPEECH_WINDOW_SAMPLES / speech_detection.SPEECH_MODEL_RATE
 )
-SIX_METRICS = [
+RECORDING_METRICS = [
     AgentInterruptionMetric,
     ResponseLatencyMetric,
     ResponseDelayConsistencyMetric,
     TimeToFirstResponseMetric,
     TurnTakingNaturalnessMetric,
     AbruptCutoffMetric,
+    UserInterruptionMetric,
 ]
 
 
@@ -130,7 +132,7 @@ def test_caller_noise_under_the_agent_is_not_an_interruption(
     assert metric.score == score
 
 
-@pytest.mark.parametrize("metric_class", SIX_METRICS)
+@pytest.mark.parametrize("metric_class", RECORDING_METRICS)
 @pytest.mark.parametrize("use_speech_detection", [True, False])
 def test_each_timing_metric_hands_the_option_to_the_recording_reader(
     tmp_path, monkeypatch, metric_class, use_speech_detection
@@ -157,7 +159,7 @@ def test_each_timing_metric_hands_the_option_to_the_recording_reader(
     assert bool(calls) is use_speech_detection
 
 
-@pytest.mark.parametrize("metric_class", SIX_METRICS)
+@pytest.mark.parametrize("metric_class", RECORDING_METRICS)
 def test_speech_detection_is_on_by_default(metric_class):
     assert metric_class().use_speech_detection is True
 

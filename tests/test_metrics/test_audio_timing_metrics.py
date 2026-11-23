@@ -5,6 +5,7 @@ from deepeval.metrics import (
     ResponseDelayConsistencyMetric,
     ResponseLatencyMetric,
     TimeToFirstResponseMetric,
+    UserInterruptionMetric,
 )
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from tests.test_metrics.helpers import (
@@ -178,28 +179,34 @@ def test_the_agents_opening_line_is_not_an_interruption():
     assert metric.score_breakdown["eligible_turns"] == 1
 
 
+def _agent_backs_off_call(caller_pause):
+    """The caller speaks, pauses, and starts again 0.4 s after the agent
+    starts; the agent stops after 1 s."""
+    agent_at = 5.0 + caller_pause - 0.4
+    return [
+        _turn("assistant", 2.0, 0.0),
+        _turn("user", 2.0, 3.0),
+        _turn("assistant", 1.0, agent_at, seed=1),
+        _turn("user", 2.0, agent_at + 0.4, seed=1),
+        _turn("assistant", 2.0, agent_at + 3.0, seed=2),
+    ]
+
+
 def test_an_agent_that_backs_off_from_the_caller_made_a_false_start():
-    turns = timed_call([0.5, 0.5, 0.5], reply_seconds=1.0, greeting_at=1.0)
-    assert _measure(AgentInterruptionMetric(), turns).score == 1.0
-    metric = _measure(
-        AgentInterruptionMetric(caller_start_window_ms=2000), turns
-    )
-    assert metric.score == pytest.approx(1 / 3)
-    assert {event["type"] for event in metric.score_breakdown["events"]} == {
-        "false_start"
-    }
+    metric = _measure(AgentInterruptionMetric(), _agent_backs_off_call(1.4))
+    assert metric.score == 0.5
+    [event] = metric.score_breakdown["events"]
+    assert event["type"] == "false_start"
+    assert event["turn"] == 2
 
 
 def test_a_false_start_after_a_long_caller_silence_is_excused():
-    turns = timed_call([0.5, 5.0, 0.5], reply_seconds=1.0, greeting_at=1.0)
-    window = {"caller_start_window_ms": 2000}
-    metric = _measure(AgentInterruptionMetric(**window), turns)
-    assert metric.score == pytest.approx(2 / 3)
-    assert 4 not in [e["turn"] for e in metric.score_breakdown["events"]]
+    turns = _agent_backs_off_call(5.4)
+    assert _measure(AgentInterruptionMetric(), turns).score == 1.0
     metric = _measure(
-        AgentInterruptionMetric(**window, max_caller_silence_seconds=7), turns
+        AgentInterruptionMetric(max_caller_silence_seconds=7), turns
     )
-    assert metric.score == pytest.approx(1 / 3)
+    assert metric.score == 0.5
 
 
 def test_a_brief_overlap_is_not_an_interruption():
@@ -280,7 +287,6 @@ def test_timing_limits_are_configurable():
         (ResponseLatencyMetric, "max_latency_seconds"),
         (ResponseDelayConsistencyMetric, "max_shift_seconds"),
         (TimeToFirstResponseMetric, "max_wait_seconds"),
-        (AgentInterruptionMetric, "caller_start_window_ms"),
         (AgentInterruptionMetric, "max_caller_silence_seconds"),
     ):
         with pytest.raises(ValueError):
@@ -463,3 +469,121 @@ def test_a_caller_left_in_silence_before_saying_hello_waited_for_the_agent(
     assert "after the call connected" in metric.reason
     [event] = metric.score_breakdown["events"]
     assert event["first_response_seconds"] == pytest.approx(6.0, abs=0.05)
+
+
+def _turn(role, seconds, start_time, seed=0):
+    return Turn(
+        role=role,
+        content=f"{role} line.",
+        audio=to_audio(speech_like(seconds, seed=seed), start_time=start_time),
+    )
+
+
+def test_a_caller_who_waits_for_the_agent_interrupts_no_one():
+    metric = _measure(
+        UserInterruptionMetric(), timed_call(CLEAN_GAPS, greeting_at=1.0)
+    )
+    assert metric.score == 1.0
+    assert metric.reason == (
+        f"No caller turn had the caller interrupting the agent.{STAMPS_NOTE}"
+    )
+    assert metric.score_breakdown["eligible_turns"] == 3
+
+
+def test_the_caller_talking_over_the_agent_from_turn_timestamps():
+    turns = [
+        _turn("assistant", 3.0, 0.0),
+        _turn("user", 2.0, 2.0),
+        _turn("assistant", 2.0, 4.5, seed=1),
+        _turn("user", 2.0, 7.0, seed=1),
+    ]
+    metric = _measure(UserInterruptionMetric(), turns)
+    assert metric.score == 0.5
+    assert metric.reason == (
+        "1 of 2 caller turns had the caller interrupting the agent."
+        f"{STAMPS_NOTE}"
+    )
+    [event] = metric.score_breakdown["events"]
+    assert event["type"] == "talk_over"
+    assert event["turn"] == 1
+
+
+def test_the_caller_talking_over_the_agent_on_a_recording(tmp_path):
+    metric = _measure_recording(
+        UserInterruptionMetric(use_speech_detection=False),
+        tmp_path,
+        agent=[(0.0, speech_like(4.0))],
+        caller=[(2.0, speech_like(3.0)), (6.0, speech_like(2.0))],
+    )
+    assert metric.score == 0.5
+    assert metric.score_breakdown["timing_source"] == "call_recording"
+    [event] = metric.score_breakdown["events"]
+    assert event["type"] == "talk_over"
+    assert event["caller_start"] == pytest.approx(2.0, abs=0.05)
+    assert event["start_time"] == pytest.approx(2.0, abs=0.05)
+    assert event["duration_seconds"] == pytest.approx(
+        event["caller_seconds"], abs=0.01
+    )
+    assert event["overlap_seconds"] == pytest.approx(1.75, abs=0.1)
+
+
+def test_a_caller_who_cuts_in_and_backs_off_made_a_false_start(tmp_path):
+    metric = _measure_recording(
+        UserInterruptionMetric(use_speech_detection=False),
+        tmp_path,
+        agent=[(0.0, speech_like(4.0))],
+        caller=[(1.5, speech_like(1.2))],
+    )
+    assert metric.score == 0.0
+    [event] = metric.score_breakdown["events"]
+    assert event["type"] == "false_start"
+
+
+def test_an_mm_hm_while_the_agent_talks_is_not_an_interruption(tmp_path):
+    metric = _measure_recording(
+        UserInterruptionMetric(use_speech_detection=False),
+        tmp_path,
+        agent=[(0.0, speech_like(4.0))],
+        caller=[(1.5, speech_like(0.6)), (5.0, speech_like(2.0))],
+    )
+    assert metric.score == 1.0
+    assert metric.score_breakdown["eligible_turns"] == 1
+
+
+def test_a_collision_is_only_an_agent_interruption():
+    turns = _agent_backs_off_call(1.4)
+    assert _measure(AgentInterruptionMetric(), turns).score == 0.5
+    metric = _measure(UserInterruptionMetric(), turns)
+    assert metric.score == 1.0
+    assert metric.score_breakdown["eligible_turns"] == 2
+
+
+@pytest.mark.parametrize("caller_at", [2.7, 3.0, 3.3])
+def test_starting_within_half_a_second_of_the_agent_is_a_collision(
+    tmp_path, caller_at
+):
+    metric = _measure_recording(
+        UserInterruptionMetric(use_speech_detection=False),
+        tmp_path,
+        agent=[(0.0, speech_like(1.5)), (3.0, speech_like(1.0))],
+        caller=[(caller_at, speech_like(2.0))],
+    )
+    assert metric.score == 1.0
+    agent = _measure_recording(
+        AgentInterruptionMetric(use_speech_detection=False),
+        tmp_path,
+        agent=[(0.0, speech_like(1.5)), (3.0, speech_like(1.0))],
+        caller=[(caller_at, speech_like(2.0))],
+    )
+    assert agent.score == 0.0
+
+
+def test_a_call_where_the_caller_never_spoke_is_skipped(tmp_path):
+    metric = _measure_recording(
+        UserInterruptionMetric(use_speech_detection=False),
+        tmp_path,
+        agent=[(0.0, speech_like(4.0))],
+        caller=[(1.5, speech_like(0.6))],
+    )
+    assert metric.score is None
+    assert metric.reason == "The caller never spoke for 1 second or more."

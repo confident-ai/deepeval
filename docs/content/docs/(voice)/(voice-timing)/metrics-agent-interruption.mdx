@@ -52,7 +52,6 @@ There are **SEVEN** optional parameters when creating an `AgentInterruptionMetri
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `caller_start_window_ms`: an integer. An agent start collides with the caller when the caller starts speaking within this many milliseconds of it. Must be greater than 0. Defaulted to `500`.
 - [Optional] `max_caller_silence_seconds`: an integer. A false start is not counted when the caller's pause, from when they stopped speaking to when they started again, was longer than this. Must be greater than 0. Defaulted to `4`.
 - [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`. Defaulted to `True`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
@@ -86,14 +85,14 @@ print(metric.score_breakdown)
 
 An interruption is a **false start** or a **talk-over**:
 
-- **False start:** the agent starts speaking, the caller is already talking or starts within `caller_start_window_ms`, and the agent stops within **1.5 seconds**. It is not counted when the caller's pause, from when they stopped speaking to when they started again, was longer than `max_caller_silence_seconds`, since after a long silence the agent is expected to fill it.
+- **False start:** the agent starts speaking, the caller is already talking or starts within **half a second**, and the agent stops within **1.5 seconds**. It is not counted when the caller's pause, from when they stopped speaking to when they started again, was longer than `max_caller_silence_seconds`, since after a long silence the agent is expected to fill it.
 - **Talk-over:** the agent starts speaking while the caller is already talking, and the caller makes **1 second** or more of sound while the agent keeps speaking.
 
-The two settings both shape the false start. Below, the caller pauses for less than `max_caller_silence_seconds` between speaking and starting again, and the agent starts during that pause, less than `caller_start_window_ms` before the caller starts again. The agent backs off within 1.5 seconds, so this counts as a false start. Had the caller paused for longer, or started again later after the agent, it would not.
+The half-second window and `max_caller_silence_seconds` both shape the false start. Below, the caller pauses for less than `max_caller_silence_seconds` between speaking and starting again, and the agent starts during that pause, less than half a second before the caller starts again. The agent backs off within 1.5 seconds, so this counts as a false start. Had the caller paused for longer, or started again later after the agent, it would not.
 
 <ImageDisplayer id="diagrams/in-house/metrics/agent-interruption-settings" />
 
-The caller is already talking when they made sound in at least 0.2 of the 0.3 seconds before the agent started. Pauses under a second do not end the agent's stretch of speech. The caller cutting in on the agent is not counted: that is the caller's choice, not the agent's. The half-second window, the 1.5-second stop and the 1-second overlap were chosen on human-labelled phone calls, where reviewers also excused an agent that spoke after about four seconds of caller silence.
+The caller is already talking when they made sound in at least 0.2 of the 0.3 seconds before the agent started. Pauses under a second do not end the agent's stretch of speech. When the agent and the caller start within half a second of each other, the moment is a collision and belongs to this metric. The caller cutting in once the agent has been talking for longer is judged by [`UserInterruptionMetric`](/docs/metrics-user-interruption) instead, so the two metrics never flag the same moment. The half-second window, the 1.5-second stop and the 1-second overlap were chosen on human-labelled phone calls, where reviewers also excused an agent that spoke after about four seconds of caller silence.
 
 ### Where the timing comes from
 

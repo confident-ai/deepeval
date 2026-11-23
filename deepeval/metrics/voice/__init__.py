@@ -32,6 +32,7 @@ from deepeval.metrics.voice.timing import (
     ResponseLatencyMetric,
     TimeToFirstResponseMetric,
     TurnTakingNaturalnessMetric,
+    UserInterruptionMetric,
 )
 from deepeval.metrics.voice.responsiveness import (
     AgentResponsivenessMetric,
@@ -96,6 +97,7 @@ __all__ = [
     "ResponseLatencyMetric",
     "TimeToFirstResponseMetric",
     "TurnTakingNaturalnessMetric",
+    "UserInterruptionMetric",
     "AgentResponsivenessMetric",
     "FailedResponseMetric",
     "SilentReplyMetric",

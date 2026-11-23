@@ -46,7 +46,7 @@ metric = TimeToFirstResponseMetric(threshold=0.5, max_wait_seconds=3)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **SIX** optional parameters when creating a `TimeToFirstResponseMetric`:
+There are **SEVEN** optional parameters when creating a `TimeToFirstResponseMetric`:
 
 - [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.

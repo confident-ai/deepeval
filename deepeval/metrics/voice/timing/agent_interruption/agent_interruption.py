@@ -1,6 +1,7 @@
 from typing import Callable, Dict, Optional
 
 from deepeval.metrics.voice.utils.call_activity import (
+    COLLISION_SECONDS,
     EVENT_KEYS,
     AgentStart,
     agent_starts,
@@ -22,11 +23,11 @@ def is_false_start(
     start: AgentStart, metric: "AgentInterruptionMetric"
 ) -> bool:
     """The agent starts speaking AND (the caller is already talking OR starts
-    within the caller-start window) AND the agent stops within 1.5 s; not
-    counted when the caller's pause ran past the caller-silence limit."""
+    within 0.5 s) AND the agent stops within 1.5 s; not counted when the
+    caller's pause ran past the caller-silence limit."""
     caller_collides = start.caller_talking or (
         start.caller_starts_after is not None
-        and start.caller_starts_after <= metric.caller_start_window_ms / 1000
+        and start.caller_starts_after <= COLLISION_SECONDS
     )
     caller_was_waiting = (
         start.caller_pause_seconds is not None
@@ -66,13 +67,10 @@ class AgentInterruptionMetric(BaseVoiceMetric):
         include_reason: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        caller_start_window_ms: int = 500,
         max_caller_silence_seconds: int = 4,
         use_speech_detection: bool = True,
         flaky: bool = False,
     ):
-        if caller_start_window_ms <= 0:
-            raise ValueError("caller_start_window_ms must be greater than 0.")
         if max_caller_silence_seconds <= 0:
             raise ValueError(
                 "max_caller_silence_seconds must be greater than 0."
@@ -84,7 +82,6 @@ class AgentInterruptionMetric(BaseVoiceMetric):
             verbose_mode=verbose_mode,
             flaky=flaky,
         )
-        self.caller_start_window_ms = caller_start_window_ms
         self.max_caller_silence_seconds = max_caller_silence_seconds
         self.use_speech_detection = use_speech_detection
 

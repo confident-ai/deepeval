@@ -37,6 +37,11 @@ SOUND_GAP_SECONDS = 0.3
 MIN_SOUND_SECONDS = 0.15
 # A pause shorter than this doesn't end a stretch of the agent's speech.
 AGENT_PAUSE_SECONDS = 1.0
+# The same for the caller, so caller starts mirror agent starts.
+CALLER_PAUSE_SECONDS = 1.0
+# Speakers starting within this of each other collided; Agent Interruption
+# owns the moment, so it is never also a User Interruption.
+COLLISION_SECONDS = 0.5
 # A speaker takes the floor after at least this much of their own silence.
 SPEAKER_PAUSE_SECONDS = 0.5
 # The caller is already talking when this much of the moment before the agent
@@ -89,6 +94,19 @@ class AgentStart:
     overlap_seconds: float
 
 
+@dataclass(frozen=True)
+class CallerStart:
+    """The caller starting to speak after at least CALLER_PAUSE_SECONDS of
+    their own silence, and what the agent was doing around it."""
+
+    at: float
+    stops_at: float
+    turn: Optional[int]
+    agent_talking: bool
+    agent_talking_for: Optional[float]
+    overlap_seconds: float
+
+
 def stretches(spans: Sequence[Span], own_silence: float) -> List[Span]:
     merged: List[Span] = []
     for span in spans:
@@ -115,20 +133,36 @@ def last_sound_end(spans: Sequence[Span], before: float) -> Optional[float]:
     )
 
 
-def _caller_pause(
-    caller_stretches: Sequence[Span], at: float
+def _pause_around(
+    speaker_stretches: Sequence[Span], at: float
 ) -> Optional[float]:
-    """The caller's pause around `at`, from when they stopped speaking to when
+    """A speaker's pause around `at`, from when they stopped speaking to when
     they started again; 0 when they had already been talking."""
-    for index, stretch in enumerate(caller_stretches):
+    for index, stretch in enumerate(speaker_stretches):
         if stretch.end <= at:
             continue
         if stretch.start < at - CALLER_TALKING_WINDOW_SECONDS:
             return 0.0
         if index == 0:
             return None
-        return stretch.start - caller_stretches[index - 1].end
+        return stretch.start - speaker_stretches[index - 1].end
     return None
+
+
+def _is_talking(spans: Sequence[Span], at: float) -> bool:
+    return (
+        sound_between(spans, at - CALLER_TALKING_WINDOW_SECONDS, at)
+        >= CALLER_TALKING_MIN_SECONDS
+    )
+
+
+def _next_start(stretches_: Sequence[Span], at: float) -> Optional[float]:
+    """Seconds from `at` until the next stretch starts; 0 when one is
+    already going."""
+    return next(
+        (max(at, span.start) - at for span in stretches_ if span.end > at),
+        None,
+    )
 
 
 def agent_starts(activity: CallActivity) -> List[AgentStart]:
@@ -139,26 +173,17 @@ def agent_starts(activity: CallActivity) -> List[AgentStart]:
     for stretch in stretches(activity.agent, AGENT_PAUSE_SECONDS):
         at = stretch.start
         caller_end = last_sound_end(caller, at)
-        caller_next = next(
-            (max(at, span.start) for span in caller_stretches if span.end > at),
-            None,
-        )
         starts.append(
             AgentStart(
                 at=at,
                 stops_at=stretch.end,
                 turn=stretch.turn,
-                caller_talking=sound_between(
-                    caller, at - CALLER_TALKING_WINDOW_SECONDS, at
-                )
-                >= CALLER_TALKING_MIN_SECONDS,
-                caller_starts_after=(
-                    None if caller_next is None else caller_next - at
-                ),
+                caller_talking=_is_talking(caller, at),
+                caller_starts_after=_next_start(caller_stretches, at),
                 caller_silent_for=(
                     None if caller_end is None else max(0.0, at - caller_end)
                 ),
-                caller_pause_seconds=_caller_pause(caller_stretches, at),
+                caller_pause_seconds=_pause_around(caller_stretches, at),
                 caller_runs_past=(
                     0.0 if caller_end is None else max(0.0, caller_end - at)
                 ),
@@ -168,6 +193,36 @@ def agent_starts(activity: CallActivity) -> List[AgentStart]:
             )
         )
         previous_end = stretch.end
+    return starts
+
+
+def caller_starts(activity: CallActivity) -> List[CallerStart]:
+    agent = activity.agent
+    # The same stretches whose starts Agent Interruption judges.
+    agent_stretches = stretches(agent, AGENT_PAUSE_SECONDS)
+    starts: List[CallerStart] = []
+    for stretch in stretches(activity.caller, CALLER_PAUSE_SECONDS):
+        at = stretch.start
+        agent_since = next(
+            (
+                span.start
+                for span in agent_stretches
+                if span.start < at < span.end
+            ),
+            None,
+        )
+        starts.append(
+            CallerStart(
+                at=at,
+                stops_at=stretch.end,
+                turn=stretch.turn,
+                agent_talking=_is_talking(agent, at),
+                agent_talking_for=(
+                    None if agent_since is None else at - agent_since
+                ),
+                overlap_seconds=sound_between(agent, at, stretch.end),
+            )
+        )
     return starts
 
 

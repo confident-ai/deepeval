@@ -5,6 +5,7 @@
     "metrics-response-delay-consistency",
     "metrics-time-to-first-response",
     "metrics-agent-interruption",
+    "metrics-user-interruption",
     "metrics-turn-taking-naturalness"
   ]
 }
