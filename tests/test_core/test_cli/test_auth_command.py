@@ -2,10 +2,12 @@ from typing import Optional
 
 import pytest
 
+from deepeval.cli.auth import flow
 from deepeval.cli.auth.api import (
     CliAuthorization,
     CliOnboardingContext,
     CliQuestionnaire,
+    DevicePairing,
     DynamicNewUserOnboardingRequest,
 )
 from deepeval.cli.auth.command import (
@@ -14,6 +16,31 @@ from deepeval.cli.auth.command import (
     _get_pasted_api_key_warnings,
     _prompt_dynamic_questionnaire,
 )
+
+
+@pytest.mark.parametrize("enabled", [False, True])
+def test_browser_pairing_respects_browser_setting(
+    monkeypatch, capsys, settings, enabled
+):
+    monkeypatch.setattr(settings, "CONFIDENT_OPEN_BROWSER", enabled)
+    monkeypatch.setattr("deepeval.utils.is_in_ci_env", lambda: False)
+    pairing = DevicePairing(
+        user_code="ABCD",
+        device_code="device",
+        verification_url="https://example.com/pair",
+        interval=0,
+    )
+    completed = CliAuthorization(setup_token="setup")
+    monkeypatch.setattr(flow, "create_pairing", lambda: pairing)
+    monkeypatch.setattr(flow, "_poll_once", lambda _: completed)
+    opened = []
+    monkeypatch.setattr("webbrowser.open", opened.append)
+
+    assert flow.browser_pairing_login() is completed
+    assert opened == ([pairing.verification_url] if enabled else [])
+    output = capsys.readouterr().out
+    assert pairing.verification_url in output
+    assert pairing.user_code in output
 
 
 @pytest.mark.parametrize("api_key", ["n", "y", "short-key", "confident key"])
