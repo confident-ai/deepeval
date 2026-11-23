@@ -232,7 +232,7 @@ def _build_model(
     elif should_use_amazon_bedrock_model():
         return AmazonBedrockModel(model=model), True
     elif isinstance(model, str) or model is None:
-        return _build_from_string(model or SETTINGS.DEEPEVAL_MODEL), True
+        return _build_from_string(model or SETTINGS.DEEPEVAL_LLM), True
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(

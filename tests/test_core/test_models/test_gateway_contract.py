@@ -112,7 +112,7 @@ def _no_provider_flags(monkeypatch, settings):
         settings.LITELLM_API_BASE = None
         settings.LITELLM_PROXY_API_BASE = None
         settings.TEMPERATURE = None
-        settings.DEEPEVAL_MODEL = None
+        settings.DEEPEVAL_LLM = None
         for flag in (
             "USE_OPENAI_MODEL",
             "USE_ANTHROPIC_MODEL",
@@ -462,7 +462,7 @@ def test_provider_flag_keeps_its_own_routing(litellm, settings):
 
 def test_default_model_setting(litellm, settings):
     with settings.edit(persist=False):
-        settings.DEEPEVAL_MODEL = "anthropic/claude-opus-5"
+        settings.DEEPEVAL_LLM = "anthropic/claude-opus-5"
     model, _ = initialize_model(None)
     assert type(model) is GatewayModel
     assert model.name == "anthropic/claude-opus-5"
