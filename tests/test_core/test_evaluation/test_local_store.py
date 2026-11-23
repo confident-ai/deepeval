@@ -323,3 +323,71 @@ def test_classifier_only_evaluate_writes_results_folder(
     body = json.loads(path.read_text(encoding="utf-8"))
     (classification,) = body["test_results"][0]["classifications"]
     assert classification["label"] == "greeting"
+
+
+@pytest.mark.parametrize("run_async", [False, True])
+def test_mixed_metric_and_classifier_evaluate_saves_classifications(
+    tmp_path: Path, run_async: bool
+):
+    from deepeval import evaluate
+    from deepeval.classifiers.base_classifier import BaseClassifier, Label
+    from deepeval.evaluate.configs import AsyncConfig, CacheConfig
+    from deepeval.metrics import BaseMetric
+    from deepeval.test_case import LLMTestCase
+
+    class Greeting(BaseClassifier):
+        name = "Greeting"
+        labels = [Label(name="greeting"), Label(name="other")]
+
+        def classify(self, test_case, **kwargs):
+            self.label = "other"
+            return self.label
+
+        async def a_classify(self, test_case, **kwargs):
+            return self.classify(test_case)
+
+    class AlwaysPass(BaseMetric):
+        threshold = 0.5
+        async_mode = False
+
+        def measure(self, test_case, *args, **kwargs):
+            self.score, self.success = 1.0, True
+            return self.score
+
+        async def a_measure(self, test_case, *args, **kwargs):
+            return self.measure(test_case)
+
+        def is_successful(self):
+            return self.success
+
+        @property
+        def __name__(self):
+            return "AlwaysPass"
+
+    target = tmp_path / "results"
+    result = evaluate(
+        [
+            LLMTestCase(
+                input="hi",
+                actual_output="hello",
+                expected_labels={"Greeting": "greeting"},
+            )
+        ],
+        metrics=[AlwaysPass()],
+        classifiers=[Greeting()],
+        async_config=AsyncConfig(run_async=run_async),
+        display_config=DisplayConfig(
+            show_indicator=False,
+            print_results=False,
+            results_folder=str(target),
+        ),
+        cache_config=CacheConfig(use_cache=False, write_cache=False),
+    )
+
+    assert result.test_results[0].success is False
+    assert len(list(target.glob("test_run_*.json"))) == 1
+    (path,) = target.glob("classifier_run_*.json")
+    body = json.loads(path.read_text(encoding="utf-8"))
+    (case,) = body["test_results"]
+    assert case["success"] is False
+    assert case["classifications"][0]["label"] == "other"
