@@ -16,18 +16,13 @@ _TRACE_FIELDS = {
     "name": "name",
     "input": "input",
     "actual_output": "output",
-    "expected_output": "expectedOutput",
-    "retrieval_context": "retrievalContext",
+    "expected_output": "expected_output",
+    "retrieval_context": "retrieval_context",
     "context": "context",
-    "tools_called": "toolsCalled",
-    "expected_tools": "expectedTools",
+    "tools_called": "tools_called",
+    "expected_tools": "expected_tools",
 }
-_CAPPED_SPAN_FIELDS = {
-    "error": "error",
-    "input": "input",
-    "output": "output",
-    "tools_called": "toolsCalled",
-}
+_CAPPED_SPAN_FIELDS = ("error", "input", "output", "tools_called")
 
 
 def construct_trace_content(content: Union[Dict[str, Any], str]) -> str:
@@ -54,10 +49,10 @@ def _flatten_spans(span: Optional[Dict], spans: List[Dict]) -> List[Dict]:
         "type": _jsonable_field(span.get("type")),
         "status": "ERRORED" if span.get("error") else "SUCCESS",
     }
-    for attr, key in _CAPPED_SPAN_FIELDS.items():
-        capped = cap_field(_jsonable_field(span.get(attr)))
+    for field in _CAPPED_SPAN_FIELDS:
+        capped = cap_field(_jsonable_field(span.get(field)))
         if capped is not None:
-            entry[key] = capped
+            entry[field] = capped
     spans.append(entry)
     for child in span.get("children") or []:
         _flatten_spans(child, spans)

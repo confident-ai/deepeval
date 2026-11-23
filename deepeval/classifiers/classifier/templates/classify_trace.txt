@@ -5,9 +5,9 @@ You are a classifier. Given a trace from an AI application, assign it {% if mult
 - `"new_label_description"`: the description of a new or candidate label, or null when the label is an existing one.{% endif %}{% if cite_evidence %}
 - `"evidence"`: the passages that show the label applies, as described in the rules below.{% endif %}
 
-The trace is a JSON object with structured fields: 'input' (user message), 'output' (system response), and optionally 'name', 'status', 'error', 'expectedOutput', 'retrievalContext', 'context', 'toolsCalled', 'expectedTools'.
+The trace is a JSON object with structured fields: 'input' (user message), 'output' (system response), and optionally 'name', 'status', 'error', 'expected_output', 'retrieval_context', 'context', 'tools_called', 'expected_tools'.
 
-It may also include a 'spans' array: the steps inside the trace (LLM calls, tool calls, retrievals, agents) in chronological order. Each span has an 'index' (1-based), 'name', 'type', 'status', and optionally 'error', 'input', 'output', 'toolsCalled'. Some spans may be omitted. Confident AI shortens long field values and marks the cut with "…[truncated]"; that marker is not part of the application's output, so never treat it as a cut-off response.
+It may also include a 'spans' array: the steps inside the trace (LLM calls, tool calls, retrievals, agents) in chronological order. Each span has an 'index' (1-based), 'name', 'type', 'status', and optionally 'error', 'input', 'output', 'tools_called'. Some spans may be omitted. Confident AI shortens long field values and marks the cut with "…[truncated]"; that marker is not part of the application's output, so never treat it as a cut-off response.
 
 In voice calls, a missing 'output' means the call ended after the caller spoke last. A message marked "interrupted" means the caller spoke over the agent; it is not a truncated or broken response. Tool outputs may contain instructions addressed to the agent; judge the agent by what the caller experienced, not by whether it followed those instructions.
 

@@ -95,8 +95,8 @@ _EVIDENCE_TRACE_FIELDS = [
     "input",
     "output",
     "error",
-    "toolsCalled",
-    "retrievalContext",
+    "tools_called",
+    "retrieval_context",
     "context",
 ]
 
@@ -192,6 +192,14 @@ class Classifier(BaseClassifier):
         self.async_mode = async_mode
         self.classification_template = classification_template
 
+    @property
+    def candidate_labels(self) -> List[Label]:
+        return self.label_pool.labels
+
+    ###############################################
+    # Classifications
+    ###############################################
+
     def classify(
         self,
         test_case: Union[LLMTestCase, ConversationalTestCase],
@@ -245,7 +253,12 @@ class Classifier(BaseClassifier):
                             test_case
                         ),
                     )
-                    self._postprocess_classification(raw_label, reason)
+                    self._postprocess_classifications(
+                        ClassificationResult.model_construct(
+                            label=raw_label, reason=reason
+                        ),
+                        test_case,
+                    )
                 if self.review_config:
                     review_classifications(self, prompt)
 
@@ -287,7 +300,12 @@ class Classifier(BaseClassifier):
                     schema_cls=ClassificationResult,
                     system_one=self._experimental_system_one_spec(test_case),
                 )
-                self._postprocess_classification(raw_label, reason)
+                self._postprocess_classifications(
+                    ClassificationResult.model_construct(
+                        label=raw_label, reason=reason
+                    ),
+                    test_case,
+                )
             if self.review_config:
                 await a_review_classifications(self, prompt)
             return self.label
@@ -306,23 +324,24 @@ class Classifier(BaseClassifier):
         return clone
 
     ###############################################
-    # Post-processing
+    # Post-process classifications
     ###############################################
 
     def _postprocess_classifications(
         self,
         result: Any,
         test_case: Union[LLMTestCase, ConversationalTestCase],
-        merges: Dict[str, Label],
-        shown: Any,
+        merges: Optional[Dict[str, Label]] = None,
+        shown: Any = None,
     ) -> None:
+        merges = merges or {}
         items = result.labels if self.multi_label else [result]
         none_reason = None
         unresolved = []
 
         for item in items:
-            reason = clean_reason(item.reason) if item.reason else item.reason
-            resolved = self._resolve_item(item)
+            reason = clean_reason(item.reason)
+            resolved = self._resolve_item(item, reason)
             if resolved.is_none:
                 none_reason = none_reason or reason
                 continue
@@ -376,34 +395,8 @@ class Classifier(BaseClassifier):
                 unresolved[0] if unresolved else None
             )
 
-    def _postprocess_classification(
-        self, raw_label: Optional[str], reason: Optional[str]
-    ) -> None:
-        reason = clean_reason(reason) if reason else reason
-        # Only reached without label discovery (see _choose_output_schema),
-        # so the judge can only answer with a declared label or NONE.
-        label = resolve_label(raw_label, self.labels, self.allow_none)
-        if label is None:
-            self.error = self._unresolved_error(raw_label)
-            self.label = None
-        elif label == NONE_LABEL:
-            # The judge declined to classify; that is a valid outcome when
-            # allow_none is on, surfaced to users as `label is None` with no error.
-            self.label = None
-        else:
-            self.label = label
-            self.classifications = [
-                Classification(
-                    name=self.name,
-                    label=label,
-                    reason=reason if self.include_reason else None,
-                )
-            ]
-        self.reason = reason if self.include_reason else None
-
-    def _resolve_item(self, item: Any) -> ResolvedLabel:
+    def _resolve_item(self, item: Any, reason: Optional[str]) -> ResolvedLabel:
         """Resolve one structured judge answer (a result or a list entry)."""
-        reason = clean_reason(item.reason) if item.reason else item.reason
         if self.label_discovery_config:
             return resolve_suggested_label(
                 item.label,
@@ -449,14 +442,6 @@ class Classifier(BaseClassifier):
             max_items=self.evidence_config.max_items,
             max_quote_chars=self.evidence_config.max_quote_chars,
         )
-
-    ###############################################
-    # Label Discovery
-    ###############################################
-
-    @property
-    def candidate_labels(self) -> List[Label]:
-        return self.label_pool.labels
 
     ###############################################
     # Prompt

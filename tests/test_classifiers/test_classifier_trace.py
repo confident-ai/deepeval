@@ -70,7 +70,7 @@ def test_trace_is_shown_with_flattened_spans():
     assert "Given a trace from an AI application" in prompt
     trace = _trace_json(prompt)
     assert trace["input"] == "How much is Pro?" and trace["output"] == "$20."
-    assert trace["toolsCalled"][0]["name"] == "lookup_price"
+    assert trace["tools_called"][0]["name"] == "lookup_price"
     assert [(s["index"], s["name"], s["status"]) for s in trace["spans"]] == [
         (1, "agent", "SUCCESS"),
         (2, "lookup_price", "SUCCESS"),

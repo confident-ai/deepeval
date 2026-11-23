@@ -15,7 +15,7 @@ import numpy as np
 
 from deepeval.classifiers.base_classifier import Label
 from deepeval.classifiers.classifier.schema import LabelMergeResult
-from deepeval.classifiers.utils import LabelOrigin
+from deepeval.classifiers.utils import LabelOrigin, clean_reason
 from deepeval.metrics.utils.generation import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
@@ -187,7 +187,7 @@ def _proposed_new_labels(
         return []
     new = []
     for item in result.labels if classifier.multi_label else [result]:
-        resolved = classifier._resolve_item(item)
+        resolved = classifier._resolve_item(item, clean_reason(item.reason))
         if (
             resolved.origin is LabelOrigin.NEW
             and same_name(resolved.name, classifier.label_pool.labels) is None
