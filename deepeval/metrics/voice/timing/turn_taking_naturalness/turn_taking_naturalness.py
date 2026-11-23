@@ -6,6 +6,7 @@ from deepeval.metrics.voice.utils.analysis import (
     CONTIGUOUS_CLIP_TOLERANCE_SECONDS,
 )
 from deepeval.metrics.voice.utils.call_activity import (
+    BACKCHANNEL_MAX_SECONDS,
     SPEAKER_PAUSE_SECONDS,
     CallActivity,
     call_recording_activity,
@@ -30,10 +31,8 @@ RESPONSE_DELAY_WEIGHT = 0.2
 GAP_TAU = 2.5
 USER_BARGE_IN_TAU = 2.0
 AGENT_OVERLAP_TAU = 0.6
-# On a recording, shorter overlaps are speakers touching, and a caller sound
-# this short over the agent is an "mm-hm", not a hand-over.
+# On a recording, shorter overlaps are speakers touching.
 MIN_OVERLAP_SECONDS = 0.3
-BACKCHANNEL_MAX_SECONDS = 1.0
 
 
 def _recording_transitions(

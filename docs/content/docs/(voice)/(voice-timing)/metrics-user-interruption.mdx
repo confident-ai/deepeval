@@ -95,9 +95,9 @@ Pauses under a second do not end either speaker's stretch of speech. Caller soun
 
 ### Where the timing comes from
 
-When the test case has a `call_recording_path`, a stereo WAV of the whole call with the caller on the left channel and the agent on the right (the simulator writes one when [`record_call=True`](/docs/conversation-simulator-voice-mode)), the metric reads who was making sound when from each channel's loudness: 20 ms frames, pauses under 0.3 seconds closed, sounds under 0.15 seconds dropped. This does not depend on how the turns were cut, so it is the more reliable source. Without one, or with a mono file, the metric falls back to each turn's `start_time` and audio length. `timing_source` on `score_breakdown` says which was used.
+<include cwd>snippets/voice/call-recording-timing.mdx</include>
 
-With `use_speech_detection` on (the default), the caller only counts as talking when the sound on their channel is both loud enough for that caller (at least 15% of their typical speech level) and heard as speech by the [Silero VAD](https://github.com/snakers4/silero-vad) model, so background noise, bangs and hold music are not mistaken for the caller cutting in. Background voices, such as a TV, are still speech and still count. It needs `onnxruntime` (`pip install onnxruntime`), and the 2 MB model is downloaded once into `~/.cache/deepeval/models` (or `$XDG_CACHE_HOME/deepeval/models`). Set `use_speech_detection=False` to judge by loudness alone, where any sound on the caller's channel reads as the caller talking.
+<include cwd>snippets/voice/speech-detection.mdx</include>
 
 Without a recording, every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped. It is also skipped when the caller never spoke for a second or more.
 

@@ -31,6 +31,7 @@ from deepeval.test_case import ConversationalTestCase
 from deepeval.voice.connectors import audio_utils
 
 EVENT_KEYS = {CALL_RECORDING: "reply_start", TURN_TIMESTAMPS: "turn"}
+CALLER_EVENT_KEYS = {CALL_RECORDING: "caller_start", TURN_TIMESTAMPS: "turn"}
 # Gaps shorter than this sit between syllables, not between utterances.
 SOUND_GAP_SECONDS = 0.3
 # Shorter bursts are clicks and breaths.
@@ -42,6 +43,11 @@ CALLER_PAUSE_SECONDS = 1.0
 # Speakers starting within this of each other collided; Agent Interruption
 # owns the moment, so it is never also a User Interruption.
 COLLISION_SECONDS = 0.5
+# An interruption either backs off within this or keeps talking over for this.
+FALSE_START_MAX_SECONDS = 1.5
+TALK_OVER_MIN_SECONDS = 1.0
+# Shorter caller sounds are an "mm-hm" while listening, not a turn.
+BACKCHANNEL_MAX_SECONDS = 1.0
 # A speaker takes the floor after at least this much of their own silence.
 SPEAKER_PAUSE_SECONDS = 0.5
 # The caller is already talking when this much of the moment before the agent

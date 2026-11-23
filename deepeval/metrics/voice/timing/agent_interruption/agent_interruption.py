@@ -3,6 +3,8 @@ from typing import Callable, Dict, Optional
 from deepeval.metrics.voice.utils.call_activity import (
     COLLISION_SECONDS,
     EVENT_KEYS,
+    FALSE_START_MAX_SECONDS,
+    TALK_OVER_MIN_SECONDS,
     AgentStart,
     agent_starts,
     is_opening_line,
@@ -15,9 +17,6 @@ from deepeval.metrics.voice.base_metric import (
 )
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent, on_call
-
-FALSE_START_MAX_SECONDS = 1.5
-TALK_OVER_MIN_SECONDS = 1.0
 
 
 def is_false_start(

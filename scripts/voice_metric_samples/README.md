@@ -5,8 +5,8 @@ Generates the example clip shown on each voice metric's docs page. Needs an
 OpenAI TTS; responses are cached in `~/.cache/deepeval-voice-samples`).
 
 ```bash
-python docs/scripts/voice-metric-samples/make_samples.py
-python docs/scripts/voice-metric-samples/attach_ranges.py
+python scripts/voice_metric_samples/make_samples.py
+python scripts/voice_metric_samples/attach_ranges.py
 ```
 
 `make_samples.py` writes the clips and `calls.json` (each clip's turns) to

@@ -20,7 +20,38 @@ The echo metric checks whether **the agent's own voice comes back through the ca
 
 ## Usage
 
-Echo reads a stereo recording of the whole call, with the caller on the left channel and the agent on the right. For a real call, attach yours as `call_recording_path`:
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Echo reads a stereo recording of the whole call, with the caller on the left channel and the agent on the right, so set `record_call=True`. Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import EchoMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+        record_call=True,
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = EchoMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+A simulated caller never plays the agent's voice back, so simulated calls are expected to pass.
+
+### Judging a recorded call
+
+For a real call, attach its stereo recording as `call_recording_path`:
 
 ```python
 from deepeval.metrics import EchoMetric
@@ -37,8 +68,6 @@ test_case = ConversationalTestCase(
 metric = EchoMetric(threshold=0.8)
 metric.measure(test_case)
 ```
-
-The [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode) writes the same recording when `record_call=True`. A simulated caller never plays the agent's voice back, so simulated calls are expected to pass.
 
 There are **FIVE** optional parameters when creating an `EchoMetric`:
 

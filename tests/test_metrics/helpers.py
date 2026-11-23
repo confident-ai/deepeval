@@ -1,11 +1,10 @@
-"""Synthetic audio for the audio-glitch, audio-defect, audio-level,
-audio-prosody, audio-timing and audio-responsiveness metric tests."""
+"""Synthetic audio and shared helpers for the voice metric tests."""
 
 import math
 import random
 from array import array
 
-from deepeval.test_case import Audio, Turn
+from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from deepeval.voice.connectors import audio_utils
 
 RATE = 8000
@@ -292,3 +291,120 @@ def stereo_recording(path, *, caller=(), agent=(), seconds=None) -> str:
             )
         )
     return str(path)
+
+
+CLEAN_GAPS = [0.5, 0.5, 0.5]
+STAMPS_NOTE = (
+    " Judged from each turn's own audio and timestamps, as no stereo call "
+    "recording was available."
+)
+AGENT_HUNG_UP = {"Stop reason": "The agent ended the call"}
+
+
+def measure(metric, turns, metadata=None):
+    metric.measure(
+        ConversationalTestCase(turns=turns, metadata=metadata),
+        _show_indicator=False,
+    )
+    return metric
+
+
+def agent_speech(seconds=3.0, **kwargs):
+    return speech_like(seconds, base_hz=230.0, seed=1, **kwargs)
+
+
+def loop_clip():
+    syllable = speech_like(0.25, seed=1)
+    return syllable + syllable + syllable + syllable
+
+
+def with_defect(index, build_clip):
+    turns = clean_turns()
+    turns[index].audio = to_audio(build_clip(), start_time=index * 3.5)
+    return turns
+
+
+def with_reply_audio(index, samples, turns=None):
+    turns = turns or clean_turns()
+    turns[index].audio = to_audio(samples, start_time=index * 3.5)
+    return turns
+
+
+def set_audio(samples):
+    def apply(turn):
+        turn.audio = to_audio(samples, start_time=turn.audio.start_time)
+
+    return apply
+
+
+def set_content(content):
+    def apply(turn):
+        turn.content = content
+
+    return apply
+
+
+def edit_reply(index, apply, turns=None):
+    turns = turns or clean_turns()
+    apply(turns[index])
+    return turns
+
+
+def caller_turn(content):
+    return Turn(role="user", content=content, audio=to_audio(speech_like(1.0)))
+
+
+def agent_turn(content):
+    return Turn(
+        role="assistant", content=content, audio=to_audio(speech_like(1.0))
+    )
+
+
+def timed_turn(role, seconds, start_time, seed=0):
+    return Turn(
+        role=role,
+        content=f"{role} line.",
+        audio=to_audio(speech_like(seconds, seed=seed), start_time=start_time),
+    )
+
+
+def without_place(event):
+    """The event minus where it sits, which is the turn's own audio span."""
+    return {
+        key: value
+        for key, value in event.items()
+        if key not in ("offset_seconds", "duration_seconds", "start_time")
+    }
+
+
+def undecodable(turn):
+    turn.audio = Audio.from_bytes(
+        b"not-a-wav", "audio/wav", start_time=turn.audio.start_time
+    )
+
+
+def recorded_call(tmp_path, *, caller, agent):
+    path = stereo_recording(tmp_path / "call.wav", caller=caller, agent=agent)
+    return timed_call(CLEAN_GAPS), path
+
+
+def measure_recording(metric, tmp_path, *, caller, agent):
+    turns, path = recorded_call(tmp_path, caller=caller, agent=agent)
+    metric.measure(
+        ConversationalTestCase(turns=turns, call_recording_path=path),
+        _show_indicator=False,
+    )
+    return metric
+
+
+def agent_backs_off_call(caller_pause):
+    """The caller speaks, pauses, and starts again 0.4 s after the agent
+    starts; the agent stops after 1 s."""
+    agent_at = 5.0 + caller_pause - 0.4
+    return [
+        timed_turn("assistant", 2.0, 0.0),
+        timed_turn("user", 2.0, 3.0),
+        timed_turn("assistant", 1.0, agent_at, seed=1),
+        timed_turn("user", 2.0, agent_at + 0.4, seed=1),
+        timed_turn("assistant", 2.0, agent_at + 3.0, seed=2),
+    ]

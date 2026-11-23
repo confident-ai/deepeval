@@ -8,7 +8,7 @@ import numpy as np
 from dotenv import load_dotenv
 from openai import OpenAI
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[2]
 OUT = ROOT / "docs/public/audio/voice-metrics"
 CACHE = Path(
     os.environ.get(

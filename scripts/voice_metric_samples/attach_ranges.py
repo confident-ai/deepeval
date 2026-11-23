@@ -9,7 +9,7 @@ import deepeval.metrics as M
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from deepeval.voice.connectors import audio_utils
 
-ROOT = Path(__file__).resolve().parents[3]
+ROOT = Path(__file__).resolve().parents[2]
 CALLS = json.loads(
     (ROOT / "docs/public/audio/voice-metrics/calls.json").read_text()
 )

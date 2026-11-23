@@ -1,28 +1,22 @@
 from typing import Callable, Dict, Optional
 
 from deepeval.metrics.voice.utils.call_activity import (
+    BACKCHANNEL_MAX_SECONDS,
+    CALLER_EVENT_KEYS,
     COLLISION_SECONDS,
+    FALSE_START_MAX_SECONDS,
+    TALK_OVER_MIN_SECONDS,
     CallerStart,
     call_activity,
     caller_starts,
 )
-from deepeval.metrics.voice.utils.defects import (
-    CALL_RECORDING,
-    TURN_TIMESTAMPS,
-    defect_share_result,
-)
+from deepeval.metrics.voice.utils.defects import defect_share_result
 from deepeval.metrics.voice.base_metric import (
     BaseVoiceMetric,
     VoiceMetricResult,
 )
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent, on_call
-
-EVENT_KEYS = {CALL_RECORDING: "caller_start", TURN_TIMESTAMPS: "turn"}
-FALSE_START_MAX_SECONDS = 1.5
-TALK_OVER_MIN_SECONDS = 1.0
-# Shorter caller sounds are an "mm-hm" while listening, not a turn.
-BACKCHANNEL_MAX_SECONDS = 1.0
 
 
 def agent_had_the_floor(start: CallerStart) -> bool:
@@ -80,10 +74,10 @@ class UserInterruptionMetric(BaseVoiceMetric):
 
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
         activity = call_activity(test_case, self.use_speech_detection)
-        event_key = EVENT_KEYS[activity.source]
+        event_key = CALLER_EVENT_KEYS[activity.source]
         eligible = []
         defects = []
-        for start in caller_starts(activity):
+        for start in caller_starts(activity) if activity.agent else []:
             if start.stops_at - start.at < BACKCHANNEL_MAX_SECONDS:
                 continue
             key = start.turn if event_key == "turn" else round(start.at, 2)
@@ -109,8 +103,12 @@ class UserInterruptionMetric(BaseVoiceMetric):
             list(activity.skipped),
             "the caller interrupting the agent",
             no_eligible_reason=activity.untimed_reason
-            or "The caller never spoke for "
-            f"{BACKCHANNEL_MAX_SECONDS:g} second or more.",
+            or (
+                "The caller never spoke for "
+                f"{BACKCHANNEL_MAX_SECONDS:g} second or more."
+                if activity.agent
+                else "The agent made no sound, so there was nothing to interrupt."
+            ),
             counted=("caller turn", "caller turns"),
             event_key=event_key,
             timing_source=activity.source,
