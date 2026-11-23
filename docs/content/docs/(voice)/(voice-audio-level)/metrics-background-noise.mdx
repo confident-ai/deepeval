@@ -85,7 +85,7 @@ Each reply is cut into 20 ms frames. The **speech level** is the 90th percentile
 
 The default of **20 dB** sits 5 dB above the +15 dB speech-to-noise ratio that speech-intelligibility guidance treats as the minimum for clearly understood speech, so it flags noise that starts to get in the way. Produced speech, such as audiobooks, keeps its noise about 40 dB below the voice, and clean synthetic speech usually measures above 60 dB. Noise at −45 dBFS behind normal speech measures about 30 dB and passes.
 
-Noise is measured in the pauses between words, and a reply under **two seconds** rarely has one, so shorter replies are skipped. A reply with no audible sound at all (an overall level of −70 dBFS or lower) is skipped too; [`SilentReplyMetric`](/docs/metrics-silent-reply) reports it. If no agent reply is long enough, the metric is skipped.
+Noise is measured in the pauses between words, and a reply under **two seconds** rarely has one, so shorter replies are skipped. A reply with no audible sound at all (no 20 ms frame reaches speech level, about −41 dBFS) is skipped too; [`SilentReplyMetric`](/docs/metrics-silent-reply) reports it. If no agent reply is long enough, the metric is skipped.
 
 ## FAQs
 

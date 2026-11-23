@@ -3,6 +3,7 @@ from deepeval.metrics.voice.utils.defects import (
     agent_reply_measurements,
     call_has_audio,
     defect_share_result,
+    is_inaudible,
 )
 from deepeval.metrics.voice.base_metric import (
     BaseVoiceMetric,
@@ -30,21 +31,21 @@ class SilentReplyMetric(BaseVoiceMetric):
         for index, turn in enumerate(test_case.turns):
             if (
                 turn.role != "assistant"
-                or not turn.content.strip()
                 or index in undecodable
+                or (not turn.content.strip() and turn.audio is None)
             ):
                 continue
             eligible_turns.append(index)
             if turn.audio is None:
                 defects.append(VoiceEvent(type="no_audio", turn=index))
-            elif measurements[index].silence_fraction >= 1.0:
+            elif is_inaudible(measurements[index]):
                 defects.append(VoiceEvent(type="no_speech", turn=index))
         return defect_share_result(
             eligible_turns,
             defects,
             skipped,
             defect_label,
-            no_eligible_reason="No assistant turn had text to be spoken.",
+            no_eligible_reason="No assistant turn had text or audio.",
         )
 
     @property

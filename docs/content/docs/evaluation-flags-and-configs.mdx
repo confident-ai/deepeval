@@ -98,7 +98,7 @@ evaluate(display_config=DisplayConfig(), ...)
 
 There are **TEN** optional parameters when creating a `DisplayConfig`:
 
-- [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](/docs/metrics-introduction#debugging-a-metric). Defaulted to `None`.
+- [Optional] `verbose_mode`: a optional boolean which when **IS NOT** `None`, overrides each [metric's `verbose_mode` value](/docs/metrics-introduction#debug-a-metric-judgement). Defaulted to `None`.
 - [Optional] `display`: a str of either `"all"`, `"failing"` or `"passing"`, which allows you to selectively decide which type of test cases to display as the final result. Defaulted to `"all"`.
 - [Optional] `show_indicator`: a boolean which when set to `True`, shows the evaluation progress indicator for each individual metric. Defaulted to `True`.
 - [Optional] `print_results`: a boolean which when set to `True`, prints the result of each evaluation. Defaulted to `True`.
@@ -123,7 +123,7 @@ await evaluate(testCases, metrics, {
 
 There are **SIX** optional fields on `displayConfig`:
 
-- [Optional] `verboseMode`: a boolean which when set, overrides each [metric's `verboseMode` value](/docs/metrics-introduction#debugging-a-metric). Omit it to leave each metric on the value it was constructed with.
+- [Optional] `verboseMode`: a boolean which when set, overrides each [metric's `verboseMode` value](/docs/metrics-introduction#debug-a-metric-judgement). Omit it to leave each metric on the value it was constructed with.
 - [Optional] `showIndicator`: a boolean which when set to `true`, shows the evaluation progress indicator for each individual metric. Defaulted to `true`.
 - [Optional] `printResults`: a boolean which when set to `true`, prints the result of each evaluation. Defaulted to `true`.
 - [Optional] `truncatePassingCases`: a boolean which when set to `true`, truncates the terminal output of passing test cases. Defaulted to `true`.
@@ -452,7 +452,7 @@ There is no short form for `--ignore-errors`, because `-i` is bound to `--identi
 
 ### Verbose Mode
 
-The `-v` flag (with no arguments) allows you to turn on [`verboseMode` for all metrics](/docs/metrics-introduction#debugging-a-metric). Not supplying the `-v` flag will default each metric's `verboseMode` to its value at instantiation.
+The `-v` flag (with no arguments) allows you to turn on [`verboseMode` for all metrics](/docs/metrics-introduction#debug-a-metric-judgement). Not supplying the `-v` flag will default each metric's `verboseMode` to its value at instantiation.
 
 <Switch>
 

@@ -5,6 +5,7 @@ from deepeval.metrics.voice.utils.call_activity import (
     EVENT_KEYS,
     AgentStart,
     agent_starts,
+    is_opening_line,
     call_activity,
 )
 from deepeval.metrics.voice.utils.defects import defect_share_result
@@ -90,8 +91,9 @@ class AgentInterruptionMetric(BaseVoiceMetric):
         event_key = EVENT_KEYS[activity.source]
         eligible = []
         defects = []
-        # The opening line interrupts no one.
-        for start in agent_starts(activity)[1:]:
+        for index, start in enumerate(agent_starts(activity)):
+            if is_opening_line(index, start):
+                continue
             key = start.turn if event_key == "turn" else round(start.at, 2)
             eligible.append(key)
             fired = [

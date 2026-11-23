@@ -228,7 +228,7 @@ def test_only_the_odd_reply_is_flagged_not_its_neighbours():
 
 
 def test_a_quiet_outlier_fails_loudness_and_loudness_consistency():
-    turns = _with_reply(1, _set_audio(with_gain(agent_speech(), 0.05)))
+    turns = _with_reply(1, _set_audio(with_gain(agent_speech(), 0.15)))
     assert _measure(LoudnessMetric(), turns).score == pytest.approx(2 / 3)
     assert _measure(LoudnessConsistencyMetric(), turns).score == pytest.approx(
         2 / 3

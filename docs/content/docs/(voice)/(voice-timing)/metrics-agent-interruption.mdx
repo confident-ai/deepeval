@@ -79,9 +79,9 @@ print(metric.score_breakdown)
 
 ## How Is It Calculated?
 
-`AgentInterruptionMetric` checks every time the agent starts speaking after at least one second of its own silence, leaving out its first start on the call (even when it answers a caller who spoke first), and scores the share that interrupted no one:
+`AgentInterruptionMetric` checks every time the agent starts speaking after at least one second of its own silence, leaving out its opening line, and scores the share that interrupted no one. The opening line is the agent's first start when the caller had made no sound before it; when the caller opens the call, the agent's first reply is checked like any other, whether the timing comes from the recording or the turn timestamps:
 
-<Equation formula="\text{Agent Interruption} = \frac{\text{Agent starts that are neither a false start nor a talk-over}}{\text{Agent starts after the opening line}}" />
+<Equation formula="\text{Agent Interruption} = \frac{\text{Agent starts that are neither a false start nor a talk-over}}{\text{Agent starts other than the opening line}}" />
 
 An interruption is a **false start** or a **talk-over**:
 

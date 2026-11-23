@@ -72,7 +72,7 @@ print(metric.score_breakdown)
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. Each looped span is its own event: `offset_seconds` and `duration_seconds` cover the audio that played again inside the reply (every repeated copy after the first, merged where the copies touch), and `start_time` places it on the call's clock (left out when the clip has no `Audio.start_time`). A reply with several looped spans still counts once toward the score. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
+`turn` is the turn's zero-based position in the conversation. Each looped span is its own event: `offset_seconds` and `duration_seconds` cover the audio that played again inside the reply (every replayed copy after the first, as one span), and `start_time` places it on the call's clock (left out when the clip has no `Audio.start_time`). A reply with several looped spans still counts once toward the score. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
 
 ## How Is It Calculated?
 
@@ -80,7 +80,13 @@ print(metric.score_breakdown)
 
 <Equation formula="\text{Audio Loop} = \frac{\text{Agent replies without the defect}}{\text{Agent replies with decodable audio}}" />
 
-The reply is split into 0.25 s windows. A reply loops when a non-silent window appears **sample for sample three or more times**. Real speech never repeats exactly, so this only catches a replayed buffer.
+A loop is found by similarity rather than identical bytes, so it still shows after the audio is re-encoded or resampled on its way through the call:
+
+1. **Candidate loop lengths.** The reply is resampled to 8 kHz and its autocorrelation is computed. Lengths from **0.2 s to 2.0 s** whose normalised autocorrelation is **0.2 or more** are candidates, strongest first, and up to **five** distinct lengths are tried.
+2. **Frame matching.** For each length, every 40 ms frame is compared with the frame one loop length later. A pair **matches** when their correlation is **0.9 or more**. Near-silent frames neither confirm nor break a run, so the pauses inside a replayed phrase do not split it.
+3. **A loop.** A matching run must last at least **two loop lengths**, so the audio plays three times. The level across one loop length of the run must also vary by at least **3 dB**, so a steady held tone, which matches itself at every delay, is not reported as a loop (see [Held Tone](/docs/metrics-held-tone)).
+
+Natural speech does not repeat itself closely for that long, so this catches a replayed buffer.
 
 If no agent reply has decodable audio, the metric is skipped.
 
@@ -92,9 +98,11 @@ If no agent reply has decodable audio, the metric is skipped.
       question: "Can natural speech be flagged as a loop?",
       answer: (
         <>
-          No. A loop needs the same quarter second of audio to repeat sample
-          for sample, which real or synthesized speech never does. Only a
-          replayed audio buffer produces it.
+          Rarely. A loop needs a stretch of audio between 0.2 and 2 seconds
+          long to match its next copy, frame by frame, for at least two loop
+          lengths in a row, with the level rising and falling inside it. Real
+          or synthesized speech does not repeat that closely; a replayed audio
+          buffer does, even after re-encoding.
         </>
       ),
     },

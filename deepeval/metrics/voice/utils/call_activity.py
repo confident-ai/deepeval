@@ -165,6 +165,10 @@ def _next_start(stretches_: Sequence[Span], at: float) -> Optional[float]:
     )
 
 
+def is_opening_line(index: int, start: AgentStart) -> bool:
+    return index == 0 and start.caller_silent_for is None
+
+
 def agent_starts(activity: CallActivity) -> List[AgentStart]:
     caller = activity.caller
     caller_stretches = stretches(caller, SPEAKER_PAUSE_SECONDS)
@@ -412,8 +416,7 @@ def reply_delays(
         return delays, skipped, untimed_reason, TURN_TIMESTAMPS
     delays: Dict[float, float] = {}
     skipped: List[Dict] = []
-    # The opening line answers no one; Time to First Response times it.
-    for start in agent_starts(recording)[1:]:
+    for start in agent_starts(recording):
         if not start.caller_spoke_last:
             continue
         at = round(start.at, 2)

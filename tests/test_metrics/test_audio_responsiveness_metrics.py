@@ -188,3 +188,12 @@ def test_events_hold_plain_values(metric_class):
     ]:
         for value in event.values():
             assert type(value) in (str, int, float)
+
+
+def test_a_reply_with_audio_but_no_text_can_still_be_silent():
+    turns = clean_turns()
+    turns[3] = Turn(role="assistant", content="", audio=to_audio(zeros(2.0)))
+    metric = _measure(SilentReplyMetric(), turns)
+    assert [_without_place(e) for e in metric.score_breakdown["events"]] == [
+        {"type": "no_speech", "turn": 3}
+    ]

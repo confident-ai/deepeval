@@ -55,7 +55,7 @@ Every voice metric records what it measured on `score_breakdown`. Read it after 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.94
+print(metric.score)  # e.g. 0.86
 print(metric.score_breakdown)
 ```
 
@@ -70,14 +70,18 @@ For `VoiceReliabilityMetric` the breakdown nests both halves, each with its own 
         "events": [],
     },
     "audio_integrity": {
-        "score": 0.88,
+        "score": 0.72,
         "critical_failure": False,
         "events": [
             {"type": "abrupt_cutoff", "turn": 3, "critical": False},
+            {"type": "audio_dropout", "turn": 3, "critical": False, "offset_seconds": 1.12, "duration_seconds": 0.08, "start_time": 11.62},
+            {"type": "audio_dropout", "turn": 3, "critical": False, "offset_seconds": 2.9, "duration_seconds": 0.06, "start_time": 13.4},
         ],
     },
 }
 ```
+
+`audio_loop` and `audio_dropout` events are one per occurrence: `offset_seconds` and `duration_seconds` place it inside the reply, and `start_time` on the call's clock (left out when the clip has no `Audio.start_time`). Their cost is charged once per reply from that reply's totals, so the two dropouts above subtract 0.16 together, and the cut-off 0.12.
 
 ## How Is It Calculated?
 
@@ -85,7 +89,7 @@ For `VoiceReliabilityMetric` the breakdown nests both halves, each with its own 
 
 <Equation formula="\text{Voice Reliability} = 0.5 \times \text{Responsiveness} + 0.5 \times \text{Audio Integrity}" />
 
-**A critical failure on either side forces the score to 0**, regardless of how well the other half did. A call with no agent turn, missing agent audio, an undecodable clip, a buffer that loops three or more times, a reply that never came, or a call that ended in a hangup, error, or idle timeout are all catastrophic — averaging them against a clean second half would hide exactly the failures this metric exists to surface.
+**A critical failure on either side forces the score to 0**, regardless of how well the other half did. A call with no agent turn, missing agent audio, an undecodable clip, a reply whose audio loops for three or more extra plays, a reply that never came, or a call that ended in a hangup, error, or idle timeout are all catastrophic — averaging them against a clean second half would hide exactly the failures this metric exists to surface.
 
 The two halves are the same detectors used by `AgentResponsivenessMetric` and `AudioIntegrityMetric`, so their pages document what each event means and what it costs.
 

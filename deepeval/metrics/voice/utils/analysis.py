@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import hashlib
 import math
 from array import array
 from dataclasses import dataclass, field
@@ -435,6 +434,115 @@ def _hard_edged_gaps(
     return gaps
 
 
+LOOP_MIN_SECONDS = 0.2
+LOOP_MAX_SECONDS = 2.0
+LOOP_RATE = 8000
+LOOP_FRAME_MS = 40
+LOOP_MIN_LAG_CORRELATION = 0.2
+LOOP_MIN_FRAME_CORRELATION = 0.9
+LOOP_CANDIDATE_LAGS = 5
+LOOP_MIN_LEVEL_SPREAD_DB = 3.0
+
+
+def _loops(
+    samples: Sequence[int], sample_rate: int
+) -> List[Tuple[float, float, int]]:
+    np = get_numpy()
+    values, rate = _downsampled(samples, sample_rate)
+    if rate > LOOP_RATE * 1.5:
+        step = int(rate // LOOP_RATE)
+        values, rate = values[::step], rate / step
+    values = values - values.mean() if len(values) else values
+    min_lag = int(LOOP_MIN_SECONDS * rate)
+    max_lag = min(int(LOOP_MAX_SECONDS * rate), len(values) // 3)
+    if max_lag <= min_lag:
+        return []
+    size = 1 << int(math.ceil(math.log2(2 * len(values))))
+    spectrum = np.fft.rfft(values, size)
+    autocorrelation = np.fft.irfft(spectrum * np.conj(spectrum), size)
+    if autocorrelation[0] <= 0:
+        return []
+    overlap = len(values) - np.arange(len(autocorrelation[: max_lag + 1]))
+    normalised = (
+        autocorrelation[: max_lag + 1]
+        / autocorrelation[0]
+        * len(values)
+        / np.maximum(overlap, 1)
+    )
+    window = normalised[min_lag : max_lag + 1]
+    candidates = [
+        min_lag + int(index)
+        for index in np.argsort(window)[::-1][: LOOP_CANDIDATE_LAGS * 4]
+        if window[index] >= LOOP_MIN_LAG_CORRELATION
+    ]
+    frame = int(rate * LOOP_FRAME_MS / 1000)
+    loops: List[Tuple[float, float, int]] = []
+    tried: List[int] = []
+    for lag in candidates:
+        if any(abs(lag - other) < frame for other in tried):
+            continue
+        tried.append(lag)
+        if len(tried) > LOOP_CANDIDATE_LAGS:
+            break
+        frames = (len(values) - lag) // frame
+        matches: List[Optional[bool]] = []
+        for index in range(frames):
+            a = values[index * frame : (index + 1) * frame]
+            b = values[index * frame + lag : (index + 1) * frame + lag]
+            quiet = (
+                max(
+                    math.sqrt(float(a @ a) / frame),
+                    math.sqrt(float(b @ b) / frame),
+                )
+                < audio_utils.DEFAULT_SILENCE_RMS
+            )
+            energy = math.sqrt(float(a @ a) * float(b @ b))
+            matches.append(
+                None
+                if quiet
+                else energy > 0
+                and float(a @ b) / energy >= LOOP_MIN_FRAME_CORRELATION
+            )
+        index = 0
+        while index < frames:
+            if matches[index] is not True:
+                index += 1
+                continue
+            run_start = last_match = index
+            while index < frames and matches[index] is not False:
+                if matches[index]:
+                    last_match = index
+                index += 1
+            index = last_match + 1
+            run = (index - run_start) * frame
+            if run + frame < 2 * lag:
+                continue
+            levels = [
+                dbfs(math.sqrt(float(chunk @ chunk) / frame))
+                for chunk in (
+                    values[position : position + frame]
+                    for position in range(
+                        run_start * frame, run_start * frame + lag, frame
+                    )
+                )
+                if len(chunk) == frame
+            ]
+            if (
+                not levels
+                or max(levels) - min(levels) < LOOP_MIN_LEVEL_SPREAD_DB
+            ):
+                continue
+            offset = (run_start * frame + lag) / rate
+            duration = run / rate
+            if any(
+                offset < existing + length and existing < offset + duration
+                for existing, length, _ in loops
+            ):
+                continue
+            loops.append((offset, duration, max(1, round(run / lag))))
+    return sorted(loops)
+
+
 def _percentile(values: Sequence[float], fraction: float) -> float:
     ordered = sorted(values)
     return ordered[int(fraction * (len(ordered) - 1))] if ordered else 0.0
@@ -589,27 +697,9 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         else None
     )
 
-    loop_window = max(1, int(sample_rate * 0.25))
-    fingerprints: dict = {}
-    for start in range(0, len(samples) - loop_window + 1, loop_window):
-        window = samples[start : start + loop_window]
-        if rms(window) < audio_utils.DEFAULT_SILENCE_RMS:
-            continue
-        fingerprint = hashlib.blake2b(
-            array("h", window).tobytes(), digest_size=8
-        ).digest()
-        fingerprints.setdefault(fingerprint, []).append(start)
-    repeats = [starts for starts in fingerprints.values() if len(starts) > 2]
-    loop_events = sum(len(starts) - 1 for starts in repeats)
-    # The audio played again: every copy after the first, merged where the
-    # copies of neighbouring windows touch.
-    loop_spans: List[Tuple[float, float]] = []
-    for start in sorted(begin for starts in repeats for begin in starts[1:]):
-        begin, end = start / sample_rate, (start + loop_window) / sample_rate
-        if loop_spans and begin <= sum(loop_spans[-1]) + 1e-9:
-            loop_spans[-1] = (loop_spans[-1][0], end - loop_spans[-1][0])
-        else:
-            loop_spans.append((begin, end - begin))
+    loops = _loops(samples, sample_rate)
+    loop_events = sum(extra for _, _, extra in loops)
+    loop_spans = [(offset, duration) for offset, duration, _ in loops]
 
     edge_size = max(1, int(sample_rate * 0.02))
     edge_threshold = _edge_threshold()

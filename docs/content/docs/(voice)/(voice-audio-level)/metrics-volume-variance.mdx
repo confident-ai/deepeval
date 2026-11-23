@@ -73,7 +73,7 @@ print(metric.score_breakdown)
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation, and `drift_db` is how much the volume changed from the start to the end of the reply (negative for a fade, positive for a swell). The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, or that have under three seconds of speech to follow, are listed under `skipped`.
+`turn` is the turn's zero-based position in the conversation, and `drift_db` is how much the volume changed from the start to the end of the reply (negative for a fade, positive for a swell). The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, that have no audible sound, or that have under three seconds of speech to follow, are listed under `skipped`.
 
 ## How Is It Calculated?
 
@@ -87,7 +87,7 @@ The default of **10 dB** is roughly the step at which a voice sounds half (or tw
 
 Only a steady fade or swell is reported. Quick ups and downs within a sentence are part of normal expressive speech and are not counted.
 
-If no agent reply is long enough to follow, the metric is skipped.
+A reply with no audible sound at all (no 20 ms frame reaches speech level, about −41 dBFS) is skipped too; [`SilentReplyMetric`](/docs/metrics-silent-reply) reports it. If no agent reply is long enough to follow, the metric is skipped.
 
 ## FAQs
 

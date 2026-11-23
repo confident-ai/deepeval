@@ -3,7 +3,7 @@ from typing import List
 
 from deepeval.metrics.voice.utils.analysis import analyze_audio, clamp_score
 from deepeval.test_case import ConversationalTestCase
-from deepeval.metrics.voice.utils.events import VoiceEvent
+from deepeval.metrics.voice.utils.events import VoiceEvent, placed
 
 
 @dataclass
@@ -128,28 +128,28 @@ def detect_audio_integrity(test_case: ConversationalTestCase) -> DetectorReport:
         if measurements.loop_events:
             severity = min(0.4, measurements.loop_events * 0.15)
             penalty += severity
-            events.append(
-                VoiceEvent(
-                    type="audio_loop",
-                    turn=index,
-                    count=measurements.loop_events,
-                    severity=severity,
-                    critical=measurements.loop_events >= 3,
+            for offset, duration in measurements.loop_spans:
+                events.append(
+                    VoiceEvent(
+                        type="audio_loop",
+                        turn=index,
+                        critical=measurements.loop_events >= 3,
+                        **placed(turn.audio, offset, duration),
+                    )
                 )
-            )
             critical = critical or measurements.loop_events >= 3
         if measurements.dropout_events:
             severity = min(0.35, measurements.dropout_events * 0.08)
             penalty += severity
-            events.append(
-                VoiceEvent(
-                    type="audio_dropout",
-                    turn=index,
-                    count=measurements.dropout_events,
-                    severity=severity,
-                    critical=False,
+            for offset, duration in measurements.dropout_spans:
+                events.append(
+                    VoiceEvent(
+                        type="audio_dropout",
+                        turn=index,
+                        critical=False,
+                        **placed(turn.audio, offset, duration),
+                    )
                 )
-            )
         if measurements.clipping_fraction > 0.01:
             severity = min(0.35, measurements.clipping_fraction * 10.0)
             penalty += severity
