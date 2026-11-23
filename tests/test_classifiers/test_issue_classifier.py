@@ -202,3 +202,24 @@ def test_expected_labels_may_name_a_discovered_issue():
         ],
         [classifier],
     )
+
+
+def test_a_label_blaming_the_truncation_marker_is_dropped():
+    blames_marker = {
+        "label": "Truncated Output",
+        "reason": "The output is cut off.",
+        "new_label_description": "The response ends mid-sentence.",
+        "evidence": [
+            {"field": "actual_output", "quote": "Refunds close…[truncated]"}
+        ],
+    }
+    classifier = IssueClassifier(
+        name="agent failures",
+        model=ScriptedModel([blames_marker], {}),
+        async_mode=False,
+        review_config=None,
+        label_discovery_config=LabelDiscoveryConfig(),
+    )
+    classifier.classify(CASE, _show_indicator=False)
+    assert classifier.classifications == [] and classifier.error is None
+    assert "[truncated]" in classifier.reason

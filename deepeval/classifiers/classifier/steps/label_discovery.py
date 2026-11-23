@@ -48,12 +48,15 @@ class LabelPool:
         with self._lock:
             return list(self._labels)
 
-    def add(self, label: Label, seen: int) -> List[Label]:
+    def add_if_unchanged(self, label: Label, seen_count: int) -> List[Label]:
+        """Adds ``label`` only when the pool still holds the ``seen_count``
+        labels the caller compared it against. Otherwise returns the labels
+        added since, for the caller to compare against first."""
         with self._lock:
-            additions = self._labels[seen:]
-            if not additions:
+            labels_added_since = self._labels[seen_count:]
+            if not labels_added_since:
                 self._labels.append(label)
-            return list(additions)
+            return list(labels_added_since)
 
 
 @dataclass(frozen=True)
@@ -73,22 +76,23 @@ def merge_new_labels(
     classification_results: List[ClassificationResult],
 ) -> MergedLabels:
     config = classifier.label_discovery_config
-    merged: Dict[str, ResolvedLabel] = {}
-    added = 0
-    for proposed, reason in _proposed_new_labels(
+    max_new_labels = config.max_new_labels if config else None
+    merged_by_name: Dict[str, ResolvedLabel] = {}
+    added_count = 0
+    for proposed_label, reason in _collect_proposed_labels(
         classifier, classification_results
     ):
-        may_add = (
-            config is None
-            or config.max_new_labels is None
-            or added < config.max_new_labels
+        can_add_to_pool = max_new_labels is None or added_count < max_new_labels
+        merged_label = _merge_or_add_label(
+            classifier, proposed_label, reason, can_add_to_pool
         )
-        label = _merge(classifier, proposed, reason, may_add)
-        if label is None:
+        if merged_label is None:
             continue
-        added += label is proposed
-        merged[proposed.name] = _resolved(classifier, label)
-    return MergedLabels(merged)
+        added_count += merged_label is proposed_label
+        merged_by_name[proposed_label.name] = _resolve_merged_label(
+            classifier, merged_label
+        )
+    return MergedLabels(merged_by_name)
 
 
 async def a_merge_new_labels(
@@ -96,157 +100,210 @@ async def a_merge_new_labels(
     classification_results: List[ClassificationResult],
 ) -> MergedLabels:
     config = classifier.label_discovery_config
-    merged: Dict[str, ResolvedLabel] = {}
-    added = 0
-    for proposed, reason in _proposed_new_labels(
+    max_new_labels = config.max_new_labels if config else None
+    merged_by_name: Dict[str, ResolvedLabel] = {}
+    added_count = 0
+    for proposed_label, reason in _collect_proposed_labels(
         classifier, classification_results
     ):
-        may_add = (
-            config is None
-            or config.max_new_labels is None
-            or added < config.max_new_labels
+        can_add_to_pool = max_new_labels is None or added_count < max_new_labels
+        merged_label = await _a_merge_or_add_label(
+            classifier, proposed_label, reason, can_add_to_pool
         )
-        label = await _a_merge(classifier, proposed, reason, may_add)
-        if label is None:
+        if merged_label is None:
             continue
-        added += label is proposed
-        merged[proposed.name] = _resolved(classifier, label)
-    return MergedLabels(merged)
+        added_count += merged_label is proposed_label
+        merged_by_name[proposed_label.name] = _resolve_merged_label(
+            classifier, merged_label
+        )
+    return MergedLabels(merged_by_name)
 
 
-def _resolved(classifier: "Classifier", label: Label) -> ResolvedLabel:
-    if any(declared.name == label.name for declared in classifier.labels):
-        return ResolvedLabel(label.name, LabelOrigin.DECLARED)
-    return ResolvedLabel(label.name, LabelOrigin.CANDIDATE, label.description)
+def _resolve_merged_label(
+    classifier: "Classifier", merged_label: Label
+) -> ResolvedLabel:
+    is_declared = any(
+        declared_label.name == merged_label.name
+        for declared_label in classifier.labels
+    )
+    if is_declared:
+        return ResolvedLabel(merged_label.name, LabelOrigin.DECLARED)
+    return ResolvedLabel(
+        merged_label.name, LabelOrigin.CANDIDATE, merged_label.description
+    )
 
 
-def _merge(
-    classifier: "Classifier", proposed: Label, reason: str, may_add: bool
+def _merge_or_add_label(
+    classifier: "Classifier",
+    proposed_label: Label,
+    reason: str,
+    can_add_to_pool: bool,
 ) -> Optional[Label]:
+    """Returns the existing label ``proposed_label`` duplicates, or
+    ``proposed_label`` itself once added to the pool, or ``None`` when it
+    matches nothing and may not be added."""
     pool = classifier.label_pool
-    labels = pool.labels
-    declared = {label.name for label in classifier.labels}
-    candidates = [
+    pooled_labels = pool.labels
+    declared_names = {label.name for label in classifier.labels}
+    existing_labels = [
         *classifier.labels,
-        *(label for label in labels if label.name not in declared),
+        *(label for label in pooled_labels if label.name not in declared_names),
     ]
-    seen = len(labels)
+    seen_count = len(pooled_labels)
     while True:
-        match = _same_name(proposed.name, candidates)
-        if match is None and candidates:
-            missing = [
+        # Same name
+        matching_label = _find_label_by_name(
+            proposed_label.name, existing_labels
+        )
+        if matching_label is None and existing_labels:
+            # Embedding similarity
+            unembedded_names = [
                 label.name
-                for label in [proposed, *candidates]
+                for label in [proposed_label, *existing_labels]
                 if label.name not in pool.vectors
             ]
-            if missing:
-                pool.vectors.update(
-                    zip(
-                        missing,
-                        classifier.label_discovery_config.embedding_model.embed_texts(
-                            missing
-                        ),
-                    )
+            if unembedded_names:
+                embeddings = classifier.label_discovery_config.embedding_model.embed_texts(
+                    unembedded_names
                 )
-            close_match, shortlist = _shortlist(
-                classifier, proposed, candidates
+                pool.vectors.update(zip(unembedded_names, embeddings))
+            near_duplicate, similar_labels = _find_similar_labels(
+                classifier, proposed_label, existing_labels
             )
-            if close_match is not None:
-                return close_match
-            same_as = generate_with_schema_and_extract(
+            if near_duplicate is not None:
+                return near_duplicate
+
+            # Merge judge
+            duplicate_of = generate_with_schema_and_extract(
                 metric=classifier,
-                prompt=_merge_prompt(classifier, proposed, reason, shortlist),
+                prompt=_build_merge_prompt(
+                    classifier, proposed_label, reason, similar_labels
+                ),
                 **_MERGE_EXTRACTION,
             )
-            match = next(
-                (label for label in shortlist if label.name == same_as), None
+            matching_label = next(
+                (
+                    label
+                    for label in similar_labels
+                    if label.name == duplicate_of
+                ),
+                None,
             )
-        if match is not None:
-            return match
-        if not may_add:
+        if matching_label is not None:
+            return matching_label
+
+        # New label
+        if not can_add_to_pool:
             return None
-        additions = pool.add(proposed, seen)
-        if not additions:
-            return proposed
-        candidates, seen = additions, seen + len(additions)
+        labels_added_since = pool.add_if_unchanged(proposed_label, seen_count)
+        if not labels_added_since:
+            return proposed_label
+        existing_labels = labels_added_since
+        seen_count += len(labels_added_since)
 
 
-async def _a_merge(
-    classifier: "Classifier", proposed: Label, reason: str, may_add: bool
+async def _a_merge_or_add_label(
+    classifier: "Classifier",
+    proposed_label: Label,
+    reason: str,
+    can_add_to_pool: bool,
 ) -> Optional[Label]:
+    """Returns the existing label ``proposed_label`` duplicates, or
+    ``proposed_label`` itself once added to the pool, or ``None`` when it
+    matches nothing and may not be added."""
     pool = classifier.label_pool
-    labels = pool.labels
-    declared = {label.name for label in classifier.labels}
-    candidates = [
+    pooled_labels = pool.labels
+    declared_names = {label.name for label in classifier.labels}
+    existing_labels = [
         *classifier.labels,
-        *(label for label in labels if label.name not in declared),
+        *(label for label in pooled_labels if label.name not in declared_names),
     ]
-    seen = len(labels)
+    seen_count = len(pooled_labels)
     while True:
-        match = _same_name(proposed.name, candidates)
-        if match is None and candidates:
-            missing = [
+        # Same name
+        matching_label = _find_label_by_name(
+            proposed_label.name, existing_labels
+        )
+        if matching_label is None and existing_labels:
+            # Embedding similarity
+            unembedded_names = [
                 label.name
-                for label in [proposed, *candidates]
+                for label in [proposed_label, *existing_labels]
                 if label.name not in pool.vectors
             ]
-            if missing:
-                pool.vectors.update(
-                    zip(
-                        missing,
-                        await classifier.label_discovery_config.embedding_model.a_embed_texts(
-                            missing
-                        ),
-                    )
+            if unembedded_names:
+                embeddings = await classifier.label_discovery_config.embedding_model.a_embed_texts(
+                    unembedded_names
                 )
-            close_match, shortlist = _shortlist(
-                classifier, proposed, candidates
+                pool.vectors.update(zip(unembedded_names, embeddings))
+            near_duplicate, similar_labels = _find_similar_labels(
+                classifier, proposed_label, existing_labels
             )
-            if close_match is not None:
-                return close_match
-            same_as = await a_generate_with_schema_and_extract(
+            if near_duplicate is not None:
+                return near_duplicate
+
+            # Merge judge
+            duplicate_of = await a_generate_with_schema_and_extract(
                 metric=classifier,
-                prompt=_merge_prompt(classifier, proposed, reason, shortlist),
+                prompt=_build_merge_prompt(
+                    classifier, proposed_label, reason, similar_labels
+                ),
                 **_MERGE_EXTRACTION,
             )
-            match = next(
-                (label for label in shortlist if label.name == same_as), None
+            matching_label = next(
+                (
+                    label
+                    for label in similar_labels
+                    if label.name == duplicate_of
+                ),
+                None,
             )
-        if match is not None:
-            return match
-        if not may_add:
+        if matching_label is not None:
+            return matching_label
+
+        # New label
+        if not can_add_to_pool:
             return None
-        additions = pool.add(proposed, seen)
-        if not additions:
-            return proposed
-        candidates, seen = additions, seen + len(additions)
+        labels_added_since = pool.add_if_unchanged(proposed_label, seen_count)
+        if not labels_added_since:
+            return proposed_label
+        existing_labels = labels_added_since
+        seen_count += len(labels_added_since)
 
 
-def _shortlist(
-    classifier: "Classifier", proposed: Label, candidates: List[Label]
+def _find_similar_labels(
+    classifier: "Classifier",
+    proposed_label: Label,
+    existing_labels: List[Label],
 ) -> Tuple[Optional[Label], List[Label]]:
+    """Returns ``(near_duplicate, similar_labels)``: an existing label at or
+    above ``similarity_threshold``, or else the ``top_k`` closest labels."""
     config = classifier.label_discovery_config
     vectors = classifier.label_pool.vectors
-    matrix = np.array(
-        [vectors[label.name] for label in [proposed, *candidates]], dtype=float
+    embeddings = np.array(
+        [vectors[label.name] for label in [proposed_label, *existing_labels]],
+        dtype=float,
     )
-    norms = np.linalg.norm(matrix, axis=1)
+    norms = np.linalg.norm(embeddings, axis=1)
     norms[norms == 0] = 1
-    unit = matrix / norms[:, None]
-    scores = unit[1:] @ unit[0]
-    order = np.argsort(-scores)
-    if scores[order[0]] >= config.similarity_threshold:
-        return candidates[order[0]], []
-    return None, [candidates[i] for i in order[: config.top_k]]
+    unit_embeddings = embeddings / norms[:, None]
+    similarities = unit_embeddings[1:] @ unit_embeddings[0]
+    most_similar_first = np.argsort(-similarities)
+    closest = most_similar_first[0]
+    if similarities[closest] >= config.similarity_threshold:
+        return existing_labels[closest], []
+    return None, [
+        existing_labels[index] for index in most_similar_first[: config.top_k]
+    ]
 
 
-def _proposed_new_labels(
+def _collect_proposed_labels(
     classifier: "Classifier",
     classification_results: List[ClassificationResult],
 ) -> List[Tuple[Label, str]]:
     if not classifier.label_discovery_config:
         return []
-    proposed: Dict[str, Tuple[Label, str]] = {}
+    proposed_by_name: Dict[str, Tuple[Label, str]] = {}
     for classification_result in classification_results:
         resolved_label = classifier._resolve_label_from_classification_result(
             classification_result, clean_reason(classification_result.reason)
@@ -254,23 +311,23 @@ def _proposed_new_labels(
         if (
             resolved_label.origin is LabelOrigin.NEW
             and resolved_label.name is not None
-            and resolved_label.name not in proposed
+            and resolved_label.name not in proposed_by_name
         ):
-            proposed[resolved_label.name] = (
+            proposed_by_name[resolved_label.name] = (
                 Label(
                     name=resolved_label.name,
                     description=resolved_label.description,
                 ),
                 classification_result.reason,
             )
-    return list(proposed.values())
+    return list(proposed_by_name.values())
 
 
-def _merge_prompt(
+def _build_merge_prompt(
     classifier: "Classifier",
-    proposed: Label,
+    proposed_label: Label,
     reason: str,
-    candidates: List[Label],
+    similar_labels: List[Label],
 ) -> str:
     return classifier._get_prompt(
         "merge_labels",
@@ -281,13 +338,13 @@ def _merge_prompt(
                     "description": classifier.description,
                 },
                 "proposed": {
-                    "name": proposed.name,
-                    "description": proposed.description,
+                    "name": proposed_label.name,
+                    "description": proposed_label.description,
                     "reason": reason,
                 },
                 "candidates": [
                     {"name": label.name, "description": label.description}
-                    for label in candidates
+                    for label in similar_labels
                 ],
             },
             ensure_ascii=False,
@@ -295,8 +352,8 @@ def _merge_prompt(
     )
 
 
-def _same_name(name: str, labels: Sequence[Label]) -> Optional[Label]:
-    lowered = name.strip().lower()
+def _find_label_by_name(name: str, labels: Sequence[Label]) -> Optional[Label]:
+    lowered_name = name.strip().lower()
     return next(
-        (label for label in labels if label.name.lower() == lowered), None
+        (label for label in labels if label.name.lower() == lowered_name), None
     )

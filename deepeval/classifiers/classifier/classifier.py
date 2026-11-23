@@ -26,6 +26,8 @@ from deepeval.classifiers.classifier.schema import (
     as_classification_results,
 )
 from deepeval.classifiers.classifier.steps.evidence import (
+    TRUNCATION_MARKER_REASON,
+    blames_truncation_marker,
     citable_fields,
     verify_evidence,
 )
@@ -326,7 +328,10 @@ class Classifier(BaseClassifier):
     ) -> Optional[bool]:
         if not self.multi_label or expected_label is None or self.error:
             return super().is_successful(expected_label)
-        self.success = expected_label in [r.label for r in self.classifications]
+        self.success = any(
+            classification.label == expected_label
+            for classification in self.classifications
+        )
         return self.success
 
     def copy(self) -> "Classifier":
@@ -370,18 +375,22 @@ class Classifier(BaseClassifier):
                 resolved_label = merged_label
             label, description = resolved_label.name, resolved_label.description
 
-            # Evidence
-            evidence = (
-                verify_evidence(
-                    classification_result.evidence,
-                    test_case,
-                    prompt,
-                    self.evidence_config,
-                )
+            # Truncation marker
+            cited = (
+                classification_result.evidence
                 if isinstance(
                     classification_result, EvidencedClassificationResult
                 )
-                and self.evidence_config
+                else []
+            )
+            if blames_truncation_marker(label, description, reason, cited):
+                no_label_reason = no_label_reason or TRUNCATION_MARKER_REASON
+                continue
+
+            # Evidence
+            evidence = (
+                verify_evidence(cited, test_case, prompt, self.evidence_config)
+                if self.evidence_config
                 else []
             )
 

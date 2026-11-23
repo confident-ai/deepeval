@@ -12,7 +12,7 @@ _DEFAULT_SPAN_PRIORITY = 4
 _ERRORED_SPAN_PRIORITY = -1
 
 
-def cap_field(value: Any) -> Optional[str]:
+def truncate_span_field(value: Any) -> Optional[str]:
     if value is None:
         return None
     text = value if isinstance(value, str) else serialize(value)
@@ -23,15 +23,15 @@ def cap_field(value: Any) -> Optional[str]:
     return text
 
 
-def select_spans(spans: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
-    ranked = sorted(
-        range(len(spans)), key=lambda i: (_span_priority(spans[i]), i)
+def select_priority_spans(spans: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
+    span_indexes_by_priority = sorted(
+        range(len(spans)), key=lambda i: (_get_span_priority(spans[i]), i)
     )
-    kept = ranked[:SPAN_LIMIT]
-    size = sum(len(serialize(spans[i])) for i in kept)
-    while kept and size > SPANS_CHAR_BUDGET:
-        size -= len(serialize(spans[kept.pop()]))
-    return [{"index": i + 1, **spans[i]} for i in sorted(kept)]
+    kept_indexes = span_indexes_by_priority[:SPAN_LIMIT]
+    total_chars = sum(len(serialize(spans[i])) for i in kept_indexes)
+    while kept_indexes and total_chars > SPANS_CHAR_BUDGET:
+        total_chars -= len(serialize(spans[kept_indexes.pop()]))
+    return [{"index": i + 1, **spans[i]} for i in sorted(kept_indexes)]
 
 
 def fit_trace(trace: Dict[str, Any], budget: int) -> Union[Dict[str, Any], str]:
@@ -39,41 +39,52 @@ def fit_trace(trace: Dict[str, Any], budget: int) -> Union[Dict[str, Any], str]:
         return trace
     spans = trace.get("spans")
     if isinstance(spans, list):
-        rest = {key: value for key, value in trace.items() if key != "spans"}
+        trace_without_spans = {
+            key: value for key, value in trace.items() if key != "spans"
+        }
         drop_order = sorted(
             range(len(spans)),
-            key=lambda i: (_span_priority(spans[i]), i),
+            key=lambda i: (_get_span_priority(spans[i]), i),
             reverse=True,
         )
-        dropped = set()
+        dropped_indexes = set()
         for i in drop_order:
-            dropped.add(i)
-            remaining = [s for j, s in enumerate(spans) if j not in dropped]
-            fitted = {**rest, "spans": remaining} if remaining else rest
-            if len(serialize(fitted)) <= budget:
-                return fitted
-        trace = rest
-    return _cut(serialize(trace), budget)
+            dropped_indexes.add(i)
+            remaining_spans = [
+                s for j, s in enumerate(spans) if j not in dropped_indexes
+            ]
+            fitted_trace = (
+                {**trace_without_spans, "spans": remaining_spans}
+                if remaining_spans
+                else trace_without_spans
+            )
+            if len(serialize(fitted_trace)) <= budget:
+                return fitted_trace
+        trace = trace_without_spans
+    return _truncate_text(serialize(trace), budget)
 
 
 def fit_text(text: str, budget: int) -> str:
-    return _cut(text, budget)
+    return _truncate_text(text, budget)
 
 
-def _cut(text: str, budget: int) -> str:
+def _truncate_text(text: str, budget: int) -> str:
     if len(text) <= budget:
         return text
     return text[: max(budget - len(TRUNCATION_MARKER), 0)] + TRUNCATION_MARKER
 
 
 def fit_turns(turns: List[Dict[str, Any]], budget: int) -> List[Dict[str, Any]]:
-    start = 0
-    while start < len(turns) - 1 and len(str(turns[start:])) > budget:
-        start += 1
-    return turns[start:]
+    first_kept_turn = 0
+    while (
+        first_kept_turn < len(turns) - 1
+        and len(str(turns[first_kept_turn:])) > budget
+    ):
+        first_kept_turn += 1
+    return turns[first_kept_turn:]
 
 
-def _span_priority(span: Dict[str, Any]) -> int:
+def _get_span_priority(span: Dict[str, Any]) -> int:
     if not isinstance(span, dict):
         return _DEFAULT_SPAN_PRIORITY
     if span.get("status") == "ERRORED" or span.get("error"):

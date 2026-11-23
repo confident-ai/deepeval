@@ -4,9 +4,9 @@ from typing import Any, Dict, List, Optional, Union
 from pydantic import BaseModel
 
 from deepeval.classifiers.classifier.steps.truncate import (
-    cap_field,
-    select_spans,
+    select_priority_spans,
     serialize,
+    truncate_span_field,
 )
 from deepeval.classifiers.utils import is_populated
 from deepeval.metrics.utils.decision import _jsonable
@@ -31,41 +31,41 @@ def construct_trace_content(content: Union[Dict[str, Any], str]) -> str:
 
 def construct_trace_dict(test_case: LLMTestCase) -> Dict[str, Any]:
     trace = {
-        key: _jsonable_field(getattr(test_case, attr, None))
+        key: _to_jsonable(getattr(test_case, attr, None))
         for attr, key in _TRACE_FIELDS.items()
         if is_populated(getattr(test_case, attr, None))
     }
-    spans = select_spans(_flatten_spans(test_case._trace_dict, []))
+    spans = select_priority_spans(_flatten_span_tree(test_case._trace_dict, []))
     if spans:
         trace["spans"] = spans
     return trace
 
 
-def _flatten_spans(span: Optional[Dict], spans: List[Dict]) -> List[Dict]:
+def _flatten_span_tree(span: Optional[Dict], spans: List[Dict]) -> List[Dict]:
     if not isinstance(span, dict):
         return spans
-    entry: Dict[str, Any] = {
+    flattened_span: Dict[str, Any] = {
         "name": span.get("name") or "",
-        "type": _jsonable_field(span.get("type")),
+        "type": _to_jsonable(span.get("type")),
         "status": "ERRORED" if span.get("error") else "SUCCESS",
     }
     for field in _CAPPED_SPAN_FIELDS:
-        capped = cap_field(_jsonable_field(span.get(field)))
-        if capped is not None:
-            entry[field] = capped
-    spans.append(entry)
+        truncated_value = truncate_span_field(_to_jsonable(span.get(field)))
+        if truncated_value is not None:
+            flattened_span[field] = truncated_value
+    spans.append(flattened_span)
     for child in span.get("children") or []:
-        _flatten_spans(child, spans)
+        _flatten_span_tree(child, spans)
     return spans
 
 
-def _jsonable_field(value: Any) -> Any:
+def _to_jsonable(value: Any) -> Any:
     if isinstance(value, Enum):
         return value.value
     if isinstance(value, BaseModel):
         return _jsonable(value.model_dump(exclude_none=True))
     if isinstance(value, (list, tuple)):
-        return [_jsonable_field(item) for item in value]
+        return [_to_jsonable(item) for item in value]
     if isinstance(value, dict):
-        return {str(k): _jsonable_field(v) for k, v in value.items()}
+        return {str(k): _to_jsonable(v) for k, v in value.items()}
     return _jsonable(value)
