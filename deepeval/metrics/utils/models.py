@@ -30,6 +30,7 @@ from deepeval.models import (
     GeminiModel,
     AmazonBedrockModel,
     LiteLLMModel,
+    GatewayModel,
     PortkeyModel,
     KimiModel,
     GrokModel,
@@ -41,7 +42,6 @@ from deepeval.models.base_model import (
     DeepEvalBaseEmbeddingModel,
     DeepEvalBaseSystemOneModel,
 )
-from deepeval.models.llms.gateway import GatewayModel
 from deepeval.models.llms.gateway_model import DeepEvalBaseGatewayModel
 from deepeval.models.utils import infer_provider
 from deepeval.models.llms.constants import (

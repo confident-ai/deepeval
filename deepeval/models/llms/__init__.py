@@ -6,7 +6,6 @@ from .gemini_model import GeminiModel
 from .anthropic_model import AnthropicModel
 from .amazon_bedrock_model import AmazonBedrockModel
 from .litellm_model import LiteLLMModel
-from .gateway import GatewayModel
 from .kimi_model import KimiModel
 from .grok_model import GrokModel
 from .deepseek_model import DeepSeekModel
@@ -22,7 +21,6 @@ __all__ = [
     "AnthropicModel",
     "AmazonBedrockModel",
     "LiteLLMModel",
-    "GatewayModel",
     "KimiModel",
     "GrokModel",
     "DeepSeekModel",

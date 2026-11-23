@@ -15,13 +15,13 @@ from deepeval.models.llms import (
     GeminiModel,
     AmazonBedrockModel,
     LiteLLMModel,
-    GatewayModel,
     KimiModel,
     GrokModel,
     DeepSeekModel,
     PortkeyModel,
     OpenRouterModel,
 )
+from deepeval.models.gateway import GatewayModel
 from deepeval.models.embedding_models import (
     OpenAIEmbeddingModel,
     AzureOpenAIEmbeddingModel,
