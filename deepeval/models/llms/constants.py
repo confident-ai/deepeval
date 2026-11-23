@@ -8,6 +8,8 @@ DEFAULT_GEMINI_MODEL = "gemini-3.6-flash"
 # OpenRouter uses provider/model format (e.g., "openai/gpt-4", "anthropic/claude-3-opus")
 # DeepEval does not validate OpenRouter model strings.
 DEFAULT_OPENROUTER_MODEL = f"openai/{DEFAULT_GPT_MODEL}"
+# Atlas Cloud also uses provider/model format and is not validated either.
+DEFAULT_ATLASCLOUD_MODEL = "openai/gpt-4.1-mini"
 
 # Every judge model a provider falls back to when the caller passes no model and
 # sets no ``*_MODEL_NAME``. Keys are the namespaces of ``REGISTRIES`` in
@@ -16,9 +18,9 @@ DEFAULT_OPENROUTER_MODEL = f"openai/{DEFAULT_GPT_MODEL}"
 # to the same models. Provider modules must read their default from here rather
 # than declaring their own — that is the whole point of the dict.
 #
-# ``openrouter`` has no registry namespace of its own (its names are
-# ``provider/model`` strings that DeepEval does not validate), so it appears here
-# without a corresponding pricing table.
+# ``openrouter`` and ``atlascloud`` have no registry namespace of their own
+# (their names are ``provider/model`` strings that DeepEval does not validate),
+# so they appear here without a corresponding pricing table.
 #
 # Providers absent from this dict — Grok, DeepSeek, Kimi, Ollama, local, Azure,
 # Portkey and Bedrock — deliberately have no Python default: they raise unless
@@ -29,6 +31,7 @@ DEFAULT_MODELS: dict[str, str] = {
     "anthropic": DEFAULT_ANTHROPIC_MODEL,
     "gemini": DEFAULT_GEMINI_MODEL,
     "openrouter": DEFAULT_OPENROUTER_MODEL,
+    "atlascloud": DEFAULT_ATLASCLOUD_MODEL,
 }
 
 ModelDataFactory = Callable[[], DeepEvalModelData]
