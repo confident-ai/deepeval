@@ -1,0 +1,330 @@
+@import "./size";
+
+@keyframes mascotBob {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(0.5px);
+  }
+}
+
+@keyframes mascotBlink {
+  0%,
+  100% {
+    transform: scaleY(1);
+  }
+
+  94% {
+    transform: scaleY(0.5);
+  }
+
+  97% {
+    transform: scaleY(1);
+  }
+}
+
+@keyframes mascotFrame {
+  0%,
+  100% {
+    opacity: 1;
+  }
+
+  50% {
+    opacity: 0;
+  }
+}
+
+@keyframes mascotJump {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  8%,
+  88% {
+    transform: translateY(1px);
+  }
+
+  18%,
+  78% {
+    transform: translateY(-2px);
+  }
+
+  28%,
+  68% {
+    transform: translateY(-4px);
+  }
+
+  38%,
+  58% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes mascotShake {
+  0%,
+  50% {
+    transform: translateX(-1px);
+  }
+
+  25%,
+  75% {
+    transform: translateX(1px);
+  }
+
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@keyframes mascotDance {
+  0% {
+    transform: translate(-2px, 1px);
+  }
+
+  12.5% {
+    transform: translate(-2px, -1px);
+  }
+
+  25%,
+  75% {
+    transform: translate(0, 1px);
+  }
+
+  37.5%,
+  87.5% {
+    transform: translate(0, -1px);
+  }
+
+  50% {
+    transform: translate(2px, 1px);
+  }
+
+  62.5% {
+    transform: translate(2px, -1px);
+  }
+
+  100% {
+    transform: translate(-2px, 1px);
+  }
+}
+
+@keyframes mascotFlyUp {
+  0% {
+    transform: translateY(0);
+  }
+
+  25% {
+    transform: translateY(-2px);
+  }
+
+  50% {
+    transform: translateY(-4px);
+  }
+
+  75%,
+  100% {
+    transform: translateY(-6px);
+  }
+}
+
+@keyframes mascotHover {
+  0%,
+  100% {
+    transform: translateY(-6px);
+  }
+
+  50% {
+    transform: translateY(-5px);
+  }
+}
+
+@keyframes mascotPulse {
+  0%,
+  100% {
+    transform: scale(1);
+  }
+
+  50% {
+    transform: scale(0.8);
+  }
+}
+
+@keyframes mascotNote {
+  0% {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
+  25% {
+    transform: translateY(-1px);
+  }
+
+  50% {
+    transform: translateY(-2px);
+  }
+
+  75% {
+    opacity: 0.6;
+    transform: translateY(-3px);
+  }
+
+  100% {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+}
+
+@keyframes mascotDrip {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(1px);
+  }
+}
+
+.button {
+  display: block;
+  padding: 0;
+  margin: 0;
+  border: 0;
+  background: none;
+  line-height: 0;
+  cursor: pointer;
+
+  &:focus-visible {
+    outline: 2px solid var(--text-secondary);
+    outline-offset: 4px;
+  }
+}
+
+.mascot {
+  --mascot-frame: 0.5s;
+
+  display: block;
+  flex-shrink: 0;
+  width: $MASCOT_SIZE;
+  height: $MASCOT_SIZE;
+
+  @media (max-width: 767px) {
+    width: $MASCOT_SIZE_SM;
+    height: $MASCOT_SIZE_SM;
+  }
+  overflow: visible;
+  image-rendering: pixelated;
+}
+
+.eyes {
+  transform-box: fill-box;
+  transform-origin: bottom;
+}
+
+.frameB {
+  opacity: 0;
+}
+
+.walking {
+  --mascot-frame: var(--mascot-step, 0.8s);
+
+  .bob {
+    animation: none !important;
+    transform: translateY(0.5px);
+  }
+}
+
+.spin {
+  --mascot-frame: 0.16s;
+}
+
+.animated {
+  .bob {
+    animation: mascotBob 1.6s step-end infinite;
+    animation-delay: var(--mascot-delay);
+  }
+
+  .eyes {
+    animation: mascotBlink 4.2s step-end infinite;
+    animation-delay: var(--mascot-delay);
+  }
+}
+
+.animated,
+.reacting {
+  .tears {
+    animation: mascotDrip 0.6s step-end infinite;
+  }
+
+  .frameA,
+  .frameB {
+    animation: mascotFrame var(--mascot-frame) step-end infinite;
+  }
+
+  .frameB {
+    animation-delay: calc(var(--mascot-frame) / -2);
+  }
+}
+
+.jump {
+  animation: mascotJump 0.8s step-end infinite;
+}
+
+.shake {
+  animation: mascotShake 0.25s step-end 4;
+}
+
+.dance {
+  --mascot-frame: 0.25s;
+
+  animation: mascotDance 1s step-end infinite;
+}
+
+.fly {
+  animation: mascotFlyUp 0.5s step-end forwards,
+    mascotHover 0.8s step-end 0.5s infinite;
+
+  .spin {
+    --mascot-frame: 0.08s;
+  }
+}
+
+.vein {
+  transform-box: fill-box;
+  transform-origin: center;
+  animation: mascotPulse 0.6s step-end infinite;
+}
+
+.note {
+  animation: mascotNote 1s step-end infinite;
+
+  & + & {
+    animation-delay: -0.5s;
+  }
+}
+
+.frozen g {
+  animation: none !important;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .mascot {
+    .bob,
+    .eyes,
+    .tears,
+    .frameA,
+    .frameB,
+    .jump,
+    .shake,
+    .dance,
+    .fly,
+    .vein,
+    .note {
+      animation: none;
+    }
+  }
+}

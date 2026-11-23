@@ -10,8 +10,10 @@ def test_metrics_imports():
         BaseArenaMetric,
         # Core metrics
         GEval,
+        JevEval,
         ArenaGEval,
         ConversationalGEval,
+        ConversationalJevEval,
         DAGMetric,
         DeepAcyclicGraph,
         # RAG metrics
@@ -72,8 +74,10 @@ def test_metrics_imports():
         BaseConversationalMetric,
         BaseArenaMetric,
         GEval,
+        JevEval,
         ArenaGEval,
         ConversationalGEval,
+        ConversationalJevEval,
         DAGMetric,
         DeepAcyclicGraph,
         AnswerRelevancyMetric,
@@ -160,7 +164,7 @@ def test_conversational_dag_imports():
     assert ConversationalVerdictNode is not None
 
 
-def test_core_modules_import(unpatch_openai_after):
+def test_core_modules_import(shutdown_confident_trace_after):
     """Test that core modules can be imported."""
     import deepeval
     import deepeval.metrics

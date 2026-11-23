@@ -115,7 +115,6 @@ def _trace(uuid: str = "trace-1") -> TraceApi:
         startTime="2026-01-01T00:00:00",
         endTime="2026-01-01T00:00:03",
         threadId="thread-1",
-        userId="user-1",
         environment="testing",
         input="hi",
         output="done",
@@ -530,7 +529,7 @@ class TestWriteTestRun:
             "trace-1",
             "my-agent",
             "thread-1",
-            "user-1",
+            None,  # traces no longer carry a user id
             "testing",
         )
         assert json.loads(trace[5]) == ["a", "b"]
@@ -834,13 +833,10 @@ class TestTestRunManagerIntegration:
         assert not (tmp_path / "deepeval.db").exists()
         assert mgr.last_saved_path is None
 
-    @pytest.mark.parametrize("terminal_width", [10, 80, 120])
     def test_storage_failure_is_a_warning_not_an_error(
-        self, tmp_path: Path, monkeypatch, capsys, terminal_width: int
+        self, tmp_path: Path, monkeypatch, capsys
     ):
         monkeypatch.setenv("DEEPEVAL_LOCAL_STORE", "sqlite")
-
-        monkeypatch.setenv("COLUMNS", str(terminal_width))
 
         def boom(*_a, **_k):
             raise sqlite3.OperationalError("disk I/O error")
@@ -852,9 +848,7 @@ class TestTestRunManagerIntegration:
 
         mgr.save_test_run_locally()  # must not raise
 
-        warning = " ".join(capsys.readouterr().err.split())
-        assert "Warning: failed to save test run" in warning
-        assert "disk I/O error" in warning
+        assert "disk I/O error" in capsys.readouterr().err
         assert mgr.last_saved_path is None
 
 

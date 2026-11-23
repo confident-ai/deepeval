@@ -5,7 +5,6 @@ from collections import Counter
 from dataclasses import dataclass
 from typing import (
     Any,
-    Callable,
     Dict,
     List,
     Optional,
@@ -21,9 +20,12 @@ from deepeval.classifiers.base_classifier import (
     Label,
 )
 from deepeval.metrics.utils.decision import (
+    _a_system_one_call,
     _accrue,
     _jsonable,
+    _record_confidence,
     _system_one_active,
+    _system_one_call,
 )
 from deepeval.metrics.utils.generation import (
     a_generate_with_schema_and_extract,
@@ -198,10 +200,12 @@ def construct_turns(test_case: ConversationalTestCase) -> List[Dict]:
 ###############################################
 #
 # The single place where a classifier turns a prompt into ``(label, reason)``.
-# Under DEEPEVAL_MODE=experimental the label is one System One (Jev) Choice
-# over the labels and the LLM only writes the reason; otherwise it is one
-# schema-constrained LLM call. Mirrors ``deepeval.metrics.utils.decision`` for
-# metrics and reuses its plumbing; see EXPERIMENTAL.md.
+# Under the `system_one` eval mode the label is one Jev Choice over the
+# labels, the reason is deterministic text and Jev errors surface (no
+# fallback). Otherwise it is one schema-constrained LLM call. Classifiers have
+# no `hybrid`: it resolves to `llm` (see ``resolve_classifier_eval_mode``).
+# Mirrors ``deepeval.metrics.utils.decision`` for metrics and reuses its
+# plumbing; see EXPERIMENTAL.md.
 
 
 @dataclass
@@ -209,16 +213,14 @@ class SystemOneClassifySpec:
     """One Choice question over a classifier's labels.
 
     ``options`` maps each label name to its description (or ``None``), the
-    same boundary the LLM prompt shows. ``reason_prompt`` receives the chosen
-    label, the per-label probabilities and Jev's confidence; when it is
-    ``None`` no LLM call is made at all and the reason is ``None``.
+    same boundary the LLM prompt shows. When ``include_reason`` is set the
+    reason is built from the answer itself; otherwise it is ``None``.
     """
 
     instructions: Any
     options: Dict[str, Any]
     state: Dict[str, Any]
-    reason_prompt: Optional[Callable[[str, Dict[str, float], float], Any]]
-    reason_schema_cls: Type[Any]
+    include_reason: bool
 
 
 def _classify_question(
@@ -234,6 +236,23 @@ def _classify_question(
     }
 
 
+def _classification_accept(
+    classifier: BaseClassifier,
+    spec: SystemOneClassifySpec,
+    answers: Any,
+    cost: Any,
+) -> Tuple[Optional[str], Optional[str]]:
+    """Book the Jev answer and return ``(label, reason)``."""
+    from deepeval.metrics.utils.system_one import format_classification_reason
+
+    _accrue(classifier, cost)
+    _record_confidence(classifier, answers)
+    answer = answers["label"]
+    if not spec.include_reason:
+        return answer.choice, None
+    return answer.choice, format_classification_reason(classifier, answer)
+
+
 def generate_classification(
     classifier: BaseClassifier,
     prompt: Any,
@@ -243,29 +262,19 @@ def generate_classification(
 ) -> Tuple[Optional[str], Optional[str]]:
     """Ask the judge for ``(label, reason)`` from a closed label set.
 
-    Under ``DEEPEVAL_MODE=experimental`` the label is one System One Choice
-    over ``system_one.options``; the LLM only writes the reason (when
-    ``system_one.reason_prompt`` is set). Otherwise the whole thing is one
-    schema-constrained LLM call against ``schema_cls`` (``label``, ``reason``).
+    Under the ``system_one`` eval mode the label is one Choice over
+    ``system_one.options`` and the reason is deterministic text. Otherwise
+    the whole thing is one schema-constrained LLM call against
+    ``schema_cls`` (``label``, ``reason``).
     """
     if _system_one_active(classifier, system_one):
-        answers, cost = classifier.system_one_model.choice(
-            _jsonable(system_one.state), _classify_question(system_one)
+        answers, cost = _system_one_call(
+            classifier,
+            classifier.system_one_model.choice,
+            _jsonable(system_one.state),
+            _classify_question(system_one),
         )
-        _accrue(classifier, cost)
-        answer = answers["label"]
-        if system_one.reason_prompt is None:
-            return answer.choice, None
-        reason = generate_with_schema_and_extract(
-            metric=classifier,
-            prompt=system_one.reason_prompt(
-                answer.choice, answer.probabilities, answer.confidence
-            ),
-            schema_cls=system_one.reason_schema_cls,
-            extract_schema=lambda s: s.reason,
-            extract_json=lambda d: d["reason"],
-        )
-        return answer.choice, reason
+        return _classification_accept(classifier, system_one, answers, cost)
 
     return generate_with_schema_and_extract(
         metric=classifier,
@@ -285,23 +294,13 @@ async def a_generate_classification(
 ) -> Tuple[Optional[str], Optional[str]]:
     """Async counterpart of ``generate_classification``."""
     if _system_one_active(classifier, system_one):
-        answers, cost = await classifier.system_one_model.a_choice(
-            _jsonable(system_one.state), _classify_question(system_one)
+        answers, cost = await _a_system_one_call(
+            classifier,
+            classifier.system_one_model.a_choice,
+            _jsonable(system_one.state),
+            _classify_question(system_one),
         )
-        _accrue(classifier, cost)
-        answer = answers["label"]
-        if system_one.reason_prompt is None:
-            return answer.choice, None
-        reason = await a_generate_with_schema_and_extract(
-            metric=classifier,
-            prompt=system_one.reason_prompt(
-                answer.choice, answer.probabilities, answer.confidence
-            ),
-            schema_cls=system_one.reason_schema_cls,
-            extract_schema=lambda s: s.reason,
-            extract_json=lambda d: d["reason"],
-        )
-        return answer.choice, reason
+        return _classification_accept(classifier, system_one, answers, cost)
 
     return await a_generate_with_schema_and_extract(
         metric=classifier,
@@ -313,11 +312,11 @@ async def a_generate_classification(
 
 
 ###############################################
-# Test case -> System One state (experimental)
+# Test case -> System One state
 ###############################################
 #
 # JSON counterparts of the string builders above, for the state handed to a
-# System One model under DEEPEVAL_MODE=experimental. Same fields, same
+# System One model when the eval mode uses one. Same fields, same
 # populated-only rule; see EXPERIMENTAL.md.
 
 

@@ -1,6 +1,6 @@
 from deepeval.voice.protocol import VoiceProtocol
 from deepeval.voice.config import VoiceConfig
-from deepeval.voice.interruption import interruption_policy
+from deepeval.voice.interruption import InterruptionSchedule
 from deepeval.voice.floor_control import FloorController, FloorState
 from deepeval.voice.turn_detection import TurnDetection
 from deepeval.voice.connectors import (
@@ -9,11 +9,18 @@ from deepeval.voice.connectors import (
     AgentEvent,
     CallbackVoiceConnector,
     LiveKitConnector,
+    LiveKitProvider,
+    PhoneConnector,
+    SIPConnector,
+    SipMediaEncryption,
+    SipTransport,
     BaseWebSocketConnector,
     ElevenLabsConnector,
     WebSocketConnector,
     WebRTCConnector,
+    SilenceTimeoutMixin,
     PipecatConnector,
+    TwilioProvider,
     VapiConnector,
 )
 
@@ -21,8 +28,7 @@ __all__ = [
     "VoiceProtocol",
     "VoiceConfig",
     "InterruptionSettings",
-    "InterruptionLevel",
-    "interruption_policy",
+    "InterruptionSchedule",
     "FloorController",
     "FloorState",
     "TurnDetection",
@@ -31,11 +37,18 @@ __all__ = [
     "AgentEvent",
     "CallbackVoiceConnector",
     "LiveKitConnector",
+    "LiveKitProvider",
+    "PhoneConnector",
+    "SIPConnector",
+    "SipMediaEncryption",
+    "SipTransport",
     "BaseWebSocketConnector",
     "ElevenLabsConnector",
     "WebSocketConnector",
     "WebRTCConnector",
+    "SilenceTimeoutMixin",
     "PipecatConnector",
+    "TwilioProvider",
     "VapiConnector",
 ]
 
@@ -44,7 +57,6 @@ __all__ = [
 _PERSONA_TYPES = {
     "InterruptionBehavior": "InterruptionBehavior",
     "InterruptionSettings": "InterruptionBehavior",
-    "InterruptionLevel": "InterruptionLevel",
     "OverlapBehavior": "OverlapBehavior",
 }
 

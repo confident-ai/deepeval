@@ -29,7 +29,7 @@ class TestPersonaPrompt:
             name="Dana",
             characteristics="You are blunt and short-tempered.",
             interruption_behavior=InterruptionBehavior(
-                frequency="frequent", overlap="insist"
+                every=2, overlap="insist"
             ),
             speaks_first=False,
         )
@@ -38,9 +38,30 @@ class TestPersonaPrompt:
 
         assert block.startswith("<persona>\nName: Dana")
         assert "You are blunt and short-tempered." in block
-        assert "You often cut in while the agent is still speaking." in block
+        assert (
+            "You sometimes cut in while the agent is still speaking." in block
+        )
         assert "you keep talking until the agent stops." in block
         assert "You wait for the agent to speak first" in block
+
+    def test_prompt_block_renders_metadata_as_details(self):
+        persona = Persona(
+            characteristics="A returning customer.",
+            metadata={"accountId": "acc_123", "plan": "pro"},
+        )
+
+        block = persona.prompt_block()
+
+        assert "A returning customer." in block
+        assert (
+            'Details:\n{\n  "accountId": "acc_123",\n  "plan": "pro"\n}'
+            in block
+        )
+
+    def test_prompt_block_omits_empty_metadata(self):
+        block = Persona(characteristics="Anyone", metadata={}).prompt_block()
+
+        assert "Details:" not in block
 
     def test_prompt_block_omits_behavior_by_default(self):
         block = Persona(characteristics="Calm caller.").prompt_block()
@@ -68,9 +89,9 @@ class TestPersonaVoice:
 
 
 class TestInterruptionBehavior:
-    def test_rejects_an_unknown_frequency(self):
-        with pytest.raises(ValueError, match="interruption frequency"):
-            InterruptionBehavior(frequency="always")
+    def test_rejects_an_invalid_cadence(self):
+        with pytest.raises(ValueError, match="interruption cadence"):
+            InterruptionBehavior(every=0)
 
     def test_rejects_an_unknown_overlap(self):
         with pytest.raises(ValueError, match="overlap behavior"):

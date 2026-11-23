@@ -5,8 +5,6 @@ sidebar_label: Building the Summarizer
 languages: [python]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 In this section, we're going to create our **meeting summarization agent** using the OpenAI API. Our summarization agent should be able to take an entire meeting transcript as `input` and returns
 
 - A **concise summary** of the entire meeting
@@ -293,7 +291,7 @@ The best we can do with the output given by the LLM for now is shown below along
 <Tabs items={["UI", "Raw"]}>
 <Tab value="UI">
 
-<ImageDisplayer src={ASSETS.tutorialSummarizationDemo1} alt="UI Image" />
+<ImageDisplayer id="screenshots/example-apps/meeting-summarizer-markdown-output" />
 
 </Tab>
 <Tab value="Raw">
@@ -449,7 +447,7 @@ Here is an example of a nice looking UI that shows how we can manipulate our new
 <Tabs items={["UI", "Raw Summary", "Raw Actions items"]}>
 <Tab value="UI">
 
-<ImageDisplayer src={ASSETS.tutorialSummarizationDemo2} alt="UI Image" />
+<ImageDisplayer id="screenshots/example-apps/meeting-summarizer-structured-output" />
 
 </Tab>
 <Tab value="Raw Summary">

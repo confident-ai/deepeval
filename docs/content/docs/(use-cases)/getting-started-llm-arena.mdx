@@ -21,10 +21,10 @@ Instead of comparing LLM outputs using a single-output LLM-as-a-Judge method as 
 ## Prerequisites
 
 - Install `deepeval`
-- A Confident AI API key (recommended). Sign up for one [here](https://app.confident-ai.com)
+- Optionally, a Confident AI API key
 
 :::info
-Confident AI allows you to view and share your testing reports. Set your API key in the CLI:
+If you have a Confident AI API key, set it in the CLI and your arena runs are sent there too:
 
 ```bash
 CONFIDENT_API_KEY="confident_us..."
@@ -359,16 +359,16 @@ Unlike single-output LLM-as-a-Judge (which is everything but LLM arena evals), t
 </Step>
 
 <Step>
-### View on Confident AI (recommended)
+### View the run on Confident AI (optional)
 
 
-If you've set your `CONFIDENT_API_KEY`, your arena comparisons will automatically appear as an experiment on [Confident AI](https://app.confident-ai.com), which `deepeval` integrates with natively.
+If you've set your `CONFIDENT_API_KEY`, your arena comparisons also appear as an experiment on Confident AI.
 
 <VideoDisplayer
   src={ASSETS.arenaEvalsExperiment}
   confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/experiments"
   label="Experiments on Confident AI"
-  description="Your arena comparisons appear as a tracked experiment automatically."
+  description="Arena comparisons from deepeval, shown as an experiment."
 />
 
 </Step>
@@ -377,7 +377,7 @@ If you've set your `CONFIDENT_API_KEY`, your arena comparisons will automaticall
 
 ## Next Steps
 
-`deepeval` lets you run Arena comparisons locally but isn’t optimized for iterative prompt or model improvements. If you’re looking for a more comprehensive and streamlined way to run Arena comparisons, [**Confident AI**](https://app.confident-ai.com) enables you to easily test different prompts, models, tools, and output configurations **side by side**, and evaluate them using any `deepeval` metric beyond `ArenaGEval`—all directly on the platform.
+Arena comparisons also show up on Confident AI in these views:
 
 <Tabs items={["Quick Comparisons", "Experiments", "Traced Comparisons", "Metric Comparisons", "Log Prompts and Models"]}>
 <Tab value="Quick Comparisons">
@@ -445,7 +445,7 @@ Track prompts and model configurations to understand which hyperparameters lead 
 Now that you have run your first Arena evals, you should:
 
 1. **Customize your metrics**: You can change the criteria of your metric to be more specific to your use-case.
-2. **Prepare a dataset**: If you don't have one, [generate one](/docs/golden-synthesizer) as a starting point to store your inputs as goldens.
+2. **Prepare a dataset**: If you don't have one, [generate one](/docs/golden-synthesizer) as a starting point to store your inputs as goldens. If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production traces and turns them into goldens, so your contestants compete on the inputs your app actually gets wrong.
 
 The arena metric is only used for picking winners among the contestants, it's not used for evaluating the answers themselves. To evaluate your LLM application on specific use cases you can read the other quickstarts here:
 

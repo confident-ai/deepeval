@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "In most entries of `exchanges`, `transcribed` accounts for what was heard on the clip in `spoken`; the differences there are limited to punctuation, capitalisation, sentence splitting, numbers written as digits rather than words, filler words dropped from inside a sentence, the same utterance repeated twice, a name spelled differently but pronounced the same, or small word-level differences two speech-to-text engines could produce from the same speech."
+  },
+  {
+    "type": "noul",
+    "statement": "No entry of `exchanges` has an empty or near-empty `transcribed` while `spoken` shows the person vocalising, nor speech, sounds or noise in `spoken` that `transcribed` does not account for, nor a name that is a different word, nor a number, date or duration whose value differs, nor a negation gained or lost."
+  },
+  {
+    "type": "score",
+    "question": "Across `exchanges`, how faithfully did `transcribed` account for what was heard in `spoken`, for both the caller and the agent?",
+    "levels": ["Mostly unaccounted for", "Several turns unaccounted for", "Mostly accounted for", "Every turn accounted for"],
+    "weight": 2
+  }
+]

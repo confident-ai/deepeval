@@ -39,7 +39,7 @@ These are the core settings for controlling `deepeval`'s behavior, file paths, a
 
 | Variable                     | Values                     | Effect                                                                                                                                                        |
 | ---------------------------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `CONFIDENT_API_KEY`          | `string` / unset           | Logs in to Confident AI. Enables tracing observability, and automatically uploads test results to the cloud when an evaluation completes.                     |
+| `CONFIDENT_API_KEY`          | `string` / unset           | Logs in to Confident AI. Traces are sent there, and test results are uploaded when an evaluation completes.                                                   |
 | `CONFIDENT_REGION`           | <Switch><Case id="python">`US` / `EU` / unset</Case><Case id="typescript">`US` / `EU` / `AU` / unset</Case></Switch> | Confident AI data region. When unset, the region is inferred from your API key prefix.                                                                        |
 | `CONFIDENT_BASE_URL`         | `string` / unset           | Base URL for the Confident AI API server (set only when using a custom or self-hosted endpoint). Takes precedence over `CONFIDENT_REGION`.                    |
 | `CONFIDENT_DISABLE_SSL`      | `1` / `0` / unset          | Disable TLS certificate verification for requests to the Confident AI API server. Only use with self-hosted endpoints that have self-signed certificates.     |
@@ -52,6 +52,7 @@ These are the core settings for controlling `deepeval`'s behavior, file paths, a
 | `DEEPEVAL_RESULTS_FOLDER`    | `path` / unset             | Export a timestamped JSON of the latest test run into this directory (created if needed).                                                                     |
 | `DEEPEVAL_LOCAL_STORE`       | `json` / `sqlite` / unset  | Backend for saving finished test runs locally. `json` (default) keeps the JSON exports; `sqlite` appends each run to a `deepeval.db` database instead. See [SQLite local store](#sqlite-local-store). |
 | `DEEPEVAL_MODE`              | `stable` / `experimental` / unset | Feature channel. `stable` (default) only runs finalised behaviour; `experimental` opts into the latest features, which may change or break between releases. Unrecognised values mean `stable`. See [DeepEval mode](#deepeval-mode). |
+| `DEEPEVAL_EVAL_MODE`         | `llm` / `hybrid` / `system_one` / unset | Who decides in LLM-as-a-judge metrics: the LLM end to end (`llm`, default), the LLM extracts and a System One model decides (`hybrid`), or a System One model runs the whole metric with no LLM at all (`system_one`). See [DeepEval eval mode](#deepeval-eval-mode). |
 | `DEEPEVAL_SQLITE_INCLUDE_ROW_JSON`   | `1` / `0` / unset          | SQLite store only. Also store the full JSON object on every test case, trace and span row (`payload_json`) so unpromoted fields can be queried per row. Off by default: roughly doubles the database size. See [here](/docs/evaluation-local-backend-storage#schema). |
 | `DEEPEVAL_VOICE_FOLDER`      | `path` / unset             | Directory that voice simulations write conversation audio into (created if needed). Defaults to `.deepeval-voice-simulations`.                                |
 | `DEEPEVAL_IDENTIFIER`        | `string` / unset           | Default identifier for runs (same idea as <Term py="deepeval test run -id ..." ts="npx deepeval test run -id ..."/>).                                          |
@@ -210,6 +211,72 @@ if (isExperimental()) {
 
 The value is case-insensitive. Anything other than `stable` or `experimental` falls back to `stable` with a one-time warning on stderr, so a typo can never silently enrol you. <Term py="deepeval diagnose" ts="npx deepeval diagnose"/> shows the channel currently in effect and where it was set.
 
+#### DeepEval eval mode
+
+`DEEPEVAL_EVAL_MODE` sets the [eval mode](/docs/evaluation-eval-modes), which picks who decides in `deepeval`'s LLM-as-a-judge metrics<Only id="python"> and classifiers</Only>, and is how [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, takes part in an eval:
+
+- `llm` (the default): the LLM runs the whole metric.
+- `hybrid`: the LLM extracts and writes the reason; Jev answers the decision points. If a Jev call fails mid-run, the LLM makes that decision instead.
+- `system_one`: Jev runs the whole metric in one request over the raw test case and the reason is built from its answers. No LLM is used, so no LLM key is needed.
+
+<Switch>
+
+<Case id="python">
+
+```bash
+export DEEPEVAL_EVAL_MODE=system_one
+export TYPESAFE_API_KEY=<your-typesafe-api-key>
+deepeval test run test_llm_app.py
+```
+
+</Case>
+
+<Case id="typescript">
+
+```bash
+export DEEPEVAL_EVAL_MODE=system_one
+export TYPESAFE_API_KEY=<your-typesafe-api-key>
+npx deepeval test run example.test.ts
+```
+
+</Case>
+
+</Switch>
+
+Unset, it means `llm`, so existing setups behave as before; the `DEEPEVAL_MODE` feature channel has no effect on it. An <Term py="eval_mode" ts="evalMode"/> argument on a metric overrides it, and <Term py="deepeval set-eval-mode" ts="npx deepeval set-eval-mode"/> sets it for you. Unrecognised values mean unset. G-Eval metrics are LLM-as-a-judge by definition and ignore it.
+
+## Tracing
+
+<Only id="python">
+
+| Variable              | Values            | Effect                                                                                                                                                                                                                       |
+| --------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEEPEVAL_AUTO_TRACE` | `1` / `0` / unset | While `evals_iterator()` or `deepeval test run` runs, trace every installed library `deepeval` supports, such as the OpenAI SDK or LangChain, without `@observe` or an integration. Defaults to on. Set `0` to trace only your `@observe` code and the integrations you set up. |
+
+</Only>
+
+| Variable                          | Values            | Effect                                                                                                                                                                                                                                            |
+| --------------------------------- | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `DEEPEVAL_GLOBAL_TRACER_PROVIDER` | `1` / `0` / unset | Install `deepeval`'s tracer provider as the global OpenTelemetry provider when none is set, so your app's own OpenTelemetry spans and other instrumentation are traced too. Defaults to off, which leaves the global provider to your own OpenTelemetry setup, including one you configure after `deepeval` starts tracing. |
+
+<Switch>
+
+<Case id="python">
+
+By default, the Strands, AgentCore, Google ADK and OpenInference integrations, and `instrument_pydantic_ai()`, still use the global provider, because those frameworks create their spans there. When none is set, they install `deepeval`'s provider as the global one. When your app set its own first, they add `deepeval`'s span processors to it, so your exporters keep receiving those spans and `deepeval`'s own spans stay out of them. `DeepEvalInstrumentationSettings` traces its agent without the global provider.
+
+Automatic tracing never uses the global provider. It doesn't record these frameworks' own spans unless you set up their integration.
+
+</Case>
+
+<Case id="typescript">
+
+By default, `deepeval` also keeps tracing when your app registered its own provider first; with `1` it can't attach to that provider and turns tracing off. The OpenInference integration still installs `deepeval`'s provider as the global one when none is set, because OpenInference instrumentors create their spans there.
+
+</Case>
+
+</Switch>
+
 ## Logging
 
 | Variable                          | Values                | Effect                                                                           |
@@ -348,7 +415,7 @@ You can also set `TEMPERATURE` to provide a default temperature for all model in
 
 Thinking is off unless you set `DEEPEVAL_MODEL_THINKING=1`, and models without a thinking parameter ignore it. Enabling it raises the default output budget to make room for the reasoning, since providers count thinking tokens against the same <Term py="max_tokens" ts="maxTokens"/> ceiling as the response — an explicit value still wins, and one too small to hold both raises an error rather than returning a truncated verdict.
 
-Models that always think, such as `claude-fable-5`, cannot be switched off and reason either way.
+Models that always think, such as `claude-fable-5`, cannot be switched off and reason either way. Claude Opus 4.7 and later reject a fixed thinking budget, so for them `deepeval` turns on adaptive thinking instead and lets the model decide how much to reason.
 
 ### Variable Options
 

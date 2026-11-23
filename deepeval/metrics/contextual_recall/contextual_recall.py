@@ -6,21 +6,29 @@ from deepeval.utils import (
 )
 from deepeval.metrics.base_metric import Verdict, YES_NO
 from deepeval.metrics.utils import (
+    prepare_measure,
     generate_qag_verdicts,
     a_generate_qag_verdicts,
     score_qag_verdicts,
     construct_verbose_logs,
-    check_llm_test_case_params,
     initialize_model,
+    initialize_system_one_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
+    SystemOneEvalSpec,
+    SystemOneVerdictSpec,
+    parse_questions,
+    run_system_one_eval,
+    a_run_system_one_eval,
+    split_sentences,
 )
+from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
 from deepeval.test_case import (
     LLMTestCase,
     SingleTurnParams,
 )
 from deepeval.metrics import BaseMetric
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.retrieval_context_display import id_retrieval_context
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.contextual_recall.schema import (
@@ -74,6 +82,10 @@ class ContextualRecallMetric(BaseMetric):
         self,
         threshold: Optional[float] = 0.5,
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        eval_mode: Optional[EvalModeName] = None,
         include_reason: bool = True,
         async_mode: bool = True,
         strict_mode: bool = False,
@@ -84,8 +96,16 @@ class ContextualRecallMetric(BaseMetric):
         ] = ContextualRecallTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
-        self.model, self.using_native_model = initialize_model(model)
-        self.evaluation_model = self.model.get_model_name()
+        self.eval_mode = resolve_eval_mode(eval_mode)
+        self.model, self.using_native_model = initialize_model(
+            model, self.eval_mode
+        )
+        self.system_one_model = initialize_system_one_model(
+            system_one_model, self.eval_mode
+        )
+        self.evaluation_model = (
+            self.model or self.system_one_model
+        ).get_model_name()
         self.include_reason = include_reason
         self.async_mode = async_mode
         self.strict_mode = strict_mode
@@ -101,19 +121,7 @@ class ContextualRecallMetric(BaseMetric):
     ) -> float:
         multimodal = test_case.multimodal
 
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
@@ -127,6 +135,9 @@ class ContextualRecallMetric(BaseMetric):
                     )
                 )
             else:
+                if run_system_one_eval(self, test_case):
+                    return self.score
+
                 expected_output = test_case.expected_output
                 retrieval_context = test_case.retrieval_context
 
@@ -156,25 +167,16 @@ class ContextualRecallMetric(BaseMetric):
 
         multimodal = test_case.multimodal
 
-        check_llm_test_case_params(
-            test_case,
-            self._required_params,
-            None,
-            None,
-            self,
-            self.model,
-            test_case.multimodal,
-        )
-
-        self.evaluation_cost = 0 if self.using_native_model else None
-        self.input_tokens = 0 if self.using_native_model else None
-        self.output_tokens = 0 if self.using_native_model else None
+        prepare_measure(self, test_case)
         with metric_progress_indicator(
             self,
             async_mode=True,
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if await a_run_system_one_eval(self, test_case):
+                return self.score
+
             expected_output = test_case.expected_output
             retrieval_context = test_case.retrieval_context
 
@@ -283,6 +285,9 @@ class ContextualRecallMetric(BaseMetric):
             verdict_cls=ContextualRecallVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(
+                expected_output, retrieval_context, multimodal
+            ),
         )
         final_verdicts = []
         for verdict in verdicts:
@@ -312,6 +317,9 @@ class ContextualRecallMetric(BaseMetric):
             verdict_cls=ContextualRecallVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO,
+            system_one=self._experimental_system_one_spec(
+                expected_output, retrieval_context, multimodal
+            ),
         )
         final_verdicts = []
         for verdict in verdicts:
@@ -322,6 +330,38 @@ class ContextualRecallMetric(BaseMetric):
             )
             final_verdicts.append(new_verdict)
         return final_verdicts
+
+    def _experimental_system_one_spec(
+        self,
+        expected_output: str,
+        retrieval_context: List[str],
+        multimodal: bool,
+    ) -> Optional[SystemOneVerdictSpec]:
+        if multimodal:
+            return None
+        return SystemOneVerdictSpec(
+            instructions=self._get_prompt("_experimental_system_one_verdict"),
+            items=split_sentences(expected_output),
+            item_key="sentence",
+            state={"retrieval_context": retrieval_context},
+        )
+
+    def _system_one_eval_spec(
+        self, test_case: LLMTestCase
+    ) -> Optional[SystemOneEvalSpec]:
+        """`system_one` eval mode: the whole metric as one Jev request over
+        `expected_output` and `retrieval_context`; see EXPERIMENTAL.md."""
+        if test_case.multimodal:
+            return None
+        return SystemOneEvalSpec(
+            evaluation_params=[
+                SingleTurnParams.EXPECTED_OUTPUT,
+                SingleTurnParams.RETRIEVAL_CONTEXT,
+            ],
+            questions=parse_questions(
+                self._get_prompt("_experimental_system_one_questions")
+            ),
+        )
 
     @property
     def __name__(self):

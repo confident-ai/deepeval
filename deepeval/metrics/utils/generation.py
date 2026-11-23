@@ -1,13 +1,27 @@
 import json
 import re
-from typing import Any, Callable, Dict, Optional, Type, TypeVar, Union
+from typing import (
+    Any,
+    Callable,
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Type,
+    TypeVar,
+    Union,
+)
 
 from deepeval.metrics.base_metric import (
     BaseMetric,
     BaseConversationalMetric,
     BaseArenaMetric,
 )
+from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.utils import EvaluationCost
+from deepeval.test_case import Audio
+
+from .models import is_native_model
 
 
 def trimAndLoadJson(
@@ -68,6 +82,23 @@ def accrue_token_usage(
         metric._accrue_tokens(cost.input_tokens, cost.output_tokens)
 
 
+def audio_kwargs(audio: Optional[List[Audio]]) -> Dict[str, Any]:
+    # Only pass `audio` when there is some, so custom models whose generate()
+    # predates the parameter keep working.
+    return {"audio": audio} if audio else {}
+
+
+def resolve_judge(
+    metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
+    model: Optional[DeepEvalBaseLLM],
+) -> Tuple[DeepEvalBaseLLM, bool]:
+    # A metric can score some calls with a model other than its main one (e.g.
+    # an audio model), so the judge and its nativeness come from the call.
+    if model is None or model is metric.model:
+        return metric.model, metric.using_native_model
+    return model, is_native_model(model)
+
+
 def generate_with_schema_and_extract(
     metric: Union[BaseMetric, BaseArenaMetric, BaseConversationalMetric],
     prompt: Any,
@@ -75,6 +106,8 @@ def generate_with_schema_and_extract(
     *,
     extract_schema: Callable[[SchemaType], ReturnType],
     extract_json: Callable[[Dict[str, Any]], ReturnType],
+    audio: Optional[List[Audio]] = None,
+    model: Optional[DeepEvalBaseLLM] = None,
 ) -> ReturnType:
     """
     Synchronous wrapper:
@@ -83,14 +116,17 @@ def generate_with_schema_and_extract(
     - if schema instance -> extract_schema
       else parse JSON -> extract_json
     """
-    if metric.using_native_model:
-        result, cost = metric.model.generate_with_schema(
-            prompt, schema=schema_cls
+    judge, native = resolve_judge(metric, model)
+    if native:
+        result, cost = judge.generate_with_schema(
+            prompt, schema=schema_cls, **audio_kwargs(audio)
         )
         metric._accrue_cost(cost)
         accrue_token_usage(metric, cost)
     else:
-        result = metric.model.generate_with_schema(prompt, schema=schema_cls)
+        result = judge.generate_with_schema(
+            prompt, schema=schema_cls, **audio_kwargs(audio)
+        )
     if isinstance(result, schema_cls):
         return extract_schema(result)
     data = trimAndLoadJson(result, metric)
@@ -104,16 +140,19 @@ async def a_generate_with_schema_and_extract(
     *,
     extract_schema: Callable[[SchemaType], ReturnType],
     extract_json: Callable[[Dict[str, Any]], ReturnType],
+    audio: Optional[List[Audio]] = None,
+    model: Optional[DeepEvalBaseLLM] = None,
 ) -> ReturnType:
-    if metric.using_native_model:
-        result, cost = await metric.model.a_generate_with_schema(
-            prompt, schema=schema_cls
+    judge, native = resolve_judge(metric, model)
+    if native:
+        result, cost = await judge.a_generate_with_schema(
+            prompt, schema=schema_cls, **audio_kwargs(audio)
         )
         metric._accrue_cost(cost)
         accrue_token_usage(metric, cost)
     else:
-        result = await metric.model.a_generate_with_schema(
-            prompt, schema=schema_cls
+        result = await judge.a_generate_with_schema(
+            prompt, schema=schema_cls, **audio_kwargs(audio)
         )
 
     # Handle models that return (result, cost) tuple even when not native

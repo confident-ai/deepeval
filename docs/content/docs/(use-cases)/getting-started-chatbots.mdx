@@ -42,10 +42,8 @@ npm install deepeval
 
 </Switch>
 
-You'll also want a Confident AI API key (recommended). Sign up for one [here.](https://app.confident-ai.com)
-
 :::info
-Confident AI allows you to view and share your chatbot testing reports. Set your API key in the CLI:
+Logging in to Confident AI is optional. If you have an API key, set it in the CLI and your test runs are sent there too:
 
 ```bash
 CONFIDENT_API_KEY="confident_us..."
@@ -59,7 +57,7 @@ Multi-turn evals are tricky because of the ad-hoc nature of conversations. The n
 
 Hence, when running evals for the purpose of benchmarking we cannot compare different conversations by looking at their turns. In `deepeval`, multi-turn interactions are grouped by **scenarios** instead. If two conversations occur under the same scenario, we consider those the same.
 
-<ImageDisplayer src={ASSETS.conversationalTestCase} alt="Conversational Test Case" />
+<ImageDisplayer id="diagrams/in-house/evaluation/conversational-test-case" />
 
 :::note
 Scenarios are optional in the diagram because not all users start with conversations with labelled scenarios.
@@ -132,7 +130,7 @@ You can learn about a `Turn`'s data model [here.](/docs/evaluation-multiturn-tes
 ### Run an evaluation
 
 
-Run an evaluation on the test case using `deepeval`'s multi-turn metrics, or create your own using [Conversational G-Eval](/docs/metrics-conversational-g-eval).
+Run an evaluation on the test case using `deepeval`'s multi-turn metrics, or create your own using [Conversational G-Eval](/docs/metrics-llm-evals).
 
 <Switch>
 
@@ -200,10 +198,10 @@ This creates a test run, which is a "snapshot"/benchmark of your multi-turn chat
 
 </Step>
 <Step>
-### View on Confident AI (recommended)
+### View the run on Confident AI (optional)
 
 
-If you've set your `CONFIDENT_API_KEY`, test runs will appear automatically on [Confident AI](https://app.confident-ai.com), which `deepeval` integrates with natively.
+If you've set your `CONFIDENT_API_KEY`, the test run also appears on Confident AI.
 
 <VideoDisplayer
   src={ASSETS.conversationTestReport}
@@ -282,7 +280,7 @@ const dataset = new EvaluationDataset({
 
 A dataset is a collection of goldens in `deepeval`, and in a multi-turn context this these are represented by `ConversationalGolden`s.
 
-<ImageDisplayer src={ASSETS.evaluationDataset} alt="Evaluation Dataset" />
+<ImageDisplayer id="diagrams/in-house/datasets/goldens-to-test-cases" />
 
 The idea is simple - we start with a list of standardized `scenario`s for each golden, and we'll simulate turns during evaluation time for more robust evaluation.
 
@@ -344,7 +342,7 @@ const dataset = new EvaluationDataset({ goldens: [golden] });
 
 </Switch>
 
-If you've set your `CONFIDENT_API_KEY` correctly, you can save them on the platform to collaborate with your team:
+If you've set your `CONFIDENT_API_KEY`, you can also push the dataset to Confident AI:
 
 <Switch>
 
@@ -370,7 +368,7 @@ await dataset.push({ alias: "A new multi-turn dataset" });
   src={ASSETS.gettingStartedChatbotEvalsMultiturnDataset}
   confidentUrl="https://www.confident-ai.com/docs/llm-evaluation/dataset-management/create-goldens"
   label="Multi-turn datasets on Confident AI"
-  description="Push conversational goldens to the platform and edit them with your team."
+  description="Push conversational goldens from deepeval and pull them back for your next run."
 />
 
 </Step>
@@ -530,14 +528,14 @@ await evaluate(conversationalTestCases, [new TurnRelevancyMetric()]);
 Now that you have run your first chatbot evals, you should:
 
 1. **Customize your metrics**: Update the [list of metrics](/docs/metrics-introduction) based on your use case.
-2. **Setup tracing**: It helps you [log multi-turn](https://www.confident-ai.com/docs/llm-tracing/advanced-features/threads) interactions in production.
-3. **Enable evals in production**: Monitor performance over time [using the metrics](https://www.confident-ai.com/docs/llm-tracing/evaluations#offline-evaluations) you've defined on Confident AI.
+2. **Setup tracing**: [Group traces into threads](https://www.confident-ai.com/docs/llm-tracing/advanced-features/threads) so each production conversation is traced end to end.
+3. **Enable evals in production**: Run [evals on every thread](https://www.confident-ai.com/docs/llm-tracing/evaluations#offline-evaluations) and flag the conversations that fail.
 
-You'll be able to analyze performance over time on **threads** this way, and add them back to your evals dataset for further evaluation.
+If you're already in production, [Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing conversations before anyone has written an eval for them, clusters them into failure modes, and turns them into conversational goldens for your next eval.
 
 <VideoDisplayer
   src={ASSETS.tracingThreads}
   confidentUrl="/docs/llm-tracing/evaluations#offline-evaluations"
   label="Chatbot evals in production"
-  description="Group traces into threads to evaluate live conversations."
+  description="Group traces into threads to evaluate production conversations."
 />

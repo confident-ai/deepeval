@@ -9,7 +9,3 @@ class ReasonScore(BaseModel):
 
 class Steps(BaseModel):
     steps: List[str]
-
-
-class Reason(BaseModel):
-    reason: str

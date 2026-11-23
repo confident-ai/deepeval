@@ -69,13 +69,10 @@ def ensure_event_loop():
 
 @pytest.fixture(autouse=True)
 def silence_confident_trace(monkeypatch):
-    """Silence trace posting during tests."""
+    """Keep traces from being exported to Confident AI during tests."""
     from deepeval.tracing.tracing import trace_manager
 
-    monkeypatch.setenv("CONFIDENT_TRACE_FLUSH", "0")
-    monkeypatch.setattr(
-        trace_manager, "post_trace", lambda *a, **k: None, raising=True
-    )
+    monkeypatch.setattr(trace_manager, "tracing_enabled", False)
 
 
 @pytest.fixture(autouse=True)

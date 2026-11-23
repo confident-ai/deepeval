@@ -1,6 +1,7 @@
 from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
+import pytest
 from pydantic import SecretStr
 
 from deepeval.models.llms.constants import GEMINI_MODELS_DATA
@@ -245,6 +246,119 @@ def test_gemini_generate_computes_cost_from_tokens_and_registry_prices(
     assert cost > 0  # guard against regressing back to the literal-zero bug
     assert cost.input_tokens == 1000
     assert cost.output_tokens == 500
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_3_models_keep_default_temperature(mock_require_dep, settings):
+    fake_response = SimpleNamespace(text="hi", usage_metadata=None)
+    model = _build_gemini_model_with_fake_client(
+        mock_require_dep, settings, fake_response, model_name="gemini-3.8-flash"
+    )
+    client = model.load_model()
+
+    model.generate("test prompt")
+
+    config = client.models.generate_content.call_args.kwargs["config"]
+    assert "temperature" not in config
+    assert model.temperature == 1.0
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_3_models_send_an_explicit_temperature(
+    mock_require_dep, settings
+):
+    fake_genai = _make_fake_genai_module()
+    fake_genai.types.GenerateContentConfig = lambda **kwargs: kwargs
+    mock_require_dep.return_value = fake_genai
+    client = MagicMock()
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "test-key"
+        settings.TEMPERATURE = None
+
+    model = GeminiModel(model="gemini-3.8-flash", temperature=0)
+    model.load_model = lambda *a, **kw: client
+    model.generate("test prompt")
+
+    config = client.models.generate_content.call_args.kwargs["config"]
+    assert config["temperature"] == 0.0
+    assert model.temperature == 0.0
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_3_models_honor_temperature_setting(mock_require_dep, settings):
+    fake_genai = _make_fake_genai_module()
+    fake_genai.types.GenerateContentConfig = lambda **kwargs: kwargs
+    mock_require_dep.return_value = fake_genai
+    client = MagicMock()
+    with settings.edit(persist=False):
+        settings.GOOGLE_API_KEY = "test-key"
+        settings.TEMPERATURE = 0.3
+
+    model = GeminiModel(model="gemini-3.8-flash")
+    model.load_model = lambda *a, **kw: client
+    model.generate("test prompt")
+
+    config = client.models.generate_content.call_args.kwargs["config"]
+    assert config["temperature"] == 0.3
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_2_models_still_send_temperature(mock_require_dep, settings):
+    fake_response = SimpleNamespace(text="hi", usage_metadata=None)
+    model = _build_gemini_model_with_fake_client(
+        mock_require_dep, settings, fake_response, model_name="gemini-2.5-flash"
+    )
+    client = model.load_model()
+
+    model.generate("test prompt")
+
+    config = client.models.generate_content.call_args.kwargs["config"]
+    assert config["temperature"] == 0.0
+
+
+@pytest.mark.parametrize(
+    "model_name, input_price, output_price",
+    [
+        ("gemini-3.8-flash", 0.75, 3.75),
+        ("gemini-3.7-flash", 0.75, 3.75),
+        ("gemini-3.6-flash", 0.75, 3.75),
+        ("gemini-2.5-flash", 0.30, 2.50),
+        ("gemini-2.5-flash-lite", 0.10, 0.40),
+    ],
+)
+def test_gemini_prices_match_google_pricing_page(
+    model_name, input_price, output_price
+):
+    assert model_name in GEMINI_MODELS_DATA
+    model_data = GEMINI_MODELS_DATA.get(model_name)
+    assert model_data.input_price == pytest.approx(input_price / 1e6)
+    assert model_data.output_price == pytest.approx(output_price / 1e6)
+
+
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_generate_bills_thinking_tokens_as_output(
+    mock_require_dep, settings
+):
+    fake_response = SimpleNamespace(
+        text="Hello world",
+        usage_metadata=SimpleNamespace(
+            prompt_token_count=1000,
+            candidates_token_count=500,
+            thoughts_token_count=2000,
+        ),
+    )
+
+    model = _build_gemini_model_with_fake_client(
+        mock_require_dep, settings, fake_response, model_name="gemini-1.5-pro"
+    )
+
+    _, cost = model.generate("test prompt")
+
+    registry = GEMINI_MODELS_DATA.get("gemini-1.5-pro")
+    assert cost == pytest.approx(
+        1000 * registry.input_price + 2500 * registry.output_price
+    )
+    assert cost.output_tokens == 2500
 
 
 @patch("deepeval.models.llms.gemini_model.require_dependency")

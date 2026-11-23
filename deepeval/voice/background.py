@@ -8,9 +8,12 @@ from __future__ import annotations
 
 import logging
 import os
+import tempfile
 from array import array
 from functools import lru_cache
 from typing import Dict, Optional, Tuple
+from urllib.parse import urlparse
+from urllib.request import urlopen
 
 from deepeval.dataset import BackgroundNoiseSettings
 from deepeval.test_case import Audio, AudioChunk
@@ -24,16 +27,43 @@ _INT16_MAX = 32767
 
 @lru_cache(maxsize=8)
 def _load_pcm(path: str) -> Tuple[bytes, int]:
-    """Decode a background file to mono 16-bit PCM, cached across turns."""
-    if not os.path.exists(path):
+    """Decode a background file or URL to mono 16-bit PCM, cached across turns."""
+    if _is_url(path):
+        wav_bytes = _download_wav(path)
+    elif not os.path.exists(path):
         raise FileNotFoundError(f"Background audio file not found: {path}")
-    if path.lower().endswith(".wav"):
+    elif path.lower().endswith(".wav"):
         with open(path, "rb") as handle:
             wav_bytes = handle.read()
     else:
         wav_bytes = _decode_to_wav(path)
     pcm, sample_rate, channels = audio_utils.wav_bytes_to_pcm16(wav_bytes)
     return audio_utils.downmix_to_mono(pcm, channels), sample_rate
+
+
+def _is_url(path: str) -> bool:
+    return urlparse(path).scheme in ("http", "https")
+
+
+def _download_wav(url: str) -> bytes:
+    try:
+        with urlopen(url, timeout=30) as response:
+            data = response.read()
+    except OSError as exc:
+        raise FileNotFoundError(
+            f"Background audio could not be downloaded: {url}"
+        ) from exc
+    url_path = urlparse(url).path.lower()
+    if url_path.endswith(".wav"):
+        return data
+    suffix = os.path.splitext(url_path)[1] or ".mp3"
+    with tempfile.NamedTemporaryFile(suffix=suffix, delete=False) as handle:
+        handle.write(data)
+        temp_path = handle.name
+    try:
+        return _decode_to_wav(temp_path)
+    finally:
+        os.unlink(temp_path)
 
 
 def _decode_to_wav(path: str) -> bytes:

@@ -456,7 +456,7 @@ describeWithSqlite("sqlite-store write / read", () => {
     const posted = writeTestRun(
       makeRun({
         testRunId: "cai_abc123",
-        link: "https://app.confident-ai.com/x",
+        link: "https://cloud.confident-ai.com/x",
       }),
       db,
     );

@@ -6,6 +6,7 @@ import type { MDXComponents } from "mdx/types";
 import { MdxAnchor } from "@/components/mdx-anchor";
 import { Term } from "@/components/lang/term";
 import { DefaultLLMModel } from "@/components/lang/default-llm-model";
+import { DefaultSystemOneModel } from "@/components/lang/default-system-one-model";
 import { Switch, Case } from "@/components/lang/switch";
 import { Only } from "@/components/lang/only";
 import { NotImplemented } from "@/components/lang/not-implemented";
@@ -30,6 +31,8 @@ import SectionLabel from "@site/src/components/SectionLabel";
 import EnterpriseComparisonTable from "@site/src/sections/enterprise/EnterpriseComparisonTable";
 import EnterprisePlatformMockup from "@site/src/sections/enterprise/EnterprisePlatformMockup";
 import RepoContributors from "@site/src/sections/home/RepoContributors";
+import CommunityEvents from "@site/src/sections/community/CommunityEvents";
+import PastMeetupScene from "@site/src/sections/community/PastMeetupScene";
 
 export const getMDXComponents = (components?: MDXComponents) =>
   ({
@@ -61,8 +64,11 @@ export const getMDXComponents = (components?: MDXComponents) =>
     SectionLabel,
     EnterpriseComparisonTable,
     EnterprisePlatformMockup,
+    CommunityEvents,
+    PastMeetupScene,
     RepoContributors,
     DefaultLLMModel,
+    DefaultSystemOneModel,
     Term,
     Switch,
     Case,

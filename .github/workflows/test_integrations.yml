@@ -373,7 +373,7 @@ jobs:
       - name: Install Dependencies
         run: |
           poetry install --no-interaction --no-root --only main
-          poetry run pip install -U agent-framework-core opentelemetry-sdk
+          poetry run pip install 'agent-framework-core>=1.12,<2'
 
       - name: Install Project
         run: poetry install --no-interaction --only main

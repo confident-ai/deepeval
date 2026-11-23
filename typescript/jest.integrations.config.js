@@ -1,4 +1,4 @@
-// Jest config for Ts Integration (non-Mastra suites).
+// Jest config for Ts Integration (suites whose frameworks load as CommonJS).
 // Default jest.config.js ignores /test/test-integrations/ so unit CI stays fast.
 module.exports = {
   preset: "ts-jest",
@@ -6,8 +6,9 @@ module.exports = {
   testMatch: ["**/test/test-integrations/**/*.test.ts"],
   testPathIgnorePatterns: [
     "/node_modules/",
-    // Mastra needs babel-jest (jest.mastra.config.cjs).
+    // ESM-only frameworks need babel-jest (jest.esm.config.cjs).
     "/test/test-integrations/test-mastra/",
+    "/test/test-integrations/test-ai-sdk/",
   ],
   moduleFileExtensions: ["ts", "js", "json", "node"],
   moduleNameMapper: {

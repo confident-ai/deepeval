@@ -1,0 +1,1 @@
+How good is `plan` for accomplishing `task`? A strong plan covers every requirement and prerequisite of `task`, has only necessary steps in a logical order, and each step is specific enough to execute. Judge the plan itself, not how it was carried out.

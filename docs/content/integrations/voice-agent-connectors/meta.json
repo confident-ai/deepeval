@@ -1,4 +1,4 @@
 {
   "title": "Voice Agent Connectors",
-  "pages": ["vapi", "elevenlabs", "livekit", "pipecat"]
+  "pages": ["vapi", "elevenlabs", "livekit", "pipecat", "twilio"]
 }

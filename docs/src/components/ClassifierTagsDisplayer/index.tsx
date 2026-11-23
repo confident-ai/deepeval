@@ -3,8 +3,10 @@ import styles from "./ClassifierTagsDisplayer.module.scss";
 
 // Tag pills shown under each classifier's H1, mirroring MetricTagsDisplayer.
 // Every classifier is a categorical LLM-as-a-judge, so those two pills are
-// always on; the rest describe scope and use case.
+// always on; `jev` marks that Jev can decide the label instead under the
+// `system_one` eval mode; the rest describe scope and use case.
 interface ClassifierTagsDisplayerProps {
+  jev?: boolean;
   custom?: boolean;
   singleTurn?: boolean;
   multiTurn?: boolean;
@@ -18,6 +20,7 @@ interface ClassifierTagsDisplayerProps {
 }
 
 const ClassifierTagsDisplayer = ({
+  jev = false,
   custom = false,
   singleTurn = false,
   multiTurn = false,
@@ -32,6 +35,9 @@ const ClassifierTagsDisplayer = ({
   return (
     <div className={styles.classifierTagsDisplayer}>
       <div className={`${styles.pill} ${styles.usesLLM}`}>LLM-as-a-judge</div>
+      {jev && (
+        <div className={`${styles.pill} ${styles.jev}`}>Jev-as-a-judge</div>
+      )}
       <div className={`${styles.pill} ${styles.categorical}`}>Categorical</div>
       {custom && (
         <div className={`${styles.pill} ${styles.custom}`}>Custom</div>

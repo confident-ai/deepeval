@@ -4,12 +4,14 @@ import logging
 import time
 import uuid
 from datetime import timedelta
+from enum import Enum
 from typing import (
     Any,
     AsyncIterable,
     AsyncIterator,
     Callable,
     ClassVar,
+    Dict,
     List,
     Optional,
     Set,
@@ -43,6 +45,24 @@ _INSTALL_HINT = 'Install it with `pip install "deepeval[voice]"`.'
 # https://docs.livekit.io/agents/multimodality/text/
 TRANSCRIPTION_TOPIC = "lk.transcription"
 TRANSCRIPTION_FINAL_ATTRIBUTE = "lk.transcription_final"
+BACKGROUND_AUDIO_TRACK = "background_audio"
+AGENT_STATE_ATTRIBUTE = "lk.agent.state"
+_TURN_END_SETTLE_S = 0.5
+_TRANSCRIPT_POLL_S = 0.05
+
+
+class AgentState(str, Enum):
+    INITIALIZING = "initializing"
+    IDLE = "idle"
+    LISTENING = "listening"
+    THINKING = "thinking"
+    SPEAKING = "speaking"
+
+
+_BUSY_AGENT_STATES = frozenset({AgentState.THINKING, AgentState.SPEAKING})
+
+
+_DTMF_DIGIT_INTERVAL_S = 0.15
 
 
 class LiveKitConnector(BaseVoiceConnector):
@@ -124,8 +144,18 @@ class LiveKitConnector(BaseVoiceConnector):
         self._uplink: Optional[UplinkStream] = None
         self._owns_room_connection = False
         self._current_transcript: Optional[str] = None
+        self._provider_transcript_parts: List[str] = []
         self._transcript_ready: Optional[asyncio.Event] = None
+        self._provider_transcript_ready: Optional[asyncio.Event] = None
         self._transcript_tasks: Set[asyncio.Task] = set()
+        self._call_ended = False
+        self._agent_state: Optional[str] = None
+        self._agent_spoke = False
+        self._turn_end_timer: Optional[asyncio.TimerHandle] = None
+        self._turn_end_deadline = 0.0
+        self._agent_segments: List[str] = []
+        self._agent_turn = 0
+        self._open_agent_transcripts = 0
 
     @property
     def audio_format(self) -> Tuple[int, str]:
@@ -139,6 +169,7 @@ class LiveKitConnector(BaseVoiceConnector):
         await self._join_room()
         await self._after_join()
         await self._await_agent_track()
+        self._adopt_agent_state()
 
     async def _join_room(self) -> None:
         self._rtc = require_dependency(
@@ -152,7 +183,16 @@ class LiveKitConnector(BaseVoiceConnector):
         self._out_frames = asyncio.Queue()
         self._agent_track_ready = asyncio.Event()
         self._transcript_ready = asyncio.Event()
+        self._provider_transcript_ready = asyncio.Event()
+        self._provider_transcript_parts = []
+        self._transcript_tasks = set()
         self._uplink = UplinkStream()
+        self._call_ended = False
+        self._agent_state = None
+        self._agent_spoke = False
+        self._agent_segments = []
+        self._agent_turn = 0
+        self._open_agent_transcripts = 0
         self._room = (
             self._room_arg if self._room_arg is not None else rtc.Room()
         )
@@ -160,6 +200,13 @@ class LiveKitConnector(BaseVoiceConnector):
 
         self._room.on("track_subscribed", self._on_track_subscribed)
         self._room.on("participant_connected", self._on_participant_connected)
+        self._room.on(
+            "participant_disconnected", self._on_participant_disconnected
+        )
+        self._room.on("disconnected", self._on_room_disconnected)
+        self._room.on(
+            "participant_attributes_changed", self._on_attributes_changed
+        )
         self._register_transcript_handler()
 
         if not self._is_room_connected():
@@ -309,7 +356,11 @@ class LiveKitConnector(BaseVoiceConnector):
                 continue
             for publication in participant.track_publications.values():
                 track = publication.track
-                if track is not None and track.kind == rtc.TrackKind.KIND_AUDIO:
+                if (
+                    track is not None
+                    and track.kind == rtc.TrackKind.KIND_AUDIO
+                    and publication.name != BACKGROUND_AUDIO_TRACK
+                ):
                     self._attach_agent_track(track, participant)
                     return
 
@@ -318,6 +369,8 @@ class LiveKitConnector(BaseVoiceConnector):
         if self._agent_track is not None:
             return
         if track.kind != rtc.TrackKind.KIND_AUDIO:
+            return
+        if publication.name == BACKGROUND_AUDIO_TRACK:
             return
         if not self._is_agent_participant(participant):
             return
@@ -351,27 +404,54 @@ class LiveKitConnector(BaseVoiceConnector):
             )
 
     def _on_transcript_stream(self, reader, participant_identity: str) -> None:
-        if participant_identity == self.identity:
-            return  # our own speech, transcribed back to us
-        task = self._loop.create_task(self._read_transcript(reader))
+        heard_us = participant_identity == self.identity
+        if not heard_us:
+            self._open_agent_transcripts += 1
+        task = self._loop.create_task(
+            self._read_transcript(
+                reader, heard_us=heard_us, agent_turn=self._agent_turn
+            )
+        )
         self._transcript_tasks.add(task)
         task.add_done_callback(self._transcript_tasks.discard)
 
-    async def _read_transcript(self, reader) -> None:
+    async def _read_transcript(
+        self,
+        reader,
+        *,
+        heard_us: bool = False,
+        agent_turn: Optional[int] = None,
+    ) -> None:
+        if agent_turn is None:
+            agent_turn = self._agent_turn
         try:
-            text = await reader.read_all()
-        except Exception:
-            logger.debug("Reading a LiveKit transcript failed.", exc_info=True)
-            return
-        attributes = getattr(getattr(reader, "info", None), "attributes", None)
-        final = (attributes or {}).get(TRANSCRIPTION_FINAL_ATTRIBUTE)
-        # Interim segments are revised as the agent keeps talking, so only the
-        # final one describes the turn.
-        if final not in (True, "true"):
-            return
-        text = (text or "").strip()
+            text = await self._read_final_text(reader)
+        finally:
+            if (
+                not heard_us
+                and agent_turn == self._agent_turn
+                and self._open_agent_transcripts
+            ):
+                self._open_agent_transcripts -= 1
         if not text:
             return
+        if heard_us:
+            self._provider_transcript_parts.append(text)
+            if self._provider_transcript_ready is not None:
+                self._provider_transcript_ready.set()
+            if self._out_frames is not None:
+                self._out_frames.put_nowait(
+                    AgentEvent(
+                        provider_transcript=text,
+                        received_at=time.perf_counter(),
+                    )
+                )
+            return
+        if agent_turn != self._agent_turn:
+            return
+        if self.signals_turn_complete:
+            self._agent_segments.append(text)
+            text = " ".join(self._agent_segments)
         self._current_transcript = text
         if self._transcript_ready is not None:
             self._transcript_ready.set()
@@ -380,11 +460,52 @@ class LiveKitConnector(BaseVoiceConnector):
                 AgentEvent(transcript=text, received_at=time.perf_counter())
             )
 
+    async def _read_final_text(self, reader) -> Optional[str]:
+        try:
+            text = await reader.read_all()
+        except Exception:
+            logger.debug("Reading a LiveKit transcript failed.", exc_info=True)
+            return None
+        attributes = getattr(getattr(reader, "info", None), "attributes", None)
+        final = (attributes or {}).get(TRANSCRIPTION_FINAL_ATTRIBUTE)
+        # Interim segments are revised as the agent keeps talking, so only the
+        # final one describes the turn.
+        if final not in (True, "true"):
+            return None
+        return (text or "").strip() or None
+
     def _on_participant_connected(self, participant) -> None:
         if self._agent_participant is None and self._is_agent_participant(
             participant
         ):
             self._agent_participant = participant
+
+    def _on_participant_disconnected(self, participant) -> None:
+        agent = self._agent_participant
+        if agent is not None and participant.identity == agent.identity:
+            self._end_call()
+
+    def _on_room_disconnected(self, *_args) -> None:
+        self._end_call()
+
+    def _end_call(self) -> None:
+        if self._call_ended:
+            return
+        self._call_ended = True
+        if self._uplink is not None:
+            self._uplink.cancel.set()
+        if self._out_frames is not None:
+            self._out_frames.put_nowait(
+                AgentEvent(
+                    turn_complete=True,
+                    call_ended=True,
+                    received_at=time.perf_counter(),
+                )
+            )
+
+    @property
+    def call_ended(self) -> bool:
+        return self._call_ended
 
     def _attach_agent_track(self, track, participant) -> None:
         rtc = self._rtc
@@ -420,11 +541,15 @@ class LiveKitConnector(BaseVoiceConnector):
         or `stop_uplink()` cancels the stream. Trailing silence is off by
         default so barge-in audio does not pad the uplink.
         """
+        if self._call_ended:
+            return
         if self._uplink is None or self._source is None:
             raise DeepEvalError(
                 "LiveKitConnector.stream_uplink() called before connect()."
             )
         await self.stop_uplink()
+        if not self.signals_turn_complete:
+            self._advance_agent_turn()
         self._uplink.begin()
         frames = self._make_input_frames(audio)
 
@@ -451,11 +576,18 @@ class LiveKitConnector(BaseVoiceConnector):
         while the rest of the utterance is still being made, which is how a real
         room behaves — a microphone does not wait for a sentence to finish.
         """
+        if self._call_ended:
+            recorder = PcmRecorder()
+            async for chunk in chunks:
+                recorder.add(chunk)
+            return UplinkResult(audio=recorder.to_audio(), first_frame_at=None)
         if self._uplink is None or self._source is None:
             raise DeepEvalError(
                 "LiveKitConnector.stream_uplink_chunks() called before connect()."
             )
         await self.stop_uplink()
+        if not self.signals_turn_complete:
+            self._advance_agent_turn()
         self._uplink.begin()
 
         first_frame_at: Optional[float] = None
@@ -500,6 +632,73 @@ class LiveKitConnector(BaseVoiceConnector):
     def supports_duplex(self) -> bool:
         return True
 
+    @property
+    def signals_turn_complete(self) -> bool:
+        return self._agent_state is not None
+
+    def _adopt_agent_state(self) -> None:
+        attributes = getattr(self._agent_participant, "attributes", None)
+        state = (attributes or {}).get(AGENT_STATE_ATTRIBUTE)
+        if state:
+            self._on_agent_state(state)
+
+    def _on_attributes_changed(
+        self, changed: Dict[str, str], participant
+    ) -> None:
+        state = changed.get(AGENT_STATE_ATTRIBUTE)
+        if state and self._is_agent_participant(participant):
+            self._on_agent_state(state)
+
+    def _on_agent_state(self, state: str) -> None:
+        self._agent_state = state
+        if state in _BUSY_AGENT_STATES:
+            self._cancel_turn_end()
+            if state == AgentState.SPEAKING and not self._agent_spoke:
+                self._agent_spoke = True
+                self._agent_segments = []
+            return
+        if self._agent_spoke and self._turn_end_timer is None:
+            self._turn_end_deadline = (
+                self._loop.time() + _TURN_END_SETTLE_S + self.transcript_grace_s
+            )
+            self._turn_end_timer = self._loop.call_later(
+                _TURN_END_SETTLE_S, self._end_agent_turn
+            )
+
+    def _end_agent_turn(self) -> None:
+        self._turn_end_timer = None
+        transcript_pending = (
+            self._open_agent_transcripts or not self._agent_segments
+        )
+        if transcript_pending and self._loop.time() < self._turn_end_deadline:
+            self._turn_end_timer = self._loop.call_later(
+                _TRANSCRIPT_POLL_S, self._end_agent_turn
+            )
+            return
+        self._agent_spoke = False
+        self._advance_agent_turn()
+        if self._out_frames is not None:
+            self._out_frames.put_nowait(
+                AgentEvent(turn_complete=True, received_at=time.perf_counter())
+            )
+
+    def _advance_agent_turn(self) -> None:
+        self._agent_turn += 1
+        self._open_agent_transcripts = 0
+
+    def _cancel_turn_end(self) -> None:
+        if self._turn_end_timer is not None:
+            self._turn_end_timer.cancel()
+            self._turn_end_timer = None
+
+    @property
+    def supports_parallel_calls(self) -> bool:
+        return (
+            self._room_arg is None
+            and self._token_arg is None
+            and self._room_name_arg is None
+        )
+
     async def iter_agent_events(self) -> AsyncIterator[AgentEvent]:
         if self._out_frames is None:
             raise DeepEvalError(
@@ -520,7 +719,9 @@ class LiveKitConnector(BaseVoiceConnector):
             )
 
         self._current_transcript = None
+        self._provider_transcript_parts = []
         self._transcript_ready.clear()
+        self._provider_transcript_ready.clear()
 
         input_audio_started_at = time.perf_counter()
         for frame in self._make_input_frames(audio):
@@ -536,7 +737,16 @@ class LiveKitConnector(BaseVoiceConnector):
             max_turn_timeout_s=self.max_turn_timeout_s,
             silence_threshold_rms=self.silence_threshold_rms,
         )
-        await self._await_transcript(bool(agent_pcm))
+        await asyncio.gather(
+            self._await_transcript(
+                self._transcript_ready,
+                arrived=not agent_pcm or self._current_transcript is not None,
+            ),
+            self._await_transcript(
+                self._provider_transcript_ready,
+                arrived=bool(self._provider_transcript_parts),
+            ),
+        )
 
         reply_audio = self._agent_pcm_to_audio(agent_pcm)
         latency_ms = (
@@ -547,6 +757,8 @@ class LiveKitConnector(BaseVoiceConnector):
         return ConnectorTurn(
             audio=reply_audio,
             transcript=self._current_transcript,
+            provider_transcript=" ".join(self._provider_transcript_parts)
+            or None,
             latency_ms=latency_ms,
             interrupted=False,
             input_audio_started_at=input_audio_started_at,
@@ -554,7 +766,9 @@ class LiveKitConnector(BaseVoiceConnector):
             audio_started_at=first_audio_at,
         )
 
-    async def _await_transcript(self, spoke: bool) -> None:
+    async def _await_transcript(
+        self, ready: asyncio.Event, *, arrived: bool
+    ) -> None:
         """Give a transcript that is still in flight a moment to land.
 
         The turn ends on silence in the audio, but the text stream carrying the
@@ -562,23 +776,30 @@ class LiveKitConnector(BaseVoiceConnector):
         transcript would arrive just after the turn was assembled and be read
         as part of the next one.
         """
-        if not spoke or self._current_transcript is not None:
-            return
-        if self.transcript_grace_s <= 0:
+        if arrived or self.transcript_grace_s <= 0:
             return
         try:
             await asyncio.wait_for(
-                self._transcript_ready.wait(), timeout=self.transcript_grace_s
+                ready.wait(), timeout=self.transcript_grace_s
             )
         except asyncio.TimeoutError:
-            pass  # no transcript published; the caller falls back to STT
+            pass  # none published; the field is left unset
+
+    def take_pending_agent_events(self) -> List[AgentEvent]:
+        events: List[AgentEvent] = []
+        if self._out_frames is None:
+            return events
+        while not self._out_frames.empty():
+            item = self._out_frames.get_nowait()
+            if isinstance(item, AgentEvent) and item.call_ended:
+                self._out_frames.put_nowait(item)
+                break
+            if isinstance(item, AgentEvent):
+                events.append(item)
+        return events
 
     def drain_downlink(self) -> None:
-        while not self._out_frames.empty():
-            try:
-                self._out_frames.get_nowait()
-            except asyncio.QueueEmpty:
-                break
+        self.take_pending_agent_events()
 
     def _make_input_frames(self, audio: Audio) -> List:
         rtc = self._rtc
@@ -635,7 +856,21 @@ class LiveKitConnector(BaseVoiceConnector):
             duration=duration,
         )
 
+    async def send_dtmf(self, digits: str) -> bool:
+        from deepeval.voice.keypad import DTMF_CODES
+
+        if self._room is None:
+            raise DeepEvalError("LiveKitConnector is not connected.")
+        for digit in digits:
+            await self._room.local_participant.publish_dtmf(
+                code=DTMF_CODES[digit], digit=digit
+            )
+            await asyncio.sleep(_DTMF_DIGIT_INTERVAL_S)
+        return True
+
     async def disconnect(self) -> None:
+        self._end_call()
+        self._cancel_turn_end()
         await self.stop_uplink()
         if self._drain_task is not None:
             self._drain_task.cancel()

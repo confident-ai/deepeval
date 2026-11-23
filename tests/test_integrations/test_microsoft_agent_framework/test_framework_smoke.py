@@ -1,13 +1,6 @@
-from __future__ import annotations
-
-from unittest.mock import MagicMock
+from unittest.mock import Mock
 
 import pytest
-
-agent_framework = pytest.importorskip("agent_framework")
-
-from agent_framework import Agent, BaseChatClient, ChatResponse, Message
-from agent_framework.observability import enable_instrumentation
 from opentelemetry import trace
 from opentelemetry.sdk.trace import TracerProvider
 from opentelemetry.sdk.trace.export import SimpleSpanProcessor
@@ -15,92 +8,100 @@ from opentelemetry.sdk.trace.export.in_memory_span_exporter import (
     InMemorySpanExporter,
 )
 
-from deepeval.integrations.microsoft_agent_framework.instrumentator import (
-    MicrosoftAgentFrameworkInstrumentationSettings,
-    MicrosoftAgentFrameworkSpanInterceptor,
+from deepeval.integrations.microsoft_agent_framework import (
+    instrument_microsoft_agent_framework,
+    otel,
 )
-from deepeval.integrations.microsoft_agent_framework import otel
+from deepeval.tracing.otel.converter import convert_span
+from deepeval.tracing.otel.setup import shutdown_confident_trace
+from deepeval.tracing.types import AgentSpan
+
+agent_framework = pytest.importorskip("agent_framework")
+observability = pytest.importorskip("agent_framework.observability")
 
 
-class FakeChatClient(BaseChatClient):
+class FakeChatClient(agent_framework.BaseChatClient):
     OTEL_PROVIDER_NAME = "fake"
 
     def _inner_get_response(self, *, messages, stream, options, **kwargs):
         async def response():
-            return ChatResponse(
-                messages=Message("assistant", ["Hello from fake"]),
+            return agent_framework.ChatResponse(
+                messages=agent_framework.Message(
+                    "assistant", ["Hello from fake"]
+                ),
                 model="fake-model",
             )
 
         return response()
 
 
-@pytest.mark.asyncio
-async def test_real_agent_run_emits_deepeval_agent_span():
+@pytest.fixture
+def exporter(monkeypatch):
+    shutdown_confident_trace()
     provider = TracerProvider()
     exporter = InMemorySpanExporter()
-    settings = MicrosoftAgentFrameworkInstrumentationSettings(
-        environment="testing"
-    )
-    provider.add_span_processor(
-        MicrosoftAgentFrameworkSpanInterceptor(settings)
-    )
     provider.add_span_processor(SimpleSpanProcessor(exporter))
 
-    previous_provider = trace.get_tracer_provider()
-    trace._TRACER_PROVIDER = provider
+    monkeypatch.setattr(trace, "_TRACER_PROVIDER", provider)
+    settings = observability.OBSERVABILITY_SETTINGS
+    monkeypatch.setattr(settings, "enable_instrumentation", True)
+    monkeypatch.setattr(settings, "enable_sensitive_data", False)
     try:
-        enable_instrumentation(enable_sensitive_data=True, force=True)
-        response = await Agent(
-            FakeChatClient(),
-            name="test_agent",
-        ).run("Hello")
+        yield exporter
     finally:
-        trace._TRACER_PROVIDER = previous_provider
+        shutdown_confident_trace()
+        provider.shutdown()
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize("capture_content", [False, True])
+async def test_real_agent_run_emits_deepeval_agent_span(
+    exporter, capture_content
+):
+    if capture_content:
+        instrument_microsoft_agent_framework(
+            name="agent trace",
+            thread_id="configured-thread",
+            capture_content=True,
+        )
+    else:
+        instrument_microsoft_agent_framework(
+            name="agent trace",
+            thread_id="configured-thread",
+        )
+
+    agent = agent_framework.Agent(FakeChatClient(), name="test_agent")
+    response = await agent.run("Hello")
 
     assert str(response) == "Hello from fake"
-    spans = exporter.get_finished_spans()
-    agent_span = next(
+    native_span = next(
         span
-        for span in spans
+        for span in exporter.get_finished_spans()
         if span.attributes.get("gen_ai.operation.name") == "invoke_agent"
     )
-    assert agent_span.attributes["confident.span.type"] == "agent"
-    assert (
-        agent_span.attributes["confident.span.integration"]
-        == "Microsoft Agent Framework"
+    converted = convert_span(native_span)
+    assert isinstance(converted.span, AgentSpan)
+    assert converted.span.integration == "Microsoft Agent Framework"
+    assert converted.span.name == "test_agent"
+    assert converted.trace_fields["name"] == "agent trace"
+    assert converted.trace_fields["thread_id"] == "configured-thread"
+    assert converted.span.input == ("Hello" if capture_content else None)
+    assert converted.span.output == (
+        "Hello from fake" if capture_content else None
     )
-    assert agent_span.attributes["confident.span.name"] == "test_agent"
-    assert agent_span.attributes["confident.span.input"] == "Hello"
-    assert agent_span.attributes["confident.span.output"] == "Hello from fake"
 
 
-def test_instrumentation_is_idempotent(monkeypatch):
-    provider = TracerProvider()
-    enable = MagicMock()
-    processor = MagicMock()
-    monkeypatch.setattr(otel.trace, "get_tracer_provider", lambda: provider)
+def test_instrumentation_does_not_enable_framework_when_tracing_unavailable(
+    monkeypatch,
+):
+    start_runtime = Mock(return_value=False)
+    enable = Mock()
+    monkeypatch.setattr(otel, "ensure_confident_trace", start_runtime)
     monkeypatch.setattr(
         "agent_framework.observability.enable_instrumentation", enable
     )
-    monkeypatch.setattr(
-        "deepeval.tracing.otel.context_aware_processor.ContextAwareSpanProcessor",
-        MagicMock(return_value=processor),
-    )
-    monkeypatch.setattr(otel, "_attached_processors", {})
 
-    otel.instrument_microsoft_agent_framework(
-        api_key="test-key",
-        capture_content=True,
-    )
-    otel.instrument_microsoft_agent_framework(
-        api_key="test-key",
-        capture_content=False,
-    )
+    instrument_microsoft_agent_framework()
 
-    processors = provider._active_span_processor._span_processors
-    assert len(processors) == 2
-    assert isinstance(processors[0], MicrosoftAgentFrameworkSpanInterceptor)
-    assert processors[1] is processor
-    assert enable.call_count == 2
-    enable.assert_called_with(enable_sensitive_data=False)
+    start_runtime.assert_called_once_with(global_provider=True)
+    enable.assert_not_called()

@@ -2,7 +2,12 @@ from typing import Optional, Tuple, Union
 
 from pydantic import SecretStr
 
-from deepeval.config.mode import MODE_ENV_VAR, DeepEvalMode, is_experimental
+from deepeval.config.eval_mode import (
+    EVAL_MODE_ENV_VAR,
+    EvalMode,
+    EvalModeName,
+    resolve_eval_mode,
+)
 from deepeval.config.settings import get_settings
 from deepeval.errors import DeepEvalError
 from deepeval.key_handler import (
@@ -164,10 +169,32 @@ def should_use_amazon_bedrock_model():
 
 def initialize_model(
     model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-) -> Tuple[DeepEvalBaseLLM, bool]:
+    eval_mode: Optional[Union[EvalModeName, EvalMode]] = None,
+) -> Tuple[Optional[DeepEvalBaseLLM], bool]:
     """
     Returns a tuple of (initialized DeepEvalBaseLLM, using_native_model boolean)
+
+    ``eval_mode`` is the calling metric's eval mode. Under ``system_one`` Jev
+    runs the whole metric and nothing falls back to the LLM, so no LLM is
+    built (and a missing LLM key is not an error): the result is
+    ``(None, True)``. ``True`` keeps the metric's cost tracking on, which Jev
+    reports into. Leave ``eval_mode`` as ``None`` when the caller always
+    needs the LLM (synthesizer, simulator, metrics with no System One form).
     """
+    if eval_mode is not None and _as_mode(eval_mode) is EvalMode.SYSTEM_ONE:
+        return None, True
+    return _build_model(model)
+
+
+def _as_mode(eval_mode: Union[EvalModeName, EvalMode]) -> EvalMode:
+    if isinstance(eval_mode, EvalMode):
+        return eval_mode
+    return resolve_eval_mode(eval_mode)
+
+
+def _build_model(
+    model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+) -> Tuple[DeepEvalBaseLLM, bool]:
     # If model is natively supported, it should be deemed as using native model
     if is_native_model(model):
         return model, True
@@ -237,19 +264,38 @@ def is_native_model(
 ###############################################
 
 
-def initialize_system_one_model() -> Optional[DeepEvalBaseSystemOneModel]:
-    """Jev answers QAG verdicts only under DEEPEVAL_MODE=experimental. There
-    is no LLM fallback in that mode: a missing key or SDK is an error."""
-    if not is_experimental():
+def initialize_system_one_model(
+    model: Optional[Union[str, DeepEvalBaseSystemOneModel]] = None,
+    eval_mode: Optional[Union[EvalModeName, EvalMode]] = None,
+) -> Optional[DeepEvalBaseSystemOneModel]:
+    """Build the System One model a metric decides with, or ``None`` when its
+    eval mode never calls one.
+
+    ``model`` is the metric's ``system_one_model`` argument: a configured
+    ``DeepEvalBaseSystemOneModel``, a TypeSafe model name, or ``None`` for
+    the default. ``eval_mode`` is the metric's eval mode; ``None`` resolves
+    it from settings (for metrics that take no ``eval_mode`` argument).
+    Under ``llm`` no model is built, so a missing TypeSafe key is not an
+    error; under ``hybrid`` and ``system_one`` a missing key or SDK fails
+    here, at construction, rather than mid-evaluation."""
+    mode = _as_mode(eval_mode) if eval_mode is not None else resolve_eval_mode()
+    if not mode.uses_system_one:
         return None
+    if isinstance(model, DeepEvalBaseSystemOneModel):
+        return model
+    if model is not None and not isinstance(model, str):
+        raise TypeError(
+            f"Unsupported type for system_one_model: {type(model)}. Expected "
+            "None, str, or DeepEvalBaseSystemOneModel."
+        )
     try:
-        return TypeSafeModel()
+        return TypeSafeModel(model=model)
     except DeepEvalError as e:
         raise DeepEvalError(
-            f"{MODE_ENV_VAR}={DeepEvalMode.EXPERIMENTAL} routes metric "
-            f"decisions to TypeSafe AI Jev, but it is not usable: {e} "
-            f"Configure it with `deepeval set-typesafe --prompt-api-key` or "
-            f"switch back with {MODE_ENV_VAR}={DeepEvalMode.STABLE}."
+            f"{EVAL_MODE_ENV_VAR}={mode} routes metric decisions to TypeSafe "
+            f"AI Jev, but it is not usable: {e} Configure it with `deepeval "
+            f"set-typesafe --prompt-api-key` or switch back with `deepeval "
+            f"set-eval-mode {EvalMode.LLM}`."
         ) from e
 
 

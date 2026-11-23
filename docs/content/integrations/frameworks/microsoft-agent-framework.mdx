@@ -8,8 +8,8 @@ sidebar_label: Microsoft Agent Framework
 
 [Microsoft Agent Framework](https://github.com/microsoft/agent-framework) is
 a Python and .NET framework for building agents and multi-agent workflows.
-DeepEval's Python integration translates its native OpenTelemetry GenAI spans
-into evaluable agent, LLM, and tool spans.
+DeepEval's Python integration uses confident-trace to collect its native
+OpenTelemetry GenAI spans as evaluable agent, LLM, and tool spans.
 
 ## Getting started
 
@@ -86,7 +86,6 @@ Static trace defaults can be passed when instrumentation is configured:
 instrument_microsoft_agent_framework(
     name="customer-support",
     thread_id="conversation-123",
-    user_id="user-456",
     tags=["agent-framework"],
     environment="development",
 )

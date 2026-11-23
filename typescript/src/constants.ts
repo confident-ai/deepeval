@@ -1,8 +1,10 @@
-export const CONFIDENT_TRACE_VERBOSE = "CONFIDENT_TRACE_VERBOSE";
 export const CONFIDENT_TRACE_SAMPLE_RATE = "CONFIDENT_TRACE_SAMPLE_RATE";
 export const CONFIDENT_TRACE_ENVIRONMENT = "CONFIDENT_TRACE_ENVIRONMENT";
 export const CONFIDENT_TRACE_FLUSH = "CONFIDENT_TRACE_FLUSH";
 export const CONFIDENT_TRACING_ENABLED = "CONFIDENT_TRACING_ENABLED";
+/** `true` installs deepeval's provider as the global OpenTelemetry provider. */
+export const DEEPEVAL_GLOBAL_TRACER_PROVIDER =
+  "DEEPEVAL_GLOBAL_TRACER_PROVIDER";
 export const DEEPEVAL_RUNNING = "DEEPEVAL";
 export const DEEPEVAL_RESULTS_DIR = "DEEPEVAL_RESULTS_DIR";
 export const DEEPEVAL_OFFICIAL = "DEEPEVAL_OFFICIAL";
@@ -18,6 +20,8 @@ export const DEEPEVAL_RESULTS_FOLDER = "DEEPEVAL_RESULTS_FOLDER";
 export const DEEPEVAL_LOCAL_STORE = "DEEPEVAL_LOCAL_STORE";
 /** `stable` (default) or `experimental`: feature channel. */
 export const DEEPEVAL_MODE = "DEEPEVAL_MODE";
+/** `llm` (default), `hybrid` or `system_one`: who decides in a judge metric. */
+export const DEEPEVAL_EVAL_MODE = "DEEPEVAL_EVAL_MODE";
 /** SQLite store: also keep the full JSON object on test case / trace / span rows. */
 export const DEEPEVAL_SQLITE_INCLUDE_ROW_JSON =
   "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON";

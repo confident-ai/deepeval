@@ -23,11 +23,11 @@ from tests.test_core.test_voice.helpers import (
 
 class _NoJudge:
     def __call__(self, *args, **kwargs):
-        raise AssertionError("the judge must not run without a policy")
+        raise AssertionError("no interruption is written without a schedule")
 
 
 @pytest.mark.asyncio
-async def test_duplex_runs_without_a_policy():
+async def test_duplex_runs_without_a_schedule():
     reply_wav = audio_utils.pcm16_to_wav_bytes(
         b"\xe8\x03" * 2400, sample_rate=RATE
     )
@@ -41,7 +41,7 @@ async def test_duplex_runs_without_a_policy():
         connector=connector,
         tts_model=object(),
         stt_model=StubSTT(),
-        policy=None,
+        schedule=None,
         floor=FloorController(),
         golden=ConversationalGolden(scenario="Test"),
         language="English",
@@ -57,7 +57,6 @@ async def test_duplex_runs_without_a_policy():
             exchange.run(
                 turns=turns,
                 sent_at=time.perf_counter(),
-                barges_this_conversation=0,
             ),
             timeout=5,
         )
@@ -89,7 +88,7 @@ class _FullDuplexConnector(CallbackVoiceConnector):
         return await super().stream_uplink(audio, **kwargs)
 
 
-def test_full_duplex_transports_use_the_duplex_path_without_a_policy():
+def test_full_duplex_transports_use_the_duplex_path_without_a_schedule():
     calls = []
     cases = ConversationSimulator(
         simulator_model=StaticSimulatorModel(),

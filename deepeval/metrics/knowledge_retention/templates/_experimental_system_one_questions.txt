@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "No assistant turn in `turns` forgets or contradicts a fact the user stated in an earlier turn.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "No assistant turn in `turns` asks the user again for information the user already gave in an earlier turn, other than to clarify, confirm or correct it."
+  },
+  {
+    "type": "score",
+    "question": "Across `turns`, how well does the assistant retain and respect the facts the user has already stated?",
+    "levels": ["Forgets most facts", "Forgets several facts", "Forgets a minor fact", "Retains every fact"]
+  }
+]

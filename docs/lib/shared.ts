@@ -22,7 +22,7 @@ export const siteTitle =
  * paragraph.
  */
 export const siteDescription =
-  'DeepEval is the open-source LLM evaluation framework for testing and benchmarking LLM applications.';
+  'DeepEval is the open-source LLM evaluation framework for testing and benchmarking AI agents, voice agents, multi-turn chatbots, RAG, and more.';
 
 export const docsRoute = '/docs';
 export const docsImageRoute = '/og/docs';
@@ -49,6 +49,14 @@ export const gitConfig = {
   repo: 'deepeval',
   branch: 'main',
 };
+
+/** Community meetups: the /community page and the GitHub issue form. Organizers
+ * add this Luma account as a co-host so we can see who registers. */
+export const communityCohostEmail = 'tony@confident-ai.com';
+export const communitySubmitUrl =
+  'https://github.com/confident-ai/deepeval/issues/new?template=community-event.yml';
+export const codeOfConductUrl =
+  'https://github.com/confident-ai/deepeval/blob/main/CODE_OF_CONDUCT.md';
 
 /** Community Discord invite — used by the `<DiscordButton>` CTA and
  *  referenced from the Kapa disclaimer copy. Single source of truth so

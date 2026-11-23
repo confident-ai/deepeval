@@ -1,0 +1,278 @@
+---
+id: metrics-transcription-accuracy
+title: Transcription Accuracy
+sidebar_label: Transcription Accuracy
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer jev={true} multiTurn={true} chatbot={true} referenceless={true} />
+
+The transcription accuracy metric measures whether your voice agent's **own speech-to-text** heard the caller correctly. It compares what the caller said against the transcription the agent's connector reported for that speech, so a reply that looks wrong can be traced to a mis-heard word rather than to the LLM behind it. For a **recorded production call**, where nobody scripted the caller, it can instead re-transcribe each turn's audio and judge whether the call's transcript accounts for what was actually said, by the caller and by the agent.
+
+:::note
+This is the metric for the case where an agent answers sensibly but answers the wrong question. If the caller says one thing and the agent hears another, every downstream turn will be coherent and wrong, nothing in the conversation text alone would tell you why.
+:::
+
+## Required Arguments
+
+To use the `TranscriptionAccuracyMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases):
+
+- `turns`
+
+You must provide the `role` and `content` for every turn, and `provider_transcript` on at least one `"assistant"` turn. With `compare_against="audio"` you instead provide `audio` on at least one turn, of either role. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn more.
+
+:::caution
+Only [voice connectors](/docs/conversation-simulator-voice-connectors) that report the agent's own transcription populate `provider_transcript`. A text conversation, or a phone call over SIP, never will — the agent's speech-to-text output does not cross the phone line. The metric raises rather than scoring such a test case 0, so a call it cannot measure is never mistaken for a call the agent failed. The same holds in audio mode when no turn has `audio`.
+:::
+
+## Usage
+
+<include cwd>snippets/metrics/set-eval-mode.mdx</include>
+
+The `TranscriptionAccuracyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.metrics import TranscriptionAccuracyMetric
+from deepeval import evaluate
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="Siobhan Kavanagh here, I can start in two weeks."),
+        Turn(
+            role="assistant",
+            content="Great to meet you Siobhan, two weeks works.",
+            provider_transcript="Siobhan Cavanaugh here, I can start in two weeks.",
+        ),
+    ]
+)
+metric = TranscriptionAccuracyMetric(threshold=0.5)
+
+# To run metric as a standalone
+# metric.measure(convo_test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+In practice you won't write those turns by hand — the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode) fills them in for you, with `content` holding what the simulated caller was scripted to say and `provider_transcript` holding what the agent reported hearing:
+
+```python
+from deepeval.dataset import ConversationalGolden
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+golden = ConversationalGolden(
+    scenario="A recruiter's voice agent screens a candidate for a backend role.",
+    expected_outcome="The candidate states their name and their notice period.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+evaluate(test_cases=test_cases, metrics=[TranscriptionAccuracyMetric()])
+```
+
+### Judging a recorded call
+
+A production call has no scripted caller text to compare against, so the recording itself has to be the record of what was said. Cut it into one clip per turn, attach each clip as `audio` with its offset from the start of the call, and set `compare_against="audio"`. The metric re-transcribes every clip with a [speech-to-text model](/docs/integrations-stt-openai) and judges whether the text the call ran on accounts for what was heard:
+
+```python
+from deepeval.test_case import Audio, Turn, ConversationalTestCase
+from deepeval.metrics import TranscriptionAccuracyMetric
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(
+            role="assistant",
+            content="Are you able to start from January 2027?",
+            audio=Audio(url="./turn-0.wav", start_time=12.0),
+        ),
+        Turn(
+            role="user",
+            content="",
+            audio=Audio(url="./turn-1.wav", start_time=18.4),
+        ),
+    ]
+)
+metric = TranscriptionAccuracyMetric(compare_against="audio", stt_model="gpt-4o-transcribe")
+```
+
+Every turn with a clip is judged, caller and agent alike: a caller turn whose transcript is empty while the clip has them thinking out loud fails, and so does an agent turn whose clip carries noise after the words it meant to say. `stt_model` picks the model that re-transcribes the clips, and falls back to the configured [STT provider](/docs/integrations-stt-openai) (`DEEPEVAL_STT_MODEL`, or `deepeval set-stt`) when left out.
+
+There are **ELEVEN** optional parameters when creating a `TranscriptionAccuracyMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `include_reason`: a boolean which when set to `True`, will include a reason for its evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which when set to `True`, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to `False`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under `hybrid` or `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.
+- [Optional] `eval_mode`: `llm`, `hybrid` or `system_one`, choosing whether an LLM, Jev, or both judge. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
+- [Optional] `compare_against`: `content` or `audio`, choosing what the transcript is checked against — the caller's scripted `content` against the agent's `provider_transcript`, or each turn's `audio` re-transcribed against the text the call ran on. Defaulted to `content`.
+- [Optional] `stt_model`: the speech-to-text model that re-transcribes the clips under `compare_against="audio"`, as a string or a `DeepEvalBaseSTT`. Not accepted under `compare_against="content"`. Defaulted to the configured [STT provider](/docs/integrations-stt-openai), which is OpenAI's `gpt-4o-transcribe` unless set. When the metric builds an OpenAI `gpt-4o` model itself, it asks it to transcribe verbatim so gibberish and thinking sounds stay in its transcription; a model instance you pass in is used as configured.
+
+### As a standalone
+
+You can also run the `TranscriptionAccuracyMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(convo_test_case)
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The metric first pairs the conversation into **exchanges**. Each `"assistant"` turn carrying a `provider_transcript` is paired with every `"user"` turn since the agent last spoke, joined together — a barge-in splits one piece of caller speech across two user turns, and the agent's transcription covers all of it. An assistant turn with no transcription is unmeasurable, and the caller speech before it is dropped with it.
+
+Under `compare_against="audio"` every turn with a clip is its own exchange, for both roles. The clip is re-transcribed by the `stt_model`, and that re-transcription is compared with the text the call ran on: for an `"assistant"` turn what it meant to say — `metadata["intended_content"]` when a duplex simulation recorded one, otherwise its `content`, which must then be the text sent to text-to-speech rather than a transcription of the agent's audio, or agent-side noise can never fail; for a `"user"` turn its `provider_transcript` when it carries one, the next reply's `provider_transcript` when that reply is the agent's only transcription of this stretch of caller speech, and otherwise its `content`. Turns without a clip are skipped. Because the two modes count different things — one exchange per agent transcription against one per recorded turn — keep a metric on one `compare_against` when comparing runs.
+
+You can change how the `TranscriptionAccuracyMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+### LLM-as-a-judge
+
+The `TranscriptionAccuracyMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Transcription Accuracy} = \frac{\text{Number of Exchanges Heard Faithfully}}{\text{Total Number of Exchanges}}" />
+
+An LLM judges each exchange, and deliberately **does not** count these as errors, because they are the same utterance written differently:
+
+- Punctuation, capitalisation and sentence splitting — `"Yes, could you"` vs `"Yes. Could you"`
+- Numbers as digits rather than words — `"fifteen years"` vs `"15 years"`
+- Dropped filler words, and the same utterance emitted twice by the speech-to-text engine
+
+It **does** count these, because they change what the agent was told:
+
+- A name or other proper noun heard as a different word — `"Kavanagh"` vs `"Cavanaugh"`
+- A number, date or duration whose value differs — `"fifteen"` vs `"fifty"`, `"two weeks"` vs `"two months"`
+- A negation gained or lost — `"I can't start"` vs `"I can start"`
+- An empty transcription where the caller spoke, which means the agent heard nothing at all
+
+Under `compare_against="audio"` the judge reads the re-transcription instead of the scripted caller text, and two rules sharpen. A filler dropped from inside a sentence the transcript otherwise captured is still harmless, but an empty or near-empty transcript while the clip has the person vocalising at all — thinking out loud, a false start, a partial word — is an error, because the agent treated speech as silence. And any speech or noise in the clip that the transcript does not account for is an error too; on an agent turn that is garbled words or a burst of noise after the sentence it meant to say. A name spelled differently but pronounced the same — `"Karthik"` vs `"Kartik"` — is not an error here, since a recording carries sound, not spelling. Each failed verdict quotes the clip's `start_time` so the moment can be found in the recording.
+
+### Hybrid
+
+Under the `hybrid` [eval mode](/docs/evaluation-eval-modes), the verdict for each exchange is answered by Jev, a System One model, instead: one yes/no question per exchange on whether the transcription captures what was spoken, with `P(yes) >= 0.5` counted as faithful. The equation and the LLM-written reason are unchanged, and the reason still quotes the words that differed. If a Jev call fails, the LLM makes that decision instead. Under `compare_against="audio"` the question asks instead whether the transcript accounts for what was heard on the clip.
+
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the whole metric in one request. It is sent the paired `exchanges` and asked three questions:
+
+| Question                                                                                                                                                  | Type  | Weight |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------- | ----- | ------ |
+| In most entries of `exchanges`, `transcribed` captures what the caller said in `spoken`; the differences there are harmless.                               | Noul  | 1      |
+| No entry of `exchanges` has a name, number, date or duration whose value differs, a negation gained or lost, or an empty `transcribed` where the caller spoke. | Noul  | 1      |
+| Across `exchanges`, how faithfully did `transcribed` capture what the caller said in `spoken`? (Mostly mis-heard → Every turn heard correctly)             | Score | 2      |
+
+Under `compare_against="audio"` the three questions are asked of `spoken` and `transcribed` instead, for the caller and the agent alike, and the second Noul also fails on an empty transcript where the clip has the person vocalising, or on sounds the transcript does not account for.
+
+:::note
+Under `system_one` Jev gives one holistic judgement of the call, whereas the LLM chain scores each exchange and takes the fraction. The two Noul questions are all-or-nothing, so a call with any meaning-altering error scores lower here than the fraction would suggest. Keep this metric on one eval mode when comparing results across runs.
+:::
+
+<include cwd>snippets/metrics/system-one-scoring.mdx</include>
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Where does `provider_transcript` come from?",
+      answer: (
+        <>
+          From the voice agent itself, through its connector — it is the agent's
+          own speech-to-text output, not something deepeval transcribed. The{" "}
+          <a href="/docs/integrations-voice-agent-connectors-livekit">LiveKit</a>,{" "}
+          <a href="/docs/integrations-voice-agent-connectors-elevenlabs">
+            ElevenLabs
+          </a>
+          , <a href="/docs/integrations-voice-agent-connectors-vapi">Vapi</a> and{" "}
+          <a href="/docs/integrations-voice-agent-connectors-pipecat">Pipecat</a>{" "}
+          connectors all report it when the agent publishes one.
+        </>
+      ),
+    },
+    {
+      question: "Why does the metric raise instead of returning 0?",
+      answer: (
+        <>
+          Because a conversation with no transcription anywhere is one the
+          metric cannot measure, not one the agent failed. Scoring it 0 would
+          make every phone call fail a metric that never had an input. An empty
+          transcription on a turn where the caller <em>did</em> speak is a real
+          failure and is scored as one.
+        </>
+      ),
+    },
+    {
+      question: "My transcription looks perfect but the score is below 1 — why?",
+      answer: (
+        <>
+          Read <code>metric.reason</code>: it quotes what was spoken and what
+          was heard for each exchange it failed. The usual cause is a proper
+          noun — names are 10 to 100 times rarer in speech-to-text training data
+          than common words, so they are where engines fail first, and a wrong
+          surname reads as plausible until you compare the two strings.
+        </>
+      ),
+    },
+    {
+      question: "My agent is in production and nobody scripted the caller — what do I compare against?",
+      answer: (
+        <>
+          The recording. Cut it into one clip per turn using the turn
+          timestamps your tracing recorded, attach each as{" "}
+          <code>audio</code> with its <code>start_time</code>, and set{" "}
+          <code>compare_against="audio"</code>. The metric re-transcribes every clip
+          and judges whether the text the call ran on accounts for it, so a
+          caller the agent heard as silence, or an agent that made noises it
+          never meant to, both show up with the second they happened at.
+        </>
+      ),
+    },
+    {
+      question: "Why re-transcribe the audio instead of trusting the transcript?",
+      answer: (
+        <>
+          Because the transcript is the thing under test. The agent's own
+          speech-to-text is tuned for real-time use and drops what it cannot
+          turn into words — a caller thinking out loud, or a burst of noise
+          after a sentence — which is exactly what you are trying to find. A
+          second, batch model listening to each clip gives you an independent
+          account to compare against. Left to its defaults a batch model
+          tidies gibberish away too, so when the metric builds an OpenAI <code>gpt-4o</code>
+          model itself it asks it to transcribe verbatim — fillers, partial
+          words, and non-words spelled out. Pass your own{" "}
+          <code>stt_model</code> instance to change or drop that hint. Pure
+          tones, such as a high-pitched whine with no syllables in it, are
+          never transcribed by any of these models, so this metric cannot see
+          them.
+        </>
+      ),
+    },
+    {
+      question: "Should I run this alongside my other conversational metrics?",
+      answer: (
+        <>
+          Yes. This metric says nothing about whether the agent's replies were
+          good — only whether it heard the caller. Pair it with{" "}
+          <a href="/docs/metrics-turn-relevancy">TurnRelevancyMetric</a> or{" "}
+          <a href="/docs/metrics-conversation-completeness">
+            ConversationCompletenessMetric
+          </a>
+          , and read this one first when they fail: a low score here explains a
+          low score there.
+        </>
+      ),
+    },
+  ]}
+/>

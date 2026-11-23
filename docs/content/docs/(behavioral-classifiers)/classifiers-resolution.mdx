@@ -5,7 +5,7 @@ sidebar_label: Resolution
 languages: [python]
 ---
 
-<ClassifierTagsDisplayer singleTurn={true} multiTurn={true} chatbot={true} />
+<ClassifierTagsDisplayer jev={true} singleTurn={true} multiTurn={true} chatbot={true} />
 
 The `ResolutionClassifier` in `deepeval` is a categorical LLM-as-a-judge that determines whether your LLM application brought the user's request to its expected end state, left it unresolved, or handed it over.
 
@@ -44,13 +44,15 @@ test_case = ConversationalTestCase(
 evaluate(test_cases=[test_case], classifiers=[classifier])
 ```
 
-There are **FIVE** optional parameters when creating a `ResolutionClassifier`:
+There are **SEVEN** optional parameters when creating a `ResolutionClassifier`:
 
 - [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/guides/guides-using-custom-llms) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `include_reason`: a boolean which when set to `True`, includes a reason for the chosen label. Defaulted to `True`.
 - [Optional] `allow_none`: a boolean which when set to `True`, lets the classifier return no label when none of them fit (surfaced as `label=None`, with a reason). When `False`, the closest label is always chosen. Defaulted to `False`.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `classify()` method](/docs/classifiers-introduction#using-classifiers-async). Defaulted to `True`.
 - [Optional] `classification_template`: a subclass of `ClassifierTemplate` used to [override the default prompts](/docs/classifiers-custom#customize-your-template). Defaulted to `ClassifierTemplate`.
+- [Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used under the `system_one` `eval_mode`. Defaulted to <DefaultSystemOneModel />.
+- [Optional] `eval_mode`: `llm` or `system_one`, choosing whether an LLM or Jev picks the label. Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`llm` unless set).
 
 :::note
 The `name` and label set of a built-in classifier are fixed, so `expected_labels` values mean the same thing across every dataset and run. If you need different labels or boundaries, build a [custom `Classifier`](/docs/classifiers-custom) instead.
@@ -69,8 +71,14 @@ print(classifier.label, classifier.reason)
 
 ## How Is It Calculated?
 
+You can change how the `ResolutionClassifier` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+
+### LLM-as-a-judge
+
 The `ResolutionClassifier` is a **one-shot LLM-as-a-judge**: a single call to your evaluation `model` with the test case content and the labels above, returning the chosen label and a reason. The result is compared against the test case's `expected_labels` entry, if any, to decide pass or fail.
 
-:::info
-Run [`deepeval set-mode experimental`](/docs/command-line-interface#set-mode) to have the label decided by [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, instead. You'll need to set `TYPESAFE_API_KEY` and [install the SDK](/integrations/models/typesafe-ai#setting-up).
-:::
+### Jev-as-a-judge
+
+Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev, a System One model, decides the label as one choice over the labels above, using each label's description as its boundary. The reason is built from Jev's per-label probabilities and confidence. No LLM is used, and Jev errors are raised.
+
+`system_one` needs `TYPESAFE_API_KEY` set and the [SDK installed](/integrations/models/typesafe-ai#setting-up-your-api-key).

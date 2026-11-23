@@ -10,7 +10,7 @@ from deepeval.cli.utils import (
     coerce_blank_to_none,
     handle_save_result as _handle_save_result,
 )
-from deepeval.config.mode import MODE_ENV_VAR, DeepEvalMode
+from deepeval.config.eval_mode import EVAL_MODE_ENV_VAR, EvalMode
 from deepeval.config.settings import get_settings
 from deepeval.models.system_one.constants import DEFAULT_TYPESAFE_MODEL
 
@@ -81,8 +81,9 @@ def set_typesafe_model_env(
         quiet=quiet,
         success_msg=(
             f":raising_hands: TypeSafe AI `{escape(effective_model)}` is configured. "
-            f"It answers QAG verdicts alongside your LLM when "
-            f"{MODE_ENV_VAR}={DeepEvalMode.EXPERIMENTAL}."
+            f"Pick how it judges with `deepeval set-eval-mode "
+            f"{EvalMode.HYBRID}` or `deepeval set-eval-mode "
+            f"{EvalMode.SYSTEM_ONE}`."
         ),
     )
 
@@ -128,8 +129,9 @@ def unset_typesafe_model_env(
         tip_msg=None,
     ):
         print(
-            f"The TypeSafe AI configuration has been removed. Metric decisions under "
-            f"{MODE_ENV_VAR}={DeepEvalMode.EXPERIMENTAL} will now fail until "
-            f"TYPESAFE_API_KEY is set again or you switch to "
-            f"{MODE_ENV_VAR}={DeepEvalMode.STABLE}."
+            f"The TypeSafe AI configuration has been removed. Metrics running "
+            f"with {EVAL_MODE_ENV_VAR}={EvalMode.HYBRID} or "
+            f"{EVAL_MODE_ENV_VAR}={EvalMode.SYSTEM_ONE} will now fail until "
+            f"TYPESAFE_API_KEY is set again or you switch back with "
+            f"`deepeval set-eval-mode {EvalMode.LLM}`."
         )

@@ -1,0 +1,40 @@
+name: Setup Wizard Tests
+
+on:
+  pull_request:
+    paths:
+      - 'setup-wizard/**'
+      - '.github/workflows/setup_wizard_test.yml'
+  push:
+    branches:
+      - main
+    paths:
+      - 'setup-wizard/**'
+      - '.github/workflows/setup_wizard_test.yml'
+  workflow_dispatch:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: setup-wizard
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: setup-wizard/package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Check
+        run: npm run check
+
+      - name: Build
+        run: npm run build

@@ -1,0 +1,16 @@
+[
+  {
+    "type": "noul",
+    "statement": "Every statement in the `retrieval_context` of each assistant turn in `turns` is relevant to addressing the user turns before it.",
+    "weight": 2
+  },
+  {
+    "type": "noul",
+    "statement": "Every node in the `retrieval_context` of each assistant turn in `turns` contains at least one statement relevant to addressing the user turns before it."
+  },
+  {
+    "type": "score",
+    "question": "Across `turns`, how much of the `retrieval_context` of the assistant turns is relevant to addressing the user turns before it?",
+    "levels": ["None of it", "Less than half", "Most of it", "All of it"]
+  }
+]

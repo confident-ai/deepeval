@@ -5,8 +5,6 @@ import asyncio
 
 from deepeval.errors import DeepEvalError
 
-MULTIMODAL_MODELS = ["OpenAIModel", "AzureModel", "GeminiModel", "OllamaModel"]
-
 
 def trim_and_load_json(
     input_string: str,

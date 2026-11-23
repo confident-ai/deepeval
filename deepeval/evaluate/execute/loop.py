@@ -1,3 +1,4 @@
+from deepeval.evaluate.expectations import with_expectation_evaluators
 import logging
 
 from rich.progress import (
@@ -34,6 +35,7 @@ from deepeval.tracing.tracing import (
     ToolSpan,
 )
 from deepeval.tracing.context import current_trace_context
+from deepeval.tracing.otel.setup import start_automatic_tracing
 from deepeval.tracing.api import (
     BaseApiSpan,
 )
@@ -84,6 +86,7 @@ logger = logging.getLogger(__name__)
 
 
 from deepeval.evaluate.execute._common import (
+    _attach_span_tree,
     _await_with_outer_deadline,
     _execute_metric,
     _log_gather_timeout,
@@ -93,7 +96,6 @@ from deepeval.evaluate.execute._common import (
     _snapshot_tasks,
     _trace_error,
     filter_duplicate_results,
-    log_prompt,
 )
 from deepeval.evaluate.execute.agentic import (
     _a_execute_agentic_test_case,
@@ -209,6 +211,7 @@ def execute_agentic_test_cases_from_loop(
             # Format golden as test case to create llm api test case
             test_case = LLMTestCase(
                 input=golden.input,
+                expectations=golden.expectations,
                 actual_output=(
                     str(current_trace.output)
                     if current_trace.output is not None
@@ -222,9 +225,10 @@ def execute_agentic_test_cases_from_loop(
                 expected_tools=current_trace.expected_tools,
                 comments=golden.comments,
                 name=golden.name,
-                _dataset_alias=golden._dataset_alias,
-                _dataset_id=golden._dataset_id,
             )
+            test_case._dataset_alias = golden._dataset_alias
+            test_case._dataset_id = golden._dataset_id
+            test_case._dataset_version = golden._dataset_version
             api_test_case = create_api_test_case(
                 test_case=test_case,
                 trace=trace_api,
@@ -248,7 +252,6 @@ def execute_agentic_test_cases_from_loop(
                     trace_api.agent_spans.append(api_span)
                 elif isinstance(span, LlmSpan):
                     trace_api.llm_spans.append(api_span)
-                    log_prompt(span, test_run_manager)
                 elif isinstance(span, RetrieverSpan):
                     trace_api.retriever_spans.append(api_span)
                 elif isinstance(span, ToolSpan):
@@ -316,6 +319,7 @@ def execute_agentic_test_cases_from_loop(
                                 advance=count_metrics_in_span_subtree(span),
                             )
                         return
+                _attach_span_tree(llm_test_case, current_trace, span)
 
                 # Preparing metric calculation
                 api_span.metrics_data = []
@@ -347,6 +351,10 @@ def execute_agentic_test_cases_from_loop(
 
             if trace_metrics:
                 current_trace.metrics = trace_metrics
+
+            current_trace.metrics = with_expectation_evaluators(
+                current_trace.metrics, [test_case]
+            )
 
             trace_level_metrics_count = (
                 len(current_trace.metrics) if current_trace.metrics else 0
@@ -385,6 +393,7 @@ def execute_agentic_test_cases_from_loop(
                 # user never calls ``update_current_trace(input=...)``.
                 llm_test_case = LLMTestCase(
                     input=golden.input,
+                    expectations=golden.expectations,
                     actual_output=(
                         str(current_trace.output)
                         if current_trace.output is not None
@@ -403,6 +412,7 @@ def execute_agentic_test_cases_from_loop(
                             current_trace.root_spans[0]
                         )
                     )
+                _attach_span_tree(llm_test_case, current_trace, None)
 
                 if not skip_metrics_for_this_golden:
                     for metric in current_trace.metrics:
@@ -459,13 +469,16 @@ def execute_agentic_test_cases_from_loop(
         # Post-iteration guard: refuse a run that ran with no metric source
         # at any level. Must happen AFTER the for-loop since span-level
         # @observe metrics only become visible after user code has run.
-        if not _has_any_evaluable_metrics(
+        if not any(
+            golden.expectations for golden in goldens
+        ) and not _has_any_evaluable_metrics(
             trace_metrics=trace_metrics,
             traces=processed_traces,
             test_case_metrics=trace_manager.eval_session.test_case_metrics,
         ):
             _raise_no_metrics_error()
 
+    stop_automatic_tracing = start_automatic_tracing()
     try:
         if display_config.show_indicator and _use_bar_indicator:
             progress = Progress(
@@ -489,6 +502,7 @@ def execute_agentic_test_cases_from_loop(
     except Exception:
         raise
     finally:
+        stop_automatic_tracing()
         # Atomic exit cleanup: replacing the session resets mode + every
         # per-run collection in a single assignment, so state can't leak
         # into the next run.
@@ -853,7 +867,9 @@ def a_execute_agentic_test_cases_from_loop(
         # on @observe-decorated functions only become visible after user
         # code has actually run.
         session = trace_manager.eval_session
-        if not _has_any_evaluable_metrics(
+        if not any(
+            golden.expectations for golden in goldens
+        ) and not _has_any_evaluable_metrics(
             trace_metrics=trace_metrics,
             traces=session.traces_to_evaluate,
             test_case_metrics=session.test_case_metrics,
@@ -901,6 +917,7 @@ def a_execute_agentic_test_cases_from_loop(
                 )
             )
 
+    stop_automatic_tracing = start_automatic_tracing()
     try:
         if display_config.show_indicator and _use_bar_indicator:
             progress = Progress(
@@ -931,6 +948,7 @@ def a_execute_agentic_test_cases_from_loop(
     except Exception:
         raise
     finally:
+        stop_automatic_tracing()
         # Atomic exit cleanup: replacing the session resets mode + every
         # per-run collection in a single assignment.
         local_trace_manager.eval_session = EvalSession()

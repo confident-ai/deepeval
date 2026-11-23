@@ -15,7 +15,7 @@ There are two ways to run a single-turn E2E test:
 
 | Approach                                                                                                                    | When to choose it                                                                                                                                                                             |
 | ----------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **<Term py="dataset.evals_iterator()" ts="dataset.evalsIterator()"/> with tracing** **— recommended**                        | Your app is (or can be) instrumented with [tracing](/docs/evaluation-llm-tracing). Test cases are built from traces automatically, and you get per-test-case traces on Confident AI for free. |
+| **<Term py="dataset.evals_iterator()" ts="dataset.evalsIterator()"/> with tracing** **— recommended**                        | Your app is (or can be) instrumented with [tracing](/docs/evaluation-llm-tracing). Test cases are built from traces automatically. |
 | **`evaluate()`**                                                                                                            | You can't (or don't want to) instrument your app — e.g. a QA engineer evaluating a deployed system. You build `LLMTestCase`s up front and hand them to `evaluate()`.                          |
 
 For projects you own, prefer the iterator — same code, plus traces, plus a clean upgrade path to [component-level evaluation](/docs/evaluation-component-level-llm-evals).
@@ -117,7 +117,7 @@ To grade **individual components** (the retriever, a tool call, an inner LLM cal
 </Step>
 </Steps>
 
-If you're logged in to Confident AI via <Term py="deepeval login" ts="npx deepeval login"/>, you'll also get to storage, share, view, and annotate full traces in testing reports on the platform:
+If you're logged in to Confident AI via <Term py="deepeval login" ts="npx deepeval login"/>, the test run and its traces also appear there:
 
 <VideoDisplayer
   src={ASSETS.evaluationSingleTurnE2eReportTracing}
@@ -360,7 +360,7 @@ Classifiers are not yet supported on `evals_iterator()` or on traced components.
 
 ## Hyperparameters
 
-Log the model, prompt, and other configuration values with each test run so you can compare runs side-by-side on Confident AI and identify the best combination. Values must be `str | int | float` or a [`Prompt`](/docs/evaluation-prompts):
+Log the model, prompt, and other configuration values with each test run so you can tell which configuration produced which scores. Values must be `str | int | float` or a [`Prompt`](/docs/evaluation-prompts):
 
 <Switch>
 
@@ -399,7 +399,7 @@ for await (const golden of iterator) {
 
 </Switch>
 
-On Confident AI, the logged values become filterable axes for comparing test runs and surfacing the model/prompt configuration that performs best:
+The logged values are attached to the test run, including on Confident AI if you're logged in:
 
 <VideoDisplayer
   src={ASSETS.evaluationParameterInsights}
@@ -582,19 +582,16 @@ See [unit testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd) for assertio
     },
     {
       question:
-        "Can my team keep these test runs on the cloud and review results in a UI?",
+        "What happens to end-to-end failures I didn't test for?",
       answer: (
         <>
-          End-to-end runs are local-first. When you're logged into{" "}
-          <a href="https://www.confident-ai.com">Confident AI</a> (the platform
-          built by the <code>deepeval</code> team), the same run produces a
-          sharable cloud{" "}
-          <a href="https://www.confident-ai.com/docs/llm-evaluation/dashboards/testing-reports">
-            testing report
+          They show up in production.{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
           </a>{" "}
-          your team can review together, with hyperparameter comparisons and
-          regression tracking over time — no code changes required, and fully
-          optional.
+          runs evals on every production trace, flags the failing ones, and
+          turns them into goldens you can add to the dataset you evaluate here.
+          It's fully optional.
         </>
       ),
     },

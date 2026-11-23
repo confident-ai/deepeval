@@ -45,3 +45,8 @@ export {
   resolveDeepEvalMode,
   type DeepEvalMode,
 } from "@/config/mode";
+export {
+  EvalMode,
+  resolveEvalMode,
+  type EvalModeName,
+} from "@/config/eval-mode";

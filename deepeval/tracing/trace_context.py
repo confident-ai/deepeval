@@ -14,8 +14,10 @@ from deepeval.tracing.utils import is_async_context
 
 @dataclass
 class LlmSpanContext:
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     prompt: Optional[Prompt] = None
     metrics: Optional[List[BaseMetric]] = None
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None
     expected_output: Optional[str] = None
     expected_tools: Optional[List[ToolCall]] = None
@@ -26,6 +28,7 @@ class LlmSpanContext:
 @dataclass
 class AgentSpanContext:
     metrics: Optional[List[BaseMetric]] = None
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None
     expected_output: Optional[str] = None
     expected_tools: Optional[List[ToolCall]] = None
@@ -50,6 +53,7 @@ def trace(
     tags: Optional[List[str]] = None,
     metadata: Optional[Dict[str, Any]] = None,
     thread_id: Optional[str] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     user_id: Optional[str] = None,
     input: Optional[Any] = None,
     output: Optional[Any] = None,
@@ -59,6 +63,7 @@ def trace(
     tools_called: Optional[List[ToolCall]] = None,
     expected_tools: Optional[List[ToolCall]] = None,
     metrics: Optional[List[BaseMetric]] = None,
+    # Deprecated, ignored: a Confident AI platform setting. Don't build on it.
     metric_collection: Optional[str] = None,
 ):
     if is_async_context():
@@ -78,9 +83,6 @@ def trace(
     if metrics:
         current_trace.metrics = metrics
 
-    if metric_collection:
-        current_trace.metric_collection = metric_collection
-
     trace_ctx_token = current_trace_context.set(current_trace)
 
     update_current_trace(
@@ -88,7 +90,6 @@ def trace(
         tags=tags,
         metadata=metadata,
         thread_id=thread_id,
-        user_id=user_id,
         input=input,
         output=output,
         retrieval_context=retrieval_context,
@@ -102,8 +103,23 @@ def trace(
         current_llm_context.set(llm_span_context)
     if agent_span_context:
         current_agent_context.set(agent_span_context)
+    from deepeval.tracing.otel.setup import exported_trace_context
+
     try:
-        yield current_trace
+        with exported_trace_context(
+            name=name,
+            tags=tags,
+            metadata=metadata,
+            thread_id=thread_id,
+            input=input,
+            output=output,
+            retrieval_context=retrieval_context,
+            context=context,
+            expected_output=expected_output,
+            tools_called=tools_called,
+            expected_tools=expected_tools,
+        ):
+            yield current_trace
     finally:
         if started_new_trace:
             trace_manager.end_trace(current_trace.uuid)

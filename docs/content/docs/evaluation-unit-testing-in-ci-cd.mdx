@@ -7,7 +7,7 @@ languages: [python, typescript]
 
 import { ASSETS } from "@site/src/assets";
 
-Integrate LLM evaluations into your CI/CD pipeline with `deepeval` to catch regressions before they ship. `deepeval` plugs into <Term py="pytest" ts="vitest"/> via <Term py="assert_test()" ts="expect(testCase).toPass()"/> and the <Term py="deepeval test run" ts="npx deepeval test run"/> command, so every push (or every PR) runs the same evals you'd run locally — single-turn or multi-turn, end-to-end or component-level.
+Integrate LLM evaluations into your CI/CD pipeline with `deepeval` to catch regressions before they ship. `deepeval` plugs into <Term py="pytest" ts="vitest"/> via <Term py="assert_test()" ts="expect(testCase).toPass()"/> and the <Term py="deepeval test run" ts="npx deepeval test run"/> command, so every push (or every PR) runs the same evals you'd run locally — single-turn or multi-turn, end-to-end or component-level. For a walkthrough that compares runs against a baseline, see the [regression testing in CI/CD guide](/guides/guides-regression-testing-in-cicd).
 
 ## How It Works
 
@@ -53,7 +53,7 @@ Pick the flavor that matches your application — [single-turn](/docs/evaluation
 
 <Tab value="Single-Turn">
 
-Within single-turn, we strongly recommend **instrumenting your app with tracing** so `deepeval` can build the `LLMTestCase` automatically from each run, and you get a full per-test-case trace on Confident AI for free.
+Within single-turn, we strongly recommend **instrumenting your app with tracing** so `deepeval` can build the `LLMTestCase` automatically from each run.
 
 The same setup also unlocks [component-level evaluation](/docs/evaluation-component-level-llm-evals), where metrics live on individual spans (retrievers, tool calls, sub-agents) instead of the trace as a whole.
 
@@ -315,6 +315,58 @@ The plain `vitest` command works but is highly not recommended. `npx deepeval te
 </Step>
 </Steps>
 
+## Voice Agents
+
+<Only id="python">
+
+A voice agent is tested the same way as a multi-turn chatbot: simulate conversations, then assert on each `ConversationalTestCase`. The only change is that the simulator calls your agent through a [voice connector](/docs/conversation-simulator-voice-connectors) instead of a `model_callback`, so every turn carries audio and timing your voice metrics can judge.
+
+```python title="test_voice_agent.py" showLineNumbers
+import pytest
+from deepeval import assert_test
+from deepeval.metrics import (
+    AgentResponsivenessMetric,
+    ConversationCompletenessMetric,
+    TurnTakingNaturalnessMetric,
+)
+from deepeval.simulator import ConversationSimulator
+from deepeval.test_case import ConversationalTestCase
+from deepeval.voice import LiveKitConnector, VoiceConfig
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=LiveKitConnector(agent_name="clinic-receptionist"),
+    ),
+    max_concurrent=2,
+)
+test_cases = simulator.simulate(
+    conversational_goldens=dataset.goldens,
+    max_user_simulations=8,
+)
+
+@pytest.mark.parametrize("test_case", test_cases)
+def test_voice_agent(test_case: ConversationalTestCase):
+    assert_test(
+        test_case=test_case,
+        metrics=[
+            ConversationCompletenessMetric(),
+            AgentResponsivenessMetric(),
+            TurnTakingNaturalnessMetric(),
+        ],
+    )
+```
+
+Run it with `deepeval test run test_voice_agent.py`, the same as any other test file. A runnable version is in [`examples/voice/test_voice_agent.py`](https://github.com/confident-ai/deepeval/blob/main/examples/voice/test_voice_agent.py).
+
+A few things are different in CI:
+
+- **Your agent has to be reachable.** The simulator places real calls, so the runner needs your connector's credentials as secrets: for example `LIVEKIT_URL`, `LIVEKIT_API_KEY` and `LIVEKIT_API_SECRET`, or `TWILIO_ACCOUNT_SID` and `TWILIO_AUTH_TOKEN` for [Twilio](/integrations/voice-agent-connectors/twilio). Twilio also needs a public URL that reaches the runner, so in CI prefer [`LiveKitProvider`](/integrations/voice-agent-connectors/livekit#calling-a-phone-number) for phone agents.
+- **Speech models run on every turn.** The simulated caller speaks through a text-to-speech model and your agent's replies are transcribed, so `OPENAI_API_KEY` (or whichever [speech provider](/docs/conversation-simulator-voice-mode#tts-and-stt-models) you configured) is needed even for audio-only metrics.
+- **Calls run in parallel.** Up to `max_concurrent` calls run at once, so keep it within what your agent, trunk or Twilio account allows.
+- **Not every metric needs a judge.** `AgentResponsivenessMetric`, `TurnTakingNaturalnessMetric` and `VoiceReliabilityMetric` are computed from the call audio and timing, so they cost nothing to run and give the same score on the same call.
+
+</Only>
+
 ## Handling Flaky Test Cases
 
 LLM evals are non-deterministic, and some test cases will sit right on a metric's threshold and flip between passing and failing across runs. Instead of removing them from your suite, mark them as flaky:
@@ -432,8 +484,8 @@ jobs:
 
 [Click here](/docs/evaluation-flags-and-configs#flags-for-deepeval-test-run) to learn about the optional flags available to <Term py="deepeval test run" ts="npx deepeval test run"/>.
 
-:::tip
-We highly recommend setting up [Confident AI](https://app.confident-ai.com) with your `deepeval` evaluations to get professional test reports and observe trends of your LLM application's performance over time:
+:::tip[Goldens from production]
+A green CI run only covers the goldens you wrote. On [Confident AI](https://www.confident-ai.com/products/llm-observability), evals run on every production trace and flag the failing ones, and those failing traces become goldens for your next CI run:
 
 <VideoDisplayer
   src={ASSETS.tracingSpans}
@@ -560,16 +612,16 @@ Marking a run as official requires a `CONFIDENT_API_KEY`, since official runs li
     },
     {
       question:
-        "Can my team see professional test reports on the cloud and track results over time?",
+        "How do I find what my CI suite is missing?",
       answer: (
         <>
-          Yes — and it's optional. Add <code>CONFIDENT_API_KEY</code> to your CI
-          secrets and the same <code>deepeval test run</code> sends results to{" "}
-          <a href="https://app.confident-ai.com">Confident AI</a> (the platform
-          from the <code>deepeval</code> team), giving your team sharable
-          testing reports, a
-          UI to inspect failing cases, and trend lines of performance across
-          commits. Without the key, the exact same tests still run locally.
+          Your CI suite tests the cases you expected. Once your app is live,{" "}
+          <a href="https://www.confident-ai.com/products/llm-observability">
+            Confident AI
+          </a>{" "}
+          surfaces the production traces that fail anyway and turns them into
+          goldens for the next run of this suite. Without it, the exact same
+          tests still run locally.
         </>
       ),
     },

@@ -1,1 +1,0 @@
-Does the conversation in `turns` (with the conversation-level fields in `test_case`) fully meet EVERY one of the `evaluation_steps`, with no shortcomings?

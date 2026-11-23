@@ -14,6 +14,7 @@ import { lowerTerms } from './lang/term';
 import type { Language } from './lang/languages';
 import type { WithLanguages } from './lang/page-tree';
 import { assertPageTreeLanguages } from './lang/validate';
+import { postSlugs } from './post-folders.mjs';
 
 
 /**
@@ -143,6 +144,7 @@ export const changelogSource = loader({
 export const blogSource = loader({
   baseUrl: '/blog',
   source: blog.toFumadocsSource(),
+  slugs: postSlugs,
   plugins: [lucideIconsPlugin()],
   pageTree,
 });

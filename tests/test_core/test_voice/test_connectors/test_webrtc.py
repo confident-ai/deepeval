@@ -18,6 +18,7 @@ from deepeval.voice.connectors.transports.webrtc import (
     parse_answer_sdp,
     signaling_kind,
 )
+from deepeval.voice.connectors.types import AgentEvent
 from tests.test_core.test_voice.helpers import wav_audio
 
 OFFER_URL = "https://agent.example.com/offer"
@@ -275,6 +276,18 @@ def test_connector_declares_the_webrtc_protocol_and_duplex():
     assert connector.audio_format == (24000, "wav")
 
 
+@pytest.mark.asyncio
+async def test_pending_agent_audio_is_handed_over_and_the_call_end_kept():
+    connector = WebRTCConnector(OFFER_URL)
+    connector._inbound = asyncio.Queue()
+    said = AgentEvent(audio=b"\x10\x00" * 480)
+    connector._inbound.put_nowait(said)
+    connector._inbound.put_nowait(AgentEvent(turn_complete=True))
+
+    assert connector.take_pending_agent_events() == [said]
+    assert connector._inbound.get_nowait().turn_complete is True
+
+
 def test_connector_rejects_unknown_signaling_schemes():
     with pytest.raises(DeepEvalError, match="signaling URL"):
         WebRTCConnector("ftp://agent.example.com")
@@ -304,22 +317,12 @@ async def test_connect_posts_the_offer_and_waits_for_the_agent(fake_stack):
     assert pc.closed and session.closed
 
 
-async def test_agent_audio_and_text_arrive_as_events(fake_stack, monkeypatch):
-    transcript_sent = asyncio.Event()
-    recv = FakeTrack.recv
-
-    async def recv_after_transcript(track):
-        # Keep the fake audio stream open until the text has been delivered.
-        await transcript_sent.wait()
-        return await recv(track)
-
-    monkeypatch.setattr(FakeTrack, "recv", recv_after_transcript)
+async def test_agent_audio_and_text_arrive_as_events(fake_stack):
     FakePeerConnection.agent_frames = [agent_frame(b"\x02\x00" * 480)]
     connector = WebRTCConnector(OFFER_URL, connect_timeout_s=1)
     await connector.connect()
     pc = FakePeerConnection.instances[-1]
     pc.channels[0].handlers["message"](json.dumps({"transcript": "Hello"}))
-    transcript_sent.set()
 
     events = []
     async for event in connector.iter_agent_events():

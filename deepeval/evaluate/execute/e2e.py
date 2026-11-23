@@ -1,3 +1,8 @@
+from deepeval.evaluate.expectations import (
+    with_expectation_evaluators,
+    metrics_for_expectations,
+    has_metrics_for_case,
+)
 import logging
 
 from rich.progress import (
@@ -24,6 +29,10 @@ from deepeval.evaluate.configs import (
     AsyncConfig,
 )
 from deepeval.metrics.utils import copy_metrics
+from deepeval.metrics.utils.system_one_batch import (
+    measure_system_one_batch,
+    a_measure_system_one_batch,
+)
 from deepeval.utils import (
     get_per_task_timeout_seconds,
     get_gather_timeout,
@@ -147,6 +156,7 @@ def execute_test_cases(
     _is_assert_test: bool = False,
     classifiers: Optional[List[BaseClassifier]] = None,
 ) -> List[TestResult]:
+    metrics = with_expectation_evaluators(metrics, test_cases)
     classifiers = list(classifiers or [])
     global_test_run_cache_manager.disable_write_cache = (
         cache_config.write_cache is False
@@ -180,6 +190,8 @@ def execute_test_cases(
     for classifier in classifiers:
         classifier.async_mode = False
 
+    all_llm_metrics = llm_metrics
+    all_conversational_metrics = conversational_metrics
     test_results: List[TestResult] = []
 
     def evaluate_test_cases(
@@ -191,6 +203,10 @@ def execute_test_cases(
             display_config.show_indicator and not _use_bar_indicator
         )
         for i, test_case in enumerate(test_cases):
+            llm_metrics = metrics_for_expectations(all_llm_metrics, test_case)
+            conversational_metrics = metrics_for_expectations(
+                all_conversational_metrics, test_case
+            )
             # skip what we know we won't run
             if isinstance(test_case, LLMTestCase):
                 if not llm_metrics and not classifiers:
@@ -250,6 +266,19 @@ def execute_test_cases(
                         ##### Metric Calculation #####
                         new_cached_test_case = CachedTestCase()
 
+                        batched_ids = {
+                            id(metric)
+                            for metric in measure_system_one_batch(
+                                llm_metrics,
+                                test_case,
+                                cached_test_case=cached_test_case,
+                                ignore_errors=error_config.ignore_errors,
+                                skip_on_missing_params=error_config.skip_on_missing_params,
+                                show_indicator=show_metric_indicator,
+                                progress=progress,
+                            )
+                        }
+
                         for metric in llm_metrics:
                             current_index = index_of[id(metric)]
                             metric_data = None
@@ -261,15 +290,19 @@ def execute_test_cases(
                                     metric_data = cached_metric_data.metric_data
 
                             if metric_data is None:
-                                res = _execute_metric(
-                                    metric=metric,
-                                    test_case=test_case,
-                                    show_metric_indicator=show_metric_indicator,
-                                    in_component=False,
-                                    error_config=error_config,
-                                )
-                                if res == "skip":
-                                    continue
+                                if id(metric) in batched_ids:
+                                    if metric.skipped:
+                                        continue
+                                else:
+                                    res = _execute_metric(
+                                        metric=metric,
+                                        test_case=test_case,
+                                        show_metric_indicator=show_metric_indicator,
+                                        in_component=False,
+                                        error_config=error_config,
+                                    )
+                                    if res == "skip":
+                                        continue
                                 metric_data = create_metric_data(metric)
 
                             # here, we will check for an additional property on the flattened test cases to see if updating is necessary
@@ -314,17 +347,32 @@ def execute_test_cases(
                     # No caching for conversational metrics yet
                     elif isinstance(test_case, ConversationalTestCase):
                         conversational_test_case_count += 1
+                        batched_ids = {
+                            id(metric)
+                            for metric in measure_system_one_batch(
+                                conversational_metrics,
+                                test_case,
+                                ignore_errors=error_config.ignore_errors,
+                                skip_on_missing_params=error_config.skip_on_missing_params,
+                                show_indicator=show_metric_indicator,
+                                progress=progress,
+                            )
+                        }
                         for metric in conversational_metrics:
                             current_index = index_of[id(metric)]
-                            res = _execute_metric(
-                                metric=metric,
-                                test_case=test_case,
-                                show_metric_indicator=show_metric_indicator,
-                                in_component=False,
-                                error_config=error_config,
-                            )
-                            if res == "skip":
-                                continue
+                            if id(metric) in batched_ids:
+                                if metric.skipped:
+                                    continue
+                            else:
+                                res = _execute_metric(
+                                    metric=metric,
+                                    test_case=test_case,
+                                    show_metric_indicator=show_metric_indicator,
+                                    in_component=False,
+                                    error_config=error_config,
+                                )
+                                if res == "skip":
+                                    continue
 
                             metric_data = create_metric_data(metric)
                             api_test_case.update_metric_data(metric_data)
@@ -448,6 +496,7 @@ async def a_execute_test_cases(
     _is_assert_test: bool = False,
     classifiers: Optional[List[BaseClassifier]] = None,
 ) -> List[TestResult]:
+    metrics = with_expectation_evaluators(metrics, test_cases)
     classifiers = list(classifiers or [])
     semaphore = asyncio.Semaphore(async_config.max_concurrent)
 
@@ -500,13 +549,16 @@ async def a_execute_test_cases(
             for test_case in test_cases:
                 record_test_case(test_case)
                 if isinstance(test_case, LLMTestCase):
-                    if len(llm_metrics) == 0 and len(classifiers) == 0:
+                    if (
+                        not has_metrics_for_case(llm_metrics, test_case)
+                        and not classifiers
+                    ):
                         update_pbar(progress, pbar_id)
                         continue
 
                     llm_test_case_counter += 1
                     copied_llm_metrics: List[BaseMetric] = copy_metrics(
-                        llm_metrics
+                        metrics_for_expectations(llm_metrics, test_case)
                     )
                     task = execute_with_semaphore(
                         func=_a_execute_llm_test_cases,
@@ -529,11 +581,23 @@ async def a_execute_test_cases(
                     tasks.append(asyncio.create_task(task))
 
                 elif isinstance(test_case, ConversationalTestCase):
+                    if (
+                        not has_metrics_for_case(
+                            conversational_metrics, test_case
+                        )
+                        and not classifiers
+                    ):
+                        update_pbar(progress, pbar_id)
+                        continue
                     conversational_test_case_counter += 1
 
                     task = execute_with_semaphore(
                         func=_a_execute_conversational_test_cases,
-                        metrics=copy_metrics(conversational_metrics),
+                        metrics=copy_metrics(
+                            metrics_for_expectations(
+                                conversational_metrics, test_case
+                            )
+                        ),
                         test_case=test_case,
                         test_run_manager=test_run_manager,
                         test_results=test_results,
@@ -571,11 +635,16 @@ async def a_execute_test_cases(
         for test_case in test_cases:
             record_test_case(test_case)
             if isinstance(test_case, LLMTestCase):
-                if len(llm_metrics) == 0 and len(classifiers) == 0:
+                if (
+                    not has_metrics_for_case(llm_metrics, test_case)
+                    and not classifiers
+                ):
                     continue
                 llm_test_case_counter += 1
 
-                copied_llm_metrics: List[BaseMetric] = copy_metrics(llm_metrics)
+                copied_llm_metrics: List[BaseMetric] = copy_metrics(
+                    metrics_for_expectations(llm_metrics, test_case)
+                )
                 task = execute_with_semaphore(
                     func=_a_execute_llm_test_cases,
                     metrics=copied_llm_metrics,
@@ -595,12 +664,17 @@ async def a_execute_test_cases(
                 tasks.append(asyncio.create_task((task)))
 
             elif isinstance(test_case, ConversationalTestCase):
+                if (
+                    not has_metrics_for_case(conversational_metrics, test_case)
+                    and not classifiers
+                ):
+                    continue
                 conversational_test_case_counter += 1
                 copied_conversational_metrics: List[
                     BaseConversationalMetric
                 ] = []
                 copied_conversational_metrics = copy_metrics(
-                    conversational_metrics
+                    metrics_for_expectations(conversational_metrics, test_case)
                 )
                 task = execute_with_semaphore(
                     func=_a_execute_conversational_test_cases,
@@ -655,6 +729,7 @@ async def _a_execute_llm_test_cases(
     classifiers: Optional[List[BaseClassifier]] = None,
 ):
     logger.info("in _a_execute_llm_test_cases")
+    metrics = metrics_for_expectations(metrics, test_case)
     classifiers = list(classifiers or [])
     pbar_test_case_id = add_pbar(
         progress,
@@ -684,8 +759,20 @@ async def _a_execute_llm_test_cases(
         new_cached_test_case: CachedTestCase = CachedTestCase()
         test_start_time = time.perf_counter()
 
+        batched = await a_measure_system_one_batch(
+            metrics,
+            test_case,
+            cached_test_case=cached_test_case,
+            ignore_errors=ignore_errors,
+            skip_on_missing_params=skip_on_missing_params,
+            show_indicator=show_metrics_indicator,
+            progress=progress,
+        )
+        if batched:
+            update_pbar(progress, pbar_test_case_id, advance=len(batched))
+        batched_ids = {id(metric) for metric in batched}
         await measure_metrics_with_indicator(
-            metrics=metrics,
+            metrics=[m for m in metrics if id(m) not in batched_ids],
             test_case=test_case,
             cached_test_case=cached_test_case,
             skip_on_missing_params=skip_on_missing_params,
@@ -800,6 +887,7 @@ async def _a_execute_conversational_test_cases(
     pbar_id: Optional[int] = None,
     classifiers: Optional[List[BaseClassifier]] = None,
 ):
+    metrics = metrics_for_expectations(metrics, test_case)
     classifiers = list(classifiers or [])
     show_metrics_indicator = show_indicator and not _use_bar_indicator
     pbar_test_case_id = add_pbar(
@@ -820,8 +908,19 @@ async def _a_execute_conversational_test_cases(
     test_start_time = time.perf_counter()
 
     try:
+        batched = await a_measure_system_one_batch(
+            metrics,
+            test_case,
+            ignore_errors=ignore_errors,
+            skip_on_missing_params=skip_on_missing_params,
+            show_indicator=show_metrics_indicator,
+            progress=progress,
+        )
+        if batched:
+            update_pbar(progress, pbar_test_case_id, advance=len(batched))
+        batched_ids = {id(metric) for metric in batched}
         await measure_metrics_with_indicator(
-            metrics=metrics,
+            metrics=[m for m in metrics if id(m) not in batched_ids],
             test_case=test_case,
             cached_test_case=None,
             skip_on_missing_params=skip_on_missing_params,

@@ -24,12 +24,18 @@ from deepeval.models.system_one.schema import NoulQuestion
 
 from .decision import (
     SYSTEM_ONE_YES_THRESHOLD,
+    SystemOneBinarySpec,
+    a_system_one_probability,
+    system_one_probability,
+    _a_system_one_call,
+    _accrue,
     _jsonable,
+    _record_confidence,
     _system_one_active,
+    _system_one_call,
 )
 from .generation import (
     SchemaType,
-    accrue_token_usage,
     generate_with_schema_and_extract,
     a_generate_with_schema_and_extract,
 )
@@ -136,13 +142,23 @@ def score_qag_verdicts(
 # System One (Jev) verdicts
 ###############################################
 #
-# Under DEEPEVAL_MODE=experimental the decision step of a QAG metric is a set
-# of Noul questions, one per item, answered by a System One model. The LLM
-# still extracts the items and writes the reasons. P(yes) is thresholded into
-# the metric's verdict vocabulary; there is deliberately no LLM fallback.
+# Under the `hybrid` eval mode the decision step of a QAG metric is a set of
+# Noul questions, one per item, answered by a System One model. The LLM still
+# extracts the items and writes the reasons. P(yes) is thresholded into the
+# metric's verdict vocabulary. A Jev call that fails at runtime hands the
+# verdicts to the LLM instead (see decision.py).
 
 SYSTEM_ONE_BORDERLINE_LOW = 0.35
 SYSTEM_ONE_BORDERLINE_HIGH = 0.65
+
+_SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
+
+
+def split_sentences(text: str) -> List[str]:
+    """Split text into sentences for metrics whose LLM prompt both splits and
+    judges in one step; under `hybrid` the split is done here so Jev can
+    judge each sentence."""
+    return [s.strip() for s in _SENTENCE_END.split(text or "") if s.strip()]
 
 
 @dataclass
@@ -228,16 +244,22 @@ def generate_qag_verdicts(
     result with ``score_qag_verdicts``.
 
     ``system_one`` describes the same decision as Noul questions; it is used
-    instead of ``prompt`` when ``DEEPEVAL_MODE=experimental``.
+    instead of ``prompt`` when the metric's eval mode uses System One.
     """
     if _system_one_active(metric, system_one):
         if len(system_one.items) == 0:
             return []
         state, questions = _system_one_request(system_one)
-        answers, cost = metric.system_one_model.noul(state, questions)
-        metric._accrue_cost(cost)
-        accrue_token_usage(metric, cost)
-        return _system_one_verdicts(system_one, answers, verdict_cls, allowed)
+        result = _system_one_call(
+            metric, metric.system_one_model.noul, state, questions
+        )
+        if result is not None:
+            answers, cost = result
+            _accrue(metric, cost)
+            _record_confidence(metric, answers)
+            return _system_one_verdicts(
+                system_one, answers, verdict_cls, allowed
+            )
 
     return generate_with_schema_and_extract(
         metric=metric,
@@ -264,10 +286,16 @@ async def a_generate_qag_verdicts(
         if len(system_one.items) == 0:
             return []
         state, questions = _system_one_request(system_one)
-        answers, cost = await metric.system_one_model.a_noul(state, questions)
-        metric._accrue_cost(cost)
-        accrue_token_usage(metric, cost)
-        return _system_one_verdicts(system_one, answers, verdict_cls, allowed)
+        result = await _a_system_one_call(
+            metric, metric.system_one_model.a_noul, state, questions
+        )
+        if result is not None:
+            answers, cost = result
+            _accrue(metric, cost)
+            _record_confidence(metric, answers)
+            return _system_one_verdicts(
+                system_one, answers, verdict_cls, allowed
+            )
 
     return await a_generate_with_schema_and_extract(
         metric=metric,
@@ -280,17 +308,34 @@ async def a_generate_qag_verdicts(
     )
 
 
+def _single_verdict(
+    verdict_cls: Type[SchemaType],
+    probability: float,
+    allowed: Tuple[Verdict, ...],
+) -> SchemaType:
+    return verdict_cls(
+        verdict=verdict_from_probability(probability, allowed),
+        reason=f"P(yes)={probability:.2f}",
+    )
+
+
 def generate_qag_verdict(
     metric: Union[BaseMetric, BaseConversationalMetric],
     prompt: Any,
     *,
     verdict_cls: Type[SchemaType],
     allowed: Tuple[Verdict, ...] = YES_NO,
+    system_one: Optional[SystemOneBinarySpec] = None,
 ) -> Optional[SchemaType]:
     """Single-verdict variant of ``generate_qag_verdicts``.
 
     Returns ``None`` when the loose-JSON verdict is out of vocabulary.
+    ``system_one`` is the same decision as one Noul, asked instead of
+    ``prompt`` when the metric's eval mode uses System One.
     """
+    p = system_one_probability(metric, system_one)
+    if p is not None:
+        return _single_verdict(verdict_cls, p, allowed)
     return generate_with_schema_and_extract(
         metric=metric,
         prompt=prompt,
@@ -306,8 +351,12 @@ async def a_generate_qag_verdict(
     *,
     verdict_cls: Type[SchemaType],
     allowed: Tuple[Verdict, ...] = YES_NO,
+    system_one: Optional[SystemOneBinarySpec] = None,
 ) -> Optional[SchemaType]:
     """Async counterpart of ``generate_qag_verdict``."""
+    p = await a_system_one_probability(metric, system_one)
+    if p is not None:
+        return _single_verdict(verdict_cls, p, allowed)
     return await a_generate_with_schema_and_extract(
         metric=metric,
         prompt=prompt,

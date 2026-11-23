@@ -5,8 +5,6 @@ sidebar_label: Generating Synthetic Test Data
 languages: [python]
 ---
 
-import { ASSETS } from "@site/src/assets";
-
 Manually curating test data can be time-consuming and often causes critical edge cases to be overlooked. With DeepEval's Synthesizer, you can quickly generate thousands of **high-quality synthetic goldens** in just minutes.
 
 :::info
@@ -47,7 +45,7 @@ The `generate_goldens_from_docs` function follows several key steps to transform
     justifyContent: "center",
   }}
 >
-  <ImageDisplayer src={ASSETS.synthesizerOverview} alt="LangChain" />
+  <ImageDisplayer id="diagrams/in-house/datasets/synthesizer-pipeline" />
 </div>
 
 Alternatively, if you already have pre-prepared contexts, you can generate goldens directly, skipping the first three steps:
@@ -120,7 +118,7 @@ The synthesizer increases the complexity of synthetic data by evolving the input
 - `num_evolutions`: The number of evolution steps to apply to each generated input.
 
 :::info
-**Data evolution** was originally introduced by the developers of [Evol-Instruct and WizardML.](https://arxiv.org/abs/2304.12244). For those interested, here is a [great article](https://www.confident-ai.com/blog/the-definitive-guide-to-synthetic-data-generation-using-llms) on how `deepeval`'s synthesizer was built.
+**Data evolution** was originally introduced by the developers of [Evol-Instruct and WizardML.](https://arxiv.org/abs/2304.12244).
 :::
 
 ```python
