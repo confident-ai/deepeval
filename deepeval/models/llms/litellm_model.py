@@ -246,7 +246,7 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
         return require_dependency(
             "litellm",
             provider_label="LiteLLM",
-            install_hint='Install it with `pip install "deepeval[gateway]"`.',
+            install_hint="Install it with `pip install litellm`.",
         )
 
     def _resolve_api_key(self, settings, model: Optional[str]):

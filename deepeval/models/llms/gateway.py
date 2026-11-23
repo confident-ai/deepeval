@@ -12,6 +12,6 @@ class GatewayModel(LiteLLMModel):
         GatewayModel("anthropic/claude-opus-5", temperature=0)
         GatewayModel("openai/gpt-5.4", reasoning_effort="high")
 
-    Requires the optional gateway dependency:
-    ``pip install "deepeval[gateway]"``.
+    Requires LiteLLM, which is not installed with deepeval:
+    ``pip install litellm``.
     """

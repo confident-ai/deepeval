@@ -470,7 +470,7 @@ def test_default_model_setting(litellm, settings):
 
 def test_missing_gateway_dependency_names_the_extra(monkeypatch):
     monkeypatch.setitem(sys.modules, "litellm", None)
-    with pytest.raises(DeepEvalError, match=r"deepeval\[gateway\]"):
+    with pytest.raises(DeepEvalError, match="pip install litellm"):
         GatewayModel("anthropic/claude-x").generate("p")
 
 
