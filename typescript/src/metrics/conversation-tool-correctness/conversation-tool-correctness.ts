@@ -15,7 +15,6 @@ import { ToolCorrectnessMetric } from "@/metrics/tool-correctness/tool-correctne
 export interface ConversationToolCorrectnessMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
-  /** Which `ToolCall` fields to compare (input parameters / output). */
   evaluationParams?: ToolCallParams[];
   shouldExactMatch?: boolean;
   shouldConsiderOrdering?: boolean;
@@ -26,20 +25,12 @@ export interface ConversationToolCorrectnessMetricOptions {
 }
 
 export interface ToolCheckScore {
-  /** "Turn N" for tools pinned to a turn, otherwise the rest of the conversation. */
   check: string;
   score: number;
   reason: string;
 }
 
-/**
- * Conversation Tool Correctness — Tool Correctness for a conversation.
- * An expected tool with `turn` set is pinned to that turn: the turn's own
- * `toolsCalled` are scored against the tools pinned to it. Expected tools
- * without `turn` are scored against the tools called on every other
- * assistant turn, in order. The score is the mean over these checks.
- * Deterministic, no model. Mirrors Python's `ConversationToolCorrectnessMetric`.
- */
+/** Tool Correctness over a conversation. Mirrors Python's `ConversationToolCorrectnessMetric`. */
 export class ConversationToolCorrectnessMetric extends BaseConversationalMetric {
   toolsCalled: ToolCall[] = [];
   checkScores: ToolCheckScore[] = [];
@@ -75,6 +66,8 @@ export class ConversationToolCorrectnessMetric extends BaseConversationalMetric 
 
     await this.startProgress();
     try {
+      // One check per pinned turn, plus one for the unpinned tools against
+      // every other assistant turn.
       const checks: [string, ToolCall[], ToolCall[]][] = [...pinned.entries()]
         .sort(([a], [b]) => a - b)
         .map(([index, tools]) => [
@@ -127,14 +120,13 @@ export class ConversationToolCorrectnessMetric extends BaseConversationalMetric 
       if (tool.turn < 0 || tool.turn >= turns.length) {
         this.error =
           `Expected tool '${tool.name}' is pinned to turn ${tool.turn}, but ` +
-          `the conversation has ${turns.length} turns (indexes 0 to ${turns.length - 1}).`;
+          `the conversation only has ${turns.length} turns.`;
         throw new MissingTestCaseParamsError(this.error);
       }
       if (turns[tool.turn].role !== "assistant") {
         this.error =
-          `Expected tool '${tool.name}' is pinned to turn ${tool.turn}, which ` +
-          `is a '${turns[tool.turn].role}' turn. 'turn' is the index in ` +
-          `'turns' of an assistant turn.`;
+          `Expected tool '${tool.name}' is pinned to turn ${tool.turn}, ` +
+          `which is not an assistant turn.`;
         throw new MissingTestCaseParamsError(this.error);
       }
       pinned.set(tool.turn, [...(pinned.get(tool.turn) ?? []), tool]);
@@ -145,13 +137,10 @@ export class ConversationToolCorrectnessMetric extends BaseConversationalMetric 
   private buildReason(): string {
     if (this.checkScores.length === 1) return this.checkScores[0].reason;
     const failing = this.checkScores.filter((c) => c.score < 1);
-    const summary =
-      `The score is ${(this.score as number).toFixed(2)}: ` +
-      `${this.checkScores.length - failing.length} of ` +
-      `${this.checkScores.length} checks passed.`;
-    if (failing.length === 0) return summary;
+    const passed = this.checkScores.length - failing.length;
     return [
-      summary,
+      `The score is ${(this.score as number).toFixed(2)}: ${passed} of ` +
+        `${this.checkScores.length} checks passed.`,
       ...failing.map(
         (c) => `- ${c.check} (${c.score.toFixed(2)}): ${c.reason}`,
       ),

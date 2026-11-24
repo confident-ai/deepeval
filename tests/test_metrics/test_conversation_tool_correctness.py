@@ -233,12 +233,14 @@ def test_pinned_turn_is_left_out_of_the_rest_of_the_conversation():
 
 def test_turn_must_point_at_an_assistant_turn():
     metric = ConversationToolCorrectnessMetric()
-    with pytest.raises(MissingTestCaseParamsError, match="'user' turn"):
+    with pytest.raises(
+        MissingTestCaseParamsError, match="not an assistant turn"
+    ):
         metric.measure(
             _conversation([_book()], expected_tools=[_pinned(_book(), 0)]),
             _show_indicator=False,
         )
-    with pytest.raises(MissingTestCaseParamsError, match="has 2 turns"):
+    with pytest.raises(MissingTestCaseParamsError, match="only has 2 turns"):
         metric.measure(
             _conversation([_book()], expected_tools=[_pinned(_book(), 5)]),
             _show_indicator=False,

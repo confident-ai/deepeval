@@ -232,7 +232,7 @@ const testCase = new ConversationalTestCase({
 
 ### Expected Tools
 
-The <Term py="expected_tools" ts="expectedTools"/> parameter is an **optional** list of `ToolCall`s the assistant should call over the conversation. It's used by the [conversation tool correctness metric](/docs/metrics-conversation-tool-correctness), and an empty list means no tools should be called. To require a tool on a specific turn, set `turn` on its `ToolCall` to the index in `turns` of that assistant turn.
+The <Term py="expected_tools" ts="expectedTools"/> parameter is an **optional** list of `ToolCall`s the assistant should call during the conversation, used by the [conversation tool correctness metric](/docs/metrics-conversation-tool-correctness).
 
 <Switch>
 

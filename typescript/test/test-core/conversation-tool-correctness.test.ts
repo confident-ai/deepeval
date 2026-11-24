@@ -129,6 +129,6 @@ describe("ConversationToolCorrectnessMetric", () => {
           [new ToolCall({ name: "book_flight", turn: 0 })],
         ),
       ),
-    ).rejects.toThrow("'user' turn");
+    ).rejects.toThrow("not an assistant turn");
   });
 });
