@@ -1,1 +1,1 @@
-from .cybersecurity_guard import CybersecurityGuard
+from .cybersecurity_guard import CyberattackCategory, CybersecurityGuard
