@@ -5,7 +5,7 @@ from deepeval.metrics.voice.utils.defects import (
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.analysis import PITCH_FRAME_MS
-from deepeval.metrics.voice.utils.events import VoiceEvent, placed
+from deepeval.metrics.voice.utils.events import MOMENT, VoiceEvent, placed
 
 PITCH_FRAME_SECONDS = PITCH_FRAME_MS / 1000
 
@@ -28,6 +28,8 @@ class AbruptPitchJumpMetric(BaseDefectMetric):
                     VoiceEvent(
                         type="pitch_jump",
                         turn=turn,
+                        mark=MOMENT,
+                        description="Pitch jumped abruptly",
                         **placed(
                             test_case.turns[turn].audio,
                             max(0.0, at - PITCH_FRAME_SECONDS),

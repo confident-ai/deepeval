@@ -78,6 +78,8 @@ print(metric.score_breakdown)
 
 `turn` is the turn's zero-based position in the conversation. An event's `type` is `long_pause`, with the reply's `longest_pause_ms` and that pause's place in the reply (`offset_seconds`, `duration_seconds`), or `too_much_silence`, with its `pause_fraction` (the share of the reply that was pauses, from 0 to 1), which covers the whole reply (`offset_seconds` 0, `duration_seconds` the reply's length). `start_time` places either on the call's clock (left out when the clip has no `Audio.start_time`). A reply with both counts once, as a long pause. Agent replies whose audio could not be decoded, or whose speech spans under two seconds from first to last sound, are listed under `skipped`.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `PausesMetric` checks every agent reply with at least two seconds from its first to its last spoken sound, and scores the share of them with natural pauses:

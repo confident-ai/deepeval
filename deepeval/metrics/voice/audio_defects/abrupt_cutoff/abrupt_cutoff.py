@@ -18,18 +18,31 @@ from deepeval.metrics.voice.utils.defects import (
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.analysis import EDGE_MS
-from deepeval.metrics.voice.utils.events import VoiceEvent, on_call, placed
+from deepeval.metrics.voice.utils.events import (
+    MOMENT,
+    VoiceEvent,
+    on_call,
+    placed,
+)
 
 # The cut is judged on the last 20 ms before the sound stops.
 CUT_EDGE_SECONDS = EDGE_MS / 1000
+CUT_DESCRIPTION = "Agent's audio cut off abruptly"
 
 
 def _cut_event(test_case, turn, reply) -> VoiceEvent:
     if reply.sound_end_seconds is None:
-        return VoiceEvent(type="abrupt_cutoff", turn=turn)
+        return VoiceEvent(
+            type="abrupt_cutoff",
+            turn=turn,
+            mark=MOMENT,
+            description=CUT_DESCRIPTION,
+        )
     return VoiceEvent(
         type="abrupt_cutoff",
         turn=turn,
+        mark=MOMENT,
+        description=CUT_DESCRIPTION,
         **placed(
             test_case.turns[turn].audio,
             max(0.0, reply.sound_end_seconds - CUT_EDGE_SECONDS),
@@ -72,6 +85,8 @@ def _recording_share(recording: CallActivity) -> DefectShare:
                 VoiceEvent(
                     type="abrupt_cutoff",
                     reply_start=round(reply.start, 2),
+                    mark=MOMENT,
+                    description=CUT_DESCRIPTION,
                     **{STOPPED_AT_SECONDS: round(cut.at, 2)},
                     **on_call(cut.at - CUT_EDGE_SECONDS, CUT_EDGE_SECONDS),
                 )
@@ -116,7 +131,11 @@ class AbruptCutoffMetric(BaseDefectMetric):
         measurements, skipped = agent_reply_measurements(test_case)
         _, events, _ = agent_glitch_events(test_case)
         stream_cuts = {
-            event.turn: event for event in events if event.type == "stream_cut"
+            event.turn: event.model_copy(
+                update={"mark": MOMENT, "description": CUT_DESCRIPTION}
+            )
+            for event in events
+            if event.type == "stream_cut"
         }
         defects = [
             stream_cuts.get(turn, _cut_event(test_case, turn, reply))

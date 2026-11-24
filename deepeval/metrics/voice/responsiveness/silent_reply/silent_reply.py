@@ -34,9 +34,21 @@ class SilentReplyMetric(BaseDefectMetric):
                 continue
             eligible_turns.append(index)
             if turn.audio is None:
-                defects.append(VoiceEvent(type="no_audio", turn=index))
+                defects.append(
+                    VoiceEvent(
+                        type="no_audio",
+                        turn=index,
+                        description="Reply had no audio",
+                    )
+                )
             elif is_inaudible(measurements[index]):
-                defects.append(VoiceEvent(type="no_speech", turn=index))
+                defects.append(
+                    VoiceEvent(
+                        type="no_speech",
+                        turn=index,
+                        description="Reply had no audible speech",
+                    )
+                )
         return DefectShare(
             eligible_turns,
             defects,

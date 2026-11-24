@@ -70,13 +70,15 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 4,
     "turns_with_events": 1,
-    "events": [{"type": "talk_over", "duration_seconds": 3.1, "start_time": 41.8, "caller_start": 41.8, "caller_seconds": 3.1, "overlap_seconds": 1.9}],
+    "events": [{"type": "talk_over", "start_time": 41.8, "duration_seconds": 1.9, "mark": "range", "timing_source": "call_recording", "description": "Caller talked over the agent for 1.9s", "caller_start": 41.8, "caller_seconds": 3.1, "overlap_seconds": 1.9}],
     "skipped": [],
     "timing_source": "call_recording",
 }
 ```
 
-`type` names the condition that fired (`false_start` or `talk_over`; `false_start` when both did). `caller_start` is where in the call recording the caller started; when the turn timestamps were used, events carry `turn`, the caller turn's zero-based position in the conversation, instead. `start_time` and `duration_seconds` place the caller's interrupting stretch on the call's clock. `caller_seconds` is how long the caller kept speaking and `overlap_seconds` how much of that the agent was making sound. Without a recording, turns whose audio could not be decoded are listed under `skipped`.
+`type` names the condition that fired (`false_start` or `talk_over`; `false_start` when both did). `caller_start` is where in the call recording the caller started; when the turn timestamps were used, events carry `turn`, the caller turn's zero-based position in the conversation, instead. `start_time` and `duration_seconds` place the stretch where both were talking on the call's clock, or the caller's interrupting stretch when the agent made no sound inside it. `caller_seconds` is how long the caller kept speaking and `overlap_seconds` how much of that the agent was making sound. Without a recording, turns whose audio could not be decoded are listed under `skipped`.
+
+<include cwd>snippets/voice/event-place.mdx</include>
 
 ## How Is It Calculated?
 

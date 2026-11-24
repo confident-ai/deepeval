@@ -78,6 +78,8 @@ print(metric.score_breakdown)
 
 `turn` is the turn's zero-based position in the conversation. An event's `type` is `too_slow` or `too_fast`, and `speech_rate_wpm` is the reply's rate. The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, that have no text, or whose speech spans under two seconds from first to last sound are listed under `skipped`.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `SpeakingRateMetric` checks every agent reply with text and at least two seconds from its first to its last spoken sound, and scores the share of them spoken at a normal rate:

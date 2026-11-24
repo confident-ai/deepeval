@@ -47,6 +47,8 @@ class LoudnessConsistencyMetric(BaseDefectMetric):
                 turn=turn,
                 speech_dbfs=round(levels[turn], 1),
                 shift_db=round(shift, 1),
+                description=f"Reply was {abs(shift):.0f} dB "
+                f"{'louder' if shift > 0 else 'quieter'} than usual",
             )
             for turn, shift in shifts_from_typical(levels).items()
             if abs(shift) > self.max_shift_db

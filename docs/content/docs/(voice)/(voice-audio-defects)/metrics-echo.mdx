@@ -88,13 +88,15 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 10,
     "turns_with_events": 1,
-    "events": [{"type": "echo", "start_time": 343.706, "duration_seconds": 4.1, "reply_start": 343.2, "delay_seconds": 0.506, "level_db": -5.8}],
+    "events": [{"type": "echo", "start_time": 343.2, "duration_seconds": 4.1, "mark": "whole_reply", "timing_source": "call_recording", "description": "Agent's voice echoed back from the caller's side", "reply_start": 343.2, "delay_seconds": 0.506, "level_db": -5.8}],
     "skipped": [],
     "timing_source": "call_recording",
 }
 ```
 
-`reply_start` is where in the recording the agent's reply started. `delay_seconds` is how long after the agent its voice came back on the caller's side, and `level_db` is how loud that copy was compared with the agent (0 is as loud, −40 is barely audible). `start_time` and `duration_seconds` place the copy on the caller's side, in seconds on the call's clock.
+`reply_start` is where in the recording the agent's reply started. `delay_seconds` is how long after the agent its voice came back on the caller's side, and `level_db` is how loud that copy was compared with the agent (0 is as loud, −40 is barely audible). `start_time` and `duration_seconds` place the agent reply the echo was found on, in seconds on the call's clock.
+
+<include cwd>snippets/voice/event-place.mdx</include>
 
 ## How Is It Calculated?
 

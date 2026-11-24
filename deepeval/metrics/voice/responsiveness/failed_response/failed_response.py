@@ -1,4 +1,7 @@
-from deepeval.metrics.voice.utils.call_activity import caller_lines
+from deepeval.metrics.voice.utils.call_activity import (
+    caller_lines,
+    silence_after_line,
+)
 from deepeval.metrics.voice.utils.defects import (
     CALLER_LINES,
     NO_CALL_AUDIO_REASON,
@@ -8,7 +11,7 @@ from deepeval.metrics.voice.utils.defects import (
 from deepeval.metrics.voice.utils.detectors import response_was_owed
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
-from deepeval.metrics.voice.utils.events import VoiceEvent
+from deepeval.metrics.voice.utils.events import RANGE, VoiceEvent
 
 
 class FailedResponseMetric(BaseDefectMetric):
@@ -40,7 +43,13 @@ class FailedResponseMetric(BaseDefectMetric):
             )
             if reply_turn is None:
                 defects.append(
-                    VoiceEvent(type="call_ended_without_reply", turn=first)
+                    VoiceEvent(
+                        type="call_ended_without_reply",
+                        turn=first,
+                        mark=RANGE,
+                        description="Call ended without a reply",
+                        **silence_after_line(turns, last),
+                    )
                 )
             elif (
                 not turns[reply_turn].content.strip()
@@ -48,7 +57,12 @@ class FailedResponseMetric(BaseDefectMetric):
             ):
                 defects.append(
                     VoiceEvent(
-                        type="empty_reply", turn=first, reply_turn=reply_turn
+                        type="empty_reply",
+                        turn=first,
+                        reply_turn=reply_turn,
+                        mark=RANGE,
+                        description="Agent's reply was empty",
+                        **silence_after_line(turns, last),
                     )
                 )
         return DefectShare(

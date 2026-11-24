@@ -12,7 +12,11 @@ from deepeval.metrics.voice.utils.defects import (
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
-from deepeval.metrics.voice.utils.events import VoiceEvent, on_call
+from deepeval.metrics.voice.utils.events import (
+    WHOLE_REPLY,
+    VoiceEvent,
+    on_call,
+)
 
 DEFECT_LABEL = "an echo"
 
@@ -53,7 +57,10 @@ class EchoMetric(BaseDefectMetric):
                         reply_start=at,
                         delay_seconds=round(delay, 3),
                         level_db=round(level, 1),
-                        **on_call(span.start + delay, span.end - span.start),
+                        mark=WHOLE_REPLY,
+                        description="Agent's voice echoed back from the "
+                        "caller's side",
+                        **on_call(span.start, span.end - span.start),
                     )
                 )
         return DefectShare(

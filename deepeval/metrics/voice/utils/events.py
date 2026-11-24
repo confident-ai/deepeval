@@ -2,6 +2,11 @@ from typing import Any, Dict, List, Optional
 
 from pydantic import BaseModel, ConfigDict
 
+# What an event's place on the call covers.
+MOMENT = "moment"
+RANGE = "range"
+WHOLE_REPLY = "whole_reply"
+
 
 class VoiceEvent(BaseModel):
     """One problem a voice metric found on a call.
@@ -9,8 +14,13 @@ class VoiceEvent(BaseModel):
     Every voice metric reports its events in this shape. Where the problem
     is known to a point in time, `offset_seconds` and `duration_seconds`
     place it inside the turn's audio and `start_time` places it on the
-    call's clock. What a metric measured about the problem (a count, a
-    level, a delay) is kept alongside these fields under its own name.
+    call's clock. `mark` says what that place covers: the spot where the
+    problem happened (`moment`), the stretch it lasted (`range`), or the
+    whole agent reply it was judged on (`whole_reply`). `timing_source` says
+    whether the place was read from the stereo call recording or from turn
+    timestamps, and `description` is one sentence about the problem. What a
+    metric measured about the problem (a count, a level, a delay) is kept
+    alongside these fields under its own name.
     """
 
     model_config = ConfigDict(extra="allow")
@@ -21,6 +31,9 @@ class VoiceEvent(BaseModel):
     offset_seconds: Optional[float] = None
     duration_seconds: Optional[float] = None
     start_time: Optional[float] = None
+    mark: Optional[str] = None
+    timing_source: Optional[str] = None
+    description: Optional[str] = None
 
     def get(self, field: str, default: Any = None) -> Any:
         return getattr(self, field, default)

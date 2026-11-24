@@ -64,3 +64,9 @@ def test_speaking_again_after_a_silence_is_a_reprompt():
     assert [without_place(e) for e in metric.score_breakdown["events"]] == [
         {"type": "user_reprompted", "turn": 1, "reprompt_turn": 2}
     ]
+    # The silence the caller sat through before saying it again.
+    [event] = metric.score_breakdown["events"]
+    assert event["mark"] == "range"
+    assert event["start_time"] == pytest.approx(5.0, abs=0.05)
+    assert event["duration_seconds"] == pytest.approx(3.0, abs=0.05)
+    assert event["description"] == "Caller repeated themselves after 3.0s"

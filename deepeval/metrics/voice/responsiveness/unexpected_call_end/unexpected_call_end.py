@@ -12,7 +12,8 @@ from deepeval.metrics.voice.utils.detectors import (
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
-from deepeval.metrics.voice.utils.events import VoiceEvent
+from deepeval.metrics.voice.utils.call_activity import call_end
+from deepeval.metrics.voice.utils.events import MOMENT, VoiceEvent, on_call
 
 # Written to the test case's metadata by ConversationSimulator.
 STOP_REASON_KEY = "Stop reason"
@@ -74,10 +75,16 @@ class UnexpectedCallEndMetric(BaseDefectMetric):
             )
         last_turn = len(test_case.turns) - 1
         end_reason = _unexpected_end_reason(test_case)
+        ended_at = call_end(test_case.turns)
         defects = (
             [
                 VoiceEvent(
-                    type="unexpected_end", turn=last_turn, end_reason=end_reason
+                    type="unexpected_end",
+                    turn=last_turn,
+                    end_reason=end_reason,
+                    mark=MOMENT,
+                    description=f"Call ended unexpectedly ({end_reason})",
+                    **({} if ended_at is None else on_call(ended_at, 0.0)),
                 )
             ]
             if end_reason

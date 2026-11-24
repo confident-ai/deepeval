@@ -80,6 +80,8 @@ For `AgentResponsivenessMetric` the breakdown counts the exchanges, lists every 
 
 Here `eligible_turns` is how many **exchanges** were judged and `turns_with_events` how many had at least one issue. `events` holds each part's events unchanged, tagged with the `metric` that raised them; the part's own page explains its fields, including which turn `turn` points to. `skipped` collects the turns a part could not judge. `metrics` gives each part's own `score`, `eligible_turns` and `turns_with_events`, counted the part's own way, or `{"score": None, "reason": ...}` when that part could not judge the call. The reason for the call above reads "1 of 4 exchanges had an issue: Reprompt (1)."
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `AgentResponsivenessMetric` runs these single-issue metrics on the call, each with its default settings:

@@ -77,6 +77,8 @@ print(metric.score_breakdown)
 
 `turn` is the turn's zero-based position in the conversation, `speech_dbfs` is the reply's speech level, and `shift_db` is how far that sits from the agent's typical level (negative when quieter). The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, or that have no audible sound, are listed under `skipped`.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `LoudnessConsistencyMetric` compares every agent reply against the agent's typical reply, and scores the share that stay close:

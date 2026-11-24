@@ -74,6 +74,8 @@ print(metric.score_breakdown)
 
 `turn` is the turn's zero-based position in the conversation. `offset_seconds` and `duration_seconds` place the tone inside the reply, and `start_time` places it on the call's clock (left out when the clip has no `Audio.start_time`). `pitch_hz` is the tone's pitch. `hold_ratio` and `pitch_ratio` compare it with how long and how high the agent's voice normally holds a sound. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `HeldToneMetric` checks every agent reply that has audio and scores the share of them without the defect:

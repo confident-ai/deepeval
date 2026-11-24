@@ -14,6 +14,7 @@ class AudioLoopMetric(BaseDefectMetric):
             VoiceEvent(
                 type="audio_loop",
                 turn=turn,
+                description=f"Audio repeated for {duration:.1f}s",
                 **placed(test_case.turns[turn].audio, offset, duration),
             )
             for turn, reply in measurements.items()

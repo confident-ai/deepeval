@@ -37,6 +37,9 @@ def test_a_slow_greeting_fails_time_to_first_response():
             "first_response_seconds": 5.0,
             "start_time": 0.0,
             "duration_seconds": 5.0,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Agent took 5.0s to first respond",
         }
     ]
 

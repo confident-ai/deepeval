@@ -75,6 +75,8 @@ print(metric.score_breakdown)
 
 `turn` is the turn's zero-based position in the conversation, and `drift_db` is how much the volume changed from the start to the end of the reply (negative for a fade, positive for a swell). The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, that have no audible sound, or that have under three seconds of speech to follow, are listed under `skipped`.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `VolumeVarianceMetric` checks every agent reply with at least three one-second windows of speech and scores the share of them without the issue:

@@ -76,6 +76,8 @@ print(metric.score_breakdown)
 
 `turn` is the turn's zero-based position in the conversation. `type` is `too_quiet` or `too_loud`, and `speech_dbfs` is the reply's speech level. The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, or that have no audible sound, are listed under `skipped` with the error.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `LoudnessMetric` checks every agent reply that has audible audio and scores the share of them without the issue:

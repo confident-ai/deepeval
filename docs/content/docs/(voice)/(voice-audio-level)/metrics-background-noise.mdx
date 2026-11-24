@@ -75,6 +75,8 @@ print(metric.score_breakdown)
 
 `turn` is the turn's zero-based position in the conversation, and `estimated_snr_db` is the reply's estimated signal-to-noise ratio. The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, that have no audible sound, or that are under two seconds long, are listed under `skipped`.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `BackgroundNoiseMetric` checks every audible agent reply with at least two seconds of audio and scores the share of them without the issue:

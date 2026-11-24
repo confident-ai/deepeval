@@ -77,6 +77,8 @@ print(metric.score_breakdown)
 
 `turn` is the agent reply's zero-based position in the conversation, and `response_delay_seconds` is how long the caller waited for it. `start_time` and `duration_seconds` place that wait on the call's clock, ending where the reply starts. Without a recording, agent replies whose audio, or the caller's audio before them, could not be decoded are listed under `skipped`. So are replies the agent started while the caller was still talking; those are judged by [`AgentInterruptionMetric`](/docs/metrics-agent-interruption) instead. With a call recording, events and `skipped` entries carry `reply_start`, where in the recording the agent started, instead of `turn`.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `ResponseLatencyMetric` times every agent reply that follows a caller turn, and scores the share that started in time:

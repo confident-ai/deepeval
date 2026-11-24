@@ -36,6 +36,9 @@ def test_touching_clips_fall_back_to_the_recorded_latency():
         # The wait the caller sat through, ending where the reply starts.
         "start_time": reply_start - 5.0,
         "duration_seconds": 5.0,
+        "mark": "range",
+        "timing_source": "turn_timestamps",
+        "description": "Agent took 5.0s to reply",
     }
 
 

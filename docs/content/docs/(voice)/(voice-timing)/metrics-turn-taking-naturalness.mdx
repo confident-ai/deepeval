@@ -85,6 +85,8 @@ For `TurnTakingNaturalnessMetric` the breakdown counts the replies, lists every 
 
 The reason for the call above reads "1 of 4 agent replies had an issue: Response Latency (1), Response Delay Consistency (1). Judged from each turn's own audio and timestamps, as no stereo call recording was available." The last sentence is added only when the turn timestamps were used.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `TurnTakingNaturalnessMetric` runs these single-issue timing metrics on the call, each with its default limits:

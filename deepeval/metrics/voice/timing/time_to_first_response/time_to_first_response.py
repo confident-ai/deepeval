@@ -91,6 +91,8 @@ class TimeToFirstResponseMetric(BaseDefectMetric):
                     type="slow_first_response",
                     turn=greeting_turn,
                     first_response_seconds=round(greeting_at, 2),
+                    description=f"Agent took {greeting_at:.1f}s to first "
+                    "respond",
                     **on_call(0.0, greeting_at),
                 )
             )
@@ -138,6 +140,7 @@ class TimeToFirstResponseMetric(BaseDefectMetric):
                     type="slow_first_response",
                     reply_start=at,
                     first_response_seconds=round(wait, 2),
+                    description=f"Agent took {wait:.1f}s to first respond",
                     **on_call(agent_at - wait, wait),
                 )
             )

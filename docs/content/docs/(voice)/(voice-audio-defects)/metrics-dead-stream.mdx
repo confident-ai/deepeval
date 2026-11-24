@@ -74,6 +74,8 @@ print(metric.score_breakdown)
 
 `turn` is the turn's zero-based position in the conversation. `offset_seconds` and `duration_seconds` place the dead stretch inside the reply, and `start_time` places it on the call's clock (left out when the clip has no `Audio.start_time`). `runs_to_end` is `True` when the stream died and never came back within the reply. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `DeadStreamMetric` checks every agent reply that has audio and scores the share of them without the defect:

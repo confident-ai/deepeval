@@ -9,11 +9,12 @@ from deepeval.metrics.voice.utils.call_activity import (
     agent_starts,
     is_opening_line,
     call_activity,
+    interruption_place,
 )
 from deepeval.metrics.voice.utils.defects import DefectShare
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
-from deepeval.metrics.voice.utils.events import VoiceEvent, on_call
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 def is_false_start(
@@ -51,6 +52,11 @@ INTERRUPTION_CONDITIONS: Dict[
 ] = {
     "false_start": is_false_start,
     "talk_over": is_talk_over,
+}
+
+AGENT_DESCRIPTIONS = {
+    "false_start": "Agent started over the caller, then stopped",
+    "talk_over": "Agent talked over the caller for {overlap:.1f}s",
 }
 
 
@@ -103,8 +109,13 @@ class AgentInterruptionMetric(BaseDefectMetric):
                         type=fired[0],
                         **{event_key: key},
                         agent_seconds=round(start.stops_at - start.at, 2),
-                        **on_call(start.at, start.stops_at - start.at),
+                        **interruption_place(
+                            activity.caller, start.at, start.stops_at
+                        ),
                         overlap_seconds=round(start.overlap_seconds, 2),
+                        description=AGENT_DESCRIPTIONS[fired[0]].format(
+                            overlap=start.overlap_seconds
+                        ),
                     )
                 )
         return DefectShare(

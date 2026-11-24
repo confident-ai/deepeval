@@ -90,6 +90,8 @@ For `VoiceNaturalnessMetric` the breakdown counts the replies, lists every issue
 
 `eligible_turns` is how many agent replies were judged and `turns_with_events` how many had at least one issue. `events` holds each part's events unchanged, tagged with the `metric` that raised them; the part's own page explains its fields. `skipped` collects the replies a part could not judge. `metrics` gives each part's own `score`, `eligible_turns` and `turns_with_events`, or `{"score": None, "reason": ...}` when that part could not judge the call. The reason for the call above reads "1 of 4 agent replies had an issue: Audio Clipping (1), Speaking Rate (1)."
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `VoiceNaturalnessMetric` runs these single-issue metrics on the call, each with its default limits:

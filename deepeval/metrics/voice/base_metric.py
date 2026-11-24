@@ -22,6 +22,7 @@ from deepeval.metrics.voice.utils.defects import (
     untimed_call_reason,
 )
 from deepeval.metrics.voice.utils.events import (
+    WHOLE_REPLY,
     VoiceEvent,
     events_to_dicts,
     placed,
@@ -62,9 +63,16 @@ def _place_reply_events(breakdown: Dict, test_case: ConversationalTestCase):
     events = breakdown.get("events") if isinstance(breakdown, dict) else None
     for event in events or []:
         turn = event.get("turn") if isinstance(event, dict) else None
-        if turn is None or "offset_seconds" in event or "start_time" in event:
+        if (
+            turn is None
+            or "mark" in event
+            or "offset_seconds" in event
+            or "start_time" in event
+        ):
             continue
         if not 0 <= turn < len(test_case.turns):
+            continue
+        if test_case.turns[turn].role != "assistant":
             continue
         audio = test_case.turns[turn].audio
         if audio is None:
@@ -82,6 +90,7 @@ def _place_reply_events(breakdown: Dict, test_case: ConversationalTestCase):
                 if value is not None
             }
         )
+        event["mark"] = WHOLE_REPLY
 
 
 class BaseVoiceMetric(BaseConversationalMetric):

@@ -77,6 +77,8 @@ print(metric.score_breakdown)
 
 `turn` is the turn's zero-based position in the conversation. Each jump is its own event: `offset_seconds` and `duration_seconds` cover the two 40 ms pitch frames either side of the step, and `start_time` places them on the call's clock (left out when the clip has no `Audio.start_time`). A crack that goes up and comes back down is two events, and a reply with several jumps still counts once toward the score. Agent replies whose audio could not be decoded, or that have no voiced speech, are listed under `skipped`.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `AbruptPitchJumpMetric` checks every agent reply with voiced speech and scores the share of them without a jump:

@@ -76,6 +76,8 @@ print(metric.score_breakdown)
 
 `turn` is the turn's zero-based position in the conversation. A reply that ends mid-sound and is picked up again by the agent within 15 seconds (its next clip in the call, which needs `Audio.start_time` on every clip) is reported as a `stream_cut`, with `gap_seconds` and the `resumed_turn`. Any other reply that ends mid-sound is reported as `{"type": "abrupt_cutoff", "turn": 3, "offset_seconds": 3.42, "duration_seconds": 0.02, "start_time": 13.92}`, which places the last 20 ms before the sound stops inside the reply and on the call's clock (`start_time` is left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded are listed under `skipped` with the error. With a call recording, events read `{"type": "abrupt_cutoff", "duration_seconds": 0.02, "start_time": 44.84, "reply_start": 41.2, "stopped_at_seconds": 44.86}`: `reply_start` is where in the recording the reply started, `stopped_at_seconds` where its sound stopped, and `start_time` and `duration_seconds` the last 20 ms before that, all in seconds on the call's clock. `eligible_turns` then counts the agent's replies on the recording and `skipped` is always empty. `timing_source` says whether the call recording (`"call_recording"`) or each turn's own audio (`"turn_timestamps"`) was used.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `AbruptCutoffMetric` checks every agent reply that has audio and scores the share of them without the defect:

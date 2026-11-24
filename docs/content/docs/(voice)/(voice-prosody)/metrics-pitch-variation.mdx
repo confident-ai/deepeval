@@ -80,6 +80,8 @@ print(metric.score_breakdown)
 
 `turn` is the turn's zero-based position in the conversation. An event's `type` is `monotone` or `erratic`, and `pitch_spread_semitones` is how widely the reply's pitch moved. The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, or that have under one second of voiced speech, are listed under `skipped`.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `PitchVariationMetric` checks every agent reply with at least one second of voiced speech and scores the share of them without the issue:

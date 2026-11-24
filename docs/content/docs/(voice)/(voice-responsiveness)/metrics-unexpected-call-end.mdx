@@ -67,12 +67,14 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 1,
     "turns_with_events": 1,
-    "events": [{"type": "unexpected_end", "turn": 7, "end_reason": "agent_ended_call", "offset_seconds": 0.0, "duration_seconds": 2.4, "start_time": 38.6}],
+    "events": [{"type": "unexpected_end", "turn": 7, "end_reason": "agent_ended_call", "start_time": 41.0, "duration_seconds": 0.0, "mark": "moment", "timing_source": "turn_timestamps", "description": "Call ended unexpectedly (agent_ended_call)"}],
     "skipped": [],
 }
 ```
 
-`turn` is the zero-based position of the call's last turn. When that turn has decodable audio, the event covers its whole clip: `offset_seconds` is 0, `duration_seconds` is the clip's length, and `start_time` is where it starts on the call's clock (left out when the clip has no `Audio.start_time`). `end_reason` is `agent_ended_call` when a simulation recorded that the agent hung up, or the call's own `end_reason` metadata, such as `ERROR`, otherwise.
+`turn` is the zero-based position of the call's last turn. `start_time` is where the call's last timed audio ends, on the call's clock (left out when no turn has an `Audio.start_time`). `end_reason` is `agent_ended_call` when a simulation recorded that the agent hung up, or the call's own `end_reason` metadata, such as `ERROR`, otherwise.
+
+<include cwd>snippets/voice/event-place.mdx</include>
 
 ## How Is It Calculated?
 

@@ -53,11 +53,14 @@ def test_the_caller_talking_over_the_agent_on_a_recording(tmp_path):
     [event] = metric.score_breakdown["events"]
     assert event["type"] == "talk_over"
     assert event["caller_start"] == pytest.approx(2.0, abs=0.05)
+    # Marks only where both talked: from the caller's start to the agent's end.
+    assert event["mark"] == "range"
     assert event["start_time"] == pytest.approx(2.0, abs=0.05)
     assert event["duration_seconds"] == pytest.approx(
-        event["caller_seconds"], abs=0.01
+        event["overlap_seconds"], abs=0.05
     )
     assert event["overlap_seconds"] == pytest.approx(1.75, abs=0.1)
+    assert event["description"].startswith("Caller talked over the agent")
 
 
 def test_a_caller_who_cuts_in_and_backs_off_made_a_false_start(tmp_path):

@@ -57,7 +57,11 @@ class VolumeVarianceMetric(BaseDefectMetric):
             if abs(drift) > self.max_drift_db:
                 defects.append(
                     VoiceEvent(
-                        type="volume_drift", turn=turn, drift_db=round(drift, 1)
+                        type="volume_drift",
+                        turn=turn,
+                        drift_db=round(drift, 1),
+                        description=f"Volume drifted {abs(drift):.0f} dB "
+                        "during the reply",
                     )
                 )
         return DefectShare(

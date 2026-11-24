@@ -54,6 +54,8 @@ class LoudnessMetric(BaseDefectMetric):
                     type=event_type,
                     turn=turn,
                     speech_dbfs=round(reply.speech_dbfs, 1),
+                    description=f"Reply was {event_type.replace('_', ' ')} "
+                    f"({reply.speech_dbfs:.0f} dBFS)",
                 )
             )
         return DefectShare(

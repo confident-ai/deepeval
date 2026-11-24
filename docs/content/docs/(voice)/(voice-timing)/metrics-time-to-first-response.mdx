@@ -77,6 +77,8 @@ print(metric.score_breakdown)
 
 `turn` is the greeting's zero-based position in the conversation, and `first_response_seconds` is how long the caller waited for the agent's first word. `start_time` and `duration_seconds` place that wait on the call's clock, ending at the agent's first sound. With a call recording, the event carries `reply_start`, where in the recording the agent first made sound, instead of `turn`, and when the caller spoke first the wait starts where their first words ended. `timing_source` says whether the call recording or the turn timestamps were used.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `TimeToFirstResponseMetric` looks at the first turn with audio on the call timeline:

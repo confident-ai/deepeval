@@ -159,6 +159,46 @@ def caller_lines(turns: Sequence[Turn]) -> List[Tuple[int, int]]:
     return lines
 
 
+def silence_after_line(turns: Sequence[Turn], last: int) -> Dict[str, Any]:
+    """The silence after a caller line on the call's clock: from the end of
+    its last turn to the next timed turn, or to the end of the call when no
+    turn follows."""
+    timeline = build_audio_timeline(turns)
+    line = next((entry for entry in timeline if entry.turn_index == last), None)
+    if line is None:
+        return {}
+    following = [
+        entry.start_time
+        for entry in timeline
+        if entry.turn_index > last and entry.start_time >= line.end_time
+    ]
+    end = min(following, default=max(entry.end_time for entry in timeline))
+    return on_call(line.end_time, max(0.0, end - line.end_time))
+
+
+def call_end(turns: Sequence[Turn]) -> Optional[float]:
+    """Where the call's last timed audio ends."""
+    timeline = build_audio_timeline(turns)
+    return max((entry.end_time for entry in timeline), default=None)
+
+
+def interruption_place(
+    other: Sequence[Span], start: float, end: float
+) -> Dict[str, Any]:
+    """Where both speakers talked during an interruption, on the call's clock;
+    the interrupter's own stretch when the other never spoke inside it."""
+    overlaps = [
+        (max(span.start, start), min(span.end, end))
+        for span in other
+        if span.start < end and span.end > start
+    ]
+    if not overlaps:
+        return on_call(start, end - start)
+    first = min(overlap[0] for overlap in overlaps)
+    last = max(overlap[1] for overlap in overlaps)
+    return on_call(first, last - first)
+
+
 def sound_between(spans: Sequence[Span], start: float, end: float) -> float:
     return sum(
         max(0.0, min(span.end, end) - max(span.start, start)) for span in spans

@@ -79,6 +79,8 @@ print(metric.score_breakdown)
 
 `turn` is the agent reply's zero-based position in the conversation, `response_delay_seconds` is how long the caller waited for it, and `shift_seconds` is how far that sits from the agent's typical wait (negative when faster). `start_time` and `duration_seconds` place the wait itself on the call's clock, ending where the reply starts. Replies the agent started while the caller was still talking are listed under `skipped`, and so, without a recording, are agent replies whose audio, or the caller's audio before them, could not be decoded. With a call recording, events and `skipped` entries carry `reply_start`, where in the recording the agent started, instead of `turn`. `timing_source` says whether the call recording or the turn timestamps were used.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `ResponseDelayConsistencyMetric` compares every timed agent reply against the agent's typical reply, and scores the share that stay close:

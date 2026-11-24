@@ -12,6 +12,8 @@ from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
+SPEED_WORDS = {"too_slow": "too slowly", "too_fast": "too fast"}
+
 
 class SpeakingRateMetric(BaseDefectMetric):
     # Conversation runs about 120-190 words per minute; each limit leaves a
@@ -65,7 +67,11 @@ class SpeakingRateMetric(BaseDefectMetric):
                 continue
             defects.append(
                 VoiceEvent(
-                    type=event_type, turn=turn, speech_rate_wpm=round(rate)
+                    type=event_type,
+                    turn=turn,
+                    speech_rate_wpm=round(rate),
+                    description=f"Agent spoke {SPEED_WORDS[event_type]} "
+                    f"({rate:.0f} wpm)",
                 )
             )
         return DefectShare(

@@ -74,6 +74,8 @@ print(metric.score_breakdown)
 
 `turn` is the turn's zero-based position in the conversation. `offset_seconds` and `duration_seconds` give the clipped span inside the reply (from the first clipped sample to the last), `start_time` places it on the call's clock and is left out when the clip has no `Audio.start_time`, and `fraction` is the share of the reply's samples that were clipped. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
 
+<include cwd>snippets/voice/event-place.mdx</include>
+
 ## How Is It Calculated?
 
 `AudioClippingMetric` checks every agent reply that has audio and scores the share of them without the defect:

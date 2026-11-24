@@ -12,7 +12,7 @@ from deepeval.metrics.voice.utils.defects import (
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
-from deepeval.metrics.voice.utils.events import VoiceEvent
+from deepeval.metrics.voice.utils.events import RANGE, VoiceEvent
 
 
 class ResponseDelayConsistencyMetric(BaseDefectMetric):
@@ -53,6 +53,9 @@ class ResponseDelayConsistencyMetric(BaseDefectMetric):
                 **wait_span(test_case, event_key, key, delays[key]),
                 response_delay_seconds=round(delays[key], 2),
                 shift_seconds=round(shift, 2),
+                mark=RANGE,
+                description=f"Reply came {abs(shift):.1f}s "
+                f"{'slower' if shift > 0 else 'faster'} than usual",
             )
             for key, shift in shifts_from_typical(delays).items()
             if abs(shift) > self.max_shift_seconds
