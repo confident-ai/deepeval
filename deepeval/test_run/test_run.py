@@ -760,6 +760,19 @@ class TestRunManager:
         return pass_count, fail_count, flaky_pass_count, flaky_fail_count
 
     @staticmethod
+    def _classifier_verdicts(
+        classifications: List[Classification],
+    ) -> List[Classification]:
+        """One classification per classifier: a classifier's labels share
+        its verdict, so it counts once however many labels it assigned."""
+        return list(
+            {
+                classification.name: classification
+                for classification in classifications
+            }.values()
+        )
+
+    @staticmethod
     def _format_verdict_counts(
         pass_count: int,
         fail_count: int,
@@ -858,7 +871,10 @@ class TestRunManager:
             classifications = test_case.classifications or []
             pass_count, fail_count, flaky_pass_count, flaky_fail_count = (
                 self._count_metric_results(
-                    [*test_case.metrics_data, *classifications]
+                    [
+                        *test_case.metrics_data,
+                        *self._classifier_verdicts(classifications),
+                    ]
                 )
             )
             self._add_test_case_header_row(
@@ -948,7 +964,7 @@ class TestRunManager:
                     self._count_metric_results(
                         [
                             *conversational_test_case.metrics_data,
-                            *classifications,
+                            *self._classifier_verdicts(classifications),
                         ]
                     )
                 )

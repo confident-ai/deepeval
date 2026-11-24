@@ -178,3 +178,14 @@ def test_failing_display_skips_test_cases_without_a_verdict():
     assert TestRunManager._should_skip_test_case(
         test_case, TestRunResultDisplay.PASSING
     )
+
+
+def test_multi_label_classifier_counts_once_in_the_results_table():
+    classifications = [
+        Classification(name="Topic", label=label, success=False)
+        for label in ("pricing", "refund")
+    ] + [Classification(name="Greeting", label="greeting", success=True)]
+
+    assert TestRunManager._count_metric_results(
+        TestRunManager._classifier_verdicts(classifications)
+    ) == (1, 1, 0, 0)
