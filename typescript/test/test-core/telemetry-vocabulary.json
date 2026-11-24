@@ -5,6 +5,7 @@
     "source": "deepeval/telemetry/"
   },
   "entrypoints": [
+    "agentic_red_team",
     "compare",
     "evals_iterator",
     "evaluate",

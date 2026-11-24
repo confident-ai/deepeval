@@ -31,6 +31,8 @@ export enum Entrypoint {
   STANDALONE = "standalone",
   /** Python's red teaming. Never emitted from here. */
   RED_TEAM = "red_team",
+  /** Python's agentic red teaming. Never emitted from here. */
+  AGENTIC_RED_TEAM = "agentic_red_team",
 }
 
 export enum Feature {

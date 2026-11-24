@@ -211,6 +211,7 @@ def capture_red_teaming_run(
     vulnerabilities: Optional[Iterable[Any]] = None,
     attacks: Optional[Iterable[Any]] = None,
     framework: Optional[Any] = None,
+    entrypoint: Entrypoint = Entrypoint.RED_TEAM,
 ) -> Iterator[RunAccumulator]:
     """Open a run scope and emit exactly one `Red Teaming` on the way out.
 
@@ -220,7 +221,7 @@ def capture_red_teaming_run(
     rather than their names so user-written names never reach the payload.
     """
     if telemetry_opt_out():
-        yield RunAccumulator(entrypoint=Entrypoint.RED_TEAM)
+        yield RunAccumulator(entrypoint=entrypoint)
         return
 
     feature_status = get_feature_status(Feature.REDTEAMING)
@@ -231,7 +232,7 @@ def capture_red_teaming_run(
     framework_name = (
         _red_team_component_name(framework) if framework is not None else None
     )
-    accumulator, token = push_run(Entrypoint.RED_TEAM, str(uuid.uuid4()))
+    accumulator, token = push_run(entrypoint, str(uuid.uuid4()))
 
     outcome = Outcome.COMPLETED
     error_type: Optional[str] = None

@@ -10,6 +10,7 @@ class StopReason(str, Enum):
     SIMULATOR_REFUSED = "SIMULATOR_REFUSED"
     SIMULATION_ERROR = "SIMULATION_ERROR"
     RUNTIME_EXCEEDED = "RUNTIME_EXCEEDED"
+    STOPPED_BY_PARENT = "STOPPED_BY_PARENT"
 
 
 # Reasons that mean the run was cut short by our side, not by the target holding
@@ -19,6 +20,7 @@ _INCOMPLETE_STOP_REASONS = frozenset(
         StopReason.SIMULATOR_REFUSED,
         StopReason.SIMULATION_ERROR,
         StopReason.RUNTIME_EXCEEDED,
+        StopReason.STOPPED_BY_PARENT,
     }
 )
 
@@ -59,6 +61,12 @@ def default_stop_detail(
             "The attack progression failed before the turn budget was spent, "
             "so this conversation's length does not reflect the target's "
             "resistance."
+        )
+    if reason is StopReason.STOPPED_BY_PARENT:
+        return (
+            "The orchestrating agent stopped this conversation before its "
+            "turn budget was spent, so its length does not reflect the "
+            "target's resistance."
         )
     return (
         "The attack hit its runtime backstop before exhausting its turn "

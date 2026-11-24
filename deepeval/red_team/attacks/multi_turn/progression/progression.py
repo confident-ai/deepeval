@@ -48,6 +48,7 @@ class Progression:
         metric_check: Optional[Union[MetricCheck, AsyncMetricCheck]] = None,
         turn_level_attacks: Optional[List[BaseSingleTurnAttack]] = None,
         turn_level_attack_rate: float = TURN_LEVEL_ATTACK_RATE,
+        goal: Optional[str] = None,
     ):
         self.model_callback = model_callback
         self.turns: List[RTTurn] = list(turns or [])
@@ -55,7 +56,7 @@ class Progression:
         self.turn_level_attacks = turn_level_attacks
         self.turn_level_attack_rate = turn_level_attack_rate
 
-        self.goal = next(
+        self.goal = goal or next(
             (
                 turn.content
                 for turn in reversed(self.turns)
@@ -65,7 +66,8 @@ class Progression:
         )
         if self.goal is None:
             raise ValueError(
-                "No user turn found in the conversation to progress from."
+                "No goal was given and no user turn was found in the "
+                "conversation to progress from."
             )
 
         self.vulnerability_data = (

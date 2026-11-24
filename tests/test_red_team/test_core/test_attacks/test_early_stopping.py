@@ -15,6 +15,7 @@ from deepeval.red_team.attacks.multi_turn import (
 )
 from deepeval.red_team.attacks.multi_turn.progression import (
     MetricVerdict,
+    Progression,
     ShiftExplanation,
     ShiftVerdict,
     default_stop_detail,
@@ -199,6 +200,7 @@ class TestStopReasonPlumbing:
         assert not is_progression_completed(StopReason.SIMULATOR_REFUSED)
         assert not is_progression_completed(StopReason.SIMULATION_ERROR)
         assert not is_progression_completed(StopReason.RUNTIME_EXCEEDED)
+        assert not is_progression_completed(StopReason.STOPPED_BY_PARENT)
 
     def test_unmarked_conversations_count_as_completed(self):
         assert is_progression_completed(None)
@@ -224,6 +226,26 @@ class TestStopReasonPlumbing:
     def test_budget_prose_names_the_turns_spent(self):
         detail = default_stop_detail(StopReason.BUDGET_EXHAUSTED, turns_spent=5)
         assert "5" in detail
+
+
+@pytest.mark.usefixtures("stub_models")
+class TestProgressionGoal:
+
+    def test_goal_falls_back_to_the_last_user_turn(self):
+        assert Progression(make_callback(), seed()).goal == "original attack"
+
+    def test_explicit_goal_needs_no_seed_turns(self):
+        progression = Progression(make_callback(), goal="find the word")
+        assert progression.goal == "find the word"
+        assert progression.turns == []
+
+    def test_explicit_goal_wins_over_the_seed(self):
+        progression = Progression(make_callback(), seed(), goal="find the word")
+        assert progression.goal == "find the word"
+
+    def test_no_goal_and_no_user_turn_is_rejected(self):
+        with pytest.raises(ValueError):
+            Progression(make_callback())
 
 
 ATTACKS = [

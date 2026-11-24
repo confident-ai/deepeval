@@ -49,6 +49,22 @@ def group_attacks_by_vulnerability_type(
     return vulnerability_type_to_attacks_map
 
 
+def validate_model_response(response) -> RTTurn:
+    """Strictly validate a target callback's return value as an assistant turn."""
+    if isinstance(response, RTTurn):
+        if response.role == "assistant":
+            return response
+        raise ValueError(
+            "The target model must return an 'RTTurn' with role='assistant' only."
+        )
+    if isinstance(response, str):
+        return RTTurn(role="assistant", content=response)
+    raise TypeError(
+        f"The target model callback has returned an invalid response of type {type(response)}. "
+        "Please return either a string or an 'RTTurn' with role='assistant'."
+    )
+
+
 def wrap_model_callback(model_callback, async_mode):
 
     sig = inspect.signature(model_callback)
@@ -60,23 +76,6 @@ def wrap_model_callback(model_callback, async_mode):
         for p in params
     )
 
-    def _validate_response(response):
-        """Helper to strictly validate the callback's return value."""
-        if isinstance(response, RTTurn):
-            if response.role == "assistant":
-                return response
-            else:
-                raise ValueError(
-                    "The target model must return an 'RTTurn' with role='assistant' only."
-                )
-        elif isinstance(response, str):
-            return RTTurn(role="assistant", content=response)
-        else:
-            raise TypeError(
-                f"The target model callback has returned an invalid response of type {type(response)}. "
-                "Please return either a string or an 'RTTurn' with role='assistant'."
-            )
-
     @wraps(model_callback)
     def get_sync_model_callback(input: str, turns: List[RTTurn] = None):
         if accepts_turns:
@@ -84,7 +83,7 @@ def wrap_model_callback(model_callback, async_mode):
         else:
             response = model_callback(input)
 
-        return _validate_response(response)
+        return validate_model_response(response)
 
     @wraps(model_callback)
     async def get_async_model_callback(input: str, turns: List[RTTurn] = None):
@@ -93,7 +92,7 @@ def wrap_model_callback(model_callback, async_mode):
         else:
             response = await model_callback(input)
 
-        return _validate_response(response)
+        return validate_model_response(response)
 
     return get_async_model_callback if async_mode else get_sync_model_callback
 

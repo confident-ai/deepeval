@@ -47,6 +47,7 @@ class Entrypoint(str, Enum):
     COMPARE = "compare"
     STANDALONE = "standalone"
     RED_TEAM = "red_team"
+    AGENTIC_RED_TEAM = "agentic_red_team"
 
 
 class Feature(str, Enum):

@@ -487,6 +487,16 @@ class TestRedTeaming:
         assert props["eval.async_mode"] is True
         assert props["feature.name"] == "redteaming"
 
+    def test_agentic_runs_report_their_own_entrypoint(self, backend):
+        with telemetry.capture_red_teaming_run(
+            entrypoint=Entrypoint.AGENTIC_RED_TEAM
+        ):
+            pass
+
+        props = backend.only()
+        assert backend.events[0][1] is Event.RED_TEAMING
+        assert props["eval.entrypoint"] == "agentic_red_team"
+
     def test_red_teaming_metrics_do_not_reach_the_standalone_path(
         self, backend
     ):
