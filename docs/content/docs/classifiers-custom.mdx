@@ -326,7 +326,7 @@ topics = Classifier(
     allow_none=True,
 )
 
-topics.classify(LLMTestCase(input="Do you offer a discount for nonprofits?"))
+topics.classify(LLMTestCase(input="My invoice PDF won't download from the billing page."))
 print(topics.label)
 print(topics.classifications[0].new_label_description)
 print([label.name for label in topics.candidate_labels])
@@ -335,9 +335,9 @@ print([label.name for label in topics.candidate_labels])
 Which prints a new label, now remembered in the pool:
 
 ```text
-Nonprofit Discount
-Conversations where the user asks whether a discount exists for nonprofit or charitable organisations. Does not apply when the user asks about general pricing or other discounts.
-['Plan Upgrade', 'Nonprofit Discount']
+Billing Document Access Issue
+Problems downloading, opening, or accessing invoices, receipts, or billing documents. Does not apply when the user asks what something costs or requests a plan change.
+['Plan Upgrade', 'Billing Document Access Issue']
 ```
 
 A later test case that describes an existing label in other words is merged into it instead of adding a near-duplicate:
@@ -354,7 +354,7 @@ The judge proposed "Team Tier Change", but merging found it is the same as the c
 ```text
 Plan Upgrade
 Requests to move to a higher plan.
-['Plan Upgrade', 'Nonprofit Discount']
+['Plan Upgrade', 'Billing Document Access Issue']
 ```
 
 There are **FIVE** optional parameters when creating a `LabelDiscoveryConfig`:
