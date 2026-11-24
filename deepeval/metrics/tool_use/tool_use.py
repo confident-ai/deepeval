@@ -146,17 +146,15 @@ class ToolUseMetric(BaseConversationalMetric):
                         tool_selection_scores, multimodal=test_case.multimodal
                     )
                 )
-                argument_correctness_reason = (
-                    self._generate_reason_for_argument_correctness(
-                        argument_correctness_scores,
-                        multimodal=test_case.multimodal,
+                reasons = [tool_selection_reason]
+                if argument_correctness_scores:
+                    reasons.append(
+                        self._generate_reason_for_argument_correctness(
+                            argument_correctness_scores,
+                            multimodal=test_case.multimodal,
+                        )
                     )
-                )
-                self.reason = str(
-                    "\n".join(
-                        [tool_selection_reason, argument_correctness_reason]
-                    )
-                )
+                self.reason = str("\n".join(reasons))
 
                 self.verbose_logs = construct_verbose_logs(
                     self,
@@ -215,15 +213,15 @@ class ToolUseMetric(BaseConversationalMetric):
                     tool_selection_scores, multimodal=test_case.multimodal
                 )
             )
-            argument_correctness_reason = (
-                await self._a_generate_reason_for_argument_correctness(
-                    argument_correctness_scores,
-                    multimodal=test_case.multimodal,
+            reasons = [tool_selection_reason]
+            if argument_correctness_scores:
+                reasons.append(
+                    await self._a_generate_reason_for_argument_correctness(
+                        argument_correctness_scores,
+                        multimodal=test_case.multimodal,
+                    )
                 )
-            )
-            self.reason = str(
-                "\n".join([tool_selection_reason, argument_correctness_reason])
-            )
+            self.reason = str("\n".join(reasons))
 
             self.verbose_logs = construct_verbose_logs(
                 self,
@@ -424,16 +422,16 @@ class ToolUseMetric(BaseConversationalMetric):
         tool_selections_scores_divisor = (
             len(tool_use_scores) if len(tool_use_scores) > 0 else 1
         )
-        argument_correctness_score_divisor = (
-            len(argument_correctness_scores)
-            if len(argument_correctness_scores) > 0
-            else 1
+        tools_selection_score = (
+            tools_scores_sum / tool_selections_scores_divisor
         )
-        tools_selction_score = tools_scores_sum / tool_selections_scores_divisor
-        argument_correctness_score = (
-            arguments_scores_sum / argument_correctness_score_divisor
-        )
-        score = min(tools_selction_score, argument_correctness_score)
+        if len(argument_correctness_scores) > 0:
+            argument_correctness_score = arguments_scores_sum / len(
+                argument_correctness_scores
+            )
+            score = min(tools_selection_score, argument_correctness_score)
+        else:
+            score = tools_selection_score
         return 0 if self.strict_mode and score < self.threshold else score
 
     def _generate_reason_for_tool_selection(
