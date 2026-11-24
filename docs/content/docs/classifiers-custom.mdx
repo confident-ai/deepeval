@@ -155,7 +155,20 @@ wrong_price - The response says Pro costs $99 a month, but get_price returned $2
 ignored_tool - The response ignores the price the get_price tool returned.
 ```
 
-`classifications` holds one `Classification` per matching label, most certain first, each with its own `label`, `reason`, `evidence`, `confidence` and `new_label_description`. In single-label mode it holds at most one, and `label` and `reason` are shortcuts to it. A test case with an `expected_labels` entry passes when the expected label is any of the `classifications`.
+`classifications` holds one `Classification` per matching label, most certain first, each with its own `label`, `reason`, `evidence`, `confidence` and `new_label_description`. In single-label mode it holds at most one, and `label` and `reason` are shortcuts to it.
+
+To assert the labels a multi-label classifier should assign, give `expected_labels` a list. The test case passes only when the classifier assigns exactly those labels, none missing and none extra:
+
+```python
+test_case = LLMTestCase(
+    input="How much is the Pro plan?",
+    actual_output="The Pro plan is $99 a month.",
+    tools_called=[ToolCall(name="get_price", output="Pro: $20/month")],
+    expected_labels={failures.name: ["wrong_price", "ignored_tool"]},
+)
+```
+
+A single string still works and passes when that label is any of the `classifications`, so `{failures.name: "wrong_price"}` passes here too. A list is only accepted for a `multi_label` classifier.
 
 ## How Does It Work?
 

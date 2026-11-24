@@ -329,6 +329,16 @@ test_case = LLMTestCase(
 )
 ```
 
+For a multi-label classifier, pass the list of labels the test case should receive:
+
+```python
+test_case = LLMTestCase(
+    input="Can I cancel my plan and get last month refunded?",
+    actual_output="Sure, I've cancelled your plan and refunded last month.",
+    expected_labels={"topics": ["cancellation", "refund"]},
+)
+```
+
 For each classifier in the run, per test case:
 
 1. The test case has an entry for this classifier: the classification **passes** if it matches, otherwise it **fails**. A single label matches when it is among the labels assigned; a list matches only when it is exactly the labels assigned, with none missing and none extra.
