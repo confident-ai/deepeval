@@ -1,5 +1,8 @@
+import asyncio
 from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Type, Union
+
+from openai import APIError
 
 from deepeval.classifiers.classifier.schema import (
     ClassificationResult,
@@ -17,6 +20,10 @@ if TYPE_CHECKING:
     from deepeval.classifiers.classifier.classifier import Classifier
 
 MAX_GENERATION_ATTEMPTS = 2
+
+# A failed provider call during review or label merging keeps the label
+# rather than failing the whole classification.
+PROVIDER_ERRORS = (APIError, asyncio.TimeoutError, TimeoutError)
 
 OutputSchema = Type[Union[ClassificationResult, ClassificationResults]]
 

@@ -58,16 +58,18 @@ def test_new_label_keeps_the_judges_description():
     )
 
 
-def test_new_label_without_description_gets_a_fallback():
+@pytest.mark.parametrize("description", [None, "", "null", " None "])
+def test_new_label_without_description_gets_a_fallback(description):
     classifier, _ = _classify(
         {
             "label": "Plan Upgrade",
             "reason": "User asked to upgrade.",
-            "new_label_description": None,
+            "new_label_description": description,
         }
     )
-    assert classifier.classifications[0].new_label_description.startswith(
-        "Cases where user asked to upgrade"
+    assert classifier.classifications[0].new_label_description == (
+        "Test cases where user asked to upgrade. "
+        "Does not apply when supporting evidence is absent."
     )
 
 

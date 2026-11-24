@@ -73,6 +73,12 @@ class EvidencedClassificationResult(ClassificationResult):
 class SuggestedClassificationResult(ClassificationResult):
     new_label_description: Optional[str] = None
 
+    @field_validator("new_label_description", mode="before")
+    @classmethod
+    def _drop_empty_description(cls, value: Any) -> Optional[str]:
+        text = _to_text(value).strip()
+        return None if text.lower() in ("", "null", "none") else text
+
 
 class SuggestedEvidencedClassificationResult(
     SuggestedClassificationResult, EvidencedClassificationResult
