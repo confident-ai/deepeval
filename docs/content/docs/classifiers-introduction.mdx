@@ -341,7 +341,7 @@ topics = Classifier(
 
 Each new label joins a pool that later test cases reuse, and a proposal that means the same as an existing label is merged into it rather than added again, so the label set grows without near-duplicates. You can also seed the pool with `candidate_labels`, labels you want suggested but have not adopted yet, and cap how many new labels one test case adds with `max_new_labels`.
 
-`TopicClassifier`, `UseCaseClassifier` and `IssueClassifier` accept the same config, and are built to [discover](#quick-summary) topics, use cases and issues this way. Classifiers with label discovery are never cached, since the pool changes between calls.
+`TopicClassifier`, `UseCaseClassifier` and `IssueClassifier` accept the same config, and are built to discover topics, use cases and issues this way. Classifiers with label discovery are never cached, since the pool changes between calls.
 
 ## Expected Labels
 
