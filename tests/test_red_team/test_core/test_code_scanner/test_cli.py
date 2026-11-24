@@ -3,7 +3,8 @@ import json
 import pytest
 from typer.testing import CliRunner
 
-import deepeval.red_team.cli.main as climain
+import deepeval.cli.red_team.scan as scan_cli
+from deepeval.cli.main import app
 import deepeval.red_team.code_scanner.code_scanner as cs_module
 from deepeval.red_team.code_scanner import CodeFinding, CodeFindingsList
 
@@ -22,7 +23,7 @@ def scan_dir(tmp_path):
 @pytest.fixture(autouse=True)
 def mock_llm(monkeypatch):
     # No real model, no real LLM call.
-    monkeypatch.setattr(climain, "load_model", lambda spec: object())
+    monkeypatch.setattr(scan_cli, "load_model", lambda spec: object())
     monkeypatch.setattr(cs_module, "initialize_model", lambda m: (m, False))
     monkeypatch.setattr(
         cs_module,
@@ -45,19 +46,20 @@ def mock_llm(monkeypatch):
 
 class TestScanCli:
     def test_json_and_exit_code(self, runner, scan_dir):
-        r = runner.invoke(climain.app, ["scan", scan_dir, "--format", "json"])
+        r = runner.invoke(app, ["red-team", "--scan", scan_dir, "--format", "json"])
         assert r.exit_code == 1  # findings present -> CI-failing
         assert json.loads(r.stdout)[0]["vulnerabilityType"] == "eval_usage"
 
     def test_markdown_default(self, runner, scan_dir):
-        r = runner.invoke(climain.app, ["scan", scan_dir])
+        r = runner.invoke(app, ["red-team", "--scan", scan_dir])
         assert "DeepTeam Code" in r.stdout
 
     def test_min_severity_filters(self, runner, scan_dir):
         r = runner.invoke(
-            climain.app,
+            app,
             [
-                "scan",
+                "red-team",
+                "--scan",
                 scan_dir,
                 "--min-severity",
                 "critical",
@@ -70,20 +72,20 @@ class TestScanCli:
 
     def test_no_fail_flag(self, runner, scan_dir):
         r = runner.invoke(
-            climain.app, ["scan", scan_dir, "--no-fail-on-findings"]
+            app, ["red-team", "--scan", scan_dir, "--no-fail-on-findings"]
         )
         assert r.exit_code == 0
 
     def test_output_file(self, runner, scan_dir, tmp_path):
         out = str(tmp_path / "out.sarif")
         runner.invoke(
-            climain.app, ["scan", scan_dir, "--format", "sarif", "-o", out]
+            app, ["red-team", "--scan", scan_dir, "--format", "sarif", "--output", out]
         )
         with open(out) as f:
             assert json.load(f)["version"] == "2.1.0"
 
     def test_bad_format(self, runner, scan_dir):
-        r = runner.invoke(climain.app, ["scan", scan_dir, "--format", "xml"])
+        r = runner.invoke(app, ["red-team", "--scan", scan_dir, "--format", "xml"])
         assert r.exit_code != 0
 
     def test_comment_flag_posts_findings(self, runner, scan_dir, monkeypatch):
@@ -91,11 +93,10 @@ class TestScanCli:
 
         calls = []
         monkeypatch.setattr(
-            pkg, "post_pr_comments", lambda findings: calls.append(findings)
+            pkg, "post_pr_comments", lambda findings, **_: calls.append(findings)
         )
         r = runner.invoke(
-            climain.app,
-            ["scan", scan_dir, "--comment", "--no-fail-on-findings"],
+            app, ["red-team", "--scan", scan_dir, "--comment", "--no-fail-on-findings"],
         )
         assert r.exit_code == 0
         assert len(calls) == 1 and len(calls[0]) == 1

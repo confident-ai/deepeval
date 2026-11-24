@@ -3,9 +3,9 @@ Smoke-test the DeepTeam code scanner through an agentic harness, using that vend
 
 Each harness SDK is an optional extra. Install the one you want and set its key:
 
-    poetry add "deepteam[codex]"       && export OPENAI_API_KEY=...      # Codex
-    poetry add "deepteam[claude-code]" && export ANTHROPIC_API_KEY=...   # Claude Code
-    poetry add "deepteam[cursor]"      && export CURSOR_API_KEY=...      # Cursor CLI
+    poetry add "deepeval[codex]"       && export OPENAI_API_KEY=...      # Codex
+    poetry add "deepeval[claude-code]" && export ANTHROPIC_API_KEY=...   # Claude Code
+    poetry add "deepeval[cursor]"      && export CURSOR_API_KEY=...      # Cursor CLI
 
 Then run this script, naming the provider (and optionally a model):
 
@@ -16,8 +16,8 @@ Then run this script, naming the provider (and optionally a model):
 
 The exact same selection works on the CLI:
 
-    poetry run deepteam scan . --provider codex
-    poetry run deepteam scan . --provider claude-code --model <model>
+    poetry run deepeval red-team --scan . --provider codex
+    poetry run deepeval red-team --scan . --provider claude-code --model <model>
 """
 
 import sys
