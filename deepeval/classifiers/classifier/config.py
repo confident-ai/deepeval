@@ -14,6 +14,7 @@ class LabelDiscoveryConfig:
     top_k: int = 15
     max_new_labels: Optional[int] = None
     model: Optional[Union[str, DeepEvalBaseLLM]] = None
+    min_confidence: Optional[float] = None
 
     def __post_init__(self):
         object.__setattr__(

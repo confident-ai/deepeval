@@ -11,8 +11,10 @@ from deepeval.classifiers.classifier import (
 )
 from deepeval.classifiers.classifier.steps.truncate import MAX_CONTENT_CHARS
 from deepeval.classifiers.issues.schema import IssueReview
-from deepeval.models import DeepEvalBaseLLM
+from deepeval.config.eval_mode import ClassifierEvalModeName
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.templates import make_template_class
+from deepeval.classifiers.utils import accepts_system_one_model
 
 
 class IssueClassifierTemplate(
@@ -29,12 +31,16 @@ class IssueClassifier(Classifier):
 
     default_template: Type[ClassifierTemplate] = IssueClassifierTemplate
     review_schema: Type[IssueReview] = IssueReview
+    finds_issues: bool = True
 
+    @accepts_system_one_model
     def __init__(
         self,
         name: str,
         labels: Sequence[Union[str, Label]] = (),
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
+        decision_model: Optional[Union[str, DeepEvalBaseSystemOneModel]] = None,
+        eval_mode: Optional[ClassifierEvalModeName] = "llm",
         include_reason: bool = True,
         async_mode: bool = True,
         classification_template: Optional[Type[ClassifierTemplate]] = None,
@@ -50,7 +56,8 @@ class IssueClassifier(Classifier):
             name=name,
             labels=labels,
             model=model,
-            eval_mode="llm",
+            decision_model=decision_model,
+            eval_mode=eval_mode,
             include_reason=include_reason,
             allow_none=True,
             async_mode=async_mode,

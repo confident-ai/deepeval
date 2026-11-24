@@ -411,7 +411,8 @@ def format_classification_reason(
     confidence, then every alternative in descending order."""
     chosen_p = answer.probabilities.get(answer.choice, 0.0)
     text = (
-        f'Decided by {_judge_name(classifier)}. Label "{answer.choice}" '
+        f"Decided by {classifier.decision_model.get_model_name()}. "
+        f'Label "{answer.choice}" '
         f"(P={chosen_p:.2f}, confidence={answer.confidence:.2f})."
     )
     alternatives = sorted(
