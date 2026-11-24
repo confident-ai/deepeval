@@ -116,6 +116,7 @@ Once the call has at least three caller-to-agent gaps, the metric also scores ho
 A perfectly even agent keeps the full score; a 1s spread costs about 0.08, a 3s spread about 0.16. With fewer than three caller-to-agent gaps the first term is the whole score and `response_delays.score` is `None`.
 
 The metric returns no score and marks the evaluation as skipped when any audio turn is missing `start_time`, when fewer than two clips are placed on the timeline, or when no two consecutive turns change speaker.
+A skipped metric is left out of `evaluate()` results and does not fail the test case.
 
 :::caution
 Silence-based end-of-turn detection is part of what this metric measures. A `turn_detection="patient"` preset waits longer before the caller replies, which shows up here as larger gaps — that is real dead air on the recording, but it is your harness's, not your agent's. For the same reason, timings only compare within a `VoiceProtocol`: keep the connector fixed when tracking this score over time.
