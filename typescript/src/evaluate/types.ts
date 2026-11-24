@@ -105,6 +105,7 @@ export const ApiToolCallSchema = z.object({
   reasoning: z.string().nullish(),
   output: z.unknown(),
   inputParameters: z.record(z.string(), z.unknown()).nullish(),
+  turn: z.number().int().nullish(),
 });
 export type ApiToolCall = z.infer<typeof ApiToolCallSchema>;
 

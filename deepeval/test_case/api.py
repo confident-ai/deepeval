@@ -62,6 +62,7 @@ def create_api_test_case(
             order=order,
             scenario=test_case.scenario,
             expectedOutcome=test_case.expected_outcome,
+            expectedTools=test_case.expected_tools,
             userDescription=test_case.user_description,
             context=test_case.context,
             tags=test_case.tags,

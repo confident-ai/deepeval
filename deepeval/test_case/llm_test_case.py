@@ -257,6 +257,7 @@ class ToolCall(BaseModel):
         serialization_alias="inputParameters",
         validation_alias=AliasChoices("inputParameters", "input_parameters"),
     )
+    turn: Optional[int] = None
 
     @field_serializer("type")
     def serialize_type(self, value: ToolCallType) -> str:
@@ -304,6 +305,8 @@ class ToolCall(BaseModel):
             fields.append(f'description="{self.description}"')
         if self.reasoning:
             fields.append(f'reasoning="{self.reasoning}"')
+        if self.turn is not None:
+            fields.append(f"turn={self.turn}")
 
         # Handle nested fields like input_parameters
         if self.input_parameters:
