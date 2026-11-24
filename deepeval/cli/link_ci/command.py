@@ -8,10 +8,15 @@ import sys
 import tempfile
 from dataclasses import dataclass
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import Dict, List, Optional, Sequence, Union
 
 import typer
+from rich.console import Console
+from rich.markup import escape
+from rich.padding import Padding
+from rich.table import Table
 
+from deepeval.cli.auth.flow import CONFIDENT_PURPLE, prompt_confirm
 from deepeval.cli.link_ci.git import (
     GitHubRepository,
     LinkCiError,
@@ -44,12 +49,25 @@ LINK_CI_HELP = (
     "git and GitHub CLI (`gh`) login; no GitHub token is sent to Confident AI."
 )
 
-DEFAULT_BRANCH_NAME = "deepeval/link-ci"
+DEFAULT_BRANCH_NAME = "deepeval/link-ci-cd"
 COMMIT_MESSAGE = "Run deepeval tests on every pull request"
 CONFIDENT_API_KEY_SECRET = "CONFIDENT_API_KEY"
 DEFAULT_JUDGE_SECRET = "OPENAI_API_KEY"
 FORWARDED_SETTINGS = ("CONFIDENT_BASE_URL", "CONFIDENT_REGION")
 TEST_RUN_COMMAND = "deepeval test run"
+
+DONE = "[rgb(5,245,141)]✓[/rgb(5,245,141)]"
+WARNING = "[bold yellow]⚠[/bold yellow]"
+INDENT = "   "
+
+console = Console(highlight=False, emoji=False)
+error_console = Console(stderr=True, highlight=False, emoji=False)
+
+
+@dataclass(frozen=True)
+class ExistingWorkflow:
+    path: str
+    default_branch: str
 
 
 @dataclass(frozen=True)
@@ -130,7 +148,7 @@ def _uncommitted_test_files(
 
 def _plan(
     cwd: Path, test_file_or_directory: Optional[str], branch: str
-) -> Optional[LinkCiPlan]:
+) -> Union[LinkCiPlan, ExistingWorkflow]:
     root = find_repository_root(cwd)
     if root is None:
         raise LinkCiError(
@@ -167,12 +185,9 @@ def _plan(
     if exists_on_ref(root, default_ref, WORKFLOW_PATH):
         existing_workflows = [WORKFLOW_PATH]
     if existing_workflows:
-        typer.echo(
-            f"✓ {existing_workflows[0]} on {default_branch} already runs "
-            f"`{TEST_RUN_COMMAND}` in GitHub Actions, so there's nothing to "
-            "set up."
+        return ExistingWorkflow(
+            path=existing_workflows[0], default_branch=default_branch
         )
-        return None
     if remote_branch_exists(root, branch):
         raise LinkCiError(
             f"The branch {branch} already exists on origin. Merge or delete "
@@ -216,7 +231,125 @@ def _plan(
 
 
 def _confirm(message: str, yes: bool) -> bool:
-    return yes or typer.confirm(message, default=True)
+    return yes or prompt_confirm(message)
+
+
+def _join(names: Sequence[str]) -> str:
+    if len(names) <= 1:
+        return "".join(names)
+    return f"{', '.join(names[:-1])} and {names[-1]}"
+
+
+def _link(url: str) -> str:
+    return f"[link={url}]{escape(url)}[/link]"
+
+
+def _test_run_command(plan: LinkCiPlan) -> str:
+    return shlex.join(["deepeval", "test", "run", *plan.test_run_args])
+
+
+def _status(message: str):
+    return console.status(
+        message, spinner="dots", spinner_style=CONFIDENT_PURPLE
+    )
+
+
+def _print_plan(plan: LinkCiPlan) -> None:
+    default_branch = plan.default_branch
+    console.print(
+        "\n🔗 Setting up GitHub Actions for "
+        f"[bold]{escape(plan.repository.full_name)}[/bold]\n"
+    )
+    grid = Table.grid(padding=(0, 2))
+    grid.add_column(style="dim")
+    grid.add_column()
+    grid.add_row("Runs", f"[bold cyan]{escape(_test_run_command(plan))}[/]")
+    grid.add_row(
+        "On",
+        f"every pull request into {escape(default_branch)} and every push "
+        f"to {escape(default_branch)}",
+    )
+    grid.add_row("Workflow", escape(WORKFLOW_PATH))
+    grid.add_row("Secrets", escape(", ".join(plan.secret_names)))
+    console.print(Padding(grid, (0, 0, 0, len(INDENT)), expand=False))
+    console.print()
+
+
+def _confirm_test_files(plan: LinkCiPlan, yes: bool) -> List[str]:
+    test_files = plan.test_files
+    if not test_files:
+        return []
+    files = _join(test_files)
+    one = len(test_files) == 1
+    pronoun = "it" if one else "them"
+    if _confirm(
+        f"{files} {'is' if one else 'are'} not on {plan.default_branch} yet, "
+        f"so CI can't run {pronoun}. Add {pronoun} to the pull request?",
+        yes,
+    ):
+        return test_files
+    console.print(
+        f"{WARNING} Leaving {escape(files)} out. CI fails until "
+        f"{pronoun} {'is' if one else 'are'} on "
+        f"{escape(plan.default_branch)}.",
+        soft_wrap=True,
+    )
+    return []
+
+
+def _share_secrets(gh: Optional[str], plan: LinkCiPlan, yes: bool) -> List[str]:
+    if gh is None:
+        return list(plan.secret_names)
+    missing = [
+        name for name in plan.secret_names if name not in plan.secret_values
+    ]
+    if not plan.secret_values:
+        return missing
+    if not _confirm(
+        f"Copy your local {_join(list(plan.secret_values))} to the "
+        f"repository secrets of {plan.repository.full_name} with gh?",
+        yes,
+    ):
+        return list(plan.secret_names)
+    with _status("Setting repository secrets..."):
+        failed = _set_secrets(gh, plan)
+    shared = [name for name in plan.secret_values if name not in failed]
+    if shared:
+        console.print(
+            f"{DONE} Set {escape(_join(shared))} on "
+            f"{escape(plan.repository.full_name)}",
+            soft_wrap=True,
+        )
+    return missing + failed
+
+
+def _open_pull_request(gh: str, plan: LinkCiPlan, branch: str) -> Optional[str]:
+    result = run_gh(
+        gh,
+        [
+            "pr",
+            "create",
+            "--repo",
+            f"{plan.repository.host}/{plan.repository.full_name}",
+            "--base",
+            plan.default_branch,
+            "--head",
+            branch,
+            "--title",
+            COMMIT_MESSAGE,
+            "--body",
+            _pull_request_body(plan),
+        ],
+    )
+    if result.returncode != 0:
+        return None
+    lines = result.stdout.strip().splitlines()
+    return lines[-1] if lines else None
+
+
+def _pull_request_label(url: str) -> str:
+    number = url.rstrip("/").rsplit("/", 1)[-1]
+    return f"pull request #{number}" if number.isdigit() else "pull request"
 
 
 def _set_secrets(gh: str, plan: LinkCiPlan) -> List[str]:
@@ -271,7 +404,7 @@ def _push_branch(plan: LinkCiPlan, branch: str, test_files: List[str]) -> None:
 
 
 def _pull_request_body(plan: LinkCiPlan) -> str:
-    command = shlex.join(["deepeval", "test", "run", *plan.test_run_args])
+    command = _test_run_command(plan)
     return "\n".join(
         [
             f"Runs `{command}` with GitHub Actions on every pull request and "
@@ -314,81 +447,68 @@ def link_ci_command(
 ) -> None:
     cwd = Path.cwd()
     try:
-        plan = _plan(cwd, test_file_or_directory, branch)
-        if plan is None:
+        with _status("Checking your repository..."):
+            plan = _plan(cwd, test_file_or_directory, branch)
+        if isinstance(plan, ExistingWorkflow):
+            console.print(
+                f"{DONE} {escape(plan.path)} on "
+                f"{escape(plan.default_branch)} already runs "
+                f"[bold cyan]{TEST_RUN_COMMAND}[/bold cyan] in GitHub "
+                "Actions, so there's nothing to set up.",
+                soft_wrap=True,
+            )
             return
 
-        test_files = plan.test_files
-        if test_files and not _confirm(
-            f"{', '.join(test_files)} isn't on {plan.default_branch} yet, so "
-            "CI can't run it. Add it to the pull request?",
-            yes,
-        ):
-            typer.echo(
-                "Skipping the test files. CI will fail until they're on "
-                f"{plan.default_branch}."
-            )
-            test_files = []
-
+        _print_plan(plan)
+        test_files = _confirm_test_files(plan, yes)
         gh = find_authenticated_gh(plan.repository)
-        missing_secrets = [
-            name for name in plan.secret_names if name not in plan.secret_values
-        ]
-        if gh and plan.secret_values:
-            names = ", ".join(plan.secret_values)
-            if _confirm(
-                f"Set {names} as repository secrets on "
-                f"{plan.repository.full_name} with gh, using your local values?",
-                yes,
-            ):
-                missing_secrets += _set_secrets(gh, plan)
-            else:
-                missing_secrets = list(plan.secret_names)
-        elif not gh:
-            missing_secrets = list(plan.secret_names)
+        missing_secrets = _share_secrets(gh, plan, yes)
 
-        _push_branch(plan, branch, test_files)
+        with _status(f"Pushing {escape(branch)}..."):
+            _push_branch(plan, branch, test_files)
+        console.print(
+            f"{DONE} Pushed {escape(_join([WORKFLOW_PATH, *test_files]))} "
+            f"to {escape(branch)}",
+            soft_wrap=True,
+        )
 
         pull_request_url = None
         if gh:
-            result = run_gh(
-                gh,
-                [
-                    "pr",
-                    "create",
-                    "--repo",
-                    f"{plan.repository.host}/{plan.repository.full_name}",
-                    "--base",
-                    plan.default_branch,
-                    "--head",
-                    branch,
-                    "--title",
-                    COMMIT_MESSAGE,
-                    "--body",
-                    _pull_request_body(plan),
-                ],
-            )
-            if result.returncode == 0:
-                pull_request_url = result.stdout.strip().splitlines()[-1]
+            with _status("Opening the pull request..."):
+                pull_request_url = _open_pull_request(gh, plan, branch)
     except LinkCiError as e:
-        typer.echo(f"❌ {e}", err=True)
+        error_console.print(f"❌ {escape(str(e))}", soft_wrap=True)
+        raise typer.Exit(code=1)
+    except typer.Abort:
+        console.print("\nCancelled. Nothing was pushed.")
         raise typer.Exit(code=1)
 
     if pull_request_url:
-        typer.echo(f"✓ Opened {pull_request_url}")
-    else:
-        typer.echo(
-            f"✓ Pushed {branch}. Open the pull request: "
-            f"{plan.repository.compare_url(plan.default_branch, branch)}"
+        console.print(
+            f"{DONE} Opened {_pull_request_label(pull_request_url)}",
+            soft_wrap=True,
         )
     if missing_secrets:
-        typer.echo(
-            f"» Add {', '.join(missing_secrets)} as repository secrets before "
-            f"the first run: {plan.repository.secrets_url}"
+        console.print(
+            f"\n{WARNING} Add {escape(', '.join(missing_secrets))} as "
+            "repository secrets before the first run:\n"
+            f"{INDENT}{_link(plan.repository.secrets_url)}",
+            soft_wrap=True,
         )
-    typer.echo(
-        "» Once it's merged, every pull request runs your tests and each run "
-        "shows on Confident AI's CI/CD page."
+    next_step, url = (
+        ("merge the pull request", pull_request_url)
+        if pull_request_url
+        else (
+            "open the pull request and merge it",
+            plan.repository.compare_url(plan.default_branch, branch),
+        )
+    )
+    console.print(
+        f"\n🎉 One step to go: {next_step}.\n"
+        f"{INDENT}{_link(url)}\n"
+        f"{INDENT}Then every pull request runs your tests, and each run "
+        "shows on Confident AI's CI/CD page.",
+        soft_wrap=True,
     )
 
 
@@ -423,7 +543,8 @@ def print_link_ci_hint() -> None:
             return
     except Exception:
         return
-    typer.echo(
-        "\n» Run `deepeval link-ci` to run these tests on every pull request "
-        "with GitHub Actions."
+    console.print(
+        "\n» Run [bold cyan]deepeval link-ci[/bold cyan] to run these tests "
+        "on every pull request with GitHub Actions.",
+        soft_wrap=True,
     )

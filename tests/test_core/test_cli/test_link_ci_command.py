@@ -4,6 +4,7 @@ from types import SimpleNamespace
 from typing import List, Optional
 
 import pytest
+import typer
 from typer.testing import CliRunner
 
 from deepeval.cli import link_ci
@@ -170,8 +171,9 @@ def test_with_gh_sets_secrets_from_local_keys_before_opening_the_pull_request(
     pr_args = fake_gh.calls[2].args
     assert pr_args[pr_args.index("--base") + 1] == "main"
     assert pr_args[pr_args.index("--head") + 1] == BRANCH
-    assert "Opened https://github.com/acme/support-bot/pull/1" in result.output
-    assert "repository secrets" not in result.output
+    assert "Opened pull request #1" in result.output
+    assert "https://github.com/acme/support-bot/pull/1" in result.output
+    assert "before the first run" not in result.output
     workflow = _remote_file(repo, BRANCH, WORKFLOW_PATH)
     assert "ANTHROPIC_API_KEY: ${{ secrets.ANTHROPIC_API_KEY }}" in workflow
     assert "OPENAI_API_KEY" not in workflow
@@ -217,6 +219,21 @@ def test_refuses_to_reuse_a_branch_that_already_exists_on_origin(repo):
 
     assert result.exit_code == 1
     assert f"The branch {BRANCH} already exists on origin" in result.output
+
+
+def test_cancelling_a_prompt_pushes_nothing(repo, monkeypatch):
+    _write_test_file(repo)
+
+    def cancel(message):
+        raise typer.Abort()
+
+    monkeypatch.setattr(link_ci_command_module, "prompt_confirm", cancel)
+
+    result = runner.invoke(app, ["link-ci", "tests/test_example.py"])
+
+    assert result.exit_code == 1
+    assert "Cancelled. Nothing was pushed." in result.output
+    assert _remote_file(repo, BRANCH, WORKFLOW_PATH) is None
 
 
 def test_fails_outside_a_github_repository(repo):
@@ -371,7 +388,7 @@ def test_hint_shows_in_a_github_repository_without_the_workflow(
 ):
     link_ci.print_link_ci_hint()
 
-    assert "Run `deepeval link-ci`" in capsys.readouterr().out
+    assert "Run deepeval link-ci" in capsys.readouterr().out
 
 
 def test_hint_is_silent_once_the_workflow_exists(

@@ -170,7 +170,7 @@ def test_link_warns_instead_of_raising_when_the_server_rejects_it(
 
     link_test_run_to_github_repository("test-run-1", 0)
 
-    assert "Warning: couldn't link this test run to acme/support-bot" in (
+    assert "Couldn't link this test run to acme/support-bot" in (
         capsys.readouterr().out
     )
 

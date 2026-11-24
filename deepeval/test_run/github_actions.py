@@ -6,8 +6,13 @@ import json
 import os
 from typing import Any, Dict, Mapping, Optional
 
+from rich.console import Console
+from rich.markup import escape
+
 from deepeval.config.settings import get_settings
 from deepeval.confident.api import Api, Endpoints, HttpMethods
+
+console = Console(highlight=False, emoji=False)
 
 PULL_REQUEST_EVENTS = frozenset({"pull_request", "pull_request_target"})
 BRANCH_EVENTS = frozenset({"push", "workflow_dispatch", "schedule"})
@@ -121,11 +126,15 @@ def link_test_run_to_github_repository(
             body={"testRunId": test_run_id, "exitCode": exit_code, "git": git},
         )
     except Exception as e:
-        print(
-            f"Warning: couldn't link this test run to {repository} on "
-            f"Confident AI's CI/CD page: {e}"
+        console.print(
+            "[bold yellow]⚠ WARNING:[/bold yellow] Couldn't link this test "
+            f"run to {escape(repository)} on Confident AI's CI/CD page: "
+            f"{escape(str(e))}",
+            soft_wrap=True,
         )
         return
-    print(
-        f"✓ Linked this test run to {repository} on Confident AI's CI/CD page."
+    console.print(
+        "[rgb(5,245,141)]✓[/rgb(5,245,141)] Linked this test run to "
+        f"[bold]{escape(repository)}[/bold] on Confident AI's CI/CD page.",
+        soft_wrap=True,
     )
