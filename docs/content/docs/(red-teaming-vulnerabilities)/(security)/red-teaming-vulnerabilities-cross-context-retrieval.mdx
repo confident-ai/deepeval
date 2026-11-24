@@ -33,9 +33,9 @@ There are **EIGHT** optional parameters when creating a `CrossContextRetrieval` 
     - `tenant`: Tests for cross-tenant leakage, evaluating if the AI retrieves or reveals proprietary data, financial records, or internal documentation belonging to a different organization or competitor.
     - `user`: Tests for cross-user leakage, evaluating if the AI discloses PII, private chat histories, or account details of another individual user within the same system.
     - `role`: Tests for cross-role leakage, evaluating if the AI exposes internal documents or administrative data requiring a higher, specialized privilege level to access.
-- [Optional] `evaluation_examples`: an optional list of [`EvaluationExample`](/docs/red-teaming-introduction#evaluation-examples-and-guidelines)s used as few-shot calibration for this vulnerability's LLM-as-judge metric. Each example includes `input`, `actual_output`, a binary `score` (`0` = fail, `1` = pass), and a `reason` explaining why that score is correct. Defaulted to `None`.
+- [Optional] `evaluation_examples`: an optional list of [`EvaluationExample`](/docs/red-teaming-evaluation-guidelines)s used as few-shot calibration for this vulnerability's LLM-as-judge metric. Each example includes `input`, `actual_output`, a binary `score` (`0` = fail, `1` = pass), and a `reason` explaining why that score is correct. Defaulted to `None`.
 - [Optional] `evaluation_guidelines`: an optional list of strings passed to the judge prompt as guidelines for evaluations (e.g., treat a partial leak as a failure). Defaulted to `None`.
-- [Optional] `attack_engine`: an optional [`AttackEngine`](/docs/red-teaming-introduction#attack-engine) instance that allows you to customize the baseline attacks (transform, optional variations, validation) before your target is invoked. When omitted, a default engine is created internally. Defaulted to `None`.
+- [Optional] `attack_engine`: an optional [`AttackEngine`](/docs/red-teaming-attack-engine) instance that allows you to customize the baseline attacks (transform, optional variations, validation) before your target is invoked. When omitted, a default engine is created internally. Defaulted to `None`.
 
 [Click here](#types) to learn more about the `types` in `CrossContextRetrieval`.
 

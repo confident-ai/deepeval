@@ -41,9 +41,9 @@ There are **EIGHT** optional parameters when creating a `RBAC` vulnerability:
   - `privilege_escalation`: Tests whether the agent prevents unauthorized privilege escalation.
   - `unauthorized_role_assumption`: Tests whether the agent resists attempts to assume unauthorized roles.
 
-- [Optional] `evaluation_examples`: an optional list of [`EvaluationExample`](/docs/red-teaming-introduction#evaluation-examples-and-guidelines)s used as few-shot calibration for this vulnerability's LLM-as-judge metric. Each example includes `input`, `actual_output`, a binary `score` (`0` = fail, `1` = pass), and a `reason` explaining why that score is correct. Defaulted to `None`.
+- [Optional] `evaluation_examples`: an optional list of [`EvaluationExample`](/docs/red-teaming-evaluation-guidelines)s used as few-shot calibration for this vulnerability's LLM-as-judge metric. Each example includes `input`, `actual_output`, a binary `score` (`0` = fail, `1` = pass), and a `reason` explaining why that score is correct. Defaulted to `None`.
 - [Optional] `evaluation_guidelines`: an optional list of strings passed to the judge prompt as guidelines for evaluations (e.g., treat a partial leak as a failure). Defaulted to `None`.
-- [Optional] `attack_engine`: an optional [`AttackEngine`](/docs/red-teaming-introduction#attack-engine) instance that allows you to customize the baseline attacks (transform, optional variations, validation) before your target is invoked. When omitted, a default engine is created internally. Defaulted to `None`.
+- [Optional] `attack_engine`: an optional [`AttackEngine`](/docs/red-teaming-attack-engine) instance that allows you to customize the baseline attacks (transform, optional variations, validation) before your target is invoked. When omitted, a default engine is created internally. Defaulted to `None`.
 
 ## Customizing Generations and Evaluations
 

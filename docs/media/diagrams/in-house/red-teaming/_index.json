@@ -120,18 +120,6 @@
       }
     },
     {
-      "file": "red-teaming-loop.svg",
-      "title": "The red-teaming loop",
-      "alt": "Four-step cycle around the DeepTeam logo: simulate adversarial attacks, probe the target LLM system, evaluate LLM outputs, then iterate based on the vulnerabilities detected",
-      "width": 2352,
-      "height": 1097,
-      "source": {
-        "urls": [
-          "https://deepteam-docs.s3.amazonaws.com/red-teaming-workflow.svg"
-        ]
-      }
-    },
-    {
       "file": "risk-assessment-structure.webp",
       "title": "Structure of a risk assessment",
       "alt": "A risk assessment holds an overview with the red-teaming overview, vulnerability type results and attack method results, plus every test case",

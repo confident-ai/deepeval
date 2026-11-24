@@ -51,7 +51,7 @@
     "benchmarks-introduction",
     "(benchmarks)",
     "---[ShieldAlert]Red Teaming---",
-    "red-teaming-introduction",
+    "(red-teaming-intro)",
     "red-teaming-quickstart",
     "what-is-llm-red-teaming",
     "red-teaming-yaml-cli",

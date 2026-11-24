@@ -61,7 +61,7 @@ Write each criterion so a judge can decide it from a **single reply**, e.g. _"Th
 
 ### Parallel mode
 
-In `parallel` mode (the default), an orchestration agent coordinates **several sub-agents at once**, each pursuing a different criterion. Because the orchestrator owns the conversation history and **replays it to the target on every turn**, your callback must accept a `turns` argument, exactly like the [model callback](/docs/red-teaming-introduction#model-callback) used by `red_team`:
+In `parallel` mode (the default), an orchestration agent coordinates **several sub-agents at once**, each pursuing a different criterion. Because the orchestrator owns the conversation history and **replays it to the target on every turn**, your callback must accept a `turns` argument, exactly like the [model callback](/docs/red-teaming-model-callback) used by `red_team`:
 
 ```python title="parallel_callback.py"
 from typing import List, Optional

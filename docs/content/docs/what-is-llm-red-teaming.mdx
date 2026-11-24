@@ -36,8 +36,6 @@ In short, LLM red teaming lets us “break” the model in-house so it doesn’t
 
 Red teaming LLM systems involves systematically testing for vulnerabilities, adversarial weaknesses, and unintended behaviors, and typically includes **manual adversarial testing** for nuanced attack discovery and **automated attack simulations** for scale and efficiency.
 
-<ImageDisplayer id="diagrams/in-house/red-teaming/red-teaming-loop" />
-
 Both methods complement each other in building a robust and secure AI model, but the former is more suited for companies training foundational models, which means for those reading this you are probably looking for simulating adversarial attacks instead.
 
 :::info
@@ -219,7 +217,7 @@ Different LLM systems exposes different weaknesses, and different weaknesses req
 ### 1. Identify your weaknesses
 
 :::info
-This builds from the [previous section](/docs/what-is-llm-red-teaming#model-vs-system-weaknesseses) were we talked about model vs system weaknesses.
+This builds from the [previous section](/docs/what-is-llm-red-teaming#model-vs-system-weakness) were we talked about model vs system weaknesses.
 :::
 
 It is important to note that both categories involve different vulnerabilities. Let's take PII leakage for example, if you're building a customer support LLM agent on top of OpenAI, you're most likely to be worried about PII leakage in the system through unauthorized access vulnerabilities such as RBAC, rather than personal data being exposed through the overfitting of training data.
