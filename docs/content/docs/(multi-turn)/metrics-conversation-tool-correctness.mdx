@@ -173,15 +173,33 @@ console.log(metric.score, metric.reason);
 
 ## How Is It Calculated?
 
-The `ConversationToolCorrectnessMetric` splits the expected tools into checks and scores each one with the same rules as the [tool correctness metric](/docs/metrics-tool-correctness#how-is-it-calculated):
+The **conversation tool correctness metric** score is calculated using the following steps:
 
-- **One check per pinned turn.** The tools pinned to a turn are compared with that turn's own <Term py="tools_called" ts="toolsCalled"/>.
-- **One check for everything else.** The expected tools without `turn` are compared with the <Term py="tools_called" ts="toolsCalled"/> of every other assistant turn, in turn order. Turns that have pinned tools are left out of this check, so their calls don't count as extra calls. If nothing is pinned, this check covers the whole conversation.
+1. Split <Term py="expected_tools" ts="expectedTools"/> into checks:
 
-Tools on user turns are ignored. The final score is the mean of the checks:
+- **One check per pinned turn:** the expected tools with `turn` set to that turn, compared with that turn's own <Term py="tools_called" ts="toolsCalled"/>.
+- **One check for the rest of the conversation:** the expected tools without `turn`, compared with the <Term py="tools_called" ts="toolsCalled"/> of every other assistant turn, in turn order. Turns with pinned tools are left out, so their calls don't count as extra calls. If nothing is pinned, this check covers the whole conversation.
 
-<Equation formula="\text{Conversation Tool Correctness} = \frac{\sum \text{Check Scores}}{\text{Number of Checks}}" />
+Tools on user turns are ignored.
 
-In the example above, `search_flights` is checked across the conversation and `book_flight` on turn 3. The agent says it booked the flight but never calls `book_flight`, so the turn 3 check scores 0, the other check scores 1, and the final score is 0.5.
+2. Score each check with the same deterministic equation as the [tool correctness metric](/docs/metrics-tool-correctness#how-is-it-calculated):
 
-Each check's score and reason is available on <Term py="metric.check_scores" ts="metric.checkScores"/>, and every tool the assistant called is on <Term py="metric.tools_called" ts="metric.toolsCalled"/>.
+<Equation
+  formula="\text{Check Score} = \frac{\text{Number of Correctly Used Tools (or Correct Input Parameters/Outputs)}}{\text{Total Number of Tools Called}}
+"
+/>
+
+- A check scores 1 when every expected tool in it was called correctly according to <Term py="evaluation_params" ts="evaluationParams"/>, <Term py="should_consider_ordering" ts="shouldConsiderOrdering"/> and <Term py="should_exact_match" ts="shouldExactMatch"/>, and 0 when none were.
+
+3. Average the check scores:
+
+<Equation
+  formula="\text{Conversation Tool Correctness} = \frac{\sum_{i=1}^{n} \text{Check Score}_i}{n}
+"
+/>
+
+where *n* is the number of checks. With nothing pinned there is one check, so the score is simply the tool correctness of the whole conversation.
+
+In the example above, `search_flights` is checked across the conversation and `book_flight` on turn 3. The agent says it booked the flight but never calls `book_flight`, so the turn 3 check scores 0, the rest of the conversation scores 1, and the final score is 0.5.
+
+Each check's score and reason is available on <Term py="metric.check_scores" ts="metric.checkScores"/>, and every tool the assistant called is on <Term py="metric.tools_called" ts="metric.toolsCalled"/>. No step uses a model.
