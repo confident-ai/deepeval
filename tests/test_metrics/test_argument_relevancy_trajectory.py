@@ -1,4 +1,4 @@
-"""ArgumentCorrectness on a traced span with no tool calls of its own judges
+"""ArgumentRelevancy on a traced span with no tool calls of its own judges
 the tool calls of the nearest LLM span: the tool's parent when that is an LLM
 span, else the latest LLM sibling that started before it."""
 
@@ -8,10 +8,10 @@ from deepeval.dataset.golden import Golden
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.evaluate.configs import CacheConfig, DisplayConfig, ErrorConfig
 from deepeval.evaluate.execute import execute_agentic_test_cases_from_loop
-from deepeval.metrics import ArgumentCorrectnessMetric
-from deepeval.metrics.argument_correctness.schema import (
-    ArgumentCorrectnessScoreReason,
-    ArgumentCorrectnessVerdict,
+from deepeval.metrics import ArgumentRelevancyMetric
+from deepeval.metrics.argument_relevancy.schema import (
+    ArgumentRelevancyScoreReason,
+    ArgumentRelevancyVerdict,
     Verdicts,
 )
 from deepeval.models import DeepEvalBaseLLM
@@ -40,10 +40,8 @@ class RecordingJudge(DeepEvalBaseLLM):
     def generate(self, prompt, schema=None, **kwargs):
         if schema is Verdicts:
             self.verdict_prompts.append(prompt)
-            return Verdicts(
-                verdicts=[ArgumentCorrectnessVerdict(verdict="yes")]
-            )
-        return ArgumentCorrectnessScoreReason(reason="Arguments fit the input.")
+            return Verdicts(verdicts=[ArgumentRelevancyVerdict(verdict="yes")])
+        return ArgumentRelevancyScoreReason(reason="Arguments fit the input.")
 
     async def a_generate(self, prompt, schema=None, **kwargs):
         return self.generate(prompt, schema=schema, **kwargs)
@@ -79,7 +77,7 @@ def _traced(span, root_spans, **fields) -> LLMTestCase:
 
 def _judged(test_case, async_mode=True) -> str:
     judge = RecordingJudge()
-    metric = ArgumentCorrectnessMetric(model=judge, async_mode=async_mode)
+    metric = ArgumentRelevancyMetric(model=judge, async_mode=async_mode)
     metric.measure(test_case)
     assert len(judge.verdict_prompts) == 1
     return judge.verdict_prompts[0]
@@ -255,7 +253,7 @@ def test_tool_call_without_an_llm_span_is_still_missing(async_mode):
         input="agent input",
         children=[tool, _span(LlmSpan, "summarize", 2, input="x")],
     )
-    metric = ArgumentCorrectnessMetric(
+    metric = ArgumentRelevancyMetric(
         model=RecordingJudge(), async_mode=async_mode
     )
 
@@ -264,7 +262,7 @@ def test_tool_call_without_an_llm_span_is_still_missing(async_mode):
 
 
 def test_untraced_test_case_without_tool_calls_is_still_missing():
-    metric = ArgumentCorrectnessMetric(model=RecordingJudge())
+    metric = ArgumentRelevancyMetric(model=RecordingJudge())
 
     with pytest.raises(MissingTestCaseParamsError):
         metric.measure(LLMTestCase(input="What's the minimum salary?"))
@@ -280,7 +278,7 @@ def _offline_tracing(monkeypatch):
 
 def test_executor_gives_an_agent_span_metric_the_span_tree(_offline_tracing):
     judge = RecordingJudge()
-    metric = ArgumentCorrectnessMetric(model=judge, async_mode=False)
+    metric = ArgumentRelevancyMetric(model=judge, async_mode=False)
 
     @observe(type="tool")
     def check_application_status(application_id: str):
@@ -327,3 +325,12 @@ def test_executor_gives_an_agent_span_metric_the_span_tree(_offline_tracing):
         "search_agency_kb",
     ]
     assert "What's happening with our EP application?" in prompt
+
+
+def test_argument_correctness_is_a_deprecated_alias():
+    from deepeval.metrics import ArgumentCorrectnessMetric
+
+    with pytest.warns(DeprecationWarning, match="ArgumentRelevancyMetric"):
+        metric = ArgumentCorrectnessMetric(model=RecordingJudge())
+    assert isinstance(metric, ArgumentRelevancyMetric)
+    assert metric.__name__ == "Argument Relevancy"

@@ -7,6 +7,7 @@
     "metrics-conversation-completeness",
     "metrics-goal-accuracy",
     "metrics-tool-use",
+    "metrics-conversational-tool-correctness",
     "metrics-topic-adherence",
     "metrics-turn-faithfulness",
     "metrics-turn-contextual-precision",

@@ -34,7 +34,7 @@ For **single-turn** apps, you populate fields on an [`LLMTestCase`](/docs/evalua
 - `input` — what you sent into your app (the question, document, draft, task, etc.).
 - <Term py="actual_output" ts="actualOutput"/> — what your app produced (the answer, summary, label, rewritten text, agent's final reply).
 - <Term py="retrieval_context" ts="retrievalContext"/> — for RAG-style apps, the chunks your retriever returned. Required by metrics like `FaithfulnessMetric` and `ContextualRelevancyMetric`.
-- <Term py="tools_called" ts="toolsCalled"/> — for agentic apps, the tools the agent invoked. Required by metrics like `ToolCorrectnessMetric` and `ArgumentCorrectnessMetric`.
+- <Term py="tools_called" ts="toolsCalled"/> — for agentic apps, the tools the agent invoked. Required by metrics like `ToolCorrectnessMetric` and `ArgumentRelevancyMetric`.
 - <Term py="expected_output" ts="expectedOutput"/> / <Term py="expected_tools" ts="expectedTools"/> — optional gold references, used by reference-based metrics.
 - `context` — optional extra background, used by some reference-based metrics.
 

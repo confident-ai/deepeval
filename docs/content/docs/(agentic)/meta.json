@@ -3,7 +3,7 @@
   "pages": [
     "metrics-task-completion",
     "metrics-step-efficiency",
-    "metrics-argument-correctness",
+    "metrics-argument-relevancy",
     "metrics-tool-correctness",
     "metrics-plan-adherence",
     "metrics-plan-quality"

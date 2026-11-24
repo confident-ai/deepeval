@@ -45,6 +45,7 @@ class MultiTurnParams(Enum):
     RETRIEVAL_CONTEXT = "retrieval_context"
     CHATBOT_ROLE = "chatbot_role"
     TOOLS_CALLED = "tools_called"
+    EXPECTED_TOOLS = "expected_tools"
     MCP_TOOLS = "mcp_tools_called"
     MCP_RESOURCES = "mcp_resources_called"
     MCP_PROMPTS = "mcp_prompts_called"
@@ -89,6 +90,13 @@ class Turn(BaseModel):
     tools_called: Optional[List[ToolCall]] = Field(
         default=None,
         validation_alias=AliasChoices("toolsCalled", "tools_called"),
+    )
+    # The tools an assistant turn should have called, for
+    # ConversationalToolCorrectnessMetric. Leave it None on turns you don't
+    # want scored; [] means "this turn should call no tools".
+    expected_tools: Optional[List[ToolCall]] = Field(
+        default=None,
+        validation_alias=AliasChoices("expectedTools", "expected_tools"),
     )
     # MCP
     mcp_tools_called: Optional[List[MCPToolCall]] = Field(default=None)

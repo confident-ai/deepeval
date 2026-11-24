@@ -19,19 +19,19 @@ import {
 } from "@/metrics/system-one";
 import {
   VerdictsSchema,
-  ArgumentCorrectnessScoreReasonSchema,
-  type ArgumentCorrectnessVerdict,
-} from "@/metrics/argument-correctness/schema";
+  ArgumentRelevancyScoreReasonSchema,
+  type ArgumentRelevancyVerdict,
+} from "@/metrics/argument-relevancy/schema";
 import { type MetricTemplateOverride } from "@/templates/override";
 import { prepareMeasure } from "@/metrics/prepare-measure";
-import { withToolCallsFromTrace } from "@/metrics/argument-correctness/utils";
+import { withToolCallsFromTrace } from "@/metrics/argument-relevancy/utils";
 
-const TEMPLATE_CLASS = "ArgumentCorrectnessMetric";
+const TEMPLATE_CLASS = "ArgumentRelevancyMetric";
 
-export type ArgumentCorrectnessTemplateOverride =
-  MetricTemplateOverride<"ArgumentCorrectnessMetric">;
+export type ArgumentRelevancyTemplateOverride =
+  MetricTemplateOverride<"ArgumentRelevancyMetric">;
 
-export interface ArgumentCorrectnessMetricOptions {
+export interface ArgumentRelevancyMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   model?: DeepEvalBaseLLM | string;
@@ -43,18 +43,18 @@ export interface ArgumentCorrectnessMetricOptions {
   strictMode?: boolean;
   verboseMode?: boolean;
   showIndicator?: boolean;
-  evaluationTemplate?: ArgumentCorrectnessTemplateOverride;
+  evaluationTemplate?: ArgumentRelevancyTemplateOverride;
 }
 
 /**
- * Argument Correctness — do the arguments passed in `toolsCalled` correctly and
+ * Argument Relevancy — do the arguments passed in `toolsCalled` correctly and
  * relevantly address the `input`? Judge each tool call, then
  * score = correct / total. **Higher is better** (`success = score >= threshold`).
  */
-export class ArgumentCorrectnessMetric extends BaseMetric {
-  verdicts: ArgumentCorrectnessVerdict[] = [];
+export class ArgumentRelevancyMetric extends BaseMetric {
+  verdicts: ArgumentRelevancyVerdict[] = [];
 
-  constructor(options: ArgumentCorrectnessMetricOptions = {}) {
+  constructor(options: ArgumentRelevancyMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
     super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
@@ -110,7 +110,7 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
   private async generateVerdicts(
     input: string,
     toolsCalled: ToolCall[],
-  ): Promise<ArgumentCorrectnessVerdict[]> {
+  ): Promise<ArgumentRelevancyVerdict[]> {
     return generateQagVerdicts(this, {
       systemOne: this.systemOneVerdictSpec(input, toolsCalled),
       llm: async () => {
@@ -131,7 +131,7 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
   private systemOneVerdictSpec(
     input: string,
     toolsCalled: ToolCall[],
-  ): SystemOneVerdictSpec<string, ArgumentCorrectnessVerdict> {
+  ): SystemOneVerdictSpec<string, ArgumentRelevancyVerdict> {
     return {
       instructions: this.getPrompt("_experimental_system_one_verdict"),
       items: toolsCalled.map((toolCall) => printToolsCalled([toolCall])),
@@ -163,7 +163,7 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
     const { reason } = await generateWithSchema(
       this,
       prompt,
-      ArgumentCorrectnessScoreReasonSchema,
+      ArgumentRelevancyScoreReasonSchema,
     );
     return reason;
   }
@@ -179,6 +179,6 @@ export class ArgumentCorrectnessMetric extends BaseMetric {
   }
 
   get name(): string {
-    return "Argument Correctness";
+    return "Argument Relevancy";
   }
 }

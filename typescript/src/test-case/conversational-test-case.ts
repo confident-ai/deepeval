@@ -32,6 +32,7 @@ export enum MultiTurnParams {
   RETRIEVAL_CONTEXT = "retrievalContext",
   CHATBOT_ROLE = "chatbotRole",
   TOOLS_CALLED = "toolsCalled",
+  EXPECTED_TOOLS = "expectedTools",
   MCP_TOOLS = "mcpToolsCalled",
   MCP_RESOURCES = "mcpResourcesCalled",
   MCP_PROMPTS = "mcpPromptsCalled",
@@ -46,6 +47,12 @@ export class Turn {
   userId?: string;
   retrievalContext?: (string | RetrievedContextData)[];
   toolsCalled?: ToolCall[];
+  /**
+   * The tools an assistant turn should have called, for
+   * `ConversationalToolCorrectnessMetric`. Leave it undefined on turns you
+   * don't want scored; `[]` means "this turn should call no tools".
+   */
+  expectedTools?: ToolCall[];
   mcpToolsCalled?: MCPToolCall[];
   mcpResourcesCalled?: MCPResourceCall[];
   mcpPromptsCalled?: MCPPromptCall[];
@@ -57,6 +64,7 @@ export class Turn {
     userId?: string;
     retrievalContext?: (string | RetrievedContextData)[];
     toolsCalled?: ToolCall[];
+    expectedTools?: ToolCall[];
     mcpToolsCalled?: MCPToolCall[];
     mcpResourcesCalled?: MCPResourceCall[];
     mcpPromptsCalled?: MCPPromptCall[];
@@ -67,6 +75,7 @@ export class Turn {
     this.userId = params.userId;
     this.retrievalContext = params.retrievalContext;
     this.toolsCalled = params.toolsCalled;
+    this.expectedTools = params.expectedTools;
     this.mcpToolsCalled = params.mcpToolsCalled;
     this.mcpResourcesCalled = params.mcpResourcesCalled;
     this.mcpPromptsCalled = params.mcpPromptsCalled;
@@ -87,13 +96,16 @@ export class Turn {
         );
       }
     }
-    if (this.toolsCalled != null) {
+    for (const [field, value] of [
+      ["toolsCalled", this.toolsCalled],
+      ["expectedTools", this.expectedTools],
+    ] as const) {
       if (
-        !Array.isArray(this.toolsCalled) ||
-        !this.toolsCalled.every((t) => t instanceof ToolCall)
+        value != null &&
+        (!Array.isArray(value) || !value.every((t) => t instanceof ToolCall))
       ) {
         throw new TypeError(
-          "'toolsCalled' must be undefined or an array of ToolCall",
+          `'${field}' must be undefined or an array of ToolCall`,
         );
       }
     }

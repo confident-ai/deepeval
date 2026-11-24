@@ -11,7 +11,7 @@
 import type { ZodType } from "zod";
 import {
   AnswerRelevancyMetric,
-  ArgumentCorrectnessMetric,
+  ArgumentRelevancyMetric,
   BiasMetric,
   ContextualPrecisionMetric,
   ContextualRecallMetric,
@@ -454,8 +454,8 @@ const CASES: Case[] = [
     },
   },
   {
-    id: "ArgumentCorrectness",
-    metric: (o) => new ArgumentCorrectnessMetric(o),
+    id: "ArgumentRelevancy",
+    metric: (o) => new ArgumentRelevancyMetric(o),
     testCase: tracedCase,
   },
   {

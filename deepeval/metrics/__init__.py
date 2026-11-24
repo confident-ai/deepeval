@@ -40,8 +40,12 @@ from .step_efficiency.step_efficiency import StepEfficiencyMetric
 from .plan_adherence.plan_adherence import PlanAdherenceMetric
 from .plan_quality.plan_quality import PlanQualityMetric
 from .tool_use.tool_use import ToolUseMetric
+from .conversational_tool_correctness.conversational_tool_correctness import (
+    ConversationalToolCorrectnessMetric,
+)
 from .goal_accuracy.goal_accuracy import GoalAccuracyMetric
-from .argument_correctness.argument_correctness import ArgumentCorrectnessMetric
+from .argument_relevancy.argument_relevancy import ArgumentRelevancyMetric
+from .argument_correctness import ArgumentCorrectnessMetric
 from .agent_loop_detection.agent_loop_detection import AgentLoopDetectionMetric
 from .mcp.mcp_task_completion import MCPTaskCompletionMetric
 from .mcp.multi_turn_mcp_use_metric import MultiTurnMCPUseMetric
@@ -132,6 +136,7 @@ __all__ = [
     "JsonCorrectnessMetric",
     "PromptAlignmentMetric",
     "TaskCompletionMetric",
+    "ArgumentRelevancyMetric",
     "ArgumentCorrectnessMetric",
     "KnowledgeRetentionMetric",
     # Agentic metrics
@@ -140,6 +145,7 @@ __all__ = [
     "PlanAdherenceMetric",
     "PlanQualityMetric",
     "ToolUseMetric",
+    "ConversationalToolCorrectnessMetric",
     "GoalAccuracyMetric",
     "AgentLoopDetectionMetric",
     # Conversational metrics

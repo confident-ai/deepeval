@@ -1,16 +1,13 @@
-from typing import List, Optional
-from pydantic import BaseModel, Field
-from deepeval.metrics.base_metric import YesNo
+"""Deprecated: moved to ``deepeval.metrics.argument_relevancy.schema``."""
 
+from deepeval.metrics.argument_relevancy.schema import (
+    ArgumentRelevancyScoreReason as ArgumentCorrectnessScoreReason,
+    ArgumentRelevancyVerdict as ArgumentCorrectnessVerdict,
+    Verdicts,
+)
 
-class ArgumentCorrectnessVerdict(BaseModel):
-    verdict: YesNo
-    reason: Optional[str] = Field(default=None)
-
-
-class Verdicts(BaseModel):
-    verdicts: List[ArgumentCorrectnessVerdict]
-
-
-class ArgumentCorrectnessScoreReason(BaseModel):
-    reason: str
+__all__ = [
+    "ArgumentCorrectnessScoreReason",
+    "ArgumentCorrectnessVerdict",
+    "Verdicts",
+]

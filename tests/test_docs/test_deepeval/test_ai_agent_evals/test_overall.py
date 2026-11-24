@@ -1,12 +1,12 @@
 from openai import OpenAI
 from deepeval.test_case import LLMTestCase, ToolCall
 from deepeval.tracing import observe, update_current_span
-from deepeval.metrics import ArgumentCorrectnessMetric, TaskCompletionMetric
+from deepeval.metrics import ArgumentRelevancyMetric, TaskCompletionMetric
 import json
 
 ...
 
-arg_correctness_metric = ArgumentCorrectnessMetric()
+arg_relevancy_metric = ArgumentRelevancyMetric()
 task_completion_metric = TaskCompletionMetric()
 client = OpenAI()
 tools = [
@@ -31,7 +31,7 @@ def web_search_tool(web_query):
 
 
 # Supply metric
-@observe(metrics=[arg_correctness_metric])
+@observe(metrics=[arg_relevancy_metric])
 def llm_component(query):
     response = client.responses.create(
         model="gpt-4.1", input=[{"role": "user", "content": query}], tools=tools

@@ -413,6 +413,7 @@ export function parseTurns(value: unknown): Turn[] {
         pickKey(t, "retrieval_context"),
       ),
       toolsCalled: parseToolCalls(pickKey(t, "tools_called")),
+      expectedTools: parseToolCalls(pickKey(t, "expected_tools")),
       mcpToolsCalled: parseMcpCalls(
         pickKey(t, "mcp_tools_called"),
         "mcpToolsCalled",

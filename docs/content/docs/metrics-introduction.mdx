@@ -45,7 +45,7 @@ Agentic metrics evaluate AI agents at two different scopes:
 **Component-level action metrics** evaluate one LLM decision about tool selection and arguments inside that trajectory:
 
 - Tool Correctness — whether the agent selected the correct tools.
-- Argument Correctness — whether it supplied the correct arguments to those tools.
+- Argument Relevancy — whether it supplied the correct arguments to those tools.
 
 Use [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals) for overall execution quality and [component-level evaluation](/docs/evaluation-component-level-llm-evals) to diagnose individual actions.
 
@@ -363,7 +363,7 @@ If you're looking for decision-tree based LLM-as-a-Judge, checkout the [Deep Acy
 **Component-level action metrics** evaluate individual LLM tool-calling decisions:
 
 - **Tool Correctness:** Assesses whether the agent selected the correct tools.
-- **Argument Correctness:** Assesses whether the agent supplied the correct arguments to those tools.
+- **Argument Relevancy:** Assesses whether the agent supplied the correct arguments to those tools.
 
 Trajectory metrics require [tracing](/docs/evaluation-llm-tracing) because they analyze the complete ordered trace. Pass them to <Term py="evals_iterator()" ts="evalsIterator()"/> when running the agent:
 
@@ -651,7 +651,7 @@ graph TD
 
 Here are some additional ideas if you're not sure:
 
-- **AI agents**: Start with `TaskCompletionMetric` for overall trajectory quality, add `StepEfficiencyMetric`, `PlanAdherenceMetric`, or `PlanQualityMetric` when the execution path matters, and use `ToolCorrectnessMetric` or `ArgumentCorrectnessMetric` to diagnose individual LLM tool-calling decisions
+- **AI agents**: Start with `TaskCompletionMetric` for overall trajectory quality, add `StepEfficiencyMetric`, `PlanAdherenceMetric`, or `PlanQualityMetric` when the execution path matters, and use `ToolCorrectnessMetric` or `ArgumentRelevancyMetric` to diagnose individual LLM tool-calling decisions
 - **Chatbots**: Implement a `ConversationCompletenessMetric` to assess overall conversation quality
 - **RAG**: Focus on the `AnswerRelevancyMetric` (evaluates <Term py="actual_output" ts="actualOutput"/> alignment with the `input`) and `FaithfulnessMetric` (checks for hallucinations against <Term py="retrieval_context" ts="retrievalContext"/>)
 - **Custom Requirements**: When standard metrics don't fit your needs, create custom evaluations with `G-Eval` or `DAG` frameworks

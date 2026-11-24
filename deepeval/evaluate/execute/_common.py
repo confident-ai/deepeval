@@ -108,7 +108,7 @@ def _skip_metrics_for_error(
 def _attach_span_tree(
     test_case: LLMTestCase, trace: Trace, span: Optional[BaseSpan]
 ) -> None:
-    """Let metrics that look past their own span (e.g. ArgumentCorrectness)
+    """Let metrics that look past their own span (e.g. ArgumentRelevancy)
     reach the rest of the trace. `span` is None for a trace-level test case."""
     test_case._trace_root_spans = trace.root_spans
     test_case._trace_span = span

@@ -1,4 +1,4 @@
-"""The tool calls a traced test case gives ArgumentCorrectness when its span
+"""The tool calls a traced test case gives ArgumentRelevancy when its span
 has none of its own.
 
 Each tool call belongs to the LLM span that chose its arguments: the tool's

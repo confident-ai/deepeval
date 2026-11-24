@@ -11,7 +11,7 @@ These metrics matter because AI agents fail in fundamentally different ways than
 For a broader overview of AI agent evaluation concepts and strategies, see the [AI Agent Evaluation guide](/guides/guides-ai-agent-evaluation). For a focused explanation of metrics that score complete ordered traces, see [trajectory-based evaluation](/docs/evaluation-trajectory-based-llm-evals). For the bigger picture of how these metrics fit into the validation layer of an agent, see [what an eval harness is](/blog/what-is-an-eval-harness).
 
 :::info
-The metrics in this guide use [tracing](/docs/evaluation-llm-tracing), but at different scopes. `PlanQualityMetric`, `PlanAdherenceMetric`, `TaskCompletionMetric`, and `StepEfficiencyMetric` are **trajectory metrics** that score the complete ordered trace. `ToolCorrectnessMetric` and `ArgumentCorrectnessMetric` are **component-level metrics** that score the individual LLM span where a tool-calling decision is made.
+The metrics in this guide use [tracing](/docs/evaluation-llm-tracing), but at different scopes. `PlanQualityMetric`, `PlanAdherenceMetric`, `TaskCompletionMetric`, and `StepEfficiencyMetric` are **trajectory metrics** that score the complete ordered trace. `ToolCorrectnessMetric` and `ArgumentRelevancyMetric` are **component-level metrics** that score the individual LLM span where a tool-calling decision is made.
 :::
 
 ## The Three Layers of AI Agent Evaluation
@@ -21,7 +21,7 @@ AI agents consist of interconnected layers that each require distinct evaluation
 | Layer               | What It Does                                        | Evaluation Scope | Key Metrics                                          |
 | ------------------- | --------------------------------------------------- | ---------------- | ---------------------------------------------------- |
 | **Reasoning Layer** | Plans tasks, creates strategies, decides what to do | Trajectory       | `PlanQualityMetric`, `PlanAdherenceMetric`           |
-| **Action Layer**    | Selects tools, generates arguments, executes calls  | Component-level  | `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric` |
+| **Action Layer**    | Selects tools, generates arguments, executes calls  | Component-level  | `ToolCorrectnessMetric`, `ArgumentRelevancyMetric` |
 | **Execution Layer** | Orchestrates the full loop, completes objectives    | Trajectory       | `TaskCompletionMetric`, `StepEfficiencyMetric`       |
 
 Each metric targets a specific failure mode. Together, they provide comprehensive coverage of everything that can go wrong in an AI agent pipeline.
@@ -123,7 +123,7 @@ Combine `PlanQualityMetric` and `PlanAdherenceMetric` together—a high-quality 
 
 ## Action Layer Metrics
 
-The action layer is where your agent interacts with external systems through tool calls. This is often where things go wrong—even state-of-the-art LLMs struggle with tool selection, argument generation, and call ordering. `ToolCorrectnessMetric` and `ArgumentCorrectnessMetric` are component-level metrics: attach them to the individual LLM span that selects a tool and generates its arguments.
+The action layer is where your agent interacts with external systems through tool calls. This is often where things go wrong—even state-of-the-art LLMs struggle with tool selection, argument generation, and call ordering. `ToolCorrectnessMetric` and `ArgumentRelevancyMetric` are component-level metrics: attach them to the individual LLM span that selects a tool and generates its arguments.
 
 ### Tool Correctness Metric
 
@@ -186,25 +186,25 @@ When `available_tools` is provided, the metric also uses an LLM to evaluate whet
 
 **→ [Full Tool Correctness documentation](/docs/metrics-tool-correctness)**
 
-### Argument Correctness Metric
+### Argument Relevancy Metric
 
-The `ArgumentCorrectnessMetric` is a component-level metric that evaluates whether your agent **generates correct arguments** for each tool call. Selecting the right tool with wrong arguments is as problematic as selecting the wrong tool entirely.
+The `ArgumentRelevancyMetric` is a component-level metric that evaluates whether your agent **generates correct arguments** for each tool call. Selecting the right tool with wrong arguments is as problematic as selecting the wrong tool entirely.
 
 ```python
 from deepeval.tracing import observe, update_current_span
 from deepeval.dataset import Golden, EvaluationDataset
-from deepeval.metrics import ArgumentCorrectnessMetric
+from deepeval.metrics import ArgumentRelevancyMetric
 from deepeval.test_case import LLMTestCase, ToolCall
 
 # Initialize metric
-argument_correctness = ArgumentCorrectnessMetric(threshold=0.7, model="gpt-4o")
+argument_relevancy = ArgumentRelevancyMetric(threshold=0.7, model="gpt-4o")
 
 @observe(type="tool")
 def search_flights(origin, destination, date):
     return [{"id": "FL123", "price": 450}, {"id": "FL456", "price": 380}]
 
 # Attach metric to the LLM component where arguments are generated
-@observe(type="llm", metrics=[argument_correctness])
+@observe(type="llm", metrics=[argument_relevancy])
 def call_llm(user_input):
     # LLM generates arguments for tool call
     origin, destination, date = "NYC", "London", "2025-03-15"
@@ -229,19 +229,19 @@ for golden in dataset.evals_iterator():
     flight_agent(golden.input)
 ```
 
-**When to use it:** Use `ArgumentCorrectnessMetric` when correct argument values are critical for task success. This is especially important for agents that interact with APIs, databases, or external services where incorrect arguments cause failures.
+**When to use it:** Use `ArgumentRelevancyMetric` when correct argument values are critical for task success. This is especially important for agents that interact with APIs, databases, or external services where incorrect arguments cause failures.
 
 **How it's calculated:**
 
-<Equation formula="\text{Argument Correctness} = \frac{\text{Number of Correctly Generated Input Parameters}}{\text{Total Number of Tool Calls}}" />
+<Equation formula="\text{Argument Relevancy} = \frac{\text{Number of Correctly Generated Input Parameters}}{\text{Total Number of Tool Calls}}" />
 
-Unlike `ToolCorrectnessMetric`, this metric is fully LLM-based and referenceless—it evaluates argument correctness based on the input context rather than comparing against expected values.
+Unlike `ToolCorrectnessMetric`, this metric is fully LLM-based and referenceless—it evaluates argument relevancy based on the input context rather than comparing against expected values.
 
 :::info
-The `ArgumentCorrectnessMetric` uses an LLM to determine correctness, making it ideal for cases where exact argument values aren't predetermined but should be logically derived from the input.
+The `ArgumentRelevancyMetric` uses an LLM to determine correctness, making it ideal for cases where exact argument values aren't predetermined but should be logically derived from the input.
 :::
 
-**→ [Full Argument Correctness documentation](/docs/metrics-argument-correctness)**
+**→ [Full Argument Relevancy documentation](/docs/metrics-argument-relevancy)**
 
 ## Execution Layer Trajectory Metrics
 
@@ -357,7 +357,7 @@ from deepeval.metrics import (
     PlanQualityMetric,
     PlanAdherenceMetric,
     ToolCorrectnessMetric,
-    ArgumentCorrectnessMetric
+    ArgumentRelevancyMetric
 )
 
 # Trajectory metrics (analyze the complete ordered agent trace)
@@ -368,7 +368,7 @@ plan_adherence = PlanAdherenceMetric()
 
 # Component-level metrics (analyze the LLM tool-calling decision)
 tool_correctness = ToolCorrectnessMetric()
-argument_correctness = ArgumentCorrectnessMetric()
+argument_relevancy = ArgumentRelevancyMetric()
 
 # Define tools
 @observe(type="tool")
@@ -380,7 +380,7 @@ def book_flight(flight_id):
     return {"confirmation": "CONF-789", "flight_id": flight_id}
 
 # Attach component-level metrics to the LLM component
-@observe(type="llm", metrics=[tool_correctness, argument_correctness])
+@observe(type="llm", metrics=[tool_correctness, argument_relevancy])
 def call_llm(user_input):
     # LLM decides to search flights then book
     origin, destination, date = "NYC", "Paris", "2025-03-18"
@@ -420,7 +420,7 @@ Not every agent needs every metric. Here's a decision framework:
 | If Your Agent...                    | Evaluation Scope | Prioritize These Metrics                             |
 | ----------------------------------- | ---------------- | ---------------------------------------------------- |
 | Uses explicit planning/reasoning    | Trajectory       | `PlanQualityMetric`, `PlanAdherenceMetric`           |
-| Calls multiple tools                | Component-level  | `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric` |
+| Calls multiple tools                | Component-level  | `ToolCorrectnessMetric`, `ArgumentRelevancyMetric` |
 | Has complex multi-step workflows    | Trajectory       | `StepEfficiencyMetric`, `TaskCompletionMetric`       |
 | Runs in production (cost-sensitive) | Trajectory       | `StepEfficiencyMetric`                               |
 | Is task-critical (must succeed)     | Trajectory       | `TaskCompletionMetric`                               |
@@ -440,7 +440,7 @@ All AI agent evaluation metrics in `deepeval` support custom LLM judges, configu
           DeepEval ships agent metrics across three layers: reasoning (
           <code>PlanQualityMetric</code>, <code>PlanAdherenceMetric</code>),
           action (<code>ToolCorrectnessMetric</code>,{" "}
-          <code>ArgumentCorrectnessMetric</code>), and execution (
+          <code>ArgumentRelevancyMetric</code>), and execution (
           <code>TaskCompletionMetric</code>, <code>StepEfficiencyMetric</code>).
           The reasoning and execution metrics are trajectory metrics, while the
           action metrics are component-level. You can also build custom metrics
@@ -453,7 +453,7 @@ All AI agent evaluation metrics in `deepeval` support custom LLM judges, configu
       answer: (
         <>
           Use <code>ToolCorrectnessMetric</code> to check whether the agent
-          picked the right tools, and <code>ArgumentCorrectnessMetric</code> to
+          picked the right tools, and <code>ArgumentRelevancyMetric</code> to
           check whether it passed the correct arguments. Both are
           component-level metrics attached to the LLM span that decides tool
           calls.
@@ -502,7 +502,7 @@ All AI agent evaluation metrics in `deepeval` support custom LLM judges, configu
           Plan quality, plan adherence, task completion, and step efficiency
           need the complete ordered trace, so run them as trajectory metrics
           via <code>evals_iterator(metrics=[...])</code>. Tool correctness and
-          argument correctness evaluate one tool-calling decision, so attach
+          argument relevancy evaluate one tool-calling decision, so attach
           them component-level via <code>@observe(metrics=[...])</code> on the
           LLM span. Use black-box end-to-end metrics when only the final input
           and output should matter.

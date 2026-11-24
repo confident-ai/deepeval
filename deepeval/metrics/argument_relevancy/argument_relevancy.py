@@ -27,26 +27,26 @@ from deepeval.test_case import (
 from deepeval.metrics import BaseMetric
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.metrics.indicator import metric_progress_indicator
-from deepeval.metrics.argument_correctness.schema import (
-    ArgumentCorrectnessVerdict,
+from deepeval.metrics.argument_relevancy.schema import (
+    ArgumentRelevancyVerdict,
     Verdicts,
-    ArgumentCorrectnessScoreReason,
+    ArgumentRelevancyScoreReason,
 )
 from deepeval.templates import make_template_class
 
 
-ArgumentCorrectnessTemplate = make_template_class("ArgumentCorrectnessMetric")
+ArgumentRelevancyTemplate = make_template_class("ArgumentRelevancyMetric")
 
 
 def _with_tool_calls_from_trace(test_case: LLMTestCase) -> LLMTestCase:
-    from deepeval.metrics.argument_correctness.utils import (
+    from deepeval.metrics.argument_relevancy.utils import (
         with_tool_calls_from_trace,
     )
 
     return with_tool_calls_from_trace(test_case)
 
 
-class ArgumentCorrectnessMetric(BaseMetric):
+class ArgumentRelevancyMetric(BaseMetric):
     _required_params: List[SingleTurnParams] = [
         SingleTurnParams.INPUT,
         SingleTurnParams.TOOLS_CALLED,
@@ -66,8 +66,8 @@ class ArgumentCorrectnessMetric(BaseMetric):
         verbose_mode: bool = False,
         flaky: bool = False,
         evaluation_template: Type[
-            ArgumentCorrectnessTemplate
-        ] = ArgumentCorrectnessTemplate,
+            ArgumentRelevancyTemplate
+        ] = ArgumentRelevancyTemplate,
     ):
         self.threshold = 1 if strict_mode else threshold
         self.eval_mode = resolve_eval_mode(eval_mode)
@@ -115,7 +115,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
                 elif run_system_one_eval(self, test_case):
                     return self.score
                 else:
-                    self.verdicts: List[ArgumentCorrectnessVerdict] = (
+                    self.verdicts: List[ArgumentRelevancyVerdict] = (
                         self._generate_verdicts(
                             test_case.input,
                             test_case.tools_called,
@@ -157,7 +157,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
             elif await a_run_system_one_eval(self, test_case):
                 return self.score
             else:
-                self.verdicts: List[ArgumentCorrectnessVerdict] = (
+                self.verdicts: List[ArgumentRelevancyVerdict] = (
                     await self._a_generate_verdicts(
                         test_case.input,
                         test_case.tools_called,
@@ -198,7 +198,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
         return await a_generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
-            schema_cls=ArgumentCorrectnessScoreReason,
+            schema_cls=ArgumentRelevancyScoreReason,
             extract_schema=lambda score_reason: score_reason.reason,
             extract_json=lambda data: data["reason"],
         )
@@ -223,14 +223,14 @@ class ArgumentCorrectnessMetric(BaseMetric):
         return generate_with_schema_and_extract(
             metric=self,
             prompt=prompt,
-            schema_cls=ArgumentCorrectnessScoreReason,
+            schema_cls=ArgumentRelevancyScoreReason,
             extract_schema=lambda score_reason: score_reason.reason,
             extract_json=lambda data: data["reason"],
         )
 
     async def _a_generate_verdicts(
         self, input: str, tools_called: List[ToolCall], multimodal: bool
-    ) -> List[ArgumentCorrectnessVerdict]:
+    ) -> List[ArgumentRelevancyVerdict]:
         prompt = self._get_prompt(
             "generate_verdicts",
             input=input,
@@ -241,7 +241,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
         return await a_generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            verdict_cls=ArgumentCorrectnessVerdict,
+            verdict_cls=ArgumentRelevancyVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO,
             system_one=self._experimental_system_one_spec(input, tools_called),
@@ -249,7 +249,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
 
     def _generate_verdicts(
         self, input: str, tools_called: List[ToolCall], multimodal: bool
-    ) -> List[ArgumentCorrectnessVerdict]:
+    ) -> List[ArgumentRelevancyVerdict]:
         prompt = self._get_prompt(
             "generate_verdicts",
             input=input,
@@ -260,7 +260,7 @@ class ArgumentCorrectnessMetric(BaseMetric):
         return generate_qag_verdicts(
             metric=self,
             prompt=prompt,
-            verdict_cls=ArgumentCorrectnessVerdict,
+            verdict_cls=ArgumentRelevancyVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO,
             system_one=self._experimental_system_one_spec(input, tools_called),
@@ -299,4 +299,4 @@ class ArgumentCorrectnessMetric(BaseMetric):
 
     @property
     def __name__(self):
-        return "Argument Correctness"
+        return "Argument Relevancy"

@@ -351,12 +351,12 @@ In every eval mode, the deterministic score in step 1 and the final reason never
       ),
     },
     {
-      question: "Tool Correctness vs Argument Correctness — what's the difference?",
+      question: "Tool Correctness vs Argument Relevancy — what's the difference?",
       answer: (
         <>
           Tool Correctness checks the <strong>right tools</strong> were called,
           deterministically against <Term py="expected_tools" ts="expectedTools"/>.{" "}
-          <a href="/docs/metrics-argument-correctness">Argument Correctness</a>{" "}
+          <a href="/docs/metrics-argument-relevancy">Argument Relevancy</a>{" "}
           checks the <strong>arguments</strong> passed to those tools, via an LLM
           with no reference.
         </>

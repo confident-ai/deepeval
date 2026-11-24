@@ -76,6 +76,11 @@ export {
   type ToolUseTemplateOverride,
 } from "@/metrics/tool-use";
 export {
+  ConversationalToolCorrectnessMetric,
+  type ConversationalToolCorrectnessMetricOptions,
+  type TurnToolScore,
+} from "@/metrics/conversational-tool-correctness";
+export {
   TaskCompletionMetric,
   type TaskCompletionMetricOptions,
   type TaskCompletionTemplateOverride,
@@ -238,6 +243,11 @@ export {
   type ToolCorrectnessMetricOptions,
   type ToolCorrectnessTemplateOverride,
 } from "@/metrics/tool-correctness";
+export {
+  ArgumentRelevancyMetric,
+  type ArgumentRelevancyMetricOptions,
+  type ArgumentRelevancyTemplateOverride,
+} from "@/metrics/argument-relevancy";
 export {
   ArgumentCorrectnessMetric,
   type ArgumentCorrectnessMetricOptions,

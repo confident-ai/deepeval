@@ -131,6 +131,9 @@ class TurnApi(BaseModel):
     user_id: Optional[str] = Field(None, alias="userId")
     retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
     tools_called: Optional[List[ToolCall]] = Field(None, alias="toolsCalled")
+    expected_tools: Optional[List[ToolCall]] = Field(
+        None, alias="expectedTools"
+    )
     comments: Optional[str] = Field(None)
     metadata: Optional[Dict] = Field(None)
 

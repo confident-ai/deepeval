@@ -1,10 +1,10 @@
-// ArgumentCorrectness on a traced span with no tool calls of its own judges
+// ArgumentRelevancy on a traced span with no tool calls of its own judges
 // the tool calls of the nearest LLM span: the tool's parent when that is an LLM
 // span, else the latest LLM sibling that started before it.
 
 import { MissingTestCaseParamsError } from "@/errors";
 import { EvaluationDataset, Golden } from "@/dataset";
-import { ArgumentCorrectnessMetric } from "@/metrics";
+import { ArgumentRelevancyMetric } from "@/metrics";
 import { LLMTestCase, ToolCall } from "@/test-case";
 import { observe } from "@/tracing";
 import { BaseSpan, SpanType, TraceSpanStatus } from "@/tracing/tracing";
@@ -64,7 +64,7 @@ function traced(
 
 async function judgedPrompt(testCase: LLMTestCase): Promise<string> {
   const llm = judge();
-  await new ArgumentCorrectnessMetric({
+  await new ArgumentRelevancyMetric({
     model: llm,
     showIndicator: false,
   }).measure(testCase);
@@ -130,7 +130,7 @@ function agentLoopTrace() {
   return { agent, plan, answer, report };
 }
 
-describe("ArgumentCorrectness tool calls from the trace", () => {
+describe("ArgumentRelevancy tool calls from the trace", () => {
   it("judges an agent span on the tool calls of its nested LLM spans", async () => {
     const { orchestrator } = businessSgTrace();
 
@@ -229,7 +229,7 @@ describe("ArgumentCorrectness tool calls from the trace", () => {
       span(SpanType.TOOL, "lookup_visa_quota", 1, { input: { pass: "EP" } }),
       span(SpanType.LLM, "summarize", 2, { input: "x" }),
     ]);
-    const metric = new ArgumentCorrectnessMetric({
+    const metric = new ArgumentRelevancyMetric({
       model: judge(),
       showIndicator: false,
     });
@@ -240,7 +240,7 @@ describe("ArgumentCorrectness tool calls from the trace", () => {
   });
 
   it("still reports missing tool calls without a trace", async () => {
-    const metric = new ArgumentCorrectnessMetric({
+    const metric = new ArgumentRelevancyMetric({
       model: judge(),
       showIndicator: false,
     });
@@ -257,7 +257,7 @@ describe("ArgumentCorrectness tool calls from the trace", () => {
 
   it("gives an agent span metric the span tree during evaluation", async () => {
     const llm = judge();
-    const metric = new ArgumentCorrectnessMetric({
+    const metric = new ArgumentRelevancyMetric({
       model: llm,
       showIndicator: false,
     });

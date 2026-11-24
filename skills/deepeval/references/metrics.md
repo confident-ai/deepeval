@@ -29,7 +29,7 @@ Choose metrics by what the user wants to measure, not only by app type.
 | Custom criteria | The success criteria is product- or domain-specific | `GEval`, `DAGMetric`, `ConversationalGEval`, `ConversationalDAGMetric` |
 | RAG retriever | You need to evaluate retrieved context quality | `ContextualRelevancyMetric`, `ContextualPrecisionMetric`, `ContextualRecallMetric` |
 | RAG generator | You need to evaluate the final answer against context | `AnswerRelevancyMetric`, `FaithfulnessMetric` |
-| Agentic flow | You need to evaluate task completion, plans, steps, tools, or arguments | `TaskCompletionMetric`, `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric`, `PlanAdherenceMetric`, `PlanQualityMetric`, `StepEfficiencyMetric` |
+| Agentic flow | You need to evaluate task completion, plans, steps, tools, or arguments | `TaskCompletionMetric`, `ToolCorrectnessMetric`, `ArgumentRelevancyMetric`, `PlanAdherenceMetric`, `PlanQualityMetric`, `StepEfficiencyMetric` |
 | Multi-turn chatbot | You need to evaluate an entire conversation | `ConversationCompletenessMetric`, `RoleAdherenceMetric`, `TurnRelevancyMetric`, `ConversationalGEval` |
 | Safety and compliance | You need to detect risky or policy-violating outputs | `BiasMetric`, `ToxicityMetric`, `PIILeakageMetric`, `MisuseMetric`, `RoleViolationMetric`, `NonAdviceMetric` |
 | Format / structure | You need output to match a schema or instruction set | `JsonCorrectnessMetric`, `PromptAlignmentMetric` |
@@ -57,7 +57,7 @@ Good system-specific defaults:
 - Single-turn tracing E2E: strongly prefer `TaskCompletionMetric` and
   `StepEfficiencyMetric` as the baseline pair, especially for agents and
   multi-step AI apps.
-- Agent: `TaskCompletionMetric` plus tool/argument correctness only when
+- Agent: `TaskCompletionMetric` plus tool/argument relevancy only when
   `tools_called` data exists.
 - RAG: `FaithfulnessMetric`, `AnswerRelevancyMetric`, and
   `ContextualRelevancyMetric` are strong candidates.
@@ -128,7 +128,7 @@ available fields or update the dataset generation/loading plan first.
 | `TaskCompletionMetric` | Agent/app completed the task | `input`, `actual_output` |
 | `StepEfficiencyMetric` | Agent/app completed the task efficiently without unnecessary steps | trace steps/tool activity |
 | `ToolCorrectnessMetric` | Called tools match expected tools | `input`, `tools_called`, `expected_tools` |
-| `ArgumentCorrectnessMetric` | Tool arguments are correct | `input`, `tools_called` |
+| `ArgumentRelevancyMetric` | Tool arguments are correct | `input`, `tools_called` |
 | `JsonCorrectnessMetric` | Output matches expected schema | `input`, `actual_output`; constructor needs `expected_schema` |
 | `PromptAlignmentMetric` | Output follows prompt instructions | `input`, `actual_output`; constructor needs `prompt_instructions` |
 | `GEval` | Custom single-turn criteria | constructor needs `name`, `criteria` or `evaluation_steps`, and `evaluation_params` |

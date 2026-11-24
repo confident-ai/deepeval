@@ -98,7 +98,7 @@ flaky?, evaluationTemplate? }`.
 | Exact Match          | `ExactMatchMetric`          | deterministic, **no model**; adds `precision`/`recall`/`f1`                       |
 | Pattern Match        | `PatternMatchMetric`        | deterministic regex full-match, **no model**                                      |
 | Tool Correctness     | `ToolCorrectnessMetric`     | deterministic tool-match + optional LLM tool-selection (`availableTools`)         |
-| Argument Correctness | `ArgumentCorrectnessMetric` | LLM verdict over `toolsCalled`                                                    |
+| Argument Relevancy   | `ArgumentRelevancyMetric`   | LLM verdict over `toolsCalled`                                                    |
 
 ### Single-turn, trace-based — `requiresTrace=true` (4)
 
@@ -182,7 +182,7 @@ metric, so these two take no `evaluationTemplate`.
 - **Metadata field naming**: conversational `metadata` is exposed as the TS-convention
   `additionalMetadata`.
 - **Latent Python template bugs intentionally diverged** (TS does the correct thing):
-  `ArgumentCorrectnessMetric` passes the stringified tools (template expects
+  `ArgumentRelevancyMetric` passes the stringified tools (template expects
   `stringified_tools_called`, Python passes the wrong var); `ToolUseMetric` uses
   `get_tool_selection_final_reason` (Python's `get_tool_argument_final_reason` is an
   unused/latent template).
