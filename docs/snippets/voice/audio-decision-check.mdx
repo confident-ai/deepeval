@@ -1,0 +1,3 @@
+### Second check with an audio decision model
+
+With `audio_decision_model` set, for example `HumeDecisionModel()` (reads `HUME_API_KEY`), each flagged event gets a second check before scoring. The model hears a clip of about five seconds around the event, from the stereo `call_recording_path` when there is one and from the turn's own audio otherwise, and answers one yes/no question about it. An event that fewer than half of its listeners would call real is dismissed: it no longer counts against the score, it is left out of `events`, and `dismissed_events` in the breakdown and one sentence in the reason say how many were dismissed. When no clip can be cut, or the model fails, the event stays. Each check is one paid request, reported in `evaluation_cost`.

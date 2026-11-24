@@ -1,3 +1,5 @@
+from typing import Optional
+
 from deepeval.metrics.voice.utils.call_activity import (
     caller_lines,
     silence_after_line,
@@ -8,13 +10,42 @@ from deepeval.metrics.voice.utils.defects import (
     call_has_audio,
     DefectShare,
 )
+from deepeval.metrics.voice.utils.decision_check import turn_clip
 from deepeval.metrics.voice.utils.detectors import response_was_owed
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import RANGE, VoiceEvent
 
 
 class RepromptMetric(BaseDefectMetric):
+    event_question = "Is the caller repeating what they said, or checking whether anyone is still there?"
+    event_speaker = "user"
+
+    def __init__(
+        self,
+        *,
+        threshold: Optional[float] = 0.5,
+        include_reason: bool = True,
+        strict_mode: bool = False,
+        verbose_mode: bool = False,
+        audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None,
+        flaky: bool = False,
+    ):
+        super().__init__(
+            threshold=threshold,
+            include_reason=include_reason,
+            strict_mode=strict_mode,
+            verbose_mode=verbose_mode,
+            flaky=flaky,
+        )
+        self._use_audio_decision_model(audio_decision_model)
+
+    def _event_clip(
+        self, test_case: ConversationalTestCase, event: VoiceEvent
+    ) -> Optional[bytes]:
+        return turn_clip(test_case, event.get("reprompt_turn"))
+
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         defect_label = "to be repeated before the agent replied"
         if not call_has_audio(test_case):

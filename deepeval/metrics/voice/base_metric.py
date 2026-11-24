@@ -18,8 +18,13 @@ from deepeval.metrics.voice.utils.defects import (
     TURN_TIMESTAMPS,
     TURN_TIMESTAMPS_NOTE,
     DefectShare,
+    dismissed_note,
     shared_analysis,
     untimed_call_reason,
+)
+from deepeval.metrics.voice.utils.decision_check import (
+    confirm_defects,
+    event_clip,
 )
 from deepeval.metrics.voice.utils.events import (
     WHOLE_REPLY,
@@ -34,6 +39,7 @@ from deepeval.metrics.voice.utils.roll_up import (
     caller_line_start_of_turn,
     exchange_of,
 )
+from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 
 
@@ -172,8 +178,38 @@ class BaseVoiceMetric(BaseConversationalMetric):
 class BaseDefectMetric(BaseVoiceMetric):
     """A metric scoring the share of items free of one defect."""
 
+    # With an audio decision model, a clip of each flagged event is asked
+    # this; a "no" dismisses the event.
+    event_question: Optional[str] = None
+    event_speaker: str = "assistant"
+    audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None
+
+    def _use_audio_decision_model(
+        self, model: Optional[DeepEvalBaseAudioDecisionModel]
+    ) -> None:
+        self.audio_decision_model = model
+        if model is not None:
+            self.evaluation_model = model.get_model_name()
+
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
-        return self.defect_share(test_case).result()
+        return self.confirmed_defect_share(test_case).result()
+
+    def confirmed_defect_share(
+        self, test_case: ConversationalTestCase
+    ) -> DefectShare:
+        share = self.defect_share(test_case)
+        if (
+            self.audio_decision_model is None
+            or not self.event_question
+            or not share.defects
+        ):
+            return share
+        return confirm_defects(self, test_case, share)
+
+    def _event_clip(
+        self, test_case: ConversationalTestCase, event: VoiceEvent
+    ) -> Optional[bytes]:
+        return event_clip(test_case, event, self.event_speaker)
 
     @abstractmethod
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
@@ -249,9 +285,15 @@ class BaseRollUpMetric(BaseVoiceMetric):
         metrics: Dict[str, Dict] = {}
         unscored_reasons: List[str] = []
         timing_source = None
+        dismissed = 0
         for part in self._parts():
             name = part.__name__
-            share = part.defect_share(part_test_case)
+            share = part.confirmed_defect_share(part_test_case)
+            dismissed += share.dismissed
+            if part.evaluation_cost:
+                self.evaluation_cost = (
+                    self.evaluation_cost or 0.0
+                ) + part.evaluation_cost
             for entry in share.skipped:
                 if entry not in skipped:
                     skipped.append(entry)
@@ -302,6 +344,8 @@ class BaseRollUpMetric(BaseVoiceMetric):
         }
         if self.reports_timing_source and timing_source is not None:
             breakdown["timing_source"] = timing_source
+        if dismissed:
+            breakdown["dismissed_events"] = dismissed
         if not eligible:
             reasons = set(unscored_reasons)
             reason = (
@@ -325,6 +369,7 @@ class BaseRollUpMetric(BaseVoiceMetric):
             )
         if self.reports_timing_source and timing_source == TURN_TIMESTAMPS:
             reason += TURN_TIMESTAMPS_NOTE
+        reason += dismissed_note(dismissed)
         return 1.0 - len(flagged_by) / len(eligible), reason, breakdown
 
 

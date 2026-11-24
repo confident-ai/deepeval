@@ -4,6 +4,7 @@ import pytest
 
 from deepeval.metrics import EchoMetric
 from deepeval.test_case import ConversationalTestCase
+from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 from tests.test_metrics.helpers import (
     speech_like,
     stereo_recording,
@@ -15,7 +16,7 @@ def _scaled(clip, gain):
     return array("h", (int(value * gain) for value in clip))
 
 
-def _echo_on_recording(tmp_path, *, caller):
+def _echo_on_recording(tmp_path, *, caller, metric=None):
     reply = speech_like(3.0)
     path = stereo_recording(
         tmp_path / "call.wav",
@@ -23,7 +24,7 @@ def _echo_on_recording(tmp_path, *, caller):
         caller=caller(reply),
         seconds=7.0,
     )
-    metric = EchoMetric()
+    metric = metric or EchoMetric()
     metric.measure(
         ConversationalTestCase(
             turns=timed_call([0.5]), call_recording_path=path
@@ -78,3 +79,15 @@ def test_echo_needs_a_call_recording():
     )
     assert metric.score is None
     assert "stereo call recording" in metric.reason
+
+
+def test_an_echo_the_decision_model_cannot_hear_is_dismissed(tmp_path):
+    model = FakeAudioDecisionModel(probability=0.3)
+    metric = _echo_on_recording(
+        tmp_path,
+        caller=lambda reply: [(1.45, _scaled(reply, 0.2))],
+        metric=EchoMetric(audio_decision_model=model),
+    )
+    assert metric.score == 1.0
+    assert metric.score_breakdown["dismissed_events"] == 1
+    assert len(model.clips) == 1

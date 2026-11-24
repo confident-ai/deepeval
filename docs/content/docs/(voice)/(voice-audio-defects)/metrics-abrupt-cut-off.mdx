@@ -46,13 +46,14 @@ metric = AbruptCutoffMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **SIX** optional parameters when creating an `AbruptCutoffMetric`:
+There are **SEVEN** optional parameters when creating an `AbruptCutoffMetric`:
 
 - [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
 - [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`. Defaulted to `True`.
+- [Optional] `audio_decision_model`: an audio decision model, such as `HumeDecisionModel`, that hears a short clip of each flagged event and dismisses the ones it judges not real. See [Second check with an audio decision model](#second-check-with-an-audio-decision-model). Defaulted to `None`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 `score_breakdown` lists the replies where the defect was found:
@@ -140,3 +141,5 @@ If no agent reply has decodable audio, or the agent made no sound on the call re
     },
   ]}
 />
+
+<include cwd>snippets/voice/audio-decision-check.mdx</include>

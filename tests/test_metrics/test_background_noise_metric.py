@@ -2,8 +2,10 @@ import pytest
 
 from deepeval.metrics import BackgroundNoiseMetric
 from deepeval.metrics.voice.utils.analysis import analyze_audio
+from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 from tests.test_metrics.helpers import (
     agent_speech,
+    clip_shape,
     measure,
     to_audio,
     with_noise,
@@ -47,3 +49,14 @@ def test_short_clips_keep_the_earlier_snr_estimate():
     # Without pauses quieter than the silence cutoff, the earlier estimate
     # assumes 40 dB; the composite metrics keep scoring short clips that way.
     assert analyze_audio(to_audio(clip)).estimated_snr_db == pytest.approx(40.0)
+
+
+def test_noise_the_decision_model_does_not_hear_is_dismissed():
+    model = FakeAudioDecisionModel(probability=0.1)
+    turns = with_reply_audio(1, with_noise(agent_speech(), -30))
+    metric = measure(BackgroundNoiseMetric(audio_decision_model=model), turns)
+    assert metric.score == 1.0
+    assert metric.score_breakdown["dismissed_events"] == 1
+    # The whole reply it was measured on.
+    [clip] = model.clips
+    assert clip_shape(clip)[1] == pytest.approx(3.0, abs=0.05)

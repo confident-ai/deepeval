@@ -1,6 +1,7 @@
 import pytest
 
 from deepeval.metrics import UserInterruptionMetric
+from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 from tests.test_metrics.helpers import (
     CLEAN_GAPS,
     STAMPS_NOTE,
@@ -95,3 +96,20 @@ def test_a_call_where_the_caller_never_spoke_is_skipped(tmp_path):
     )
     assert metric.score is None
     assert metric.reason == "The caller never spoke for 1 second or more."
+
+
+def test_a_caller_interruption_the_decision_model_dismisses_is_dropped(
+    tmp_path,
+):
+    model = FakeAudioDecisionModel(probability=0.2)
+    metric = measure_recording(
+        UserInterruptionMetric(
+            use_speech_detection=False, audio_decision_model=model
+        ),
+        tmp_path,
+        agent=[(0.0, speech_like(4.0))],
+        caller=[(2.0, speech_like(3.0)), (6.0, speech_like(2.0))],
+    )
+    assert metric.score == 1.0
+    assert metric.score_breakdown["dismissed_events"] == 1
+    assert len(model.clips) == 1

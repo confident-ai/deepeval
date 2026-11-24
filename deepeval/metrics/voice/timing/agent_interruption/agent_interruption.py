@@ -13,6 +13,7 @@ from deepeval.metrics.voice.utils.call_activity import (
 )
 from deepeval.metrics.voice.utils.defects import DefectShare
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
@@ -61,6 +62,9 @@ AGENT_DESCRIPTIONS = {
 
 
 class AgentInterruptionMetric(BaseDefectMetric):
+    event_question = "Is a person speaking in this clip, rather than only background noise, breathing or silence?"
+    event_speaker = "user"
+
     # On human-labelled phone calls, reviewers excused an agent that spoke
     # after about 4 s of caller silence.
     def __init__(
@@ -72,6 +76,7 @@ class AgentInterruptionMetric(BaseDefectMetric):
         verbose_mode: bool = False,
         max_caller_silence_seconds: int = 4,
         use_speech_detection: bool = True,
+        audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None,
         flaky: bool = False,
     ):
         if max_caller_silence_seconds <= 0:
@@ -85,6 +90,7 @@ class AgentInterruptionMetric(BaseDefectMetric):
             verbose_mode=verbose_mode,
             flaky=flaky,
         )
+        self._use_audio_decision_model(audio_decision_model)
         self.max_caller_silence_seconds = max_caller_silence_seconds
         self.use_speech_detection = use_speech_detection
 

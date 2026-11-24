@@ -1,8 +1,10 @@
 import pytest
 
 from deepeval.metrics import RepromptMetric
+from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 from tests.test_metrics.helpers import (
     caller_turn,
+    clip_shape,
     clean_turns,
     measure,
     timed_turn,
@@ -70,3 +72,19 @@ def test_speaking_again_after_a_silence_is_a_reprompt():
     assert event["start_time"] == pytest.approx(5.0, abs=0.05)
     assert event["duration_seconds"] == pytest.approx(3.0, abs=0.05)
     assert event["description"] == "Caller repeated themselves after 3.0s"
+
+
+def test_a_reprompt_the_decision_model_dismisses_is_dropped():
+    model = FakeAudioDecisionModel(probability=0.1)
+    turns = [
+        timed_turn("assistant", 2.0, 0.0),
+        timed_turn("user", 2.0, 3.0),
+        timed_turn("user", 1.0, 8.0, seed=1),
+        timed_turn("assistant", 2.0, 10.0, seed=2),
+    ]
+    metric = measure(RepromptMetric(audio_decision_model=model), turns)
+    assert metric.score == 1.0
+    assert metric.score_breakdown["dismissed_events"] == 1
+    # The caller's repeated line, padded to the one second the model needs.
+    [clip] = model.clips
+    assert clip_shape(clip)[1] == pytest.approx(1.0, abs=0.05)

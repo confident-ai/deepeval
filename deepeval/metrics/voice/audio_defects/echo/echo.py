@@ -1,3 +1,5 @@
+from typing import Optional
+
 from deepeval.metrics.voice.audio_defects.echo.utils import (
     ECHO_MIN_REPLY_SECONDS,
     speaker_leak,
@@ -11,6 +13,7 @@ from deepeval.metrics.voice.utils.defects import (
     DefectShare,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import (
     WHOLE_REPLY,
@@ -22,6 +25,28 @@ DEFECT_LABEL = "an echo"
 
 
 class EchoMetric(BaseDefectMetric):
+    event_question = "Can the AI agent's own voice be heard echoed back on this caller's line?"
+    event_speaker = "user"
+
+    def __init__(
+        self,
+        *,
+        threshold: Optional[float] = 0.5,
+        include_reason: bool = True,
+        strict_mode: bool = False,
+        verbose_mode: bool = False,
+        audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None,
+        flaky: bool = False,
+    ):
+        super().__init__(
+            threshold=threshold,
+            include_reason=include_reason,
+            strict_mode=strict_mode,
+            verbose_mode=verbose_mode,
+            flaky=flaky,
+        )
+        self._use_audio_decision_model(audio_decision_model)
+
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         path = test_case.call_recording_path
         channels = read_call_recording(path)

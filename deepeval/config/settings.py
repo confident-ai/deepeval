@@ -789,6 +789,11 @@ class Settings(BaseSettings):
         description="TypeSafe AI input token cost (used for cost reporting).",
     )
 
+    # Hume (audio decisions).
+    HUME_API_KEY: Optional[SecretStr] = Field(
+        None, description="Hume API key for the Audio Decisions API."
+    )
+
     #
     # Speech Keys (TTS/STT)
     #

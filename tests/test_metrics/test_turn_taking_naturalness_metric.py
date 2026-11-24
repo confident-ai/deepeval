@@ -2,6 +2,7 @@ import pytest
 
 from deepeval.metrics import TurnTakingNaturalnessMetric
 from deepeval.test_case import ConversationalTestCase
+from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 from tests.test_metrics.helpers import (
     CLEAN_GAPS,
     measure,
@@ -59,3 +60,35 @@ def test_a_caller_cutting_in_counts_against_the_reply_cut_into(tmp_path):
     assert metric.reason == (
         "1 of 3 agent replies had an issue: User Interruption (1)."
     )
+
+
+def test_the_decision_model_checks_the_interruption_parts(tmp_path):
+    path = stereo_recording(
+        tmp_path / "call.wav",
+        caller=[
+            (0.0, speech_like(2.0)),
+            (4.0, speech_like(2.0, seed=1)),
+            (10.0, speech_like(2.0, seed=2)),
+        ],
+        agent=[
+            (2.5, speech_like(3.0, seed=3)),
+            (7.5, speech_like(2.0, seed=4)),
+            (12.5, speech_like(2.0, seed=5)),
+        ],
+    )
+    model = FakeAudioDecisionModel(probability=0.1)
+    metric = TurnTakingNaturalnessMetric(
+        use_speech_detection=False, audio_decision_model=model
+    )
+    metric.measure(
+        ConversationalTestCase(
+            turns=timed_call(CLEAN_GAPS), call_recording_path=path
+        ),
+        _show_indicator=False,
+    )
+    assert metric.score == 1.0
+    assert metric.score_breakdown["dismissed_events"] == 1
+    assert metric.reason.endswith(
+        "1 flagged event was dismissed by the audio decision model."
+    )
+    assert metric.evaluation_cost == pytest.approx(0.001)

@@ -5,7 +5,11 @@ network, an API key or the ``typesafe-sdk``."""
 
 from typing import Any, Dict, List, Optional, Tuple
 
-from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
+from deepeval.models import (
+    DeepEvalBaseAudioDecisionModel,
+    DeepEvalBaseLLM,
+    DeepEvalBaseSystemOneModel,
+)
 from deepeval.models.system_one.schema import (
     ChoiceAnswer,
     NoulAnswer,
@@ -59,6 +63,43 @@ class FakeSystemOneModel(DeepEvalBaseSystemOneModel):
         self, state: Any, questions: Dict[str, Any]
     ) -> Tuple[SystemOneAnswers, Optional[float]]:
         return self.decide(state, questions)
+
+
+class FakeAudioDecisionModel(DeepEvalBaseAudioDecisionModel):
+    """Answers every yes/no question with ``probability`` and keeps the clips
+    it heard; raises ``error`` instead when one is given."""
+
+    def __init__(
+        self,
+        probability: float = 0.1,
+        cost: float = 0.001,
+        error: Optional[BaseException] = None,
+    ):
+        super().__init__("fake-hume")
+        self.probability = probability
+        self.cost = cost
+        self.error = error
+        self.clips: List[bytes] = []
+
+    def load_model(self, *args, **kwargs):
+        return None
+
+    def get_model_name(self):
+        return "fake-hume"
+
+    def decide(self, audio, questions, context=None):
+        self.clips.append(audio)
+        if self.error is not None:
+            raise self.error
+        return (
+            SystemOneAnswers(
+                nouls={
+                    key: NoulAnswer(probability=self.probability)
+                    for key in questions
+                }
+            ),
+            self.cost,
+        )
 
 
 class ExplodingSystemOneModel(FakeSystemOneModel):

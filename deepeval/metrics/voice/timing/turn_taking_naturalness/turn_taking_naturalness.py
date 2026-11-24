@@ -25,6 +25,7 @@ from deepeval.metrics.voice.utils.call_activity import (
 )
 from deepeval.metrics.voice.utils.defects import CALL_RECORDING, DefectShare
 from deepeval.metrics.voice.utils.events import VoiceEvent
+from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.test_case import ConversationalTestCase
 
 
@@ -43,6 +44,7 @@ class TurnTakingNaturalnessMetric(BaseRollUpMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         use_speech_detection: bool = True,
+        audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None,
         flaky: bool = False,
     ):
         super().__init__(
@@ -53,6 +55,9 @@ class TurnTakingNaturalnessMetric(BaseRollUpMetric):
             flaky=flaky,
         )
         self.use_speech_detection = use_speech_detection
+        self.audio_decision_model = audio_decision_model
+        if audio_decision_model is not None:
+            self.evaluation_model = audio_decision_model.get_model_name()
 
     def _parts(self) -> List[BaseDefectMetric]:
         return [
@@ -60,10 +65,12 @@ class TurnTakingNaturalnessMetric(BaseRollUpMetric):
                 use_speech_detection=self.use_speech_detection
             ),
             AgentInterruptionMetric(
-                use_speech_detection=self.use_speech_detection
+                use_speech_detection=self.use_speech_detection,
+                audio_decision_model=self.audio_decision_model,
             ),
             UserInterruptionMetric(
-                use_speech_detection=self.use_speech_detection
+                use_speech_detection=self.use_speech_detection,
+                audio_decision_model=self.audio_decision_model,
             ),
             ResponseDelayConsistencyMetric(
                 use_speech_detection=self.use_speech_detection

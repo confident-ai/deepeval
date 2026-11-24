@@ -7,11 +7,15 @@ from deepeval.metrics.voice.utils.defects import (
     audible_replies,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 class BackgroundNoiseMetric(BaseDefectMetric):
+    event_question = "Is there distracting background noise behind the speaker?"
+    event_speaker = "assistant"
+
     # 5 dB above the +15 dB speech-to-noise minimum for intelligible speech.
     def __init__(
         self,
@@ -21,6 +25,7 @@ class BackgroundNoiseMetric(BaseDefectMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         min_snr_db: int = 20,
+        audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None,
         flaky: bool = False,
     ):
         if min_snr_db < 0:
@@ -32,6 +37,7 @@ class BackgroundNoiseMetric(BaseDefectMetric):
             verbose_mode=verbose_mode,
             flaky=flaky,
         )
+        self._use_audio_decision_model(audio_decision_model)
         self.min_snr_db = min_snr_db
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
