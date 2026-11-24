@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.agent_identity_abuse.types import (
+from deepeval.red_team.vulnerabilities.agent_identity_abuse.types import (
     AgentIdentityAbuseType,
 )
 

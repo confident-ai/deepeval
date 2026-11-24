@@ -2,9 +2,9 @@ import json
 import copy
 from typing import Optional, Dict, Any, Literal
 
-from deepteam.attacks.single_turn import BaseSingleTurnAttack, AttackParameter
-from deepteam.attacks.base_attack import Exploitability
-from deepteam.attacks.single_turn.embedded_instruction_json.template import (
+from deepeval.red_team.attacks.single_turn import BaseSingleTurnAttack, AttackParameter
+from deepeval.red_team.attacks.base_attack import Exploitability
+from deepeval.red_team.attacks.single_turn.embedded_instruction_json.template import (
     DEFAULT_JSON,
 )
 

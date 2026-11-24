@@ -1,7 +1,7 @@
 import pytest
 
-from deepteam.guardrails import Guardrails, GuardResult
-from deepteam.guardrails.guards import (
+from deepeval.red_team.guardrails import Guardrails, GuardResult
+from deepeval.red_team.guardrails.guards import (
     PromptInjectionGuard,
     ToxicityGuard,
 )

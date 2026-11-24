@@ -8,8 +8,8 @@ import traceback
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
-from deepteam.guardrails.types import GuardType
-from deepteam.guardrails.guards.schema import SafetyLevelSchema
+from deepeval.red_team.guardrails.types import GuardType
+from deepeval.red_team.guardrails.guards.schema import SafetyLevelSchema
 
 
 class SafetyLevel(Enum):

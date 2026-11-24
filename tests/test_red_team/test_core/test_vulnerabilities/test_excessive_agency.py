@@ -1,10 +1,10 @@
 import pytest
 
-from deepteam.vulnerabilities import ExcessiveAgency
-from deepteam.vulnerabilities.excessive_agency import (
+from deepeval.red_team.vulnerabilities import ExcessiveAgency
+from deepeval.red_team.vulnerabilities.excessive_agency import (
     ExcessiveAgencyType,
 )
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestExcessiveAgency:
@@ -88,7 +88,7 @@ class TestExcessiveAgency:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_ExcessiveAgency_metric(self):
-        from deepteam.metrics import ExcessiveAgencyMetric
+        from deepeval.red_team._metrics import ExcessiveAgencyMetric
 
         excessive_agency = ExcessiveAgency(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

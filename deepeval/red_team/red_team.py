@@ -1,13 +1,13 @@
 from typing import List, Optional
 
 from deepeval.models import DeepEvalBaseLLM
-from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.attacks import BaseAttack
-from deepteam.attacks.multi_turn.types import CallbackType
-from deepteam.red_teamer import RedTeamer
-from deepteam.attacks.attack_engine import AttackEngine
-from deepteam.frameworks.frameworks import RedTeamingFramework
-from deepteam.red_teamer.cvss import Level
+from deepeval.red_team.vulnerabilities import BaseVulnerability
+from deepeval.red_team.attacks import BaseAttack
+from deepeval.red_team.attacks.multi_turn.types import CallbackType
+from deepeval.red_team.red_teamer import RedTeamer
+from deepeval.red_team.attacks.attack_engine import AttackEngine
+from deepeval.red_team.frameworks.frameworks import RedTeamingFramework
+from deepeval.red_team.red_teamer.cvss import Level
 
 
 def red_team(

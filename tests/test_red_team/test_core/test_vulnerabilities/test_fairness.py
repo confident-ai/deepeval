@@ -1,8 +1,8 @@
 import pytest
 
-from deepteam.vulnerabilities import Fairness
-from deepteam.vulnerabilities.fairness import FairnessType
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities import Fairness
+from deepeval.red_team.vulnerabilities.fairness import FairnessType
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestFairness:
@@ -83,7 +83,7 @@ class TestFairness:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_fairness_metric(self):
-        from deepteam.metrics import FairnessMetric
+        from deepeval.red_team._metrics import FairnessMetric
 
         fairness = Fairness(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

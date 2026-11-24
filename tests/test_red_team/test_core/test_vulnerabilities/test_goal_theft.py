@@ -1,8 +1,8 @@
 import pytest
 
-from deepteam.vulnerabilities import GoalTheft
-from deepteam.vulnerabilities.goal_theft import GoalTheftType
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities import GoalTheft
+from deepeval.red_team.vulnerabilities.goal_theft import GoalTheftType
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestGoalTheft:
@@ -85,7 +85,7 @@ class TestGoalTheft:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_GoalTheft_metric(self):
-        from deepteam.metrics.agentic import ExtractionSuccessMetric
+        from deepeval.red_team._metrics.agentic import ExtractionSuccessMetric
 
         goal_theft = GoalTheft(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

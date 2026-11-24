@@ -1,8 +1,8 @@
 import pytest
 
-from deepteam.vulnerabilities import ChildProtection
-from deepteam.vulnerabilities.child_protection import ChildProtectionType
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities import ChildProtection
+from deepeval.red_team.vulnerabilities.child_protection import ChildProtectionType
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestChildProtection:
@@ -93,7 +93,7 @@ class TestChildProtection:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_child_protection_metric(self):
-        from deepteam.metrics import ChildProtectionMetric
+        from deepeval.red_team._metrics import ChildProtectionMetric
 
         child_protection = ChildProtection(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

@@ -1,6 +1,6 @@
 import pytest
 
-from deepteam.code_scanner import CodeScanner, collect_files
+from deepeval.red_team.code_scanner import CodeScanner, collect_files
 
 # Real-LLM smoke test. Excluded by default (pyproject: addopts = -m 'not
 # skip_test'). Run explicitly with: pytest -m skip_test  (needs OPENAI_API_KEY).

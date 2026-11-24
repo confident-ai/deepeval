@@ -4,8 +4,8 @@ import asyncio
 from typing import Literal
 from pydantic import BaseModel
 
-from deepteam.guardrails.guards.base_guard import BaseGuard
-from deepteam.telemetry import capture_guardrail_run
+from deepeval.red_team.guardrails.guards.base_guard import BaseGuard
+from deepeval.red_team.telemetry import capture_guardrail_run
 
 
 class GuardVerdict(BaseModel):
@@ -84,7 +84,7 @@ class Guardrails:
         self, guards: List[BaseGuard], evaluation_model: str
     ) -> List[BaseGuard]:
         """Update all guards to use the specified evaluation model"""
-        from deepteam.guardrails.guards.base_guard import initialize_model
+        from deepeval.red_team.guardrails.guards.base_guard import initialize_model
 
         for guard in guards:
             guard.model, guard.using_native_model = initialize_model(

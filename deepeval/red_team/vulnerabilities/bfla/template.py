@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.bfla.types import BFLAType
+from deepeval.red_team.vulnerabilities.bfla.types import BFLAType
 
 
 class BFLATemplate:

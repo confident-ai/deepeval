@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.competition.types import CompetitionType
+from deepeval.red_team.vulnerabilities.competition.types import CompetitionType
 
 
 class CompetitionTemplate:

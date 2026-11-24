@@ -1,10 +1,10 @@
 import pytest
 
-from deepteam.vulnerabilities import RecursiveHijacking
-from deepteam.vulnerabilities.recursive_hijacking import (
+from deepeval.red_team.vulnerabilities import RecursiveHijacking
+from deepeval.red_team.vulnerabilities.recursive_hijacking import (
     RecursiveHijackingType,
 )
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestRecursiveHijacking:
@@ -106,7 +106,7 @@ class TestRecursiveHijacking:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_RecursiveHijacking_metric(self):
-        from deepteam.metrics.agentic import SubversionSuccessMetric
+        from deepeval.red_team._metrics.agentic import SubversionSuccessMetric
 
         recursive_hijack = RecursiveHijacking(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

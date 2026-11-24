@@ -1,10 +1,10 @@
 import pytest
 
-from deepteam.vulnerabilities import ToolMetadataPoisoning
-from deepteam.vulnerabilities.tool_metadata_poisoning import (
+from deepeval.red_team.vulnerabilities import ToolMetadataPoisoning
+from deepeval.red_team.vulnerabilities.tool_metadata_poisoning import (
     ToolMetadataPoisoningType,
 )
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestToolMetadataPoisoning:
@@ -115,7 +115,7 @@ class TestToolMetadataPoisoning:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_tool_metadata_poisoning_metric(self):
-        from deepteam.metrics import ToolMetadataPoisoningMetric
+        from deepeval.red_team._metrics import ToolMetadataPoisoningMetric
 
         tool_metadata_poisoning = ToolMetadataPoisoning(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

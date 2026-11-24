@@ -3,13 +3,13 @@ import warnings
 import re
 
 # Optionally add telemetry
-from deepteam.red_team import red_team
+from deepeval.red_team.red_team import red_team
 
 # Import guardrails for production LLM safety
-from deepteam.guardrails import (
+from deepeval.red_team.guardrails import (
     Guardrails,
 )
-from deepteam._version import __version__
+from deepeval.red_team._version import __version__
 
 __all__ = [
     "red_team",

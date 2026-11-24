@@ -1,11 +1,11 @@
 import pytest
-from deepteam.frameworks import MITRE
-from deepteam.red_teamer.risk_assessment import RiskAssessment
-from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.attacks import BaseAttack
-from deepteam.frameworks.risk_category import RiskCategory
-from deepteam.frameworks.mitre.risk_categories import MITRE_CATEGORIES
-from deepteam import red_team
+from deepeval.red_team.frameworks import MITRE
+from deepeval.red_team.red_teamer.risk_assessment import RiskAssessment
+from deepeval.red_team.vulnerabilities import BaseVulnerability
+from deepeval.red_team.attacks import BaseAttack
+from deepeval.red_team.frameworks.risk_category import RiskCategory
+from deepeval.red_team.frameworks.mitre.risk_categories import MITRE_CATEGORIES
+from deepeval.red_team import red_team
 
 
 class TestMITRE:

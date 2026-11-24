@@ -1,9 +1,9 @@
 from typing import List, Optional
 
-from deepteam.code_scanner.constants import (
+from deepeval.red_team.code_scanner.constants import (
     DEFAULT_CODE_SCAN_VULNERABILITIES,
 )
-from deepteam.code_scanner.taxonomy import (
+from deepeval.red_team.code_scanner.taxonomy import (
     VulnerabilityRef,
     allowed_types,
     to_name,

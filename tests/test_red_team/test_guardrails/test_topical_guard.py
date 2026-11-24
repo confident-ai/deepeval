@@ -1,5 +1,5 @@
 import json
-from deepteam.guardrails.guards import TopicalGuard
+from deepeval.red_team.guardrails.guards import TopicalGuard
 
 
 class TestTopicalGuard:

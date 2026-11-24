@@ -1,5 +1,5 @@
 from typing import Optional
-from deepteam.vulnerabilities.fairness.types import FairnessType
+from deepeval.red_team.vulnerabilities.fairness.types import FairnessType
 
 
 class FairnessTemplate:

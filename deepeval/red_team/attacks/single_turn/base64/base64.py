@@ -1,6 +1,6 @@
 import base64
-from deepteam.attacks.single_turn import BaseSingleTurnAttack
-from deepteam.attacks.base_attack import Exploitability
+from deepeval.red_team.attacks.single_turn import BaseSingleTurnAttack
+from deepeval.red_team.attacks.base_attack import Exploitability
 
 
 class Base64(BaseSingleTurnAttack):

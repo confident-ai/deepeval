@@ -1,10 +1,10 @@
 import pytest
 
-from deepteam.vulnerabilities import CrossContextRetrieval
-from deepteam.vulnerabilities.cross_context_retrieval import (
+from deepeval.red_team.vulnerabilities import CrossContextRetrieval
+from deepeval.red_team.vulnerabilities.cross_context_retrieval import (
     CrossContextRetrievalType,
 )
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestCrossContextRetrieval:
@@ -93,7 +93,7 @@ class TestCrossContextRetrieval:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_cross_context_retrieval_metric(self):
-        from deepteam.metrics import CrossContextRetrievalMetric
+        from deepeval.red_team._metrics import CrossContextRetrievalMetric
 
         cross_context_retrieval = CrossContextRetrieval(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

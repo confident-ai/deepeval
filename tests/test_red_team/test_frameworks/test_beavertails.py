@@ -1,6 +1,6 @@
 import pytest
-from deepteam.frameworks import BeaverTails
-from deepteam import red_team
+from deepeval.red_team.frameworks import BeaverTails
+from deepeval.red_team import red_team
 
 
 class TestBeaverTails:

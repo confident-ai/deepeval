@@ -1,6 +1,6 @@
 from typing import List
-from deepteam.frameworks.risk_category import RiskCategory
-from deepteam.vulnerabilities import (
+from deepeval.red_team.frameworks.risk_category import RiskCategory
+from deepeval.red_team.vulnerabilities import (
     Ethics,
     Misinformation,
     PromptLeakage,
@@ -23,7 +23,7 @@ from deepteam.vulnerabilities import (
     InsecureInterAgentCommunication,
     AutonomousAgentDrift,
 )
-from deepteam.attacks.single_turn import (
+from deepeval.red_team.attacks.single_turn import (
     Base64,
     PromptInjection,
     PromptProbing,
@@ -31,7 +31,7 @@ from deepteam.attacks.single_turn import (
     ROT13,
     ContextPoisoning,
 )
-from deepteam.attacks.multi_turn import (
+from deepeval.red_team.attacks.multi_turn import (
     CrescendoJailbreaking,
     LinearJailbreaking,
     TreeJailbreaking,

@@ -130,7 +130,7 @@ def generate_with_cost(
         except Exception as e:
             last_error = e
             if attempt < max_retries - 1:
-                from deepteam.attacks.single_turn.escalation_constants import (
+                from deepeval.red_team.attacks.single_turn.escalation_constants import (
                     append_critic_feedback,
                     random_escalation_suffix,
                 )
@@ -232,7 +232,7 @@ async def a_generate_with_cost(
         except Exception as e:
             last_error = e
             if attempt < max_retries - 1:
-                from deepteam.attacks.single_turn.escalation_constants import (
+                from deepeval.red_team.attacks.single_turn.escalation_constants import (
                     append_critic_feedback,
                     random_escalation_suffix,
                 )

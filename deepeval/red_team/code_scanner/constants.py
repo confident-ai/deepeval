@@ -1,7 +1,7 @@
 import os
 from typing import List, Type
 
-from deepteam.vulnerabilities import (
+from deepeval.red_team.vulnerabilities import (
     BFLA,
     BOLA,
     RBAC,
@@ -17,7 +17,7 @@ from deepteam.vulnerabilities import (
     ToolOrchestrationAbuse,
     UnexpectedCodeExecution,
 )
-from deepteam.vulnerabilities.base_vulnerability import BaseVulnerability
+from deepeval.red_team.vulnerabilities.base_vulnerability import BaseVulnerability
 
 CODE_CONTEXT_LIMIT = int(os.getenv("CODE_CONTEXT_LIMIT", "40000"))
 

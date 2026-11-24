@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.intellectual_property.types import (
+from deepeval.red_team.vulnerabilities.intellectual_property.types import (
     IntellectualPropertyType,
 )
 

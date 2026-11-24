@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.autonomous_agent_drift.types import (
+from deepeval.red_team.vulnerabilities.autonomous_agent_drift.types import (
     AutonomousAgentDriftType,
 )
 

@@ -5,29 +5,29 @@ from typing import List, Optional, Tuple, Union
 
 from deepeval.models import DeepEvalBaseLLM
 
-from deepteam.attacks.attack_simulator.utils import a_generate, generate
-from deepteam.attacks.base_attack import Exploitability
-from deepteam.attacks.multi_turn.tree_jailbreaking.schema import (
+from deepeval.red_team.attacks.attack_simulator.utils import a_generate, generate
+from deepeval.red_team.attacks.base_attack import Exploitability
+from deepeval.red_team.attacks.multi_turn.tree_jailbreaking.schema import (
     ImprovementPrompt,
     OnTopic,
     Rating,
 )
-from deepteam.attacks.multi_turn.tree_jailbreaking.template import (
+from deepeval.red_team.attacks.multi_turn.tree_jailbreaking.template import (
     JailBreakingTemplate,
 )
-from deepteam.attacks.multi_turn.base_multi_turn_attack import (
+from deepeval.red_team.attacks.multi_turn.base_multi_turn_attack import (
     BaseMultiTurnAttack,
 )
-from deepteam.attacks.multi_turn.progression import (
+from deepeval.red_team.attacks.multi_turn.progression import (
     Probe,
     Progression,
     StopReason,
 )
-from deepteam.attacks.single_turn import BaseSingleTurnAttack
-from deepteam.attacks.single_turn.base_single_turn_attack import (
+from deepeval.red_team.attacks.single_turn import BaseSingleTurnAttack
+from deepeval.red_team.attacks.single_turn.base_single_turn_attack import (
     AttackParameter,
 )
-from deepteam.utils import add_pbar, create_progress, update_pbar
+from deepeval.red_team.utils import add_pbar, create_progress, update_pbar
 
 
 class TreeJailbreaking(BaseMultiTurnAttack):

@@ -1,4 +1,4 @@
-from deepteam.attacks.multi_turn.base_template import BaseMultiTurnTemplate
+from deepeval.red_team.attacks.multi_turn.base_template import BaseMultiTurnTemplate
 
 
 class JailBreakingTemplate(BaseMultiTurnTemplate):

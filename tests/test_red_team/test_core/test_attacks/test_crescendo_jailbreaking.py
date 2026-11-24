@@ -1,8 +1,8 @@
 import pytest
 from unittest.mock import AsyncMock, MagicMock
-from deepteam.attacks.multi_turn import CrescendoJailbreaking
-from deepteam.vulnerabilities import Bias
-from deepteam.test_case.test_case import RTTurn
+from deepeval.red_team.attacks.multi_turn import CrescendoJailbreaking
+from deepeval.red_team.vulnerabilities import Bias
+from deepeval.red_team.test_case.test_case import RTTurn
 
 
 class TestCrescendoJailbreaking:

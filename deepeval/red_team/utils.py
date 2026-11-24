@@ -11,7 +11,7 @@ from rich.progress import (
     TaskProgressColumn,
     TimeElapsedColumn,
 )
-from deepteam.test_case import RTTurn, ToolCall
+from deepeval.red_team.test_case import RTTurn, ToolCall
 
 PROGRESS_ENABLED = os.getenv("DEEPTEAM_SHOW_PROGRESS", "true").lower() in (
     "true",

@@ -1,5 +1,5 @@
 import json
-from deepteam.guardrails.guards import IllegalGuard
+from deepeval.red_team.guardrails.guards import IllegalGuard
 
 
 class TestIllegalGuard:

@@ -8,8 +8,8 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
 
 from .schema import BatchFinding, BatchFindingsList, SpanNode
-from deepteam.utils import SPANS_CONTEXT_LIMIT
-from deepteam.attacks.attack_simulator.utils import generate, a_generate
+from deepeval.red_team.utils import SPANS_CONTEXT_LIMIT
+from deepeval.red_team.attacks.attack_simulator.utils import generate, a_generate
 
 
 # Appended to a scanner's prompt only when prior detections from other

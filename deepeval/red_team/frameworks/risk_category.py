@@ -1,8 +1,8 @@
 from typing import List, Optional
-from deepteam.vulnerabilities import (
+from deepeval.red_team.vulnerabilities import (
     BaseVulnerability,
 )
-from deepteam.attacks import BaseAttack
+from deepeval.red_team.attacks import BaseAttack
 from dataclasses import dataclass
 
 

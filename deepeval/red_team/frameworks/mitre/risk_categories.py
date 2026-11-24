@@ -1,5 +1,5 @@
-from deepteam.frameworks.risk_category import RiskCategory
-from deepteam.vulnerabilities import (
+from deepeval.red_team.frameworks.risk_category import RiskCategory
+from deepeval.red_team.vulnerabilities import (
     IllegalActivity,
     PromptLeakage,
     PIILeakage,
@@ -16,7 +16,7 @@ from deepteam.vulnerabilities import (
     RecursiveHijacking,
 )
 
-from deepteam.attacks.single_turn import (
+from deepeval.red_team.attacks.single_turn import (
     Leetspeak,
     PromptInjection,
     PromptProbing,
@@ -24,7 +24,7 @@ from deepteam.attacks.single_turn import (
     ROT13,
 )
 
-from deepteam.attacks.multi_turn import (
+from deepeval.red_team.attacks.multi_turn import (
     CrescendoJailbreaking,
     LinearJailbreaking,
     TreeJailbreaking,

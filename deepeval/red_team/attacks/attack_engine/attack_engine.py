@@ -5,8 +5,8 @@ from typing import List, Optional, Tuple, Union
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
 
-from deepteam.test_case import RTTestCase
-from deepteam.attacks.attack_simulator.utils import (
+from deepeval.red_team.test_case import RTTestCase
+from deepeval.red_team.attacks.attack_simulator.utils import (
     generate_with_cost,
     a_generate_with_cost,
     add_cost,

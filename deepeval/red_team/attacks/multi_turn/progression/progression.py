@@ -5,32 +5,32 @@ from typing import List, Optional, Union
 from deepeval.metrics.utils import initialize_model
 from deepeval.models import DeepEvalBaseLLM
 
-from deepteam.attacks.attack_simulator.utils import (
+from deepeval.red_team.attacks.attack_simulator.utils import (
     add_cost,
     current_simulation_cost,
 )
-from deepteam.attacks.multi_turn.types import CallbackType
-from deepteam.attacks.multi_turn.utils import (
+from deepeval.red_team.attacks.multi_turn.types import CallbackType
+from deepeval.red_team.attacks.multi_turn.utils import (
     a_enhance_attack,
     enhance_attack,
 )
-from deepteam.attacks.multi_turn.progression.shift_detection import (
+from deepeval.red_team.attacks.multi_turn.progression.shift_detection import (
     AsyncMetricCheck,
     BehaviorShiftDetector,
     MetricCheck,
     MetricVerdict,
 )
-from deepteam.attacks.multi_turn.progression.stopping import (
+from deepeval.red_team.attacks.multi_turn.progression.stopping import (
     StopReason,
     get_stopping_reason,
     mark_stop,
 )
-from deepteam.attacks.multi_turn.progression.types import (
+from deepeval.red_team.attacks.multi_turn.progression.types import (
     Probe,
     ProgressionResult,
 )
-from deepteam.attacks.single_turn import BaseSingleTurnAttack
-from deepteam.test_case.test_case import RTTurn
+from deepeval.red_team.attacks.single_turn import BaseSingleTurnAttack
+from deepeval.red_team.test_case.test_case import RTTurn
 
 TURN_LEVEL_ATTACK_RATE = 0.5
 

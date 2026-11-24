@@ -1,6 +1,6 @@
 from typing import List, Literal
-from deepteam.frameworks import RedTeamingFramework
-from deepteam.frameworks.owasp_top_10_agentic.risk_categories import (
+from deepeval.red_team.frameworks import RedTeamingFramework
+from deepeval.red_team.frameworks.owasp_top_10_agentic.risk_categories import (
     OWASP_ASI_CATEGORIES,
 )
 

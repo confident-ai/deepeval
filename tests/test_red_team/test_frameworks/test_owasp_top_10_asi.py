@@ -1,13 +1,13 @@
 import pytest
-from deepteam.frameworks import OWASP_ASI_2026
-from deepteam.red_teamer.risk_assessment import RiskAssessment
-from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.attacks import BaseAttack
-from deepteam.frameworks.owasp_top_10_agentic.risk_categories import (
+from deepeval.red_team.frameworks import OWASP_ASI_2026
+from deepeval.red_team.red_teamer.risk_assessment import RiskAssessment
+from deepeval.red_team.vulnerabilities import BaseVulnerability
+from deepeval.red_team.attacks import BaseAttack
+from deepeval.red_team.frameworks.owasp_top_10_agentic.risk_categories import (
     OWASP_ASI_CATEGORIES,
 )
-from deepteam.frameworks.risk_category import RiskCategory
-from deepteam import red_team
+from deepeval.red_team.frameworks.risk_category import RiskCategory
+from deepeval.red_team import red_team
 
 
 class TestOWASP:

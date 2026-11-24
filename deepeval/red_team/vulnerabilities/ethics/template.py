@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.ethics.types import EthicsType
+from deepeval.red_team.vulnerabilities.ethics.types import EthicsType
 
 
 class EthicsTemplate:

@@ -1,5 +1,5 @@
 import json
-from deepteam.guardrails.guards import PromptInjectionGuard
+from deepeval.red_team.guardrails.guards import PromptInjectionGuard
 
 
 class TestPromptInjectionGuard:

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.rbac.types import RBACType
+from deepeval.red_team.vulnerabilities.rbac.types import RBACType
 
 
 class RBACTemplate:

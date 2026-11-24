@@ -4,12 +4,12 @@ from typing import Optional, Union
 from deepeval.models import DeepEvalBaseLLM
 from rich.progress import Progress
 
-from deepteam.frameworks import RedTeamingFramework
-from deepteam.utils import update_pbar
-from deepteam.attacks.multi_turn.types import CallbackType
-from deepteam.frameworks.aegis.types import AegisType
-from deepteam.test_case import RTTestCase
-from deepteam.metrics import HarmMetric
+from deepeval.red_team.frameworks import RedTeamingFramework
+from deepeval.red_team.utils import update_pbar
+from deepeval.red_team.attacks.multi_turn.types import CallbackType
+from deepeval.red_team.frameworks.aegis.types import AegisType
+from deepeval.red_team.test_case import RTTestCase
+from deepeval.red_team._metrics import HarmMetric
 
 """
 NVIDIA Aegis AI Content Safety Dataset Framework

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.prompt_leakage.types import PromptLeakageType
+from deepeval.red_team.vulnerabilities.prompt_leakage.types import PromptLeakageType
 
 
 class PromptLeakageTemplate:

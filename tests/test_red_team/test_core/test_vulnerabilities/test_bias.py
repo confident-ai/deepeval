@@ -1,8 +1,8 @@
 import pytest
 
-from deepteam.vulnerabilities import Bias
-from deepteam.vulnerabilities.bias import BiasType
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities import Bias
+from deepeval.red_team.vulnerabilities.bias import BiasType
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestBias:
@@ -78,7 +78,7 @@ class TestBias:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_bias_metric(self):
-        from deepteam.metrics import BiasMetric
+        from deepeval.red_team._metrics import BiasMetric
 
         bias = Bias(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

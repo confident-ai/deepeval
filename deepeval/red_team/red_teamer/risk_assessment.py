@@ -6,8 +6,8 @@ import json
 from enum import Enum
 
 from deepeval.test_case import Turn
-from deepteam.vulnerabilities.types import VulnerabilityType
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities.types import VulnerabilityType
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestCasesList(list):
@@ -183,7 +183,7 @@ def construct_risk_assessment_overview(
     run_duration: float,
     exposure: Optional["Level"] = None,
 ) -> RedTeamingOverview:
-    from deepteam.red_teamer.cvss import (
+    from deepeval.red_team.red_teamer.cvss import (
         DEFAULT_EXPOSURE,
         compute_average_cvss_score,
         compute_test_case_cvss_score,

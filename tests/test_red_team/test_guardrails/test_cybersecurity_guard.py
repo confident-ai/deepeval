@@ -1,6 +1,6 @@
 import json
-from deepteam.guardrails.guards import CybersecurityGuard
-from deepteam.guardrails.guards.cybersecurity_guard.cybersecurity_guard import (
+from deepeval.red_team.guardrails.guards import CybersecurityGuard
+from deepeval.red_team.guardrails.guards.cybersecurity_guard.cybersecurity_guard import (
     CyberattackCategory,
 )
 

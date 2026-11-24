@@ -1,10 +1,10 @@
 import pytest
 
-from deepteam.vulnerabilities import ExternalSystemAbuse
-from deepteam.vulnerabilities.external_system_abuse import (
+from deepeval.red_team.vulnerabilities import ExternalSystemAbuse
+from deepeval.red_team.vulnerabilities.external_system_abuse import (
     ExternalSystemAbuseType,
 )
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestExternalSystemAbuse:
@@ -102,7 +102,7 @@ class TestExternalSystemAbuse:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_cross_context_retrieval_metric(self):
-        from deepteam.metrics import ExternalSystemAbuseMetric
+        from deepeval.red_team._metrics import ExternalSystemAbuseMetric
 
         external_system_abuse = ExternalSystemAbuse(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

@@ -1,8 +1,8 @@
 import pytest
 
-from deepteam.vulnerabilities import Competition
-from deepteam.vulnerabilities.competition import CompetitionType
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities import Competition
+from deepeval.red_team.vulnerabilities.competition import CompetitionType
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestCompetition:
@@ -94,7 +94,7 @@ class TestCompetition:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_Competition_metric(self):
-        from deepteam.metrics import CompetitorsMetric
+        from deepeval.red_team._metrics import CompetitorsMetric
 
         competition = Competition(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

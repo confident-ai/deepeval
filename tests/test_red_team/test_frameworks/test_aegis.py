@@ -1,6 +1,6 @@
 import pytest
-from deepteam.frameworks import Aegis
-from deepteam import red_team
+from deepeval.red_team.frameworks import Aegis
+from deepeval.red_team import red_team
 
 
 class TestAegis:

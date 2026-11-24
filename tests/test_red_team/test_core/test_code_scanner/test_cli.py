@@ -3,9 +3,9 @@ import json
 import pytest
 from typer.testing import CliRunner
 
-import deepteam.cli.main as climain
-import deepteam.code_scanner.code_scanner as cs_module
-from deepteam.code_scanner import CodeFinding, CodeFindingsList
+import deepeval.red_team.cli.main as climain
+import deepeval.red_team.code_scanner.code_scanner as cs_module
+from deepeval.red_team.code_scanner import CodeFinding, CodeFindingsList
 
 
 @pytest.fixture
@@ -87,7 +87,7 @@ class TestScanCli:
         assert r.exit_code != 0
 
     def test_comment_flag_posts_findings(self, runner, scan_dir, monkeypatch):
-        import deepteam.code_scanner as pkg
+        import deepeval.red_team.code_scanner as pkg
 
         calls = []
         monkeypatch.setattr(

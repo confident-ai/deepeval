@@ -1,11 +1,11 @@
 from typing import List, Optional, Union
 
 from deepeval.models import DeepEvalBaseLLM
-from deepteam.guardrails.guards.base_guard import BaseGuard
-from deepteam.guardrails.guards.topical_guard.template import (
+from deepeval.red_team.guardrails.guards.base_guard import BaseGuard
+from deepeval.red_team.guardrails.guards.topical_guard.template import (
     TopicalGuardTemplate,
 )
-from deepteam.guardrails.types import GuardType
+from deepeval.red_team.guardrails.types import GuardType
 
 
 class TopicalGuard(BaseGuard):

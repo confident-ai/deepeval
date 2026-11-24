@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Dict, List, Optional
 
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.test_case import RTTestCase
 
 
 class Level(str, Enum):
@@ -65,10 +65,10 @@ def get_attack_exploitability(attack_method: Optional[str]) -> Level:
     if not attack_method:
         return DEFAULT_EXPLOITABILITY
 
-    from deepteam.attacks.single_turn.constants import (
+    from deepeval.red_team.attacks.single_turn.constants import (
         SINGLE_TURN_ATTACK_INFO_MAP,
     )
-    from deepteam.attacks.multi_turn.constants import (
+    from deepeval.red_team.attacks.multi_turn.constants import (
         MULTI_TURN_ATTACK_INFO_MAP,
     )
 

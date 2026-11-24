@@ -47,7 +47,7 @@ from .robustness.robustness import Robustness
 from .excessive_agency.excessive_agency import ExcessiveAgency
 from .hallucination.hallucination import Hallucination
 
-from deepteam.metrics import EvaluationExample
+from deepeval.red_team._metrics import EvaluationExample
 
 __all__ = [
     "BaseVulnerability",

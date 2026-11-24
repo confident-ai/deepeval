@@ -1,8 +1,8 @@
 from typing import List, Literal
-from deepteam.frameworks import RedTeamingFramework
-from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.attacks import BaseAttack
-from deepteam.frameworks.nist.risk_categories import NIST_CATEGORIES
+from deepeval.red_team.frameworks import RedTeamingFramework
+from deepeval.red_team.vulnerabilities import BaseVulnerability
+from deepeval.red_team.attacks import BaseAttack
+from deepeval.red_team.frameworks.nist.risk_categories import NIST_CATEGORIES
 
 """
 NIST AI Risk Management Framework (AI RMF) 1.0

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.tool_metadata_poisoning.types import (
+from deepeval.red_team.vulnerabilities.tool_metadata_poisoning.types import (
     ToolMetadataPoisoningType,
 )
 

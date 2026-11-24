@@ -1,8 +1,8 @@
 import pytest
 
-from deepteam.vulnerabilities import DebugAccess
-from deepteam.vulnerabilities.debug_access import DebugAccessType
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities import DebugAccess
+from deepeval.red_team.vulnerabilities.debug_access import DebugAccessType
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestDebugAccess:
@@ -97,7 +97,7 @@ class TestDebugAccess:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_DebugAccess_metric(self):
-        from deepteam.metrics import DebugAccessMetric
+        from deepeval.red_team._metrics import DebugAccessMetric
 
         debug_access = DebugAccess(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

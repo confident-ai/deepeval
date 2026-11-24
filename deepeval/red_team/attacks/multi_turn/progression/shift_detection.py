@@ -4,13 +4,13 @@ from typing import Awaitable, Callable, List, Optional, Union
 from deepeval.models import DeepEvalBaseLLM
 from pydantic import BaseModel
 
-from deepteam.attacks.attack_simulator.utils import (
+from deepeval.red_team.attacks.attack_simulator.utils import (
     a_generate,
     add_cost,
     generate,
 )
-from deepteam.test_case.test_case import RTTurn
-from deepteam.utils import format_turns
+from deepeval.red_team.test_case.test_case import RTTurn
+from deepeval.red_team.utils import format_turns
 
 
 def _as_sentence(text: str) -> str:

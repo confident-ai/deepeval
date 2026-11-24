@@ -1,8 +1,8 @@
 import pytest
 
-from deepteam.vulnerabilities import ShellInjection
-from deepteam.vulnerabilities.shell_injection import ShellInjectionType
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities import ShellInjection
+from deepeval.red_team.vulnerabilities.shell_injection import ShellInjectionType
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestShellInjection:
@@ -97,7 +97,7 @@ class TestShellInjection:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_ShellInjection_metric(self):
-        from deepteam.metrics import ShellInjectionMetric
+        from deepeval.red_team._metrics import ShellInjectionMetric
 
         shell_injection = ShellInjection(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

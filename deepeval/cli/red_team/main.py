@@ -10,8 +10,8 @@ from dataclasses import dataclass
 from . import config
 from .model_callback import load_model
 
-from deepteam.red_teamer import RedTeamer
-from deepteam.vulnerabilities import (
+from deepeval.red_team.red_teamer import RedTeamer
+from deepeval.red_team.vulnerabilities import (
     # Data Privacy
     PIILeakage,
     PromptLeakage,
@@ -42,7 +42,7 @@ from deepteam.vulnerabilities import (
     # Custom
     CustomVulnerability,
 )
-from deepteam.attacks.single_turn import (
+from deepeval.red_team.attacks.single_turn import (
     Base64,
     GrayBox,
     Leetspeak,
@@ -53,14 +53,14 @@ from deepteam.attacks.single_turn import (
     Roleplay,
     ROT13,
 )
-from deepteam.attacks.multi_turn import (
+from deepeval.red_team.attacks.multi_turn import (
     CrescendoJailbreaking,
     LinearJailbreaking,
     TreeJailbreaking,
     SequentialJailbreak,
     BadLikertJudge,
 )
-from deepteam.red_teamer.risk_assessment import RiskAssessment
+from deepeval.red_team.red_teamer.risk_assessment import RiskAssessment
 
 app = typer.Typer(name="deepteam")
 
@@ -204,7 +204,7 @@ def _load_config(path: str):
 
 
 def _show_version(value: bool):
-    from deepteam._version import __version__
+    from deepeval.red_team._version import __version__
 
     if value:
         typer.echo(f"deepteam version {__version__}")
@@ -461,7 +461,7 @@ def scan(
     ),
 ):
     """Scan source code for AI-security vulnerabilities."""
-    from deepteam.code_scanner import (
+    from deepeval.red_team.code_scanner import (
         CodeScanner,
         build_engine,
         collect_changed_files,

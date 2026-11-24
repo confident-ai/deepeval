@@ -1,10 +1,10 @@
 import pytest
 
-from deepteam.vulnerabilities import ToolOrchestrationAbuse
-from deepteam.vulnerabilities.tool_orchestration_abuse import (
+from deepeval.red_team.vulnerabilities import ToolOrchestrationAbuse
+from deepeval.red_team.vulnerabilities.tool_orchestration_abuse import (
     ToolOrchestrationAbuseType,
 )
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestToolOrchestrationAbuse:
@@ -118,7 +118,7 @@ class TestToolOrchestrationAbuse:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_tool_orchestration_metric(self):
-        from deepteam.metrics import ToolOrchestrationMetric
+        from deepeval.red_team._metrics import ToolOrchestrationMetric
 
         tool_orchestration_abuse = ToolOrchestrationAbuse(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

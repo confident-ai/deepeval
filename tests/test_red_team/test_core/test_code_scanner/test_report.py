@@ -1,6 +1,6 @@
 import json
 
-from deepteam.code_scanner import (
+from deepeval.red_team.code_scanner import (
     CodeFinding,
     filter_by_severity,
     to_json,

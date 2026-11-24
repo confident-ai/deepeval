@@ -2,12 +2,12 @@ from typing import List, Optional
 from pydantic import BaseModel, Field
 
 from deepeval.test_run.api import TurnApi
-from deepteam.red_teamer.risk_assessment import (
+from deepeval.red_team.red_teamer.risk_assessment import (
     RiskAssessment,
     VulnerabilityTypeResult,
     AttackMethodResult,
 )
-from deepteam.test_case import RTTestCase, RTTurn
+from deepeval.red_team.test_case import RTTestCase, RTTurn
 
 
 class VulnerabilityTypeResult(BaseModel):

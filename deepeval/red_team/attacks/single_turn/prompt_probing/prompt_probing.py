@@ -3,21 +3,21 @@ from typing import Optional, Union
 from deepeval.metrics.utils import initialize_model
 from deepeval.models import DeepEvalBaseLLM
 
-from deepteam.attacks.single_turn import BaseSingleTurnAttack
-from deepteam.attacks.base_attack import Exploitability
-from deepteam.utils import create_progress, update_pbar, add_pbar
-from deepteam.attacks.single_turn.prompt_probing.template import (
+from deepeval.red_team.attacks.single_turn import BaseSingleTurnAttack
+from deepeval.red_team.attacks.base_attack import Exploitability
+from deepeval.red_team.utils import create_progress, update_pbar, add_pbar
+from deepeval.red_team.attacks.single_turn.prompt_probing.template import (
     PromptProbingTemplate,
 )
-from deepteam.attacks.single_turn.prompt_probing.schema import (
+from deepeval.red_team.attacks.single_turn.prompt_probing.schema import (
     EnhancedAttack,
     IsPromptProbing,
 )
-from deepteam.attacks.single_turn.compliance import (
+from deepeval.red_team.attacks.single_turn.compliance import (
     evaluate_generation_compliance,
     a_evaluate_generation_compliance,
 )
-from deepteam.attacks.attack_simulator.utils import (
+from deepeval.red_team.attacks.attack_simulator.utils import (
     generate,
     a_generate,
 )

@@ -1,7 +1,7 @@
 import pytest
 from pydantic import ValidationError
 
-from deepteam.code_scanner import CodeChunk, CodeFinding, CodeFindingsList
+from deepeval.red_team.code_scanner import CodeChunk, CodeFinding, CodeFindingsList
 
 
 class TestSchema:

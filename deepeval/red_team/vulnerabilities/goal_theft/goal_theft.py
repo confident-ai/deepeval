@@ -1,4 +1,4 @@
-from deepteam.metrics.types import EvaluationExample
+from deepeval.red_team._metrics.types import EvaluationExample
 from typing import List, Literal, Optional, Union, Dict
 import asyncio
 
@@ -6,23 +6,23 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model, trimAndLoadJson
 from deepeval.utils import get_or_create_event_loop
 
-from deepteam.utils import validate_model_callback_signature
+from deepeval.red_team.utils import validate_model_callback_signature
 
-from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.vulnerabilities.goal_theft import GoalTheftType
-from deepteam.vulnerabilities.utils import validate_vulnerability_types
-from deepteam.metrics.agentic.extraction_success.extraction_success import (
+from deepeval.red_team.vulnerabilities import BaseVulnerability
+from deepeval.red_team.vulnerabilities.goal_theft import GoalTheftType
+from deepeval.red_team.vulnerabilities.utils import validate_vulnerability_types
+from deepeval.red_team._metrics.agentic.extraction_success.extraction_success import (
     ExtractionSuccessMetric,
     BaseRedTeamingMetric,
 )
-from deepteam.test_case import RTTestCase
-from deepteam.attacks.multi_turn.types import CallbackType
-from deepteam.attacks.attack_engine import AttackEngine
-from deepteam.attacks.attack_simulator.schema import SyntheticDataList
+from deepeval.red_team.test_case import RTTestCase
+from deepeval.red_team.attacks.multi_turn.types import CallbackType
+from deepeval.red_team.attacks.attack_engine import AttackEngine
+from deepeval.red_team.attacks.attack_simulator.schema import SyntheticDataList
 from .template import GoalTheftTemplate
 from deepeval.tracing.types import Trace
-from deepteam.trace_scanner.schema import BatchFinding
-from deepteam.trace_scanner import TraceScanner
+from deepeval.red_team.trace_scanner.schema import BatchFinding
+from deepeval.red_team.trace_scanner import TraceScanner
 
 GoalTheftLiteralType = Literal[
     "escalating_probing", "cooperative_dialogue", "social_engineering"
@@ -69,7 +69,7 @@ class GoalTheft(BaseVulnerability):
         model_callback: CallbackType,
         purpose: Optional[str] = None,
     ) -> Dict[GoalTheftType, List[RTTestCase]]:
-        from deepteam.risks import getRiskCategory
+        from deepeval.red_team.risks import getRiskCategory
 
         validate_model_callback_signature(
             model_callback=model_callback,
@@ -124,7 +124,7 @@ class GoalTheft(BaseVulnerability):
         model_callback: CallbackType,
         purpose: Optional[str] = None,
     ) -> Dict[GoalTheftType, List[RTTestCase]]:
-        from deepteam.risks import getRiskCategory
+        from deepeval.red_team.risks import getRiskCategory
 
         validate_model_callback_signature(
             model_callback=model_callback,

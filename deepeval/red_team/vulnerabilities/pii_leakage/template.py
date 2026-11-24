@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.pii_leakage.types import PIILeakageType
+from deepeval.red_team.vulnerabilities.pii_leakage.types import PIILeakageType
 
 
 class PIILeakageTemplate:

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.illegal_activity.types import IllegalActivityType
+from deepeval.red_team.vulnerabilities.illegal_activity.types import IllegalActivityType
 
 
 class IllegalActivityTemplate:

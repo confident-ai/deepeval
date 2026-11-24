@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import Dict
 
-from deepteam.vulnerabilities.types import *
+from deepeval.red_team.vulnerabilities.types import *
 
 
 class LLMRiskCategories(Enum):

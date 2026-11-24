@@ -1,7 +1,7 @@
-from deepteam import red_team
-from deepteam.vulnerabilities import Bias
-from deepteam.attacks.single_turn import *
-from deepteam.attacks.multi_turn import *
+from deepeval.red_team import red_team
+from deepeval.red_team.vulnerabilities import Bias
+from deepeval.red_team.attacks.single_turn import *
+from deepeval.red_team.attacks.multi_turn import *
 
 
 async def model_callback(input: str, turns=None) -> str:

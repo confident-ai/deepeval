@@ -1,11 +1,11 @@
 from typing import Optional, Union
 
 from deepeval.models import DeepEvalBaseLLM
-from deepteam.guardrails.guards.base_guard import BaseGuard
-from deepteam.guardrails.guards.toxicity_guard.template import (
+from deepeval.red_team.guardrails.guards.base_guard import BaseGuard
+from deepeval.red_team.guardrails.guards.toxicity_guard.template import (
     ToxicityGuardTemplate,
 )
-from deepteam.guardrails.types import GuardType
+from deepeval.red_team.guardrails.types import GuardType
 
 
 class ToxicityGuard(BaseGuard):

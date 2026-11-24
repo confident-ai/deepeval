@@ -1,5 +1,5 @@
 import json
-from deepteam.guardrails.guards import HallucinationGuard
+from deepeval.red_team.guardrails.guards import HallucinationGuard
 
 
 class TestHallucinationGuard:

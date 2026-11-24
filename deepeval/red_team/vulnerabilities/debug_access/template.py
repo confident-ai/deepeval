@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.debug_access.types import DebugAccessType
+from deepeval.red_team.vulnerabilities.debug_access.types import DebugAccessType
 
 
 class DebugAccessTemplate:

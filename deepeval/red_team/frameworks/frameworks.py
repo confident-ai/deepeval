@@ -3,15 +3,15 @@ from dataclasses import dataclass
 
 from deepeval.confident.api import HttpMethods
 
-from deepteam.vulnerabilities import (
+from deepeval.red_team.vulnerabilities import (
     BaseVulnerability,
 )
-from deepteam.attacks import BaseAttack
-from deepteam.confident.api import Api, Endpoints
-from deepteam.frameworks.api import RedTeamingFrameworkHttpResponse
-from deepteam.frameworks.risk_category import RiskCategory
-from deepteam.frameworks.utils import build_risk_categories
-from deepteam.utils import add_pbar, create_progress, update_pbar
+from deepeval.red_team.attacks import BaseAttack
+from deepeval.red_team.confident.api import Api, Endpoints
+from deepeval.red_team.frameworks.api import RedTeamingFrameworkHttpResponse
+from deepeval.red_team.frameworks.risk_category import RiskCategory
+from deepeval.red_team.frameworks.utils import build_risk_categories
+from deepeval.red_team.utils import add_pbar, create_progress, update_pbar
 
 
 @dataclass

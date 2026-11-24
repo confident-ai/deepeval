@@ -1,6 +1,6 @@
 import pytest
 import base64
-from deepteam.attacks.single_turn import Base64
+from deepeval.red_team.attacks.single_turn import Base64
 
 
 class TestBase64:

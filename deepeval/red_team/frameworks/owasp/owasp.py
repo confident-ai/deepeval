@@ -1,10 +1,10 @@
 from typing import List, Literal
-from deepteam.frameworks import RedTeamingFramework
-from deepteam.vulnerabilities import (
+from deepeval.red_team.frameworks import RedTeamingFramework
+from deepeval.red_team.vulnerabilities import (
     BaseVulnerability,
 )
-from deepteam.attacks import BaseAttack
-from deepteam.frameworks.owasp.risk_categories import OWASP_CATEGORIES
+from deepeval.red_team.attacks import BaseAttack
+from deepeval.red_team.frameworks.owasp.risk_categories import OWASP_CATEGORIES
 
 """
 OWASP Top 10 for Large Language Models (LLMs) 2025

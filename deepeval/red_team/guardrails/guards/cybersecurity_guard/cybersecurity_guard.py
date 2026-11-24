@@ -2,11 +2,11 @@ from typing import List, Optional, Union
 from enum import Enum
 
 from deepeval.models import DeepEvalBaseLLM
-from deepteam.guardrails.guards.base_guard import BaseGuard
-from deepteam.guardrails.guards.cybersecurity_guard.template import (
+from deepeval.red_team.guardrails.guards.base_guard import BaseGuard
+from deepeval.red_team.guardrails.guards.cybersecurity_guard.template import (
     CybersecurityGuardTemplate,
 )
-from deepteam.guardrails.types import GuardType
+from deepeval.red_team.guardrails.types import GuardType
 
 
 class CyberattackCategory(Enum):

@@ -3,22 +3,22 @@ from typing import Dict, List, Optional, Union
 
 from deepeval.models import DeepEvalBaseLLM
 
-from deepteam.attacks.base_attack import BaseAttack
-from deepteam.attacks.multi_turn.types import CallbackType
-from deepteam.attacks.multi_turn.progression import (
+from deepeval.red_team.attacks.base_attack import BaseAttack
+from deepeval.red_team.attacks.multi_turn.types import CallbackType
+from deepeval.red_team.attacks.multi_turn.progression import (
     AsyncMetricCheck,
     MetricCheck,
     Progression,
     ProgressionResult,
     StopReason,
 )
-from deepteam.attacks.single_turn.base_single_turn_attack import (
+from deepeval.red_team.attacks.single_turn.base_single_turn_attack import (
     AttackParameter,
     BaseSingleTurnAttack,
 )
-from deepteam.test_case.test_case import RTTurn
-from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.vulnerabilities.types import VulnerabilityType
+from deepeval.red_team.test_case.test_case import RTTurn
+from deepeval.red_team.vulnerabilities import BaseVulnerability
+from deepeval.red_team.vulnerabilities.types import VulnerabilityType
 
 
 class BaseMultiTurnAttack(BaseAttack):
@@ -115,7 +115,7 @@ class BaseMultiTurnAttack(BaseAttack):
         model_callback: CallbackType,
         turns: Optional[List[RTTurn]] = None,
     ) -> Dict[VulnerabilityType, List[ProgressionResult]]:
-        from deepteam.red_teamer.utils import (
+        from deepeval.red_team.red_teamer.utils import (
             group_attacks_by_vulnerability_type,
         )
 
@@ -143,7 +143,7 @@ class BaseMultiTurnAttack(BaseAttack):
         model_callback: CallbackType,
         turns: Optional[List[RTTurn]] = None,
     ) -> Dict[VulnerabilityType, List[ProgressionResult]]:
-        from deepteam.red_teamer.utils import (
+        from deepeval.red_team.red_teamer.utils import (
             group_attacks_by_vulnerability_type,
         )
 

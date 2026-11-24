@@ -1,5 +1,5 @@
 import pytest
-from deepteam.attacks.single_turn import MathProblem
+from deepeval.red_team.attacks.single_turn import MathProblem
 
 
 class TestMathProblem:

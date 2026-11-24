@@ -1,5 +1,5 @@
 import json
-from deepteam.guardrails.guards import PrivacyGuard
+from deepeval.red_team.guardrails.guards import PrivacyGuard
 
 
 class TestPrivacyGuard:

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.recursive_hijacking.types import (
+from deepeval.red_team.vulnerabilities.recursive_hijacking.types import (
     RecursiveHijackingType,
 )
 

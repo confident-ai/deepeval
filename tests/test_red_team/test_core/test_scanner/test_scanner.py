@@ -7,9 +7,9 @@ import pytest
 from deepeval.metrics.utils import initialize_model
 from deepeval.tracing.types import AgentSpan, LlmSpan, Trace, TraceSpanStatus
 
-from deepteam.trace_scanner.trace_scanner import TraceScanner
-from deepteam.vulnerabilities.bias.bias import Bias
-from deepteam.vulnerabilities.bias.template import BiasTemplate
+from deepeval.red_team.trace_scanner.trace_scanner import TraceScanner
+from deepeval.red_team.vulnerabilities.bias.bias import Bias
+from deepeval.red_team.vulnerabilities.bias.template import BiasTemplate
 
 def load_trace_fixture(filename: str) -> Trace:
     test_dir = os.path.dirname(__file__)

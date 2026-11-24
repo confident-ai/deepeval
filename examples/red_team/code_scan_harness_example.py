@@ -22,7 +22,7 @@ The exact same selection works on the CLI:
 
 import sys
 
-from deepteam.code_scanner import (
+from deepeval.red_team.code_scanner import (
     CodeChunk,
     CodeScanner,
     build_engine,

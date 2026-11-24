@@ -1,7 +1,7 @@
 import pytest
-from deepteam.vulnerabilities import Hallucination
-from deepteam.vulnerabilities.hallucination.types import HallucinationType
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities import Hallucination
+from deepeval.red_team.vulnerabilities.hallucination.types import HallucinationType
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestHallucination:
@@ -92,7 +92,7 @@ class TestHallucination:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_hallucination_metric(self):
-        from deepteam.metrics import HallucinationMetric
+        from deepeval.red_team._metrics import HallucinationMetric
 
         hallucination = Hallucination(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

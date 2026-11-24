@@ -10,7 +10,7 @@ from tenacity import (
 )
 
 
-import deepteam
+import deepeval.red_team as deepteam
 from deepeval.confident.types import ApiResponse, ConfidentApiError
 from deepeval.confident.api import (
     get_confident_api_key,

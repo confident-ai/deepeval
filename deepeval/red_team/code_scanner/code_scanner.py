@@ -6,7 +6,7 @@ from typing import List, Optional
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
 
-from deepteam.attacks.attack_simulator.utils import generate, a_generate
+from deepeval.red_team.attacks.attack_simulator.utils import generate, a_generate
 
 from .constants import CODE_CONTEXT_LIMIT
 from .engines import ScanEngine

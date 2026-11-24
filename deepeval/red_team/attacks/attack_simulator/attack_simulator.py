@@ -9,20 +9,20 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
 from deepeval.metrics.utils import initialize_model
 
-from deepteam.attacks import BaseAttack
-from deepteam.utils import create_progress, add_pbar, update_pbar
-from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.attacks.multi_turn.types import CallbackType
-from deepteam.errors import ModelRefusalError
-from deepteam.test_case import RTTestCase
-from deepteam.attacks.attack_engine import AttackEngine
-from deepteam.attacks.attack_simulator.utils import (
+from deepeval.red_team.attacks import BaseAttack
+from deepeval.red_team.utils import create_progress, add_pbar, update_pbar
+from deepeval.red_team.vulnerabilities import BaseVulnerability
+from deepeval.red_team.attacks.multi_turn.types import CallbackType
+from deepeval.red_team.errors import ModelRefusalError
+from deepeval.red_team.test_case import RTTestCase
+from deepeval.red_team.attacks.attack_engine import AttackEngine
+from deepeval.red_team.attacks.attack_simulator.utils import (
     cost_accumulator,
     add_cost,
 )
 
 if TYPE_CHECKING:
-    from deepteam.attacks.multi_turn.progression import MetricCheckRecord
+    from deepeval.red_team.attacks.multi_turn.progression import MetricCheckRecord
 
 
 class BaselineAttack:
@@ -379,7 +379,7 @@ class AttackSimulator:
         test_case: RTTestCase,
         vulnerabilities: Optional[List[BaseVulnerability]],
     ):
-        from deepteam.attacks.multi_turn.progression import (
+        from deepeval.red_team.attacks.multi_turn.progression import (
             MetricCheckRecord,
             MetricVerdict,
         )
@@ -411,7 +411,7 @@ class AttackSimulator:
         test_case: RTTestCase,
         vulnerabilities: Optional[List[BaseVulnerability]],
     ):
-        from deepteam.attacks.multi_turn.progression import (
+        from deepeval.red_team.attacks.multi_turn.progression import (
             MetricCheckRecord,
             MetricVerdict,
         )
@@ -440,7 +440,7 @@ class AttackSimulator:
 
     @staticmethod
     def _flag_incomplete_progression(test_case: RTTestCase):
-        from deepteam.attacks.multi_turn.progression import (
+        from deepeval.red_team.attacks.multi_turn.progression import (
             is_progression_completed,
             get_stopping_reason,
             get_stopping_category,
@@ -480,8 +480,8 @@ class AttackSimulator:
         ignore_errors: bool,
         vulnerabilities: Optional[List[BaseVulnerability]] = None,
     ):
-        from deepteam.test_case.test_case import RTTurn
-        from deepteam.attacks.multi_turn import BaseMultiTurnAttack
+        from deepeval.red_team.test_case.test_case import RTTurn
+        from deepeval.red_team.attacks.multi_turn import BaseMultiTurnAttack
 
         # Check if the attack is a multi-turn attack
         if isinstance(attack, BaseMultiTurnAttack):
@@ -598,10 +598,10 @@ class AttackSimulator:
         ignore_errors: bool,
         vulnerabilities: Optional[List[BaseVulnerability]] = None,
     ):
-        from deepteam.attacks.multi_turn import (
+        from deepeval.red_team.attacks.multi_turn import (
             BaseMultiTurnAttack,
         )
-        from deepteam.test_case.test_case import RTTurn
+        from deepeval.red_team.test_case.test_case import RTTurn
 
         if isinstance(attack, BaseMultiTurnAttack):
             # This is multi-turn attack

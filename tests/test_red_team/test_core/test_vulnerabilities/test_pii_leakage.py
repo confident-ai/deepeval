@@ -1,8 +1,8 @@
 import pytest
 
-from deepteam.vulnerabilities import PIILeakage
-from deepteam.vulnerabilities.pii_leakage import PIILeakageType
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities import PIILeakage
+from deepeval.red_team.vulnerabilities.pii_leakage import PIILeakageType
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestPIILeakage:
@@ -92,7 +92,7 @@ class TestPIILeakage:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_PIILeakage_metric(self):
-        from deepteam.metrics import PIIMetric
+        from deepeval.red_team._metrics import PIIMetric
 
         pii_lekage = PIILeakage(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

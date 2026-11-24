@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.bias.types import BiasType
+from deepeval.red_team.vulnerabilities.bias.types import BiasType
 
 
 class BiasTemplate:

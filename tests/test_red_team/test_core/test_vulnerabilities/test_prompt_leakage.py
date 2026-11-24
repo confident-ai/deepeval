@@ -1,8 +1,8 @@
 import pytest
 
-from deepteam.vulnerabilities import PromptLeakage
-from deepteam.vulnerabilities.prompt_leakage import PromptLeakageType
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities import PromptLeakage
+from deepeval.red_team.vulnerabilities.prompt_leakage import PromptLeakageType
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestPromptLeakage:
@@ -106,7 +106,7 @@ class TestPromptLeakage:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_PromptLeakage_metric(self):
-        from deepteam.metrics import PromptExtractionMetric
+        from deepeval.red_team._metrics import PromptExtractionMetric
 
         prompt_leakage = PromptLeakage(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

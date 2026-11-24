@@ -1,99 +1,99 @@
 from typing import Union
 
-from deepteam.metrics.intellectual_property.template import (
+from deepeval.red_team._metrics.intellectual_property.template import (
     IntellectualPropertyTemplate,
 )
-from deepteam.vulnerabilities.bias.template import BiasTemplate
-from deepteam.vulnerabilities.competition.template import CompetitionTemplate
-from deepteam.vulnerabilities.graphic_content.template import (
+from deepeval.red_team.vulnerabilities.bias.template import BiasTemplate
+from deepeval.red_team.vulnerabilities.competition.template import CompetitionTemplate
+from deepeval.red_team.vulnerabilities.graphic_content.template import (
     GraphicContentTemplate,
 )
-from deepteam.vulnerabilities.illegal_activity.template import (
+from deepeval.red_team.vulnerabilities.illegal_activity.template import (
     IllegalActivityTemplate,
 )
-from deepteam.vulnerabilities.intellectual_property import (
+from deepeval.red_team.vulnerabilities.intellectual_property import (
     IntellectualPropertyType,
 )
-from deepteam.vulnerabilities.misinformation.template import (
+from deepeval.red_team.vulnerabilities.misinformation.template import (
     MisinformationTemplate,
 )
-from deepteam.vulnerabilities.personal_safety.template import (
+from deepeval.red_team.vulnerabilities.personal_safety.template import (
     PersonalSafetyTemplate,
 )
-from deepteam.vulnerabilities.pii_leakage.template import PIILeakageTemplate
-from deepteam.vulnerabilities.prompt_leakage.template import (
+from deepeval.red_team.vulnerabilities.pii_leakage.template import PIILeakageTemplate
+from deepeval.red_team.vulnerabilities.prompt_leakage.template import (
     PromptLeakageTemplate,
 )
-from deepteam.vulnerabilities.toxicity.template import ToxicityTemplate
-from deepteam.vulnerabilities.illegal_activity import IllegalActivityType
-from deepteam.vulnerabilities.personal_safety import PersonalSafetyType
-from deepteam.vulnerabilities.graphic_content import GraphicContentType
-from deepteam.vulnerabilities.misinformation import MisinformationType
-from deepteam.vulnerabilities.prompt_leakage import PromptLeakageType
-from deepteam.vulnerabilities.competition import CompetitionType
-from deepteam.vulnerabilities.pii_leakage import PIILeakageType
-from deepteam.vulnerabilities.toxicity import ToxicityType
-from deepteam.vulnerabilities.bias import BiasType
-from deepteam.vulnerabilities.rbac import RBACType
-from deepteam.vulnerabilities.bola.types import BOLAType
-from deepteam.vulnerabilities.bfla.types import BFLAType
-from deepteam.vulnerabilities.ssrf.types import SSRFType
-from deepteam.vulnerabilities.debug_access.types import DebugAccessType
-from deepteam.vulnerabilities.shell_injection.types import ShellInjectionType
-from deepteam.vulnerabilities.sql_injection.types import SQLInjectionType
-from deepteam.vulnerabilities.rbac.template import RBACTemplate
-from deepteam.vulnerabilities.bola.template import BOLATemplate
-from deepteam.vulnerabilities.bfla.template import BFLATemplate
-from deepteam.vulnerabilities.ssrf.template import SSRFTemplate
-from deepteam.vulnerabilities.debug_access.template import DebugAccessTemplate
-from deepteam.vulnerabilities.shell_injection.template import (
+from deepeval.red_team.vulnerabilities.toxicity.template import ToxicityTemplate
+from deepeval.red_team.vulnerabilities.illegal_activity import IllegalActivityType
+from deepeval.red_team.vulnerabilities.personal_safety import PersonalSafetyType
+from deepeval.red_team.vulnerabilities.graphic_content import GraphicContentType
+from deepeval.red_team.vulnerabilities.misinformation import MisinformationType
+from deepeval.red_team.vulnerabilities.prompt_leakage import PromptLeakageType
+from deepeval.red_team.vulnerabilities.competition import CompetitionType
+from deepeval.red_team.vulnerabilities.pii_leakage import PIILeakageType
+from deepeval.red_team.vulnerabilities.toxicity import ToxicityType
+from deepeval.red_team.vulnerabilities.bias import BiasType
+from deepeval.red_team.vulnerabilities.rbac import RBACType
+from deepeval.red_team.vulnerabilities.bola.types import BOLAType
+from deepeval.red_team.vulnerabilities.bfla.types import BFLAType
+from deepeval.red_team.vulnerabilities.ssrf.types import SSRFType
+from deepeval.red_team.vulnerabilities.debug_access.types import DebugAccessType
+from deepeval.red_team.vulnerabilities.shell_injection.types import ShellInjectionType
+from deepeval.red_team.vulnerabilities.sql_injection.types import SQLInjectionType
+from deepeval.red_team.vulnerabilities.rbac.template import RBACTemplate
+from deepeval.red_team.vulnerabilities.bola.template import BOLATemplate
+from deepeval.red_team.vulnerabilities.bfla.template import BFLATemplate
+from deepeval.red_team.vulnerabilities.ssrf.template import SSRFTemplate
+from deepeval.red_team.vulnerabilities.debug_access.template import DebugAccessTemplate
+from deepeval.red_team.vulnerabilities.shell_injection.template import (
     ShellInjectionTemplate,
 )
-from deepteam.vulnerabilities.sql_injection.template import SQLInjectionTemplate
-from deepteam.vulnerabilities.robustness import RobustnessType
-from deepteam.vulnerabilities.robustness.template import (
+from deepeval.red_team.vulnerabilities.sql_injection.template import SQLInjectionTemplate
+from deepeval.red_team.vulnerabilities.robustness import RobustnessType
+from deepeval.red_team.vulnerabilities.robustness.template import (
     RobustnessTemplate,
 )
-from deepteam.vulnerabilities.excessive_agency import (
+from deepeval.red_team.vulnerabilities.excessive_agency import (
     ExcessiveAgencyType,
 )
-from deepteam.vulnerabilities.excessive_agency.template import (
+from deepeval.red_team.vulnerabilities.excessive_agency.template import (
     ExcessiveAgencyTemplate,
 )
-from deepteam.vulnerabilities.exploit_tool_agent.types import (
+from deepeval.red_team.vulnerabilities.exploit_tool_agent.types import (
     ExploitToolAgentType,
 )
-from deepteam.vulnerabilities.exploit_tool_agent.template import (
+from deepeval.red_team.vulnerabilities.exploit_tool_agent.template import (
     ExploitToolAgentTemplate,
 )
-from deepteam.vulnerabilities.external_system_abuse.types import (
+from deepeval.red_team.vulnerabilities.external_system_abuse.types import (
     ExternalSystemAbuseType,
 )
-from deepteam.vulnerabilities.external_system_abuse.template import (
+from deepeval.red_team.vulnerabilities.external_system_abuse.template import (
     ExternalSystemAbuseTemplate,
 )
-from deepteam.vulnerabilities.cross_context_retrieval.types import (
+from deepeval.red_team.vulnerabilities.cross_context_retrieval.types import (
     CrossContextRetrievalType,
 )
-from deepteam.vulnerabilities.cross_context_retrieval.template import (
+from deepeval.red_team.vulnerabilities.cross_context_retrieval.template import (
     CrossContextRetrievalTemplate,
 )
-from deepteam.vulnerabilities.system_reconnaissance.types import (
+from deepeval.red_team.vulnerabilities.system_reconnaissance.types import (
     SystemReconnaissanceType,
 )
-from deepteam.vulnerabilities.system_reconnaissance.template import (
+from deepeval.red_team.vulnerabilities.system_reconnaissance.template import (
     SystemReconnaissanceTemplate,
 )
 
 # Import agentic vulnerability types
-from deepteam.vulnerabilities.goal_theft.types import GoalTheftType
-from deepteam.vulnerabilities.recursive_hijacking.types import (
+from deepeval.red_team.vulnerabilities.goal_theft.types import GoalTheftType
+from deepeval.red_team.vulnerabilities.recursive_hijacking.types import (
     RecursiveHijackingType,
 )
-from deepteam.vulnerabilities.goal_theft.template import (
+from deepeval.red_team.vulnerabilities.goal_theft.template import (
     GoalTheftTemplate,
 )
-from deepteam.vulnerabilities.recursive_hijacking.template import (
+from deepeval.red_team.vulnerabilities.recursive_hijacking.template import (
     RecursiveHijackingTemplate,
 )
 

@@ -3,7 +3,7 @@ from typing import List, Optional
 
 import pytest
 
-from deepteam.attacks.multi_turn import (
+from deepeval.red_team.attacks.multi_turn import (
     BadLikertJudge,
     BehaviorShiftDetector,
     CrescendoJailbreaking,
@@ -13,23 +13,23 @@ from deepteam.attacks.multi_turn import (
     TreeJailbreaking,
     is_progression_completed,
 )
-from deepteam.attacks.multi_turn.progression import (
+from deepeval.red_team.attacks.multi_turn.progression import (
     MetricVerdict,
     ShiftExplanation,
     ShiftVerdict,
     default_stop_detail,
     mark_stop,
 )
-from deepteam.test_case.test_case import RTTurn
+from deepeval.red_team.test_case.test_case import RTTurn
 
 MODULES = [
-    "deepteam.attacks.multi_turn.progression.shift_detection",
-    "deepteam.attacks.multi_turn.progression.progression",
-    "deepteam.attacks.multi_turn.linear_jailbreaking.linear_jailbreaking",
-    "deepteam.attacks.multi_turn.bad_likert_judge.bad_likert_judge",
-    "deepteam.attacks.multi_turn.sequential_break.sequential_break",
-    "deepteam.attacks.multi_turn.crescendo_jailbreaking.crescendo_jailbreaking",
-    "deepteam.attacks.multi_turn.tree_jailbreaking.tree_jailbreaking",
+    "deepeval.red_team.attacks.multi_turn.progression.shift_detection",
+    "deepeval.red_team.attacks.multi_turn.progression.progression",
+    "deepeval.red_team.attacks.multi_turn.linear_jailbreaking.linear_jailbreaking",
+    "deepeval.red_team.attacks.multi_turn.bad_likert_judge.bad_likert_judge",
+    "deepeval.red_team.attacks.multi_turn.sequential_break.sequential_break",
+    "deepeval.red_team.attacks.multi_turn.crescendo_jailbreaking.crescendo_jailbreaking",
+    "deepeval.red_team.attacks.multi_turn.tree_jailbreaking.tree_jailbreaking",
 ]
 
 FAIL = MetricVerdict(score=0.0, reason="metric says broken")
@@ -113,7 +113,7 @@ class TestBehaviorShiftDetector:
 
     @pytest.fixture(autouse=True)
     def _stub_explainer(self, monkeypatch):
-        import deepteam.attacks.multi_turn.progression.shift_detection as progression
+        import deepeval.red_team.attacks.multi_turn.progression.shift_detection as progression
 
         monkeypatch.setattr(
             progression,
@@ -155,7 +155,7 @@ class TestBehaviorShiftDetector:
         assert detector.check([RTTurn(role="user", content="attack")]) is None
 
     def test_explainer_failure_still_stops(self, monkeypatch):
-        import deepteam.attacks.multi_turn.progression.shift_detection as progression
+        import deepeval.red_team.attacks.multi_turn.progression.shift_detection as progression
 
         def boom(*a, **k):
             raise RuntimeError("explainer down")
@@ -327,8 +327,8 @@ class TestProgressionInvariants:
 class TestBadLikertJudgeBudget:
 
     def test_backtracks_do_not_eat_the_turn_budget(self, monkeypatch):
-        import deepteam.attacks.multi_turn.bad_likert_judge.bad_likert_judge as blj
-        from deepteam.attacks.multi_turn.base_schema import NonRefusal
+        import deepeval.red_team.attacks.multi_turn.bad_likert_judge.bad_likert_judge as blj
+        from deepeval.red_team.attacks.multi_turn.base_schema import NonRefusal
 
         calls = {"n": 0}
         real_generate = blj.generate
@@ -352,8 +352,8 @@ class TestBadLikertJudgeBudget:
     def test_exhausted_backtracks_report_a_simulator_refusal(
         self, monkeypatch
     ):
-        import deepteam.attacks.multi_turn.bad_likert_judge.bad_likert_judge as blj
-        from deepteam.attacks.multi_turn.base_schema import NonRefusal
+        import deepeval.red_team.attacks.multi_turn.bad_likert_judge.bad_likert_judge as blj
+        from deepeval.red_team.attacks.multi_turn.base_schema import NonRefusal
 
         real_generate = blj.generate
 
@@ -442,8 +442,8 @@ class TestTreeSearch:
         assert not is_progression_completed(turns[-1].stopping_category)
 
     def test_off_topic_pruning_is_applied(self, monkeypatch):
-        import deepteam.attacks.multi_turn.tree_jailbreaking.tree_jailbreaking as tree
-        from deepteam.attacks.multi_turn.tree_jailbreaking.schema import (
+        import deepeval.red_team.attacks.multi_turn.tree_jailbreaking.tree_jailbreaking as tree
+        from deepeval.red_team.attacks.multi_turn.tree_jailbreaking.schema import (
             OnTopic,
         )
 

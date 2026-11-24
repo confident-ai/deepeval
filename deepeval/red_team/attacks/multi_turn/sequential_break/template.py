@@ -1,9 +1,9 @@
 from typing import Optional
-from deepteam.attacks.multi_turn.sequential_break.schema import (
+from deepeval.red_team.attacks.multi_turn.sequential_break.schema import (
     SequentialJailbreakTypeLiteral,
     DialogueTypeLiteral,
 )
-from deepteam.attacks.multi_turn.base_template import BaseMultiTurnTemplate
+from deepeval.red_team.attacks.multi_turn.base_template import BaseMultiTurnTemplate
 
 
 class SequentialBreakTemplate(BaseMultiTurnTemplate):

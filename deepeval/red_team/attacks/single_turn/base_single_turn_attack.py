@@ -2,7 +2,7 @@ from typing import Any, Dict, List, Literal, Optional
 
 from pydantic import BaseModel
 
-from deepteam.attacks.base_attack import BaseAttack
+from deepeval.red_team.attacks.base_attack import BaseAttack
 
 
 ParameterType = Literal["string", "integer", "float", "boolean", "enum", "json"]

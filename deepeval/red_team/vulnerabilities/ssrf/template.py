@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.ssrf.types import SSRFType
+from deepeval.red_team.vulnerabilities.ssrf.types import SSRFType
 
 
 class SSRFTemplate:

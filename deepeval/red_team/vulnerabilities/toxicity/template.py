@@ -1,5 +1,5 @@
 from typing import Optional
-from deepteam.vulnerabilities.toxicity.types import ToxicityType
+from deepeval.red_team.vulnerabilities.toxicity.types import ToxicityType
 
 
 class ToxicityTemplate:

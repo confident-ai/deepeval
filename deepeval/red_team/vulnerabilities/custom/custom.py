@@ -6,19 +6,19 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model, trimAndLoadJson
 from deepeval.utils import get_or_create_event_loop
 
-from deepteam.utils import validate_model_callback_signature
-from deepteam.confident.api import Api, Endpoints
+from deepeval.red_team.utils import validate_model_callback_signature
+from deepeval.red_team.confident.api import Api, Endpoints
 from deepeval.confident.api import HttpMethods
 from rich.console import Console
 
-from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.metrics import BaseRedTeamingMetric, HarmMetric
-from deepteam.metrics.types import EvaluationExample
-from deepteam.attacks.multi_turn.types import CallbackType
-from deepteam.attacks.attack_engine import AttackEngine
-from deepteam.attacks.attack_simulator.schema import SyntheticDataList
-from deepteam.risks import getRiskCategory
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities import BaseVulnerability
+from deepeval.red_team._metrics import BaseRedTeamingMetric, HarmMetric
+from deepeval.red_team._metrics.types import EvaluationExample
+from deepeval.red_team.attacks.multi_turn.types import CallbackType
+from deepeval.red_team.attacks.attack_engine import AttackEngine
+from deepeval.red_team.attacks.attack_simulator.schema import SyntheticDataList
+from deepeval.red_team.risks import getRiskCategory
+from deepeval.red_team.test_case import RTTestCase
 from .template import CustomVulnerabilityTemplate
 from .api import (
     APIEvaluationExample,
@@ -26,8 +26,8 @@ from .api import (
     CustomVulnerabilityUploadRequest,
 )
 from deepeval.tracing.types import Trace
-from deepteam.trace_scanner.schema import BatchFinding
-from deepteam.trace_scanner import TraceScanner
+from deepeval.red_team.trace_scanner.schema import BatchFinding
+from deepeval.red_team.trace_scanner import TraceScanner
 
 
 def _build_types(name: str, types: Optional[List[str]]) -> List[Enum]:
@@ -484,7 +484,7 @@ class CustomVulnerability(BaseVulnerability):
         if response.built_in:
             raise ValueError(
                 f"'{response.name}' is a built-in vulnerability, not a custom one. "
-                "Import it from deepteam.vulnerabilities instead of pulling it."
+                "Import it from deepeval.red_team.vulnerabilities instead of pulling it."
             )
         if not response.criteria:
             raise ValueError(

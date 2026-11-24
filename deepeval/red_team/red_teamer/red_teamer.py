@@ -13,42 +13,42 @@ from deepeval.confident.api import HttpMethods, is_confident
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
 from deepeval.dataset.golden import Golden
-from deepteam.confident.api import Api, Endpoints
-from deepteam.red_teamer.api import map_risk_assessment_to_api
-from deepteam.test_case import RTTestCase, RTTurn
+from deepeval.red_team.confident.api import Api, Endpoints
+from deepeval.red_team.red_teamer.api import map_risk_assessment_to_api
+from deepeval.red_team.test_case import RTTestCase, RTTurn
 from deepeval.utils import get_or_create_event_loop
 
-from deepteam.frameworks.frameworks import RedTeamingFramework
-from deepteam.frameworks.risk_category import RiskCategory
-from deepteam.telemetry import capture_red_teamer_run
-from deepteam.attacks import BaseAttack
-from deepteam.utils import (
+from deepeval.red_team.frameworks.frameworks import RedTeamingFramework
+from deepeval.red_team.frameworks.risk_category import RiskCategory
+from deepeval.red_team.telemetry import capture_red_teamer_run
+from deepeval.red_team.attacks import BaseAttack
+from deepeval.red_team.utils import (
     validate_model_callback_signature,
     create_progress,
     add_pbar,
     update_pbar,
 )
-from deepteam.red_teamer.utils import (
+from deepeval.red_team.red_teamer.utils import (
     resolve_model_callback,
     wrap_model_callback,
 )
-from deepteam.vulnerabilities import BaseVulnerability
-from deepteam.vulnerabilities.types import VulnerabilityType
-from deepteam.attacks.attack_simulator import AttackSimulator
-from deepteam.attacks.attack_engine import AttackEngine
-from deepteam.attacks.attack_simulator.utils import add_cost
-from deepteam.attacks.multi_turn.progression import StopReason
-from deepteam.attacks.multi_turn.types import CallbackType
-from deepteam.metrics import BaseRedTeamingMetric
-from deepteam.red_teamer.risk_assessment import (
+from deepeval.red_team.vulnerabilities import BaseVulnerability
+from deepeval.red_team.vulnerabilities.types import VulnerabilityType
+from deepeval.red_team.attacks.attack_simulator import AttackSimulator
+from deepeval.red_team.attacks.attack_engine import AttackEngine
+from deepeval.red_team.attacks.attack_simulator.utils import add_cost
+from deepeval.red_team.attacks.multi_turn.progression import StopReason
+from deepeval.red_team.attacks.multi_turn.types import CallbackType
+from deepeval.red_team._metrics import BaseRedTeamingMetric
+from deepeval.red_team.red_teamer.risk_assessment import (
     construct_risk_assessment_overview,
     RiskAssessment,
 )
-from deepteam.red_teamer.cvss import (
+from deepeval.red_team.red_teamer.cvss import (
     Level,
     get_severity_from_cvss_score,
 )
-from deepteam.risks import getRiskCategory
+from deepeval.red_team.risks import getRiskCategory
 
 console = Console()
 

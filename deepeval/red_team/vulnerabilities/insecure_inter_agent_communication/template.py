@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.insecure_inter_agent_communication.types import (
+from deepeval.red_team.vulnerabilities.insecure_inter_agent_communication.types import (
     InsecureInterAgentCommunicationType,
 )
 

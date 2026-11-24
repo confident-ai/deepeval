@@ -1,8 +1,8 @@
-from deepteam.code_scanner import (
+from deepeval.red_team.code_scanner import (
     DEFAULT_CODE_SCAN_VULNERABILITIES,
     CodeScanTemplate,
 )
-from deepteam.vulnerabilities import SSRF, BaseVulnerability
+from deepeval.red_team.vulnerabilities import SSRF, BaseVulnerability
 
 
 def _catalog(prompt: str) -> str:

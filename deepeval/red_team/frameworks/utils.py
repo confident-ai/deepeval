@@ -1,7 +1,7 @@
 import logging
 from typing import List, Optional
 
-from deepteam.vulnerabilities import (
+from deepeval.red_team.vulnerabilities import (
     BaseVulnerability,
     CustomVulnerability,
     Bias,
@@ -25,22 +25,22 @@ from deepteam.vulnerabilities import (
     SQLInjection,
 )
 
-from deepteam.vulnerabilities.constants import VULNERABILITY_CLASSES_MAP
-from deepteam.metrics.types import EvaluationExample
-from deepteam.frameworks.api import (
+from deepeval.red_team.vulnerabilities.constants import VULNERABILITY_CLASSES_MAP
+from deepeval.red_team._metrics.types import EvaluationExample
+from deepeval.red_team.frameworks.api import (
     APIAttackMethod,
     APIEvaluationExample,
     APIRiskCategory,
     APIVulnerability,
 )
-from deepteam.frameworks.risk_category import RiskCategory
+from deepeval.red_team.frameworks.risk_category import RiskCategory
 
-from deepteam.attacks import BaseAttack
-from deepteam.attacks.single_turn.constants import (
+from deepeval.red_team.attacks import BaseAttack
+from deepeval.red_team.attacks.single_turn.constants import (
     SINGLE_TURN_ATTACK_CLASSES_MAP,
 )
-from deepteam.attacks.multi_turn.constants import MULTI_TURN_ATTACK_CLASSES_MAP
-from deepteam.attacks.single_turn import (
+from deepeval.red_team.attacks.multi_turn.constants import MULTI_TURN_ATTACK_CLASSES_MAP
+from deepeval.red_team.attacks.single_turn import (
     Base64,
     GrayBox,
     Leetspeak,
@@ -52,7 +52,7 @@ from deepteam.attacks.single_turn import (
     ROT13,
 )
 
-from deepteam.attacks.multi_turn import (
+from deepeval.red_team.attacks.multi_turn import (
     CrescendoJailbreaking,
     LinearJailbreaking,
     TreeJailbreaking,

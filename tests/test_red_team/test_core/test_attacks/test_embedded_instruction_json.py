@@ -1,6 +1,6 @@
 import json
 import pytest
-from deepteam.attacks.single_turn import EmbeddedInstructionJSON
+from deepeval.red_team.attacks.single_turn import EmbeddedInstructionJSON
 
 
 def extract_json(text: str) -> dict:

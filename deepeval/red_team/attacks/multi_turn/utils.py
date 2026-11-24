@@ -2,7 +2,7 @@ import inspect
 
 from deepeval.models import DeepEvalBaseLLM
 
-from deepteam.attacks import BaseAttack
+from deepeval.red_team.attacks import BaseAttack
 
 
 def enhance_attack(

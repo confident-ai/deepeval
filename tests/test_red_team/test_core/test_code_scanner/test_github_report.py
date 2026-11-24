@@ -2,8 +2,8 @@ import json
 
 import pytest
 
-import deepteam.code_scanner.github.report as gr
-from deepteam.code_scanner import CodeFinding
+import deepeval.red_team.code_scanner.github.report as gr
+from deepeval.red_team.code_scanner import CodeFinding
 
 
 class _Resp:

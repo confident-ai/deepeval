@@ -1,6 +1,6 @@
 from typing import List, Literal
-from deepteam.frameworks import RedTeamingFramework
-from deepteam.frameworks.mitre.risk_categories import MITRE_CATEGORIES
+from deepeval.red_team.frameworks import RedTeamingFramework
+from deepeval.red_team.frameworks.mitre.risk_categories import MITRE_CATEGORIES
 
 """
 MITRE ATLAS™ (Adversarial Threat Landscape for Artificial-Intelligence Systems)

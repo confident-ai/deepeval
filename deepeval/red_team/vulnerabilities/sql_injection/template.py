@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.sql_injection.types import SQLInjectionType
+from deepeval.red_team.vulnerabilities.sql_injection.types import SQLInjectionType
 
 
 class SQLInjectionTemplate:

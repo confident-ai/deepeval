@@ -1,10 +1,10 @@
 import pytest
 
-from deepteam.vulnerabilities import IntellectualProperty
-from deepteam.vulnerabilities.intellectual_property import (
+from deepeval.red_team.vulnerabilities import IntellectualProperty
+from deepeval.red_team.vulnerabilities.intellectual_property import (
     IntellectualPropertyType,
 )
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestIntellectualProperty:
@@ -110,7 +110,7 @@ class TestIntellectualProperty:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_IntellectualProperty_metric(self):
-        from deepteam.metrics import IntellectualPropertyMetric
+        from deepeval.red_team._metrics import IntellectualPropertyMetric
 
         intellectual = IntellectualProperty(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

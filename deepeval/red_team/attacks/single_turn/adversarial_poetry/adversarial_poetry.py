@@ -3,16 +3,16 @@ from typing import Optional, Union
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
 
-from deepteam.utils import create_progress, update_pbar, add_pbar
-from deepteam.attacks.single_turn import BaseSingleTurnAttack
-from deepteam.attacks.base_attack import Exploitability
-from deepteam.attacks.single_turn.adversarial_poetry.template import (
+from deepeval.red_team.utils import create_progress, update_pbar, add_pbar
+from deepeval.red_team.attacks.single_turn import BaseSingleTurnAttack
+from deepeval.red_team.attacks.base_attack import Exploitability
+from deepeval.red_team.attacks.single_turn.adversarial_poetry.template import (
     AdversarialPoetryTemplate,
 )
-from deepteam.attacks.single_turn.adversarial_poetry.schema import (
+from deepeval.red_team.attacks.single_turn.adversarial_poetry.schema import (
     EnhancedAttack,
 )
-from deepteam.attacks.attack_simulator.utils import (
+from deepeval.red_team.attacks.attack_simulator.utils import (
     generate,
     a_generate,
 )

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.unexpected_code_execution.types import (
+from deepeval.red_team.vulnerabilities.unexpected_code_execution.types import (
     UnexpectedCodeExecutionType,
 )
 

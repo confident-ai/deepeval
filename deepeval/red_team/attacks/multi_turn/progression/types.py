@@ -2,11 +2,11 @@ from typing import List, Optional
 
 from pydantic import BaseModel, ConfigDict
 
-from deepteam.attacks.multi_turn.progression.shift_detection import (
+from deepeval.red_team.attacks.multi_turn.progression.shift_detection import (
     MetricVerdict,
 )
-from deepteam.attacks.multi_turn.progression.stopping import StopReason
-from deepteam.test_case.test_case import RTTurn
+from deepeval.red_team.attacks.multi_turn.progression.stopping import StopReason
+from deepeval.red_team.test_case.test_case import RTTurn
 
 
 class Probe(BaseModel):

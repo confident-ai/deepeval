@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.indirect_instruction.types import (
+from deepeval.red_team.vulnerabilities.indirect_instruction.types import (
     IndirectInstructionType,
 )
 

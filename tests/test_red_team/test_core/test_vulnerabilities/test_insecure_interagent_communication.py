@@ -1,10 +1,10 @@
 import pytest
 
-from deepteam.vulnerabilities import InsecureInterAgentCommunication
-from deepteam.vulnerabilities.insecure_inter_agent_communication import (
+from deepeval.red_team.vulnerabilities import InsecureInterAgentCommunication
+from deepeval.red_team.vulnerabilities.insecure_inter_agent_communication import (
     InsecureInterAgentCommunicationType,
 )
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestInsecureInterAgentCommunication:
@@ -120,7 +120,7 @@ class TestInsecureInterAgentCommunication:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_insecure_interagent_communication_metric(self):
-        from deepteam.metrics import InsecureInterAgentCommunicationMetric
+        from deepeval.red_team._metrics import InsecureInterAgentCommunicationMetric
 
         insecure_interagent_communication = InsecureInterAgentCommunication(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

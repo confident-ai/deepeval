@@ -1,8 +1,8 @@
 import pytest
 
-from deepteam.vulnerabilities import BFLA
-from deepteam.vulnerabilities.bfla import BFLAType
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities import BFLA
+from deepeval.red_team.vulnerabilities.bfla import BFLAType
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestBFLA:
@@ -83,7 +83,7 @@ class TestBFLA:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_BFLA_metric(self):
-        from deepteam.metrics import BFLAMetric
+        from deepeval.red_team._metrics import BFLAMetric
 
         bfla = BFLA(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

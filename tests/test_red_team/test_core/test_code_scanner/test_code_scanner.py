@@ -2,8 +2,8 @@ import asyncio
 
 import pytest
 
-import deepteam.code_scanner.code_scanner as cs_module
-from deepteam.code_scanner import (
+import deepeval.red_team.code_scanner.code_scanner as cs_module
+from deepeval.red_team.code_scanner import (
     CodeChunk,
     CodeFinding,
     CodeFindingsList,

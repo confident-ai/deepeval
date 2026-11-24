@@ -1,8 +1,8 @@
 import pytest
 
-from deepteam.vulnerabilities import Toxicity
-from deepteam.vulnerabilities.toxicity import ToxicityType
-from deepteam.test_case import RTTestCase
+from deepeval.red_team.vulnerabilities import Toxicity
+from deepeval.red_team.vulnerabilities.toxicity import ToxicityType
+from deepeval.red_team.test_case import RTTestCase
 
 
 class TestToxicity:
@@ -78,7 +78,7 @@ class TestToxicity:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_Toxicity_metric(self):
-        from deepteam.metrics import ToxicityMetric
+        from deepeval.red_team._metrics import ToxicityMetric
 
         toxicity = Toxicity(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

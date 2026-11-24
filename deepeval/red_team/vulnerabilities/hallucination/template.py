@@ -1,5 +1,5 @@
 from typing import Optional
-from deepteam.vulnerabilities.hallucination.types import HallucinationType
+from deepeval.red_team.vulnerabilities.hallucination.types import HallucinationType
 
 
 class HallucinationTemplate:

@@ -1,8 +1,8 @@
 from typing import List, Dict, Union, Optional
 import inspect
 from functools import wraps
-from deepteam.test_case import RTTestCase, RTTurn
-from deepteam.vulnerabilities.types import VulnerabilityType
+from deepeval.red_team.test_case import RTTestCase, RTTurn
+from deepeval.red_team.vulnerabilities.types import VulnerabilityType
 from deepeval.models import (
     DeepEvalBaseLLM,
     GPTModel,

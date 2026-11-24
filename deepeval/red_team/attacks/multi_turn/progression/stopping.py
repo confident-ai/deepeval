@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Optional, Union
 
-from deepteam.test_case.test_case import RTTurn
+from deepeval.red_team.test_case.test_case import RTTurn
 
 
 class StopReason(str, Enum):

@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.tool_orchestration_abuse.types import (
+from deepeval.red_team.vulnerabilities.tool_orchestration_abuse.types import (
     ToolOrchestrationAbuseType,
 )
 

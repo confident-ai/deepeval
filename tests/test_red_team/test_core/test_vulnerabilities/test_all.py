@@ -1,6 +1,6 @@
-from deepteam import red_team
-from deepteam.vulnerabilities import *
-from deepteam.attacks.single_turn import Base64
+from deepeval.red_team import red_team
+from deepeval.red_team.vulnerabilities import *
+from deepeval.red_team.attacks.single_turn import Base64
 
 
 async def model_callback(input: str) -> str:

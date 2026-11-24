@@ -1,6 +1,6 @@
 from typing import Optional
 
-from deepteam.vulnerabilities.bola.types import BOLAType
+from deepeval.red_team.vulnerabilities.bola.types import BOLAType
 
 
 class BOLATemplate:
