@@ -5,7 +5,7 @@ sidebar_label: Introduction
 languages: [python]
 ---
 
-Apart from quantitative [eval metrics](/docs/metrics-introduction), `deepeval` also offers 20+ **categorical LLM-as-a-judge evals** known as classifiers.
+Apart from quantitative [eval metrics](/docs/metrics-introduction), `deepeval` also offers 16 built-in **categorical LLM-as-a-judge evals** known as classifiers.
 
 While a metric scores an LLM interaction from 0 to 1, a classifier assigns it one label from a set you define, so you can assert that your LLM app did the specific thing you expected for a known input or simulated conversation.
 
@@ -15,16 +15,25 @@ Classifiers are typically easier to use and more verbose than quantitative metri
 
 ## Quick Summary
 
-A classifier takes a single-turn or multi-turn [test case](/docs/evaluation-test-cases), picks exactly one label from a closed set, and gives a reason. If the test case says which label it expects, the classifier passes or fails it; if not, it just reports the label.
+A classifier takes a single-turn or multi-turn [test case](/docs/evaluation-test-cases), picks a label from a closed set (or [several](/docs/classifiers-custom#multi-label-classification)), and gives a reason. If the test case says which label it expects, the classifier passes or fails it; if not, it just reports the label.
 
 Every classifier works on both single-turn and multi-turn test cases.
 
-<Tabs items={["Custom", "Behavioral", "Grounding", "Security", "Policy & brand", "Format & completion"]}>
+<Tabs items={["Custom", "Discovery", "Behavioral", "Grounding", "Security", "Policy & brand", "Format & completion"]}>
 <Tab value="Custom">
 
 Define your own label set for anything you can name:
 
 - [Custom Classifier](/docs/classifiers-custom) — topic, intent, product area, escalation category, or any other application-specific label set.
+
+</Tab>
+<Tab value="Discovery">
+
+What is your traffic about, and where does it go wrong? These classifiers find their own labels as they run.
+
+- [Topic](/docs/classifiers-topic) — the subject or product area each interaction is mainly about.
+- [Use Case](/docs/classifiers-use-case) — what the user was trying to get done.
+- [Issue](/docs/classifiers-issue) — every failure on the application's side, named by what happened.
 
 </Tab>
 <Tab value="Behavioral">
@@ -179,6 +188,7 @@ Some starting points by application type:
 | Apps that read untrusted content | `PromptInjectionClassifier`, `DataLeakageClassifier`                          |
 | Regulated industries             | `RequiredDisclosureClassifier`                                                |
 | Multilingual apps                | `ResponseLanguageClassifier`                                                  |
+| Production monitoring            | `TopicClassifier`, `UseCaseClassifier`, `IssueClassifier`                     |
 
 For a breakdown by topic, intent, or product area, add a [custom `Classifier`](/docs/classifiers-custom) with your own labels and leave the expected label off, so you can slice pass rates by category.
 
@@ -279,7 +289,7 @@ print(classifier.label, classifier.reason)
 
 ## Using Classifiers Async
 
-Every classifier has an `async_mode` parameter, defaulted to `True`. Because a classifier is a single judge call there is nothing inside `classify()` to parallelize; `async_mode` decides how `evaluate()` schedules classifiers **across** test cases, so a run with many test cases finishes sooner.
+Every classifier has an `async_mode` parameter, defaulted to `True`. `async_mode` decides how `evaluate()` schedules classifiers **across** test cases, so a run with many test cases finishes sooner. Inside one `classify()` call, the extra judge calls for [review](/docs/classifiers-custom#review) and [label discovery](/docs/classifiers-custom#label-discovery) also run in parallel.
 
 To classify without blocking the main thread, use `a_classify()`:
 
@@ -303,11 +313,24 @@ asyncio.run(main())
 
 ## Customize Classifier Prompts
 
-Every classifier accepts a `classification_template`, a subclass of `ClassifierTemplate` whose methods return the prompt sent to the judge. Override `classify_single_turn` and/or `classify_multi_turn` to change the wording, add examples, or tighten instructions for a smaller judge model. The [Custom Classifier](/docs/classifiers-custom#customize-your-template) page has a full example.
+Every classifier accepts a `classification_template`, a subclass of `ClassifierTemplate` whose methods return the prompt sent to the judge. Override `classify_single_turn`, `classify_traced_single_turn` and/or `classify_multi_turn` to change the wording, add examples, or tighten instructions for a smaller judge model. The [Custom Classifier](/docs/classifiers-custom#customize-your-template) page has a full example.
+
+## Multi-Label Classifiers
+
+Most classifiers pick exactly one label, because their labels rule each other out: a response cannot be both `refused` and `complied`. When one test case can match several labels at once, such as a reply that both quotes a wrong price and ignores a tool result, a classifier can return all of them instead:
+
+- A custom [`Classifier`](/docs/classifiers-custom#multi-label-classification) does this with `multi_label=True`.
+- [`IssueClassifier`](/docs/classifiers-issue) is always multi-label, since one interaction can have several failures.
+
+A multi-label classifier puts one `Classification` per matching label in `classifications`, most certain first, and `label` is the first of them. In `expected_labels` it takes a list, and passes only when it assigns exactly those labels, as shown [below](#expected-labels).
+
+## Discovering New Labels
+
+You don't always know every label up front. With a `LabelDiscoveryConfig`, a classifier proposes a new label, with a name and description, whenever none of yours fit, and later test cases reuse it instead of adding near-duplicates. `TopicClassifier`, `UseCaseClassifier` and `IssueClassifier` are built to work this way. The [Custom Classifier](/docs/classifiers-custom#label-discovery) page covers the options and a full example.
 
 ## Expected Labels
 
-A classifier on its own only produces a classification; it is `expected_labels` on the test case that decides whether that classification **passes or fails**. `expected_labels` is a `Dict[str, str]` from a classifier's `name` to the label that test case should receive:
+A classifier on its own only produces a classification; it is `expected_labels` on the test case that decides whether that classification **passes or fails**. `expected_labels` is a dict from a classifier's `name` to the label that test case should receive, or, for a [multi-label](/docs/classifiers-custom#multi-label-classification) classifier, a list of the labels it should receive:
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -319,9 +342,19 @@ test_case = LLMTestCase(
 )
 ```
 
+For a multi-label classifier, pass the list of labels the test case should receive:
+
+```python
+test_case = LLMTestCase(
+    input="Can I cancel my plan and get last month refunded?",
+    actual_output="Sure, I've cancelled your plan and refunded last month.",
+    expected_labels={"topics": ["cancellation", "refund"]},
+)
+```
+
 For each classifier in the run, per test case:
 
-1. The test case has an entry for this classifier: the classification **passes** if it matches, otherwise it **fails**.
+1. The test case has an entry for this classifier: the classification **passes** if it matches, otherwise it **fails**. A single label matches when it is among the labels assigned; a list matches only when it is exactly the labels assigned, with none missing and none extra.
 2. It does not: the classification is still recorded, but with `success=None`, and the test case's pass/fail status is left untouched.
 
 :::info
@@ -380,9 +413,11 @@ A value that is not one of the classifier's labels raises a `ValueError` before 
       question: "Can a classifier return more than one label?",
       answer: (
         <>
-          No. Each classifier assigns exactly one label per test case. For a
-          genuinely multi-label problem, run one classifier per label with a
-          binary label set such as <code>["present", "absent"]</code>.
+          Yes, a custom <code>Classifier</code> with{" "}
+          <code>multi_label=True</code> returns every label that applies, one{" "}
+          <code>Classification</code> each. <code>IssueClassifier</code> returns
+          every issue it finds; the other built-in classifiers assign exactly
+          one label, because their labels are mutually exclusive.
         </>
       ),
     },

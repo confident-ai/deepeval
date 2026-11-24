@@ -99,6 +99,7 @@ def test_failed_classification_fails_the_uploaded_test_case(run_async):
             "expectedLabel": "other",
             "success": False,
             "reason": "says hello",
+            "evidence": [],
             "evaluationCost": 0.25,
         }
     ]
