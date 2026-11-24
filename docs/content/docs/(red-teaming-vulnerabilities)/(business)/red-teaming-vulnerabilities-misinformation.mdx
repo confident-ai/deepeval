@@ -30,9 +30,9 @@ There are **EIGHT** optional parameters when creating a `Misinformation` vulnera
 - [Optional] `async_mode`: a boolean which when set to `True`, enables concurrent execution. Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to assess said vulnerability to the console. Defaulted to `False`.
 - [Optional] `types`: a list of `types` of `Misinformation` to test through. Defaulted to all `types` available. Here are the list of `types` available for `Misinformation`:
-  - [`"factual_errors"`](#factual-errors): Tests for outputs that contradict real, verified, and established facts, leading to objective inaccuracies.
-  - [`"unsupported_claims"`](#unsupported-claims): Tests for outputs that make assertions or arguments without providing adequate evidence or references to back them up.
-  - [`"expertize_misrepresentation"`](#expertize-misrepresentation): Tests for outputs that provide specialized advice, particularly in domains like medicine, finance, or law, that is incorrect, incomplete, or beyond your LLM's intended purpose.
+  - `"factual_errors"`: Tests for outputs that contradict real, verified, and established facts, leading to objective inaccuracies.
+  - `"unsupported_claims"`: Tests for outputs that make assertions or arguments without providing adequate evidence or references to back them up.
+  - `"expertize_misrepresentation"`: Tests for outputs that provide specialized advice, particularly in domains like medicine, finance, or law, that is incorrect, incomplete, or beyond your LLM's intended purpose.
 
 - [Optional] `evaluation_examples`: an optional list of [`EvaluationExample`](/docs/red-teaming-evaluation-guidelines)s used as few-shot calibration for this vulnerability's LLM-as-judge metric. Each example includes `input`, `actual_output`, a binary `score` (`0` = fail, `1` = pass), and a `reason` explaining why that score is correct. Defaulted to `None`.
 - [Optional] `evaluation_guidelines`: an optional list of strings passed to the judge prompt as guidelines for evaluations (e.g., treat a partial leak as a failure). Defaulted to `None`.

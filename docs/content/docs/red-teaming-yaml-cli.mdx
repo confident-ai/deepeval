@@ -15,10 +15,10 @@ The YAML CLI interface is built on top of the same red teaming engine as the Pyt
 
 The YAML CLI approach is made up of 4 main configuration sections:
 
-- [Models Configuration](/docs/red-teaming-yaml-cli#models-configuration) - specify which LLMs to use for simulation and evaluation.
-- [Target Configuration](/docs/red-teaming-yaml-cli#target-configuration) - define your target LLM system and its purpose.
-- [System Configuration](/docs/red-teaming-yaml-cli#system-configuration) - control concurrency, output settings, and behavior.
-- [Vulnerabilities and Attacks](/docs/red-teaming-yaml-cli#vulnerabilities-and-attacks) - specify what to test and how to test it.
+- [Models Configuration](#models-configuration) - specify which LLMs to use for simulation and evaluation.
+- [Target Configuration](#target-configuration) - define your target LLM system and its purpose.
+- [System Configuration](#system-configuration) - control concurrency, output settings, and behavior.
+- [Vulnerabilities and Attacks](#vulnerabilities-and-attacks) - specify what to test and how to test it.
 
 Here's how you can implement it with a YAML configuration:
 
@@ -201,7 +201,7 @@ models:
 </Tabs>
 
 :::note
-When using custom models, ensure your model class inherits from `DeepEvalBaseLLM` and implements the required methods as described in the [custom LLM documentation](/docs/red-teaming-llm-providers).
+When using custom models, ensure your model class inherits from `DeepEvalBaseLLM` and implements the required methods as described in the [custom LLM documentation](/docs/red-teaming-introduction#configuring-models).
 :::
 
 ## Target Configuration
@@ -340,7 +340,7 @@ models:
 </Tabs>
 
 :::note
-When using custom models, ensure your model class inherits from `DeepEvalBaseLLM` and implements the required methods as described in the [custom LLM documentation](/docs/red-teaming-llm-providers).
+When using custom models, ensure your model class inherits from `DeepEvalBaseLLM` and implements the required methods as described in the [custom LLM documentation](/docs/red-teaming-introduction#configuring-models).
 :::
 
 ## System Configuration
