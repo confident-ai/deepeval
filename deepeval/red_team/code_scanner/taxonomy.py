@@ -19,7 +19,7 @@ def to_name(vulnerability: VulnerabilityRef) -> str:
 
 
 def vulnerability_names() -> List[str]:
-    """All known deepteam vulnerability category names."""
+    """All known red teaming vulnerability category names."""
     return list(KNOWN_VULNERABILITIES.keys())
 
 
@@ -31,7 +31,7 @@ def allowed_types(vulnerability: str) -> List[str]:
 def is_known(
     vulnerability: str, vulnerability_type: Optional[str] = None
 ) -> bool:
-    """Whether a (category[, subtype]) pair exists in deepteam's taxonomy."""
+    """Whether a (category[, subtype]) pair exists in the red teaming taxonomy."""
     if vulnerability not in KNOWN_VULNERABILITIES:
         return False
     if vulnerability_type is None:

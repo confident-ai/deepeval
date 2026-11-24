@@ -21,7 +21,7 @@ from deepeval.red_team.vulnerabilities.base_vulnerability import BaseVulnerabili
 
 CODE_CONTEXT_LIMIT = int(os.getenv("CODE_CONTEXT_LIMIT", "40000"))
 
-# Default categories the code scanner looks for: a curated subset of deepteam's
+# Default categories the code scanner looks for: a curated subset of the red teaming
 # taxonomy whose risk is visible in source code.
 DEFAULT_CODE_SCAN_VULNERABILITIES: List[Type[BaseVulnerability]] = [
     UnexpectedCodeExecution,
