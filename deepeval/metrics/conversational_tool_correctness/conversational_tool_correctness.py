@@ -1,8 +1,14 @@
-"""Tool Correctness for conversations: every tool the assistant called across
-the conversation is compared with the test case's ``expected_tools``."""
+"""Tool Correctness for conversations.
 
-from typing import List, Optional
+The test case's ``expected_tools`` are checked with the Tool Correctness
+rules. An expected tool with ``turn`` set is pinned to that turn: the turn's
+own ``tools_called`` are scored against the tools pinned to it. Expected tools
+without ``turn`` are scored against the tools called on every other assistant
+turn, in order. The score is the mean over these groups."""
 
+from typing import Dict, List, Optional, Tuple
+
+from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.tool_correctness.tool_correctness import (
@@ -46,9 +52,10 @@ class _ToolCallScorer(ToolCorrectnessMetric):
 
 
 class ConversationalToolCorrectnessMetric(BaseConversationalMetric):
-    """Collects the tools the assistant called across every turn, in order,
-    and scores them against the test case's ``expected_tools`` with the Tool
-    Correctness rules. No LLM is used."""
+    """Scores a conversation's tool calls against ``expected_tools`` with the
+    Tool Correctness rules. ``ToolCall.turn`` pins an expected tool to one
+    assistant turn; the rest are checked across the conversation. No LLM is
+    used."""
 
     _required_test_case_params = [
         MultiTurnParams.ROLE,
@@ -89,27 +96,66 @@ class ConversationalToolCorrectnessMetric(BaseConversationalMetric):
     ) -> float:
         prepare_measure(self, test_case, multimodal=False)
 
+        expected_tools = test_case.expected_tools
+        pinned = self._pinned_tools(test_case.turns, expected_tools)
+        unpinned = [tool for tool in expected_tools if tool.turn is None]
+
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
-            self.tools_called = self._tools_called(test_case.turns)
-            self.expected_tools = test_case.expected_tools
             scorer = _ToolCallScorer(
                 self.evaluation_params,
                 self.should_exact_match,
                 self.should_consider_ordering,
             )
-            score, reason = scorer.score(self.tools_called, self.expected_tools)
+            # Each group is (label, tools called, tools expected).
+            groups: List[Tuple[str, List[ToolCall], List[ToolCall]]] = [
+                (
+                    f"Turn {index}",
+                    test_case.turns[index].tools_called or [],
+                    tools,
+                )
+                for index, tools in sorted(pinned.items())
+            ]
+            if unpinned or not pinned:
+                groups.append(
+                    (
+                        (
+                            "Rest of the conversation"
+                            if pinned
+                            else "Conversation"
+                        ),
+                        self._tools_called(
+                            test_case.turns, skip=set(pinned.keys())
+                        ),
+                        unpinned,
+                    )
+                )
+
+            self.group_scores = []
+            for label, called, expected in groups:
+                score, reason = scorer.score(called, expected)
+                self.group_scores.append(
+                    {"group": label, "score": score, "reason": reason}
+                )
+            self.tools_called = self._tools_called(test_case.turns)
+            self.expected_tools = expected_tools
+
+            score = sum(g["score"] for g in self.group_scores) / len(
+                self.group_scores
+            )
             self.score = (
                 0 if self.strict_mode and score < self.threshold else score
             )
-            self.reason = reason if self.include_reason else None
+            self.reason = self._reason() if self.include_reason else None
             self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    f"Tools called across the conversation: {[t.name for t in self.tools_called]}",
-                    f"Expected tools: {[t.name for t in self.expected_tools]}",
+                    *(
+                        f"{g['group']}: score {g['score']:.2f}. {g['reason']}"
+                        for g in self.group_scores
+                    ),
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
@@ -128,13 +174,55 @@ class ConversationalToolCorrectnessMetric(BaseConversationalMetric):
         )
 
     @staticmethod
-    def _tools_called(turns: List[Turn]) -> List[ToolCall]:
+    def _tools_called(
+        turns: List[Turn], skip: Optional[set] = None
+    ) -> List[ToolCall]:
         return [
             tool
-            for turn in turns
-            if turn.role == "assistant"
+            for index, turn in enumerate(turns)
+            if turn.role == "assistant" and index not in (skip or set())
             for tool in (turn.tools_called or [])
         ]
+
+    def _pinned_tools(
+        self, turns: List[Turn], expected_tools: List[ToolCall]
+    ) -> Dict[int, List[ToolCall]]:
+        pinned: Dict[int, List[ToolCall]] = {}
+        for tool in expected_tools:
+            if tool.turn is None:
+                continue
+            if not 0 <= tool.turn < len(turns):
+                self.error = (
+                    f"Expected tool '{tool.name}' is pinned to turn "
+                    f"{tool.turn}, but the conversation has {len(turns)} "
+                    f"turns (indexes 0 to {len(turns) - 1})."
+                )
+                raise MissingTestCaseParamsError(self.error)
+            if turns[tool.turn].role != "assistant":
+                self.error = (
+                    f"Expected tool '{tool.name}' is pinned to turn "
+                    f"{tool.turn}, which is a '{turns[tool.turn].role}' turn. "
+                    "'turn' is the index in 'turns' of an assistant turn."
+                )
+                raise MissingTestCaseParamsError(self.error)
+            pinned.setdefault(tool.turn, []).append(tool)
+        return pinned
+
+    def _reason(self) -> str:
+        if len(self.group_scores) == 1:
+            return self.group_scores[0]["reason"]
+        failing = [g for g in self.group_scores if g["score"] < 1]
+        summary = (
+            f"The score is {self.score:.2f}: "
+            f"{len(self.group_scores) - len(failing)} of "
+            f"{len(self.group_scores)} checks passed."
+        )
+        if not failing:
+            return summary
+        details = "\n".join(
+            f"- {g['group']} ({g['score']:.2f}): {g['reason']}" for g in failing
+        )
+        return f"{summary}\n{details}"
 
     @property
     def __name__(self):

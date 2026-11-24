@@ -96,8 +96,43 @@ describe("ConversationalToolCorrectnessMetric", () => {
       expectedTools: [transfer()],
     });
     const [tc] = convertConvoGoldensToConvoTestCases([golden]);
-    expect(tc.expectedTools?.map((t) => t.name)).toEqual([
-      "transfer_to_human",
+    expect(tc.expectedTools?.map((t) => t.name)).toEqual(["transfer_to_human"]);
+  });
+  it("checks a pinned tool on its own turn", async () => {
+    // Turns: 0 user, 1 assistant, 2 user, 3 assistant.
+    const pin = new ToolCall({ name: "transfer_to_human", turn: 3 });
+    expect(
+      await metric().measure(conversation([[track("1")], [transfer()]], [pin])),
+    ).toBe(1);
+    expect(
+      await metric().measure(conversation([[transfer()], []], [pin])),
+    ).toBe(0);
+  });
+
+  it("scores pinned and unpinned tools as separate checks", async () => {
+    const m = metric();
+    const score = await m.measure(
+      conversation(
+        [[track("1")], []],
+        [track("1"), new ToolCall({ name: "transfer_to_human", turn: 3 })],
+      ),
+    );
+    expect(score).toBe(0.5);
+    expect(m.groupScores.map((g) => g.group)).toEqual([
+      "Turn 3",
+      "Rest of the conversation",
     ]);
+    expect(m.reason).toContain("Turn 3 (0.00)");
+  });
+
+  it("rejects a turn that isn't an assistant turn", async () => {
+    await expect(
+      metric().measure(
+        conversation(
+          [[transfer()]],
+          [new ToolCall({ name: "transfer_to_human", turn: 0 })],
+        ),
+      ),
+    ).rejects.toThrow("'user' turn");
   });
 });

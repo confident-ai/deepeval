@@ -373,8 +373,16 @@ export function parseToolCalls(value: unknown): ToolCall[] | undefined {
       inputParameters: pickKey(t, "input_parameters") as
         | Record<string, any>
         | undefined,
+      turn: typeof t.turn === "number" ? t.turn : undefined,
     });
   });
+}
+
+/** Like `parseToolCalls`, but keeps `[]` ("no tools expected"). */
+export function parseExpectedTools(value: unknown): ToolCall[] | undefined {
+  const raw = typeof value === "string" ? trimAndLoadJson(value) : value;
+  if (Array.isArray(raw) && raw.length === 0) return [];
+  return parseToolCalls(raw);
 }
 
 function parseMcpCalls<T>(
@@ -524,7 +532,7 @@ export function goldenFromRecord(
       expectedOutcome: pickKey(record, keys.expectedOutcome) as
         | string
         | undefined,
-      expectedTools: parseToolCalls(pickKey(record, keys.expectedTools)),
+      expectedTools: parseExpectedTools(pickKey(record, keys.expectedTools)),
       persona,
       userDescription: persona
         ? undefined

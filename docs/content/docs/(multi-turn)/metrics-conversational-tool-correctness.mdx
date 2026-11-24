@@ -6,7 +6,7 @@ languages: [python, typescript]
 ---
 <MetricTagsDisplayer multiTurn={true} usesLLMs={false} agent={true} referenceBased={true} />
 
-The conversational tool correctness metric is a deterministic multi-turn agentic metric. It checks whether your AI agent called the tools it was expected to call over the course of a conversation. It collects every tool the assistant called, across all turns and in order, and compares that list with the test case's <Term py="expected_tools" ts="expectedTools"/> using the [tool correctness](/docs/metrics-tool-correctness) rules. No LLM is used.
+The conversational tool correctness metric is a deterministic multi-turn agentic metric. It checks whether your AI agent called the tools it was expected to call over the course of a conversation. It collects every tool the assistant called, across all turns and in order, and compares that list with the test case's <Term py="expected_tools" ts="expectedTools"/> using the [tool correctness](/docs/metrics-tool-correctness) rules. You can also pin an expected tool to a specific turn. No LLM is used.
 
 :::note
 Use this metric when you know which tools a conversation should end up calling (for example, `track_parcel` and then `transfer_to_human` for a user who asks about a late parcel and then for a person). Because expected tools are set on the whole conversation rather than on individual turns, they work for [simulated conversations](/docs/conversation-simulator), whose turns aren't known in advance. If you don't have expected tools and want an LLM to judge tool selection and arguments instead, use the [tool use metric](/docs/metrics-tool-use).
@@ -18,6 +18,8 @@ To use the `ConversationalToolCorrectnessMetric`, you'll have to provide the fol
 
 - `turns`, where assistant turns that called tools set <Term py="tools_called" ts="toolsCalled"/>
 - <Term py="expected_tools" ts="expectedTools"/>, the tools the assistant should call over the whole conversation. An empty list means no tools should be called.
+
+To require a tool on a specific turn, set `turn` on its `ToolCall` in <Term py="expected_tools" ts="expectedTools"/>. `turn` is the index in `turns` (starting at 0) of the assistant turn that should make the call. It must point at an assistant turn, or the metric raises an error. Pinning only works when the turns are known in advance, so leave `turn` unset for simulated conversations.
 
 You can also set <Term py="expected_tools" ts="expectedTools"/> on a `ConversationalGolden`. It's copied onto the test case each golden produces, including simulated ones.
 
@@ -45,7 +47,8 @@ test_case = ConversationalTestCase(
     ],
     expected_tools=[
         ToolCall(name="track_parcel", input_parameters={"pin": "8670940983"}),
-        ToolCall(name="transfer_to_human"),
+        # Must be called on turns[3], the second assistant reply
+        ToolCall(name="transfer_to_human", turn=3),
     ],
 )
 metric = ConversationalToolCorrectnessMetric(
@@ -82,7 +85,8 @@ const testCase = new ConversationalTestCase({
   ],
   expectedTools: [
     new ToolCall({ name: "track_parcel", inputParameters: { pin: "8670940983" } }),
-    new ToolCall({ name: "transfer_to_human" }),
+    // Must be called on turns[3], the second assistant reply
+    new ToolCall({ name: "transfer_to_human", turn: 3 }),
   ],
 });
 const metric = new ConversationalToolCorrectnessMetric({
@@ -108,10 +112,17 @@ There are **SIX** optional parameters when creating a `ConversationalToolCorrect
 
 ## How Is It Calculated?
 
-The metric builds one list of tool calls from the conversation: the <Term py="tools_called" ts="toolsCalled"/> of every assistant turn, in turn order. Tools on user turns are ignored. It then scores that list against <Term py="expected_tools" ts="expectedTools"/> with the same rules as the [tool correctness metric](/docs/metrics-tool-correctness#how-is-it-calculated):
+The metric splits <Term py="expected_tools" ts="expectedTools"/> into checks and scores each one with the same rules as the [tool correctness metric](/docs/metrics-tool-correctness#how-is-it-calculated):
 
-<Equation formula="\text{Conversational Tool Correctness} = \frac{\text{Number of Correctly Used Tools (or Correct Input Parameters/Outputs)}}{\text{Total Number of Tools Called}}" />
+- **One check per pinned turn.** The tools pinned to a turn are compared with that turn's own <Term py="tools_called" ts="toolsCalled"/>.
+- **One check for everything else.** The expected tools without `turn` are compared with the <Term py="tools_called" ts="toolsCalled"/> of every other assistant turn, in turn order. Turns that have pinned tools are left out of this check, so their calls don't count as extra calls. If nothing is pinned, this check covers the whole conversation.
 
-With <Term py="should_consider_ordering" ts="shouldConsiderOrdering"/> or <Term py="should_exact_match" ts="shouldExactMatch"/>, order is judged across the whole conversation, so calling `transfer_to_human` before `track_parcel` lowers the score.
+Tools on user turns are ignored. The final score is the mean of the checks:
 
-The tools collected from the conversation are available on <Term py="metric.tools_called" ts="metric.toolsCalled"/>.
+<Equation formula="\text{Conversational Tool Correctness} = \frac{\sum \text{Check Scores}}{\text{Number of Checks}}" />
+
+In the example above, `track_parcel` is checked across the conversation and `transfer_to_human` on turn 3. The agent never transfers, so the turn 3 check scores 0, the other check scores 1, and the final score is 0.5.
+
+With <Term py="should_consider_ordering" ts="shouldConsiderOrdering"/> or <Term py="should_exact_match" ts="shouldExactMatch"/>, order is judged within each check. For unpinned tools that's across the conversation, so calling `transfer_to_human` before `track_parcel` lowers the score. Exact match fails whenever the agent repeats a call, which is common in conversations, so most conversations are better served by the default or by ordering.
+
+Each check's score and reason is available on <Term py="metric.group_scores" ts="metric.groupScores"/>, and every tool the assistant called is on <Term py="metric.tools_called" ts="metric.toolsCalled"/>.

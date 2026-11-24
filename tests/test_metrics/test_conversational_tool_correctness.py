@@ -181,3 +181,84 @@ async def test_a_measure_matches_measure():
         )
         == 1
     )
+
+
+def _pinned(tool, turn):
+    return tool.model_copy(update={"turn": turn})
+
+
+def test_pinned_tool_must_be_called_on_its_turn():
+    # Turns: 0 user, 1 assistant, 2 user, 3 assistant.
+    on_time = _conversation(
+        [_track("1")], [_transfer()], expected_tools=[_pinned(_transfer(), 3)]
+    )
+    too_early = _conversation(
+        [_transfer()], [], expected_tools=[_pinned(_transfer(), 3)]
+    )
+    metric = ConversationalToolCorrectnessMetric()
+    assert metric.measure(on_time, _show_indicator=False) == 1
+    assert metric.measure(too_early, _show_indicator=False) == 0
+    assert "transfer_to_human" in metric.reason
+
+
+def test_pinned_and_unpinned_tools_are_scored_separately():
+    metric = ConversationalToolCorrectnessMetric()
+    score = metric.measure(
+        _conversation(
+            [_track("1")],
+            [],
+            expected_tools=[_track("1"), _pinned(_transfer(), 3)],
+        ),
+        _show_indicator=False,
+    )
+    assert score == 0.5
+    assert [g["group"] for g in metric.group_scores] == [
+        "Turn 3",
+        "Rest of the conversation",
+    ]
+    assert "Turn 3 (0.00)" in metric.reason
+
+
+def test_pinned_turn_is_left_out_of_the_rest_of_the_conversation():
+    # Exact match on the unpinned tools ignores calls made on pinned turns.
+    metric = ConversationalToolCorrectnessMetric(should_exact_match=True)
+    score = metric.measure(
+        _conversation(
+            [_track("1")],
+            [_transfer()],
+            expected_tools=[_track("1"), _pinned(_transfer(), 3)],
+        ),
+        _show_indicator=False,
+    )
+    assert score == 1
+
+
+def test_turn_must_point_at_an_assistant_turn():
+    metric = ConversationalToolCorrectnessMetric()
+    with pytest.raises(MissingTestCaseParamsError, match="'user' turn"):
+        metric.measure(
+            _conversation(
+                [_transfer()], expected_tools=[_pinned(_transfer(), 0)]
+            ),
+            _show_indicator=False,
+        )
+    with pytest.raises(MissingTestCaseParamsError, match="has 2 turns"):
+        metric.measure(
+            _conversation(
+                [_transfer()], expected_tools=[_pinned(_transfer(), 5)]
+            ),
+            _show_indicator=False,
+        )
+
+
+def test_turn_does_not_change_tool_equality_or_unset_payloads():
+    assert _pinned(_transfer(), 3) == _transfer()
+    assert "turn" not in _transfer().model_dump(
+        by_alias=True, exclude_none=True
+    )
+    assert (
+        _pinned(_transfer(), 3).model_dump(by_alias=True, exclude_none=True)[
+            "turn"
+        ]
+        == 3
+    )
