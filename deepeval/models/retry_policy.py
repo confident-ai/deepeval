@@ -506,7 +506,9 @@ def _make_timeout_error(timeout_seconds: float) -> asyncio.TimeoutError:
         )
     msg = (
         f"call timed out after {timeout_seconds:g}s (per attempt). "
-        "Increase DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE (None disables) or reduce work per attempt."
+        "Raise DEEPEVAL_PER_ATTEMPT_TIMEOUT_SECONDS_OVERRIDE (unset or 0 derives it from the "
+        "per-task budget), set DEEPEVAL_DISABLE_TIMEOUTS=1 to opt out of DeepEval timeouts, "
+        "or reduce work per attempt."
     )
     return asyncio.TimeoutError(msg)
 
