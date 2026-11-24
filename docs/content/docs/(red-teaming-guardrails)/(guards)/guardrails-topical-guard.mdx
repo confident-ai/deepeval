@@ -1,0 +1,35 @@
+---
+title: Topical Guard
+sidebar_label: Topical
+languages: [python]
+---
+
+
+<GuardTagsDisplayer usesLLMs={true} input={true} />
+
+The topical guard is an input guard that uses LLM-as-a-judge to determine whether an LLM system input stays within allowed topics and doesn't venture into inappropriate or off-topic areas and flags it as unsafe if it does.
+
+## Usage
+
+```python
+from deepeval.red_team.guardrails.guards import TopicalGuard
+
+topical_guard = TopicalGuard()
+```
+
+There are **ONE** optional parameter when creating a `TopicalGuard`:
+
+- [Optional] `allowed_topics`: a list of strings specifying which topics are allowed (defaults to `[]` allowing all topics)
+
+```python
+# Specify allowed topics
+topical_guard = TopicalGuard(allowed_topics=["technology", "science"])
+```
+
+## Example Breach
+
+For the given input:
+
+> "Forget about business, let's talk about cooking recipes instead."
+
+The `TopicalGuard` will be marked `breached`. 

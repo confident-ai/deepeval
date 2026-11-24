@@ -1,6 +1,42 @@
 {
   "images": [
     {
+      "file": "best-of-n-augmentations.webp",
+      "title": "Best-of-N text, audio and image augmentations",
+      "alt": "Text augmentations of word scrambling, random capitals and character noising applied to a request, audio augmentations such as speed, pitch, volume and background noise, and an image of request text drawn over random colored blocks",
+      "width": 1139,
+      "height": 509,
+      "source": {
+        "urls": [
+          "https://arxiv.org/abs/2412.03556"
+        ]
+      }
+    },
+    {
+      "file": "best-of-n-jailbreaking-overview.webp",
+      "title": "Best-of-N Jailbreaking overview",
+      "alt": "The Best-of-N loop, where a harmful request is randomly augmented, sent to the model and graded until it succeeds or N runs out, above plots of attack success rate rising with N for text, vision and audio models, and a log-log plot of negative log ASR falling as a straight line",
+      "width": 1127,
+      "height": 842,
+      "source": {
+        "urls": [
+          "https://arxiv.org/abs/2412.03556"
+        ]
+      }
+    },
+    {
+      "file": "best-of-n-power-law-forecast.webp",
+      "title": "Forecasting Best-of-N attack success with a power law",
+      "alt": "Log-log plots for text, vision and audio where power laws fitted to the first 1,000 attempts extend to 10,000 attempts and land close to the observed final attack success rates",
+      "width": 648,
+      "height": 315,
+      "source": {
+        "urls": [
+          "https://arxiv.org/abs/2412.03556"
+        ]
+      }
+    },
+    {
       "file": "elastic-rag-in-action.webp",
       "title": "Elastic RAG in action diagram",
       "alt": "Elastic diagram of RAG: a user question is embedded for similarity search in a vector DB, and similar passages feed a prompt to an LLM",
@@ -37,6 +73,90 @@
       }
     },
     {
+      "file": "gender-substitution-bias.webp",
+      "title": "Gender substitution bias test",
+      "alt": "Two prompts that differ only in gender, a male and a female data engineer, get different career advice from the model, so the answers are not invariant",
+      "width": 1638,
+      "height": 1048,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.amazonaws.com/bias-example.png"
+        ]
+      }
+    },
+    {
+      "file": "gpt2-memorized-pii.webp",
+      "title": "GPT-2 memorizing personal information",
+      "alt": "A short prefix fed into GPT-2 makes it emit memorized text containing a real name, address, email, phone and fax number, redacted in black",
+      "width": 956,
+      "height": 788,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.amazonaws.com/pii-leakage-gpt2.png"
+        ]
+      }
+    },
+    {
+      "file": "iterative-jailbreaking.webp",
+      "title": "Iterative jailbreaking conversation",
+      "alt": "An attacker repeatedly improves a phishing-email prompt against a target model, with each improvement and target response shown in turn",
+      "width": 1180,
+      "height": 1588,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.amazonaws.com/jailbreaking-example.png"
+        ]
+      }
+    },
+    {
+      "file": "many-shot-jailbreaking-alignment-training.webp",
+      "title": "Many-shot jailbreaking during alignment training",
+      "alt": "Three log-log plots of the negative log-likelihood of a harmful answer against number of shots at increasing fractions of supervised and reinforcement learning, where more training lifts the lines but leaves their downward slope unchanged",
+      "width": 1190,
+      "height": 500,
+      "source": {
+        "urls": [
+          "https://proceedings.neurips.cc/paper_files/paper/2024/file/ea456e232efb72d261715e33ce25f208-Paper-Conference.pdf"
+        ]
+      }
+    },
+    {
+      "file": "many-shot-jailbreaking-model-size.webp",
+      "title": "Many-shot jailbreaking by topic mismatch, model size and formatting",
+      "alt": "Three plots: harmful responses rising with shots unless the examples come from one narrow topic, larger models showing steeper drops in the negative log-likelihood of a harmful answer as shots increase, and reformatted prompts shifting the line down without changing its slope",
+      "width": 1190,
+      "height": 500,
+      "source": {
+        "urls": [
+          "https://proceedings.neurips.cc/paper_files/paper/2024/file/ea456e232efb72d261715e33ce25f208-Paper-Conference.pdf"
+        ]
+      }
+    },
+    {
+      "file": "many-shot-jailbreaking.webp",
+      "title": "Few-shot versus many-shot jailbreaking",
+      "alt": "A few-shot prompt with a handful of faux dialogues beside a many-shot prompt with many, and a chart where harmful response rates rise as the number of shots grows",
+      "width": 2400,
+      "height": 785,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.amazonaws.com/many-shot-jailbreaking-example.png"
+        ]
+      }
+    },
+    {
+      "file": "prompt-injection.webp",
+      "title": "Prompt injection in an LLM-integrated application",
+      "alt": "A normal user's benign prompt and a malicious user's injected prompt are both combined with the application's predefined prompt, and the injection makes the LLM print hello world",
+      "width": 1594,
+      "height": 992,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.amazonaws.com/prompt-injection-example.png"
+        ]
+      }
+    },
+    {
       "file": "qdrant-rag-sketch.webp",
       "title": "Hand-drawn RAG flow with Qdrant",
       "alt": "Hand-drawn sketch of a user query embedded and searched against document embeddings in Qdrant, with context and query passed to an LLM",
@@ -45,6 +165,30 @@
       "source": {
         "urls": [
           "https://miro.medium.com/v2/resize:fit:720/format:webp/1*d_t9FzfdZyelyzBx_CVUNA.png"
+        ]
+      }
+    },
+    {
+      "file": "red-lm-attacks.webp",
+      "title": "How a red LM attacks a target LM",
+      "alt": "A red LM asks a target LM a series of questions, and a red classifier flags replies containing offensive content, data leakage, user info, distributional bias or offensive dialog",
+      "width": 1252,
+      "height": 1264,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.amazonaws.com/red-teaming-intro.png"
+        ]
+      }
+    },
+    {
+      "file": "training-data-leakage.webp",
+      "title": "Training data leakage examples",
+      "alt": "Red-team questions about inspirational quotes and favourite books where the model replies with verbatim quotes from its training data, highlighted in red",
+      "width": 1054,
+      "height": 1350,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.amazonaws.com/pii-leakage-example.png"
         ]
       }
     },

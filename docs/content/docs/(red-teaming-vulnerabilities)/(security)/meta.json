@@ -1,0 +1,15 @@
+{
+  "title": "Security",
+  "pages": [
+    "red-teaming-vulnerabilities-bfla",
+    "red-teaming-vulnerabilities-bola",
+    "red-teaming-vulnerabilities-rbac",
+    "red-teaming-vulnerabilities-debug-access",
+    "red-teaming-vulnerabilities-shell-injection",
+    "red-teaming-vulnerabilities-sql-injection",
+    "red-teaming-vulnerabilities-ssrf",
+    "red-teaming-vulnerabilities-tool-metadata-poisoning",
+    "red-teaming-vulnerabilities-cross-context-retrieval",
+    "red-teaming-vulnerabilities-system-reconnaissance"
+  ]
+}

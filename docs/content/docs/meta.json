@@ -4,13 +4,11 @@
     "introduction",
     "introduction-design-philosophy",
     "introduction-comparisons",
-
     "---[Rocket]Getting Started---",
     "getting-started",
     "vibe-coder-quickstart",
     "vibe-coding",
     "(use-cases)",
-
     "---[FlaskConical]LLM Evals---",
     "evaluation-introduction",
     "evaluation-eval-modes",
@@ -21,7 +19,6 @@
     "evaluation-unit-testing-in-ci-cd",
     "evaluation-flags-and-configs",
     "evaluation-local-backend-storage",
-
     "---[Gauge]Eval Metrics---",
     "metrics-introduction",
     "(custom)",
@@ -35,7 +32,6 @@
     "(images)",
     "(metrics-others)",
     "(community)",
-
     "---[Tags]Classifiers---",
     "classifiers-introduction",
     "classifiers-custom",
@@ -44,20 +40,27 @@
     "(security-classifiers)",
     "(policy-classifiers)",
     "(format-classifiers)",
-
     "---[Sparkles]Prompt Optimization---",
     "prompt-optimization-introduction",
     "(algorithms)",
-
     "---[Database]Synthetic Data Generation---",
     "synthetic-data-generation-introduction",
     "golden-synthesizer",
     "conversation-simulator",
-
     "---[Trophy]Benchmarks---",
     "benchmarks-introduction",
     "(benchmarks)",
-
+    "---[ShieldAlert]Red Teaming---",
+    "red-teaming-introduction",
+    "red-teaming-quickstart",
+    "what-is-llm-red-teaming",
+    "red-teaming-yaml-cli",
+    "(red-teaming-concepts)",
+    "(red-teaming-attacks)",
+    "(red-teaming-vulnerabilities)",
+    "(red-teaming-frameworks)",
+    "(red-teaming-guardrails)",
+    "(red-teaming-code-scanning)",
     "---[Boxes]Others---",
     "command-line-interface",
     "environment-variables",

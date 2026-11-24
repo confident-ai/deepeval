@@ -2,6 +2,94 @@
   "framework": "nextjs",
   "redirects": [
     {
+      "source": "/",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:www\\.)?trydeepteam\\.com"
+        }
+      ],
+      "destination": "https://deepeval.com/docs/red-teaming-introduction",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/getting-started",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:www\\.)?trydeepteam\\.com"
+        }
+      ],
+      "destination": "https://deepeval.com/docs/red-teaming-quickstart",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/guides-rag-evaluation",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:www\\.)?trydeepteam\\.com"
+        }
+      ],
+      "destination": "https://deepeval.com/guides/guides-rag-evaluation",
+      "statusCode": 301
+    },
+    {
+      "source": "/enterprise",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:www\\.)?trydeepteam\\.com"
+        }
+      ],
+      "destination": "https://deepeval.com/enterprise",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:www\\.)?trydeepteam\\.com"
+        }
+      ],
+      "destination": "https://deepeval.com/docs/:path*",
+      "statusCode": 301
+    },
+    {
+      "source": "/guides/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:www\\.)?trydeepteam\\.com"
+        }
+      ],
+      "destination": "https://deepeval.com/guides/:path*",
+      "statusCode": 301
+    },
+    {
+      "source": "/blog/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:www\\.)?trydeepteam\\.com"
+        }
+      ],
+      "destination": "https://deepeval.com/blog/:path*",
+      "statusCode": 301
+    },
+    {
+      "source": "/:path*",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:www\\.)?trydeepteam\\.com"
+        }
+      ],
+      "destination": "https://deepeval.com/docs/red-teaming-introduction",
+      "statusCode": 301
+    },
+    {
       "source": "/docs/metrics-conversational-g-eval",
       "destination": "/docs/metrics-llm-evals",
       "statusCode": 301
@@ -37,83 +125,18 @@
       "statusCode": 301
     },
     {
-      "source": "/docs/red-teaming-introduction",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-introduction",
-      "statusCode": 301
-    },
-    {
       "source": "/docs/red-teaming-owasp",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-owasp-top-10-for-llms",
+      "destination": "/docs/frameworks-owasp-top-10-for-llms",
       "statusCode": 301
     },
     {
       "source": "/docs/red-teaming-attack-enhancements",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-adversarial-attacks",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/red-teaming-vulnerabilities",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/red-teaming-vulnerabilities-bias",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-bias",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/red-teaming-vulnerabilities-misinformation",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-misinformation",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/red-teaming-vulnerabilities-toxicity",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-toxicity",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/red-teaming-vulnerabilities-illegal-activity",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-illegal-activity",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/red-teaming-vulnerabilities-personal-safety",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-personal-safety",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/red-teaming-vulnerabilities-pii-leakage",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-pii-leakage",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/red-teaming-vulnerabilities-prompt-leakage",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-prompt-leakage",
+      "destination": "/docs/red-teaming-adversarial-attacks",
       "statusCode": 301
     },
     {
       "source": "/docs/red-teaming-vulnerabilities-unauthorized-access",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-unauthorized-access",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/red-teaming-vulnerabilities-intellectual-property",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-intellectual-property",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/red-teaming-vulnerabilities-excessive-agency",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-excessive-agency",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/red-teaming-vulnerabilities-robustness",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-robustness",
-      "statusCode": 301
-    },
-    {
-      "source": "/docs/red-teaming-vulnerabilities-graphic-content",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-graphic-content",
+      "destination": "/docs/red-teaming-vulnerabilities",
       "statusCode": 301
     },
     {
@@ -122,8 +145,8 @@
       "statusCode": 301
     },
     {
-      "source": "/docs/red-teaming-vulnerabilities-competition",
-      "destination": "https://www.trydeepteam.com/docs/red-teaming-vulnerabilities-competition",
+      "source": "/guides/guides-red-teaming",
+      "destination": "/docs/red-teaming-quickstart",
       "statusCode": 301
     }
   ]

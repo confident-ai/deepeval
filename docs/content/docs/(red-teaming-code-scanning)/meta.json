@@ -1,0 +1,7 @@
+{
+  "title": "Code Scanning",
+  "pages": [
+    "code-scanning-introduction",
+    "code-scanning-github-bot"
+  ]
+}

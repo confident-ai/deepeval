@@ -1,0 +1,25 @@
+{
+  "title": "Single-Turn",
+  "pages": [
+    "red-teaming-adversarial-attacks-adversarial-poetry",
+    "red-teaming-adversarial-attacks-authority-escalation",
+    "red-teaming-adversarial-attacks-base64-encoding",
+    "red-teaming-adversarial-attacks-character-stream",
+    "red-teaming-adversarial-attacks-context-flooding",
+    "red-teaming-adversarial-attacks-embedded-instruction-json",
+    "red-teaming-adversarial-attacks-emotional-manipulation",
+    "red-teaming-adversarial-attacks-gray-box-attack",
+    "red-teaming-adversarial-attacks-leetspeak",
+    "red-teaming-adversarial-attacks-math-problem",
+    "red-teaming-adversarial-attacks-multilingual",
+    "red-teaming-adversarial-attacks-prompt-injection",
+    "red-teaming-adversarial-attacks-roleplay",
+    "red-teaming-adversarial-attacks-rot13-encoding",
+    "red-teaming-adversarial-attacks-synthetic-context-injection",
+    "red-teaming-agentic-attacks-context-poisoning",
+    "red-teaming-agentic-attacks-input-bypass",
+    "red-teaming-agentic-attacks-permission-escalation",
+    "red-teaming-agentic-attacks-semantic-manipulation",
+    "red-teaming-agentic-attacks-system-override"
+  ]
+}
