@@ -145,7 +145,7 @@ _MIN_CLEANED_LENGTH = 10
 def clean_reason(reason: str) -> str:
     if not reason:
         return reason
-    original = reason.strip()
+    original = str(reason).strip()
     cleaned = _META_PREFIX_RE.sub("", original).strip()
     if cleaned == original or len(cleaned) < _MIN_CLEANED_LENGTH:
         return original
@@ -164,13 +164,8 @@ _ABSENCE_LABEL_NAMES = {
     "uncategorized",
     "not applicable",
     "miscellaneous",
+    "none found",
 }
-_ABSENCE_LABEL_RE = re.compile(
-    r"^(?:no|none|nothing|without)\b.*\b(?:issues?|problems?|errors?|failures?|"
-    r"concerns?|complaints?|sentiments?|topics?|use cases?|intents?|labels?|"
-    r"categor(?:y|ies)|match(?:es)?|applicable|relevant|clear|specific|found)\b",
-    re.IGNORECASE,
-)
 
 
 class LabelOrigin(str, Enum):
@@ -210,6 +205,7 @@ def resolve_suggested_label(
     labels: List[Label],
     candidate_labels: List[Label],
     allow_none: bool,
+    classifier_name: str,
 ) -> ResolvedLabel:
     """Map a judge answer that may name a new label onto a ``ResolvedLabel``.
 
@@ -225,7 +221,11 @@ def resolve_suggested_label(
     if raw is None:
         return ResolvedLabel(None)
     name = str(raw).strip()
-    if not name or name.upper() == NONE_LABEL or _is_absence_label(name):
+    if (
+        not name
+        or name.upper() == NONE_LABEL
+        or _is_absence_label(name, classifier_name)
+    ):
         return (
             ResolvedLabel(NONE_LABEL, LabelOrigin.NONE)
             if allow_none
@@ -259,10 +259,17 @@ def _fallback_description(name: str, reason: Optional[str]) -> str:
     )
 
 
-def _is_absence_label(name: str) -> bool:
-    normalized = name.strip().lower()
-    return normalized in _ABSENCE_LABEL_NAMES or bool(
-        _ABSENCE_LABEL_RE.match(normalized)
+def _is_absence_label(name: str, classifier_name: str) -> bool:
+    normalized = " ".join(name.lower().split())
+    if normalized in _ABSENCE_LABEL_NAMES:
+        return True
+    singular = re.escape(" ".join(classifier_name.lower().split()).rstrip("s"))
+    return bool(
+        singular
+        and re.fullmatch(
+            rf"(?:no|none|without) (?:\w+ ){{0,2}}{singular}(?:s|es)?(?: \w+)?",
+            normalized,
+        )
     )
 
 

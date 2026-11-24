@@ -67,6 +67,10 @@ class Label(BaseModel):
         return hash((self.name, self.description))
 
 
+def _normalize(label: str) -> str:
+    return label.strip().lower()
+
+
 class BaseClassifier(PromptMixin):
     """Classifier counterpart of ``BaseMetric``.
 
@@ -154,13 +158,14 @@ class BaseClassifier(PromptMixin):
         elif self.error is not None:
             self.success = False
         else:
-            assigned = [c.label for c in self.classifications or []] or (
+            assigned_labels = [c.label for c in self.classifications or []] or (
                 [self.label] if self.label is not None else []
             )
+            assigned = {_normalize(label) for label in assigned_labels}
             self.success = (
-                set(assigned) == set(expected_label)
+                assigned == {_normalize(label) for label in expected_label}
                 if isinstance(expected_label, list)
-                else expected_label in assigned
+                else _normalize(expected_label) in assigned
             )
         return self.success
 

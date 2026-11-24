@@ -50,6 +50,7 @@ from deepeval.classifiers.classifier.steps.trace import (
 )
 from deepeval.classifiers.classifier.steps.truncate import (
     MAX_CONTENT_CHARS,
+    TRUNCATION_MARKER,
     ShownContent,
     fit_text,
     fit_trace,
@@ -180,6 +181,10 @@ class Classifier(BaseClassifier):
         self.classification_template = classification_template
         self.description = description
         self.multi_label = multi_label
+        if max_content_chars <= len(TRUNCATION_MARKER):
+            raise ValueError(
+                f"max_content_chars must be greater than {len(TRUNCATION_MARKER)}."
+            )
         self.max_content_chars = max_content_chars
         self.evidence_config = evidence_config
         self.review_config = review_config
@@ -353,7 +358,11 @@ class Classifier(BaseClassifier):
             if resolved_label.origin is LabelOrigin.NEW:
                 merged_label = merged_labels.get(resolved_label.name)
                 if merged_label is None:
-                    continue  # over max_new_labels, never merged
+                    no_label_reason = no_label_reason or (
+                        f'Proposed new label "{resolved_label.name}", but '
+                        "max_new_labels was already reached."
+                    )
+                    continue
                 resolved_label = merged_label
             label, description = resolved_label.name, resolved_label.description
 
@@ -387,8 +396,11 @@ class Classifier(BaseClassifier):
             )
             if existing_classification is not None:
                 if self.evidence_config:
-                    combined = existing_classification.evidence + evidence
-                    existing_classification.evidence = combined[
+                    combined = {
+                        (e.field, e.quote, e.turn_index, e.span_index): e
+                        for e in existing_classification.evidence + evidence
+                    }
+                    existing_classification.evidence = list(combined.values())[
                         : self.evidence_config.max_items
                     ]
                 continue
@@ -440,6 +452,7 @@ class Classifier(BaseClassifier):
                 labels=self.labels,
                 candidate_labels=self.candidate_labels,
                 allow_none=self.allow_none,
+                classifier_name=self.name,
             )
 
         # Declared labels only
@@ -478,9 +491,16 @@ class Classifier(BaseClassifier):
 
         # Conversation
         if isinstance(test_case, ConversationalTestCase):
-            test_case_content = construct_multi_turn_content(test_case)
+            test_case_content = fit_text(
+                construct_multi_turn_content(test_case),
+                self.max_content_chars // 2,
+            )
             shown = fit_turns(
-                construct_turns(test_case), self.max_content_chars
+                [
+                    {"index": index, **turn}
+                    for index, turn in enumerate(construct_turns(test_case), 1)
+                ],
+                self.max_content_chars - len(test_case_content),
             )
             template, subject = "classify_multi_turn", "conversation"
             content = f"{test_case_content}\n\nTurns:\n{shown}"
@@ -585,6 +605,7 @@ class Classifier(BaseClassifier):
         traced = not multi_turn and test_case._trace_dict is not None
         if multi_turn:
             state = construct_multi_turn_state(test_case)
+            state["turns"] = fit_turns(state["turns"], self.max_content_chars)
         elif traced:
             state = {
                 "trace": fit_trace(
@@ -593,6 +614,14 @@ class Classifier(BaseClassifier):
             }
         else:
             state = construct_single_turn_state(test_case)
+            state["test_case"] = {
+                field: (
+                    fit_text(value, self.max_content_chars)
+                    if isinstance(value, str)
+                    else value
+                )
+                for field, value in state["test_case"].items()
+            }
         options: Dict[str, Optional[str]] = {
             label.name: label.description for label in self.labels
         }

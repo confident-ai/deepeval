@@ -102,7 +102,7 @@ def test_all_dropped_explains_why():
     )
 
 
-def test_unreadable_review_keeps_the_label_without_confidence():
+def test_unreadable_review_is_retried_then_drops_the_label():
     model = ReviewingModel(
         {"label": "pricing", "reason": "r"}, {"pricing": None}
     )
@@ -111,13 +111,34 @@ def test_unreadable_review_keeps_the_label_without_confidence():
         labels=LABELS,
         model=model,
         review_config=ReviewConfig(),
+        allow_none=True,
         async_mode=False,
     )
     classifier.classify(CASE, _show_indicator=False)
+    reviews = [
+        p for p in model.prompts if p.startswith("A classifier labelled")
+    ]
+    assert len(reviews) == 2
+    assert classifier.label is None and classifier.error is None
     assert (
-        classifier.label == "pricing"
-        and classifier.classifications[0].confidence is None
+        classifier.reason
+        == 'Proposed "pricing" but its review could not be read.'
     )
+
+
+@pytest.mark.parametrize("async_mode", [True, False])
+def test_unreadable_review_drops_only_that_label(async_mode):
+    classifier = Classifier(
+        name="topic",
+        labels=LABELS,
+        model=ReviewingModel(BOTH, {"pricing": 0.95, "cancellation": None}),
+        multi_label=True,
+        review_config=ReviewConfig(),
+        async_mode=async_mode,
+    )
+    classifier.classify(CASE, _show_indicator=False)
+    assert [c.label for c in classifier.classifications] == ["pricing"]
+    assert classifier.error is None
 
 
 def test_review_sees_label_description_passages_and_content():
@@ -175,14 +196,14 @@ def test_description_and_context_reach_the_prompts():
     ).classify(CASE, _show_indicator=False)
     classify, review = model.prompts
     assert (
-        'This classifier is named "topic". Its purpose: "What the customer wants to talk about."'
+        'This classifier is named "topic". Its purpose: What the customer wants to talk about.'
         in classify
     )
     assert (
-        "The application being traced is: A billing assistant for a SaaS product."
+        "The application is: A billing assistant for a SaaS product."
         in classify
     )
-    assert "Each trace is one support chat." in classify
+    assert "About the content: Each trace is one support chat." in classify
     assert "App description:\nA billing assistant for a SaaS product." in review
 
 

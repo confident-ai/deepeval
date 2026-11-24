@@ -12,6 +12,7 @@ You are a classifier. Given the conversation below, assign it {% if multi_label 
 {% endif %}Rules:
 - Use the label descriptions as the boundary for each label. When a description is given, it is authoritative.
 {{ reason_rules }}
+- Long field values may be shortened, with the cut marked "…[truncated]". That marker is not part of the application's output, so never treat it as a cut-off response.
 - Consider the conversation as a whole, not just the last turn, unless a label description says otherwise.
 {% if multi_label %}- The conversation can match several labels. Return every one that applies, most certain first: one item per label, each following the rules here. Never pad the list with weaker or repeated labels.{% if allow_none %} When no label fits, return a single item with `"NONE"` and its reason.{% endif %}
 {% else %}- Choose exactly one label. Never return multiple labels.
@@ -23,7 +24,7 @@ You are a classifier. Given the conversation below, assign it {% if multi_label 
 ---
 
 Labels:
-{{ labels }}
+{% if labels %}{{ labels }}{% else %}(none yet){% endif %}
 {% if candidate_labels %}
 Candidate Labels:
 {{ candidate_labels }}

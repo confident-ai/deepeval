@@ -17,11 +17,15 @@ from deepeval.classifiers.classifier.schema import (
     ClassificationResult,
     LabelMergeResult,
 )
+from deepeval.classifiers.classifier.steps.classification import (
+    MAX_GENERATION_ATTEMPTS,
+)
 from deepeval.classifiers.utils import (
     LabelOrigin,
     ResolvedLabel,
     clean_reason,
 )
+from deepeval.errors import DeepEvalError
 from deepeval.metrics.utils.generation import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
@@ -166,6 +170,11 @@ def _merge_or_add_label(
                 embeddings = classifier.label_discovery_config.embedding_model.embed_texts(
                     unembedded_names
                 )
+                if len(embeddings) != len(unembedded_names):
+                    raise ValueError(
+                        f"The embedding model returned {len(embeddings)} "
+                        f"vectors for {len(unembedded_names)} label names."
+                    )
                 pool.vectors.update(zip(unembedded_names, embeddings))
             near_duplicate, similar_labels = _find_similar_labels(
                 classifier, proposed_label, existing_labels
@@ -174,18 +183,16 @@ def _merge_or_add_label(
                 return near_duplicate
 
             # Merge judge
-            try:
-                duplicate_of = generate_with_schema_and_extract(
-                    metric=classifier,
-                    prompt=_build_merge_prompt(
+            duplicate_of = (
+                _ask_merge_judge(
+                    classifier,
+                    _build_merge_prompt(
                         classifier, proposed_label, reason, similar_labels
                     ),
-                    **_MERGE_EXTRACTION,
                 )
-            except ValueError:
-                # Unreadable merge answer: treat the label as new
-                classifier.error = None
-                duplicate_of = None
+                if similar_labels
+                else None
+            )
             matching_label = next(
                 (
                     label
@@ -240,6 +247,11 @@ async def _a_merge_or_add_label(
                 embeddings = await classifier.label_discovery_config.embedding_model.a_embed_texts(
                     unembedded_names
                 )
+                if len(embeddings) != len(unembedded_names):
+                    raise ValueError(
+                        f"The embedding model returned {len(embeddings)} "
+                        f"vectors for {len(unembedded_names)} label names."
+                    )
                 pool.vectors.update(zip(unembedded_names, embeddings))
             near_duplicate, similar_labels = _find_similar_labels(
                 classifier, proposed_label, existing_labels
@@ -248,18 +260,16 @@ async def _a_merge_or_add_label(
                 return near_duplicate
 
             # Merge judge
-            try:
-                duplicate_of = await a_generate_with_schema_and_extract(
-                    metric=classifier,
-                    prompt=_build_merge_prompt(
+            duplicate_of = (
+                await _a_ask_merge_judge(
+                    classifier,
+                    _build_merge_prompt(
                         classifier, proposed_label, reason, similar_labels
                     ),
-                    **_MERGE_EXTRACTION,
                 )
-            except ValueError:
-                # Unreadable merge answer: treat the label as new
-                classifier.error = None
-                duplicate_of = None
+                if similar_labels
+                else None
+            )
             matching_label = next(
                 (
                     label
@@ -279,6 +289,30 @@ async def _a_merge_or_add_label(
             return proposed_label
         existing_labels = labels_added_since
         seen_count += len(labels_added_since)
+
+
+def _ask_merge_judge(classifier: "Classifier", prompt: str) -> Optional[str]:
+    for _ in range(MAX_GENERATION_ATTEMPTS):
+        try:
+            return generate_with_schema_and_extract(
+                metric=classifier, prompt=prompt, **_MERGE_EXTRACTION
+            )
+        except (ValueError, DeepEvalError):
+            classifier.error = None
+    return None
+
+
+async def _a_ask_merge_judge(
+    classifier: "Classifier", prompt: str
+) -> Optional[str]:
+    for _ in range(MAX_GENERATION_ATTEMPTS):
+        try:
+            return await a_generate_with_schema_and_extract(
+                metric=classifier, prompt=prompt, **_MERGE_EXTRACTION
+            )
+        except (ValueError, DeepEvalError):
+            classifier.error = None
+    return None
 
 
 def _find_similar_labels(

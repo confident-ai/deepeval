@@ -81,7 +81,18 @@ def fit_turns(turns: List[Dict[str, Any]], budget: int) -> List[Dict[str, Any]]:
         and len(str(turns[first_kept_turn:])) > budget
     ):
         first_kept_turn += 1
-    return turns[first_kept_turn:]
+    kept_turns = turns[first_kept_turn:]
+    overflow = len(str(kept_turns)) - budget
+    if overflow > 0 and kept_turns:
+        content = kept_turns[-1].get("content")
+        if isinstance(content, str):
+            kept_turns[-1] = {
+                **kept_turns[-1],
+                "content": _truncate_text(
+                    content, max(len(content) - overflow, 0)
+                ),
+            }
+    return kept_turns
 
 
 def _get_span_priority(span: Dict[str, Any]) -> int:

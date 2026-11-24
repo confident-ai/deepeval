@@ -126,7 +126,8 @@ def _collect_classifications(
             and classifier.label_discovery_config is None
         ):
             cached_classifications = deepcopy(created)
-            cached_classifications[0].evaluation_cost = 0
+            if cached_classifications[0].evaluation_cost is not None:
+                cached_classifications[0].evaluation_cost = 0
             new_cached_test_case.cached_classifications.append(
                 CachedClassification(
                     classification=cached_classifications[0],

@@ -90,7 +90,7 @@ def test_conversation_over_budget_keeps_latest_turns():
     turns = [{"role": "user", "content": str(i) * 50} for i in range(5)]
     kept = fit_turns(turns, len(str(turns[-2:])))
     assert kept == turns[-2:]
-    assert fit_turns(turns[:1], 1) == turns[:1]
+    assert fit_turns(turns[:1], 1)[0]["content"] == TRUNCATION_MARKER
 
 
 def test_single_turn_content_is_cut_to_budget():

@@ -14,9 +14,18 @@ from pydantic import (
 ###############################################
 
 
+def _to_text(value: Any) -> str:
+    return "" if value is None else str(value)
+
+
 class ClassificationResult(BaseModel):
     label: str
-    reason: str
+    reason: str = ""
+
+    @field_validator("reason", mode="before")
+    @classmethod
+    def _coerce_reason(cls, value: Any) -> str:
+        return _to_text(value)
 
 
 def _is_valid(model: Type[BaseModel], item: Any) -> bool:
@@ -38,6 +47,11 @@ class EvidenceItem(BaseModel):
     note: str = ""
     span_index: Optional[int] = None
     turn_index: Optional[int] = None
+
+    @field_validator("note", mode="before")
+    @classmethod
+    def _coerce_note(cls, value: Any) -> str:
+        return _to_text(value)
 
 
 class EvidencedClassificationResult(ClassificationResult):
@@ -115,7 +129,7 @@ def _label_list(
             if not isinstance(data, dict):
                 return data
             if "labels" not in data and "label" in data:
-                return {"labels": [data]}
+                return {"labels": [data] if _is_valid(item, data) else []}
             if isinstance(data.get("labels"), list):
                 return {
                     **data,

@@ -1,10 +1,11 @@
 import json
 import re
-from typing import TYPE_CHECKING, Any, List, Optional, Union
+from dataclasses import dataclass
+from typing import TYPE_CHECKING, Any, Dict, List, Optional, Tuple, Union
 
 from deepeval.classifiers.classifier.config import EvidenceConfig
 from deepeval.classifiers.classifier.schema import EvidenceItem
-from deepeval.classifiers.classifier.steps.truncate import ShownContent
+from deepeval.classifiers.classifier.steps.truncate import serialize
 from deepeval.classifiers.utils import (
     MULTI_TURN_CONTENT_PARAMS,
     SINGLE_TURN_CONTENT_PARAMS,
@@ -17,7 +18,10 @@ if TYPE_CHECKING:
 
 _MIN_EVIDENCE_QUOTE_CHARS = 8
 _WHITESPACE_RE = re.compile(r"\s+")
-_TRUNCATION_TAIL_RE = re.compile(r"""…?\[truncated\][\s"'\\]*$""")
+_TRUNCATION_TAIL_RE = re.compile(
+    r"""…?\[truncated\][\s"'\\,}\]]*$""", re.IGNORECASE
+)
+_TRUNCATION_MARKER_RE = re.compile(r"…?\[truncated\]", re.IGNORECASE)
 _TRUNCATION_CLAIM_RE = re.compile(
     r"truncat|cut[ -]?off|cut short|incomplete (?:output|response|content)",
     re.IGNORECASE,
@@ -66,13 +70,26 @@ def blames_truncation_marker(
     """Whether a label about cut-off content rests on the marker added where
     long fields are shortened, rather than on the application's own output."""
     claims_truncation = _TRUNCATION_CLAIM_RE.search(
-        f"{label} {description or ''} {reason or ''}"
+        _TRUNCATION_MARKER_RE.sub(
+            "", f"{label} {description or ''} {reason or ''}"
+        )
     )
-    cites_marker = "[truncated]" in (reason or "") or any(
-        _TRUNCATION_TAIL_RE.search(evidence_item.quote.strip())
-        for evidence_item in evidence_items
+    cites_marker = bool(_TRUNCATION_MARKER_RE.search(reason or "")) or (
+        bool(evidence_items)
+        and all(
+            _TRUNCATION_TAIL_RE.search(evidence_item.quote.strip())
+            for evidence_item in evidence_items
+        )
     )
     return bool(claims_truncation) and cites_marker
+
+
+@dataclass
+class _Source:
+    field: str
+    texts: List[str]
+    turn_index: Optional[int] = None
+    span_index: Optional[int] = None
 
 
 def verify_evidence(
@@ -81,12 +98,7 @@ def verify_evidence(
     prompt: "ClassificationPrompt",
     evidence_config: EvidenceConfig,
 ) -> List[Evidence]:
-    dropped_turn_count = (
-        len(test_case.turns) - len(prompt.shown)
-        if isinstance(test_case, ConversationalTestCase)
-        and isinstance(prompt.shown, list)
-        else 0
-    )
+    sources = _get_sources(test_case, prompt)
     verified_evidence = []
     for evidence_item in evidence_items:
         if len(verified_evidence) == evidence_config.max_items:
@@ -96,31 +108,74 @@ def verify_evidence(
         ).rstrip()[: evidence_config.max_quote_chars]
         if not quote:
             continue
-        source_texts = (
-            _get_source_texts(evidence_item, test_case, prompt.shown)
-            if evidence_item.field in prompt.evidence_fields
-            else None
-        )
-        matched_quote = (
-            _find_quote_in_sources(quote, source_texts)
-            if source_texts and len(quote) >= _MIN_EVIDENCE_QUOTE_CHARS
-            else None
-        )
+
+        cited_sources = [
+            source
+            for source in sources
+            if source.field == evidence_item.field
+            and source.turn_index == evidence_item.turn_index
+            and source.span_index == evidence_item.span_index
+        ]
+        matched_quote, source = _find_source(
+            quote, cited_sources + sources
+        ) or (None, None)
         verified_evidence.append(
             Evidence(
-                field=evidence_item.field,
+                field=source.field if source else evidence_item.field,
                 quote=matched_quote or quote,
                 note=evidence_item.note.strip(),
-                span_index=evidence_item.span_index,
-                turn_index=(
-                    None
-                    if evidence_item.turn_index is None
-                    else evidence_item.turn_index + dropped_turn_count
-                ),
-                matched=matched_quote is not None,
+                turn_index=source.turn_index if source else None,
+                span_index=source.span_index if source else None,
+                matched=source is not None,
             )
         )
     return verified_evidence
+
+
+def _find_source(
+    quote: str, sources: List[_Source]
+) -> Optional[Tuple[str, _Source]]:
+    if len(quote) < _MIN_EVIDENCE_QUOTE_CHARS:
+        return None
+    for source in sources:
+        matched_quote = _find_quote_in_sources(quote, source.texts)
+        if matched_quote is not None:
+            return matched_quote, source
+    return None
+
+
+def _get_sources(
+    test_case: Union[LLMTestCase, ConversationalTestCase],
+    prompt: "ClassificationPrompt",
+) -> List[_Source]:
+    shown, fields = prompt.shown, prompt.evidence_fields
+    own_fields = {field: getattr(test_case, field, None) for field in fields}
+    if isinstance(test_case, ConversationalTestCase):
+        sources = _sources_in(own_fields, fields)
+        for turn in shown if isinstance(shown, list) else []:
+            sources += _sources_in(turn, fields, turn_index=turn.get("index"))
+        return sources
+    if test_case._trace_dict is None:
+        return _sources_in(own_fields, fields)
+    if isinstance(shown, str):
+        return [_Source(field=field, texts=[shown]) for field in fields]
+    if not isinstance(shown, dict):
+        return []
+    sources = _sources_in(shown, fields)
+    for span in shown.get("spans") or []:
+        if isinstance(span, dict):
+            sources += _sources_in(span, fields, span_index=span.get("index"))
+    return sources
+
+
+def _sources_in(
+    values: Dict[str, Any], fields: List[str], **index: Optional[int]
+) -> List[_Source]:
+    return [
+        _Source(field=field, texts=texts, **index)
+        for field in fields
+        if (texts := _to_texts(values.get(field)))
+    ]
 
 
 def _find_quote_in_sources(
@@ -136,49 +191,15 @@ def _find_quote_in_sources(
     if unescaped != quote:
         quote_variants.append(unescaped)
     for quote_variant in quote_variants:
-        if any(quote_variant in source for source in source_texts):
+        if any(quote_variant in text for text in source_texts):
             return quote_variant
         quote_without_whitespace = _WHITESPACE_RE.sub("", quote_variant)
         if quote_without_whitespace and any(
-            quote_without_whitespace in _WHITESPACE_RE.sub("", source)
-            for source in source_texts
+            quote_without_whitespace in _WHITESPACE_RE.sub("", text)
+            for text in source_texts
         ):
             return quote_variant
     return None
-
-
-def _get_source_texts(
-    evidence_item: EvidenceItem,
-    test_case: Union[LLMTestCase, ConversationalTestCase],
-    shown: Optional[ShownContent],
-) -> Optional[List[str]]:
-    if isinstance(test_case, ConversationalTestCase):
-        if evidence_item.turn_index is None:
-            return _to_texts(getattr(test_case, evidence_item.field, None))
-        if not isinstance(shown, list) or not (
-            1 <= evidence_item.turn_index <= len(shown)
-        ):
-            return None
-        return _to_texts(
-            shown[evidence_item.turn_index - 1].get(evidence_item.field)
-        )
-    if test_case._trace_dict is None:
-        return _to_texts(getattr(test_case, evidence_item.field, None))
-    if isinstance(shown, str):
-        return [shown] if evidence_item.span_index is None else None
-    if not isinstance(shown, dict):
-        return None
-    if evidence_item.span_index is None:
-        return _to_texts(shown.get(evidence_item.field))
-    span = next(
-        (
-            s
-            for s in shown.get("spans", [])
-            if s["index"] == evidence_item.span_index
-        ),
-        None,
-    )
-    return None if span is None else _to_texts(span.get(evidence_item.field))
 
 
 def _to_texts(value: Any) -> Optional[List[str]]:
@@ -192,8 +213,8 @@ def _to_texts(value: Any) -> Optional[List[str]]:
             for v in value
             if isinstance(v, (str, ToolCall))
         ]
-        return [*texts, str(value), _to_json(value)]
-    return [str(value), _to_json(value)]
+        return [*texts, str(value), _to_json(value), serialize(value)]
+    return [str(value), _to_json(value), serialize(value)]
 
 
 def _to_json(value: Any) -> str:

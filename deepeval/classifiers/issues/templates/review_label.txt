@@ -1,4 +1,4 @@
-A classifier flagged a possible problem in an interaction handled by an AI system. You are given the flagged label, its description when given, and the passages it pointed to ("flag"), and the interaction itself ("content"). Confident AI shortens long field values and marks the cut with "…[truncated]"; that marker is not part of the application's output, so never treat it as a cut-off response.
+A classifier flagged a possible problem in an interaction handled by an AI system. You are given the flagged label, its description when given, and the passages it pointed to ("flag"), and the interaction itself ("content"). Long field values are shortened, with the cut marked "…[truncated]". That marker is not part of the application's output, so never treat it as a cut-off response.
 
 Most flags are wrong. Judge independently: read the content around the flagged passages and decide for yourself what happened before you consider the label.
 

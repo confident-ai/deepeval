@@ -78,10 +78,10 @@ def test_trace_quotes_resolve_spans_by_index():
             {"field": "output", "quote": "price: 20 USD", "span_index": 1},
         ],
     )
-    assert [e.matched for e in classifier.classifications[0].evidence] == [
-        True,
-        False,
-    ]
+    assert [
+        (e.matched, e.span_index)
+        for e in classifier.classifications[0].evidence
+    ] == [(True, 2), (True, 2)]
     assert '"span_index"' in prompt
 
 
@@ -214,10 +214,19 @@ def test_evidence_is_capped_at_max_items():
     assert len(classifier.classifications[0].evidence) == 2
 
 
-def test_evidence_from_a_field_the_judge_was_not_offered_never_matches():
+def test_evidence_cited_under_the_wrong_field_moves_to_the_right_one():
     classifier, _ = _classify(
         LLMTestCase(input="How much is the Pro plan?"),
         [{"field": "__dict__", "quote": "How much is the Pro plan?"}],
+    )
+    evidence = classifier.classifications[0].evidence[0]
+    assert evidence.matched and evidence.field == "input"
+
+
+def test_evidence_not_in_the_content_never_matches():
+    classifier, _ = _classify(
+        LLMTestCase(input="How much is the Pro plan?"),
+        [{"field": "input", "quote": "What does Enterprise cost?"}],
     )
     assert not classifier.classifications[0].evidence[0].matched
 

@@ -192,7 +192,7 @@ class EvaluationConsoleReport:
                     summary_parts.append(f"Passed {len(metrics_data)} metrics")
                 if classifications:
                     summary_parts.append(
-                        f"{len(classifications)} classifications"
+                        f"{len({c.name for c in classifications})} classifications"
                     )
                 summary_text = f"[{status_color} bold]{status_icon} {case.name} ({', '.join(summary_parts)})[/{status_color} bold]"
                 renderables.append(

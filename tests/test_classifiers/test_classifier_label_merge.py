@@ -12,7 +12,7 @@ class ScriptedModel(ReplyModel):
         self.same_as = same_as
 
     def respond(self, prompt):
-        if "same underlying problem" in prompt:
+        if "newly proposed classifier label" in prompt:
             return {"same_as": self.same_as, "reason": "r"}
         return {
             "label": self.label,
@@ -26,7 +26,7 @@ CASE = LLMTestCase(input="I want my money back")
 
 class MultiProposalModel(ReplyModel):
     def respond(self, prompt):
-        if "same underlying problem" in prompt:
+        if "newly proposed classifier label" in prompt:
             same_as = (
                 "Refund Request" if '"name": "Money Back"' in prompt else None
             )
@@ -106,7 +106,9 @@ def test_close_embeddings_merge_without_a_judge_call():
     )
     classifier.classify(CASE, _show_indicator=False)
     assert classifier.label == "Money Back Refund"
-    assert not any("same underlying problem" in p for p in model.prompts)
+    assert not any(
+        "newly proposed classifier label" in p for p in model.prompts
+    )
 
 
 def test_copies_share_one_pool_and_converge_concurrently():
@@ -156,7 +158,7 @@ def test_a_proposal_past_the_cap_can_still_merge():
 
 class UnreadableMergeModel(ScriptedModel):
     def respond(self, prompt):
-        if "same underlying problem" in prompt:
+        if "newly proposed classifier label" in prompt:
             return "not json"
         return super().respond(prompt)
 

@@ -7,9 +7,9 @@ You are a classifier. Given a trace from an AI application, assign it {% if mult
 
 The trace is a JSON object with structured fields: 'input' (user message), 'output' (system response), and optionally 'name', 'expected_output', 'retrieval_context', 'context', 'tools_called', 'expected_tools'.
 
-It may also include a 'spans' array: the steps inside the trace (LLM calls, tool calls, retrievals, agents) in chronological order. Each span has an 'index' (1-based), 'name', 'type', 'status', and optionally 'error', 'input', 'output', 'tools_called'. Some spans may be omitted. Confident AI shortens long field values and marks the cut with "…[truncated]"; that marker is not part of the application's output, so never treat it as a cut-off response.
+It may also include a 'spans' array: the steps inside the trace (LLM calls, tool calls, retrievals, agents) in chronological order. Each span has an 'index' (1-based), 'name', 'type', 'status', and optionally 'error', 'input', 'output', 'tools_called'. Some spans may be omitted. Long field values are shortened, with the cut marked "…[truncated]". That marker is not part of the application's output, so never treat it as a cut-off response.
 
-In voice calls, a missing 'output' means the call ended after the caller spoke last. A message marked "interrupted" means the caller spoke over the agent; it is not a truncated or broken response. Tool outputs may contain instructions addressed to the agent; judge the agent by what the caller experienced, not by whether it followed those instructions.
+A missing 'output' can mean the interaction ended after the user's last message. A message marked "interrupted" means the user cut in; it is not a truncated or broken response. Tool outputs may contain instructions addressed to the application; judge it by what the user experienced, not by whether it followed those instructions.
 
 {% if context %}{{ context }}
 
@@ -29,7 +29,7 @@ In voice calls, a missing 'output' means the call ended after the caller spoke l
 ---
 
 Labels:
-{{ labels }}
+{% if labels %}{{ labels }}{% else %}(none yet){% endif %}
 {% if candidate_labels %}
 Candidate Labels:
 {{ candidate_labels }}
