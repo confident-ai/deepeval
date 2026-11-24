@@ -119,31 +119,6 @@ from deepeval.classifiers import Classifier
 sentiment = Classifier(name="sentiment", labels=["positive", "neutral", "negative"])
 ```
 
-## Agent Profile
-
-Pass an `AgentProfile` to tell the judge what application it is looking at, so it reasons from that application's point of view:
-
-```python
-from deepeval.classifiers import Classifier, AgentProfile
-
-classifier = Classifier(
-    name="topic",
-    labels=["billing", "refund"],
-    description="What the customer wants to talk about.",
-    agent_profile=AgentProfile(
-        description="A billing assistant for a SaaS product.",
-        trace_description="Each trace is one support chat.",
-    ),
-)
-```
-
-There are **TWO** optional parameters when creating an `AgentProfile`:
-
-- [Optional] `description`: what the agent is and does. The review also uses it to tell designed behaviour apart from mistakes. Defaulted to `None`.
-- [Optional] `trace_description`: what one test case or trace represents. Defaulted to `None`.
-
-With an `AgentProfile` but neither description, the judge is told to infer the application's use case from the content.
-
 ## Multi-Label Classification
 
 By default a `Classifier` picks exactly one label. Set `multi_label=True` when one test case can match several, such as a trace that both quotes the wrong price and ignores a tool result:
@@ -450,7 +425,34 @@ flowchart LR
 
 Reviewing costs one extra judge call per returned label, made in parallel under `async_mode`.
 
-## Customize Your Template
+## Advanced Usage
+
+### Agent Profile
+
+Pass an `AgentProfile` to tell the judge what application it is looking at, so it reasons from that application's point of view:
+
+```python
+from deepeval.classifiers import Classifier, AgentProfile
+
+classifier = Classifier(
+    name="topic",
+    labels=["billing", "refund"],
+    description="What the customer wants to talk about.",
+    agent_profile=AgentProfile(
+        description="A billing assistant for a SaaS product.",
+        trace_description="Each trace is one support chat.",
+    ),
+)
+```
+
+There are **TWO** optional parameters when creating an `AgentProfile`:
+
+- [Optional] `description`: what the agent is and does. The review also uses it to tell designed behaviour apart from mistakes. Defaulted to `None`.
+- [Optional] `trace_description`: what one test case or trace represents. Defaulted to `None`.
+
+With an `AgentProfile` but neither description, the judge is told to infer the application's use case from the content.
+
+### Customize Your Template
 
 You can override the default prompts by subclassing `ClassifierTemplate` and passing it as `classification_template`. These are the prompts you can override:
 
