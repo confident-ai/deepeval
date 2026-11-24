@@ -186,7 +186,7 @@ def test_litellm_model_name_resolves_provider_with_configured_region(
         calls["model"] = model
         calls["api_base"] = api_base
         calls["litellm_params"] = litellm_params
-        return "resolved-provider"
+        return (model, "resolved-provider", None, None)
 
     monkeypatch.setitem(
         sys.modules,
@@ -233,3 +233,34 @@ def test_litellm_temperature_explicit_included(settings):
     assert model.temperature == 0.7
     params = model._completion_params([{"type": "text", "text": "hello"}])
     assert params["temperature"] == 0.7
+
+
+def test_litellm_model_name_does_not_include_provider_api_key(
+    monkeypatch, settings
+):
+    # get_llm_provider returns (model, provider, api_key, api_base); the key
+    # read from the environment must never end up in the model name.
+    def fake_get_llm_provider(model, api_base=None, litellm_params=None):
+        return (
+            "deepseek-chat",
+            "deepseek",
+            "sk-FAKE123",
+            "https://api.deepseek.com/beta",
+        )
+
+    monkeypatch.setitem(
+        sys.modules,
+        "litellm",
+        types.SimpleNamespace(get_llm_provider=fake_get_llm_provider),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "litellm.types.router",
+        types.SimpleNamespace(GenericLiteLLMParams=dict),
+    )
+
+    model = _mk_litellm_model(settings, model="deepseek/deepseek-chat")
+
+    name = model.get_model_name()
+    assert "sk-FAKE123" not in name
+    assert name == "deepseek/deepseek-chat (deepseek)"
