@@ -153,7 +153,7 @@ class DAGMetric(BaseMetric):
             return self.score
 
     def upload(self):
-        from rich.console import Console
+        from deepeval.utils import make_console
         from deepeval.confident.api import Api, Endpoints, HttpMethods
         from deepeval.metrics.dag.utils import construct_dag_upload_payload
 
@@ -168,7 +168,7 @@ class DAGMetric(BaseMetric):
         )
         self.metric_id = data.get("id")
         if self.metric_id:
-            Console().print(
+            make_console().print(
                 "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric "
                 f"'{self.name}' [DAG] uploaded successfully "
                 f"(id: [bold]{self.metric_id}[/bold])"
@@ -176,7 +176,7 @@ class DAGMetric(BaseMetric):
         return data
 
     def pull(self):
-        from rich.console import Console
+        from deepeval.utils import make_console
         from deepeval.confident.api import Api, Endpoints, HttpMethods
         from deepeval.metrics.dag.utils import build_dag_from_payload
 
@@ -194,7 +194,7 @@ class DAGMetric(BaseMetric):
             )
         self.dag = build_dag_from_payload(dag_json, multiturn=False)
         self.metric_id = data.get("id")
-        Console().print(
+        make_console().print(
             "[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric "
             f"'{self.name}' [DAG] pulled successfully"
         )

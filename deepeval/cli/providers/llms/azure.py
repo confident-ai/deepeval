@@ -2,9 +2,9 @@
 
 import typer
 from typing import Optional
-from rich import print
 from rich.markup import escape
 
+from deepeval.utils import print
 from deepeval.cli.app import app
 from deepeval.cli.utils import (
     coerce_blank_to_none,

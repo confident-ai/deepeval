@@ -25,7 +25,6 @@ from urllib.parse import urlsplit
 import typer
 from pydantic import SecretStr
 from rich import box
-from rich.console import Console
 from rich.padding import Padding
 from rich.table import Table
 
@@ -42,6 +41,7 @@ from deepeval.key_handler import (
     ModelKeyValues,
     SpeechKeyValues,
 )
+from deepeval.utils import make_console
 
 # Friendly provider labels for the model classes `initialize_model` /
 # `initialize_embedding_model` can return (keyed by class name so we don't
@@ -503,7 +503,7 @@ def diagnose_command(
         typer.echo(json_lib.dumps(report, indent=2))
         return
 
-    console = Console()
+    console = make_console()
 
     def _kv_table(title: str) -> Table:
         table = Table(

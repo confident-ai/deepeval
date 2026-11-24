@@ -50,8 +50,8 @@ from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 import requests
 import typer
 from pydantic import ValidationError
-from rich import print
 
+from deepeval.utils import print
 import deepeval
 from deepeval.cli.auth.api import (
     CliAuthorization,

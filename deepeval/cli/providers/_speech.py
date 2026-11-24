@@ -3,9 +3,9 @@
 from typing import List, Optional
 
 import typer
-from rich import print
 from rich.markup import escape
 
+from deepeval.utils import print
 from deepeval.cli.utils import (
     coerce_blank_to_none,
     handle_save_result as _handle_save_result,

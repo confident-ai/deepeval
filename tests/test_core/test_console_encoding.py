@@ -8,6 +8,7 @@ application's global streams.
 
 import contextlib
 import io
+import pathlib
 import sys
 
 import pytest
@@ -17,7 +18,7 @@ from deepeval import evaluate
 from deepeval.evaluate.configs import CacheConfig
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import LLMTestCase
-from deepeval.utils import make_console
+from deepeval.utils import make_console, print
 
 EMOJI_LINE = "✨ latest metric 🚀 ⚠ WARNING 한국어"
 
@@ -86,6 +87,38 @@ def test_make_console_follows_stdout_redirection():
         console.print("hello from deepeval")
 
     assert "hello from deepeval" in buffer.getvalue()
+
+
+def test_make_console_with_none_stdout_does_not_crash(monkeypatch):
+    # Windowed interpreters (pythonw, --noconsole builds) set sys.stdout to
+    # None. Rich writes and then flushes the console file, which used to hit
+    # None from the proxy and raise AttributeError.
+    monkeypatch.setattr(sys, "stdout", None)
+
+    console = make_console()
+    console.print(EMOJI_LINE)
+    console.file.flush()
+
+    assert console.file.write("still writable") == len("still writable")
+    assert console.is_terminal is False
+
+
+def test_make_console_with_none_stderr_does_not_crash(monkeypatch):
+    monkeypatch.setattr(sys, "stderr", None)
+
+    console = make_console(stderr=True)
+    console.print(EMOJI_LINE)
+    console.file.flush()
+
+
+def test_make_console_with_none_stdout_inside_progress(monkeypatch):
+    # A live display calls flush() on the console file repeatedly, so it must
+    # work with a no-op stream too.
+    monkeypatch.setattr(sys, "stdout", None)
+    console = make_console(force_terminal=True)
+
+    with Progress(console=console, redirect_stdout=True, transient=True):
+        print("printed while a progress bar is live")
 
 
 def test_make_console_inside_progress_redirect(monkeypatch):
@@ -168,3 +201,45 @@ def test_evaluate_with_legacy_encoded_output_does_not_crash(
     # warnings ("⚠ WARNING") are printed with replacement characters
     assert "DeepEval Evaluation Results" in out
     assert "WARNING" in out
+
+
+def test_deepeval_print_is_encoding_safe(monkeypatch):
+    # DeepEval's own modules print with `from deepeval.utils import print`,
+    # not `rich.print`, so markup output also goes through the safe console.
+    stream = _legacy_stream("cp1252")
+    monkeypatch.setattr(sys, "stdout", stream)
+
+    print(EMOJI_LINE)
+
+    out = _read(stream)
+    assert "latest metric" in out
+    assert "✨" not in out
+
+
+# The only consoles in the package that may reach a redirected stream are the
+# ones built by `make_console` itself; the HTML report renders into an
+# in-memory StringIO. Everything else must go through `make_console`.
+_ALLOWED_CONSOLE_LINES = {
+    ("utils.py", "return Console("),
+    ("evaluate/console_report.py", "html_console = Console("),
+}
+
+
+def test_no_plain_console_left_in_package():
+    root = pathlib.Path(__file__).resolve().parents[2] / "deepeval"
+    naked = []
+    for path in sorted(root.rglob("*.py")):
+        rel = path.relative_to(root).as_posix()
+        for number, line in enumerate(
+            path.read_text(encoding="utf-8").splitlines(), 1
+        ):
+            stripped = line.strip()
+            if (
+                "Console(" in line
+                and (rel, stripped) not in _ALLOWED_CONSOLE_LINES
+            ):
+                naked.append(f"{rel}:{number}: {stripped}")
+            elif stripped == "from rich import print":
+                naked.append(f"{rel}:{number}: {stripped}")
+
+    assert naked == []

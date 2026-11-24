@@ -17,8 +17,7 @@ from pathlib import Path
 from typing import Optional
 
 import typer
-from rich import print
-
+from deepeval.utils import make_console, print
 
 _INSTALL_HINT = (
     "[bold red]deepeval inspect[/bold red] requires extras that are not "
@@ -123,7 +122,6 @@ def _print_run_list(target: str) -> None:
         print(f"[dim]{db_path} contains no test runs yet.[/dim]")
         return
 
-    from rich.console import Console
     from rich.table import Table
 
     table = Table(title=str(db_path))
@@ -152,7 +150,7 @@ def _print_run_list(target: str) -> None:
                 else f"{r['evaluation_cost']:.4f}"
             ),
         )
-    Console().print(table)
+    make_console().print(table)
     print(
         "[dim]Open one with: [bold]deepeval inspect "
         f"{db_path} --run-id <id>[/bold][/dim]"

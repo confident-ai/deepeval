@@ -19,16 +19,14 @@ split into `llms`, `tts` and `stt`. General behavior for all of them:
 import typer
 import importlib.metadata
 from typing import List, Optional
-from rich import print
 from rich.markup import escape
-from rich.console import Console
 from rich.table import Table
 from enum import Enum
 from pydantic import SecretStr
 from pydantic_core import PydanticUndefined
 from deepeval.telemetry import capture_cli_command
 from deepeval.config.settings import get_settings
-from deepeval.utils import open_browser
+from deepeval.utils import make_console, open_browser, print
 from deepeval.test_run.test_run import (
     global_test_run_manager,
 )
@@ -480,7 +478,7 @@ def update_settings(
         if shown == 0:
             raise typer.BadParameter(f"No settings matched: {filter_terms!r}")
 
-        Console().print(table)
+        make_console().print(table)
 
     settings = get_settings()
     fields = type(settings).model_fields

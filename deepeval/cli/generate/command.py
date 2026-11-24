@@ -3,8 +3,8 @@ from pathlib import Path
 from typing import Any, List, Optional
 
 import typer
-from rich import print
 
+from deepeval.utils import print
 from deepeval.cli.generate.utils import (
     FileType,
     GenerationMethod,

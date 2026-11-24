@@ -5,7 +5,6 @@ from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import Any, Optional, List, Dict, Union, Tuple
 from rich.table import Table
-from rich import print
 
 
 from deepeval.metrics import BaseMetric
@@ -29,6 +28,7 @@ from deepeval.utils import (
     format_turn,
     len_short,
     make_console,
+    print,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.telemetry import (

@@ -1,7 +1,6 @@
 from asyncio import Task
 from typing import TYPE_CHECKING, Dict, Iterator, List, Optional, Union, Literal
 from dataclasses import dataclass, field
-from rich.console import Console
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
 import json
 import csv
@@ -59,6 +58,7 @@ from deepeval.test_run.test_run import TEMP_FILE_PATH
 from deepeval.utils import (
     convert_keys_to_snake_case,
     get_or_create_event_loop,
+    make_console,
     open_browser,
 )
 from deepeval.test_run import (
@@ -990,7 +990,7 @@ class EvaluationDataset:
             url_params={"alias": alias},
         )
         if link:
-            console = Console()
+            console = make_console()
             console.print(
                 "✅ Dataset successfully pushed to Confident AI! View at "
                 f"[link={link}]{link}[/link]"
@@ -1098,7 +1098,7 @@ class EvaluationDataset:
         self._id = response.id
         self._version = response.version
         if _verbose:
-            console = Console()
+            console = make_console()
             console.print(
                 f"✅ New Dataset version successfully created: {response.version}"
             )
@@ -1149,7 +1149,7 @@ class EvaluationDataset:
             url_params={"alias": alias},
         )
         if link and print_response:
-            console = Console()
+            console = make_console()
             console.print(
                 "✅ Goldens successfully queued to Confident AI! Annotate & finalized them at "
                 f"[link={link}]{link}[/link]"
@@ -1165,7 +1165,7 @@ class EvaluationDataset:
             endpoint=Endpoints.DATASET_ALIAS_ENDPOINT,
             url_params={"alias": alias},
         )
-        console = Console()
+        console = make_console()
         console.print("✅ Dataset successfully deleted from Confident AI!")
 
     def update_golden(
@@ -1198,7 +1198,7 @@ class EvaluationDataset:
             body=golden_body,
             url_params={"goldenId": golden.id, "alias": dataset_alias},
         )
-        console = Console()
+        console = make_console()
         console.print("✅ Golden successfully updated on Confident AI!")
 
     def delete_golden(
@@ -1220,7 +1220,7 @@ class EvaluationDataset:
             endpoint=Endpoints.GOLDEN_ENDPOINT,
             url_params={"goldenId": golden_id, "alias": dataset_alias},
         )
-        console = Console()
+        console = make_console()
         console.print("✅ Golden successfully deleted from Confident AI!")
 
     def generate_goldens_from_docs(

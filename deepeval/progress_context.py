@@ -8,22 +8,20 @@ from rich.progress import (
 )
 from typing import Optional, Generator
 from contextlib import contextmanager
-from rich.console import Console
 from typing import Dict, Tuple
-import sys
 
 from deepeval.telemetry import (
     capture_synthesizer_run,
     capture_conversation_simulator_run,
 )
-from deepeval.utils import custom_console
+from deepeval.utils import custom_console, make_console
 
 
 @contextmanager
 def progress_context(
     description: str, total: int = 9999, transient: bool = True
 ):
-    console = Console(file=sys.stderr)
+    console = make_console(stderr=True)
     with Progress(
         SpinnerColumn(),
         BarColumn(bar_width=60),
