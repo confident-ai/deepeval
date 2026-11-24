@@ -444,7 +444,7 @@ flowchart LR
 - Every `Classification` gets a `confidence`, and `classifications` is sorted by it, most confident first.
 - Labels below `min_confidence` are dropped. When every label is dropped, `label` is `None` with no error, and `reason` says which label was proposed and why the review dropped it.
 - The review sees the label's description and, with an `evidence_config`, the passages the first call cited.
-- A review whose reply cannot be read keeps the label, with `confidence=None`.
+- A review whose reply cannot be read is asked once more; if it still cannot be read, the label is dropped and the `reason` says so.
 
 Reviewing costs one extra judge call per returned label, made in parallel under `async_mode`.
 
