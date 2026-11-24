@@ -280,7 +280,8 @@ class OpenAIDecisionModel(DeepEvalBaseSystemOneModel):
         missing = [key for key in questions if key not in answered]
         if missing:
             raise DeepEvalError(
-                f"OpenAI returned no answer for question(s): {', '.join(missing)}"
+                f"{self.get_model_name()} returned no answer for question(s): "
+                f"{', '.join(missing)}"
             )
         return answers, self.calculate_cost(input_tokens, output_tokens)
 
@@ -288,7 +289,9 @@ class OpenAIDecisionModel(DeepEvalBaseSystemOneModel):
         name = answer.get("name")
         kind = answer.get("type")
         if kind == "refusal":
-            raise DeepEvalError(f"OpenAI refused to answer question '{name}'.")
+            raise DeepEvalError(
+                f"{self.get_model_name()} refused to answer question '{name}'."
+            )
         if kind == "predicate":
             answers.nouls[name] = NoulAnswer(probability=answer["probability"])
         elif kind == "choice":
@@ -311,7 +314,8 @@ class OpenAIDecisionModel(DeepEvalBaseSystemOneModel):
             )
         else:
             raise DeepEvalError(
-                f"Unexpected OpenAI decision answer: {answer!r}"
+                f"Unexpected decision answer from {self.get_model_name()}: "
+                f"{answer!r}"
             )
 
     ###############################################

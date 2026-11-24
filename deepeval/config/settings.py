@@ -798,6 +798,9 @@ class Settings(BaseSettings):
         description="TypeSafe AI input token cost (used for cost reporting).",
     )
 
+    # Nace (System One, Drex): `NaceModel`.
+    NACE_API_KEY: Optional[SecretStr] = Field(None, description="Nace API key.")
+
     #
     # Speech Keys (TTS/STT)
     #
