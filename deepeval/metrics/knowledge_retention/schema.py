@@ -1,5 +1,7 @@
-from typing import Dict, Optional, Union, List
+from typing import Dict, List, Optional, Union
+
 from pydantic import BaseModel, ConfigDict
+
 from deepeval.metrics.base_metric import YesNo
 
 
@@ -14,7 +16,7 @@ class Knowledge(BaseModel):
 class KnowledgeRetentionVerdict(BaseModel):
     verdict: YesNo
     reason: Optional[str] = None
-    model_config = ConfigDict(extra="forbid")
+    model_config = ConfigDict(extra="ignore")
 
 
 class KnowledgeRetentionScoreReason(BaseModel):
