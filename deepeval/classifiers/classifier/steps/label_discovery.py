@@ -73,6 +73,12 @@ class MergedLabels:
         return None if name is None else self.by_name.get(name)
 
 
+@dataclass(frozen=True)
+class LabelDiscoveryStep:
+    merged_labels: Dict[str, str]
+    seconds: float
+
+
 def merge_new_labels(
     classifier: "Classifier",
     classification_results: List[ClassificationResult],

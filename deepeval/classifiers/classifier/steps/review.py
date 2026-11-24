@@ -1,6 +1,7 @@
 import asyncio
 import json
 import logging
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Optional
 
 from deepeval.classifiers.classifier.schema import LabelReview
@@ -23,26 +24,40 @@ if TYPE_CHECKING:
 logger = logging.getLogger(__name__)
 
 
+@dataclass(frozen=True)
+class ClassificationReview:
+    label: str
+    kept: bool
+    confidence: Optional[float] = None
+    reason: str = ""
+
+
+@dataclass(frozen=True)
+class ReviewStep:
+    reviews: List[ClassificationReview]
+    seconds: float
+
+
 def review_classifications(
     classifier: "Classifier", prompt: "ClassificationPrompt"
-) -> None:
+) -> List[ClassificationReview]:
     reviews = [
         _review(classifier, _build_review_prompt(classifier, c, prompt))
         for c in classifier.classifications
     ]
-    _apply_review_results(classifier, reviews)
+    return _apply_review_results(classifier, reviews)
 
 
 async def a_review_classifications(
     classifier: "Classifier", prompt: "ClassificationPrompt"
-) -> None:
+) -> List[ClassificationReview]:
     reviews = await asyncio.gather(
         *(
             _a_review(classifier, _build_review_prompt(classifier, c, prompt))
             for c in classifier.classifications
         )
     )
-    _apply_review_results(classifier, reviews)
+    return _apply_review_results(classifier, reviews)
 
 
 def _review(classifier: "Classifier", prompt: str) -> Optional[LabelReview]:
@@ -83,18 +98,32 @@ async def _a_review(
 
 def _apply_review_results(
     classifier: "Classifier", reviews: List[Optional[LabelReview]]
-) -> None:
+) -> List[ClassificationReview]:
     kept_classifications, dropped_classifications = [], []
+    classification_reviews = []
     for classification, review in zip(classifier.classifications, reviews):
         if review is not None:
             classification.confidence = review.confidence
-        if (
+        kept = (
             review is not None
             and review.confidence >= classifier.review_config.min_confidence
-        ):
+        )
+        if kept:
             kept_classifications.append(classification)
         else:
             dropped_classifications.append((classification, review))
+        classification_reviews.append(
+            ClassificationReview(
+                label=classification.label,
+                kept=kept,
+                confidence=review.confidence if review is not None else None,
+                reason=(
+                    review.explanation()
+                    if review is not None
+                    else "The review could not be read."
+                ),
+            )
+        )
     kept_classifications.sort(key=lambda c: -c.confidence)
     classifier.classifications = kept_classifications
     top_classification = (
@@ -120,6 +149,7 @@ def _apply_review_results(
                 if part
             )
         )
+    return classification_reviews
 
 
 def _build_review_prompt(

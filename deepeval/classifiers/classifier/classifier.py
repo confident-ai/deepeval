@@ -1,6 +1,7 @@
 """LLM-judged classifier: assigns one or more labels to a test case."""
 
 import asyncio
+import time
 from dataclasses import dataclass
 from typing import Dict, List, Optional, Sequence, Type, Union, cast
 
@@ -25,6 +26,7 @@ from deepeval.classifiers.classifier.schema import (
     SuggestedEvidencedClassificationResult,
 )
 from deepeval.classifiers.classifier.steps.classification import (
+    ClassificationStep,
     a_generate_classification_results,
     generate_classification_results,
 )
@@ -35,12 +37,14 @@ from deepeval.classifiers.classifier.steps.evidence import (
     verify_evidence,
 )
 from deepeval.classifiers.classifier.steps.label_discovery import (
+    LabelDiscoveryStep,
     LabelPool,
     MergedLabels,
     a_merge_new_labels,
     merge_new_labels,
 )
 from deepeval.classifiers.classifier.steps.review import (
+    ReviewStep,
     a_review_classifications,
     review_classifications,
 )
@@ -112,6 +116,13 @@ class ClassificationPrompt:
     shown: Optional[ShownContent] = None
 
 
+@dataclass
+class ClassifierSteps:
+    classification: Optional[ClassificationStep] = None
+    label_discovery: Optional[LabelDiscoveryStep] = None
+    review: Optional[ReviewStep] = None
+
+
 class Classifier(BaseClassifier):
     """Labels a test case, conversation or trace with an LLM judge, choosing
     from your labels and, when configured, citing evidence, reviewing each
@@ -143,6 +154,10 @@ class Classifier(BaseClassifier):
     ):
         if not name or not name.strip():
             raise ValueError("Classifier 'name' cannot be empty.")
+        if max_content_chars <= len(TRUNCATION_MARKER):
+            raise ValueError(
+                f"max_content_chars must be greater than {len(TRUNCATION_MARKER)}."
+            )
 
         self.name = name
         self.labels = (
@@ -181,10 +196,6 @@ class Classifier(BaseClassifier):
         self.classification_template = classification_template
         self.description = description
         self.multi_label = multi_label
-        if max_content_chars <= len(TRUNCATION_MARKER):
-            raise ValueError(
-                f"max_content_chars must be greater than {len(TRUNCATION_MARKER)}."
-            )
         self.max_content_chars = max_content_chars
         self.evidence_config = evidence_config
         self.review_config = review_config
@@ -231,15 +242,24 @@ class Classifier(BaseClassifier):
             else:
                 prompt = self._build_prompt(test_case)
                 schema = self._choose_output_schema()
+                started = time.perf_counter()
                 if schema is not None:
                     classification_results = generate_classification_results(
                         self, prompt.text, schema
                     )
+                    classification_seconds = time.perf_counter() - started
+                    started = time.perf_counter()
                     merged_labels = merge_new_labels(
                         self, classification_results
                     )
+                    label_discovery_seconds = time.perf_counter() - started
                     self._postprocess_classifications(
                         classification_results, test_case, prompt, merged_labels
+                    )
+                    self._record_steps(
+                        merged_labels,
+                        classification_seconds,
+                        label_discovery_seconds,
                     )
                 else:
                     raw_label, reason = generate_classification(
@@ -252,6 +272,7 @@ class Classifier(BaseClassifier):
                             else None
                         ),
                     )
+                    classification_seconds = time.perf_counter() - started
                     self._postprocess_classifications(
                         [
                             ClassificationResult.model_construct(
@@ -262,8 +283,15 @@ class Classifier(BaseClassifier):
                         prompt,
                         MergedLabels(),
                     )
+                    self._record_steps(
+                        MergedLabels(), classification_seconds, 0.0
+                    )
                 if self.review_config:
-                    review_classifications(self, prompt)
+                    started = time.perf_counter()
+                    reviews = review_classifications(self, prompt)
+                    self.steps.review = ReviewStep(
+                        reviews=reviews, seconds=time.perf_counter() - started
+                    )
 
             return self.label
 
@@ -284,17 +312,26 @@ class Classifier(BaseClassifier):
         ):
             prompt = self._build_prompt(test_case)
             schema = self._choose_output_schema()
+            started = time.perf_counter()
             if schema is not None:
                 classification_results = (
                     await a_generate_classification_results(
                         self, prompt.text, schema
                     )
                 )
+                classification_seconds = time.perf_counter() - started
+                started = time.perf_counter()
                 merged_labels = await a_merge_new_labels(
                     self, classification_results
                 )
+                label_discovery_seconds = time.perf_counter() - started
                 self._postprocess_classifications(
                     classification_results, test_case, prompt, merged_labels
+                )
+                self._record_steps(
+                    merged_labels,
+                    classification_seconds,
+                    label_discovery_seconds,
                 )
             else:
                 raw_label, reason = await a_generate_classification(
@@ -307,6 +344,7 @@ class Classifier(BaseClassifier):
                         else None
                     ),
                 )
+                classification_seconds = time.perf_counter() - started
                 self._postprocess_classifications(
                     [
                         ClassificationResult.model_construct(
@@ -317,8 +355,13 @@ class Classifier(BaseClassifier):
                     prompt,
                     MergedLabels(),
                 )
+                self._record_steps(MergedLabels(), classification_seconds, 0.0)
             if self.review_config:
-                await a_review_classifications(self, prompt)
+                started = time.perf_counter()
+                reviews = await a_review_classifications(self, prompt)
+                self.steps.review = ReviewStep(
+                    reviews=reviews, seconds=time.perf_counter() - started
+                )
             return self.label
 
     def copy(self) -> "Classifier":
@@ -432,6 +475,28 @@ class Classifier(BaseClassifier):
         ):
             self.error = self._unresolved_error(
                 unresolved_labels[0] if unresolved_labels else None
+            )
+
+    def _record_steps(
+        self,
+        merged_labels: MergedLabels,
+        classification_seconds: float,
+        label_discovery_seconds: float,
+    ) -> None:
+        self.steps.classification = ClassificationStep(
+            classifications=[
+                classification.model_copy(deep=True)
+                for classification in self.classifications
+            ],
+            seconds=classification_seconds,
+        )
+        if self.label_discovery_config:
+            self.steps.label_discovery = LabelDiscoveryStep(
+                merged_labels={
+                    name: label.name
+                    for name, label in merged_labels.by_name.items()
+                },
+                seconds=label_discovery_seconds,
             )
 
     def _resolve_label_from_classification_result(
@@ -671,4 +736,5 @@ class Classifier(BaseClassifier):
         self.label = None
         self.reason = None
         self.classifications: List[Classification] = []
+        self.steps = ClassifierSteps()
         self.error = None
