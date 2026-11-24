@@ -282,3 +282,55 @@ def test_new_client_submits_server_questionnaire_answers(
         "questionnaireVersion": 1,
         "questionnaireAnswers": answers,
     }
+
+
+@pytest.fixture
+def styled_confirm(monkeypatch):
+    import questionary
+    import typer
+    from prompt_toolkit.input import create_pipe_input
+    from prompt_toolkit.output import DummyOutput
+
+    from deepeval.cli.auth import flow
+
+    real_confirm = questionary.confirm
+    monkeypatch.setattr(flow, "_is_interactive", lambda: True)
+
+    def fall_back(*args, **kwargs):
+        raise AssertionError("fell back to the plain prompt")
+
+    monkeypatch.setattr(typer, "confirm", fall_back)
+
+    def answer(keys: str):
+        with create_pipe_input() as pipe:
+            pipe.send_text(keys)
+            monkeypatch.setattr(
+                questionary,
+                "confirm",
+                lambda *args, **kwargs: real_confirm(
+                    *args, input=pipe, output=DummyOutput(), **kwargs
+                ),
+            )
+            return flow.prompt_confirm("Add it?")
+
+    return answer
+
+
+@pytest.mark.parametrize(("keys", "expected"), [("y", True), ("n", False)])
+def test_styled_confirm_answers_without_falling_back(
+    styled_confirm, keys: str, expected: bool
+) -> None:
+    assert styled_confirm(keys) is expected
+
+
+def test_styled_confirm_takes_the_default_on_enter(styled_confirm) -> None:
+    assert styled_confirm("\r") is True
+
+
+def test_styled_confirm_raises_abort_on_ctrl_c_like_typer_confirm(
+    styled_confirm,
+) -> None:
+    import typer
+
+    with pytest.raises(typer.Abort):
+        styled_confirm("\x03")

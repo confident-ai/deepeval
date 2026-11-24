@@ -158,6 +158,29 @@ def prompt_text(message: str, default: Optional[str] = None) -> str:
     return typer.prompt(message, default=default)
 
 
+def prompt_confirm(message: str, default: bool = True) -> bool:
+    """Styled yes/no prompt matching `prompt_select`, with a plain fallback.
+    Raises typer.Abort when the user cancels, like `typer.confirm`."""
+    if _is_interactive():
+        try:
+            import questionary
+
+            return bool(
+                questionary.confirm(
+                    message,
+                    default=default,
+                    qmark="?",
+                    style=_questionary_style(),
+                ).unsafe_ask()
+            )
+        except KeyboardInterrupt:
+            raise typer.Abort()
+        except Exception:
+            pass
+
+    return typer.confirm(message, default=default)
+
+
 def prompt_select(message: str, choices: Sequence[Tuple[str, Any]]) -> Any:
     """Arrow-key selection when the terminal supports it, numbered fallback
     otherwise."""

@@ -495,6 +495,10 @@ class Settings(BaseSettings):
         None,
         description="Disable SSL/TLS certificate verification for requests to the Confident AI API server (only use for self-hosted endpoints with self-signed certificates).",
     )
+    CONFIDENT_CI_LINK_OPT_OUT: Optional[bool] = Field(
+        None,
+        description="Don't send the repository, branch, commit and pull request of a `deepeval test run` in GitHub Actions to Confident AI, so the run isn't listed on the CI/CD page.",
+    )
 
     # General
     TEMPERATURE: Optional[confloat(ge=0, le=2)] = Field(
@@ -1189,6 +1193,7 @@ class Settings(BaseSettings):
     @field_validator(
         "CONFIDENT_OPEN_BROWSER",
         "CONFIDENT_DISABLE_SSL",
+        "CONFIDENT_CI_LINK_OPT_OUT",
         "CONFIDENT_TRACE_FLUSH",
         "CONFIDENT_TRACE_INTERNAL",
         "CONFIDENT_TRACE_VERBOSE",

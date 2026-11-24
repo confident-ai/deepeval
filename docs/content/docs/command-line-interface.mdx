@@ -627,6 +627,24 @@ npx deepeval gate
 Your project must be associated with a governance policy. If it isn't, the command exits non-zero and tells you to contact your organization administrator.
 :::
 
+<Only id="python">
+
+### `link-ci`
+
+Open a pull request that runs your last `deepeval test run` with GitHub Actions on every pull request and every push to your default branch. Each run is listed under the repository on Confident AI's CI/CD page. Run it in the directory where you ran `deepeval test run`. See [Unit Testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd#set-up-with-deepeval-link-ci) for what it sets up.
+
+```bash
+deepeval link-ci [PATH]
+```
+
+| Option          | Description                                                                                                  |
+| --------------- | ------------------------------------------------------------------------------------------------------------ |
+| `PATH`          | The tests to run in CI. Defaults to the path and options of your last `deepeval test run` in this directory. |
+| `--yes`, `-y`   | Answer yes to every prompt: add uncommitted test files and set repository secrets with `gh`.                 |
+| `--branch`      | The branch to open the pull request from. Defaults to `deepeval/link-ci`.                                    |
+
+</Only>
+
 ## Persistence & Secrets
 
 All `set-*` / `unset-*` commands follow the same rules:
