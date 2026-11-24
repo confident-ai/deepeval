@@ -1,3 +1,6 @@
+from types import SimpleNamespace
+
+import pytest
 import deepeval.models.llms.local_model as local_mod
 
 from pydantic import SecretStr
@@ -169,3 +172,143 @@ def test_local_generate_returns_zero_cost(monkeypatch):
     output, cost = model.generate("test prompt")
     assert cost == 0.0
     assert output == "hello"
+
+
+#############################################
+# Per-call clients are closed after the call #
+#############################################
+
+
+def _install_closable_clients(monkeypatch):
+    """Stub OpenAI/AsyncOpenAI with clients that record when they are closed.
+
+    Returns the list that every constructed client is appended to, so tests
+    can check how many clients a call built and whether each one was closed.
+    """
+
+    class _Created(list):
+        client_cls = None
+
+    created = _Created()
+
+    def _response():
+        return SimpleNamespace(
+            choices=[SimpleNamespace(message=SimpleNamespace(content="hello"))]
+        )
+
+    class _FakeClient:
+        fail_with = None
+
+        def __init__(self, *args, **kwargs):
+            self.kwargs = kwargs
+            self.closed = False
+            self.chat = SimpleNamespace(
+                completions=SimpleNamespace(create=self._create)
+            )
+            created.append(self)
+
+        def _create(self, **kwargs):
+            if _FakeClient.fail_with is not None:
+                raise _FakeClient.fail_with
+            return _response()
+
+        def close(self):
+            self.closed = True
+
+    class _FakeAsyncClient(_FakeClient):
+        async def _create(self, **kwargs):
+            return super()._create(**kwargs)
+
+        async def close(self):
+            self.closed = True
+
+    monkeypatch.setattr(local_mod, "OpenAI", _FakeClient, raising=True)
+    monkeypatch.setattr(
+        local_mod, "AsyncOpenAI", _FakeAsyncClient, raising=True
+    )
+    created.client_cls = _FakeClient
+    return created
+
+
+def _local_model(**kwargs):
+    return LocalModel(
+        model="test-model",
+        api_key="test-key",
+        base_url="http://localhost:11434/v1",
+        **kwargs,
+    )
+
+
+def test_generate_closes_the_client_it_built_for_the_call(monkeypatch):
+    created = _install_closable_clients(monkeypatch)
+    model = _local_model()
+    created.clear()  # drop the long-lived client built in __init__
+
+    assert model.generate("one") == ("hello", 0.0)
+    assert model.generate("two") == ("hello", 0.0)
+
+    assert len(created) == 2
+    assert all(client.closed for client in created)
+
+
+async def test_a_generate_closes_the_client_it_built_for_the_call(monkeypatch):
+    created = _install_closable_clients(monkeypatch)
+    model = _local_model()
+    created.clear()
+
+    assert await model.a_generate("one") == ("hello", 0.0)
+    assert await model.a_generate("two") == ("hello", 0.0)
+
+    assert len(created) == 2
+    assert all(client.closed for client in created)
+
+
+def test_generate_closes_the_client_when_the_call_raises(monkeypatch):
+    created = _install_closable_clients(monkeypatch)
+    model = _local_model()
+    created.clear()
+    created.client_cls.fail_with = RuntimeError("boom")
+
+    with pytest.raises(RuntimeError, match="boom"):
+        model.generate("one")
+
+    assert created and all(client.closed for client in created)
+
+
+async def test_a_generate_closes_the_client_when_the_call_raises(monkeypatch):
+    created = _install_closable_clients(monkeypatch)
+    model = _local_model()
+    created.clear()
+    created.client_cls.fail_with = RuntimeError("boom")
+
+    with pytest.raises(RuntimeError, match="boom"):
+        await model.a_generate("one")
+
+    assert created and all(client.closed for client in created)
+
+
+def test_user_supplied_http_client_is_left_open(monkeypatch):
+    """Closing an SDK client closes its transport, which the user owns here."""
+    created = _install_closable_clients(monkeypatch)
+    shared_transport = object()
+    model = _local_model(http_client=shared_transport)
+    created.clear()
+
+    model.generate("one")
+
+    assert len(created) == 1
+    assert created[0].kwargs["http_client"] is shared_transport
+    assert not created[0].closed
+
+
+async def test_user_supplied_http_client_is_left_open_async(monkeypatch):
+    created = _install_closable_clients(monkeypatch)
+    shared_transport = object()
+    model = _local_model(http_client=shared_transport)
+    created.clear()
+
+    await model.a_generate("one")
+
+    assert len(created) == 1
+    assert created[0].kwargs["http_client"] is shared_transport
+    assert not created[0].closed

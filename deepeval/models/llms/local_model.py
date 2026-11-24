@@ -1,3 +1,4 @@
+import contextlib
 from typing import Optional, Tuple, Union, Dict, List
 from pydantic import BaseModel, SecretStr
 from openai import OpenAI, AsyncOpenAI
@@ -96,13 +97,13 @@ class LocalModel(DeepEvalBaseLLM):
             inline_remote_images=True,
         )
 
-        client = self.load_model(async_mode=False)
-        response: ChatCompletion = client.chat.completions.create(
-            model=self.name,
-            messages=[{"role": "user", "content": content}],
-            temperature=self.temperature,
-            **self.generation_kwargs,
-        )
+        with self._scoped_client() as client:
+            response: ChatCompletion = client.chat.completions.create(
+                model=self.name,
+                messages=[{"role": "user", "content": content}],
+                temperature=self.temperature,
+                **self.generation_kwargs,
+            )
         res_content = response.choices[0].message.content
 
         if schema:
@@ -126,13 +127,13 @@ class LocalModel(DeepEvalBaseLLM):
             inline_remote_images=True,
         )
 
-        client = self.load_model(async_mode=True)
-        response: ChatCompletion = await client.chat.completions.create(
-            model=self.name,
-            messages=[{"role": "user", "content": content}],
-            temperature=self.temperature,
-            **self.generation_kwargs,
-        )
+        async with self._scoped_async_client() as client:
+            response: ChatCompletion = await client.chat.completions.create(
+                model=self.name,
+                messages=[{"role": "user", "content": content}],
+                temperature=self.temperature,
+                **self.generation_kwargs,
+            )
         res_content = response.choices[0].message.content
 
         if schema:
@@ -155,6 +156,44 @@ class LocalModel(DeepEvalBaseLLM):
         if not async_mode:
             return self._build_client(OpenAI)
         return self._build_client(AsyncOpenAI)
+
+    def _owns_http_client(self) -> bool:
+        """Whether clients built by this model own their HTTP transport.
+
+        When the user passes ``http_client`` through ``kwargs``, every client
+        this model builds wraps that same object, and ``close()`` would shut
+        it down for all later calls, so its lifetime stays with the user.
+        """
+        return (self.kwargs or {}).get("http_client") is None
+
+    @contextlib.contextmanager
+    def _scoped_client(self):
+        """Yield a fresh ``OpenAI`` client scoped to a single call.
+
+        A new client is built per call, so it is closed again on exit instead
+        of being left to the garbage collector.
+        """
+        client = self.load_model(async_mode=False)
+        try:
+            yield client
+        finally:
+            if self._owns_http_client():
+                client.close()
+
+    @contextlib.asynccontextmanager
+    async def _scoped_async_client(self):
+        """Yield a fresh ``AsyncOpenAI`` client scoped to a single call.
+
+        The client is closed in the event loop that created it. Leaving it to
+        the garbage collector leaks connections and, once that loop is gone,
+        can print ``RuntimeError: Event loop is closed`` tracebacks.
+        """
+        client = self.load_model(async_mode=True)
+        try:
+            yield client
+        finally:
+            if self._owns_http_client():
+                await client.close()
 
     def _client_kwargs(self) -> Dict:
         """
