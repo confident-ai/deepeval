@@ -2,11 +2,12 @@ import asyncio
 import json
 import logging
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, List, Optional
+from typing import TYPE_CHECKING, List, Optional, Union
 
 from deepeval.classifiers.classifier.schema import LabelReview
 from deepeval.classifiers.classifier.steps.classification import (
     MAX_GENERATION_ATTEMPTS,
+    PROVIDER_ERRORS,
 )
 from deepeval.errors import DeepEvalError
 from deepeval.metrics.utils.generation import (
@@ -22,6 +23,8 @@ if TYPE_CHECKING:
     )
 
 logger = logging.getLogger(__name__)
+
+_NO_RESPONSE = "The reviewer did not respond."
 
 
 @dataclass(frozen=True)
@@ -60,7 +63,9 @@ async def a_review_classifications(
     return _apply_review_results(classifier, reviews)
 
 
-def _review(classifier: "Classifier", prompt: str) -> Optional[LabelReview]:
+def _review(
+    classifier: "Classifier", prompt: str
+) -> Union[LabelReview, str, None]:
     schema = classifier.review_schema
     for _ in range(MAX_GENERATION_ATTEMPTS):
         try:
@@ -74,12 +79,15 @@ def _review(classifier: "Classifier", prompt: str) -> Optional[LabelReview]:
         except (ValueError, DeepEvalError) as error:
             logger.warning(f"Unreadable review: {error}")
             classifier.error = None
+        except PROVIDER_ERRORS as error:
+            logger.warning(f"Review call failed; keeping the label: {error}")
+            return _NO_RESPONSE
     return None
 
 
 async def _a_review(
     classifier: "Classifier", prompt: str
-) -> Optional[LabelReview]:
+) -> Union[LabelReview, str, None]:
     schema = classifier.review_schema
     for _ in range(MAX_GENERATION_ATTEMPTS):
         try:
@@ -93,15 +101,26 @@ async def _a_review(
         except (ValueError, DeepEvalError) as error:
             logger.warning(f"Unreadable review: {error}")
             classifier.error = None
+        except PROVIDER_ERRORS as error:
+            logger.warning(f"Review call failed; keeping the label: {error}")
+            return _NO_RESPONSE
     return None
 
 
 def _apply_review_results(
-    classifier: "Classifier", reviews: List[Optional[LabelReview]]
+    classifier: "Classifier", reviews: List[Union[LabelReview, str, None]]
 ) -> List[ClassificationReview]:
     kept_classifications, dropped_classifications = [], []
     classification_reviews = []
     for classification, review in zip(classifier.classifications, reviews):
+        if review == _NO_RESPONSE:
+            kept_classifications.append(classification)
+            classification_reviews.append(
+                ClassificationReview(
+                    label=classification.label, kept=True, reason=_NO_RESPONSE
+                )
+            )
+            continue
         if review is not None:
             classification.confidence = review.confidence
         kept = (
@@ -124,7 +143,9 @@ def _apply_review_results(
                 ),
             )
         )
-    kept_classifications.sort(key=lambda c: -c.confidence)
+    kept_classifications.sort(
+        key=lambda c: -1.0 if c.confidence is None else -c.confidence
+    )
     classifier.classifications = kept_classifications
     top_classification = (
         kept_classifications[0] if kept_classifications else None

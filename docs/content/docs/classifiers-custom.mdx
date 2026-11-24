@@ -360,7 +360,7 @@ Requests to move to a higher plan.
 There are **FIVE** optional parameters when creating a `LabelDiscoveryConfig`:
 
 - [Optional] `candidate_labels`: a list of `Label`s or strings proposed earlier but not adopted yet, used to seed the classifier's label pool. Defaulted to `[]`.
-- [Optional] `embedding_model`: a string or any `DeepEvalBaseEmbeddingModel`, used to [merge near-duplicates](#label-discovery) by similarity before asking the judge. Defaulted to deepeval's default embedding model, the same one the `Synthesizer` uses. Label discovery always embeds label names, so it needs an [embedding model](/guides/guides-using-custom-embedding-models) to be available.
+- [Optional] `embedding_model`: a string or any `DeepEvalBaseEmbeddingModel`, used to [merge near-duplicates](#label-discovery) by similarity before asking the judge. Defaulted to deepeval's default embedding model, the same one the `Synthesizer` uses. Label discovery always embeds label names, so it needs an [embedding model](/guides/guides-using-custom-embedding-models) to be available. If embedding fails twice, names are compared by the words they share instead, and a merge judge call the provider fails keeps the new label.
 - [Optional] `similarity_threshold`: the cosine similarity at or above which a new label is merged into an existing one without asking the judge. Defaulted to `0.92`.
 - [Optional] `top_k`: how many of the most similar existing labels the judge compares a new label against when deciding whether to merge it. Defaulted to `15`.
 - [Optional] `max_new_labels`: the most new labels added to the pool from one test case; proposals past the cap can still merge into existing labels. Defaulted to `None` (no cap).
@@ -435,6 +435,7 @@ flowchart LR
 - Labels below `min_confidence` are dropped. When every label is dropped, `label` is `None` with no error, and `reason` says which label was proposed and why the review dropped it.
 - The review sees the label's description and, with an `evidence_config`, the passages the first call cited.
 - A review whose reply cannot be read is asked once more; if it still cannot be read, the label is dropped and the `reason` says so.
+- A review the model provider fails to answer (a rate limit or timeout) keeps the label without a `confidence`, and its `ClassificationReview` reason says the reviewer did not respond.
 
 Reviewing costs one extra judge call per returned label, made in parallel under `async_mode`.
 

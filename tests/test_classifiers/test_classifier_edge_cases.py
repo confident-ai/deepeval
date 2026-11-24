@@ -1,6 +1,9 @@
+import httpx
+import openai
 import pytest
 
 from deepeval.classifiers import (
+    ReviewConfig,
     Classifier,
     EvidenceConfig,
     Label,
@@ -22,7 +25,7 @@ def _classify(reply, **kwargs):
     classifier = Classifier(
         name="t",
         labels=kwargs.pop("labels", LABELS),
-        model=ReplyModel(reply),
+        model=kwargs.pop("model", None) or ReplyModel(reply),
         async_mode=False,
         **kwargs,
     )
@@ -146,19 +149,89 @@ class ShortEmbedding(WordEmbedding):
         return super().embed_texts(texts)[:1]
 
 
-def test_embedding_model_returning_too_few_vectors_is_a_clear_error():
-    with pytest.raises(ValueError, match="vectors for"):
-        _classify(
+class FailingEmbedding(WordEmbedding):
+    def embed_texts(self, texts):
+        raise openai.APITimeoutError(request=httpx.Request("POST", "http://e"))
+
+
+@pytest.mark.parametrize("embedding", [ShortEmbedding(), FailingEmbedding()])
+def test_a_failed_embedding_falls_back_to_shared_words(embedding):
+    classifier = _classify(
+        {"label": "Refund Delay", "reason": "r", "new_label_description": "d"},
+        labels=[Label("pricing", "Asks a price.")],
+        label_discovery_config=LabelDiscoveryConfig(embedding_model=embedding),
+    )
+    assert classifier.label == "Refund Delay" and classifier.error is None
+
+
+class FailingCallModel(ReplyModel):
+    def __init__(self, reply, failing_prompt):
+        super().__init__(reply)
+        self.failing_prompt = failing_prompt
+
+    def respond(self, prompt):
+        if self.failing_prompt in prompt:
+            raise openai.APITimeoutError(
+                request=httpx.Request("POST", "http://m")
+            )
+        return self.reply
+
+
+def test_a_review_the_provider_fails_keeps_the_label_unreviewed():
+    classifier = Classifier(
+        name="t",
+        labels=LABELS,
+        model=FailingCallModel(
+            {"label": LABELS[0].name, "reason": "r"}, "Label:\n"
+        ),
+        review_config=ReviewConfig(),
+        async_mode=False,
+    )
+    classifier.classify(CASE, _show_indicator=False)
+    assert classifier.label == LABELS[0].name
+    assert classifier.classifications[0].confidence is None
+    [review] = classifier.steps.review.reviews
+    assert review.kept and review.reason == "The reviewer did not respond."
+
+
+def test_a_merge_judge_the_provider_fails_keeps_the_new_label():
+    classifier = _classify(
+        {"label": "Refund Delay", "reason": "r", "new_label_description": "d"},
+        labels=[Label("Refund Request", "Asks for a refund.")],
+        model=FailingCallModel(
             {
                 "label": "Refund Delay",
                 "reason": "r",
                 "new_label_description": "d",
             },
-            labels=[Label("pricing", "Asks a price.")],
-            label_discovery_config=LabelDiscoveryConfig(
-                embedding_model=ShortEmbedding()
-            ),
-        )
+            "newly proposed classifier label",
+        ),
+        label_discovery_config=LabelDiscoveryConfig(
+            embedding_model=FailingEmbedding()
+        ),
+    )
+    assert classifier.label == "Refund Delay" and classifier.error is None
+
+
+def test_turn_metadata_reaches_the_judge():
+    model = ReplyModel({"label": LABELS[0].name, "reason": "r"})
+    classifier = Classifier(
+        name="t", labels=LABELS, model=model, async_mode=False
+    )
+    classifier.classify(
+        ConversationalTestCase(
+            turns=[
+                Turn(role="user", content="hi"),
+                Turn(
+                    role="assistant",
+                    content="sorry",
+                    metadata={"error": "Timeout"},
+                ),
+            ]
+        ),
+        _show_indicator=False,
+    )
+    assert "Timeout" in model.prompts[0]
 
 
 def test_label_over_the_cap_explains_itself():

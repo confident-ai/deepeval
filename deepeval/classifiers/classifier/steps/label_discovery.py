@@ -1,4 +1,6 @@
 import json
+import logging
+import re
 import threading
 from dataclasses import dataclass, field
 from typing import (
@@ -17,6 +19,7 @@ from deepeval.classifiers.classifier.schema import (
 )
 from deepeval.classifiers.classifier.steps.classification import (
     MAX_GENERATION_ATTEMPTS,
+    PROVIDER_ERRORS,
 )
 from deepeval.classifiers.utils import (
     LabelOrigin,
@@ -31,6 +34,8 @@ from deepeval.metrics.utils.generation import (
 
 if TYPE_CHECKING:
     from deepeval.classifiers.classifier.classifier import Classifier
+
+logger = logging.getLogger(__name__)
 
 _MERGE_EXTRACTION = dict(
     schema_cls=LabelMergeResult,
@@ -82,13 +87,14 @@ class LabelDiscoveryStep:
 def merge_new_labels(
     classifier: "Classifier",
     classification_results: List[ClassificationResult],
+    subject: str,
 ) -> MergedLabels:
     config = classifier.label_discovery_config
     max_new_labels = config.max_new_labels if config else None
     merged_by_name: Dict[str, ResolvedLabel] = {}
     added_count = 0
     for proposed_label, reason in _collect_proposed_labels(
-        classifier, classification_results
+        classifier, classification_results, subject
     ):
         can_add_to_pool = max_new_labels is None or added_count < max_new_labels
         merged_label = _merge_or_add_label(
@@ -106,13 +112,14 @@ def merge_new_labels(
 async def a_merge_new_labels(
     classifier: "Classifier",
     classification_results: List[ClassificationResult],
+    subject: str,
 ) -> MergedLabels:
     config = classifier.label_discovery_config
     max_new_labels = config.max_new_labels if config else None
     merged_by_name: Dict[str, ResolvedLabel] = {}
     added_count = 0
     for proposed_label, reason in _collect_proposed_labels(
-        classifier, classification_results
+        classifier, classification_results, subject
     ):
         can_add_to_pool = max_new_labels is None or added_count < max_new_labels
         merged_label = await _a_merge_or_add_label(
@@ -164,27 +171,17 @@ def _merge_or_add_label(
             proposed_label.name, existing_labels
         )
         if matching_label is None and existing_labels:
-            # Embedding similarity
-            unembedded_names = [
-                label.name
-                for label in [proposed_label, *existing_labels]
-                if label.name not in pool.vectors
-            ]
-            if unembedded_names:
-                embeddings = classifier.label_discovery_config.embedding_model.embed_texts(
-                    unembedded_names
+            # Embedding similarity, or shared words when embedding fails
+            if _embed_labels(classifier, [proposed_label, *existing_labels]):
+                near_duplicate, similar_labels = _find_similar_labels(
+                    classifier, proposed_label, existing_labels
                 )
-                if len(embeddings) != len(unembedded_names):
-                    raise ValueError(
-                        f"The embedding model returned {len(embeddings)} "
-                        f"vectors for {len(unembedded_names)} label names."
-                    )
-                pool.vectors.update(zip(unembedded_names, embeddings))
-            near_duplicate, similar_labels = _find_similar_labels(
-                classifier, proposed_label, existing_labels
-            )
-            if near_duplicate is not None:
-                return near_duplicate
+                if near_duplicate is not None:
+                    return near_duplicate
+            else:
+                similar_labels = _labels_sharing_words(
+                    classifier, proposed_label, existing_labels
+                )
 
             # Merge judge
             duplicate_of = (
@@ -241,27 +238,19 @@ async def _a_merge_or_add_label(
             proposed_label.name, existing_labels
         )
         if matching_label is None and existing_labels:
-            # Embedding similarity
-            unembedded_names = [
-                label.name
-                for label in [proposed_label, *existing_labels]
-                if label.name not in pool.vectors
-            ]
-            if unembedded_names:
-                embeddings = await classifier.label_discovery_config.embedding_model.a_embed_texts(
-                    unembedded_names
+            # Embedding similarity, or shared words when embedding fails
+            if await _a_embed_labels(
+                classifier, [proposed_label, *existing_labels]
+            ):
+                near_duplicate, similar_labels = _find_similar_labels(
+                    classifier, proposed_label, existing_labels
                 )
-                if len(embeddings) != len(unembedded_names):
-                    raise ValueError(
-                        f"The embedding model returned {len(embeddings)} "
-                        f"vectors for {len(unembedded_names)} label names."
-                    )
-                pool.vectors.update(zip(unembedded_names, embeddings))
-            near_duplicate, similar_labels = _find_similar_labels(
-                classifier, proposed_label, existing_labels
-            )
-            if near_duplicate is not None:
-                return near_duplicate
+                if near_duplicate is not None:
+                    return near_duplicate
+            else:
+                similar_labels = _labels_sharing_words(
+                    classifier, proposed_label, existing_labels
+                )
 
             # Merge judge
             duplicate_of = (
@@ -303,6 +292,11 @@ def _ask_merge_judge(classifier: "Classifier", prompt: str) -> Optional[str]:
             )
         except (ValueError, DeepEvalError):
             classifier.error = None
+        except PROVIDER_ERRORS as error:
+            logger.warning(
+                f"Merge judge call failed; keeping the label: {error}"
+            )
+            return None
     return None
 
 
@@ -316,7 +310,84 @@ async def _a_ask_merge_judge(
             )
         except (ValueError, DeepEvalError):
             classifier.error = None
+        except PROVIDER_ERRORS as error:
+            logger.warning(
+                f"Merge judge call failed; keeping the label: {error}"
+            )
+            return None
     return None
+
+
+def _embed_labels(classifier: "Classifier", labels: List[Label]) -> bool:
+    """Embeds the label names the pool has no vector for yet, trying twice.
+    Returns whether every name now has a vector."""
+    pool = classifier.label_pool
+    names = [label.name for label in labels if label.name not in pool.vectors]
+    for _ in range(MAX_GENERATION_ATTEMPTS):
+        if not names:
+            return True
+        try:
+            embeddings = (
+                classifier.label_discovery_config.embedding_model.embed_texts(
+                    names
+                )
+            )
+        except PROVIDER_ERRORS as error:
+            logger.warning(f"Label embedding failed: {error}")
+            continue
+        if len(embeddings) == len(names):
+            pool.vectors.update(zip(names, embeddings))
+            return True
+        logger.warning(
+            f"The embedding model returned {len(embeddings)} vectors for "
+            f"{len(names)} label names."
+        )
+    return False
+
+
+async def _a_embed_labels(
+    classifier: "Classifier", labels: List[Label]
+) -> bool:
+    """Embeds the label names the pool has no vector for yet, trying twice.
+    Returns whether every name now has a vector."""
+    pool = classifier.label_pool
+    names = [label.name for label in labels if label.name not in pool.vectors]
+    for _ in range(MAX_GENERATION_ATTEMPTS):
+        if not names:
+            return True
+        try:
+            embeddings = await classifier.label_discovery_config.embedding_model.a_embed_texts(
+                names
+            )
+        except PROVIDER_ERRORS as error:
+            logger.warning(f"Label embedding failed: {error}")
+            continue
+        if len(embeddings) == len(names):
+            pool.vectors.update(zip(names, embeddings))
+            return True
+        logger.warning(
+            f"The embedding model returned {len(embeddings)} vectors for "
+            f"{len(names)} label names."
+        )
+    return False
+
+
+def _labels_sharing_words(
+    classifier: "Classifier",
+    proposed_label: Label,
+    existing_labels: List[Label],
+) -> List[Label]:
+    """The ``top_k`` existing labels sharing the most words with the proposed
+    name, for the merge judge to compare when there are no embeddings."""
+    words = set(re.findall(r"\w+", proposed_label.name.lower()))
+    ranked = sorted(
+        existing_labels,
+        key=lambda label: len(
+            words & set(re.findall(r"\w+", label.name.lower()))
+        ),
+        reverse=True,
+    )
+    return ranked[: classifier.label_discovery_config.top_k]
 
 
 def _find_similar_labels(
@@ -356,13 +427,16 @@ def _find_similar_labels(
 def _collect_proposed_labels(
     classifier: "Classifier",
     classification_results: List[ClassificationResult],
+    subject: str,
 ) -> List[Tuple[Label, str]]:
     if not classifier.label_discovery_config:
         return []
     proposed_by_name: Dict[str, Tuple[Label, str]] = {}
     for classification_result in classification_results:
         resolved_label = classifier._resolve_label_from_classification_result(
-            classification_result, clean_reason(classification_result.reason)
+            classification_result,
+            clean_reason(classification_result.reason),
+            subject,
         )
         if (
             resolved_label.origin is LabelOrigin.NEW

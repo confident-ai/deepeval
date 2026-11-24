@@ -250,7 +250,7 @@ class Classifier(BaseClassifier):
                     classification_seconds = time.perf_counter() - started
                     started = time.perf_counter()
                     merged_labels = merge_new_labels(
-                        self, classification_results
+                        self, classification_results, prompt.subject
                     )
                     label_discovery_seconds = time.perf_counter() - started
                     self._postprocess_classifications(
@@ -322,7 +322,7 @@ class Classifier(BaseClassifier):
                 classification_seconds = time.perf_counter() - started
                 started = time.perf_counter()
                 merged_labels = await a_merge_new_labels(
-                    self, classification_results
+                    self, classification_results, prompt.subject
                 )
                 label_discovery_seconds = time.perf_counter() - started
                 self._postprocess_classifications(
@@ -386,7 +386,7 @@ class Classifier(BaseClassifier):
         for classification_result in classification_results:
             reason = clean_reason(classification_result.reason)
             resolved_label = self._resolve_label_from_classification_result(
-                classification_result, reason
+                classification_result, reason, prompt.subject
             )
 
             # No resolved label
@@ -500,7 +500,10 @@ class Classifier(BaseClassifier):
             )
 
     def _resolve_label_from_classification_result(
-        self, classification_result: ClassificationResult, reason: str
+        self,
+        classification_result: ClassificationResult,
+        reason: str,
+        subject: str,
     ) -> ResolvedLabel:
         # Label discovery: a declared, candidate or new label
         if self.label_discovery_config:
@@ -518,6 +521,7 @@ class Classifier(BaseClassifier):
                 candidate_labels=self.candidate_labels,
                 allow_none=self.allow_none,
                 classifier_name=self.name,
+                subject=subject,
             )
 
         # Declared labels only

@@ -206,6 +206,7 @@ def resolve_suggested_label(
     candidate_labels: List[Label],
     allow_none: bool,
     classifier_name: str,
+    subject: str = "case",
 ) -> ResolvedLabel:
     """Map a judge answer that may name a new label onto a ``ResolvedLabel``.
 
@@ -241,20 +242,22 @@ def resolve_suggested_label(
     if description and description.strip():
         return ResolvedLabel(name, LabelOrigin.NEW, description.strip())
     return ResolvedLabel(
-        name, LabelOrigin.NEW, _fallback_description(name, reason)
+        name, LabelOrigin.NEW, _fallback_description(name, reason, subject)
     )
 
 
-def _fallback_description(name: str, reason: Optional[str]) -> str:
+def _fallback_description(
+    name: str, reason: Optional[str], subject: str
+) -> str:
     detail = (reason or "").strip().rstrip(
         "."
     ) or f'the evidence shows "{name}"'
-    # Lowercase the first letter to fit "Cases where ...", unless it starts an
+    # Lowercase the first letter to fit "Traces where ...", unless it starts an
     # acronym such as "API".
     if not detail[1:2].isupper():
         detail = detail[:1].lower() + detail[1:]
     return (
-        f"Cases where {detail}. "
+        f"{subject[:1].upper()}{subject[1:]}s where {detail}. "
         "Does not apply when supporting evidence is absent."
     )
 
@@ -354,7 +357,11 @@ def construct_turns(test_case: ConversationalTestCase) -> List[Dict]:
             "Cannot classify a ConversationalTestCase with no turns."
         )
     return [
-        convert_turn_to_dict(turn, _TURN_PARAMS) for turn in test_case.turns
+        {
+            **convert_turn_to_dict(turn, _TURN_PARAMS),
+            **({"metadata": turn.metadata} if turn.metadata else {}),
+        }
+        for turn in test_case.turns
     ]
 
 
