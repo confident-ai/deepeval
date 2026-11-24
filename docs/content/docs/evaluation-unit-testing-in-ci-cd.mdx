@@ -399,9 +399,36 @@ When a flaky test case fails, <Switch><Case id="python">`assert_test()` prints a
 
 You can also mark individual **metrics** as flaky (<Term py="AnswerRelevancyMetric(flaky=True)" ts="new AnswerRelevancyMetric({ flaky: true })"/>) — a flaky metric's score and verdict are still reported, but its failure never fails the test case it ran on.
 
+<Only id="python">
+
+## Set Up With `deepeval link-ci`
+
+`deepeval link-ci` turns a test you've already run locally into a GitHub Actions check. Run it in the directory where you ran `deepeval test run`:
+
+```bash
+deepeval link-ci
+```
+
+It reuses the path and options of your last `deepeval test run` there, or you can pass a path: `deepeval link-ci tests/`. Then it:
+
+1. Opens a pull request from a `deepeval/link-ci` branch that adds `.github/workflows/deepeval.yml`. The workflow runs on every pull request and every push to your default branch, installs your dependencies the way your project does (`uv`, Poetry, `requirements.txt`, or plain `pip`), and runs the same `deepeval test run` command. If your test file isn't on the default branch yet, it offers to add it to the pull request.
+2. Sets `CONFIDENT_API_KEY` and the LLM judge keys you have set locally (such as `OPENAI_API_KEY`) as repository secrets, after asking. This needs the [GitHub CLI](https://cli.github.com), logged in. Without it, `deepeval link-ci` prints the compare link for the pull request and the secrets to add yourself.
+
+Everything runs with your own `git` and `gh` login, and your working tree and current branch are left as they are. No GitHub token is sent to Confident AI. Pass `--yes` to accept every prompt, or `--branch` to open the pull request from a different branch.
+
+Add any other keys your app needs to the repository secrets and to the workflow's `env`. Pull requests from forks don't receive repository secrets, so their runs aren't uploaded to Confident AI.
+
+</Only>
+
 ## YAML File For CI/CD Evals
 
 Drop <Term py="deepeval test run" ts="npx deepeval test run"/> into a `.yml` to run your unit tests on every push or PR. This example uses `OPENAI_API_KEY` as your LLM judge to run evals locally. Add `CONFIDENT_API_KEY` to send results to Confident AI.
+
+<Only id="python">
+
+In GitHub Actions, each uploaded run is also listed under its repository on Confident AI's CI/CD page, with its pull request, commit, branch and pass/fail result, so you can follow a repository's history without connecting the GitHub App. Set `CONFIDENT_CI_LINK_OPT_OUT=1` to upload the test run without that information.
+
+</Only>
 
 <Switch>
 

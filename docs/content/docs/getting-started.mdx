@@ -581,6 +581,32 @@ npx deepeval login
 </Tab>
 </Tabs>
 
+### Run on Every Pull Request
+
+<Only id="python">
+
+Once the test passes locally, run `deepeval link-ci` from the same directory to run it with GitHub Actions on every pull request:
+
+```bash
+deepeval link-ci
+```
+
+It opens a pull request that adds a workflow running the same `deepeval test run` command. If the [GitHub CLI](https://cli.github.com) is installed and logged in, it also sets `CONFIDENT_API_KEY` and your LLM judge's key as repository secrets. Once you merge it, a failing test fails the pull request's check, and if you're logged in to Confident AI, every run is listed under the repository on the CI/CD page with its pull request, commit and branch.
+
+:::note
+`test_example.py` above hard-codes `actual_output`, so every run scores the same text. Call your LLM app to produce `actual_output` before you rely on the test to catch regressions.
+:::
+
+[Unit Testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd#set-up-with-deepeval-link-ci) covers what `deepeval link-ci` sets up and its options.
+
+</Only>
+
+<Only id="typescript">
+
+Add `npx deepeval test run` to a GitHub Actions workflow to run your tests on every pull request. [Unit Testing in CI/CD](/docs/evaluation-unit-testing-in-ci-cd#yaml-file-for-cicd-evals) has a workflow you can copy.
+
+</Only>
+
 <span id="evals-with-llm-tracing" />
 
 ## Evaluate an AI Agent
