@@ -126,10 +126,12 @@ def _system_one_active(metric: Any, spec: Optional[Any]) -> bool:
         # that will not get better on retry (auth). Stay on the LLM path.
         return False
     if getattr(metric, "system_one_model", None) is None:
+        from deepeval.metrics.utils.models import system_one_setup_hint
+
         raise DeepEvalError(
             f"{EVAL_MODE_ENV_VAR}={mode} routes decisions to a System One "
-            f"model, but {type(metric).__name__} has none configured. Set "
-            f"TYPESAFE_API_KEY or switch back with "
+            f"model, but {type(metric).__name__} has none configured. "
+            f"{system_one_setup_hint()} Or switch back with "
             f"`deepeval set-eval-mode {EvalMode.LLM}`."
         )
     return True

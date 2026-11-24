@@ -45,3 +45,9 @@ OPENAI_DECISION_MODELS_DATA = ModelDataRegistry(
         "gpt-6-luna": _gpt_6_luna,
     }
 )
+
+# Nace serves Drex through the same Decisions API shape as OpenAI.
+NACE_BASE_URL = "https://console.nace.ai/v1"
+DEFAULT_NACE_MODEL = "drex-max-v1.1"
+# Nace prices every Drex model the same and bills input tokens only.
+DREX_INPUT_PRICE = 0.03 / 1e6

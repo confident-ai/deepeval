@@ -16,10 +16,12 @@ from deepeval.models.system_one.limits import (
 )
 from deepeval.models.system_one.typesafe_model import TypeSafeModel
 from deepeval.models.system_one.openai_model import OpenAIDecisionModel
+from deepeval.models.system_one.nace_model import NaceModel
 
 __all__ = [
     "TypeSafeModel",
     "OpenAIDecisionModel",
+    "NaceModel",
     "SystemOneContextLimitError",
     "check_context_budget",
     "context_limits",
