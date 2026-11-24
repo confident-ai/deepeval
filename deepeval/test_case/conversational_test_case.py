@@ -247,7 +247,7 @@ class ConversationalTestCase(BaseModel):
         validation_alias=AliasChoices("chatbotRole", "chatbot_role"),
     )
     # The tools the assistant should call over the whole conversation, for
-    # ConversationalToolCorrectnessMetric. [] means "no tools expected".
+    # ConversationToolCorrectnessMetric. [] means "no tools expected".
     expected_tools: Optional[List[ToolCall]] = Field(
         default=None,
         serialization_alias="expectedTools",

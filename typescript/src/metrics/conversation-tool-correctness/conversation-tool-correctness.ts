@@ -12,7 +12,7 @@ import { constructVerboseLogs } from "@/metrics/utils";
 import { prepareMeasure } from "@/metrics/prepare-measure";
 import { ToolCorrectnessMetric } from "@/metrics/tool-correctness/tool-correctness";
 
-export interface ConversationalToolCorrectnessMetricOptions {
+export interface ConversationToolCorrectnessMetricOptions {
   threshold?: number | null;
   flaky?: boolean;
   /** Which `ToolCall` fields to compare (input parameters / output). */
@@ -33,21 +33,21 @@ export interface ToolGroupScore {
 }
 
 /**
- * Conversational Tool Correctness — Tool Correctness for a conversation.
+ * Conversation Tool Correctness — Tool Correctness for a conversation.
  * An expected tool with `turn` set is pinned to that turn: the turn's own
  * `toolsCalled` are scored against the tools pinned to it. Expected tools
  * without `turn` are scored against the tools called on every other
  * assistant turn, in order. The score is the mean over these groups.
- * Deterministic, no model. Mirrors Python's `ConversationalToolCorrectnessMetric`.
+ * Deterministic, no model. Mirrors Python's `ConversationToolCorrectnessMetric`.
  */
-export class ConversationalToolCorrectnessMetric extends BaseConversationalMetric {
+export class ConversationToolCorrectnessMetric extends BaseConversationalMetric {
   toolsCalled: ToolCall[] = [];
   groupScores: ToolGroupScore[] = [];
   private readonly evaluationParams: ToolCallParams[];
   private readonly shouldExactMatch: boolean;
   private readonly shouldConsiderOrdering: boolean;
 
-  constructor(options: ConversationalToolCorrectnessMetricOptions = {}) {
+  constructor(options: ConversationToolCorrectnessMetricOptions = {}) {
     const strictMode = options.strictMode ?? false;
     super(strictMode ? 1 : resolveThreshold(options.threshold, 0.5), {
       strictMode,
@@ -159,7 +159,7 @@ export class ConversationalToolCorrectnessMetric extends BaseConversationalMetri
   }
 
   get name(): string {
-    return "Conversational Tool Correctness";
+    return "Conversation Tool Correctness";
   }
 }
 

@@ -1,6 +1,6 @@
 import { describe, expect, it } from "@jest/globals";
 import { MissingTestCaseParamsError } from "@/errors";
-import { ConversationalToolCorrectnessMetric } from "@/metrics";
+import { ConversationToolCorrectnessMetric } from "@/metrics";
 import {
   ConversationalTestCase,
   ToolCall,
@@ -28,9 +28,9 @@ function conversation(
 }
 
 const metric = (options = {}) =>
-  new ConversationalToolCorrectnessMetric({ showIndicator: false, ...options });
+  new ConversationToolCorrectnessMetric({ showIndicator: false, ...options });
 
-describe("ConversationalToolCorrectnessMetric", () => {
+describe("ConversationToolCorrectnessMetric", () => {
   it("collects tools across all assistant turns", async () => {
     const m = metric();
     const score = await m.measure(

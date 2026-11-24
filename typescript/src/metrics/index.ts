@@ -76,10 +76,10 @@ export {
   type ToolUseTemplateOverride,
 } from "@/metrics/tool-use";
 export {
-  ConversationalToolCorrectnessMetric,
-  type ConversationalToolCorrectnessMetricOptions,
+  ConversationToolCorrectnessMetric,
+  type ConversationToolCorrectnessMetricOptions,
   type ToolGroupScore,
-} from "@/metrics/conversational-tool-correctness";
+} from "@/metrics/conversation-tool-correctness";
 export {
   TaskCompletionMetric,
   type TaskCompletionMetricOptions,

@@ -1,12 +1,12 @@
 ---
-id: metrics-conversational-tool-correctness
-title: Conversational Tool Correctness
-sidebar_label: Conversational Tool Correctness
+id: metrics-conversation-tool-correctness
+title: Conversation Tool Correctness
+sidebar_label: Conversation Tool Correctness
 languages: [python, typescript]
 ---
 <MetricTagsDisplayer multiTurn={true} usesLLMs={false} agent={true} referenceBased={true} />
 
-The conversational tool correctness metric is a deterministic multi-turn agentic metric. It checks whether your AI agent called the tools it was expected to call over the course of a conversation. It collects every tool the assistant called, across all turns and in order, and compares that list with the test case's <Term py="expected_tools" ts="expectedTools"/> using the [tool correctness](/docs/metrics-tool-correctness) rules. You can also pin an expected tool to a specific turn. No LLM is used.
+The conversation tool correctness metric is a deterministic multi-turn agentic metric. It checks whether your AI agent called the tools it was expected to call over the course of a conversation. It collects every tool the assistant called, across all turns and in order, and compares that list with the test case's <Term py="expected_tools" ts="expectedTools"/> using the [tool correctness](/docs/metrics-tool-correctness) rules. You can also pin an expected tool to a specific turn. No LLM is used.
 
 :::note
 Use this metric when you know which tools a conversation should end up calling (for example, `track_parcel` and then `transfer_to_human` for a user who asks about a late parcel and then for a person). Because expected tools are set on the whole conversation rather than on individual turns, they work for [simulated conversations](/docs/conversation-simulator), whose turns aren't known in advance. If you don't have expected tools and want an LLM to judge tool selection and arguments instead, use the [tool use metric](/docs/metrics-tool-use).
@@ -14,7 +14,7 @@ Use this metric when you know which tools a conversation should end up calling (
 
 ## Required Arguments
 
-To use the `ConversationalToolCorrectnessMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases):
+To use the `ConversationToolCorrectnessMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases):
 
 - `turns`, where assistant turns that called tools set <Term py="tools_called" ts="toolsCalled"/>
 - <Term py="expected_tools" ts="expectedTools"/>, the tools the assistant should call over the whole conversation. An empty list means no tools should be called.
@@ -31,7 +31,7 @@ You can also set <Term py="expected_tools" ts="expectedTools"/> on a `Conversati
 
 ```python
 from deepeval import evaluate
-from deepeval.metrics import ConversationalToolCorrectnessMetric
+from deepeval.metrics import ConversationToolCorrectnessMetric
 from deepeval.test_case import ConversationalTestCase, ToolCall, ToolCallParams, Turn
 
 test_case = ConversationalTestCase(
@@ -51,7 +51,7 @@ test_case = ConversationalTestCase(
         ToolCall(name="transfer_to_human", turn=3),
     ],
 )
-metric = ConversationalToolCorrectnessMetric(
+metric = ConversationToolCorrectnessMetric(
     threshold=0.5,
     evaluation_params=[ToolCallParams.INPUT_PARAMETERS],
 )
@@ -69,7 +69,7 @@ evaluate(test_cases=[test_case], metrics=[metric])
 
 ```typescript
 import { evaluate } from "deepeval";
-import { ConversationalToolCorrectnessMetric } from "deepeval/metrics";
+import { ConversationToolCorrectnessMetric } from "deepeval/metrics";
 import { ConversationalTestCase, ToolCall, ToolCallParams, Turn } from "deepeval/test-case";
 
 const testCase = new ConversationalTestCase({
@@ -89,7 +89,7 @@ const testCase = new ConversationalTestCase({
     new ToolCall({ name: "transfer_to_human", turn: 3 }),
   ],
 });
-const metric = new ConversationalToolCorrectnessMetric({
+const metric = new ConversationToolCorrectnessMetric({
   threshold: 0.5,
   evaluationParams: [ToolCallParams.INPUT_PARAMETERS],
 });
@@ -101,7 +101,7 @@ await evaluate({ testCases: [testCase], metrics: [metric] });
 
 </Switch>
 
-There are **SIX** optional parameters when creating a `ConversationalToolCorrectnessMetric`:
+There are **SIX** optional parameters when creating a `ConversationToolCorrectnessMetric`:
 
 - [Optional] `threshold`: a float representing the minimum passing threshold, defaulted to 0.5.
 - [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: a list of `ToolCallParams` to compare besides the tool name. `INPUT_PARAMETERS` also compares arguments, `OUTPUT` also compares outputs. Defaulted to `[]`.
@@ -119,7 +119,7 @@ The metric splits <Term py="expected_tools" ts="expectedTools"/> into checks and
 
 Tools on user turns are ignored. The final score is the mean of the checks:
 
-<Equation formula="\text{Conversational Tool Correctness} = \frac{\sum \text{Check Scores}}{\text{Number of Checks}}" />
+<Equation formula="\text{Conversation Tool Correctness} = \frac{\sum \text{Check Scores}}{\text{Number of Checks}}" />
 
 In the example above, `track_parcel` is checked across the conversation and `transfer_to_human` on turn 3. The agent never transfers, so the turn 3 check scores 0, the other check scores 1, and the final score is 0.5.
 

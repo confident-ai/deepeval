@@ -258,7 +258,7 @@ class ToolCall(BaseModel):
         validation_alias=AliasChoices("inputParameters", "input_parameters"),
     )
     # Only read on a conversation's expected_tools, by
-    # ConversationalToolCorrectnessMetric: the index in `turns` of the
+    # ConversationToolCorrectnessMetric: the index in `turns` of the
     # assistant turn that should make this call. Not part of equality.
     turn: Optional[int] = None
 

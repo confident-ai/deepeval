@@ -40,8 +40,8 @@ from .step_efficiency.step_efficiency import StepEfficiencyMetric
 from .plan_adherence.plan_adherence import PlanAdherenceMetric
 from .plan_quality.plan_quality import PlanQualityMetric
 from .tool_use.tool_use import ToolUseMetric
-from .conversational_tool_correctness.conversational_tool_correctness import (
-    ConversationalToolCorrectnessMetric,
+from .conversation_tool_correctness.conversation_tool_correctness import (
+    ConversationToolCorrectnessMetric,
 )
 from .goal_accuracy.goal_accuracy import GoalAccuracyMetric
 from .argument_correctness.argument_correctness import ArgumentCorrectnessMetric
@@ -143,7 +143,7 @@ __all__ = [
     "PlanAdherenceMetric",
     "PlanQualityMetric",
     "ToolUseMetric",
-    "ConversationalToolCorrectnessMetric",
+    "ConversationToolCorrectnessMetric",
     "GoalAccuracyMetric",
     "AgentLoopDetectionMetric",
     # Conversational metrics

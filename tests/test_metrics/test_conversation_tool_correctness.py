@@ -3,7 +3,7 @@ import pytest
 from deepeval.dataset import ConversationalGolden
 from deepeval.dataset.utils import convert_convo_goldens_to_convo_test_cases
 from deepeval.errors import MissingTestCaseParamsError
-from deepeval.metrics import ConversationalToolCorrectnessMetric
+from deepeval.metrics import ConversationToolCorrectnessMetric
 from deepeval.test_case import (
     ConversationalTestCase,
     ToolCall,
@@ -31,7 +31,7 @@ def _conversation(*tools_per_assistant_turn, expected_tools=None):
 
 
 def test_collects_tools_across_all_assistant_turns():
-    metric = ConversationalToolCorrectnessMetric()
+    metric = ConversationToolCorrectnessMetric()
     score = metric.measure(
         _conversation(
             [_track("123")],
@@ -50,7 +50,7 @@ def test_collects_tools_across_all_assistant_turns():
 
 
 def test_missing_expected_tool_lowers_the_score():
-    metric = ConversationalToolCorrectnessMetric()
+    metric = ConversationToolCorrectnessMetric()
     score = metric.measure(
         _conversation(
             [_track("123")], [], expected_tools=[_track("123"), _transfer()]
@@ -66,12 +66,12 @@ def test_user_turn_tools_are_ignored():
     test_case.turns[0] = Turn(
         role="user", content="hi", tools_called=[_transfer()]
     )
-    metric = ConversationalToolCorrectnessMetric()
+    metric = ConversationToolCorrectnessMetric()
     assert metric.measure(test_case, _show_indicator=False) == 0
 
 
 def test_empty_expected_tools_means_no_calls_expected():
-    metric = ConversationalToolCorrectnessMetric()
+    metric = ConversationToolCorrectnessMetric()
     assert (
         metric.measure(
             _conversation([], [], expected_tools=[]), _show_indicator=False
@@ -95,13 +95,13 @@ def test_ordering_is_across_the_conversation():
     reversed_order = _conversation(
         [_transfer()], [_track("123")], expected_tools=expected
     )
-    metric = ConversationalToolCorrectnessMetric(should_consider_ordering=True)
+    metric = ConversationToolCorrectnessMetric(should_consider_ordering=True)
     assert metric.measure(in_order, _show_indicator=False) == 1
     assert metric.measure(reversed_order, _show_indicator=False) < 1
 
 
 def test_exact_match_rejects_extra_calls():
-    metric = ConversationalToolCorrectnessMetric(should_exact_match=True)
+    metric = ConversationToolCorrectnessMetric(should_exact_match=True)
     score = metric.measure(
         _conversation(
             [_track("123")], [_track("123")], expected_tools=[_track("123")]
@@ -114,13 +114,11 @@ def test_exact_match_rejects_extra_calls():
 def test_input_parameters_are_compared_when_asked():
     case = _conversation([_track("999")], expected_tools=[_track("123")])
     assert (
-        ConversationalToolCorrectnessMetric().measure(
-            case, _show_indicator=False
-        )
+        ConversationToolCorrectnessMetric().measure(case, _show_indicator=False)
         == 1
     )
     assert (
-        ConversationalToolCorrectnessMetric(
+        ConversationToolCorrectnessMetric(
             evaluation_params=[ToolCallParams.INPUT_PARAMETERS]
         ).measure(case, _show_indicator=False)
         == 0
@@ -128,7 +126,7 @@ def test_input_parameters_are_compared_when_asked():
 
 
 def test_strict_mode_zeroes_a_partial_score():
-    metric = ConversationalToolCorrectnessMetric(strict_mode=True)
+    metric = ConversationToolCorrectnessMetric(strict_mode=True)
     score = metric.measure(
         _conversation(
             [_track("123")], expected_tools=[_track("123"), _transfer()]
@@ -140,7 +138,7 @@ def test_strict_mode_zeroes_a_partial_score():
 
 
 def test_errors_without_expected_tools():
-    metric = ConversationalToolCorrectnessMetric()
+    metric = ConversationToolCorrectnessMetric()
     with pytest.raises(MissingTestCaseParamsError, match="expected_tools"):
         metric.measure(_conversation([_track("123")]), _show_indicator=False)
 
@@ -176,7 +174,7 @@ def test_expected_tools_round_trips_through_aliases_and_api():
 async def test_a_measure_matches_measure():
     case = _conversation([_track("1")], expected_tools=[_track("1")])
     assert (
-        await ConversationalToolCorrectnessMetric().a_measure(
+        await ConversationToolCorrectnessMetric().a_measure(
             case, _show_indicator=False
         )
         == 1
@@ -195,14 +193,14 @@ def test_pinned_tool_must_be_called_on_its_turn():
     too_early = _conversation(
         [_transfer()], [], expected_tools=[_pinned(_transfer(), 3)]
     )
-    metric = ConversationalToolCorrectnessMetric()
+    metric = ConversationToolCorrectnessMetric()
     assert metric.measure(on_time, _show_indicator=False) == 1
     assert metric.measure(too_early, _show_indicator=False) == 0
     assert "transfer_to_human" in metric.reason
 
 
 def test_pinned_and_unpinned_tools_are_scored_separately():
-    metric = ConversationalToolCorrectnessMetric()
+    metric = ConversationToolCorrectnessMetric()
     score = metric.measure(
         _conversation(
             [_track("1")],
@@ -221,7 +219,7 @@ def test_pinned_and_unpinned_tools_are_scored_separately():
 
 def test_pinned_turn_is_left_out_of_the_rest_of_the_conversation():
     # Exact match on the unpinned tools ignores calls made on pinned turns.
-    metric = ConversationalToolCorrectnessMetric(should_exact_match=True)
+    metric = ConversationToolCorrectnessMetric(should_exact_match=True)
     score = metric.measure(
         _conversation(
             [_track("1")],
@@ -234,7 +232,7 @@ def test_pinned_turn_is_left_out_of_the_rest_of_the_conversation():
 
 
 def test_turn_must_point_at_an_assistant_turn():
-    metric = ConversationalToolCorrectnessMetric()
+    metric = ConversationToolCorrectnessMetric()
     with pytest.raises(MissingTestCaseParamsError, match="'user' turn"):
         metric.measure(
             _conversation(

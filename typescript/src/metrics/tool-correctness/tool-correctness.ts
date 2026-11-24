@@ -231,7 +231,7 @@ export class ToolCorrectnessMetric extends BaseMetric {
   /**
    * The deterministic tool-calling score and reason for one set of calls,
    * without a judge model. Used per turn by
-   * `ConversationalToolCorrectnessMetric`.
+   * `ConversationToolCorrectnessMetric`.
    */
   static scoreToolCalls(
     toolsCalled: ToolCall[],

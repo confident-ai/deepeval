@@ -53,7 +53,7 @@ export class ToolCall {
   inputParameters?: Record<string, any>;
   /**
    * Only read on a conversation's `expectedTools`, by
-   * `ConversationalToolCorrectnessMetric`: the index in `turns` of the
+   * `ConversationToolCorrectnessMetric`: the index in `turns` of the
    * assistant turn that should make this call.
    */
   turn?: number;

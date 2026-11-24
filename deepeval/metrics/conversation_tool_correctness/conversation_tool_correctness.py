@@ -51,7 +51,7 @@ class _ToolCallScorer(ToolCorrectnessMetric):
         return self._calculate_score(), self._generate_reason()
 
 
-class ConversationalToolCorrectnessMetric(BaseConversationalMetric):
+class ConversationToolCorrectnessMetric(BaseConversationalMetric):
     """Scores a conversation's tool calls against ``expected_tools`` with the
     Tool Correctness rules. ``ToolCall.turn`` pins an expected tool to one
     assistant turn; the rest are checked across the conversation. No LLM is
@@ -226,4 +226,4 @@ class ConversationalToolCorrectnessMetric(BaseConversationalMetric):
 
     @property
     def __name__(self):
-        return "Conversational Tool Correctness"
+        return "Conversation Tool Correctness"
