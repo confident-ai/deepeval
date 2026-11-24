@@ -9,18 +9,15 @@ from deepeval.metrics.voice.utils.call_activity import (
 from deepeval.metrics.voice.utils.defects import (
     CALL_RECORDING,
     TURN_TIMESTAMPS,
-    defect_share_result,
+    DefectShare,
     untimed_call_reason,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent, on_call
 
 
-class TimeToFirstResponseMetric(BaseVoiceMetric):
+class TimeToFirstResponseMetric(BaseDefectMetric):
     # The 2 s latency limit plus 1 s for the line to connect, since the clock
     # starts when the call connects.
     def __init__(
@@ -46,12 +43,12 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
         self.max_wait_seconds = max_wait_seconds
         self.use_speech_detection = use_speech_detection
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         recording = call_recording_activity(
             test_case, self.use_speech_detection
         )
         if recording is not None:
-            return self._evaluate_recording(recording)
+            return self._recording_share(recording)
         defect_label = (
             f"a first response over {self.max_wait_seconds} seconds after "
             "the call connected"
@@ -67,7 +64,7 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
             )
         )
         if not audio_turns:
-            return defect_share_result(
+            return DefectShare(
                 [],
                 [],
                 [],
@@ -78,7 +75,7 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
             )
         greeting_at, greeting_turn = audio_turns[0]
         if test_case.turns[greeting_turn].role != "assistant":
-            return defect_share_result(
+            return DefectShare(
                 [],
                 [],
                 [],
@@ -97,7 +94,7 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
                     **on_call(0.0, greeting_at),
                 )
             )
-        return defect_share_result(
+        return DefectShare(
             [greeting_turn],
             defects,
             [],
@@ -105,9 +102,9 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
             timing_source=TURN_TIMESTAMPS,
         )
 
-    def _evaluate_recording(self, recording: CallActivity) -> VoiceMetricResult:
+    def _recording_share(self, recording: CallActivity) -> DefectShare:
         if not recording.agent:
-            return defect_share_result(
+            return DefectShare(
                 [],
                 [],
                 [],
@@ -144,7 +141,7 @@ class TimeToFirstResponseMetric(BaseVoiceMetric):
                     **on_call(agent_at - wait, wait),
                 )
             )
-        return defect_share_result(
+        return DefectShare(
             [at],
             defects,
             [],

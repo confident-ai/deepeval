@@ -124,9 +124,11 @@ Without a recording, every audio turn in the call needs a `start_time`; without 
           <a href="/docs/metrics-turn-taking-naturalness">
             TurnTakingNaturalnessMetric
           </a>{" "}
-          scores both kinds of overlap on a sliding curve together with the
-          gaps. This metric checks only the caller starting over the agent and
-          points to the moments where they did.
+          runs this metric together with response latency, agent interruption
+          and response delay consistency, and counts each caller interruption
+          against the agent reply it cut into. This metric checks only the
+          caller starting over the agent and points to the moments where they
+          did.
         </>
       ),
     },

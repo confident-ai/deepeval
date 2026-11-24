@@ -4,6 +4,9 @@ from deepeval.metrics.voice.responsiveness.agent_responsiveness import (
 from deepeval.metrics.voice.responsiveness.failed_response import (
     FailedResponseMetric,
 )
+from deepeval.metrics.voice.responsiveness.reprompt import (
+    RepromptMetric,
+)
 from deepeval.metrics.voice.responsiveness.silent_reply import (
     SilentReplyMetric,
 )
@@ -17,6 +20,7 @@ from deepeval.metrics.voice.responsiveness.voice_reliability import (
 __all__ = [
     "AgentResponsivenessMetric",
     "FailedResponseMetric",
+    "RepromptMetric",
     "SilentReplyMetric",
     "UnexpectedCallEndMetric",
     "VoiceReliabilityMetric",

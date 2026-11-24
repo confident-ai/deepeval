@@ -3,19 +3,16 @@ from typing import Optional
 from deepeval.metrics.voice.utils.defects import (
     MIN_COMPARED_REPLIES,
     agent_reply_measurements,
-    defect_share_result,
+    DefectShare,
     shifts_from_typical,
     audible_replies,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
-class LoudnessConsistencyMetric(BaseVoiceMetric):
+class LoudnessConsistencyMetric(BaseDefectMetric):
     # A 3 dB change is just perceptible; 5 dB is clearly noticeable.
     def __init__(
         self,
@@ -38,7 +35,7 @@ class LoudnessConsistencyMetric(BaseVoiceMetric):
         )
         self.max_shift_db = max_shift_db
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         measurements, skipped = agent_reply_measurements(test_case)
         measurements = audible_replies(measurements, skipped)
         levels = {
@@ -54,7 +51,7 @@ class LoudnessConsistencyMetric(BaseVoiceMetric):
             for turn, shift in shifts_from_typical(levels).items()
             if abs(shift) > self.max_shift_db
         ]
-        return defect_share_result(
+        return DefectShare(
             list(levels),
             defects,
             skipped,

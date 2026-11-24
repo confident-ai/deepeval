@@ -1,11 +1,8 @@
 from deepeval.metrics.voice.utils.defects import (
     agent_reply_measurements,
-    defect_share_result,
+    DefectShare,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.analysis import PITCH_FRAME_MS
 from deepeval.metrics.voice.utils.events import VoiceEvent, placed
@@ -13,8 +10,8 @@ from deepeval.metrics.voice.utils.events import VoiceEvent, placed
 PITCH_FRAME_SECONDS = PITCH_FRAME_MS / 1000
 
 
-class AbruptPitchJumpMetric(BaseVoiceMetric):
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+class AbruptPitchJumpMetric(BaseDefectMetric):
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         measurements, skipped = agent_reply_measurements(test_case)
         eligible_turns = []
         defects = []
@@ -38,7 +35,7 @@ class AbruptPitchJumpMetric(BaseVoiceMetric):
                         ),
                     )
                 )
-        return defect_share_result(
+        return DefectShare(
             eligible_turns,
             defects,
             skipped,

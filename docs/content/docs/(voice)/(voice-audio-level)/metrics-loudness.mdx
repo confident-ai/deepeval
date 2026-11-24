@@ -101,9 +101,10 @@ A reply with no audible sound at all (no 20 ms frame reaches speech level, about
           <a href="/docs/metrics-speech-intelligibility">
             SpeechIntelligibilityMetric
           </a>{" "}
-          blends the whole clip's volume, pauses included, with noise, clipping
-          and dropouts. This metric looks only at the speech, and tells you
-          whether it was too quiet or too loud.
+          runs this metric together with background noise, clipping and
+          dropouts, and scores the share of replies none of them flagged. This
+          metric reports loudness alone, and tells you whether the speech was
+          too quiet or too loud.
         </>
       ),
     },

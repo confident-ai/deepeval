@@ -98,8 +98,9 @@ The default of **4 semitones** comes from 't Hart (1981): differences under abou
       answer: (
         <>
           <a href="/docs/metrics-voice-consistency">VoiceConsistencyMetric</a>{" "}
-          blends pitch, loudness and timbre into one score for the call. This
-          metric checks pitch only and points to the replies that drifted.
+          runs this metric together with loudness consistency and scores the
+          share of replies neither flagged. This metric checks pitch only and
+          points to the replies that drifted.
         </>
       ),
     },

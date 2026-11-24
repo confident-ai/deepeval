@@ -2,22 +2,19 @@ from deepeval.metrics.voice.utils.defects import (
     NO_CALL_AUDIO_REASON,
     agent_reply_measurements,
     call_has_audio,
-    defect_share_result,
+    DefectShare,
     is_inaudible,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
-class SilentReplyMetric(BaseVoiceMetric):
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+class SilentReplyMetric(BaseDefectMetric):
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         defect_label = "a reply the caller could not hear"
         if not call_has_audio(test_case):
-            return defect_share_result(
+            return DefectShare(
                 [],
                 [],
                 [],
@@ -40,7 +37,7 @@ class SilentReplyMetric(BaseVoiceMetric):
                 defects.append(VoiceEvent(type="no_audio", turn=index))
             elif is_inaudible(measurements[index]):
                 defects.append(VoiceEvent(type="no_speech", turn=index))
-        return defect_share_result(
+        return DefectShare(
             eligible_turns,
             defects,
             skipped,

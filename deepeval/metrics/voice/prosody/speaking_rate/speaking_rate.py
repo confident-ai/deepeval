@@ -6,17 +6,14 @@ from deepeval.metrics.voice.prosody.speaking_rate.utils import (
 from deepeval.metrics.voice.utils.analysis import SPEECH_SPAN_MIN_SECONDS
 from deepeval.metrics.voice.utils.defects import (
     agent_reply_measurements,
-    defect_share_result,
+    DefectShare,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
-class SpeakingRateMetric(BaseVoiceMetric):
+class SpeakingRateMetric(BaseDefectMetric):
     # Conversation runs about 120-190 words per minute; each limit leaves a
     # 10 wpm margin.
     def __init__(
@@ -44,7 +41,7 @@ class SpeakingRateMetric(BaseVoiceMetric):
         self.min_wpm = min_wpm
         self.max_wpm = max_wpm
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         measurements, skipped = agent_reply_measurements(test_case)
         eligible_turns = []
         defects = []
@@ -71,7 +68,7 @@ class SpeakingRateMetric(BaseVoiceMetric):
                     type=event_type, turn=turn, speech_rate_wpm=round(rate)
                 )
             )
-        return defect_share_result(
+        return DefectShare(
             eligible_turns,
             defects,
             skipped,

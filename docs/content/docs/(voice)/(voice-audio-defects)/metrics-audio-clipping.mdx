@@ -92,10 +92,10 @@ If no agent reply has decodable audio, the metric is skipped.
       question: "How does this differ from audio glitch?",
       answer: (
         <>
-          <a href="/docs/metrics-audio-glitch">AudioGlitchMetric</a> reports
-          clipping together with held tones, dead stream and stream cuts. This
-          metric uses the same clipping check but reports only clipping, and
-          only for the agent's replies.
+          <a href="/docs/metrics-audio-glitch">AudioGlitchMetric</a> runs this
+          metric together with held tones, dead stream and cut-offs, and scores
+          the share of agent replies none of them flagged. This metric reports
+          only clipping.
         </>
       ),
     },

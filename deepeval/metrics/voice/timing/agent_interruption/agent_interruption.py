@@ -10,11 +10,8 @@ from deepeval.metrics.voice.utils.call_activity import (
     is_opening_line,
     call_activity,
 )
-from deepeval.metrics.voice.utils.defects import defect_share_result
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.utils.defects import DefectShare
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent, on_call
 
@@ -57,7 +54,7 @@ INTERRUPTION_CONDITIONS: Dict[
 }
 
 
-class AgentInterruptionMetric(BaseVoiceMetric):
+class AgentInterruptionMetric(BaseDefectMetric):
     # On human-labelled phone calls, reviewers excused an agent that spoke
     # after about 4 s of caller silence.
     def __init__(
@@ -85,7 +82,7 @@ class AgentInterruptionMetric(BaseVoiceMetric):
         self.max_caller_silence_seconds = max_caller_silence_seconds
         self.use_speech_detection = use_speech_detection
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         activity = call_activity(test_case, self.use_speech_detection)
         event_key = EVENT_KEYS[activity.source]
         eligible = []
@@ -110,7 +107,7 @@ class AgentInterruptionMetric(BaseVoiceMetric):
                         overlap_seconds=round(start.overlap_seconds, 2),
                     )
                 )
-        return defect_share_result(
+        return DefectShare(
             eligible,
             defects,
             list(activity.skipped),

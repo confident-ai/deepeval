@@ -9,15 +9,13 @@ from deepeval.metrics.voice.utils.call_activity import (
 )
 from deepeval.metrics.voice.utils.defects import (
     CALL_RECORDING,
+    STOPPED_AT_SECONDS,
     TURN_TIMESTAMPS,
     agent_glitch_events,
     agent_reply_measurements,
-    defect_share_result,
+    DefectShare,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.analysis import EDGE_MS
 from deepeval.metrics.voice.utils.events import VoiceEvent, on_call, placed
@@ -49,7 +47,7 @@ RECORDING_END_SECONDS = 0.05
 DEFECT_LABEL = "an abrupt cut-off"
 
 
-def _recording_result(recording: CallActivity) -> VoiceMetricResult:
+def _recording_share(recording: CallActivity) -> DefectShare:
     replies = stretches(recording.agent, AGENT_PAUSE_SECONDS)
     defects = []
     for reply in replies:
@@ -74,11 +72,11 @@ def _recording_result(recording: CallActivity) -> VoiceMetricResult:
                 VoiceEvent(
                     type="abrupt_cutoff",
                     reply_start=round(reply.start, 2),
-                    stopped_at_seconds=round(cut.at, 2),
+                    **{STOPPED_AT_SECONDS: round(cut.at, 2)},
                     **on_call(cut.at - CUT_EDGE_SECONDS, CUT_EDGE_SECONDS),
                 )
             )
-    return defect_share_result(
+    return DefectShare(
         [round(reply.start, 2) for reply in replies],
         defects,
         [],
@@ -89,7 +87,7 @@ def _recording_result(recording: CallActivity) -> VoiceMetricResult:
     )
 
 
-class AbruptCutoffMetric(BaseVoiceMetric):
+class AbruptCutoffMetric(BaseDefectMetric):
     def __init__(
         self,
         *,
@@ -109,12 +107,12 @@ class AbruptCutoffMetric(BaseVoiceMetric):
         )
         self.use_speech_detection = use_speech_detection
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         recording = call_recording_activity(
             test_case, self.use_speech_detection
         )
         if recording is not None:
-            return _recording_result(recording)
+            return _recording_share(recording)
         measurements, skipped = agent_reply_measurements(test_case)
         _, events, _ = agent_glitch_events(test_case)
         stream_cuts = {
@@ -126,7 +124,7 @@ class AbruptCutoffMetric(BaseVoiceMetric):
             if (turn in stream_cuts or reply.ends_abruptly)
             and not test_case.turns[turn].interrupted
         ]
-        return defect_share_result(
+        return DefectShare(
             list(measurements),
             defects,
             skipped,

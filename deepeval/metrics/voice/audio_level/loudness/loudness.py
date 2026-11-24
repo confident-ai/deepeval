@@ -2,18 +2,15 @@ from typing import Optional
 
 from deepeval.metrics.voice.utils.defects import (
     agent_reply_measurements,
-    defect_share_result,
+    DefectShare,
     audible_replies,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
-class LoudnessMetric(BaseVoiceMetric):
+class LoudnessMetric(BaseDefectMetric):
     # Phone speech sits near -22 dBFS on this scale: quiet is 10 dB (half as
     # loud) below it, loud leaves under 6 dB of headroom before peaks clip.
     def __init__(
@@ -41,7 +38,7 @@ class LoudnessMetric(BaseVoiceMetric):
         self.min_dbfs = min_dbfs
         self.max_dbfs = max_dbfs
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         measurements, skipped = agent_reply_measurements(test_case)
         measurements = audible_replies(measurements, skipped)
         defects = []
@@ -59,7 +56,7 @@ class LoudnessMetric(BaseVoiceMetric):
                     speech_dbfs=round(reply.speech_dbfs, 1),
                 )
             )
-        return defect_share_result(
+        return DefectShare(
             list(measurements),
             defects,
             skipped,

@@ -72,7 +72,7 @@ print(metric.score_breakdown)
 }
 ```
 
-Unlike most voice metrics, `turn` here is the zero-based position of the **caller** line that went unanswered. An event's `type` is `call_ended_without_reply` when the call ended before the agent spoke again, or `empty_reply` when the agent's next turn had neither text nor audio; `reply_turn` then points to that empty turn. When the caller line has decodable audio, the event covers its whole clip: `offset_seconds` is 0, `duration_seconds` is the clip's length, and `start_time` is where it starts on the call's clock (left out when the clip has no `Audio.start_time`).
+Unlike most voice metrics, `turn` here is the zero-based position of the **caller** line that went unanswered (its first turn, when the line spans several). An event's `type` is `call_ended_without_reply` when the call ended before the agent spoke again, or `empty_reply` when the agent's next turn had neither text nor audio; `reply_turn` then points to that empty turn. When the caller line has decodable audio, the event covers its whole clip: `offset_seconds` is 0, `duration_seconds` is the clip's length, and `start_time` is where it starts on the call's clock (left out when the clip has no `Audio.start_time`).
 
 ## How Is It Calculated?
 
@@ -80,7 +80,7 @@ Unlike most voice metrics, `turn` here is the zero-based position of the **calle
 
 <Equation formula="\text{Failed Response} = \frac{\text{Caller lines followed by an agent reply}}{\text{Caller lines that needed a reply}}" />
 
-A caller line needs a reply unless it closes the call: once any trailing periods or exclamation marks are dropped, its text ends in "bye", "goodbye", "thank you", "thanks", "that's all" or "that is all". Several caller lines in a row share the agent's next reply, so when the call ends after them, each of them counts as unanswered. A reply only has to exist; whether it was heard is checked by [`SilentReplyMetric`](/docs/metrics-silent-reply), and how long it took by [`ResponseLatencyMetric`](/docs/metrics-response-latency). When the agent hangs up right after a question, this metric and [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end) both fail: one reports the unanswered question, the other how the call ended. A conversation with no audio on any turn is not a voice call, so the metric is skipped, as it is when no caller line needed a reply.
+Caller turns that start less than 1 second after the previous caller turn ends are one line: a transcriber often splits one sentence into several turns. Turns without an `Audio.start_time` can't be timed, so each is its own line. A caller line needs a reply unless it closes the call: once any trailing periods or exclamation marks are dropped, the text of its last turn ends in "bye", "goodbye", "thank you", "thanks", "that's all" or "that is all". Several caller lines in a row share the agent's next reply, so when the call ends after them, each of them counts as unanswered. A reply only has to exist; whether it was heard is checked by [`SilentReplyMetric`](/docs/metrics-silent-reply), and how long it took by [`ResponseLatencyMetric`](/docs/metrics-response-latency). When the agent hangs up right after a question, this metric and [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end) both fail: one reports the unanswered question, the other how the call ended. A conversation with no audio on any turn is not a voice call, so the metric is skipped, as it is when no caller line needed a reply.
 
 ## FAQs
 
@@ -93,7 +93,7 @@ A caller line needs a reply unless it closes the call: once any trailing periods
           <a href="/docs/metrics-agent-responsiveness">
             AgentResponsivenessMetric
           </a>{" "}
-          combines unanswered lines, reprompts and bad call endings into one score that drops to zero on any critical failure. This metric checks only whether each caller line got a reply, and points to the lines that did not.
+          runs this metric together with silent replies, unexpected call ends and reprompts, and scores the share of exchanges none of them flagged. This metric checks only whether each caller line got a reply, and points to the lines that did not.
         </>
       ),
     },

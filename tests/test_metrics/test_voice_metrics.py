@@ -1,21 +1,19 @@
+import importlib
 import math
 from array import array
 
 import pytest
 
 from deepeval.metrics.voice import (
+    _RELEASED_PATHS,
     AgentResponsivenessMetric,
     AudioIntegrityMetric,
     SpeechIntelligibilityMetric,
-    TurnTakingNaturalnessMetric,
-    VoiceConsistencyMetric,
-    VoiceNaturalnessMetric,
     VoiceReliabilityMetric,
 )
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.timeline import render_timeline_wav
-from tests.test_metrics.helpers import speech_like, stereo_recording
 
 
 def make_tone(
@@ -90,24 +88,6 @@ def test_audio_rejects_negative_timeline_values():
         make_tone(start_time=-0.1)
 
 
-def test_quality_metrics_score_assistant_audio():
-    test_case = voice_case()
-
-    naturalness = VoiceNaturalnessMetric().measure(
-        test_case, _show_indicator=False
-    )
-    intelligibility = SpeechIntelligibilityMetric().measure(
-        test_case, _show_indicator=False
-    )
-    consistency = VoiceConsistencyMetric().measure(
-        test_case, _show_indicator=False
-    )
-
-    assert naturalness is not None and 0 <= naturalness <= 1
-    assert intelligibility is not None and 0 <= intelligibility <= 1
-    assert consistency is not None and 0 <= consistency <= 1
-
-
 @pytest.mark.asyncio
 async def test_voice_metric_sync_async_parity():
     metric = SpeechIntelligibilityMetric()
@@ -117,148 +97,6 @@ async def test_voice_metric_sync_async_parity():
     async_score = await metric.a_measure(test_case, _show_indicator=False)
 
     assert async_score == sync_score
-
-
-def test_turn_taking_uses_timestamped_audio_and_skips_without_it():
-    test_case = voice_case()
-    metric = TurnTakingNaturalnessMetric()
-
-    score = metric.measure(test_case, _show_indicator=False)
-    assert score is not None and 0 <= score <= 1
-    assert metric.score_breakdown["transitions"]
-
-    test_case.turns[0].audio.start_time = None
-    assert metric.measure(test_case, _show_indicator=False) is None
-    assert metric.skipped is True
-
-
-def _call_with_response_delays(delays):
-    turns = []
-    cursor = 0.0
-    for index, delay in enumerate(delays):
-        turns.append(
-            Turn(
-                role="user",
-                content=f"Question {index}",
-                audio=make_tone(start_time=cursor, frequency=160),
-            )
-        )
-        cursor += 0.3 + delay
-        turns.append(
-            Turn(
-                role="assistant",
-                content=f"Answer {index}",
-                audio=make_tone(start_time=cursor, frequency=190),
-            )
-        )
-        cursor += 0.3 + 0.2
-    return ConversationalTestCase(turns=turns)
-
-
-def test_turn_taking_rewards_consistent_response_delays():
-    steady = TurnTakingNaturalnessMetric()
-    steady.measure(_call_with_response_delays([0.4] * 4), _show_indicator=False)
-    erratic = TurnTakingNaturalnessMetric()
-    erratic.measure(
-        _call_with_response_delays([0.1, 0.4, 2.5, 0.4]), _show_indicator=False
-    )
-
-    assert steady.score_breakdown["response_delays"]["count"] == 4
-    assert steady.score_breakdown["response_delays"]["spread_seconds"] == (
-        pytest.approx(0.0, abs=1e-6)
-    )
-    assert steady.score_breakdown["response_delays"]["score"] == pytest.approx(
-        1.0
-    )
-    assert erratic.score_breakdown["response_delays"]["spread_seconds"] == (
-        pytest.approx(0.96, abs=0.01)
-    )
-    assert erratic.score < steady.score
-    assert "varied by" in erratic.reason
-
-
-def test_turn_taking_omits_consistency_with_fewer_than_three_delays():
-    metric = TurnTakingNaturalnessMetric()
-    metric.measure(voice_case(), _show_indicator=False)
-
-    delays = metric.score_breakdown["response_delays"]
-    assert delays["count"] == 2
-    assert delays["score"] is None
-    transitions = metric.score_breakdown["transitions"]
-    assert metric.score == pytest.approx(
-        sum(t["score"] for t in transitions) / len(transitions)
-    )
-
-
-def _contiguous_call(latencies_ms):
-    turns = []
-    cursor = 0.0
-    for index, latency_ms in enumerate(latencies_ms):
-        turns.append(
-            Turn(
-                role="user",
-                content=f"Question {index}",
-                audio=make_tone(duration=1.0, start_time=cursor),
-            )
-        )
-        cursor += 1.0
-        turns.append(
-            Turn(
-                role="assistant",
-                content=f"Answer {index}",
-                audio=make_tone(duration=2.0, start_time=cursor),
-                latency_ms=latency_ms,
-            )
-        )
-        cursor += 2.0
-    return ConversationalTestCase(turns=turns)
-
-
-def test_turn_taking_uses_latency_when_clips_touch():
-    metric = TurnTakingNaturalnessMetric()
-    metric.measure(
-        _contiguous_call([4150.0, 900.0, 1200.0]), _show_indicator=False
-    )
-
-    transitions = metric.score_breakdown["transitions"]
-    assert [t["gap_seconds"] for t in transitions] == pytest.approx(
-        [4.15, 0.9, 1.2]
-    )
-    assert {t["gap_source"] for t in transitions} == {"latency"}
-    assert len(metric.score_breakdown["unmeasured_transitions"]) == 2
-    assert metric.score_breakdown["response_delays"]["count"] == 3
-    assert metric.score < 0.8
-    assert "2 transition(s) were left out" in metric.reason
-
-
-def test_turn_taking_skips_when_touching_clips_have_no_latency():
-    metric = TurnTakingNaturalnessMetric()
-
-    assert (
-        metric.measure(_contiguous_call([None, None]), _show_indicator=False)
-        is None
-    )
-    assert metric.skipped is True
-    assert len(metric.score_breakdown["unmeasured_transitions"]) == 3
-
-
-def test_turn_taking_prefers_audio_gap_over_latency():
-    test_case = _call_with_response_delays([0.4] * 3)
-    for turn in test_case.turns[1::2]:
-        turn.latency_ms = 5000.0
-    metric = TurnTakingNaturalnessMetric()
-    metric.measure(test_case, _show_indicator=False)
-
-    gaps = [
-        t["gap_seconds"]
-        for t in metric.score_breakdown["transitions"]
-        if t["from_turn"] % 2 == 0
-    ]
-    assert gaps == pytest.approx([0.4] * 3)
-    assert {t["gap_source"] for t in metric.score_breakdown["transitions"]} == {
-        "audio"
-    }
-    assert metric.score_breakdown["unmeasured_transitions"] == []
 
 
 def test_timeline_rendering_preserves_gap_and_overlap():
@@ -337,39 +175,6 @@ def test_audio_analysis_without_numpy_says_numpy_is_required(monkeypatch):
         _analysis.rms(array("h", [1, 2, 3]))
 
 
-def test_turn_taking_reads_hand_overs_from_a_recording(tmp_path):
-    path = stereo_recording(
-        tmp_path / "call.wav",
-        agent=[
-            (0.0, speech_like(1.5)),
-            (4.5, speech_like(3.0)),
-            (8.5, speech_like(1.0)),
-        ],
-        caller=[
-            (2.0, speech_like(2.0)),
-            (5.0, speech_like(0.5)),
-            (6.0, speech_like(2.0)),
-        ],
-    )
-    metric = TurnTakingNaturalnessMetric(use_speech_detection=False)
-    metric.measure(
-        ConversationalTestCase(
-            turns=voice_case().turns, call_recording_path=path
-        ),
-        _show_indicator=False,
-    )
-    breakdown = metric.score_breakdown
-    assert breakdown["timing_source"] == "call_recording"
-    assert [
-        (round(t["at_seconds"]), t["to"], t["kind"])
-        for t in breakdown["transitions"]
-    ] == [
-        (2, "user", "gap"),
-        (4, "assistant", "gap"),
-        (6, "user", "user_barge_in"),
-        (8, "assistant", "gap"),
-    ]
-    assert breakdown["transitions"][2]["gap_seconds"] == pytest.approx(
-        -1.25, abs=0.05
-    )
-    assert breakdown["response_delays"]["count"] == 2
+@pytest.mark.parametrize("old_path", sorted(_RELEASED_PATHS))
+def test_released_import_paths_still_load(old_path):
+    importlib.import_module(f"deepeval.metrics.{old_path}")

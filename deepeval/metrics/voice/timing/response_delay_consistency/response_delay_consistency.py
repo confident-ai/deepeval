@@ -7,18 +7,15 @@ from deepeval.metrics.voice.utils.call_activity import (
 )
 from deepeval.metrics.voice.utils.defects import (
     MIN_COMPARED_REPLIES,
-    defect_share_result,
+    DefectShare,
     shifts_from_typical,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
-class ResponseDelayConsistencyMetric(BaseVoiceMetric):
+class ResponseDelayConsistencyMetric(BaseDefectMetric):
     # A reply 2 s slower or faster than usual is as noticeable as a long
     # wait.
     def __init__(
@@ -44,7 +41,7 @@ class ResponseDelayConsistencyMetric(BaseVoiceMetric):
         self.max_shift_seconds = max_shift_seconds
         self.use_speech_detection = use_speech_detection
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         delays, skipped, untimed_reason, source = reply_delays(
             test_case, self.use_speech_detection
         )
@@ -60,7 +57,7 @@ class ResponseDelayConsistencyMetric(BaseVoiceMetric):
             for key, shift in shifts_from_typical(delays).items()
             if abs(shift) > self.max_shift_seconds
         ]
-        return defect_share_result(
+        return DefectShare(
             list(delays),
             defects,
             skipped,

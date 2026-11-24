@@ -8,10 +8,10 @@ beta: true
 <MetricTagsDisplayer
   voice={true} multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
 
-The voice consistency metric measures whether your voice agent **sounds like the same speaker for the whole call**. It compares assistant audio across turns and returns a score between 0 and 1, where a higher score means a more stable voice.
+The voice consistency metric measures whether your voice agent **sounds like the same speaker for the whole call**. It compares the agent's replies with each other for pitch and loudness, and returns the share of replies that stay close to the agent's typical voice, between 0 and 1.
 
 :::note
-This is the one voice metric that is inherently multi-turn: it says nothing about any single clip, only about how the clips differ from each other. It needs at least two decodable assistant turns to produce a score.
+This metric says nothing about any single clip, only about how the clips differ from each other. It needs at least three decodable agent replies to tell which one is off.
 :::
 
 ## Usage
@@ -55,48 +55,46 @@ Every voice metric records what it measured on `score_breakdown`. Read it after 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.91
+print(metric.score)  # e.g. 0.75
 print(metric.score_breakdown)
 ```
 
-For `VoiceConsistencyMetric` the breakdown carries the three component scores and the per-turn measurements they were computed from:
+For `VoiceConsistencyMetric` the breakdown counts the replies, lists every issue found, and gives each part's own result:
 
 ```python
 {
-    "eligible_turns": 3,
-    "pitch_consistency": 0.94,
-    "loudness_consistency": 0.88,
-    "spectral_consistency": 0.91,
-    "turns": [
-        {
-            "turn": 1,
-            "rms_dbfs": -21.4,
-            "pitch_mean_hz": 118.2,
-            "zero_crossing_rate": 0.061,
-        }
+    "eligible_turns": 4,
+    "turns_with_events": 1,
+    "events": [
+        {"type": "loudness_shift", "turn": 3, "speech_dbfs": -9.1, "shift_db": 6.4, "offset_seconds": 0.0, "duration_seconds": 4.2, "start_time": 10.5, "metric": "Loudness Consistency"},
     ],
+    "skipped": [],
+    "metrics": {
+        "Pitch Consistency": {"score": 1.0, "eligible_turns": 4, "turns_with_events": 0},
+        "Loudness Consistency": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
+    },
 }
 ```
 
-Here `turn` is the turn's zero-based position in the conversation, counting user turns too — not the assistant reply number.
+`eligible_turns` is how many agent replies were judged and `turns_with_events` how many had at least one issue. `events` holds each part's events unchanged, tagged with the `metric` that raised them; the part's own page explains its fields. `skipped` collects the replies a part could not judge. `metrics` gives each part's own `score`, `eligible_turns` and `turns_with_events`, or `{"score": None, "reason": ...}` when that part could not judge the call. The reason for the call above reads "1 of 4 agent replies had an issue: Loudness Consistency (1)."
 
 ## How Is It Calculated?
 
-`VoiceConsistencyMetric` measures three properties on every decodable assistant clip — mean pitch, loudness (`rms_dbfs`), and timbre (zero-crossing rate) — and scores how little each varies across the call:
+`VoiceConsistencyMetric` runs these single-issue metrics on the call, each with its default limits:
 
-<Equation formula="\text{Voice Consistency} = 0.4 \times \text{Pitch} + 0.35 \times \text{Loudness} + 0.25 \times \text{Timbre}" />
+| Part                                                       | Flags an agent reply that                                  |
+| ---------------------------------------------------------- | ---------------------------------------------------------- |
+| [Pitch Consistency](/docs/metrics-pitch-consistency)       | sounds clearly deeper or higher than the agent's typical reply. |
+| [Loudness Consistency](/docs/metrics-loudness-consistency) | is clearly louder or quieter than the agent's typical reply. |
 
-Each component is a spread measured as population standard deviation, turned into a score and clamped between 0 and 1:
+The score is the share of judged agent replies that neither part flagged:
 
-- **Pitch** and **timbre** are scored relative to their own mean, `1 − stdev / mean`, so they are scale-free. Pitch uses only the turns that yielded a pitch estimate.
-- **Loudness** is scored against a fixed 12 dB spread, `1 − stdev(rms_dbfs) / 12`, so a call whose replies have a standard deviation of 12 dB or more scores 0 on this component.
+<Equation formula="\text{Voice Consistency} = 1 - \frac{\text{Agent replies flagged by at least one part}}{\text{Agent replies judged}}" />
 
-When fewer than two turns yield a usable pitch estimate, `pitch_consistency` is `None` and the remaining two components are reweighted to 0.6 loudness / 0.4 timbre.
-
-Assistant turns without audio, or whose audio is not a decodable PCM WAV, are left out. The metric returns no score and marks the evaluation as skipped when fewer than two assistant turns contain decodable audio.
+A reply flagged by both parts counts once. Each part needs at least three replies it can measure, so a part with fewer is left out of the score; when neither part has three, the metric is skipped.
 
 :::tip
-A sudden drop here usually means something changed mid-call rather than gradually: a fallback voice after a TTS error, a different model handling one turn, or a hand-off to another agent. Compare the per-turn `rms_dbfs` and `pitch_mean_hz` values to find where it happened.
+A flagged reply usually means something changed mid-call rather than gradually: a fallback voice after a TTS error, a different model handling one turn, or a hand-off to another agent. The `turn` on each event points to where it happened.
 :::
 
 ## FAQs
@@ -104,13 +102,28 @@ A sudden drop here usually means something changed mid-call rather than graduall
 <FAQs
   qas={[
     {
+      question: "Why did my score change?",
+      answer: (
+        <>
+          This metric used to blend weighted pitch, loudness and timbre spreads
+          for the whole call. It now rolls up{" "}
+          <a href="/docs/metrics-pitch-consistency">PitchConsistencyMetric</a>{" "}
+          and{" "}
+          <a href="/docs/metrics-loudness-consistency">
+            LoudnessConsistencyMetric
+          </a>{" "}
+          and scores the share of replies that stay close to the agent's
+          typical voice. Timbre is no longer checked.
+        </>
+      ),
+    },
+    {
       question: "Why did the metric skip my test case?",
       answer: (
         <>
-          It needs at least two assistant turns with decodable audio.
-          Single-exchange calls, and calls where only one reply carried audio,
-          are skipped rather than scored — consistency across one sample is not
-          a measurement.
+          It needs at least three agent replies to compare. Short calls, and
+          calls where fewer than three replies carried usable audio, are
+          skipped rather than scored.
         </>
       ),
     },
@@ -118,19 +131,10 @@ A sudden drop here usually means something changed mid-call rather than graduall
       question: "Does an emotional agent get penalized for varying its voice?",
       answer: (
         <>
-          Somewhat, and deliberately. The metric cannot tell intentional
-          expressiveness from an unstable voice. If your agent is designed to
-          shift tone, treat this as a regression signal against its own baseline
-          rather than expecting a near-perfect score.
-        </>
-      ),
-    },
-    {
-      question: "Does this metric call an LLM or an external speech model?",
-      answer: (
-        <>
-          No. Scoring is deterministic and runs locally over the audio samples,
-          so it has no model or token cost.
+          It can be. The metric cannot tell intentional expressiveness from an
+          unstable voice. If your agent is designed to shift tone, treat this
+          as a regression signal against its own baseline rather than
+          expecting a perfect score.
         </>
       ),
     },
@@ -138,7 +142,7 @@ A sudden drop here usually means something changed mid-call rather than graduall
       question: "Does it compare against a reference voice?",
       answer: (
         <>
-          No. It is referenceless — turns are compared against each other, not
+          No. It is referenceless: replies are compared against each other, not
           against a target voice, so an agent that uses the wrong voice
           consistently for a whole call still scores well.
         </>

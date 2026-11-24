@@ -98,7 +98,7 @@ A call with no recorded ending, such as a simulation that ran its full number of
           <a href="/docs/metrics-agent-responsiveness">
             AgentResponsivenessMetric
           </a>{" "}
-          reads the same `end_reason` values but counts any agent hang-up as critical, even after a goodbye, and does not read the simulator's own stop reason. This metric judges only the ending, and lets an agent hang up once the call has wrapped up.
+          runs this metric together with failed responses, silent replies and reprompts, and scores the share of exchanges none of them flagged, so a bad ending costs it one exchange. This metric judges only the ending.
         </>
       ),
     },

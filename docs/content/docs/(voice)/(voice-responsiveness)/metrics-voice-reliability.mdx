@@ -8,7 +8,7 @@ beta: true
 <MetricTagsDisplayer
   voice={true} multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
 
-The voice reliability metric is the **operational summary** of a call: did the agent answer, and did its audio arrive intact? It combines [agent responsiveness](/docs/metrics-agent-responsiveness) and [audio integrity](/docs/metrics-audio-integrity) into a single score between 0 and 1.
+The voice reliability metric is the **operational summary** of a call: did the agent answer, and did its audio arrive intact? It runs every check of [agent responsiveness](/docs/metrics-agent-responsiveness) and [audio integrity](/docs/metrics-audio-integrity) together, and returns the share of exchanges none of them flagged, between 0 and 1.
 
 :::note
 Use this as the one number to gate a CI run on. It answers "did the call work?" rather than "was the call good?" — quality lives in [voice naturalness](/docs/metrics-voice-naturalness), [speech intelligibility](/docs/metrics-speech-intelligibility), and your usual multi-turn metrics.
@@ -42,12 +42,13 @@ metric = VoiceReliabilityMetric(threshold=0.9)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **FIVE** optional parameters when creating a `VoiceReliabilityMetric`:
+There are **SIX** optional parameters when creating a `VoiceReliabilityMetric`:
 
 - [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`, and is passed to the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) check. Defaulted to `True`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
@@ -55,46 +56,73 @@ Every voice metric records what it measured on `score_breakdown`. Read it after 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.86
+print(metric.score)  # e.g. 0.5
 print(metric.score_breakdown)
 ```
 
-For `VoiceReliabilityMetric` the breakdown nests both halves, each with its own score, critical flag, and events, so a failure can be traced without re-running the individual metrics:
+For `VoiceReliabilityMetric` the breakdown counts the exchanges, lists every issue found, and gives each part's own result. Here the agent's second reply looped, and the agent hung up on the caller's last question:
 
 ```python
 {
-    "critical_failure": False,
-    "responsiveness": {
-        "score": 1.0,
-        "critical_failure": False,
-        "events": [],
-    },
-    "audio_integrity": {
-        "score": 0.72,
-        "critical_failure": False,
-        "events": [
-            {"type": "abrupt_cutoff", "turn": 3, "critical": False},
-            {"type": "audio_dropout", "turn": 3, "critical": False, "offset_seconds": 1.12, "duration_seconds": 0.08, "start_time": 11.62},
-            {"type": "audio_dropout", "turn": 3, "critical": False, "offset_seconds": 2.9, "duration_seconds": 0.06, "start_time": 13.4},
-        ],
+    "eligible_turns": 4,
+    "turns_with_events": 2,
+    "events": [
+        {"type": "call_ended_without_reply", "turn": 6, "offset_seconds": 0.0, "duration_seconds": 2.1, "start_time": 16.0, "metric": "Failed Response"},
+        {"type": "unexpected_end", "turn": 6, "end_reason": "agent_ended_call", "offset_seconds": 0.0, "duration_seconds": 2.1, "start_time": 16.0, "metric": "Unexpected Call End"},
+        {"type": "audio_loop", "turn": 3, "offset_seconds": 1.5, "duration_seconds": 0.75, "start_time": 7.5, "metric": "Audio Loop"},
+    ],
+    "skipped": [],
+    "metrics": {
+        "Failed Response": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
+        "Silent Reply": {"score": 1.0, "eligible_turns": 3, "turns_with_events": 0},
+        "Unexpected Call End": {"score": 0.0, "eligible_turns": 1, "turns_with_events": 1},
+        "Reprompt": {"score": 1.0, "eligible_turns": 4, "turns_with_events": 0},
+        "Abrupt Cut-off": {"score": 1.0, "eligible_turns": 3, "turns_with_events": 0},
+        "Audio Loop": {"score": 0.6666666666666667, "eligible_turns": 3, "turns_with_events": 1},
+        "Audio Dropout": {"score": 1.0, "eligible_turns": 3, "turns_with_events": 0},
+        "Audio Clipping": {"score": 1.0, "eligible_turns": 3, "turns_with_events": 0},
     },
 }
 ```
 
-`audio_loop` and `audio_dropout` events are one per occurrence: `offset_seconds` and `duration_seconds` place it inside the reply, and `start_time` on the call's clock (left out when the clip has no `Audio.start_time`). Their cost is charged once per reply from that reply's totals, so the two dropouts above subtract 0.16 together, and the cut-off 0.12.
+Here `eligible_turns` is how many **exchanges** were judged and `turns_with_events` how many had at least one issue. `events` holds each part's events unchanged, tagged with the `metric` that raised them; the part's own page explains its fields. `skipped` collects the turns a part could not judge. `metrics` gives each part's own `score`, `eligible_turns` and `turns_with_events`, counted the part's own way, or `{"score": None, "reason": ...}` when that part could not judge the call. The reason for the call above reads "2 of 4 exchanges had an issue: Failed Response (1), Unexpected Call End (1), Audio Loop (1)."
+
+When the call has no agent turns, or an agent turn's audio cannot be decoded, the breakdown is the critical failure instead:
+
+```python
+{
+    "critical_failure": True,
+    "events": [{"type": "audio_undecodable", "turn": 3, "reason": "Audio is not a decodable PCM WAV."}],
+}
+```
 
 ## How Is It Calculated?
 
-`VoiceReliabilityMetric` runs the responsiveness and audio-integrity checks and averages them evenly:
+`VoiceReliabilityMetric` runs the parts of both metrics it combines, each with its default settings:
 
-<Equation formula="\text{Voice Reliability} = 0.5 \times \text{Responsiveness} + 0.5 \times \text{Audio Integrity}" />
+| Part                                                     | From                 | Flags                                                   |
+| -------------------------------------------------------- | -------------------- | ------------------------------------------------------- |
+| [Failed Response](/docs/metrics-failed-response)         | Agent Responsiveness | a caller line the agent never answered.                 |
+| [Silent Reply](/docs/metrics-silent-reply)               | Both                 | an agent reply the caller could not hear.               |
+| [Unexpected Call End](/docs/metrics-unexpected-call-end) | Agent Responsiveness | a call that ended badly.                                |
+| [Reprompt](/docs/metrics-reprompt)                       | Agent Responsiveness | a caller line the caller had to repeat.                 |
+| [Abrupt Cut-off](/docs/metrics-abrupt-cut-off)           | Audio Integrity      | an agent reply that stops mid-sound.                    |
+| [Audio Loop](/docs/metrics-audio-loop)                   | Audio Integrity      | an agent reply stuck repeating the same chunk of audio. |
+| [Audio Dropout](/docs/metrics-audio-dropout)             | Audio Integrity      | an agent reply that cuts out mid-speech.                |
+| [Audio Clipping](/docs/metrics-audio-clipping)           | Audio Integrity      | an agent reply distorted from being too loud.           |
 
-**A critical failure on either side forces the score to 0**, regardless of how well the other half did. A call with no agent turn, missing agent audio, an undecodable clip, a reply whose audio loops for three or more extra plays, a reply that never came, or a call that ended in a hangup, error, or idle timeout are all catastrophic — averaging them against a clean second half would hide exactly the failures this metric exists to surface.
+Each issue is counted against an **exchange**: a caller line and the agent's reply to it. Caller turns that start less than 1 second after the previous one ends are one line, as in [Reprompt](/docs/metrics-reprompt). An agent turn spoken before the caller's first line is an exchange of its own. The score is the share of judged exchanges that none of the parts flagged:
 
-The two halves are the same detectors used by `AgentResponsivenessMetric` and `AudioIntegrityMetric`, so their pages document what each event means and what it costs.
+<Equation formula="\text{Voice Reliability} = 1 - \frac{\text{Exchanges flagged by at least one part}}{\text{Exchanges judged}}" />
+
+Two issues in the same exchange count once. A part that cannot judge the call is left out of the score, and if no part can judge it, the metric is skipped.
+
+Like Audio Integrity, two checks run before the parts and force the score to 0, with the reason "A critical failure occurred: ..." naming them: `assistant_turn_missing` when the conversation has no agent turns, and `audio_undecodable` when an agent turn's audio cannot be decoded. Nothing else zeroes the score.
+
+With a stereo call recording (`call_recording_path`), cut-offs are read from the recording, and each one counts against the agent reply that started last before the cut. A cut before the test case's first agent reply, such as one in turns left out of the test case, is not counted. That needs `start_time` on every audio turn; without it, cut-offs are read from each reply's own audio.
 
 :::tip
-Run this alongside a quality metric — [`VoiceNaturalnessMetric`](/docs/metrics-voice-naturalness) or [`SpeechIntelligibilityMetric`](/docs/metrics-speech-intelligibility) — rather than instead of one. A score of 1 here means every reply arrived with usable audio — it says nothing about whether those replies were helpful, natural, or correct.
+Run this alongside a quality metric — [`VoiceNaturalnessMetric`](/docs/metrics-voice-naturalness) or [`SpeechIntelligibilityMetric`](/docs/metrics-speech-intelligibility) — rather than instead of one. A score of 1 here means every exchange got a reply with usable audio — it says nothing about whether those replies were helpful, natural, or correct.
 :::
 
 ## FAQs
@@ -102,12 +130,14 @@ Run this alongside a quality metric — [`VoiceNaturalnessMetric`](/docs/metrics
 <FAQs
   qas={[
     {
-      question: "Why is my score exactly 0 instead of somewhere in between?",
+      question: "Why did my score change?",
       answer: (
         <>
-          A critical failure was detected. Check <code>critical_failure</code>{" "}
-          on each half of the breakdown to see which side it came from, then
-          read that half's <code>events</code> list for the specific failure.
+          This metric used to average the agent responsiveness and audio
+          integrity scores and drop to 0 on any critical event from either. It
+          now rolls up their single-issue metrics and scores the share of
+          exchanges with no issue. Only a call with no agent turns, or agent
+          audio that cannot be decoded, still scores 0.
         </>
       ),
     },
@@ -115,10 +145,10 @@ Run this alongside a quality metric — [`VoiceNaturalnessMetric`](/docs/metrics
       question: "Should I run this as well as the two metrics it combines?",
       answer: (
         <>
-          Usually not both. Gate on this one and read its nested breakdown when
-          it fails — the events it reports are identical to what the individual
-          metrics would have given you. Run them separately when you want to
-          threshold the two halves differently.
+          Usually not. Gate on this one and read its <code>metrics</code> and{" "}
+          <code>events</code> when it fails; the events are the same ones the
+          individual metrics would give you. Run them separately when you want
+          to threshold the two sides differently.
         </>
       ),
     },
@@ -126,21 +156,10 @@ Run this alongside a quality metric — [`VoiceNaturalnessMetric`](/docs/metrics
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Both halves are deterministic detectors that run locally, so it
-          has no model or token cost.
-        </>
-      ),
-    },
-    {
-      question: "Can this metric be skipped for want of usable audio?",
-      answer: (
-        <>
-          No. It always returns a score — a conversation with no assistant turns
-          at all is a critical audio-integrity failure and scores 0, rather than
-          being skipped as unevaluable. Many other voice metrics, such as{" "}
-          <a href="/docs/metrics-failed-response">FailedResponseMetric</a> and{" "}
-          <a href="/docs/metrics-silent-reply">SilentReplyMetric</a>, skip a
-          test case when there is nothing in it to measure.
+          No LLM. Every part runs locally over the turns and audio samples.
+          With a call recording and <code>use_speech_detection</code> on, the
+          cut-off check runs the small Silero VAD model locally over the
+          caller's channel, so it has no token cost.
         </>
       ),
     },

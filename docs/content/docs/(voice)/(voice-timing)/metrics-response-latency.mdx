@@ -106,7 +106,7 @@ People answer each other in about **0.2 seconds** (Stivers et al., 2009), and co
           <a href="/docs/metrics-turn-taking-naturalness">
             TurnTakingNaturalnessMetric
           </a>{" "}
-          scores every gap on a sliding curve and blends in overlaps and consistency. This metric checks one thing, whether the caller waited too long, and points to the replies that were slow.
+          runs this metric together with both kinds of interruption and response delay consistency, and scores the share of agent replies none of them flagged. This metric checks one thing, whether the caller waited too long, and points to the replies that were slow.
         </>
       ),
     },

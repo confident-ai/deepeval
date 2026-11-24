@@ -1,24 +1,21 @@
+from deepeval.metrics.voice.utils.call_activity import caller_lines
 from deepeval.metrics.voice.utils.defects import (
+    CALLER_LINES,
     NO_CALL_AUDIO_REASON,
     call_has_audio,
-    defect_share_result,
+    DefectShare,
 )
 from deepeval.metrics.voice.utils.detectors import response_was_owed
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
-CALLER_LINES = ("caller line", "caller lines")
 
-
-class FailedResponseMetric(BaseVoiceMetric):
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+class FailedResponseMetric(BaseDefectMetric):
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         defect_label = "no reply from the agent"
         if not call_has_audio(test_case):
-            return defect_share_result(
+            return DefectShare(
                 [],
                 [],
                 [],
@@ -29,21 +26,21 @@ class FailedResponseMetric(BaseVoiceMetric):
         turns = test_case.turns
         eligible_turns = []
         defects = []
-        for index, turn in enumerate(turns):
-            if turn.role != "user" or not response_was_owed(turn.content):
+        for first, last in caller_lines(turns):
+            if not response_was_owed(turns[last].content):
                 continue
-            eligible_turns.append(index)
+            eligible_turns.append(first)
             reply_turn = next(
                 (
                     later
-                    for later in range(index + 1, len(turns))
+                    for later in range(last + 1, len(turns))
                     if turns[later].role == "assistant"
                 ),
                 None,
             )
             if reply_turn is None:
                 defects.append(
-                    VoiceEvent(type="call_ended_without_reply", turn=index)
+                    VoiceEvent(type="call_ended_without_reply", turn=first)
                 )
             elif (
                 not turns[reply_turn].content.strip()
@@ -51,10 +48,10 @@ class FailedResponseMetric(BaseVoiceMetric):
             ):
                 defects.append(
                     VoiceEvent(
-                        type="empty_reply", turn=index, reply_turn=reply_turn
+                        type="empty_reply", turn=first, reply_turn=reply_turn
                     )
                 )
-        return defect_share_result(
+        return DefectShare(
             eligible_turns,
             defects,
             [],

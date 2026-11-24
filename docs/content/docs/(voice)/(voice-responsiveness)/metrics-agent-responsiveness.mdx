@@ -8,10 +8,10 @@ beta: true
 <MetricTagsDisplayer
   voice={true} multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
 
-The agent responsiveness metric checks whether your voice agent **answered when it was spoken to**. It walks the conversation in order looking for turns the caller had to repeat, replies that never came, and calls that ended badly, returning a score between 0 and 1.
+The agent responsiveness metric checks whether your voice agent **answered when it was spoken to**. It runs four single-issue voice metrics for replies that never came, replies the caller could not hear, calls that ended badly, and lines the caller had to repeat, and returns the share of exchanges none of them flagged, between 0 and 1.
 
 :::note
-Like the other responsiveness metrics, it reads the conversation's shape rather than its audio content. A caller who has to say "hello? are you there?" is the failure it is built to catch — the kind that a transcript-based metric scores as a perfectly relevant exchange.
+Like the other responsiveness metrics, it reads the conversation's shape rather than how the audio sounded. A caller who has to say "hello? are you there?" is the failure it is built to catch — the kind that a transcript-based metric scores as a perfectly relevant exchange.
 :::
 
 ## Usage
@@ -59,67 +59,78 @@ print(metric.score)  # e.g. 0.75
 print(metric.score_breakdown)
 ```
 
-For `AgentResponsivenessMetric` the breakdown is a list of the events that were detected:
+For `AgentResponsivenessMetric` the breakdown counts the exchanges, lists every issue found, and gives each part's own result:
 
 ```python
 {
-    "critical_failure": False,
+    "eligible_turns": 4,
+    "turns_with_events": 1,
     "events": [
-        {"type": "user_reprompted", "turn": 2, "critical": False, "offset_seconds": 0.0, "duration_seconds": 1.8, "start_time": 7.2},
+        {"type": "user_reprompted", "turn": 2, "reprompt_turn": 3, "offset_seconds": 0.0, "duration_seconds": 1.8, "start_time": 7.2, "metric": "Reprompt"},
     ],
+    "skipped": [],
+    "metrics": {
+        "Failed Response": {"score": 1.0, "eligible_turns": 4, "turns_with_events": 0},
+        "Silent Reply": {"score": 1.0, "eligible_turns": 3, "turns_with_events": 0},
+        "Unexpected Call End": {"score": 1.0, "eligible_turns": 1, "turns_with_events": 0},
+        "Reprompt": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
+    },
 }
 ```
 
-`turn` is the zero-based position of the offending turn in the conversation: the unanswered user turn for `agent_failed_to_respond`, the agent turn for `assistant_audio_missing`, and the repeated user turn for `user_reprompted`. When that turn has decodable audio, the event covers its whole clip: `offset_seconds` is 0, `duration_seconds` is the clip's length, and `start_time` is where it starts on the call's clock (left out when the clip has no `Audio.start_time`). An `unexpected_end` event belongs to the whole call, so it has no `turn` and carries the call's `end_reason` instead. Every event has a `critical` flag. An empty `events` list means the agent answered every time it was addressed.
+Here `eligible_turns` is how many **exchanges** were judged and `turns_with_events` how many had at least one issue. `events` holds each part's events unchanged, tagged with the `metric` that raised them; the part's own page explains its fields, including which turn `turn` points to. `skipped` collects the turns a part could not judge. `metrics` gives each part's own `score`, `eligible_turns` and `turns_with_events`, counted the part's own way, or `{"score": None, "reason": ...}` when that part could not judge the call. The reason for the call above reads "1 of 4 exchanges had an issue: Reprompt (1)."
 
 ## How Is It Calculated?
 
-`AgentResponsivenessMetric` looks at each user turn that **owed a reply**, and checks what came next. A user turn that reads as a sign-off — one whose text, once any trailing periods or exclamation marks are dropped, ends in "bye", "goodbye", "thank you", "thanks", "that's all", or "that is all" — owes nothing, so a call that ends on a pleasantry is not marked as a failure.
+`AgentResponsivenessMetric` runs these single-issue metrics on the call, each with its default settings:
 
-Each remaining user turn is checked against the turn that follows it, and the call's ending is checked once, producing these events:
+| Part                                                     | Flags                                                            |
+| -------------------------------------------------------- | ---------------------------------------------------------------- |
+| [Failed Response](/docs/metrics-failed-response)         | a caller line the agent never answered, or answered with an empty turn. |
+| [Silent Reply](/docs/metrics-silent-reply)               | an agent reply the caller could not hear.                        |
+| [Unexpected Call End](/docs/metrics-unexpected-call-end) | a call that ended with an agent hang-up mid-conversation, an error or a timeout. |
+| [Reprompt](/docs/metrics-reprompt)                       | a caller line the caller had to follow with another before the agent replied. |
 
-| Event                     | Detected when                                                  | Critical |
-| ------------------------- | --------------------------------------------------------------- | -------- |
-| `agent_failed_to_respond` | The user turn is the last turn of the call.                    | Yes      |
-| `assistant_audio_missing` | The agent replied, but that turn carries no audio.             | Yes      |
-| `user_reprompted`         | The next turn is another user turn — the caller spoke twice.   | No       |
-| `unexpected_end`          | The call's `end_reason` metadata is `AGENT_HANGUP`, `ERROR`, or `IDLE_TIMEOUT`. | Yes      |
+Each issue is counted against an **exchange**: a caller line and the agent's reply to it. Caller turns that start less than 1 second after the previous one ends are one line, as in [Reprompt](/docs/metrics-reprompt). An agent turn spoken before the caller's first line is an exchange of its own. The score is the share of judged exchanges that none of the parts flagged:
 
-Any critical event forces the score to 0. Otherwise each reprompt costs 0.25, so four reprompts in a single call reach 0:
+<Equation formula="\text{Agent Responsiveness} = 1 - \frac{\text{Exchanges flagged by at least one part}}{\text{Exchanges judged}}" />
 
-<Equation formula="\text{Agent Responsiveness} = \max \left( 0,\ 1 - 0.25 \times \text{reprompts} \right)" />
-
-:::tip
-`unexpected_end` is read from the test case's `metadata`, under `end_reason` or `endReason`, and fires on `AGENT_HANGUP`, `ERROR`, and `IDLE_TIMEOUT` in any letter case. Set it yourself when you assemble test cases from production calls and your platform reports why the call ended.
-:::
+Two issues in the same exchange count once: an agent that hangs up right after a question fails both Failed Response and Unexpected Call End, and costs one exchange. A part that cannot judge the call is left out of the score. A conversation with no audio on any turn is not a voice call, so the metric is skipped with the reason "The call has no audio to evaluate."
 
 ## FAQs
 
 <FAQs
   qas={[
     {
-      question: "Does this metric measure response latency?",
+      question: "Why did my score change?",
       answer: (
         <>
-          No — it measures whether a response happened at all. Latency is scored
-          by{" "}
-          <a href="/docs/metrics-response-latency">
-            ResponseLatencyMetric
-          </a>
-          , which reads the timing of each clip; the raw number is on each
-          assistant turn's <code>latency_ms</code>.
+          This metric used to subtract 0.25 per reprompt and drop to 0 on a
+          missed reply, a reply with no audio or a bad call ending. It now rolls up
+          the single-issue metrics listed above and scores the share of
+          exchanges with no issue, so nothing zeroes the score on its own.
         </>
       ),
     },
     {
-      question: "My agent pauses to call a tool and gets marked unresponsive.",
+      question: "How is this different from the single-issue metrics it runs?",
       answer: (
         <>
-          That is end-of-turn detection cutting the reply short, not the metric
-          misreading it. Use{" "}
-          <code>turn_detection="patient"</code> on your connector so the
-          simulator waits through mid-reply pauses instead of reclaiming the
-          floor and re-prompting.
+          Each part, such as{" "}
+          <a href="/docs/metrics-failed-response">FailedResponseMetric</a>,
+          checks one issue and points to the turns where it happened. This
+          metric gives one number for all four, counted per exchange.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric measure response latency?",
+      answer: (
+        <>
+          No, it measures whether a response happened at all. Latency is
+          scored by{" "}
+          <a href="/docs/metrics-response-latency">ResponseLatencyMetric</a>,
+          which reads the timing of each clip.
         </>
       ),
     },
@@ -127,19 +138,8 @@ Any critical event forces the score to 0. Otherwise each reprompt costs 0.25, so
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and reads the ordered turns, so it has
-          no model or token cost.
-        </>
-      ),
-    },
-    {
-      question: "Does it need audio at all?",
-      answer: (
-        <>
-          Yes. Reprompts and missing replies are read from turn order and
-          content, but an agent reply with no audio is itself a critical
-          failure — so running this on a text-only conversation scores 0 rather
-          than grading its turn-taking.
+          No. Every part is deterministic and reads the ordered turns, their
+          audio and the call's metadata, so it has no model or token cost.
         </>
       ),
     },

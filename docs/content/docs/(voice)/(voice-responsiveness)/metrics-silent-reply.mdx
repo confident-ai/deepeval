@@ -93,7 +93,7 @@ A reply is silent when it carries no audio at all, or when its audio is inaudibl
           <a href="/docs/metrics-agent-responsiveness">
             AgentResponsivenessMetric
           </a>{" "}
-          flags a missing agent clip as a critical failure inside a combined score. This metric checks every reply on its own, also catches audio that holds no speech, and points to the replies that were silent.
+          runs this metric together with failed responses, unexpected call ends and reprompts, and scores the share of exchanges none of them flagged. This metric checks only whether each reply could be heard, and points to the replies that were silent.
         </>
       ),
     },

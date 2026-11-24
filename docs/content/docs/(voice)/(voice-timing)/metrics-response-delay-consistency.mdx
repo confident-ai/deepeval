@@ -100,7 +100,7 @@ The default of **2 seconds** reflects that a reply suddenly two seconds slower, 
           <a href="/docs/metrics-turn-taking-naturalness">
             TurnTakingNaturalnessMetric
           </a>{" "}
-          folds the spread of all waits into one call-level number. This metric points to the replies whose wait broke from the agent's usual rhythm.
+          runs this metric together with response latency and both kinds of interruption, and scores the share of agent replies none of them flagged. This metric points only to the replies whose wait broke from the agent's usual rhythm, and lets you change its limit.
         </>
       ),
     },

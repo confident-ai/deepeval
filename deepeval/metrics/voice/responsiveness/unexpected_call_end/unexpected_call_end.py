@@ -4,16 +4,13 @@ from typing import Optional
 from deepeval.metrics.voice.utils.defects import (
     NO_CALL_AUDIO_REASON,
     call_has_audio,
-    defect_share_result,
+    DefectShare,
 )
 from deepeval.metrics.voice.utils.detectors import (
     UNEXPECTED_END_REASONS,
     response_was_owed,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
@@ -63,11 +60,11 @@ def _unexpected_end_reason(test_case: ConversationalTestCase) -> Optional[str]:
     return None
 
 
-class UnexpectedCallEndMetric(BaseVoiceMetric):
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+class UnexpectedCallEndMetric(BaseDefectMetric):
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         defect_label = "an unexpected end"
         if not call_has_audio(test_case):
-            return defect_share_result(
+            return DefectShare(
                 [],
                 [],
                 [],
@@ -86,7 +83,7 @@ class UnexpectedCallEndMetric(BaseVoiceMetric):
             if end_reason
             else []
         )
-        return defect_share_result(
+        return DefectShare(
             [last_turn], defects, [], defect_label, counted=CALLS
         )
 

@@ -5,16 +5,13 @@ from deepeval.metrics.voice.utils.call_activity import (
     reply_delays,
     wait_span,
 )
-from deepeval.metrics.voice.utils.defects import defect_share_result
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.utils.defects import DefectShare
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
-class ResponseLatencyMetric(BaseVoiceMetric):
+class ResponseLatencyMetric(BaseDefectMetric):
     # Voice agents need time to transcribe, think and speak; on human-labelled
     # phone calls, 4 s matched reviewers best (2 s flagged almost every call).
     def __init__(
@@ -40,7 +37,7 @@ class ResponseLatencyMetric(BaseVoiceMetric):
         self.max_latency_seconds = max_latency_seconds
         self.use_speech_detection = use_speech_detection
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         delays, skipped, untimed_reason, source = reply_delays(
             test_case, self.use_speech_detection
         )
@@ -55,7 +52,7 @@ class ResponseLatencyMetric(BaseVoiceMetric):
             for key, delay in delays.items()
             if delay > self.max_latency_seconds
         ]
-        return defect_share_result(
+        return DefectShare(
             list(delays),
             defects,
             skipped,

@@ -110,7 +110,6 @@ class AudioMeasurements:
     dropout_events: int
     loop_events: int
     estimated_snr_db: float
-    zero_crossing_rate: float
     pitch_mean_hz: Optional[float]
     pitch_variation_hz: Optional[float]
     starts_abruptly: bool
@@ -682,8 +681,6 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
 
     np = get_numpy()
     values = np.asarray(samples).astype(np.int32)
-    negative = values < 0
-    crossings = int(np.count_nonzero(negative[:-1] != negative[1:]))
     track = pitch_track(samples, sample_rate)
     jump_frames = pitch_jump_frames(track)
     pitches = [pitch for pitch in track if pitch is not None]
@@ -742,7 +739,6 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         dropout_events=len(dropout_spans),
         loop_events=loop_events,
         estimated_snr_db=snr_db,
-        zero_crossing_rate=crossings / max(1, len(samples) - 1),
         pitch_mean_hz=mean(pitches) if pitches else None,
         pitch_variation_hz=pstdev(pitches) if len(pitches) > 1 else None,
         starts_abruptly=rms(samples[:edge_size]) > edge_threshold,

@@ -8,7 +8,7 @@ beta: true
 <MetricTagsDisplayer
   voice={true} multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
 
-The turn-taking naturalness metric measures the **rhythm of the call** — how long each speaker waited before answering, and how much they talked over each other. It reads the call timeline from the stereo call recording when there is one, or from the audio on every turn, and returns a score between 0 and 1, where a higher score means smoother hand-offs.
+The turn-taking naturalness metric measures the **rhythm of the call** — how long the agent made the caller wait, whether it waited about as long each time, and whether either side talked over the other. It runs four single-issue timing metrics, reading the call from the stereo call recording when there is one or from the audio on every turn, and returns the share of agent replies none of them flagged, between 0 and 1.
 
 :::note
 Like the other timing metrics, this judges *when* things happened rather than what was said or how it sounded. Without a call recording, it needs `start_time` on every audio clip, which voice simulations populate from the live call clock.
@@ -48,7 +48,7 @@ There are **SIX** optional parameters when creating a `TurnTakingNaturalnessMetr
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`, and is passed to all four timing checks. Defaulted to `True`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
@@ -56,86 +56,62 @@ Every voice metric records what it measured on `score_breakdown`. Read it after 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.78
+print(metric.score)  # e.g. 0.75
 print(metric.score_breakdown)
 ```
 
-For `TurnTakingNaturalnessMetric` the breakdown is one entry per speaker change:
+For `TurnTakingNaturalnessMetric` the breakdown counts the replies, lists every issue found, gives each part's own result, and says where the timing came from:
 
 ```python
 {
-    "transitions": [
-        {
-            "from_turn": 0,
-            "to_turn": 1,
-            "kind": "gap",
-            "gap_seconds": 0.82,
-            "gap_source": "audio",
-            "score": 0.72,
-        },
-        {
-            "from_turn": 1,
-            "to_turn": 2,
-            "kind": "user_barge_in",
-            "gap_seconds": -0.35,
-            "gap_source": "audio",
-            "score": 0.84,
-        },
+    "eligible_turns": 4,
+    "turns_with_events": 1,
+    "events": [
+        {"type": "slow_response", "turn": 5, "duration_seconds": 4.8, "start_time": 26.7, "response_delay_seconds": 4.8, "metric": "Response Latency"},
+        {"type": "delay_shift", "turn": 5, "duration_seconds": 4.8, "start_time": 26.7, "response_delay_seconds": 4.8, "shift_seconds": 3.9, "metric": "Response Delay Consistency"},
     ],
-    "unmeasured_transitions": [],
-    "response_delays": {
-        "count": 4,
-        "mean_seconds": 0.61,
-        "spread_seconds": 0.38,
-        "score": 0.83,
+    "skipped": [],
+    "metrics": {
+        "Response Latency": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
+        "Agent Interruption": {"score": 1.0, "eligible_turns": 4, "turns_with_events": 0},
+        "User Interruption": {"score": 1.0, "eligible_turns": 4, "turns_with_events": 0},
+        "Response Delay Consistency": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
     },
     "timing_source": "turn_timestamps",
 }
 ```
 
-A negative `gap_seconds` is overlap: the next speaker started before the previous one finished. `response_delays` summarises the caller-to-agent gaps only — how long the agent waited before replying each time, and how much that wait varied. `timing_source` says whether the call recording or the turn timestamps were used; `gap_source` is `audio` when the gap was read from the clips and `latency` when the reply's `latency_ms` was used instead. With a recording, transitions carry `at_seconds` (seconds on the call's clock), `from` and `to` (roles) instead of `from_turn`, `to_turn` and `gap_source`.
+`eligible_turns` is how many agent replies were judged and `turns_with_events` how many had at least one issue. `events` holds each part's events unchanged, tagged with the `metric` that raised them; the part's own page explains its fields. With a call recording, events carry `reply_start` or `caller_start`, seconds on the call's clock, instead of `turn`. `skipped` collects what a part could not time. `metrics` gives each part's own `score`, `eligible_turns` and `turns_with_events`, counted the part's own way, or `{"score": None, "reason": ...}` when that part could not judge the call. `timing_source` is `"call_recording"` or `"turn_timestamps"`.
+
+The reason for the call above reads "1 of 4 agent replies had an issue: Response Latency (1), Response Delay Consistency (1). Judged from each turn's own audio and timestamps, as no stereo call recording was available." The last sentence is added only when the turn timestamps were used.
 
 ## How Is It Calculated?
 
-`TurnTakingNaturalnessMetric` places every clip on a call-relative timeline using `Audio.start_time` and `Audio.duration`, then scores each transition between consecutive turns with **different** roles. Same-speaker transitions are ignored, so an agent's two-part reply is not scored as a hand-off. When two clips touch with no gap, a caller-to-agent transition uses the reply's `latency_ms` instead; any other touching transition, or one with no `latency_ms`, is left out and listed under `unmeasured_transitions`.
+`TurnTakingNaturalnessMetric` runs these single-issue timing metrics on the call, each with its default limits:
 
-Each transition decays exponentially from a perfect 1 at zero delay, and the conversation score is their mean:
+| Part                                                                   | Flags an agent reply that                                          |
+| ---------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| [Response Latency](/docs/metrics-response-latency)                     | kept the caller waiting too long after they finished.              |
+| [Agent Interruption](/docs/metrics-agent-interruption)                 | started into the caller, as a false start or by talking over them. |
+| [User Interruption](/docs/metrics-user-interruption)                   | the caller cut into, with a false start or by talking over it.     |
+| [Response Delay Consistency](/docs/metrics-response-delay-consistency) | came after a wait clearly longer or shorter than the agent's usual. |
 
-<Equation formula="\text{Turn-Taking Naturalness} = \frac{1}{T} \sum_{t=1}^{T} e^{-|\Delta_t| / \tau_t}" />
+The score is the share of judged agent replies that none of the parts flagged:
 
-where _T_ is the number of speaker changes, Δ is the gap or overlap in seconds, and the time constant τ is chosen by what kind of transition it is:
+<Equation formula="\text{Turn-Taking Naturalness} = 1 - \frac{\text{Agent replies flagged by at least one part}}{\text{Agent replies judged}}" />
 
-| `kind`          | Transition                                      | τ     |
-| --------------- | ----------------------------------------------- | ----- |
-| `gap`           | Silence between the two turns.                  | 2.5s  |
-| `user_barge_in` | The caller started while the agent was talking. | 2.0s  |
-| `agent_overlap` | The agent talked over the caller.               | 0.6s  |
-
-A smaller τ decays faster. Agent-on-user overlap is the harshest because it is the most disruptive: half a second of it scores 0.43, where half a second of caller barge-in still scores 0.78.
-
-There is no latency cutoff — the curve is continuous, so a 1.7s silence scores 0.5 and a 4s silence scores 0.2. Judge the score against your own baseline rather than expecting a natural call to reach 1.
-
-Once the call has at least three caller-to-agent gaps, the metric also scores how **consistently** the agent waited before replying. An agent that jumps in after 2s once and waits 9s another time is applying its silence timeout unevenly, which the per-transition mean alone would hide. The spread σ of those gaps (their population standard deviation, in seconds) becomes a second term:
-
-<Equation formula="\text{Turn-Taking Naturalness} = 0.8 \cdot \frac{1}{T} \sum_{t=1}^{T} e^{-|\Delta_t| / \tau_t} + 0.2 \cdot e^{-\sigma / 2}" />
-
-A perfectly even agent keeps the full score; a 1s spread costs about 0.08, a 3s spread about 0.16. With fewer than three caller-to-agent gaps the first term is the whole score and `response_delays.score` is `None`.
+A reply flagged by two parts counts once. Agent speech with pauses under a second counts as one reply, so an agent's two-part reply is judged once. A User Interruption counts against the agent reply the caller cut into: the one playing when the caller started, or else the latest one that started before. A part that cannot judge the call, such as Response Delay Consistency with fewer than three timed replies, is left out of the score.
 
 ### With a call recording
 
-When the test case has a stereo `call_recording_path` (caller on the left channel, agent on the right), transitions come from the recording instead of the turns. A hand-over is a **gap** or an **overlap**, and a speaker starts when they make sound after at least half a second of their own silence:
-
-- **Gap:** a speaker starts while the other is silent, and the other spoke last. Δ is the silence in between.
-- **Overlap:** a speaker starts while the other is talking. Δ is how long both keep talking.
-
-Not counted: the same speaker carrying on, overlaps under 0.3 seconds, the agent's first stretch of speech on the call when it starts before the caller makes any sound (an opening line answers no one; when the caller opens the call, the agent's first reply is scored as a hand-over), and a caller sound under one second that starts while the agent is talking (an "mm-hm"). The scoring above is unchanged; with no hand-over found, the metric is skipped.
+When the test case has a stereo `call_recording_path` (caller on the left channel, agent on the right), every part reads who spoke when from the recording instead of the turns, and `timing_source` is `"call_recording"`. Each part's page explains how it reads the recording.
 
 <include cwd>snippets/voice/speech-detection.mdx</include>
 
-Without a recording, the metric returns no score and marks the evaluation as skipped when any audio turn is missing `start_time`, when fewer than two clips are placed on the timeline, when no two consecutive turns change speaker, or when every speaker change has touching clips with no `latency_ms` to time it.
+Without a recording, every audio turn needs a `start_time`; when one is missing there is no honest way to tell when anyone spoke, so the metric is skipped with the reason "Every audio turn needs a start_time to time the call, so none was inferred."
 
 :::caution
-Silence-based end-of-turn detection is part of what this metric measures. A `turn_detection="patient"` preset waits longer before the caller replies, which shows up here as larger gaps — that is real dead air on the recording, but it is your harness's, not your agent's. For the same reason, timings only compare within a `VoiceProtocol`: keep the connector fixed when tracking this score over time.
+Timings depend on the connector and its end-of-turn detection, so they only compare within a `VoiceProtocol`: keep the connector fixed when tracking this score over time.
 :::
 
 ## FAQs
@@ -143,55 +119,37 @@ Silence-based end-of-turn detection is part of what this metric measures. A `tur
 <FAQs
   qas={[
     {
+      question: "Why did my score change?",
+      answer: (
+        <>
+          This metric used to score every hand-off on a sliding curve and
+          blend in the spread of the agent's waits. It now rolls up the four
+          timing metrics listed above, each with its own limit, and scores the
+          share of agent replies with no issue.
+        </>
+      ),
+    },
+    {
       question: "Why was my test case skipped?",
       answer: (
         <>
           Without a call recording, almost always a missing{" "}
-          <code>start_time</code>. Every clip needs a
-          call-relative placement; without one, silence and overlap would have
-          to be guessed from clip order, and the metric refuses to invent timing
-          evidence. Test cases assembled by hand from recordings need{" "}
-          <code>start_time</code> set explicitly.
+          <code>start_time</code>. Every clip needs a call-relative placement;
+          without one, silence and overlap would have to be guessed from clip
+          order, and the metric refuses to invent timing evidence. Test cases
+          assembled by hand from recordings need <code>start_time</code> set
+          explicitly, or a <code>call_recording_path</code>.
         </>
       ),
     },
     {
-      question: "Is this the same as `latency_ms`?",
+      question: "How is this different from response latency?",
       answer: (
         <>
-          Related but not the same. <code>latency_ms</code> is one number per
-          assistant turn — how long the agent took to start speaking. This
-          metric scores every hand-off in both directions, including the
-          caller's, and accounts for overlap that a latency figure cannot
-          express.
-        </>
-      ),
-    },
-    {
-      question: "Do interruptions hurt the score?",
-      answer: (
-        <>
-          Mildly, by design. A caller barging in is normal phone behavior, so it
-          decays slowly; the agent failing to yield decays more than three times
-          as fast.
-          Enabling{" "}
-          <a href="/docs/conversation-simulator-voice-interruptions">
-            interruptions
-          </a>{" "}
-          is what makes those transitions appear at all.
-        </>
-      ),
-    },
-    {
-      question: "Why does one slow reply lower the score more than its own transition suggests?",
-      answer: (
-        <>
-          Because it also widens the spread of the agent's response delays.
-          Four replies at 0.4s and one at 3s score reasonably well transition
-          by transition, but the agent plainly did not apply the same timeout
-          each time, and <code>response_delays.score</code> records that. The
-          spread term is weighted at 20%, so it adjusts the score rather than
-          dominating it.
+          <a href="/docs/metrics-response-latency">ResponseLatencyMetric</a>{" "}
+          checks only whether the caller waited too long, and lets you change
+          that limit. This metric adds interruptions on both sides and uneven
+          waits, at their default limits, and counts each reply once.
         </>
       ),
     },
@@ -199,9 +157,10 @@ Silence-based end-of-turn detection is part of what this metric measures. A `tur
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Scoring is deterministic and reads clip timings, or each
-          channel's loudness on a call recording, so it has no model or token
-          cost.
+          No LLM. It reads clip timings, or each channel's sound on a call
+          recording. With a recording and <code>use_speech_detection</code>{" "}
+          on, it runs the small Silero VAD model locally over the caller's
+          channel, so it has no token cost.
         </>
       ),
     },

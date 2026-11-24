@@ -7,17 +7,14 @@ from deepeval.metrics.voice.audio_level.volume_variance.utils import (
 from deepeval.metrics.voice.utils.defects import (
     agent_reply_measurements,
     audible_replies,
-    defect_share_result,
+    DefectShare,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
-class VolumeVarianceMetric(BaseVoiceMetric):
+class VolumeVarianceMetric(BaseDefectMetric):
     # 10 dB is roughly half (or twice) as loud.
     def __init__(
         self,
@@ -40,7 +37,7 @@ class VolumeVarianceMetric(BaseVoiceMetric):
         )
         self.max_drift_db = max_drift_db
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         measurements, skipped = agent_reply_measurements(test_case)
         measurements = audible_replies(measurements, skipped)
         eligible_turns = []
@@ -63,7 +60,7 @@ class VolumeVarianceMetric(BaseVoiceMetric):
                         type="volume_drift", turn=turn, drift_db=round(drift, 1)
                     )
                 )
-        return defect_share_result(
+        return DefectShare(
             eligible_turns,
             defects,
             skipped,

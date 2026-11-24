@@ -2,6 +2,7 @@ import pytest
 
 from deepeval.metrics import (
     FailedResponseMetric,
+    RepromptMetric,
     SilentReplyMetric,
     UnexpectedCallEndMetric,
 )
@@ -14,7 +15,12 @@ from tests.test_metrics.helpers import (
 )
 
 
-METRICS = [FailedResponseMetric, SilentReplyMetric, UnexpectedCallEndMetric]
+METRICS = [
+    FailedResponseMetric,
+    RepromptMetric,
+    SilentReplyMetric,
+    UnexpectedCallEndMetric,
+]
 
 
 @pytest.mark.parametrize("metric_class", METRICS)
