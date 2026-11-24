@@ -1255,7 +1255,7 @@ def observe(
             setattr(gen_wrapper, "_is_deepeval_observed", True)
             return gen_wrapper
 
-        if asyncio.iscoroutinefunction(func):
+        if inspect.iscoroutinefunction(func):
 
             @functools.wraps(func)
             async def async_wrapper(*args, **func_kwargs):
