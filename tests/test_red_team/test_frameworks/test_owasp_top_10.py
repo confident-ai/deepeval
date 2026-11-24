@@ -103,9 +103,11 @@ class TestOWASP:
             "BOLA",
             "BFLA",
             "SSRF",
+            "PathTraversal",
             "DebugAccess",
             "ShellInjection",
             "SQLInjection",
+            "XSS",
             "CustomVulnerability",
         ]
         for name in expected_vulns:

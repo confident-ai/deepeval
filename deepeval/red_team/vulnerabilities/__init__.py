@@ -15,6 +15,8 @@ from .debug_access.debug_access import DebugAccess
 from .shell_injection.shell_injection import ShellInjection
 from .sql_injection.sql_injection import SQLInjection
 from .ssrf.ssrf import SSRF
+from .xss.xss import XSS
+from .path_traversal.path_traversal import PathTraversal
 from .intellectual_property.intellectual_property import IntellectualProperty
 from .indirect_instruction.indirect_instruction import IndirectInstruction
 from .tool_orchestration_abuse.tool_orchestration_abuse import (
@@ -36,6 +38,9 @@ from .cross_context_retrieval.cross_context_retrieval import (
 from .system_reconnaissance.system_reconnaissance import SystemReconnaissance
 from .exploit_tool_agent.exploit_tool_agent import ExploitToolAgent
 from .external_system_abuse.external_system_abuse import ExternalSystemAbuse
+from .mcp_server_trust_exploitation.mcp_server_trust_exploitation import (
+    MCPServerTrustExploitation,
+)
 from .autonomous_agent_drift.autonomous_agent_drift import AutonomousAgentDrift
 from .competition.competition import Competition
 from .graphic_content.graphic_content import GraphicContent
@@ -67,6 +72,8 @@ __all__ = [
     "ShellInjection",
     "SQLInjection",
     "SSRF",
+    "XSS",
+    "PathTraversal",
     "IntellectualProperty",
     "IndirectInstruction",
     "ToolOrchestrationAbuse",
@@ -79,6 +86,7 @@ __all__ = [
     "SystemReconnaissance",
     "ExploitToolAgent",
     "ExternalSystemAbuse",
+    "MCPServerTrustExploitation",
     "Competition",
     "GraphicContent",
     "PersonalSafety",

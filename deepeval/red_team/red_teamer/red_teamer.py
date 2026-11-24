@@ -507,27 +507,23 @@ class RedTeamer:
 
                     red_teaming_test_cases: List[RTTestCase] = []
 
-                    async def throttled_evaluate_vulnerability_type(
+                    async def evaluate_vulnerability_type(
                         vulnerability_type, attacks
                     ):
-                        async with semaphore:
-                            test_cases = (
-                                await self._a_evaluate_vulnerability_type(
-                                    model_callback,
-                                    vulnerabilities,
-                                    vulnerability_type,
-                                    attacks,
-                                    ignore_errors=ignore_errors,
-                                )
-                            )
-                            red_teaming_test_cases.extend(test_cases)
-                            update_pbar(progress, task_id, advance=len(attacks))
+                        test_cases = await self._a_evaluate_vulnerability_type(
+                            model_callback,
+                            vulnerabilities,
+                            vulnerability_type,
+                            attacks,
+                            ignore_errors=ignore_errors,
+                            semaphore=semaphore,
+                        )
+                        red_teaming_test_cases.extend(test_cases)
+                        update_pbar(progress, task_id, advance=len(attacks))
 
                     # Create a list of tasks for evaluating each vulnerability, with throttling
                     tasks = [
-                        throttled_evaluate_vulnerability_type(
-                            vulnerability_type, attacks
-                        )
+                        evaluate_vulnerability_type(vulnerability_type, attacks)
                         for vulnerability_type, attacks in vulnerability_type_to_attacks_map.items()
                     ]
                     await asyncio.gather(*tasks)
@@ -764,10 +760,13 @@ class RedTeamer:
         vulnerability_type: VulnerabilityType,
         simulated_test_cases: List[RTTestCase],
         ignore_errors: bool,
+        semaphore: asyncio.Semaphore,
     ) -> List[RTTestCase]:
-        red_teaming_test_cases = await asyncio.gather(
-            *[
-                self._a_attack(
+        async def evaluate_attack(simulated_test_case):
+            # Share the assessment's limit across vulnerability types, not
+            # just across groups that can each launch many target/judge calls.
+            async with semaphore:
+                return await self._a_attack(
                     model_callback=model_callback,
                     simulated_test_case=simulated_test_case,
                     vulnerabilities=vulnerabilities,
@@ -775,6 +774,10 @@ class RedTeamer:
                     vulnerability_type=vulnerability_type,
                     ignore_errors=ignore_errors,
                 )
+
+        red_teaming_test_cases = await asyncio.gather(
+            *[
+                evaluate_attack(simulated_test_case)
                 for simulated_test_case in simulated_test_cases
             ]
         )

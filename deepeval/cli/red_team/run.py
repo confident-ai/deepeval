@@ -22,6 +22,8 @@ from deepeval.red_team.vulnerabilities import (
     ShellInjection,
     SQLInjection,
     SSRF,
+    XSS,
+    PathTraversal,
     # Safety
     IllegalActivity,
     GraphicContent,
@@ -78,6 +80,8 @@ VULN_CLASSES = [
     ShellInjection,
     SQLInjection,
     SSRF,
+    XSS,
+    PathTraversal,
     GoalTheft,
     RecursiveHijacking,
 ]

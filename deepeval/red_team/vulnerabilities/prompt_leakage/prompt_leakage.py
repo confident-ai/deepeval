@@ -99,8 +99,8 @@ class PromptLeakage(BaseVulnerability):
             red_teaming_test_case = RTTestCase(
                 vulnerability=simulated_test_case.vulnerability,
                 vulnerability_type=vulnerability_type,
-                attackMethod=simulated_test_case.attack_method,
-                riskCategory=getRiskCategory(vulnerability_type),
+                attack_method=simulated_test_case.attack_method,
+                risk_category=getRiskCategory(vulnerability_type),
                 input=input_text,
                 actual_output=target_output,
             )
@@ -149,8 +149,8 @@ class PromptLeakage(BaseVulnerability):
             red_teaming_test_case = RTTestCase(
                 vulnerability=simulated_test_case.vulnerability,
                 vulnerability_type=vulnerability_type,
-                attackMethod=simulated_test_case.attack_method,
-                riskCategory=getRiskCategory(vulnerability_type),
+                attack_method=simulated_test_case.attack_method,
+                risk_category=getRiskCategory(vulnerability_type),
                 input=input_text,
                 actual_output=target_output,
             )

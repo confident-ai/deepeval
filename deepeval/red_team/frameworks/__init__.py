@@ -1,6 +1,7 @@
 from .frameworks import RedTeamingFramework
 from .aegis.aegis import Aegis
 from .nist.nist import NIST
+from .iso_42001.iso_42001 import ISO42001
 from .owasp.owasp import OWASPTop10
 from .mitre.mitre import MITRE
 from .beavertails.beavertails import BeaverTails
@@ -13,6 +14,7 @@ __all__ = [
     "OWASP_ASI_2026",
     "NIST",
     "Aegis",
+    "ISO42001",
     "BeaverTails",
     "MITRE",
     "EUAIAct",

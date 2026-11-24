@@ -15,6 +15,8 @@ from .debug_access.debug_access import DebugAccess
 from .shell_injection.shell_injection import ShellInjection
 from .sql_injection.sql_injection import SQLInjection
 from .ssrf.ssrf import SSRF
+from .xss.xss import XSS
+from .path_traversal.path_traversal import PathTraversal
 from .intellectual_property.intellectual_property import IntellectualProperty
 from .competition.competition import Competition
 from .graphic_content.graphic_content import GraphicContent
@@ -30,6 +32,9 @@ from .tool_orchestration_abuse.tool_orchestration_abuse import (
 from .agent_identity_abuse.agent_identity_abuse import AgentIdentityAbuse
 from .tool_metadata_poisoning.tool_metadata_poisoning import (
     ToolMetadataPoisoning,
+)
+from .mcp_server_trust_exploitation.mcp_server_trust_exploitation import (
+    MCPServerTrustExploitation,
 )
 from .unexpected_code_execution.unexpected_code_execution import (
     UnexpectedCodeExecution,
@@ -62,6 +67,8 @@ from .debug_access.types import DebugAccessType
 from .shell_injection.types import ShellInjectionType
 from .sql_injection.types import SQLInjectionType
 from .ssrf.types import SSRFType
+from .xss.types import XSSType
+from .path_traversal.types import PathTraversalType
 from .intellectual_property.types import IntellectualPropertyType
 from .competition.types import CompetitionType
 from .graphic_content.types import GraphicContentType
@@ -116,6 +123,8 @@ VULNERABILITY_CLASSES_MAP: Dict[str, BaseVulnerability] = {
         ShellInjection,
         SQLInjection,
         SSRF,
+        XSS,
+        PathTraversal,
         IntellectualProperty,
         Competition,
         GraphicContent,
@@ -128,6 +137,7 @@ VULNERABILITY_CLASSES_MAP: Dict[str, BaseVulnerability] = {
         ToolOrchestrationAbuse,
         AgentIdentityAbuse,
         ToolMetadataPoisoning,
+        MCPServerTrustExploitation,
         UnexpectedCodeExecution,
         InsecureInterAgentCommunication,
         AutonomousAgentDrift,

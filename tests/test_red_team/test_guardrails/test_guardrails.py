@@ -158,3 +158,35 @@ class TestGuardrailsIntroduction:
         )
         result = guardrails.guard_input("test input")
         assert result.verdicts == []
+
+
+class TestSampleRateAccuracy:
+    """_should_process must guard the requested fraction of requests.
+
+    Uses empty guard lists so the sampling maths can be checked without an
+    evaluation model, since constructing a real guard needs an API key.
+    """
+
+    def _sampled(self, sample_rate: float, requests: int = 1000) -> float:
+        guardrails = Guardrails(
+            input_guards=[], output_guards=[], sample_rate=sample_rate
+        )
+        sampled = sum(guardrails._should_process() for _ in range(requests))
+        return sampled / requests
+
+    @pytest.mark.parametrize(
+        "sample_rate", [0.1, 0.2, 0.25, 0.3, 0.4, 0.5, 0.6, 0.7, 0.75, 0.8, 0.9]
+    )
+    def test_sampled_fraction_matches_sample_rate(self, sample_rate):
+        """int(1 / sample_rate) rounded down, so every rate above 0.5 became 1.0."""
+        assert abs(self._sampled(sample_rate) - sample_rate) < 0.01
+
+    def test_rates_above_half_do_not_guard_everything(self):
+        assert self._sampled(0.6) < 1.0
+
+    def test_boundary_rates_are_unchanged(self):
+        assert self._sampled(0.0) == 0.0
+        assert self._sampled(1.0) == 1.0
+
+    def test_sampling_is_deterministic(self):
+        assert self._sampled(0.3) == self._sampled(0.3)

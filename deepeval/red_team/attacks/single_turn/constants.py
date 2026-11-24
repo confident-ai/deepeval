@@ -13,12 +13,17 @@ from .roleplay import Roleplay
 from .rot13 import ROT13
 from .system_override import SystemOverride
 from .adversarial_poetry import AdversarialPoetry
+from .char_split import CharSplit
 from .character_stream import CharacterStream
 from .context_flooding import ContextFlooding
 from .embedded_instruction_json import EmbeddedInstructionJSON
 from .synthetic_context_injection import SyntheticContextInjection
 from .authority_escalation import AuthorityEscalation
 from .emotional_manipulation import EmotionalManipulation
+from .homoglyph import Homoglyph
+from .zero_width import ZeroWidth
+from .hex_encoding import HexEncoding
+from .morse_code import MorseCode
 
 from .permission_escalation.permission_escalation import PermissionEscalation
 from .goal_redirection.goal_redirection import GoalRedirection
@@ -31,12 +36,17 @@ SINGLE_TURN_ATTACK_CLASSES_MAP: Dict[str, BaseSingleTurnAttack] = {
     for v in [
         AdversarialPoetry,
         Base64,
+        CharSplit,
         CharacterStream,
         ContextFlooding,
         EmbeddedInstructionJSON,
         SyntheticContextInjection,
         AuthorityEscalation,
         EmotionalManipulation,
+        Homoglyph,
+        ZeroWidth,
+        HexEncoding,
+        MorseCode,
         GrayBox,
         Leetspeak,
         MathProblem,

@@ -28,7 +28,7 @@ Input to analyze:
 "{input_text}"
 
 Respond with JSON in this exact format:
-{{"safety_level": "safe"/"unsafe"/"uncertain", "reason": "explanation"}}
+{{"safety_level": "safe"/"unsafe"/"borderline", "reason": "explanation"}}
 
 JSON:"""
 

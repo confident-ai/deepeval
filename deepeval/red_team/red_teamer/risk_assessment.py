@@ -29,9 +29,9 @@ class TestCasesList(list):
                 "Error": case.error,
                 "CVSS Score": case.cvss_score,
                 "Status": (
-                    "Passed"
-                    if case.score and case.score > 0
-                    else "Errored" if case.error else "Failed"
+                    "Errored"
+                    if case.error
+                    else "Passed" if case.score and case.score > 0 else "Failed"
                 ),
             }
             if case.metadata:
@@ -202,10 +202,23 @@ def construct_risk_assessment_overview(
     ] = {}
     attack_method_to_cases: Dict[str, List[RTTestCase]] = {}
 
-    errored = 0
+    total_errored = 0
+    # Errored test cases are skipped below, so they never reach the per-group
+    # loops. Keep a side table per group instead of counting inside those loops.
+    errored_by_vulnerability_type: Dict[VulnerabilityType, int] = {}
+    errored_by_attack_method: Dict[str, int] = {}
     for test_case in red_teaming_test_cases:
         if test_case.error:
-            errored += 1
+            total_errored += 1
+            vuln_type = test_case.vulnerability_type
+            errored_by_vulnerability_type[vuln_type] = (
+                errored_by_vulnerability_type.get(vuln_type, 0) + 1
+            )
+            if test_case.attack_method is not None:
+                attack_method = test_case.attack_method
+                errored_by_attack_method[attack_method] = (
+                    errored_by_attack_method.get(attack_method, 0) + 1
+                )
             continue
 
         # Group by vulnerability type
@@ -229,9 +242,11 @@ def construct_risk_assessment_overview(
         passing = sum(
             1 for tc in test_cases if tc.score is not None and tc.score > 0
         )
-        errored = sum(1 for tc in test_cases if tc.error is not None)
-        failing = len(test_cases) - passing - errored
-        valid_cases = len(test_cases) - errored
+        errored = errored_by_vulnerability_type.get(vuln_type, 0)
+        # `test_cases` already excludes errored rows, so do not subtract them
+        # again from the totals below (that would double-count).
+        failing = len(test_cases) - passing
+        valid_cases = len(test_cases)
         pass_rate = (passing / valid_cases) if valid_cases > 0 else 0.0
 
         vulnerability_type_results.append(
@@ -251,9 +266,9 @@ def construct_risk_assessment_overview(
             passing = sum(
                 1 for tc in test_cases if tc.score is not None and tc.score > 0
             )
-            errored = sum(1 for tc in test_cases if tc.error is not None)
-            failing = len(test_cases) - passing - errored
-            valid_cases = len(test_cases) - errored
+            errored = errored_by_attack_method.get(attack_method, 0)
+            failing = len(test_cases) - passing
+            valid_cases = len(test_cases)
             pass_rate = (passing / valid_cases) if valid_cases > 0 else 0.0
 
             attack_method_results.append(
@@ -269,7 +284,7 @@ def construct_risk_assessment_overview(
     return RedTeamingOverview(
         vulnerability_type_results=vulnerability_type_results,
         attack_method_results=attack_method_results,
-        errored=errored,
+        errored=total_errored,
         run_duration=run_duration,
         cvss_score=compute_average_cvss_score(red_teaming_test_cases),
     )

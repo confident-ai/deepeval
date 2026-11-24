@@ -41,10 +41,16 @@ from deepeval.red_team.vulnerabilities.ssrf.types import SSRFType
 from deepeval.red_team.vulnerabilities.debug_access.types import DebugAccessType
 from deepeval.red_team.vulnerabilities.shell_injection.types import ShellInjectionType
 from deepeval.red_team.vulnerabilities.sql_injection.types import SQLInjectionType
+from deepeval.red_team.vulnerabilities.xss.types import XSSType
+from deepeval.red_team.vulnerabilities.path_traversal.types import PathTraversalType
 from deepeval.red_team.vulnerabilities.rbac.template import RBACTemplate
 from deepeval.red_team.vulnerabilities.bola.template import BOLATemplate
 from deepeval.red_team.vulnerabilities.bfla.template import BFLATemplate
 from deepeval.red_team.vulnerabilities.ssrf.template import SSRFTemplate
+from deepeval.red_team.vulnerabilities.xss.template import XSSTemplate
+from deepeval.red_team.vulnerabilities.path_traversal.template import (
+    PathTraversalTemplate,
+)
 from deepeval.red_team.vulnerabilities.debug_access.template import DebugAccessTemplate
 from deepeval.red_team.vulnerabilities.shell_injection.template import (
     ShellInjectionTemplate,
@@ -84,6 +90,12 @@ from deepeval.red_team.vulnerabilities.system_reconnaissance.types import (
 from deepeval.red_team.vulnerabilities.system_reconnaissance.template import (
     SystemReconnaissanceTemplate,
 )
+from deepeval.red_team.vulnerabilities.mcp_server_trust_exploitation.types import (
+    MCPServerTrustExploitationType,
+)
+from deepeval.red_team.vulnerabilities.mcp_server_trust_exploitation.template import (
+    MCPServerTrustExploitationTemplate,
+)
 
 # Import agentic vulnerability types
 from deepeval.red_team.vulnerabilities.goal_theft.types import GoalTheftType
@@ -115,13 +127,16 @@ VulnerabilityType = Union[
     BOLAType,
     BFLAType,
     SSRFType,
+    PathTraversalType,
     DebugAccessType,
     ShellInjectionType,
     SQLInjectionType,
+    XSSType,
     ExploitToolAgentType,
     ExternalSystemAbuseType,
     CrossContextRetrievalType,
     SystemReconnaissanceType,
+    MCPServerTrustExploitationType,
     # Restored vulnerability types
     RobustnessType,
     ExcessiveAgencyType,
@@ -145,9 +160,11 @@ TemplateType = Union[
     BOLATemplate,
     BFLATemplate,
     SSRFTemplate,
+    PathTraversalTemplate,
     DebugAccessTemplate,
     ShellInjectionTemplate,
     SQLInjectionTemplate,
+    XSSTemplate,
     RobustnessTemplate,
     ExcessiveAgencyTemplate,
     GoalTheftTemplate,
@@ -156,4 +173,5 @@ TemplateType = Union[
     ExternalSystemAbuseTemplate,
     CrossContextRetrievalTemplate,
     SystemReconnaissanceTemplate,
+    MCPServerTrustExploitationTemplate,
 ]

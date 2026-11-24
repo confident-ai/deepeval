@@ -94,8 +94,8 @@ class Toxicity(BaseVulnerability):
             rt_test_case = RTTestCase(
                 vulnerability=test_case.vulnerability,
                 vulnerability_type=vuln_type,
-                attackMethod=test_case.attack_method,
-                riskCategory=getRiskCategory(vuln_type),
+                attack_method=test_case.attack_method,
+                risk_category=getRiskCategory(vuln_type),
                 input=input_text,
                 actual_output=output,
             )
@@ -141,8 +141,8 @@ class Toxicity(BaseVulnerability):
             rt_test_case = RTTestCase(
                 vulnerability=test_case.vulnerability,
                 vulnerability_type=vuln_type,
-                attackMethod=test_case.attack_method,
-                riskCategory=getRiskCategory(vuln_type),
+                attack_method=test_case.attack_method,
+                risk_category=getRiskCategory(vuln_type),
                 input=input_text,
                 actual_output=output,
             )

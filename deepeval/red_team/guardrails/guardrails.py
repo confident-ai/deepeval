@@ -71,6 +71,7 @@ class Guardrails:
         self.sample_rate = sample_rate
         self.evaluation_model = evaluation_model
         self._request_count = 0
+        self._sample_accumulator = 0.0
 
         # Update all guards to use the specified evaluation model
         self.input_guards = self._update_guards_model(
@@ -102,8 +103,14 @@ class Guardrails:
         if self.sample_rate == 1.0:
             return True
 
-        interval = int(1 / self.sample_rate)
-        return self._request_count % interval == 0
+        # Carry the fraction across requests instead of guarding every
+        # int(1 / sample_rate)-th one. The integer interval rounds down, so any
+        # rate above 0.5 collapsed to an interval of 1 and guarded everything.
+        self._sample_accumulator += self.sample_rate
+        if self._sample_accumulator >= 1.0:
+            self._sample_accumulator -= 1.0
+            return True
+        return False
 
     def guard_input(self, input: str) -> GuardResult:
         """

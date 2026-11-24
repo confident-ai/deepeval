@@ -21,6 +21,8 @@ from .competitors.competitors import CompetitorsMetric
 from .overreliance.overreliance import OverrelianceMetric
 from .prompt_extraction.prompt_extraction import PromptExtractionMetric
 from .ssrf.ssrf import SSRFMetric
+from .xss.xss import XSSMetric
+from .path_traversal.path_traversal import PathTraversalMetric
 from .hijacking.hijacking import HijackingMetric
 from .intellectual_property.intellectual_property import (
     IntellectualPropertyMetric,
@@ -49,6 +51,9 @@ from .system_reconnaissance.system_reconnaissance import (
 from .exploit_tool_agent.exploit_tool_agent import ExploitToolAgentMetric
 from .external_system_abuse.external_system_abuse import (
     ExternalSystemAbuseMetric,
+)
+from .mcp_server_trust_exploitation.mcp_server_trust_exploitation import (
+    MCPServerTrustExploitationMetric,
 )
 
 # Agentic metrics

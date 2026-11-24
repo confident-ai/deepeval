@@ -9,12 +9,17 @@ from .prompt_injection import PromptInjection
 from .prompt_probing import PromptProbing
 from .roleplay import Roleplay
 from .rot13 import ROT13
+from .char_split import CharSplit
 from .character_stream import CharacterStream
 from .context_flooding import ContextFlooding
 from .embedded_instruction_json import EmbeddedInstructionJSON
 from .synthetic_context_injection import SyntheticContextInjection
 from .authority_escalation import AuthorityEscalation
 from .emotional_manipulation import EmotionalManipulation
+from .homoglyph import Homoglyph
+from .zero_width import ZeroWidth
+from .hex_encoding import HexEncoding
+from .morse_code import MorseCode
 
 # Generic enhancement attacks (moved from agentic)
 from .system_override.system_override import SystemOverride
@@ -37,6 +42,7 @@ __all__ = [
     "PromptProbing",
     "Roleplay",
     "ROT13",
+    "CharSplit",
     "CharacterStream",
     "ContextFlooding",
     "EmbeddedInstructionJSON",
@@ -49,4 +55,8 @@ __all__ = [
     "SyntheticContextInjection",
     "AuthorityEscalation",
     "EmotionalManipulation",
+    "Homoglyph",
+    "ZeroWidth",
+    "HexEncoding",
+    "MorseCode",
 ]
