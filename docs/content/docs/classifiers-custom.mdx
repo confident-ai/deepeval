@@ -357,13 +357,14 @@ Requests to move to a higher plan.
 ['Plan Upgrade', 'Billing Document Access Issue']
 ```
 
-There are **FIVE** optional parameters when creating a `LabelDiscoveryConfig`:
+There are **SIX** optional parameters when creating a `LabelDiscoveryConfig`:
 
 - [Optional] `candidate_labels`: a list of `Label`s or strings proposed earlier but not adopted yet, used to seed the classifier's label pool. Defaulted to `[]`.
 - [Optional] `embedding_model`: a string or any `DeepEvalBaseEmbeddingModel`, used to [merge near-duplicates](#label-discovery) by similarity before asking the judge. Defaulted to deepeval's default embedding model, the same one the `Synthesizer` uses. Label discovery always embeds label names, so it needs an [embedding model](/guides/guides-using-custom-embedding-models) to be available. If embedding fails twice, names are compared by the words they share instead, and a merge judge call the provider fails keeps the new label.
 - [Optional] `similarity_threshold`: the cosine similarity at or above which a new label is merged into an existing one without asking the judge. Defaulted to `0.92`.
 - [Optional] `top_k`: how many of the most similar existing labels the judge compares a new label against when deciding whether to merge it. Defaulted to `15`.
 - [Optional] `max_new_labels`: the most new labels added to the pool from one test case; proposals past the cap can still merge into existing labels. Defaulted to `None` (no cap).
+- [Optional] `model`: a string or any `DeepEvalBaseLLM` that proposes new labels. When set, the classifier's own `model` first picks from your labels with discovery off, and this model is asked for a new label only when none fits; a name matching one of your labels is dropped, and review still uses the classifier's `model`. Defaulted to `None`, where one call both picks and proposes.
 
 On each `Classification`, `new_label_description` is `None` for one of your labels, and is set for a new or candidate label. A suggested name that only says nothing applies, such as "Other" or "No Topic", is treated as no label.
 
@@ -442,6 +443,7 @@ Reviewing costs one extra judge call per returned label, made in parallel under 
 To see what each step did, read `classifier.steps` after `classify`. Each step holds its result and the `seconds` it took, and a step that did not run is `None`:
 
 - `steps.classification.classifications`: the labels the judge gave, before review.
+- `steps.suggestion.classifications`: the labels the discovery `model` proposed, when `LabelDiscoveryConfig(model=...)` is set and none of your labels fit.
 - `steps.label_discovery.merged_labels`: each new label name the judge proposed, mapped to the label it became after merging, which is itself when it was added as new.
 - `steps.review.reviews`: one `ClassificationReview` per label the judge gave, with its `label`, `kept`, `confidence` (`None` when the review could not be read) and `reason`.
 
