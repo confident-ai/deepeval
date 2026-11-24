@@ -2,7 +2,7 @@
 
 import asyncio
 import time
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Dict, List, Optional, Sequence, Type, Union, cast
 
 from deepeval.classifiers.base_classifier import (
@@ -119,6 +119,7 @@ class ClassificationPrompt:
 @dataclass
 class ClassifierSteps:
     classification: Optional[ClassificationStep] = None
+    suggestion: Optional[ClassificationStep] = None
     label_discovery: Optional[LabelDiscoveryStep] = None
     review: Optional[ReviewStep] = None
 
@@ -239,6 +240,8 @@ class Classifier(BaseClassifier):
                         ),
                     )
                 )
+            elif self._discovers_separately():
+                self._label_then_discover(test_case)
             else:
                 prompt = self._build_prompt(test_case)
                 schema = self._choose_output_schema()
@@ -310,6 +313,9 @@ class Classifier(BaseClassifier):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if self._discovers_separately():
+                await self._a_label_then_discover(test_case)
+                return self.label
             prompt = self._build_prompt(test_case)
             schema = self._choose_output_schema()
             started = time.perf_counter()
@@ -368,6 +374,114 @@ class Classifier(BaseClassifier):
         clone = cast("Classifier", super().copy())
         clone.label_pool = self.label_pool
         return clone
+
+    ###############################################
+    # Separate discovery model
+    ###############################################
+
+    def _discovers_separately(self) -> bool:
+        return bool(
+            self.label_discovery_config and self.label_discovery_config.model
+        )
+
+    def _label_then_discover(
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+    ) -> None:
+        if self.labels:
+            labeler = self._labeler()
+            labeler.classify(test_case, _show_indicator=False)
+            self._take_run(labeler)
+            if self.classifications or self.error:
+                self._review_taken_run(test_case)
+                return
+        discoverer = self._discoverer()
+        discoverer.classify(test_case, _show_indicator=False)
+        self._take_run(discoverer)
+        self._review_taken_run(test_case)
+
+    async def _a_label_then_discover(
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+    ) -> None:
+        if self.labels:
+            labeler = self._labeler()
+            await labeler.a_classify(test_case, _show_indicator=False)
+            self._take_run(labeler)
+            if self.classifications or self.error:
+                await self._a_review_taken_run(test_case)
+                return
+        discoverer = self._discoverer()
+        await discoverer.a_classify(test_case, _show_indicator=False)
+        self._take_run(discoverer)
+        await self._a_review_taken_run(test_case)
+
+    def _labeler(self) -> "Classifier":
+        labeler = self.copy()
+        labeler.label_discovery_config = None
+        labeler.review_config = None
+        labeler.allow_none = True
+        return labeler
+
+    def _discoverer(self) -> "Classifier":
+        discoverer = self.copy()
+        discoverer.labels = []
+        discoverer.review_config = None
+        discoverer.label_discovery_config = replace(
+            self.label_discovery_config, model=None
+        )
+        discoverer.model, discoverer.using_native_model = initialize_model(
+            self.label_discovery_config.model, self.eval_mode
+        )
+        discoverer.evaluation_model = discoverer.model.get_model_name()
+        return discoverer
+
+    def _take_run(self, run: "Classifier") -> None:
+        self._accrue_cost(run.evaluation_cost)
+        self._accrue_tokens(run.input_tokens, run.output_tokens)
+        declared = {label.name.lower() for label in self.labels}
+        discovered = not run.labels
+        self.classifications = [
+            classification
+            for classification in run.classifications
+            if not discovered or classification.label.lower() not in declared
+        ]
+        self.label = (
+            self.classifications[0].label if self.classifications else None
+        )
+        self.reason = (
+            self.classifications[0].reason
+            if self.classifications
+            else run.reason or self.reason
+        )
+        self.error = run.error
+        if discovered:
+            self.steps.suggestion = run.steps.classification
+            self.steps.label_discovery = run.steps.label_discovery
+        else:
+            self.steps.classification = run.steps.classification
+
+    def _review_taken_run(
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+    ) -> None:
+        if not (self.review_config and self.classifications):
+            return
+        started = time.perf_counter()
+        reviews = review_classifications(self, self._build_prompt(test_case))
+        self.steps.review = ReviewStep(
+            reviews=reviews, seconds=time.perf_counter() - started
+        )
+
+    async def _a_review_taken_run(
+        self, test_case: Union[LLMTestCase, ConversationalTestCase]
+    ) -> None:
+        if not (self.review_config and self.classifications):
+            return
+        started = time.perf_counter()
+        reviews = await a_review_classifications(
+            self, self._build_prompt(test_case)
+        )
+        self.steps.review = ReviewStep(
+            reviews=reviews, seconds=time.perf_counter() - started
+        )
 
     ###############################################
     # Post-process classifications

@@ -3,7 +3,7 @@ from typing import List, Optional, Union
 
 from deepeval.classifiers.base_classifier import Label
 from deepeval.metrics.utils import initialize_embedding_model
-from deepeval.models import DeepEvalBaseEmbeddingModel
+from deepeval.models import DeepEvalBaseEmbeddingModel, DeepEvalBaseLLM
 
 
 @dataclass(frozen=True)
@@ -13,6 +13,7 @@ class LabelDiscoveryConfig:
     similarity_threshold: float = 0.92
     top_k: int = 15
     max_new_labels: Optional[int] = None
+    model: Optional[Union[str, DeepEvalBaseLLM]] = None
 
     def __post_init__(self):
         object.__setattr__(
