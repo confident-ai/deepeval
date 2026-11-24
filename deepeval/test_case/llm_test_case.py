@@ -434,9 +434,10 @@ class LLMTestCase(BaseModel):
         ),
     )
     expectations: Optional[Expectations] = Field(default=None)
-    # Classifier name -> label this test case should receive. A classifier
-    # only produces a pass/fail verdict when its name is present here.
-    expected_labels: Optional[Dict[str, str]] = Field(
+    # Classifier name -> the label, or for a multi_label classifier the
+    # exact list of labels, this test case should receive. A classifier only
+    # produces a pass/fail verdict when its name is present here.
+    expected_labels: Optional[Dict[str, Union[str, List[str]]]] = Field(
         default=None,
         serialization_alias="expectedLabels",
         validation_alias=AliasChoices("expectedLabels", "expected_labels"),
@@ -634,11 +635,18 @@ class LLMTestCase(BaseModel):
             expected_labels = data.get("expectedLabels")
         if expected_labels is not None:
             if not isinstance(expected_labels, dict) or not all(
-                isinstance(k, str) and isinstance(v, str)
+                isinstance(k, str)
+                and (
+                    isinstance(v, str)
+                    or (
+                        isinstance(v, list)
+                        and all(isinstance(label, str) for label in v)
+                    )
+                )
                 for k, v in expected_labels.items()
             ):
                 raise TypeError(
-                    "'expected_labels' must be None or a Dict[str, str] mapping classifier name to label"
+                    "'expected_labels' must be None or a dict mapping classifier name to a label or a list of labels"
                 )
 
         return data

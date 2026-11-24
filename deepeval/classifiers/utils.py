@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import logging
+import re
 from collections import Counter
 from dataclasses import dataclass
+from enum import Enum
 from typing import (
     Any,
     Dict,
@@ -51,7 +53,9 @@ logger = logging.getLogger(__name__)
 
 def normalize_labels(labels: Sequence[Union[str, Label]]) -> List[Label]:
     if not labels:
-        raise ValueError("A classifier needs at least one label.")
+        raise ValueError(
+            "A classifier needs at least one label, or a label_discovery_config to discover them."
+        )
 
     normalized: List[Label] = []
     for label in labels:
@@ -110,6 +114,165 @@ def resolve_label(
     return None
 
 
+_META_NOUNS = (
+    r"(?:trace|content|interaction|conversation|input|output|data|message|"
+    r"payload|json|response|record|log)"
+)
+_META_VERBS = (
+    r"(?:shows|contains|reports|says|indicates|reveals|describes|presents|"
+    r"returns|is|reflects|demonstrates|depicts)"
+)
+_META_ADVERBS = (
+    r"(?:only|just|merely|simply|essentially|primarily|mostly|mainly)"
+)
+_META_PREFIX_RE = re.compile(
+    r"^\s*(?:"
+    rf"the content of the {_META_NOUNS}\s+(?:{_META_VERBS})\s+(?:that\s+)?"
+    rf"|the {_META_NOUNS}(?:\s+{_META_ADVERBS})?\s+{_META_VERBS}\s+"
+    r"(?:that\s+|a\s+|an\s+|only\s+|just\s+)?"
+    rf"|the only (?:visible\s+|actual\s+|real\s+)?(?:{_META_NOUNS})\s+"
+    rf"(?:is|shows|contains|{_META_VERBS})\s+"
+    rf"|according to the {_META_NOUNS}[,:]?\s*"
+    rf"|based on the {_META_NOUNS}[,:]?\s*"
+    r"|looking at the " + _META_NOUNS + r"[,:]?\s*"
+    rf"|from the {_META_NOUNS}[,:]?\s*"
+    r")",
+    re.IGNORECASE,
+)
+_MIN_CLEANED_LENGTH = 10
+
+
+def clean_reason(reason: str) -> str:
+    if not reason:
+        return reason
+    original = str(reason).strip()
+    cleaned = _META_PREFIX_RE.sub("", original).strip()
+    if cleaned == original or len(cleaned) < _MIN_CLEANED_LENGTH:
+        return original
+    return cleaned[:1].upper() + cleaned[1:]
+
+
+_ABSENCE_LABEL_NAMES = {
+    "none",
+    "n/a",
+    "na",
+    "nothing",
+    "other",
+    "others",
+    "unknown",
+    "unclassified",
+    "uncategorized",
+    "not applicable",
+    "miscellaneous",
+    "none found",
+}
+
+
+class LabelOrigin(str, Enum):
+    DECLARED = "declared"
+    CANDIDATE = "candidate"
+    NEW = "new"
+    NONE = "none"
+
+
+@dataclass(frozen=True)
+class ResolvedLabel:
+    """A judge answer mapped onto a label.
+
+    ``name`` is ``None`` when the answer matched nothing (an error for the
+    caller to record). ``description`` is set only for candidate and new
+    labels, since declared labels already carry their own.
+    """
+
+    name: Optional[str]
+    origin: Optional[LabelOrigin] = None
+    description: Optional[str] = None
+
+    @property
+    def unresolved(self) -> bool:
+        return self.name is None
+
+    @property
+    def is_none(self) -> bool:
+        return self.origin is LabelOrigin.NONE
+
+
+def resolve_suggested_label(
+    raw: Optional[str],
+    *,
+    description: Optional[str],
+    reason: Optional[str],
+    labels: List[Label],
+    candidate_labels: List[Label],
+    allow_none: bool,
+    classifier_name: str,
+) -> ResolvedLabel:
+    """Map a judge answer that may name a new label onto a ``ResolvedLabel``.
+
+    Declared labels win, then candidates (with their description), then a new
+    label with the judge's description. A name that only says nothing applies
+    is treated as ``NONE``.
+    """
+    existing = resolve_label(raw, labels, allow_none)
+    if existing == NONE_LABEL:
+        return ResolvedLabel(NONE_LABEL, LabelOrigin.NONE)
+    if existing is not None:
+        return ResolvedLabel(existing, LabelOrigin.DECLARED)
+    if raw is None:
+        return ResolvedLabel(None)
+    name = str(raw).strip()
+    if (
+        not name
+        or name.upper() == NONE_LABEL
+        or _is_absence_label(name, classifier_name)
+    ):
+        return (
+            ResolvedLabel(NONE_LABEL, LabelOrigin.NONE)
+            if allow_none
+            else ResolvedLabel(None)
+        )
+    candidate = next(
+        (c for c in candidate_labels if c.name.lower() == name.lower()), None
+    )
+    if candidate is not None:
+        return ResolvedLabel(
+            candidate.name, LabelOrigin.CANDIDATE, candidate.description
+        )
+    if description and description.strip():
+        return ResolvedLabel(name, LabelOrigin.NEW, description.strip())
+    return ResolvedLabel(
+        name, LabelOrigin.NEW, _fallback_description(name, reason)
+    )
+
+
+def _fallback_description(name: str, reason: Optional[str]) -> str:
+    detail = (reason or "").strip().rstrip(
+        "."
+    ) or f'the evidence shows "{name}"'
+    # Lowercase the first letter to fit "Cases where ...", unless it starts an
+    # acronym such as "API".
+    if not detail[1:2].isupper():
+        detail = detail[:1].lower() + detail[1:]
+    return (
+        f"Cases where {detail}. "
+        "Does not apply when supporting evidence is absent."
+    )
+
+
+def _is_absence_label(name: str, classifier_name: str) -> bool:
+    normalized = " ".join(name.lower().split())
+    if normalized in _ABSENCE_LABEL_NAMES:
+        return True
+    singular = re.escape(" ".join(classifier_name.lower().split()).rstrip("s"))
+    return bool(
+        singular
+        and re.fullmatch(
+            rf"(?:no|none|without) (?:\w+ ){{0,2}}{singular}(?:s|es)?(?: \w+)?",
+            normalized,
+        )
+    )
+
+
 def format_labels(labels: List[Label]) -> str:
     lines = []
     for label in labels:
@@ -125,7 +288,7 @@ def format_labels(labels: List[Label]) -> str:
 ###############################################
 
 # Ordered (param -> display name). Every populated field is shown to the judge.
-_SINGLE_TURN_CONTENT_PARAMS = {
+SINGLE_TURN_CONTENT_PARAMS = {
     SingleTurnParams.INPUT: "Input",
     SingleTurnParams.ACTUAL_OUTPUT: "Actual Output",
     SingleTurnParams.EXPECTED_OUTPUT: "Expected Output",
@@ -135,7 +298,7 @@ _SINGLE_TURN_CONTENT_PARAMS = {
     SingleTurnParams.EXPECTED_TOOLS: "Expected Tools",
 }
 
-_MULTI_TURN_CONTENT_PARAMS = {
+MULTI_TURN_CONTENT_PARAMS = {
     MultiTurnParams.SCENARIO: "Scenario",
     MultiTurnParams.EXPECTED_OUTCOME: "Expected Outcome",
     MultiTurnParams.USER_DESCRIPTION: "User Description",
@@ -151,7 +314,7 @@ _TURN_PARAMS = [
 ]
 
 
-def _is_populated(value) -> bool:
+def is_populated(value) -> bool:
     if value is None:
         return False
     if isinstance(value, (str, list, dict)) and len(value) == 0:
@@ -161,9 +324,9 @@ def _is_populated(value) -> bool:
 
 def construct_single_turn_content(test_case: LLMTestCase) -> str:
     text = ""
-    for param, display in _SINGLE_TURN_CONTENT_PARAMS.items():
+    for param, display in SINGLE_TURN_CONTENT_PARAMS.items():
         value = getattr(test_case, param.value, None)
-        if not _is_populated(value):
+        if not is_populated(value):
             continue
         if isinstance(value, list) and value and isinstance(value[0], ToolCall):
             value = [repr(tool) for tool in value]
@@ -177,9 +340,9 @@ def construct_single_turn_content(test_case: LLMTestCase) -> str:
 
 def construct_multi_turn_content(test_case: ConversationalTestCase) -> str:
     text = ""
-    for param, display in _MULTI_TURN_CONTENT_PARAMS.items():
+    for param, display in MULTI_TURN_CONTENT_PARAMS.items():
         value = getattr(test_case, param.value, None)
-        if not _is_populated(value):
+        if not is_populated(value):
             continue
         text += f"{display}:\n{value}\n\n"
     return text.rstrip()
@@ -324,7 +487,7 @@ def _experimental_system_one_fields(test_case, params) -> Dict:
     fields: Dict = {}
     for param in params:
         value = getattr(test_case, param.value, None)
-        if not _is_populated(value):
+        if not is_populated(value):
             continue
         if isinstance(value, list) and value and isinstance(value[0], ToolCall):
             value = [repr(tool) for tool in value]
@@ -334,7 +497,7 @@ def _experimental_system_one_fields(test_case, params) -> Dict:
 
 def construct_single_turn_state(test_case: LLMTestCase) -> Dict:
     fields = _experimental_system_one_fields(
-        test_case, _SINGLE_TURN_CONTENT_PARAMS
+        test_case, SINGLE_TURN_CONTENT_PARAMS
     )
     if not fields:
         raise ValueError(
@@ -346,7 +509,7 @@ def construct_single_turn_state(test_case: LLMTestCase) -> Dict:
 def construct_multi_turn_state(test_case: ConversationalTestCase) -> Dict:
     state: Dict = {"turns": construct_turns(test_case)}
     fields = _experimental_system_one_fields(
-        test_case, _MULTI_TURN_CONTENT_PARAMS
+        test_case, MULTI_TURN_CONTENT_PARAMS
     )
     if fields:
         state["test_case"] = fields
@@ -412,10 +575,17 @@ def validate_classifiers(
             if classifier is None:
                 unknown_keys[key] += 1
                 continue
-            if value not in classifier.labels:
+            if isinstance(value, list) and not classifier.multi_label:
                 raise ValueError(
-                    f"expected_labels['{key}'] = '{value}' is not one of classifier '{key}' labels: {', '.join(str(l) for l in classifier.labels)}."
+                    f"expected_labels['{key}'] is a list, but classifier '{key}' assigns one label; set multi_label=True or expect a single label."
                 )
+            if classifier.label_discovery_config is not None:
+                continue
+            for label in value if isinstance(value, list) else [value]:
+                if label not in classifier.labels:
+                    raise ValueError(
+                        f"expected_labels['{key}'] = '{label}' is not one of classifier '{key}' labels: {', '.join(str(declared) for declared in classifier.labels)}."
+                    )
 
     if unknown_keys:
         details = ", ".join(
