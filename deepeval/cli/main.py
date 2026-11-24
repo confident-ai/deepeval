@@ -37,6 +37,7 @@ from deepeval.cli.auth import LOGIN_HELP, login_command, logout_command
 from deepeval.cli.diagnose import diagnose_command
 from deepeval.cli.generate.command import generate_command
 from deepeval.cli.inspect import inspect_command
+from deepeval.cli.link_ci import LINK_CI_HELP, link_ci_command
 from deepeval.cli.setup import (
     SETUP_CONTEXT_SETTINGS,
     SETUP_HELP,
@@ -66,6 +67,7 @@ app.command(name="logout")(logout_command)
 app.command(
     name="setup", help=SETUP_HELP, context_settings=SETUP_CONTEXT_SETTINGS
 )(setup_command)
+app.command(name="link-ci", help=LINK_CI_HELP)(link_ci_command)
 
 
 class Regions(Enum):

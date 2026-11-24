@@ -168,6 +168,7 @@ class Endpoints(Enum):
     GOLDEN_ENDPOINT = "/v1/datasets/:alias/goldens/:goldenId"
 
     TEST_RUN_ENDPOINT = "/v1/test-run"
+    EVAL_GATE_UNIT_TEST_RUNS_ENDPOINT = "/v1/eval-gate/unit-test-runs"
     EXPERIMENT_ENDPOINT = "/v1/experiment"
     TRACES_ENDPOINT = "/v1/traces"
     ANNOTATIONS_ENDPOINT = "/v1/annotations"

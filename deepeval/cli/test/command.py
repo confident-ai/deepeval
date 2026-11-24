@@ -7,6 +7,7 @@ import pytest
 import typer
 from typing_extensions import Annotated
 
+from deepeval.cli.link_ci import print_link_ci_hint, save_test_run_args
 from deepeval.config.settings import get_settings
 from deepeval.test_run import (
     TEMP_FILE_PATH,
@@ -14,9 +15,11 @@ from deepeval.test_run import (
     invoke_test_run_end_hook,
 )
 from deepeval.test_run.cache import TEMP_CACHE_FILE_NAME
+from deepeval.test_run.github_actions import link_test_run_to_github_repository
 from deepeval.test_run.test_run import TestRunResultDisplay
 from deepeval.utils import (
     delete_file_if_exists,
+    is_in_ci_env,
     set_identifier,
     set_is_running_deepeval,
     set_should_ignore_errors,
@@ -184,9 +187,36 @@ def run(
     pytest_retcode = pytest.main(pytest_args)
     end_time = time.perf_counter()
     run_duration = end_time - start_time
-    global_test_run_manager.wrap_up_test_run(run_duration, True, display)
+    uploaded = global_test_run_manager.wrap_up_test_run(
+        run_duration, True, display
+    )
+    confident_test_run_id = uploaded[1] if uploaded else None
+    if confident_test_run_id:
+        link_test_run_to_github_repository(
+            confident_test_run_id, int(pytest_retcode)
+        )
 
     invoke_test_run_end_hook()
+
+    if not is_in_ci_env():
+        save_test_run_args(
+            [
+                test_file_or_directory,
+                *(["-x"] if exit_on_first_failure else []),
+                *(["--identifier", identifier] if identifier else []),
+                *(
+                    ["-n", str(num_processes)]
+                    if num_processes is not None
+                    else []
+                ),
+                *(["-r", str(repeat)] if repeat is not None else []),
+                *(["-i"] if ignore_errors else []),
+                *(["-s"] if skip_on_missing_params else []),
+                *(["-m", mark] if mark else []),
+                *ctx.args,
+            ]
+        )
+        print_link_ci_hint()
 
     # Propagate any non-zero pytest exit code so failures surface in CI.
     # pytest distinguishes: 1=tests failed, 2=interrupted (e.g. -x stop on
