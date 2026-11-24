@@ -19,7 +19,7 @@ from deepeval.utils import get_or_create_event_loop
 
 from deepeval.red_team.frameworks.frameworks import RedTeamingFramework
 from deepeval.red_team.frameworks.risk_category import RiskCategory
-from deepeval.telemetry import capture_red_teaming_run
+from deepeval.telemetry import capture_red_teaming_run, record_test_case
 from deepeval.red_team.attacks import BaseAttack
 from deepeval.red_team.utils import (
     validate_model_callback_signature,
@@ -211,8 +211,7 @@ class RedTeamer:
                 vulnerabilities=vulnerabilities,
                 attacks=attacks,
                 framework=framework,
-                async_mode=self.async_mode,
-            ) as telemetry_span:
+            ):
                 # Generate attacks
                 if (
                     reuse_simulated_test_cases
@@ -323,9 +322,8 @@ class RedTeamer:
                     test_cases=red_teaming_test_cases,
                 )
                 self.test_cases = red_teaming_test_cases
-                telemetry_span.set_test_case_count(
-                    len(red_teaming_test_cases)
-                )
+                for test_case in red_teaming_test_cases:
+                    record_test_case(test_case)
 
                 if _print_assessment:
                     self._print_risk_assessment(self.risk_assessment)
@@ -420,8 +418,7 @@ class RedTeamer:
             vulnerabilities=vulnerabilities,
             attacks=attacks,
             framework=framework,
-            async_mode=self.async_mode,
-        ) as telemetry_span:
+        ):
             # Generate attacks
             if (
                 reuse_simulated_test_cases
@@ -537,9 +534,8 @@ class RedTeamer:
                 test_cases=red_teaming_test_cases,
             )
             self.test_cases = red_teaming_test_cases
-            telemetry_span.set_test_case_count(
-                len(red_teaming_test_cases)
-            )
+            for test_case in red_teaming_test_cases:
+                record_test_case(test_case)
 
             if _print_assessment:
                 self._print_risk_assessment(self.risk_assessment)

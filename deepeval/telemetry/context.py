@@ -17,8 +17,9 @@ from contextvars import ContextVar
 from dataclasses import dataclass, field, replace
 from typing import Any, Optional, Set, Tuple
 
-from deepeval.telemetry.client import capture
-from deepeval.telemetry.events import Entrypoint, Event
+from deepeval.telemetry.client import capture, telemetry_opt_out
+from deepeval.telemetry.events import Entrypoint, Event, Feature
+from deepeval.telemetry.identity import get_feature_status, set_last_feature
 from deepeval.telemetry.judge import describe_judge
 from deepeval.telemetry.properties import (
     EventProperties,
@@ -237,13 +238,24 @@ def record_metric(
 
 
 class StandaloneAccumulator:
-    """Metrics measured outside any `evaluate()` call.
+    """Measures taken outside any `evaluate()` call.
 
     Flushes on a count threshold, on an interval, and at process exit --
-    `atexit` alone loses SIGKILLed containers.
+    `atexit` alone loses SIGKILLed containers. The default instance batches
+    bare `metric.measure()` calls into `Evaluation` events; guardrails reuse
+    the same policy under their own event, since a guard check is a measure
+    that runs on every production request.
     """
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        event: Event = Event.EVALUATION,
+        entrypoint: Optional[Entrypoint] = Entrypoint.STANDALONE,
+        feature: Optional[Feature] = None,
+    ) -> None:
+        self._event = event
+        self._entrypoint = entrypoint
+        self._feature = feature
         self._lock = threading.Lock()
         self._reset()
         self._timer: Optional[threading.Timer] = None
@@ -312,13 +324,14 @@ class StandaloneAccumulator:
                 return None
             metric_names = sorted(self._metrics)
             traced_here = max(trace_total - (self._traces_at_start or 0), 0)
+            is_evaluation = self._event is Event.EVALUATION
             properties = EventProperties(
-                entrypoint=Entrypoint.STANDALONE,
+                entrypoint=self._entrypoint,
                 run_id=str(uuid.uuid4()),
                 # Explicit zeros rather than absent keys, so every Evaluation
                 # event has the same shape whatever the entrypoint.
-                test_case_count=0,
-                golden_count=0,
+                test_case_count=0 if is_evaluation else None,
+                golden_count=0 if is_evaluation else None,
                 metric_runs=self._metric_runs,
                 metrics=metric_names,
                 metrics_count=len(metric_names),
@@ -337,14 +350,17 @@ class StandaloneAccumulator:
         properties = self._drain()
         if properties is None:
             return
-        capture(
-            Event.EVALUATION,
-            replace(
-                properties,
-                flush_reason=reason,
-                outcome=Outcome.COMPLETED,
-            ),
+        properties = replace(
+            properties, flush_reason=reason, outcome=Outcome.COMPLETED
         )
+        if self._feature is not None and not telemetry_opt_out():
+            properties = replace(
+                properties,
+                feature_name=self._feature,
+                feature_status=get_feature_status(self._feature),
+            )
+            set_last_feature(self._feature)
+        capture(self._event, properties)
 
     def _flush_on_interval(self) -> None:
         with self._lock:
@@ -359,6 +375,9 @@ class StandaloneAccumulator:
 
 
 _standalone = StandaloneAccumulator()
+_guardrails = StandaloneAccumulator(
+    event=Event.GUARDRAILS, entrypoint=None, feature=Feature.GUARDRAILS
+)
 
 
 def reset_for_testing() -> None:
@@ -370,6 +389,7 @@ def reset_for_testing() -> None:
     """
     _run_stack.set(())
     _standalone._reset()
+    _guardrails._reset()
 
 
 def flush_standalone_metrics(
@@ -378,3 +398,14 @@ def flush_standalone_metrics(
     """Flush now. The default reason reflects the caller, not process exit --
     `atexit` passes `PROCESS_EXIT` itself."""
     _standalone.flush(reason)
+
+
+def record_guardrail(
+    guard_name: str, async_mode: bool, model: Any = None
+) -> None:
+    """One guard check, batched like a standalone `metric.measure()`."""
+    _guardrails.record(guard_name, async_mode, in_component=False, model=model)
+
+
+def flush_guardrails(reason: FlushReason = FlushReason.MANUAL) -> None:
+    _guardrails.flush(reason)

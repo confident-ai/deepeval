@@ -8,6 +8,7 @@ import traceback
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
+from deepeval.telemetry import record_guard
 from deepeval.red_team.guardrails.types import GuardType
 from deepeval.red_team.guardrails.guards.schema import SafetyLevelSchema
 
@@ -37,6 +38,7 @@ class BaseGuard(ABC):
         return "Base Guard"
 
     def _guard(self, guard_prompt: str, **kwargs) -> Optional[str]:
+        record_guard(self, async_mode=False)
         self.evaluation_cost = 0 if self.using_native_model else None
         if self.using_native_model:
             res, cost = self.model.generate(
@@ -68,6 +70,7 @@ class BaseGuard(ABC):
         return self.safety_level
 
     async def a_guard(self, guard_prompt: str, **kwargs) -> Optional[str]:
+        record_guard(self, async_mode=True)
         self.evaluation_cost = 0 if self.using_native_model else None
         if self.using_native_model:
             res, cost = await self.model.a_generate(

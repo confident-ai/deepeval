@@ -9,6 +9,7 @@
     "evals_iterator",
     "evaluate",
     "pytest",
+    "red_team",
     "standalone",
     "vitest"
   ],
@@ -40,10 +41,6 @@
     "manual",
     "process_exit",
     "threshold"
-  ],
-  "guardDirections": [
-    "input",
-    "output"
   ],
   "identityFileName": ".deepeval_telemetry.txt",
   "integrations": [
@@ -140,9 +137,7 @@
     "num_conversations",
     "rt_vulnerabilities",
     "rt_attacks",
-    "rt_framework",
-    "guard_direction",
-    "guards"
+    "rt_framework"
   ],
   "props": [
     "benchmark.name",
@@ -166,8 +161,6 @@
     "feature.last",
     "feature.name",
     "feature.status",
-    "guardrails.direction",
-    "guardrails.guards",
     "judge.model",
     "judge.provider",
     "login.method",
@@ -206,8 +199,6 @@
     "feature_status": "feature.status",
     "flush_reason": "eval.flush_reason",
     "golden_count": "eval.golden_count",
-    "guard_direction": "guardrails.direction",
-    "guards": "guardrails.guards",
     "in_component": "eval.in_component",
     "integration": "tracing.integration",
     "integrations": "tracing.integrations",

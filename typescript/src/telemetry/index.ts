@@ -85,7 +85,6 @@ export {
   CUSTOM_PROVIDER,
   FIELD_TO_PROP,
   FlushReason,
-  GuardDirection,
   LocalStore,
   Language,
   LoginMethod,

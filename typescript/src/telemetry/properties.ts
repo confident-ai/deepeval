@@ -69,9 +69,6 @@ export enum Prop {
   RT_VULNERABILITIES = "red_teaming.vulnerabilities",
   RT_ATTACKS = "red_teaming.attacks",
   RT_FRAMEWORK = "red_teaming.framework",
-  // guardrails
-  GUARD_DIRECTION = "guardrails.direction",
-  GUARDS = "guardrails.guards",
 }
 
 /** Which SDK emitted the event. An absent value means Python. */
@@ -140,12 +137,6 @@ export const CUSTOM_PROVIDER = "custom";
 export const UNKNOWN_MODEL = "other";
 
 export const UNKNOWN_CLI_COMMAND = "unknown";
-
-/** Red teaming and guardrails run in Python only; mirrored for parity. */
-export enum GuardDirection {
-  INPUT = "input",
-  OUTPUT = "output",
-}
 
 export enum LoginPromptSurface {
   POST_EVAL = "post_eval",
@@ -237,9 +228,6 @@ export interface EventProperties {
   rtVulnerabilities?: string[];
   rtAttacks?: string[];
   rtFramework?: string;
-  // guardrails
-  guardDirection?: GuardDirection;
-  guards?: string[];
 }
 
 export const FIELD_TO_PROP: Record<keyof EventProperties, Prop> = {
@@ -290,8 +278,6 @@ export const FIELD_TO_PROP: Record<keyof EventProperties, Prop> = {
   rtVulnerabilities: Prop.RT_VULNERABILITIES,
   rtAttacks: Prop.RT_ATTACKS,
   rtFramework: Prop.RT_FRAMEWORK,
-  guardDirection: Prop.GUARD_DIRECTION,
-  guards: Prop.GUARDS,
 };
 
 /** Drop absent fields and rewrite the rest onto their wire keys. */

@@ -629,7 +629,6 @@ describe("parity with Python's wire vocabulary", () => {
     ["loginPromptSurfaces", telemetry.LoginPromptSurface],
     ["loginOutcomes", telemetry.LoginOutcome],
     ["loginMethods", telemetry.LoginMethod],
-    ["guardDirections", telemetry.GuardDirection],
     ["telemetryKeys", telemetry.TelemetryKey],
   ])("matches Python's %s", (name, enumObject) => {
     expect(values(enumObject as Record<string, string>)).toEqual(

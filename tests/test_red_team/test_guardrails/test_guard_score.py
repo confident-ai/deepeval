@@ -49,7 +49,7 @@ class _StubJudge(DeepEvalBaseLLM):
 @pytest.fixture(autouse=True)
 def no_telemetry(monkeypatch):
     monkeypatch.setattr(
-        "deepeval.red_team.guardrails.guardrails.record_guardrails_used",
+        "deepeval.red_team.guardrails.guards.base_guard.record_guard",
         lambda *args, **kwargs: None,
     )
 

@@ -5,7 +5,6 @@ from typing import Literal
 from pydantic import BaseModel
 
 from deepeval.red_team.guardrails.guards.base_guard import BaseGuard
-from deepeval.telemetry import GuardDirection, record_guardrails_used
 
 
 class GuardVerdict(BaseModel):
@@ -127,7 +126,6 @@ class Guardrails:
 
         verdicts: List[GuardVerdict] = []
 
-        record_guardrails_used(GuardDirection.INPUT, self.input_guards)
         for guard in self.input_guards:
             start_time = time.time()
             try:
@@ -176,7 +174,6 @@ class Guardrails:
 
         verdicts: List[GuardVerdict] = []
 
-        record_guardrails_used(GuardDirection.OUTPUT, self.output_guards)
         for guard in self.output_guards:
             start_time = time.time()
             try:

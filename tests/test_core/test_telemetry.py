@@ -469,17 +469,35 @@ class TestRedTeaming:
                 shipped_red_team_component("Bias"),
             ],
             attacks=[shipped_red_team_component("PromptInjection")],
-            async_mode=True,
-        ) as span:
-            span.set_test_case_count(7)
+        ):
+            for _ in range(7):
+                telemetry.record_test_case()
+            telemetry.record_metric(
+                "Bias (Red Teaming)", async_mode=True, in_component=False
+            )
 
         assert backend.events[0][1] is Event.RED_TEAMING
         props = backend.only()
         assert props["red_teaming.vulnerabilities"] == ["Bias", "Toxicity"]
         assert props["red_teaming.attacks"] == ["PromptInjection"]
+        assert props["eval.entrypoint"] == Entrypoint.RED_TEAM.value
         assert props["eval.outcome"] == Outcome.COMPLETED.value
         assert props["eval.test_case_count"] == 7
+        assert props["eval.metric_runs"] == 1
+        assert props["eval.async_mode"] is True
         assert props["feature.name"] == "redteaming"
+
+    def test_red_teaming_metrics_do_not_reach_the_standalone_path(
+        self, backend
+    ):
+        with telemetry.capture_red_teaming_run():
+            telemetry.record_metric(
+                "Bias (Red Teaming)", async_mode=False, in_component=False
+            )
+        telemetry.flush_standalone_metrics()
+
+        assert len(backend.events) == 1
+        assert backend.events[0][1] is Event.RED_TEAMING
 
     def test_user_written_names_cannot_leak(self, backend):
         class AcmeFraudProbe:
@@ -514,23 +532,54 @@ class TestRedTeaming:
 
 
 class TestGuardrails:
-    def test_a_guard_set_is_reported_once_per_process(self, backend):
-        from deepeval.telemetry import GuardDirection
-        from deepeval.telemetry.api import reset_guardrails_seen_for_testing
+    """Guard checks follow the standalone metric policy under their own event."""
 
-        reset_guardrails_seen_for_testing()
-        guards = [shipped_red_team_component("ToxicityGuard")]
-        for _ in range(100):
-            telemetry.record_guardrails_used(GuardDirection.INPUT, guards)
+    def test_guard_checks_become_one_event_at_exit(self, backend):
+        guard = shipped_red_team_component("ToxicityGuard")
+        for _ in range(10):
+            telemetry.record_guard(guard, async_mode=False)
+        assert backend.events == []
+
+        telemetry.flush_guardrails()
 
         props = backend.only()
         assert backend.events[0][1] is Event.GUARDRAILS
-        assert props["guardrails.direction"] == "input"
-        assert props["guardrails.guards"] == ["ToxicityGuard"]
+        assert props["eval.metric_runs"] == 10
+        assert props["eval.metrics"] == ["ToxicityGuard"]
+        assert props["eval.flush_reason"] == FlushReason.MANUAL.value
+        assert props["feature.name"] == "guardrails"
+        assert "eval.entrypoint" not in props
+        assert "eval.test_case_count" not in props
 
-        telemetry.record_guardrails_used(GuardDirection.OUTPUT, guards)
-        assert len(backend.events) == 2
-        reset_guardrails_seen_for_testing()
+    def test_partial_flushes_sum_to_the_true_total(self, backend):
+        guard = shipped_red_team_component("ToxicityGuard")
+        for _ in range(120):
+            telemetry.record_guard(guard, async_mode=True)
+        telemetry.flush_guardrails()
+
+        assert all(event is Event.GUARDRAILS for _, event, _ in backend.events)
+        assert sum(p["eval.metric_runs"] for _, _, p in backend.events) == 120
+        assert any(
+            p["eval.flush_reason"] == FlushReason.THRESHOLD.value
+            for _, _, p in backend.events
+        )
+
+    def test_a_custom_guard_name_cannot_leak(self, backend):
+        class AcmeComplianceGuard:
+            pass
+
+        telemetry.record_guard(AcmeComplianceGuard(), async_mode=False)
+        telemetry.flush_guardrails()
+
+        assert backend.only()["eval.metrics"] == ["custom"]
+
+    def test_guard_checks_stay_out_of_evaluation_events(self, backend):
+        telemetry.record_guard(
+            shipped_red_team_component("ToxicityGuard"), async_mode=False
+        )
+        telemetry.flush_standalone_metrics()
+
+        assert backend.events == []
 
 
 class TestOptOut:

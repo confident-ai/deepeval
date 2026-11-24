@@ -16,7 +16,6 @@ from typing import (
     Iterator,
     Optional,
     Set,
-    Tuple,
 )
 
 from deepeval.telemetry.client import (
@@ -28,6 +27,7 @@ from deepeval.telemetry.context import (
     RunAccumulator,
     pop_run,
     push_run,
+    record_guardrail,
 )
 from deepeval.telemetry.events import Entrypoint, Event, Feature
 from deepeval.telemetry.identity import (
@@ -39,7 +39,6 @@ from deepeval.telemetry.properties import (
     CUSTOM_PROVIDER,
     UNKNOWN_CLI_COMMAND,
     EventProperties,
-    GuardDirection,
     LoginMethod,
     LoginOutcome,
     LoginPromptSurface,
@@ -183,16 +182,6 @@ def capture_benchmark_run(benchmark: str, num_tasks: Any) -> Iterator[None]:
     yield
 
 
-class RedTeamingSpan:
-    """Lets a red teaming run report how many test cases it produced."""
-
-    def __init__(self) -> None:
-        self.test_case_count: Optional[int] = None
-
-    def set_test_case_count(self, count: int) -> None:
-        self.test_case_count = count
-
-
 # Classes under `deepeval.` whose instances carry user-written names: a
 # vulnerability defined inline, or a framework pulled from Confident AI.
 _USER_DEFINED_RED_TEAM_CLASSES = frozenset(
@@ -201,7 +190,7 @@ _USER_DEFINED_RED_TEAM_CLASSES = frozenset(
 
 
 def _red_team_component_name(component: Any) -> str:
-    """A bounded name for a vulnerability, attack or framework.
+    """A bounded name for a vulnerability, attack, framework or guard.
 
     Same invariant as `describe_judge`: only classes defined under `deepeval.`
     are named, anything else collapses to `custom`.
@@ -222,16 +211,16 @@ def capture_red_teaming_run(
     vulnerabilities: Optional[Iterable[Any]] = None,
     attacks: Optional[Iterable[Any]] = None,
     framework: Optional[Any] = None,
-    async_mode: Optional[bool] = None,
-) -> Iterator[RedTeamingSpan]:
-    """Emit exactly one `Red Teaming` on the way out, with the outcome.
+) -> Iterator[RunAccumulator]:
+    """Open a run scope and emit exactly one `Red Teaming` on the way out.
 
-    Takes the objects rather than their names so user-written names never
-    reach the payload.
+    The same shape as `capture_evaluation_run`: red teaming metrics measured
+    inside the scope count towards this run rather than the standalone path,
+    and test cases are recorded with `record_test_case`. Takes the objects
+    rather than their names so user-written names never reach the payload.
     """
-    span = RedTeamingSpan()
     if telemetry_opt_out():
-        yield span
+        yield RunAccumulator(entrypoint=Entrypoint.RED_TEAM)
         return
 
     feature_status = get_feature_status(Feature.REDTEAMING)
@@ -242,10 +231,12 @@ def capture_red_teaming_run(
     framework_name = (
         _red_team_component_name(framework) if framework is not None else None
     )
+    accumulator, token = push_run(Entrypoint.RED_TEAM, str(uuid.uuid4()))
+
     outcome = Outcome.COMPLETED
     error_type: Optional[str] = None
     try:
-        yield span
+        yield accumulator
     except KeyboardInterrupt:
         outcome = Outcome.INTERRUPTED
         raise
@@ -255,17 +246,19 @@ def capture_red_teaming_run(
         error_type = type(error).__name__
         raise
     finally:
+        pop_run(token)
         try:
+            # Never `return` from this block: that would discard an exception
+            # on its way out of the user's red teaming run.
             set_last_feature(Feature.REDTEAMING)
             capture(
                 Event.RED_TEAMING,
-                EventProperties(
-                    feature_name=Feature.REDTEAMING,
-                    feature_status=feature_status,
+                replace(
+                    accumulator.snapshot(),
                     outcome=outcome,
                     error_type=error_type,
-                    test_case_count=span.test_case_count,
-                    async_mode=async_mode,
+                    feature_name=Feature.REDTEAMING,
+                    feature_status=feature_status,
                     rt_vulnerabilities=vulnerability_names,
                     rt_attacks=attack_names,
                     rt_framework=framework_name,
@@ -275,44 +268,17 @@ def capture_red_teaming_run(
             pass
 
 
-_guardrails_seen: Set[Tuple[GuardDirection, Tuple[str, ...]]] = set()
+def record_guard(guard: Any, async_mode: bool) -> None:
+    """One guard check, the guardrail equivalent of a metric's `start_measure`.
 
-
-def record_guardrails_used(
-    direction: GuardDirection, guards: Iterable[Any]
-) -> None:
-    """Once per process per guard set.
-
-    Guardrails run on every production request, so counting calls would
-    measure traffic, not adoption.
+    Batched into `Guardrails` events by the same threshold, interval and
+    process-exit policy as standalone metrics.
     """
-    key = (
-        direction,
-        tuple(sorted({_red_team_component_name(g) for g in guards})),
+    record_guardrail(
+        _red_team_component_name(guard),
+        async_mode=async_mode,
+        model=getattr(guard, "model", None),
     )
-    if key in _guardrails_seen:
-        return
-    _guardrails_seen.add(key)
-    if telemetry_opt_out():
-        return
-    try:
-        feature_status = get_feature_status(Feature.GUARDRAILS)
-        set_last_feature(Feature.GUARDRAILS)
-        capture(
-            Event.GUARDRAILS,
-            EventProperties(
-                feature_name=Feature.GUARDRAILS,
-                feature_status=feature_status,
-                guard_direction=direction,
-                guards=list(key[1]),
-            ),
-        )
-    except Exception:
-        pass
-
-
-def reset_guardrails_seen_for_testing() -> None:
-    _guardrails_seen.clear()
 
 
 def record_tracing_integration(integration: Integration) -> None:

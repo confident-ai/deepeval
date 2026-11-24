@@ -29,6 +29,8 @@ export enum Entrypoint {
   VITEST = "vitest",
   COMPARE = "compare",
   STANDALONE = "standalone",
+  /** Python's red teaming. Never emitted from here. */
+  RED_TEAM = "red_team",
 }
 
 export enum Feature {

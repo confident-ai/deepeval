@@ -73,9 +73,6 @@ class Prop(str, Enum):
     RT_VULNERABILITIES = "red_teaming.vulnerabilities"
     RT_ATTACKS = "red_teaming.attacks"
     RT_FRAMEWORK = "red_teaming.framework"
-    # guardrails
-    GUARD_DIRECTION = "guardrails.direction"
-    GUARDS = "guardrails.guards"
 
 
 class Language(str, Enum):
@@ -156,11 +153,6 @@ UNKNOWN_MODEL = "other"
 # `cli.command` is validated against the Click group that dispatched it, so an
 # unrecognised name can only mean the callback ran outside normal dispatch.
 UNKNOWN_CLI_COMMAND = "unknown"
-
-
-class GuardDirection(str, Enum):
-    INPUT = "input"
-    OUTPUT = "output"
 
 
 class LoginPromptSurface(str, Enum):
@@ -263,9 +255,6 @@ class EventProperties:
     rt_vulnerabilities: Optional[List[str]] = None
     rt_attacks: Optional[List[str]] = None
     rt_framework: Optional[str] = None
-    # guardrails
-    guard_direction: Optional[GuardDirection] = None
-    guards: Optional[List[str]] = None
 
     def to_dict(self) -> Dict[str, PropValue]:
         payload: Dict[str, PropValue] = {}
@@ -331,6 +320,4 @@ _FIELD_TO_PROP: Dict[str, Prop] = {
     "rt_vulnerabilities": Prop.RT_VULNERABILITIES,
     "rt_attacks": Prop.RT_ATTACKS,
     "rt_framework": Prop.RT_FRAMEWORK,
-    "guard_direction": Prop.GUARD_DIRECTION,
-    "guards": Prop.GUARDS,
 }
