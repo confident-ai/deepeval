@@ -12,21 +12,41 @@ from deepeval.tracing.api import (
 from deepeval.utils import make_model_config
 
 
+class Evidence(BaseModel):
+    model_config = make_model_config(extra="ignore", populate_by_name=True)
+
+    field: str
+    quote: str
+    note: str = ""
+    span_index: Optional[int] = Field(None, alias="spanIndex")
+    turn_index: Optional[int] = Field(None, alias="turnIndex")
+    matched: bool = False
+
+
 class Classification(BaseModel):
-    """Classifier counterpart of ``MetricData``: one classifier's result on
-    one test case. ``success`` is ``None`` when the test case declared no
-    expected label for this classifier.
+    """Classifier counterpart of ``MetricData``: one label a classifier gave
+    one test case, or a single ``label=None`` entry when it gave none.
+    ``success`` is ``None`` when the test case declared no expected label for
+    this classifier. ``confidence`` is the review step's score for the label,
+    set only when the classifier has a ``review_config``.
 
     Local-only: classifications live on ``TestResult`` and are never attached
     to the API test cases that are uploaded to Confident AI."""
 
-    model_config = make_model_config(extra="ignore")
+    model_config = make_model_config(extra="ignore", populate_by_name=True)
 
     name: str
     label: Optional[str] = None
-    expected_label: Optional[str] = Field(None, alias="expectedLabel")
+    expected_label: Optional[Union[str, List[str]]] = Field(
+        None, alias="expectedLabel"
+    )
     success: Optional[bool] = None
     reason: Optional[str] = None
+    new_label_description: Optional[str] = Field(
+        None, alias="newLabelDescription"
+    )
+    evidence: List[Evidence] = Field(default_factory=list)
+    confidence: Optional[float] = None
     evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
     error: Optional[str] = None
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")

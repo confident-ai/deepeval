@@ -228,7 +228,7 @@ class Golden(BaseModel):
         default=None, serialization_alias="customColumnKeyValues"
     )
     expectations: Optional[Expectations] = Field(default=None)
-    expected_labels: Optional[Dict[str, str]] = Field(
+    expected_labels: Optional[Dict[str, Union[str, List[str]]]] = Field(
         default=None,
         serialization_alias="expectedLabels",
         validation_alias=AliasChoices("expectedLabels", "expected_labels"),
@@ -346,7 +346,7 @@ class ConversationalGolden(BaseModel):
         default=None, serialization_alias="customColumnKeyValues"
     )
     expectations: Optional[Expectations] = Field(default=None)
-    expected_labels: Optional[Dict[str, str]] = Field(
+    expected_labels: Optional[Dict[str, Union[str, List[str]]]] = Field(
         default=None,
         serialization_alias="expectedLabels",
         validation_alias=AliasChoices("expectedLabels", "expected_labels"),
