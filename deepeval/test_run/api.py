@@ -131,9 +131,6 @@ class TurnApi(BaseModel):
     user_id: Optional[str] = Field(None, alias="userId")
     retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
     tools_called: Optional[List[ToolCall]] = Field(None, alias="toolsCalled")
-    expected_tools: Optional[List[ToolCall]] = Field(
-        None, alias="expectedTools"
-    )
     comments: Optional[str] = Field(None)
     metadata: Optional[Dict] = Field(None)
 
@@ -152,6 +149,9 @@ class ConversationalApiTestCase(BaseModel):
     order: Union[int, None] = Field(None)
     scenario: Optional[str] = Field(None)
     expected_outcome: Optional[str] = Field(None, alias="expectedOutcome")
+    expected_tools: Optional[List[ToolCall]] = Field(
+        None, alias="expectedTools"
+    )
     user_description: Optional[str] = Field(None, alias="userDescription")
     context: Optional[list] = Field(None)
     comments: Optional[str] = Field(None)

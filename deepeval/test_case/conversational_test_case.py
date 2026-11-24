@@ -91,13 +91,6 @@ class Turn(BaseModel):
         default=None,
         validation_alias=AliasChoices("toolsCalled", "tools_called"),
     )
-    # The tools an assistant turn should have called, for
-    # ConversationalToolCorrectnessMetric. Leave it None on turns you don't
-    # want scored; [] means "this turn should call no tools".
-    expected_tools: Optional[List[ToolCall]] = Field(
-        default=None,
-        validation_alias=AliasChoices("expectedTools", "expected_tools"),
-    )
     # MCP
     mcp_tools_called: Optional[List[MCPToolCall]] = Field(default=None)
     mcp_resources_called: Optional[List[MCPResourceCall]] = Field(default=None)
@@ -252,6 +245,13 @@ class ConversationalTestCase(BaseModel):
         default=None,
         serialization_alias="chatbotRole",
         validation_alias=AliasChoices("chatbotRole", "chatbot_role"),
+    )
+    # The tools the assistant should call over the whole conversation, for
+    # ConversationalToolCorrectnessMetric. [] means "no tools expected".
+    expected_tools: Optional[List[ToolCall]] = Field(
+        default=None,
+        serialization_alias="expectedTools",
+        validation_alias=AliasChoices("expectedTools", "expected_tools"),
     )
     # Metadata
     metadata: Optional[Dict] = Field(

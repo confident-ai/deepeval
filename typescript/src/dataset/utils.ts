@@ -86,6 +86,7 @@ export function convertConvoTestCasesToConvoGoldens(
       turns: testCase.turns,
       expectations: testCase.expectations,
       expectedOutcome: testCase.expectedOutcome,
+      expectedTools: testCase.expectedTools,
       // A test case only carries the flattened text, so rebuild it as a
       // persona rather than tripping the `userDescription` deprecation.
       persona: testCase.userDescription
@@ -109,6 +110,7 @@ export function convertConvoGoldensToConvoTestCases(
       userDescription: golden.userDescription,
       expectations: golden.expectations,
       expectedOutcome: golden.expectedOutcome,
+      expectedTools: golden.expectedTools,
       context: golden.context,
       name: golden.name,
       additionalMetadata: golden.additionalMetadata,
@@ -151,6 +153,7 @@ function createConversationalTestCase(params: {
   scenario?: string;
   userDescription?: string;
   expectedOutcome?: string;
+  expectedTools?: ToolCall[];
   context?: string[];
   name?: string;
   additionalMetadata?: Record<string, any>;
@@ -413,7 +416,6 @@ export function parseTurns(value: unknown): Turn[] {
         pickKey(t, "retrieval_context"),
       ),
       toolsCalled: parseToolCalls(pickKey(t, "tools_called")),
-      expectedTools: parseToolCalls(pickKey(t, "expected_tools")),
       mcpToolsCalled: parseMcpCalls(
         pickKey(t, "mcp_tools_called"),
         "mcpToolsCalled",
@@ -522,6 +524,7 @@ export function goldenFromRecord(
       expectedOutcome: pickKey(record, keys.expectedOutcome) as
         | string
         | undefined,
+      expectedTools: parseToolCalls(pickKey(record, keys.expectedTools)),
       persona,
       userDescription: persona
         ? undefined

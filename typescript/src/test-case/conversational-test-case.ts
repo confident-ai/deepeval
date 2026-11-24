@@ -47,12 +47,6 @@ export class Turn {
   userId?: string;
   retrievalContext?: (string | RetrievedContextData)[];
   toolsCalled?: ToolCall[];
-  /**
-   * The tools an assistant turn should have called, for
-   * `ConversationalToolCorrectnessMetric`. Leave it undefined on turns you
-   * don't want scored; `[]` means "this turn should call no tools".
-   */
-  expectedTools?: ToolCall[];
   mcpToolsCalled?: MCPToolCall[];
   mcpResourcesCalled?: MCPResourceCall[];
   mcpPromptsCalled?: MCPPromptCall[];
@@ -64,7 +58,6 @@ export class Turn {
     userId?: string;
     retrievalContext?: (string | RetrievedContextData)[];
     toolsCalled?: ToolCall[];
-    expectedTools?: ToolCall[];
     mcpToolsCalled?: MCPToolCall[];
     mcpResourcesCalled?: MCPResourceCall[];
     mcpPromptsCalled?: MCPPromptCall[];
@@ -75,7 +68,6 @@ export class Turn {
     this.userId = params.userId;
     this.retrievalContext = params.retrievalContext;
     this.toolsCalled = params.toolsCalled;
-    this.expectedTools = params.expectedTools;
     this.mcpToolsCalled = params.mcpToolsCalled;
     this.mcpResourcesCalled = params.mcpResourcesCalled;
     this.mcpPromptsCalled = params.mcpPromptsCalled;
@@ -96,16 +88,13 @@ export class Turn {
         );
       }
     }
-    for (const [field, value] of [
-      ["toolsCalled", this.toolsCalled],
-      ["expectedTools", this.expectedTools],
-    ] as const) {
+    if (this.toolsCalled != null) {
       if (
-        value != null &&
-        (!Array.isArray(value) || !value.every((t) => t instanceof ToolCall))
+        !Array.isArray(this.toolsCalled) ||
+        !this.toolsCalled.every((t) => t instanceof ToolCall)
       ) {
         throw new TypeError(
-          `'${field}' must be undefined or an array of ToolCall`,
+          "'toolsCalled' must be undefined or an array of ToolCall",
         );
       }
     }
@@ -120,6 +109,11 @@ export class ConversationalTestCase {
   scenario?: string;
   userDescription?: string;
   expectedOutcome?: string;
+  /**
+   * The tools the assistant should call over the whole conversation, for
+   * `ConversationalToolCorrectnessMetric`. `[]` means "no tools expected".
+   */
+  expectedTools?: ToolCall[];
   context?: string[];
   mcpServers?: MCPServer[];
   name?: string;
@@ -140,6 +134,7 @@ export class ConversationalTestCase {
     scenario?: string;
     userDescription?: string;
     expectedOutcome?: string;
+    expectedTools?: ToolCall[];
     context?: string[];
     mcpServers?: MCPServer[];
     name?: string;
@@ -158,6 +153,7 @@ export class ConversationalTestCase {
     this.scenario = params.scenario;
     this.userDescription = params.userDescription;
     this.expectedOutcome = params.expectedOutcome;
+    this.expectedTools = params.expectedTools;
     this.context = params.context;
     this.mcpServers = params.mcpServers;
     this.name = params.name;

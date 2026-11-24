@@ -78,7 +78,6 @@ export {
 export {
   ConversationalToolCorrectnessMetric,
   type ConversationalToolCorrectnessMetricOptions,
-  type TurnToolScore,
 } from "@/metrics/conversational-tool-correctness";
 export {
   TaskCompletionMetric,

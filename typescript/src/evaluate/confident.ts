@@ -36,7 +36,6 @@ function convertTurn(turn: Turn, order: number) {
     userId: turn.userId,
     retrievalContext: resolveRetrievalContext(turn.retrievalContext),
     toolsCalled: turn.toolsCalled?.map(convertTool),
-    expectedTools: turn.expectedTools?.map(convertTool),
   };
 }
 
@@ -90,7 +89,8 @@ export function buildTestCaseEntry(
 ): PersistedCase {
   const success = aggregateSuccess(metricsData);
   const evaluationCost = caseCost(metricsData);
-  const metricsDataApi = withoutExpectations(metricsData).map(convertMetricData);
+  const metricsDataApi =
+    withoutExpectations(metricsData).map(convertMetricData);
   const expectationsMetric = metricsData.find((m) => m.expectationsData);
   const expectationsData = expectationsMetric && {
     ...expectationsMetric.expectationsData,
@@ -118,6 +118,7 @@ export function buildTestCaseEntry(
         turns: testCase.turns.map((t, i) => convertTurn(t, i)),
         scenario: testCase.scenario,
         expectedOutcome: testCase.expectedOutcome,
+        expectedTools: testCase.expectedTools?.map(convertTool),
         userDescription: testCase.userDescription,
         imagesMapping: testCase.getImagesMapping(),
       },

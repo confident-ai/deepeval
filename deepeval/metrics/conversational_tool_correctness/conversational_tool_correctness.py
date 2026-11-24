@@ -1,9 +1,8 @@
-"""Tool Correctness for conversations: each assistant turn's tool calls are
-compared with that turn's ``expected_tools``."""
+"""Tool Correctness for conversations: every tool the assistant called across
+the conversation is compared with the test case's ``expected_tools``."""
 
-from typing import List, Optional, Tuple
+from typing import List, Optional
 
-from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.tool_correctness.tool_correctness import (
@@ -19,7 +18,7 @@ from deepeval.test_case import (
 )
 
 
-class _TurnScorer(ToolCorrectnessMetric):
+class _ToolCallScorer(ToolCorrectnessMetric):
     """ToolCorrectnessMetric's deterministic matching, without a judge model.
 
     Skips the parent ``__init__`` (which sets up an LLM for tool selection)
@@ -38,18 +37,18 @@ class _TurnScorer(ToolCorrectnessMetric):
         self.strict_mode = False
         self.threshold = 0
 
-    def score_turn(
+    def score(
         self, tools_called: List[ToolCall], expected_tools: List[ToolCall]
-    ) -> Tuple[float, str]:
+    ) -> "tuple[float, str]":
         self.tools_called = tools_called
         self.expected_tools = expected_tools
         return self._calculate_score(), self._generate_reason()
 
 
 class ConversationalToolCorrectnessMetric(BaseConversationalMetric):
-    """Scores every assistant turn that sets ``expected_tools`` with the Tool
-    Correctness rules, and averages the turn scores. Turns without
-    ``expected_tools`` are not scored. No LLM is used."""
+    """Collects the tools the assistant called across every turn, in order,
+    and scores them against the test case's ``expected_tools`` with the Tool
+    Correctness rules. No LLM is used."""
 
     _required_test_case_params = [
         MultiTurnParams.ROLE,
@@ -89,48 +88,28 @@ class ConversationalToolCorrectnessMetric(BaseConversationalMetric):
         _in_component: bool = False,
     ) -> float:
         prepare_measure(self, test_case, multimodal=False)
-        scored_turns = self._scored_turns(test_case.turns)
-        if not scored_turns:
-            self.error = (
-                "No assistant turn in the conversational test case sets "
-                f"'expected_tools', which the '{self.__name__}' metric needs. "
-                "Set Turn.expected_tools on the assistant turns to check "
-                "([] means the turn should call no tools)."
-            )
-            raise MissingTestCaseParamsError(self.error)
 
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
-            scorer = _TurnScorer(
+            self.tools_called = self._tools_called(test_case.turns)
+            self.expected_tools = test_case.expected_tools
+            scorer = _ToolCallScorer(
                 self.evaluation_params,
                 self.should_exact_match,
                 self.should_consider_ordering,
             )
-            self.turn_scores = []
-            for index, turn in scored_turns:
-                score, reason = scorer.score_turn(
-                    turn.tools_called or [], turn.expected_tools
-                )
-                self.turn_scores.append(
-                    {"turn": index, "score": score, "reason": reason}
-                )
-
-            score = sum(t["score"] for t in self.turn_scores) / len(
-                self.turn_scores
-            )
+            score, reason = scorer.score(self.tools_called, self.expected_tools)
             self.score = (
                 0 if self.strict_mode and score < self.threshold else score
             )
-            self.reason = self._reason() if self.include_reason else None
+            self.reason = reason if self.include_reason else None
             self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
-                    *(
-                        f"Turn {t['turn']}: score {t['score']:.2f}. {t['reason']}"
-                        for t in self.turn_scores
-                    ),
+                    f"Tools called across the conversation: {[t.name for t in self.tools_called]}",
+                    f"Expected tools: {[t.name for t in self.expected_tools]}",
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
             )
@@ -149,27 +128,13 @@ class ConversationalToolCorrectnessMetric(BaseConversationalMetric):
         )
 
     @staticmethod
-    def _scored_turns(turns: List[Turn]) -> List[Tuple[int, Turn]]:
+    def _tools_called(turns: List[Turn]) -> List[ToolCall]:
         return [
-            (index, turn)
-            for index, turn in enumerate(turns)
-            if turn.role == "assistant" and turn.expected_tools is not None
+            tool
+            for turn in turns
+            if turn.role == "assistant"
+            for tool in (turn.tools_called or [])
         ]
-
-    def _reason(self) -> str:
-        total = len(self.turn_scores)
-        failing = [t for t in self.turn_scores if t["score"] < 1]
-        summary = (
-            f"The score is {self.score:.2f}: {total - len(failing)} of "
-            f"{total} scored assistant turns called the expected tools."
-        )
-        if not failing:
-            return summary
-        details = "\n".join(
-            f"- Turn {t['turn']} ({t['score']:.2f}): {t['reason']}"
-            for t in failing
-        )
-        return f"{summary}\n{details}"
 
     @property
     def __name__(self):
