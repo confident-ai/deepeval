@@ -1,3 +1,4 @@
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, List, Type, Union
 
 from deepeval.classifiers.classifier.schema import (
@@ -10,6 +11,7 @@ from deepeval.metrics.utils.generation import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
+from deepeval.test_run.api import Classification
 
 if TYPE_CHECKING:
     from deepeval.classifiers.classifier.classifier import Classifier
@@ -17,6 +19,12 @@ if TYPE_CHECKING:
 MAX_GENERATION_ATTEMPTS = 2
 
 OutputSchema = Type[Union[ClassificationResult, ClassificationResults]]
+
+
+@dataclass(frozen=True)
+class ClassificationStep:
+    classifications: List[Classification]
+    seconds: float
 
 
 def generate_classification_results(

@@ -4,6 +4,7 @@ import pytest
 
 from deepeval.classifiers import (
     AgentProfile,
+    ClassificationReview,
     Classifier,
     EvidenceConfig,
     Label,
@@ -250,3 +251,53 @@ def test_built_in_classifiers_accept_evidence_and_review():
     )
     assert classification.evidence[0].matched
     assert type(classifier.copy()) is RefusalClassifier
+
+
+@pytest.mark.parametrize("async_mode", [True, False])
+def test_each_step_is_recorded_with_its_time(async_mode):
+    model = ReviewingModel(BOTH, {"pricing": 0.9, "cancellation": None})
+    classifier = Classifier(
+        name="topic",
+        labels=LABELS,
+        model=model,
+        multi_label=True,
+        review_config=ReviewConfig(),
+        async_mode=async_mode,
+    )
+    classifier.classify(CASE, _show_indicator=False)
+    steps = classifier.steps
+    assert [c.label for c in steps.classification.classifications] == [
+        "cancellation",
+        "pricing",
+    ]
+    assert steps.classification.classifications[1].confidence is None
+    assert steps.label_discovery is None
+    assert steps.review.reviews == [
+        ClassificationReview(
+            label="cancellation",
+            kept=False,
+            reason="The review could not be read.",
+        ),
+        ClassificationReview(
+            label="pricing",
+            kept=True,
+            confidence=0.9,
+            reason="pricing checked.",
+        ),
+    ]
+    assert steps.classification.seconds >= 0 and steps.review.seconds >= 0
+
+
+def test_steps_that_did_not_run_are_none():
+    classifier = Classifier(
+        name="topic",
+        labels=LABELS,
+        model=ReviewingModel({"label": "pricing", "reason": "r"}, {}),
+        async_mode=False,
+    )
+    classifier.classify(CASE, _show_indicator=False)
+    assert [
+        c.label for c in classifier.steps.classification.classifications
+    ] == ["pricing"]
+    assert classifier.steps.label_discovery is None
+    assert classifier.steps.review is None

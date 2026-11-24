@@ -154,6 +154,10 @@ def test_a_proposal_past_the_cap_can_still_merge():
         "Refund Request",
         "Shipping Delay",
     ]
+    assert classifier.steps.label_discovery.merged_labels == {
+        "Shipping Delay": "Shipping Delay",
+        "Money Back": "Refund Request",
+    }
 
 
 class UnreadableMergeModel(ScriptedModel):

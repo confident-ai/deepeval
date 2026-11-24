@@ -438,6 +438,12 @@ flowchart LR
 
 Reviewing costs one extra judge call per returned label, made in parallel under `async_mode`.
 
+To see what each step did, read `classifier.steps` after `classify`. Each step holds its result and the `seconds` it took, and a step that did not run is `None`:
+
+- `steps.classification.classifications`: the labels the judge gave, before review.
+- `steps.label_discovery.merged_labels`: each new label name the judge proposed, mapped to the label it became after merging, which is itself when it was added as new.
+- `steps.review.reviews`: one `ClassificationReview` per label the judge gave, with its `label`, `kept`, `confidence` (`None` when the review could not be read) and `reason`.
+
 ## Advanced Usage
 
 ### Agent Profile
