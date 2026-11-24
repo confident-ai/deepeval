@@ -33,3 +33,7 @@ class TestConfig:
         assert find_config_file(str(tmp_path)) is None
         (tmp_path / CONFIG_FILENAMES[0]).write_text("min_severity: low\n")
         assert find_config_file(str(tmp_path)).endswith(CONFIG_FILENAMES[0])
+
+    def test_legacy_config_file_is_still_found(self, tmp_path):
+        (tmp_path / ".deepteam-code-scan.yaml").write_text("min_severity: high\n")
+        assert load_config(directory=str(tmp_path)).min_severity == "high"

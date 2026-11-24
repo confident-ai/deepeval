@@ -8,8 +8,12 @@ from contextvars import ContextVar
 from contextlib import contextmanager
 from deepeval.metrics.utils import trimAndLoadJson, initialize_model
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.config.settings import get_settings
 
 def _max_retries() -> int:
+    configured = get_settings().DEEPEVAL_RED_TEAM_MAX_RETRIES
+    if configured is not None:
+        return configured
     max_retries = os.getenv("DEEPTEAM_MAX_RETRIES")
     if max_retries is None:
         return 3

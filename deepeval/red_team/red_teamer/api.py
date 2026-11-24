@@ -1,6 +1,7 @@
 from typing import List, Optional
 from pydantic import BaseModel, Field
 
+from deepeval.test_case import ToolCall
 from deepeval.test_run.api import TurnApi
 from deepeval.red_team.red_teamer.risk_assessment import (
     RiskAssessment,
@@ -39,7 +40,7 @@ class APIRTTestCase(BaseModel):
     retrieval_context: Optional[List[str]] = Field(
         None, alias="retrievalContext"
     )
-    tools_called: Optional[List[str]] = Field(None, alias="toolsCalled")
+    tools_called: Optional[List[ToolCall]] = Field(None, alias="toolsCalled")
     turns: Optional[List[APIRTTurn]] = Field(None)
 
     success: Optional[bool] = Field(None)

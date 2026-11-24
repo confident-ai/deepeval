@@ -11,13 +11,21 @@ from rich.progress import (
     TaskProgressColumn,
     TimeElapsedColumn,
 )
+from deepeval.config.settings import get_settings
 from deepeval.red_team.test_case import RTTurn, ToolCall
 
-PROGRESS_ENABLED = os.getenv("DEEPTEAM_SHOW_PROGRESS", "true").lower() in (
-    "true",
-    "1",
-    "yes",
-)
+def _progress_enabled() -> bool:
+    configured = get_settings().DEEPEVAL_RED_TEAM_SHOW_PROGRESS
+    if configured is not None:
+        return configured
+    return os.getenv("DEEPTEAM_SHOW_PROGRESS", "true").lower() in (
+        "true",
+        "1",
+        "yes",
+    )
+
+
+PROGRESS_ENABLED = _progress_enabled()
 
 SPANS_CONTEXT_LIMIT = int(os.getenv("SPANS_CONTEXT_LIMIT", "40000"))
 

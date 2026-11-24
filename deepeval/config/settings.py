@@ -930,6 +930,18 @@ class Settings(BaseSettings):
     )
 
     #
+    # Red teaming
+    #
+    DEEPEVAL_RED_TEAM_MAX_RETRIES: Optional[conint(ge=1)] = Field(
+        None,
+        description="Attempts per attack generation call during red teaming (default: 3; falls back to DEEPTEAM_MAX_RETRIES).",
+    )
+    DEEPEVAL_RED_TEAM_SHOW_PROGRESS: Optional[bool] = Field(
+        None,
+        description="Show red teaming progress bars (default: true; falls back to DEEPTEAM_SHOW_PROGRESS).",
+    )
+
+    #
     # Telemetry and Debug
     #
     DEEPEVAL_DEBUG_ASYNC: Optional[bool] = Field(
@@ -1197,6 +1209,7 @@ class Settings(BaseSettings):
         "DEEPEVAL_LOG_STACK_TRACES",
         "DEEPEVAL_DISABLE_TIMEOUTS",
         "DEEPEVAL_VERBOSE_MODE",
+        "DEEPEVAL_RED_TEAM_SHOW_PROGRESS",
         "DEEPEVAL_GRPC_LOGGING",
         "DEEPEVAL_AUTO_TRACE",
         "DEEPEVAL_DISABLE_DOTENV",

@@ -244,14 +244,14 @@ def _build_vulnerability(
     vulnerability_class = VULNERABILITY_CLASSES_MAP.get(api_vulnerability.name)
 
     if vulnerability_class is None:
-        # A name deepteam doesn't know is either a custom vulnerability defined
+        # A name deepeval doesn't know is either a custom vulnerability defined
         # on Confident AI (which carries the criteria needed to judge it) or a
-        # vulnerability newer than the installed deepteam.
+        # vulnerability newer than the installed deepeval.
         if not api_vulnerability.criteria:
             raise ValueError(
                 f"Vulnerability '{api_vulnerability.name}' in the '{framework_name}' framework "
-                "is not supported by this version of deepteam. Upgrade with "
-                "'pip install -U deepteam', or define it as a custom vulnerability on Confident AI."
+                "is not supported by this version of deepeval. Upgrade with "
+                "'pip install -U deepeval', or define it as a custom vulnerability on Confident AI."
             )
         return CustomVulnerability(
             name=api_vulnerability.name,
@@ -270,7 +270,7 @@ def _build_vulnerability(
         raise ValueError(
             f"Vulnerability '{api_vulnerability.name}' in the '{framework_name}' framework has "
             f"type(s) {', '.join(repr(t) for t in unsupported_types)} that are not supported by "
-            "this version of deepteam. Upgrade with 'pip install -U deepteam'."
+            "this version of deepeval. Upgrade with 'pip install -U deepeval'."
         )
 
     return vulnerability_class(
@@ -291,7 +291,7 @@ def _build_attack(api_attack_method: APIAttackMethod) -> Optional[BaseAttack]:
     if attack_class is None:
         logging.warning(
             f"Skipping attack method '{api_attack_method.name}': not supported by this "
-            "version of deepteam. Upgrade with 'pip install -U deepteam' to run it."
+            "version of deepeval. Upgrade with 'pip install -U deepeval' to run it."
         )
         return None
 
@@ -322,10 +322,10 @@ def build_risk_categories(
     api_risk_categories: List[APIRiskCategory], framework_name: str
 ) -> List[RiskCategory]:
     """
-    Rebuild a Confident AI framework's risk categories as deepteam objects.
+    Rebuild a Confident AI framework's risk categories as red teaming objects.
 
     Vulnerabilities and attack methods are resolved by name, which is how
-    Confident AI stores them (its catalog is generated from deepteam's own
+    Confident AI stores them (its catalog is generated from the red teaming
     class maps), so the local run tests the same threats as a cloud run.
     """
     risk_categories: List[RiskCategory] = []

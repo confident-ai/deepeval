@@ -9,6 +9,7 @@ from ..schema import CodeFinding
 
 PR_COMMENTS_ENDPOINT = "/v1/github-app/code-scan/comments"
 _OIDC_AUDIENCE = "confident-code-scan"
+# Selects the GitHub App that posts the comments; a backend value, not a name.
 _APP = "deepteam"
 
 
@@ -70,7 +71,7 @@ def post_pr_comments(
 
     if not repo or pr_number is None:
         raise RuntimeError(
-            "`deepteam scan --comment` must run in a GitHub Actions "
+            "`deepeval red-team --scan --comment` must run in a GitHub Actions "
             "pull_request job (could not resolve repository or PR number)."
         )
     if not oidc:

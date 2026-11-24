@@ -67,7 +67,7 @@ def missing_sdk(provider: str) -> ImportError:
     return ImportError(
         f"The '{provider}' provider requires the {pkg} SDK. Install it with "
         f"`poetry add {pkg}` (or `pip install {pkg}`), or omit --provider to "
-        f"use deepteam's built-in scanner."
+        f"use the built-in scanner."
     )
 
 

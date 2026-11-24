@@ -2,11 +2,10 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import List, Optional
 
-import yaml
 
 from .schema import Severity
 
-CONFIG_FILENAMES = (".deepteam-code-scan.yaml",)
+CONFIG_FILENAMES = (".deepeval-code-scan.yaml", ".deepteam-code-scan.yaml")
 
 
 @dataclass
@@ -49,6 +48,8 @@ def load_config(
     config_path = path or find_config_file(directory)
     if not config_path or not Path(config_path).is_file():
         return CodeScanConfig()
+
+    import yaml
 
     with open(config_path) as f:
         raw = yaml.safe_load(f) or {}

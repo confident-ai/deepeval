@@ -965,7 +965,7 @@ class RedTeamer:
                 f"  » Pass Rate: {pass_rate}% | Passed: [bold green]{passing}[/bold green] | Failed: [bold red]{failing}[/bold red]\n\n",
                 "=" * 80,
                 "\n\n» Want to share risk assessments with your team, or a place for your test cases to live? ❤️ 🏡\n"
-                "  » Run [bold]'deepteam login'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
+                "  » Run [bold]'deepeval login'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",
             )
             return
 
@@ -1129,7 +1129,7 @@ class RedTeamer:
         if not framework.risk_categories:
             raise ValueError(
                 "This framework has no risk categories to assess. Call 'pull' on it to load "
-                "one from Confident AI, or pass one of deepteam's builtin frameworks."
+                "one from Confident AI, or pass one of the builtin frameworks."
             )
 
         def assess_risk_category(category: RiskCategory):
@@ -1211,7 +1211,7 @@ class RedTeamer:
         if not framework.risk_categories:
             raise ValueError(
                 "This framework has no risk categories to assess. Call 'pull' on it to load "
-                "one from Confident AI, or pass one of deepteam's builtin frameworks."
+                "one from Confident AI, or pass one of the builtin frameworks."
             )
 
         semaphore = asyncio.Semaphore(self.max_concurrent)

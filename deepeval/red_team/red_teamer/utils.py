@@ -5,7 +5,7 @@ from deepeval.red_team.test_case import RTTestCase, RTTurn
 from deepeval.red_team.vulnerabilities.types import VulnerabilityType
 from deepeval.models import (
     DeepEvalBaseLLM,
-    GPTModel,
+    OpenAIModel,
     GeminiModel,
     GrokModel,
     KimiModel,
@@ -16,7 +16,7 @@ from deepeval.models import (
 from deepeval.metrics.utils import initialize_model
 
 MODEL_PROVIDER_MAPPING = {
-    "openai": GPTModel,
+    "openai": OpenAIModel,
     "anthropic": AnthropicModel,
     "google": GeminiModel,
     "xai": GrokModel,

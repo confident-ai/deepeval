@@ -6,7 +6,7 @@ import sys
 import os
 
 from deepeval.models import (
-    GPTModel,
+    OpenAIModel,
     AzureOpenAIModel,
     OllamaModel,
     LocalModel,
@@ -60,7 +60,7 @@ def load_model(spec: Union[str, Dict[str, Any], None]) -> DeepEvalBaseLLM:
     temperature = spec.get("temperature", 0)
 
     if provider == "openai":
-        return GPTModel(model=model_name, temperature=temperature)
+        return OpenAIModel(model=model_name, temperature=temperature)
 
     if provider == "azure":
         return AzureOpenAIModel(
