@@ -12,6 +12,7 @@ A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a 
 - `turns`
 - [Optional] `scenario`
 - [Optional] `expected_outcome`
+- [Optional] <Term py="expected_tools" ts="expectedTools"/>
 - [Optional] `context`
 - [Optional] `chatbot_role`
 - [Optional] `expectations`
@@ -221,6 +222,42 @@ import { Turn, ConversationalTestCase } from "deepeval/test-case";
 const testCase = new ConversationalTestCase({
   scenario: "Frustrated user asking for a refund.",
   expectedOutcome: "AI routes to a real human agent.",
+  turns: [new Turn({ role: "user", content: "..." })],
+});
+```
+
+</Case>
+
+</Switch>
+
+### Expected Tools
+
+The <Term py="expected_tools" ts="expectedTools"/> parameter is an **optional** list of `ToolCall`s the assistant should call over the conversation. It's used by the [conversation tool correctness metric](/docs/metrics-conversation-tool-correctness), and an empty list means no tools should be called. To require a tool on a specific turn, set `turn` on its `ToolCall` to the index in `turns` of that assistant turn.
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase, ToolCall
+
+test_case = ConversationalTestCase(
+    scenario="User wants to book a flight to Tokyo.",
+    expected_tools=[ToolCall(name="search_flights"), ToolCall(name="book_flight")],
+    turns=[Turn(...)]
+)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { Turn, ConversationalTestCase, ToolCall } from "deepeval/test-case";
+
+const testCase = new ConversationalTestCase({
+  scenario: "User wants to book a flight to Tokyo.",
+  expectedTools: [new ToolCall({ name: "search_flights" }), new ToolCall({ name: "book_flight" })],
   turns: [new Turn({ role: "user", content: "..." })],
 });
 ```

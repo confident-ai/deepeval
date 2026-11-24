@@ -4,9 +4,9 @@ The test case's ``expected_tools`` are checked with the Tool Correctness
 rules. An expected tool with ``turn`` set is pinned to that turn: the turn's
 own ``tools_called`` are scored against the tools pinned to it. Expected tools
 without ``turn`` are scored against the tools called on every other assistant
-turn, in order. The score is the mean over these groups."""
+turn, in order. The score is the mean over these checks."""
 
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Set, Tuple
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import BaseConversationalMetric
@@ -45,7 +45,7 @@ class _ToolCallScorer(ToolCorrectnessMetric):
 
     def score(
         self, tools_called: List[ToolCall], expected_tools: List[ToolCall]
-    ) -> "tuple[float, str]":
+    ) -> Tuple[float, str]:
         self.tools_called = tools_called
         self.expected_tools = expected_tools
         return self._calculate_score(), self._generate_reason()
@@ -65,7 +65,7 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
 
     def __init__(
         self,
-        threshold: float = 0.5,
+        threshold: Optional[float] = 0.5,
         evaluation_params: Optional[List[ToolCallParams]] = None,
         should_exact_match: bool = False,
         should_consider_ordering: bool = False,
@@ -108,8 +108,8 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
                 self.should_exact_match,
                 self.should_consider_ordering,
             )
-            # Each group is (label, tools called, tools expected).
-            groups: List[Tuple[str, List[ToolCall], List[ToolCall]]] = [
+            # Each check is (label, tools called, tools expected).
+            checks: List[Tuple[str, List[ToolCall], List[ToolCall]]] = [
                 (
                     f"Turn {index}",
                     test_case.turns[index].tools_called or [],
@@ -118,7 +118,7 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
                 for index, tools in sorted(pinned.items())
             ]
             if unpinned or not pinned:
-                groups.append(
+                checks.append(
                     (
                         (
                             "Rest of the conversation"
@@ -132,17 +132,17 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
                     )
                 )
 
-            self.group_scores = []
-            for label, called, expected in groups:
+            self.check_scores = []
+            for label, called, expected in checks:
                 score, reason = scorer.score(called, expected)
-                self.group_scores.append(
-                    {"group": label, "score": score, "reason": reason}
+                self.check_scores.append(
+                    {"check": label, "score": score, "reason": reason}
                 )
             self.tools_called = self._tools_called(test_case.turns)
             self.expected_tools = expected_tools
 
-            score = sum(g["score"] for g in self.group_scores) / len(
-                self.group_scores
+            score = sum(c["score"] for c in self.check_scores) / len(
+                self.check_scores
             )
             self.score = (
                 0 if self.strict_mode and score < self.threshold else score
@@ -153,8 +153,8 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
                 self,
                 steps=[
                     *(
-                        f"{g['group']}: score {g['score']:.2f}. {g['reason']}"
-                        for g in self.group_scores
+                        f"{c['check']}: score {c['score']:.2f}. {c['reason']}"
+                        for c in self.check_scores
                     ),
                     f"Score: {self.score}\nReason: {self.reason}",
                 ],
@@ -175,12 +175,13 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
 
     @staticmethod
     def _tools_called(
-        turns: List[Turn], skip: Optional[set] = None
+        turns: List[Turn], skip: Optional[Set[int]] = None
     ) -> List[ToolCall]:
+        skip = skip or set()
         return [
             tool
             for index, turn in enumerate(turns)
-            if turn.role == "assistant" and index not in (skip or set())
+            if turn.role == "assistant" and index not in skip
             for tool in (turn.tools_called or [])
         ]
 
@@ -209,18 +210,18 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
         return pinned
 
     def _reason(self) -> str:
-        if len(self.group_scores) == 1:
-            return self.group_scores[0]["reason"]
-        failing = [g for g in self.group_scores if g["score"] < 1]
+        if len(self.check_scores) == 1:
+            return self.check_scores[0]["reason"]
+        failing = [c for c in self.check_scores if c["score"] < 1]
         summary = (
             f"The score is {self.score:.2f}: "
-            f"{len(self.group_scores) - len(failing)} of "
-            f"{len(self.group_scores)} checks passed."
+            f"{len(self.check_scores) - len(failing)} of "
+            f"{len(self.check_scores)} checks passed."
         )
         if not failing:
             return summary
         details = "\n".join(
-            f"- {g['group']} ({g['score']:.2f}): {g['reason']}" for g in failing
+            f"- {c['check']} ({c['score']:.2f}): {c['reason']}" for c in failing
         )
         return f"{summary}\n{details}"
 

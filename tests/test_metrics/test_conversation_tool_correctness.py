@@ -12,12 +12,14 @@ from deepeval.test_case import (
 )
 
 
-def _track(number):
-    return ToolCall(name="track_parcel", input_parameters={"pin": number})
+def _search(destination):
+    return ToolCall(
+        name="search_flights", input_parameters={"destination": destination}
+    )
 
 
-def _transfer():
-    return ToolCall(name="transfer_to_human", input_parameters={})
+def _book():
+    return ToolCall(name="book_flight", input_parameters={})
 
 
 def _conversation(*tools_per_assistant_turn, expected_tools=None):
@@ -34,17 +36,17 @@ def test_collects_tools_across_all_assistant_turns():
     metric = ConversationToolCorrectnessMetric()
     score = metric.measure(
         _conversation(
-            [_track("123")],
+            [_search("123")],
             None,
-            [_transfer()],
-            expected_tools=[_track("123"), _transfer()],
+            [_book()],
+            expected_tools=[_search("123"), _book()],
         ),
         _show_indicator=False,
     )
     assert score == 1
     assert [t.name for t in metric.tools_called] == [
-        "track_parcel",
-        "transfer_to_human",
+        "search_flights",
+        "book_flight",
     ]
     assert metric.success is True
 
@@ -53,19 +55,17 @@ def test_missing_expected_tool_lowers_the_score():
     metric = ConversationToolCorrectnessMetric()
     score = metric.measure(
         _conversation(
-            [_track("123")], [], expected_tools=[_track("123"), _transfer()]
+            [_search("123")], [], expected_tools=[_search("123"), _book()]
         ),
         _show_indicator=False,
     )
     assert score == 0.5
-    assert "transfer_to_human" in metric.reason
+    assert "book_flight" in metric.reason
 
 
 def test_user_turn_tools_are_ignored():
-    test_case = _conversation([], expected_tools=[_transfer()])
-    test_case.turns[0] = Turn(
-        role="user", content="hi", tools_called=[_transfer()]
-    )
+    test_case = _conversation([], expected_tools=[_book()])
+    test_case.turns[0] = Turn(role="user", content="hi", tools_called=[_book()])
     metric = ConversationToolCorrectnessMetric()
     assert metric.measure(test_case, _show_indicator=False) == 0
 
@@ -80,7 +80,7 @@ def test_empty_expected_tools_means_no_calls_expected():
     )
     assert (
         metric.measure(
-            _conversation([_transfer()], expected_tools=[]),
+            _conversation([_book()], expected_tools=[]),
             _show_indicator=False,
         )
         == 0
@@ -88,12 +88,12 @@ def test_empty_expected_tools_means_no_calls_expected():
 
 
 def test_ordering_is_across_the_conversation():
-    expected = [_track("123"), _transfer()]
+    expected = [_search("123"), _book()]
     in_order = _conversation(
-        [_track("123")], [_transfer()], expected_tools=expected
+        [_search("123")], [_book()], expected_tools=expected
     )
     reversed_order = _conversation(
-        [_transfer()], [_track("123")], expected_tools=expected
+        [_book()], [_search("123")], expected_tools=expected
     )
     metric = ConversationToolCorrectnessMetric(should_consider_ordering=True)
     assert metric.measure(in_order, _show_indicator=False) == 1
@@ -104,7 +104,7 @@ def test_exact_match_rejects_extra_calls():
     metric = ConversationToolCorrectnessMetric(should_exact_match=True)
     score = metric.measure(
         _conversation(
-            [_track("123")], [_track("123")], expected_tools=[_track("123")]
+            [_search("123")], [_search("123")], expected_tools=[_search("123")]
         ),
         _show_indicator=False,
     )
@@ -112,7 +112,7 @@ def test_exact_match_rejects_extra_calls():
 
 
 def test_input_parameters_are_compared_when_asked():
-    case = _conversation([_track("999")], expected_tools=[_track("123")])
+    case = _conversation([_search("999")], expected_tools=[_search("123")])
     assert (
         ConversationToolCorrectnessMetric().measure(case, _show_indicator=False)
         == 1
@@ -129,7 +129,7 @@ def test_strict_mode_zeroes_a_partial_score():
     metric = ConversationToolCorrectnessMetric(strict_mode=True)
     score = metric.measure(
         _conversation(
-            [_track("123")], expected_tools=[_track("123"), _transfer()]
+            [_search("123")], expected_tools=[_search("123"), _book()]
         ),
         _show_indicator=False,
     )
@@ -140,21 +140,21 @@ def test_strict_mode_zeroes_a_partial_score():
 def test_errors_without_expected_tools():
     metric = ConversationToolCorrectnessMetric()
     with pytest.raises(MissingTestCaseParamsError, match="expected_tools"):
-        metric.measure(_conversation([_track("123")]), _show_indicator=False)
+        metric.measure(_conversation([_search("123")]), _show_indicator=False)
 
 
 def test_golden_expected_tools_reach_the_test_case():
     golden = ConversationalGolden(
-        scenario="Parcel is late; user wants a human.",
-        turns=[Turn(role="user", content="Get me a person.")],
-        expected_tools=[{"name": "transfer_to_human"}],
+        scenario="User wants to book a flight.",
+        turns=[Turn(role="user", content="Book me a flight to Tokyo.")],
+        expected_tools=[{"name": "book_flight"}],
     )
     assert (
         golden.model_dump(by_alias=True)["expectedTools"][0]["name"]
-        == "transfer_to_human"
+        == "book_flight"
     )
     (test_case,) = convert_convo_goldens_to_convo_test_cases([golden])
-    assert [t.name for t in test_case.expected_tools] == ["transfer_to_human"]
+    assert [t.name for t in test_case.expected_tools] == ["book_flight"]
 
 
 def test_expected_tools_round_trips_through_aliases_and_api():
@@ -163,16 +163,16 @@ def test_expected_tools_round_trips_through_aliases_and_api():
     test_case = ConversationalTestCase.model_validate(
         {
             "turns": [{"role": "user", "content": "hi"}],
-            "expectedTools": [{"name": "track_parcel"}],
+            "expectedTools": [{"name": "search_flights"}],
         }
     )
-    assert test_case.expected_tools[0].name == "track_parcel"
+    assert test_case.expected_tools[0].name == "search_flights"
     api = create_api_test_case(test_case, index=0).model_dump(by_alias=True)
-    assert api["expectedTools"][0]["name"] == "track_parcel"
+    assert api["expectedTools"][0]["name"] == "search_flights"
 
 
 async def test_a_measure_matches_measure():
-    case = _conversation([_track("1")], expected_tools=[_track("1")])
+    case = _conversation([_search("1")], expected_tools=[_search("1")])
     assert (
         await ConversationToolCorrectnessMetric().a_measure(
             case, _show_indicator=False
@@ -188,29 +188,29 @@ def _pinned(tool, turn):
 def test_pinned_tool_must_be_called_on_its_turn():
     # Turns: 0 user, 1 assistant, 2 user, 3 assistant.
     on_time = _conversation(
-        [_track("1")], [_transfer()], expected_tools=[_pinned(_transfer(), 3)]
+        [_search("1")], [_book()], expected_tools=[_pinned(_book(), 3)]
     )
     too_early = _conversation(
-        [_transfer()], [], expected_tools=[_pinned(_transfer(), 3)]
+        [_book()], [], expected_tools=[_pinned(_book(), 3)]
     )
     metric = ConversationToolCorrectnessMetric()
     assert metric.measure(on_time, _show_indicator=False) == 1
     assert metric.measure(too_early, _show_indicator=False) == 0
-    assert "transfer_to_human" in metric.reason
+    assert "book_flight" in metric.reason
 
 
 def test_pinned_and_unpinned_tools_are_scored_separately():
     metric = ConversationToolCorrectnessMetric()
     score = metric.measure(
         _conversation(
-            [_track("1")],
+            [_search("1")],
             [],
-            expected_tools=[_track("1"), _pinned(_transfer(), 3)],
+            expected_tools=[_search("1"), _pinned(_book(), 3)],
         ),
         _show_indicator=False,
     )
     assert score == 0.5
-    assert [g["group"] for g in metric.group_scores] == [
+    assert [c["check"] for c in metric.check_scores] == [
         "Turn 3",
         "Rest of the conversation",
     ]
@@ -222,9 +222,9 @@ def test_pinned_turn_is_left_out_of_the_rest_of_the_conversation():
     metric = ConversationToolCorrectnessMetric(should_exact_match=True)
     score = metric.measure(
         _conversation(
-            [_track("1")],
-            [_transfer()],
-            expected_tools=[_track("1"), _pinned(_transfer(), 3)],
+            [_search("1")],
+            [_book()],
+            expected_tools=[_search("1"), _pinned(_book(), 3)],
         ),
         _show_indicator=False,
     )
@@ -235,28 +235,20 @@ def test_turn_must_point_at_an_assistant_turn():
     metric = ConversationToolCorrectnessMetric()
     with pytest.raises(MissingTestCaseParamsError, match="'user' turn"):
         metric.measure(
-            _conversation(
-                [_transfer()], expected_tools=[_pinned(_transfer(), 0)]
-            ),
+            _conversation([_book()], expected_tools=[_pinned(_book(), 0)]),
             _show_indicator=False,
         )
     with pytest.raises(MissingTestCaseParamsError, match="has 2 turns"):
         metric.measure(
-            _conversation(
-                [_transfer()], expected_tools=[_pinned(_transfer(), 5)]
-            ),
+            _conversation([_book()], expected_tools=[_pinned(_book(), 5)]),
             _show_indicator=False,
         )
 
 
 def test_turn_does_not_change_tool_equality_or_unset_payloads():
-    assert _pinned(_transfer(), 3) == _transfer()
-    assert "turn" not in _transfer().model_dump(
-        by_alias=True, exclude_none=True
-    )
+    assert _pinned(_book(), 3) == _book()
+    assert "turn" not in _book().model_dump(by_alias=True, exclude_none=True)
     assert (
-        _pinned(_transfer(), 3).model_dump(by_alias=True, exclude_none=True)[
-            "turn"
-        ]
+        _pinned(_book(), 3).model_dump(by_alias=True, exclude_none=True)["turn"]
         == 3
     )

@@ -1,5 +1,5 @@
 export {
   ConversationToolCorrectnessMetric,
   type ConversationToolCorrectnessMetricOptions,
-  type ToolGroupScore,
+  type ToolCheckScore,
 } from "@/metrics/conversation-tool-correctness/conversation-tool-correctness";

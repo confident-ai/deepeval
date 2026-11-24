@@ -78,7 +78,7 @@ export {
 export {
   ConversationToolCorrectnessMetric,
   type ConversationToolCorrectnessMetricOptions,
-  type ToolGroupScore,
+  type ToolCheckScore,
 } from "@/metrics/conversation-tool-correctness";
 export {
   TaskCompletionMetric,
