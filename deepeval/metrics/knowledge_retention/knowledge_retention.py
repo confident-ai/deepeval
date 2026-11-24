@@ -31,6 +31,7 @@ from deepeval.metrics.knowledge_retention.schema import (
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.templates import make_template_class
 
+
 KnowledgeRetentionTemplate = make_template_class("KnowledgeRetentionMetric")
 
 

@@ -15,6 +15,7 @@ from deepeval.metrics import AnswerRelevancyMetric, GEval, TaskCompletionMetric
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.test_case import LLMTestCase
 
+
 TRACE = {
     "name": "support_agent",
     "type": "agent",

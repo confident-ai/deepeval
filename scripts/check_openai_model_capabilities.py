@@ -19,6 +19,7 @@ from typing import Any, Callable
 
 from deepeval.models.llms.constants import OPENAI_MODELS_DATA
 
+
 DEFAULT_MODELS = ("gpt-5.4", "gpt-5.5")
 
 

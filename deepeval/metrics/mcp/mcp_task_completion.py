@@ -31,6 +31,7 @@ from deepeval.metrics.mcp.utils import (
 from deepeval.metrics.mcp.schema import Task, TaskScore, Reason
 from deepeval.templates import make_template_class
 
+
 MCPTaskCompletionTemplate = make_template_class("MCPTaskCompletionMetric")
 
 TASK_COMPLETION_LEVELS = [

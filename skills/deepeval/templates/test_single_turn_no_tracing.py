@@ -8,6 +8,7 @@ from deepeval.test_case import LLMTestCase
 
 from metrics import SINGLE_TURN_NO_TRACING_METRICS
 
+
 ai_app = import_module("ai_app")
 
 

@@ -34,6 +34,7 @@ from deepeval.metrics.plan_adherence.schema import (
 )
 from deepeval.templates import make_template_class
 
+
 PlanAdherenceTemplate = make_template_class("PlanAdherenceMetric")
 
 PLAN_ADHERENCE_LEVELS = [

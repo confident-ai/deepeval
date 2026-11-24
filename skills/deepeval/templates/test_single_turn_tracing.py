@@ -7,6 +7,7 @@ from deepeval.dataset import EvaluationDataset, Golden
 
 from metrics import SINGLE_TURN_TRACE_METRICS
 
+
 ai_app = import_module("ai_app")
 
 

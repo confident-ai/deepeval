@@ -29,7 +29,8 @@ class SimulationTemplate:
 
     @staticmethod
     def keypad_option() -> str:
-        return textwrap.dedent("""
+        return textwrap.dedent(
+            """
             Keypad:
             The caller can press keys on their phone's keypad instead of speaking.
             1. Press keys only when the assistant's last reply asks for keypad
@@ -43,7 +44,8 @@ class SimulationTemplate:
 
             Add the `keypad` key to the JSON output, for example:
             {"simulated_input": "", "keypad": "8670940983#"}
-            """)
+            """
+        )
 
     @staticmethod
     def simulate_first_user_turn(
@@ -90,7 +92,8 @@ class SimulationTemplate:
         language: str,
     ) -> str:
         previous_conversation = serialize_turns_for_prompt(turns)
-        prompt = textwrap.dedent(f"""
+        prompt = textwrap.dedent(
+            f"""
             Pretend you are a user of an LLM app. Your task is to generate the next user input in {language} 
             based on the provided scenario, persona, and the previous conversation.
 
@@ -128,5 +131,6 @@ class SimulationTemplate:
             {previous_conversation}
 
             JSON Output:
-        """)
+        """
+        )
         return prompt

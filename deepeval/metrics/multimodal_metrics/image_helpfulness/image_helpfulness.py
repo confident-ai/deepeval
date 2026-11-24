@@ -21,6 +21,7 @@ from deepeval.utils import (
 )
 from deepeval.templates import make_template_class
 
+
 ImageHelpfulnessTemplate = make_template_class("ImageHelpfulnessMetric")
 
 

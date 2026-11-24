@@ -35,6 +35,7 @@ from tests.test_integrations.test_agentcore.apps.agentcore_eval_app import (
     init_evals_agentcore,
 )
 
+
 pytestmark = pytest.mark.skipif(
     not os.getenv("AWS_ACCESS_KEY_ID") or not os.getenv("OPENAI_API_KEY"),
     reason=(

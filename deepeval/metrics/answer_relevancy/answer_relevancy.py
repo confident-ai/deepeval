@@ -34,6 +34,7 @@ from deepeval.metrics.answer_relevancy.schema import (
 )
 from deepeval.templates import make_template_class
 
+
 AnswerRelevancyTemplate = make_template_class("AnswerRelevancyMetric")
 
 

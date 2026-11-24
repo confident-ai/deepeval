@@ -34,6 +34,7 @@ from deepeval.metrics.turn_relevancy.schema import (
 )
 from deepeval.templates import make_template_class
 
+
 TurnRelevancyTemplate = make_template_class("TurnRelevancyMetric")
 
 

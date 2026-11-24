@@ -61,6 +61,7 @@ from deepeval.test_case import SingleTurnParams, MultiTurnParams
 from .registry import CLASS_TO_NODE_TYPE, NODE_CLASSES
 from .types import ChildType, NodeType
 
+
 # ----------------------------------------------------------------------------
 # Public API
 # ----------------------------------------------------------------------------

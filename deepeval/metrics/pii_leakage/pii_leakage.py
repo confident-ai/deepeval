@@ -34,6 +34,7 @@ from deepeval.metrics.pii_leakage.schema import (
 )
 from deepeval.templates import make_template_class
 
+
 PIILeakageTemplate = make_template_class("PIILeakageMetric")
 
 

@@ -32,6 +32,7 @@ from deepeval.metrics.g_eval.utils import (
 from deepeval.utils import update_pbar
 from deepeval.templates import make_template_class
 
+
 ArenaGEvalTemplate = make_template_class("ArenaGEval")
 
 

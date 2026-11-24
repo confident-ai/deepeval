@@ -8,6 +8,7 @@ import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.agent_loop_detection import AgentLoopDetectionMetric
 
+
 # ---------------------------------------------------------------------------
 # Trace / test-case builder helpers
 # ---------------------------------------------------------------------------

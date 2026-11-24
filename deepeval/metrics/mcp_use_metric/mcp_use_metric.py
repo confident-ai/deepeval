@@ -34,6 +34,7 @@ from deepeval.metrics.mcp.utils import mcp_calls_state, mcp_servers_state
 from .schema import MCPPrimitivesScore, MCPArgsScore
 from deepeval.templates import make_template_class
 
+
 MCPUseTemplate = make_template_class("MCPUseMetric")
 
 PRIMITIVE_USAGE_LEVELS = [

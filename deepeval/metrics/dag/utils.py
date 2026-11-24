@@ -21,6 +21,7 @@ from deepeval.metrics.conversational_dag import (
 )
 from deepeval.test_case import SingleTurnParams, MultiTurnParams
 
+
 _suppress_bottom_up_deprecation: ContextVar[bool] = ContextVar(
     "deepeval_suppress_bottom_up_dag_deprecation", default=False
 )
