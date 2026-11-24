@@ -75,6 +75,7 @@ from deepeval.test_run.cache import (
 )
 from deepeval.evaluate.types import TestResult
 from deepeval.evaluate.utils import (
+    attach_classifications,
     create_metric_data,
     create_classification,
     create_test_result,
@@ -108,9 +109,8 @@ def _collect_classifications(
     test_case: Union[LLMTestCase, ConversationalTestCase],
     new_cached_test_case: Optional[CachedTestCase],
 ) -> List[Classification]:
-    """Build one ``Classification`` per classifier for the local
-    ``TestResult`` (never attached to the uploaded API test case) and, when a
-    cache bucket is given, record error-free results for reuse."""
+    """Build one ``Classification`` per classifier and, when a cache bucket
+    is given, record error-free results for reuse."""
     expected_labels = test_case.expected_labels or {}
     classifications: List[Classification] = []
     for classifier in classifiers:
@@ -451,10 +451,9 @@ def execute_test_cases(
                     api_test_case.update_run_duration(
                         elapsed if elapsed >= 0 else deadline_timeout
                     )
+                    attach_classifications(api_test_case, case_classifications)
                     test_run_manager.update_test_run(api_test_case, test_case)
-                    test_results.append(
-                        create_test_result(api_test_case, case_classifications)
-                    )
+                    test_results.append(create_test_result(api_test_case))
                     update_pbar(progress, pbar_id)
                 finally:
                     reset_outer_deadline(deadline_token)
@@ -851,6 +850,7 @@ async def _a_execute_llm_test_cases(
         api_test_case.update_run_duration(run_duration)
 
         ### Update Test Run ###
+        attach_classifications(api_test_case, case_classifications)
         test_run_manager.update_test_run(api_test_case, test_case)
 
         ### Cache Test Run ###
@@ -866,9 +866,7 @@ async def _a_execute_llm_test_cases(
             to_temp=True,
         )
 
-        test_results.append(
-            create_test_result(api_test_case, case_classifications)
-        )
+        test_results.append(create_test_result(api_test_case))
         update_pbar(progress, pbar_id)
 
 
@@ -984,11 +982,10 @@ async def _a_execute_conversational_test_cases(
             api_test_case.update_run_duration(run_duration)
 
         ### Update Test Run ###
+        attach_classifications(api_test_case, case_classifications)
         test_run_manager.update_test_run(api_test_case, test_case)
 
-        test_results.append(
-            create_test_result(api_test_case, case_classifications)
-        )
+        test_results.append(create_test_result(api_test_case))
         update_pbar(progress, pbar_id)
 
 

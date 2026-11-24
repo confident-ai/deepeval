@@ -14,11 +14,9 @@ from deepeval.utils import make_model_config
 
 class Classification(BaseModel):
     """Classifier counterpart of ``MetricData``: one classifier's result on
-    one test case. ``success`` is ``None`` when the test case declared no
-    expected label for this classifier.
-
-    Local-only: classifications live on ``TestResult`` and are never attached
-    to the API test cases that are uploaded to Confident AI."""
+    one test case, uploaded to Confident AI with that test case. ``success``
+    is ``None`` when the test case declared no expected label for this
+    classifier."""
 
     model_config = make_model_config(extra="ignore")
 
@@ -60,6 +58,7 @@ class LLMApiTestCase(BaseModel):
     # make these optional, not all test cases in a conversation will be evaluated
     success: Union[bool, None] = Field(None)
     metrics_data: Union[ApiMetricsData, None] = Field(None, alias="metricsData")
+    classifications: Optional[List[Classification]] = Field(None)
     run_duration: Union[float, None] = Field(None, alias="runDuration")
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
 
@@ -141,8 +140,9 @@ class ConversationalApiTestCase(BaseModel):
         None, alias="expectationsData"
     )
     name: str
-    success: bool
+    success: Optional[bool] = Field(None)
     metrics_data: ApiMetricsData = Field(alias="metricsData")
+    classifications: Optional[List[Classification]] = Field(None)
     run_duration: float = Field(0.0, alias="runDuration")
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     turns: List[TurnApi] = Field(default_factory=lambda: [])
