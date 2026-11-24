@@ -46,7 +46,7 @@ There is **ONE** mandatory and **THIRTEEN** optional arguments when calling the 
 - [Optional] `target_purpose`: a string specifying your target LLM application's intended purpose. This affects the passing and failing of simulated attacks that are evaluated. Defaulted to `None`.
 - [Optional] `attack_engine`: an optional `AttackEngine` used to refine baseline simulated attacks before they are sent to your target. Forwarded to the internal `RedTeamer`. Defaulted to `None` (a default engine is created per run). See [Attack engine](/docs/red-teaming-attack-engine).
 
-:::caution WARNING
+:::caution[WARNING]
 You **MUST** pass either `vulnerabilities` and `attacks` or `framework` in the `red_team` function. If not, you will get an error since red teaming cannot be performed without any of those. (In case you provide both, the `attacks` and `vulnerabilities` inside framework overwrite your regular `attacks` or `vulnerabilities`)
 :::
 

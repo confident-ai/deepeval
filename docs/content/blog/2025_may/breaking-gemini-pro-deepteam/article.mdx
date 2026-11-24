@@ -14,13 +14,13 @@ We tested Gemini 2.5 Pro against 33 vulnerability types using [DeepEval](/docs/r
 
 We used DeepEval to generate a total of **33 attacks** from 33 distinct vulnerability types across 9 vulnerability classes, such as **Bias**, **Misinformation**, and **Excessive Agency**.
 
-:::info Definition
+:::info[Definition]
 **Attack**: An adversarial technique that exploits vulnerabilities in an AI model's training or alignment to elicit outputs that violate the model's safety constraints, ethical guidelines, or intended behavior parameters.
 :::
 
 We use DeepEval's `vulnerabilities` to generate baseline attacks and enhance these attacks using methods like **linear jailbreaking**.
 
-:::info Definition
+:::info[Definition]
 **Linear Jailbreaking**: A multi-turn adversarial strategy that incrementally escalates prompt complexity and persuasion across conversation turns, systematically probing and weakening the model's refusal mechanisms until safety guardrails are bypassed.
 :::
 The simplified DeepEval setup below illustrates this, applying **linear jailbreaking** to standard vulnerabilities:

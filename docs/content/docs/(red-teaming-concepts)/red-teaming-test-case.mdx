@@ -244,7 +244,7 @@ class ToolCall(BaseModel):
     input_parameters: Optional[Dict[str, Any]] = None
 ```
 
-:::caution Warning
+:::caution[Warning]
 An `RTTestCase` **must** be either single-turn or multi-turn. You cannot use both `actual_output` and `turns` at the same time — doing so will raise an error.
 :::
 

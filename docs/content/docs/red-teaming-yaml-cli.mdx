@@ -57,7 +57,7 @@ Then run the red teaming with a single command:
 deepeval red-team config.yaml
 ```
 
-:::tip DID YOU KNOW?
+:::tip[DID YOU KNOW?]
 The YAML CLI interface is particularly useful for **CI/CD pipelines and automated testing** where you need reproducible, version-controlled red teaming configurations that can be easily shared across development teams.
 :::
 
@@ -415,7 +415,7 @@ attacks:
     turn_level_attacks: ["Roleplay"]
 ```
 
-:::caution Warning
+:::caution[Warning]
 When defining attacks, you should pass the **class name** of the attacks as defined in the [attack docs](/docs/red-teaming-adversarial-attacks). For example, for the `PromptInjection` attack you **MUST** pass `"PromptInjection"` and not `"Prompt Injection"` or `"Promptinjection"`.
 :::
 
