@@ -973,6 +973,7 @@ class RedTeamer:
             self.risk_assessment,
             identifier=identifier,
             rt_framework_id=rt_framework_id,
+            simulation_model=self.simulator_model.get_model_name(),
         )
         try:
             body = api_risk_assessment.model_dump(

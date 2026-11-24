@@ -9,6 +9,7 @@ from deepeval.red_team.red_teamer.risk_assessment import (
     AttackMethodResult,
 )
 from deepeval.red_team.test_case import RTTestCase, RTTurn
+from deepeval.red_team.test_case.test_case import Probe
 
 
 class VulnerabilityTypeResult(BaseModel):
@@ -34,6 +35,19 @@ class APIRTTurn(TurnApi):
     stopping_category: Optional[str] = Field(None, alias="stoppingCategory")
 
 
+class APIRTProbe(BaseModel):
+    id: int
+    parent_id: Optional[int] = Field(None, alias="parentId")
+    input: str
+    output: Optional[str] = Field(None)
+    turn_level_attack: Optional[str] = Field(None, alias="turnLevelAttack")
+    committed: bool
+    latency: Optional[float] = Field(None)
+    simulation_cost: Optional[float] = Field(None, alias="simulationCost")
+    score: Optional[float] = Field(None)
+    reason: Optional[str] = Field(None)
+
+
 class APIRTTestCase(BaseModel):
     input: str
     actual_output: Optional[str] = Field(None, alias="actualOutput")
@@ -42,11 +56,16 @@ class APIRTTestCase(BaseModel):
     )
     tools_called: Optional[List[ToolCall]] = Field(None, alias="toolsCalled")
     turns: Optional[List[APIRTTurn]] = Field(None)
+    probes: Optional[List[APIRTProbe]] = Field(None)
 
     success: Optional[bool] = Field(None)
     score: Optional[float] = Field(None)
     reason: Optional[str] = Field(None)
     error: Optional[str] = Field(None)
+
+    simulation_cost: Optional[float] = Field(None, alias="simulationCost")
+    evaluation_cost: Optional[float] = Field(None, alias="evaluationCost")
+    simulation_model: Optional[str] = Field(None, alias="simulationModel")
 
     vulnerability: str = Field(alias="vulnerability")
     vulnerability_type: str = Field(alias="vulnerabilityType")
@@ -83,7 +102,27 @@ def map_turn_to_api(turn: RTTurn, order: int) -> APIRTTurn:
     )
 
 
-def map_test_case_to_api(test_case: RTTestCase, index: int) -> APIRTTestCase:
+def map_probe_to_api(probe: Probe) -> APIRTProbe:
+    """Map Probe to APIRTProbe."""
+    return APIRTProbe(
+        id=probe.id,
+        parentId=probe.parent_id,
+        input=probe.input,
+        output=probe.output.content if probe.output else None,
+        turnLevelAttack=probe.turn_level_attack,
+        committed=probe.committed,
+        latency=probe.latency,
+        simulationCost=probe.simulation_cost,
+        score=probe.score,
+        reason=probe.reason,
+    )
+
+
+def map_test_case_to_api(
+    test_case: RTTestCase,
+    index: int,
+    simulation_model: Optional[str] = None,
+) -> APIRTTestCase:
     """Map RTTestCase to APIRTTestCase."""
     turns = None
     if test_case.turns:
@@ -91,6 +130,10 @@ def map_test_case_to_api(test_case: RTTestCase, index: int) -> APIRTTestCase:
             map_turn_to_api(turn, idx)
             for idx, turn in enumerate(test_case.turns)
         ]
+
+    probes = None
+    if test_case.probes:
+        probes = [map_probe_to_api(probe) for probe in test_case.probes]
 
     if test_case.score is not None:
         success = test_case.score > 0
@@ -103,10 +146,14 @@ def map_test_case_to_api(test_case: RTTestCase, index: int) -> APIRTTestCase:
         retrievalContext=test_case.retrieval_context,
         toolsCalled=test_case.tools_called,
         turns=turns,
+        probes=probes,
         success=success,
         score=test_case.score,
         reason=test_case.reason,
         error=test_case.error,
+        simulationCost=test_case.simulation_cost,
+        evaluationCost=test_case.evaluation_cost,
+        simulationModel=simulation_model,
         vulnerability=test_case.vulnerability,
         vulnerabilityType=test_case.vulnerability_type.value,
         attackMethod=test_case.attack_method,
@@ -147,6 +194,7 @@ def map_risk_assessment_to_api(
     assessment_cost: Optional[float] = None,
     identifier: Optional[str] = None,
     rt_framework_id: Optional[str] = None,
+    simulation_model: Optional[str] = None,
 ) -> APIRiskAssessment:
     """
     Map RiskAssessment to APIRiskAssessment.
@@ -157,6 +205,8 @@ def map_risk_assessment_to_api(
         assessment_cost: Optional[float] = None,
         rt_framework_id: id of the Confident AI framework this assessment ran,
             set only when the framework was pulled from Confident AI.
+        simulation_model: name of the model that simulated the attacks,
+            reported on every test case.
 
     Returns:
         APIRiskAssessment: The API-compatible risk assessment object
@@ -172,7 +222,7 @@ def map_risk_assessment_to_api(
     ]
 
     test_cases = [
-        map_test_case_to_api(test_case, index)
+        map_test_case_to_api(test_case, index, simulation_model)
         for index, test_case in enumerate(risk_assessment.test_cases)
     ]
 

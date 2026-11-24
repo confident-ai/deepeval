@@ -6,21 +6,7 @@ from deepeval.red_team.attacks.multi_turn.progression.shift_detection import (
     MetricVerdict,
 )
 from deepeval.red_team.attacks.multi_turn.progression.stopping import StopReason
-from deepeval.red_team.test_case.test_case import RTTurn
-
-
-class Probe(BaseModel):
-    id: int
-    parent_id: Optional[int] = None
-    input: str
-    output: Optional[RTTurn] = None
-    turn_level_attack: Optional[str] = None
-    committed: bool = False
-    depth: int = 0
-    latency: Optional[float] = None
-    simulation_cost: Optional[float] = None
-    score: Optional[float] = None
-    reason: Optional[str] = None
+from deepeval.red_team.test_case.test_case import Probe, RTTurn
 
 
 class ProgressionResult(BaseModel):
