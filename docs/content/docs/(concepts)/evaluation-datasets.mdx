@@ -1381,7 +1381,6 @@ from deepeval.dataset import Expectations
 class ConversationalGolden(BaseModel):
     scenario: str
     expected_outcome: Optional[str] = None
-    # Tools the assistant should call, see /docs/metrics-conversation-tool-correctness
     expected_tools: Optional[List[ToolCall]] = None
     persona: Optional[Persona] = None
     context: Optional[List[str]] = None
@@ -1406,7 +1405,6 @@ class ConversationalGolden(BaseModel):
 class ConversationalGolden {
   scenario: string;
   expectedOutcome?: string;
-  // Tools the assistant should call, see /docs/metrics-conversation-tool-correctness
   expectedTools?: ToolCall[];
   persona?: Persona;
   context?: string[];
