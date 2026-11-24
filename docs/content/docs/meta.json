@@ -60,7 +60,6 @@
     "(red-teaming-vulnerabilities)",
     "(red-teaming-frameworks)",
     "(red-teaming-guardrails)",
-    "(red-teaming-code-scanning)",
     "---[Boxes]Others---",
     "command-line-interface",
     "environment-variables",
