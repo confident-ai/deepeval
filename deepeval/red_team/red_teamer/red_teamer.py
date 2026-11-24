@@ -8,12 +8,11 @@ import inspect
 from rich import box
 from enum import Enum
 from collections import defaultdict
-from deepeval.confident.api import HttpMethods, is_confident
+from deepeval.confident.api import Api, Endpoints, HttpMethods, is_confident
 
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
 from deepeval.dataset.golden import Golden
-from deepeval.red_team.confident.api import Api, Endpoints
 from deepeval.red_team.red_teamer.api import map_risk_assessment_to_api
 from deepeval.red_team.test_case import RTTestCase, RTTurn
 from deepeval.utils import get_or_create_event_loop

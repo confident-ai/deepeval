@@ -7,8 +7,7 @@ from deepeval.metrics.utils import initialize_model, trimAndLoadJson
 from deepeval.utils import get_or_create_event_loop
 
 from deepeval.red_team.utils import validate_model_callback_signature
-from deepeval.red_team.confident.api import Api, Endpoints
-from deepeval.confident.api import HttpMethods
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 from rich.console import Console
 
 from deepeval.red_team.vulnerabilities import BaseVulnerability

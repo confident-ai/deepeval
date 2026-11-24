@@ -1,13 +1,12 @@
 from typing import List, Optional
 from dataclasses import dataclass
 
-from deepeval.confident.api import HttpMethods
+from deepeval.confident.api import Api, Endpoints, HttpMethods
 
 from deepeval.red_team.vulnerabilities import (
     BaseVulnerability,
 )
 from deepeval.red_team.attacks import BaseAttack
-from deepeval.red_team.confident.api import Api, Endpoints
 from deepeval.red_team.frameworks.api import RedTeamingFrameworkHttpResponse
 from deepeval.red_team.frameworks.risk_category import RiskCategory
 from deepeval.red_team.frameworks.utils import build_risk_categories
