@@ -132,6 +132,7 @@ class AiMonthSummary(BaseModel):
 
 PR_NUM_RE = re.compile(r"\(#(\d+)\)|pull request #(\d+)", re.IGNORECASE)
 MERGE_SUBJECT_RE = re.compile(r"^Merge pull request #(\d+)\b", re.IGNORECASE)
+SQUASH_SUBJECT_RE = re.compile(r"\(#(\d+)\)\s*$")
 user_cache: Dict[str, Tuple[str, str]] = (
     {}
 )  # maps login to (display_name, html_url)
@@ -324,20 +325,24 @@ def commits_in_range(base: str, head: str) -> List[Commit]:
     # get sha and subject for commit subjects in range
     # No --first-parent: release tags often sit on a fork-sync merge whose first
     # parent leaves the range immediately, which hides every PR merge behind it.
+    # Merge commits cover merged PRs; squash-merged PRs land as a single
+    # non-merge commit whose subject ends in "(#123)", so keep those too.
     raw = sh(
         [
             "git",
             "log",
-            "--merges",
-            "--format=%H%x00%s",
+            "--format=%H%x00%P%x00%s",
             f"{base}..{head}",
         ]
     )
     commits: List[Commit] = []
     for line in raw.splitlines():
-        if "\x00" not in line:
+        if line.count("\x00") < 2:
             continue
-        sha, subj = line.split("\x00", 1)
+        sha, parents, subj = line.split("\x00", 2)
+        is_merge = len(parents.split()) > 1
+        if not is_merge and not SQUASH_SUBJECT_RE.search(subj):
+            continue
         commits.append(Commit(sha=sha.strip(), subject=subj.strip()))
     return commits
 
