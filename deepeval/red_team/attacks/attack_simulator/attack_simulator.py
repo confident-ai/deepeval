@@ -508,6 +508,7 @@ class AttackSimulator:
                     )
 
                     test_case.turns = result.turns
+                    test_case.probes = result.probesx
                     test_case.actual_output = result.turns[-1].content
                     if result.error is not None:
                         raise result.error
@@ -628,6 +629,7 @@ class AttackSimulator:
                     )
 
                     test_case.turns = result.turns
+                    test_case.probes = result.probes
                     test_case.actual_output = result.turns[-1].content
                     if result.error is not None:
                         raise result.error

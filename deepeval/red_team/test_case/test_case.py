@@ -1,5 +1,6 @@
 from typing import List, Optional
 from enum import Enum
+from pydantic import BaseModel
 from deepeval.test_case import LLMTestCase, Turn, ToolCall
 
 
@@ -19,11 +20,26 @@ class RTTurn(Turn):
         return f"RTTurn({', '.join(attrs)})"
 
 
+class Probe(BaseModel):
+    id: int
+    parent_id: Optional[int] = None
+    input: str
+    output: Optional[RTTurn] = None
+    turn_level_attack: Optional[str] = None
+    committed: bool = False
+    depth: int = 0
+    latency: Optional[float] = None
+    simulation_cost: Optional[float] = None
+    score: Optional[float] = None
+    reason: Optional[str] = None
+
+
 class RTTestCase(LLMTestCase):
     vulnerability: str
     input: Optional[str] = None
     actual_output: Optional[str] = None
     turns: Optional[List[RTTurn]] = None
+    probes: Optional[List[Probe]] = None
     metadata: Optional[dict] = None
     vulnerability_type: Enum = None
     attack_method: Optional[str] = None
