@@ -1,7 +1,7 @@
 ---
-id: metrics-argument-relevancy
-title: Argument Relevancy
-sidebar_label: Argument Relevancy
+id: metrics-argument-correctness
+title: Argument Correctness
+sidebar_label: Argument Correctness
 languages: [python, typescript]
 ---
 <MetricTagsDisplayer
@@ -12,15 +12,15 @@ languages: [python, typescript]
   referenceless={true}
 />
 
-The argument relevancy metric is an agentic LLM metric that assesses whether the arguments your AI agent passes to each tool fit what the user asked. An LLM judges every tool call's arguments against the input; nothing is compared with expected values.
+The argument correctness metric is an agentic LLM metric that assesses your AI agent's ability to generate the correct arguments for the tools it calls. It is calculated by determining whether the arguments for each tool call is correct based on the input.
 
 :::info
-This metric was called `ArgumentCorrectnessMetric` before. The old name still works but is deprecated. It was renamed because it checks relevance to the input, not correctness against expected arguments. To check arguments against expected values deterministically, use the [tool correctness metric](/docs/metrics-tool-correctness) with <Term py="evaluation_params=[ToolCallParams.INPUT_PARAMETERS]" ts="evaluationParams: [ToolCallParams.INPUT_PARAMETERS]"/>.
+The `ArgumentCorrectnessMetric` uses an LLM to determine argument correctness, and is also referenceless. If you're looking to deterministically evaluate argument correctness, refer to the [tool correctness metric](/docs/metrics-tool-correctness) instead.
 :::
 
 ## Required Arguments
 
-To use the `ArgumentRelevancyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+To use the `ArgumentCorrectnessMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
 
 - `input`
 - <Term py="actual_output" ts="actualOutput"/>
@@ -32,18 +32,18 @@ Read the [How Is It Calculated](#how-is-it-calculated) section below to learn ho
 
 <include cwd>snippets/metrics/set-eval-mode.mdx</include>
 
-The `ArgumentRelevancyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
+The `ArgumentCorrectnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) evaluation:
 
 <Switch>
 
 <Case id="python">
 
 ```python
-from deepeval.metrics import ArgumentRelevancyMetric
+from deepeval.metrics import ArgumentCorrectnessMetric
 from deepeval.test_case import LLMTestCase, ToolCall
 from deepeval import evaluate
 
-metric = ArgumentRelevancyMetric(
+metric = ArgumentCorrectnessMetric(
     threshold=0.7,
     model="gpt-4",
     include_reason=True
@@ -77,11 +77,11 @@ evaluate(test_cases=[test_case], metrics=[metric])
 <Case id="typescript">
 
 ```typescript
-import { ArgumentRelevancyMetric } from "deepeval/metrics";
+import { ArgumentCorrectnessMetric } from "deepeval/metrics";
 import { LLMTestCase, ToolCall } from "deepeval/test-case";
 import { evaluate } from "deepeval";
 
-const metric = new ArgumentRelevancyMetric({
+const metric = new ArgumentCorrectnessMetric({
   threshold: 0.7,
   model: "gpt-4",
   includeReason: true,
@@ -118,13 +118,13 @@ await evaluate([testCase], [metric]);
 
 <Case id="python">
 
-There are **NINE** optional parameters when creating an `ArgumentRelevancyMetric`:
+There are **NINE** optional parameters when creating an `ArgumentCorrectnessMetric`:
 
 </Case>
 
 <Case id="typescript">
 
-There are **SIX** optional parameters when creating an `ArgumentRelevancyMetric`:
+There are **SIX** optional parameters when creating an `ArgumentCorrectnessMetric`:
 
 </Case>
 
@@ -144,7 +144,7 @@ There are **SIX** optional parameters when creating an `ArgumentRelevancyMetric`
 
 ### Within components
 
-You can also run the `ArgumentRelevancyMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
+You can also run the `ArgumentCorrectnessMetric` within nested components for [component-level](/docs/evaluation-component-level-llm-evals) evaluation.
 
 <Switch>
 
@@ -221,7 +221,7 @@ When the span a metric is attached to has no <Term py="tools_called" ts="toolsCa
 
 ### As a standalone
 
-You can also run the `ArgumentRelevancyMetric` on a single test case as a standalone, one-off execution.
+You can also run the `ArgumentCorrectnessMetric` on a single test case as a standalone, one-off execution.
 
 <Switch>
 
@@ -251,15 +251,15 @@ console.log(metric.score, metric.reason);
 
 ## How Is It Calculated?
 
-You can change how the `ArgumentRelevancyMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
+You can change how the `ArgumentCorrectnessMetric` is calculated by setting the [eval mode](/docs/evaluation-eval-modes).
 
 ### LLM-as-a-judge
 
-The `ArgumentRelevancyMetric` score is calculated according to the following equation:
+The `ArgumentCorrectnessMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Argument Relevancy} = \frac{\text{Number of Correctly Generated Input Parameters}}{\text{Total Number of Tool Calls}}" />
+<Equation formula="\text{Argument Correctness} = \frac{\text{Number of Correctly Generated Input Parameters}}{\text{Total Number of Tool Calls}}" />
 
-The `ArgumentRelevancyMetric` assesses the correctness of the arguments (input parameters) for each tool call, based on the task outlined in the input.
+The `ArgumentCorrectnessMetric` assesses the correctness of the arguments (input parameters) for each tool call, based on the task outlined in the input.
 
 :::note
 You can set the <Term py="verbose_mode" ts="verboseMode"/> of **ANY** `deepeval` metric to <Term py="True" ts="true"/> to debug the `measure()` method:
@@ -271,7 +271,7 @@ You can set the <Term py="verbose_mode" ts="verboseMode"/> of **ANY** `deepeval`
 ```python
 ...
 
-metric = ArgumentRelevancyMetric(verbose_mode=True)
+metric = ArgumentCorrectnessMetric(verbose_mode=True)
 metric.measure(test_case)
 ```
 
@@ -282,7 +282,7 @@ metric.measure(test_case)
 ```typescript
 // ...
 
-const metric = new ArgumentRelevancyMetric({ verboseMode: true });
+const metric = new ArgumentCorrectnessMetric({ verboseMode: true });
 await metric.measure(testCase);
 ```
 
@@ -316,7 +316,7 @@ Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the 
       question: "My agent called the right tool but passed wrong arguments — which metric catches that?",
       answer: (
         <>
-          Argument Relevancy. It scores the <strong>arguments</strong> per
+          Argument Correctness. It scores the <strong>arguments</strong> per
           tool call, judged by an LLM against the <code>input</code>.{" "}
           <a href="/docs/metrics-tool-correctness">Tool Correctness</a> passes
           such a run since the right tool was selected.
@@ -324,7 +324,7 @@ Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the 
       ),
     },
     {
-      question: "Do I need expected tools for Argument Relevancy?",
+      question: "Do I need expected tools for Argument Correctness?",
       answer: (
         <>
           No — it's referenceless. Provide only <code>input</code>,{" "}
@@ -337,19 +337,19 @@ Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the 
       ),
     },
     {
-      question: "Tool Correctness vs Argument Relevancy — right tool vs right inputs?",
+      question: "Tool Correctness vs Argument Correctness — right tool vs right inputs?",
       answer: (
         <>
           Exactly.{" "}
           <a href="/docs/metrics-tool-correctness">Tool Correctness</a> checks
           "right tools?" deterministically against <Term py="expected_tools" ts="expectedTools"/>;
-          Argument Relevancy checks "right inputs?" via an LLM. Use both to
+          Argument Correctness checks "right inputs?" via an LLM. Use both to
           verify selection and arguments.
         </>
       ),
     },
     {
-      question: "Is Argument Relevancy deterministic or LLM-judged?",
+      question: "Is Argument Correctness deterministic or LLM-judged?",
       answer: (
         <>
           LLM-judged: correct input parameters ÷ total tool calls, with an LLM
@@ -361,7 +361,7 @@ Under the `system_one` [eval mode](/docs/evaluation-eval-modes), Jev judges the 
       ),
     },
     {
-      question: "Can I use Argument Relevancy with LangChain, OpenAI, or another framework?",
+      question: "Can I use Argument Correctness with LangChain, OpenAI, or another framework?",
       answer: (
         <>
           Yes. <code>deepeval</code> auto-traces agents built with{" "}

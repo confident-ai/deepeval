@@ -44,7 +44,6 @@ def test_metrics_imports():
         # Agentic metrics
         ToolCorrectnessMetric,
         TaskCompletionMetric,
-        ArgumentRelevancyMetric,
         ArgumentCorrectnessMetric,
         GoalAccuracyMetric,
         TopicAdherenceMetric,
@@ -104,7 +103,6 @@ def test_metrics_imports():
         JsonCorrectnessMetric,
         PromptAlignmentMetric,
         TaskCompletionMetric,
-        ArgumentRelevancyMetric,
         ArgumentCorrectnessMetric,
         GoalAccuracyMetric,
         TopicAdherenceMetric,

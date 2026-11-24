@@ -286,7 +286,7 @@ The `travel_agent` in this example can be any `@observe` decorated agent. Whatev
 
 - [`ToolCorrectnessMetric`](/docs/metrics-tool-correctness): evaluates whether your agent **selects the right tools** and calls them in the expected manner based on a list of expected tools.
 
-- [`ArgumentRelevancyMetric`](/docs/metrics-argument-relevancy): evaluates whether your agent **generates correct arguments** for each tool call based on the input and context.
+- [`ArgumentCorrectnessMetric`](/docs/metrics-argument-correctness): evaluates whether your agent **generates correct arguments** for each tool call based on the input and context.
 
 These are **component-level metrics** and should be placed strictly on the LLM component of your agent (e.g., `call_openai`), since this is where tool calling decisions are made. The LLM is responsible for selecting which tools to use and generating the arguments—so that's exactly where we want to evaluate.
 
@@ -297,17 +297,17 @@ Tool selection and argument generation are both critical—calling the right too
 To begin, define your metrics:
 
 ```python
-from deepeval.metrics import ToolCorrectnessMetric, ArgumentRelevancyMetric
+from deepeval.metrics import ToolCorrectnessMetric, ArgumentCorrectnessMetric
 
 tool_correctness = ToolCorrectnessMetric()
-argument_relevancy = ArgumentRelevancyMetric()
+argument_correctness = ArgumentCorrectnessMetric()
 ```
 
 Then, add the metrics to the **LLM component** of your AI agent:
 
 ```python
 # Add metrics=[...] to @observe
-@observe(type="llm", metrics=[tool_correctness, argument_relevancy])
+@observe(type="llm", metrics=[tool_correctness, argument_correctness])
 def call_openai(messages):
     response = client.chat.completions.create(
         model="gpt-4o",
@@ -335,7 +335,7 @@ for golden in dataset.evals_iterator():
 The `tools_called` contains the actual tools your agent invoked (with their arguments), and `expected_tools` defines what tools should have been called. Visit their respective metric documentation pages to learn how they're calculated:
 
 - [`ToolCorrectnessMetric`](/docs/metrics-tool-correctness)
-- [`ArgumentRelevancyMetric`](/docs/metrics-argument-relevancy)
+- [`ArgumentCorrectnessMetric`](/docs/metrics-argument-correctness)
 
 Let's move on to evaluating the overall execution of your AI agent.
 
@@ -393,7 +393,7 @@ AI agent evaluation can operate at three different scopes:
 
 - **Trajectory evals** — The reasoning metrics (`PlanQualityMetric`, `PlanAdherenceMetric`) and execution metrics (`TaskCompletionMetric`, `StepEfficiencyMetric`) are passed to `evals_iterator(metrics=[...])`. They require tracing and evaluate the complete ordered sequence of reasoning, tool calls, observations, and other steps.
 
-- **Component-level evals** — The action layer metrics (`ToolCorrectnessMetric`, `ArgumentRelevancyMetric`) are attached directly to the `@observe` decorator on the LLM component via `@observe(metrics=[...])`. They evaluate the single span where the tool-calling decision is made.
+- **Component-level evals** — The action layer metrics (`ToolCorrectnessMetric`, `ArgumentCorrectnessMetric`) are attached directly to the `@observe` decorator on the LLM component via `@observe(metrics=[...])`. They evaluate the single span where the tool-calling decision is made.
 
 This distinction matters because different metrics need different scopes:
 
@@ -480,7 +480,7 @@ To catch these issues, `deepeval` provides metrics you can apply at different sc
 | ---------------------- | ---------------------------------- | ----------------------------------------------------------------------------------------- |
 | End-to-end (black-box) | Evaluate the final output only     | Output-focused metrics and custom `GEval` criteria                                        |
 | Trajectory             | Evaluate the complete ordered trace | `PlanQualityMetric`, `PlanAdherenceMetric`, `TaskCompletionMetric`, `StepEfficiencyMetric` |
-| Component-level        | Evaluate a single span or decision | `ToolCorrectnessMetric`, `ArgumentRelevancyMetric`                                      |
+| Component-level        | Evaluate a single span or decision | `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric`                                      |
 
 :::info[Development vs Production]
 
@@ -513,7 +513,7 @@ With proper evaluation in place, you can catch regressions before users do, pinp
           For most agents, start with <code>PlanQualityMetric</code> and{" "}
           <code>PlanAdherenceMetric</code> for reasoning,{" "}
           <code>ToolCorrectnessMetric</code> and{" "}
-          <code>ArgumentRelevancyMetric</code> for the action layer, and{" "}
+          <code>ArgumentCorrectnessMetric</code> for the action layer, and{" "}
           <code>TaskCompletionMetric</code> with{" "}
           <code>StepEfficiencyMetric</code> for trajectory-level execution
           quality. The planning and execution metrics require tracing and score
@@ -532,7 +532,7 @@ With proper evaluation in place, you can catch regressions before users do, pinp
           completion, and step efficiency. Component-level evals are attached
           via <code>@observe(metrics=[...])</code> and score a specific span
           such as the LLM tool-calling decision—use them for tool selection and
-          argument relevancy.
+          argument correctness.
         </>
       ),
     },

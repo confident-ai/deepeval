@@ -318,7 +318,7 @@ Here is a summary of how to map your metrics:
 | ------------------------ | ----------------------------------------------------- | ------------------------------------------------------------------------ |
 | **End-to-end black-box** | Application input and final output                    | `AnswerRelevancyMetric`, custom `GEval`                                  |
 | **Trajectory-based**     | Complete ordered trace                                | `TaskCompletionMetric`, `StepEfficiencyMetric`, `PlanAdherenceMetric`    |
-| **Component-level**      | One LLM span and its tool calls or arguments          | `ToolCorrectnessMetric`, `ArgumentRelevancyMetric`                     |
+| **Component-level**      | One LLM span and its tool calls or arguments          | `ToolCorrectnessMetric`, `ArgumentCorrectnessMetric`                     |
 
 All three scopes can be active on the same run. A single execution might use `ToolCorrectnessMetric` on each LLM span, trajectory metrics on the complete trace, and an output-quality metric on the black-box result. This matters because an agent can make a bad tool selection in step 3, recover by step 5, and still complete the task; only the combined view explains both the result and the route taken.
 

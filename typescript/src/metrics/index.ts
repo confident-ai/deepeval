@@ -244,11 +244,6 @@ export {
   type ToolCorrectnessTemplateOverride,
 } from "@/metrics/tool-correctness";
 export {
-  ArgumentRelevancyMetric,
-  type ArgumentRelevancyMetricOptions,
-  type ArgumentRelevancyTemplateOverride,
-} from "@/metrics/argument-relevancy";
-export {
   ArgumentCorrectnessMetric,
   type ArgumentCorrectnessMetricOptions,
   type ArgumentCorrectnessTemplateOverride,
