@@ -12,7 +12,7 @@ multi-node graphs that fire the LLM callback more than once per
 need a regression guard for.
 """
 
-from typing import List, Optional
+from typing import Any, List, Optional
 from unittest.mock import MagicMock
 
 import pytest
@@ -26,9 +26,13 @@ from deepeval.tracing import (
     next_llm_span,
     next_span,
     next_tool_span,
-    trace_manager,
 )
 from deepeval.tracing.types import BaseSpan, LlmSpan, ToolSpan
+from tests.test_integrations.utils import (
+    collecting_traces,
+    confident_trace_instrumentation,
+    walk_spans,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -36,47 +40,38 @@ from deepeval.tracing.types import BaseSpan, LlmSpan, ToolSpan
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture(autouse=True)
+def _collect_runs():
+    with confident_trace_instrumentation("langchain", "langgraph"):
+        with collecting_traces() as traces:
+            _COLLECTED.append(traces)
+            yield
+            _COLLECTED.clear()
+
+
+_COLLECTED: List[List[Any]] = []
+
+
+def _collected(span_type) -> list:
+    spans = [
+        span
+        for trace in _COLLECTED[-1]
+        for span in walk_spans(trace.root_spans)
+        if isinstance(span, span_type)
+    ]
+    return sorted(spans, key=lambda span: span.start_time)
+
+
 class _RecordingCallbackHandler(CallbackHandler):
-    """Capture span object refs at start so tests can assert against
-    them after ``graph.ainvoke(...)`` (the trace ends and
-    ``trace_manager.active_spans`` clears, but span objects stay
-    attached to the trace tree)."""
+    """Reads the spans its runs produced, in start order."""
 
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.llm_spans: List[LlmSpan] = []
-        self.tool_spans: List[ToolSpan] = []
-        self.root_span: Optional[BaseSpan] = None
+    llm_spans = property(lambda self: _collected(LlmSpan))
+    tool_spans = property(lambda self: _collected(ToolSpan))
 
-    def on_chat_model_start(self, serialized, messages, *, run_id, **kwargs):
-        res = super().on_chat_model_start(
-            serialized, messages, run_id=run_id, **kwargs
-        )
-        span = trace_manager.get_span_by_uuid(str(run_id))
-        if span is not None:
-            self.llm_spans.append(span)
-        return res
-
-    def on_llm_start(self, serialized, prompts, *, run_id, **kwargs):
-        res = super().on_llm_start(serialized, prompts, run_id=run_id, **kwargs)
-        span = trace_manager.get_span_by_uuid(str(run_id))
-        if span is not None:
-            self.llm_spans.append(span)
-        return res
-
-    def on_chain_start(
-        self, serialized, inputs, *, run_id, parent_run_id=None, **kwargs
-    ):
-        res = super().on_chain_start(
-            serialized,
-            inputs,
-            run_id=run_id,
-            parent_run_id=parent_run_id,
-            **kwargs,
-        )
-        if parent_run_id is None:
-            self.root_span = trace_manager.get_span_by_uuid(str(run_id))
-        return res
+    @property
+    def root_span(self) -> Optional[BaseSpan]:
+        traces = _COLLECTED[-1]
+        return traces[0].root_spans[0] if traces else None
 
 
 class _State(TypedDict, total=False):
@@ -138,18 +133,18 @@ def _build_two_llm_graph(llm: FakeListLLM):
     "ignore:The 'config' parameter should be typed as 'RunnableConfig' or 'RunnableConfig \\| None'"
 )
 class TestNextLlmSpanInStateGraph:
-    async def test_metric_collection_lands_on_llm_span(self):
+    async def test_staged_field_lands_on_llm_span(self):
         callback = _RecordingCallbackHandler()
         llm = FakeListLLM(responses=["pong"])
         graph = _build_single_llm_graph(llm)
 
-        with next_llm_span(metric_collection="graph_llm_v1"):
+        with next_llm_span(expected_output="graph_llm_v1"):
             await graph.ainvoke(
                 {"prompt": "ping"}, config={"callbacks": [callback]}
             )
 
         assert len(callback.llm_spans) == 1
-        assert callback.llm_spans[0].metric_collection == "graph_llm_v1"
+        assert callback.llm_spans[0].expected_output == "graph_llm_v1"
 
     async def test_metrics_lands_on_llm_span(self):
         callback = _RecordingCallbackHandler()
@@ -186,14 +181,14 @@ class TestNextLlmSpanInStateGraph:
         llm = FakeListLLM(responses=["pong-1", "pong-2"])
         graph = _build_two_llm_graph(llm)
 
-        with next_llm_span(metric_collection="only-first-node"):
+        with next_llm_span(expected_output="only-first-node"):
             await graph.ainvoke(
                 {"prompt": "ping"}, config={"callbacks": [callback]}
             )
 
         assert len(callback.llm_spans) == 2
-        assert callback.llm_spans[0].metric_collection == "only-first-node"
-        assert callback.llm_spans[1].metric_collection is None
+        assert callback.llm_spans[0].expected_output == "only-first-node"
+        assert callback.llm_spans[1].expected_output is None
 
     async def test_unconsumed_payload_does_not_leak_across_invocations(
         self,
@@ -205,15 +200,15 @@ class TestNextLlmSpanInStateGraph:
         llm = FakeListLLM(responses=["pong"])
         graph = _build_single_llm_graph(llm)
 
-        with next_llm_span(metric_collection="leaked"):
+        with next_llm_span(expected_output="leaked"):
             pass  # no ainvoke → nothing pops
 
-        with next_llm_span(metric_collection="fresh"):
+        with next_llm_span(expected_output="fresh"):
             await graph.ainvoke(
                 {"prompt": "ping"}, config={"callbacks": [callback]}
             )
 
-        assert callback.llm_spans[0].metric_collection == "fresh"
+        assert callback.llm_spans[0].expected_output == "fresh"
 
 
 # ---------------------------------------------------------------------------
@@ -233,12 +228,12 @@ async def test_next_tool_span_does_not_leak_to_llm_span_in_graph():
     llm = FakeListLLM(responses=["pong"])
     graph = _build_single_llm_graph(llm)
 
-    with next_tool_span(metric_collection="tool-only"):
+    with next_tool_span(expected_output="tool-only"):
         await graph.ainvoke(
             {"prompt": "ping"}, config={"callbacks": [callback]}
         )
 
-    assert callback.llm_spans[0].metric_collection is None
+    assert callback.llm_spans[0].expected_output is None
 
 
 # ---------------------------------------------------------------------------
@@ -254,22 +249,21 @@ async def test_next_tool_span_does_not_leak_to_llm_span_in_graph():
 )
 async def test_base_next_span_lands_on_root_agent_span_in_graph():
     """``next_span(...)`` is "next of any type", and in a graph the
-    first span the handler opens is the root ``agent`` span for
-    ``ainvoke`` itself — not the LLM span inside the node. The root's
-    ``pop_pending_for("agent")`` drains the base slot, so the LLM span
-    downstream sees an empty slot."""
+    first span opened is the graph's root span for ``ainvoke`` itself,
+    not the LLM span inside the node. The root drains the base slot, so
+    the LLM span downstream sees an empty slot."""
     callback = _RecordingCallbackHandler()
     llm = FakeListLLM(responses=["pong"])
     graph = _build_single_llm_graph(llm)
 
-    with next_span(metric_collection="from_base_in_graph"):
+    with next_span(expected_output="from_base_in_graph"):
         await graph.ainvoke(
             {"prompt": "ping"}, config={"callbacks": [callback]}
         )
 
     assert callback.root_span is not None
-    assert callback.root_span.metric_collection == "from_base_in_graph"
-    assert callback.llm_spans[0].metric_collection is None
+    assert callback.root_span.expected_output == "from_base_in_graph"
+    assert callback.llm_spans[0].expected_output is None
 
 
 # ---------------------------------------------------------------------------
@@ -296,8 +290,8 @@ def test_next_llm_span_in_sync_state_graph():
     builder.add_edge("llm", END)
     graph = builder.compile()
 
-    with next_llm_span(metric_collection="sync_graph_v1"):
+    with next_llm_span(expected_output="sync_graph_v1"):
         graph.invoke({"prompt": "ping"}, config={"callbacks": [callback]})
 
     assert len(callback.llm_spans) == 1
-    assert callback.llm_spans[0].metric_collection == "sync_graph_v1"
+    assert callback.llm_spans[0].expected_output == "sync_graph_v1"

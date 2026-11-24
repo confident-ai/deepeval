@@ -1,0 +1,198 @@
+// The planet rises under the strip and runs to the bottom of the pane,
+// which cuts it off like a horizon.
+.globe {
+  position: relative;
+  overflow: hidden;
+
+  @media (min-width: 1024px) {
+    flex: 1;
+    min-height: 0;
+  }
+
+  @media (max-width: 1023px) {
+    height: 240px;
+  }
+  // Room above the horizon for the flags.
+  padding-top: 2.25rem;
+}
+
+.stage {
+  position: relative;
+  width: 100%;
+  cursor: grab;
+  touch-action: pan-y;
+  user-select: none;
+
+  &:active {
+    cursor: grabbing;
+  }
+}
+
+.planet {
+  display: block;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+.sea {
+  fill: color-mix(in srgb, var(--color-fd-foreground) 14%, transparent);
+}
+
+.land1 {
+  fill: color-mix(in srgb, var(--color-fd-foreground) 35%, transparent);
+}
+
+.land2 {
+  fill: color-mix(in srgb, var(--color-fd-foreground) 60%, transparent);
+}
+
+.land3 {
+  fill: color-mix(in srgb, var(--color-fd-foreground) 85%, transparent);
+}
+
+// On the light theme the same shades read as near-black, so lift them.
+:global(html:not(.dark)) {
+  .sea {
+    fill: color-mix(in srgb, var(--color-fd-foreground) 9%, transparent);
+  }
+
+  .land1 {
+    fill: color-mix(in srgb, var(--color-fd-foreground) 18%, transparent);
+  }
+
+  .land2 {
+    fill: color-mix(in srgb, var(--color-fd-foreground) 30%, transparent);
+  }
+
+  .land3 {
+    fill: color-mix(in srgb, var(--color-fd-foreground) 45%, transparent);
+  }
+}
+
+// A flag on a pixel pole; the pole's foot is the pin's anchor.
+.pin {
+  position: absolute;
+  display: block;
+  width: 24px;
+  height: 28px;
+  padding: 0;
+  border: 0;
+  background: none;
+  cursor: pointer;
+  transform-origin: 1px 100%;
+  transition: opacity 200ms ease;
+
+  // The pole: thin and the same for every flag; meetup flags flutter.
+  &::before {
+    content: "";
+    position: absolute;
+    left: 0;
+    bottom: 0;
+    width: 1px;
+    height: 100%;
+    background: var(--color-fd-muted-foreground);
+  }
+
+  &[data-hidden] {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  &:focus-visible {
+    outline: 1px dashed var(--color-fd-foreground);
+    outline-offset: 2px;
+  }
+}
+
+.flag {
+  position: absolute;
+  top: 0;
+  left: 2px;
+  font-size: 17px;
+  line-height: 1;
+  transform-origin: 0 50%;
+
+  .pin[data-real] & {
+    animation: wave 1.2s steps(2, end) infinite;
+  }
+}
+
+// A two-frame flutter, in the same stepped rhythm as the mascots.
+@keyframes wave {
+  0%,
+  100% {
+    transform: skewY(0deg);
+  }
+
+  50% {
+    transform: skewY(-8deg);
+  }
+}
+
+.count {
+  position: absolute;
+  top: -5px;
+  right: -4px;
+  padding: 0 3px;
+  background: #760eff;
+  color: #fff;
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 9px;
+  line-height: 1.4;
+}
+
+.tip {
+  position: absolute;
+  z-index: 200;
+  // Below the flag: the planet always continues downward, while above it
+  // the card would be cut off at the top of the globe area.
+  transform: translate(-50%, 8px);
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  padding: 3px 7px;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-background);
+  font-family: var(--font-mono, ui-monospace, monospace);
+  font-size: 11px;
+  line-height: 1.4;
+  white-space: nowrap;
+  color: var(--color-fd-foreground);
+  pointer-events: none;
+}
+
+// Stars (icon + number), then contributors and meetups in words.
+.tipStats {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  > span {
+    display: inline-flex;
+    align-items: center;
+    gap: 3px;
+  }
+
+  > span + span::before {
+    content: "·";
+    margin-right: 5px;
+    color: var(--color-fd-muted-foreground);
+  }
+
+  svg {
+    flex-shrink: 0;
+    color: var(--color-fd-muted-foreground);
+  }
+}
+
+.tipTitle {
+  font-weight: 600;
+}
+
+
+@media (prefers-reduced-motion: reduce) {
+  .flag {
+    animation: none !important;
+  }
+}

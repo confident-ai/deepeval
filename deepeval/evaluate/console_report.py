@@ -79,6 +79,7 @@ def _aggregate_classifications(test_results: List[TestResult]) -> dict:
     a verdict (an expected label was set)."""
     aggregates: dict = {}
     for case in test_results:
+        counted = set()
         for c in case.classifications or []:
             agg = aggregates.setdefault(
                 c.name,
@@ -90,12 +91,15 @@ def _aggregate_classifications(test_results: List[TestResult]) -> dict:
                     "labels": {},
                 },
             )
+            if not c.error:
+                label = _classification_label(c)
+                agg["labels"][label] = agg["labels"].get(label, 0) + 1
+            if c.name in counted:
+                continue
+            counted.add(c.name)
             agg["total"] += 1
             if c.error:
                 agg["errors"] += 1
-            else:
-                label = _classification_label(c)
-                agg["labels"][label] = agg["labels"].get(label, 0) + 1
             if c.success is True:
                 agg["passes"] += 1
             elif c.success is False:
@@ -188,7 +192,7 @@ class EvaluationConsoleReport:
                     summary_parts.append(f"Passed {len(metrics_data)} metrics")
                 if classifications:
                     summary_parts.append(
-                        f"{len(classifications)} classifications"
+                        f"{len({c.name for c in classifications})} classifications"
                     )
                 summary_text = f"[{status_color} bold]{status_icon} {case.name} ({', '.join(summary_parts)})[/{status_color} bold]"
                 renderables.append(

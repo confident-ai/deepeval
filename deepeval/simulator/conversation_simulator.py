@@ -38,8 +38,10 @@ from deepeval.simulator.template import (
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import MULTIMODAL_SUPPORTED_MODELS
 from deepeval.simulator.schema import (
+    KeypadSimulatedInput,
     SimulatedInput,
 )
+from deepeval.voice.keypad import keypad_audio, keypad_turn_text
 from deepeval.simulator.controller.controller import (
     SimulationController,
     expected_outcome_controller,
@@ -64,7 +66,8 @@ if TYPE_CHECKING:
     from deepeval.voice.config import VoiceConfig
     from deepeval.voice.connectors.types import AgentEvent
     from deepeval.voice.floor_control import FloorController
-    from deepeval.voice.interruption import InterruptionPolicy
+    from deepeval.voice.duplex import DuplexExchange
+    from deepeval.voice.interruption import InterruptionSchedule
 
 logger = logging.getLogger(__name__)
 
@@ -169,16 +172,15 @@ class _VoiceSession:
 
     connector: "BaseVoiceConnector"
     persona: Optional["Persona"]
-    policy: Optional["InterruptionPolicy"] = None
+    schedule: Optional["InterruptionSchedule"] = None
     floor: Optional["FloorController"] = None
     started_at: Optional[float] = None
-    barges: int = 0
     recorder: Optional[CallRecorder] = None
 
     @property
     def is_duplex(self) -> bool:
-        """A barge policy or a full-duplex line both take the duplex path."""
-        return self.policy is not None or self.connector.supports_duplex
+        """A barge schedule or a full-duplex line both take the duplex path."""
+        return self.schedule is not None or self.connector.supports_duplex
 
 
 @dataclass
@@ -210,7 +212,7 @@ class _VoiceRun:
     def open_session(
         self,
         persona: Optional["Persona"],
-        policy: Optional["InterruptionPolicy"],
+        schedule: Optional["InterruptionSchedule"],
         floor: Optional["FloorController"],
     ) -> _VoiceSession:
         from deepeval.voice.floor_control import FloorController
@@ -222,7 +224,7 @@ class _VoiceRun:
         return _VoiceSession(
             connector=connector,
             persona=persona,
-            policy=policy,
+            schedule=schedule,
             floor=floor or FloorController(),
             recorder=recorder,
         )
@@ -749,8 +751,8 @@ class ConversationSimulator:
         voice = self._voice
         session: Optional[_VoiceSession] = None
         if voice is not None:
-            policy, floor = self._build_interruption(golden)
-            session = voice.open_session(golden.persona, policy, floor)
+            schedule, floor = self._build_interruption(golden)
+            session = voice.open_session(golden.persona, schedule, floor)
 
         async with AsyncExitStack() as stack:
             # Voice mode: one live session per conversation. The connector is
@@ -861,6 +863,7 @@ class ConversationSimulator:
 
                 # Generate turn from user (via simulation graph)
                 emission_end = False
+                keypad = None
                 if len(turns) > 0 and turns[-1].role == "user":
                     user_input = turns[-1].content
                 elif muted:
@@ -917,6 +920,7 @@ class ConversationSimulator:
                         break
                     agent_catch_ups = 0
                     turns.append(emission.turn)
+                    keypad = (emission.turn.metadata or {}).get("dtmf")
                     user_input = emission.turn.content
                     logger.debug("Simulated user turn: %r", user_input)
                     update_pbar(progress, pbar_max_user_simluations_id)
@@ -934,7 +938,7 @@ class ConversationSimulator:
                         1 for turn in turns if turn.role == "user"
                     )
                     assistant_turn = await self._voice_duplex_exchange(
-                        session, user_input, turns, golden
+                        session, user_input, turns, golden, keypad=keypad
                     )
                     simulation_counter += (
                         sum(1 for turn in turns if turn.role == "user")
@@ -942,7 +946,7 @@ class ConversationSimulator:
                     )
                 elif session is not None:
                     assistant_turn = await self._voice_model_callback(
-                        session, user_input, turns
+                        session, user_input, turns, keypad=keypad
                     )
                     turns.append(assistant_turn)
                 elif self.is_callback_async:
@@ -1129,6 +1133,23 @@ class ConversationSimulator:
         )
         return result.audio, result.first_frame_at or time.perf_counter()
 
+    async def _press_keys(
+        self,
+        session: _VoiceSession,
+        digits: str,
+        *,
+        trailing_silence: bool,
+    ) -> Tuple["Audio", float]:
+        connector = session.connector
+        sample_rate, _ = connector.audio_format
+        audio = keypad_audio(digits, sample_rate)
+        started_at = time.perf_counter()
+        if not await connector.send_dtmf(digits):
+            await connector.stream_uplink(
+                audio, trailing_silence=trailing_silence
+            )
+        return audio, started_at
+
     @staticmethod
     def _silence_audio(session: _VoiceSession, seconds: float) -> "Audio":
         """Digital silence in the connector's uplink format."""
@@ -1193,14 +1214,14 @@ class ConversationSimulator:
         return await self._voice_exchange(session, silence, turns)
 
     def _build_interruption(self, golden: ConversationalGolden):
-        """Build this conversation's barge-in policy and floor controller.
+        """Build this conversation's barge-in schedule and floor controller.
 
         The golden's persona wins; `VoiceConfig.interruption_settings` is the
         deprecated run-wide fallback. Returns `(None, None)` when nobody
         barges; a full-duplex transport still runs the duplex exchange then.
         """
         from deepeval.voice.floor_control import FloorController
-        from deepeval.voice.interruption import interruption_policy
+        from deepeval.voice.interruption import InterruptionSchedule
 
         behavior = (
             golden.persona.interruption_behavior
@@ -1212,10 +1233,9 @@ class ConversationSimulator:
         if behavior is None:
             return None, None
 
-        policy = interruption_policy(behavior.frequency)
-        return policy, FloorController.from_overlap_behavior(
-            behavior.overlap, policy=policy
-        )
+        return InterruptionSchedule(
+            behavior.every
+        ), FloorController.from_overlap_behavior(behavior.overlap)
 
     def _save_voice_audio(
         self,
@@ -1251,6 +1271,12 @@ class ConversationSimulator:
     ):
         tmpl = template or SimulationTemplate
         prompt = tmpl.simulate_first_user_turn(golden, self.language)
+        if self._keypad_input:
+            return self._keypad_turn(
+                self.generate_schema(
+                    prompt + tmpl.keypad_option(), KeypadSimulatedInput
+                )
+            )
         simulated_input: SimulatedInput = self.generate_schema(
             prompt, SimulatedInput
         )
@@ -1263,6 +1289,12 @@ class ConversationSimulator:
     ):
         tmpl = template or SimulationTemplate
         prompt = tmpl.simulate_first_user_turn(golden, self.language)
+        if self._keypad_input:
+            return self._keypad_turn(
+                await self.a_generate_schema(
+                    prompt + tmpl.keypad_option(), KeypadSimulatedInput
+                )
+            )
         simulated_input: SimulatedInput = await self.a_generate_schema(
             prompt, SimulatedInput
         )
@@ -1276,6 +1308,12 @@ class ConversationSimulator:
     ):
         tmpl = template or SimulationTemplate
         prompt = tmpl.simulate_user_turn(golden, turns, self.language)
+        if self._keypad_input:
+            return self._keypad_turn(
+                self.generate_schema(
+                    prompt + tmpl.keypad_option(), KeypadSimulatedInput
+                )
+            )
         simulated_input: SimulatedInput = self.generate_schema(
             prompt, SimulatedInput
         )
@@ -1289,10 +1327,30 @@ class ConversationSimulator:
     ):
         tmpl = template or SimulationTemplate
         prompt = tmpl.simulate_user_turn(golden, turns, self.language)
+        if self._keypad_input:
+            return self._keypad_turn(
+                await self.a_generate_schema(
+                    prompt + tmpl.keypad_option(), KeypadSimulatedInput
+                )
+            )
         simulated_input: SimulatedInput = await self.a_generate_schema(
             prompt, SimulatedInput
         )
         return simulated_input.simulated_input
+
+    @property
+    def _keypad_input(self) -> bool:
+        return bool(self.voice_config and self.voice_config.keypad_input)
+
+    @staticmethod
+    def _keypad_turn(simulated: KeypadSimulatedInput) -> Union[str, Turn]:
+        if not simulated.keypad:
+            return simulated.simulated_input
+        return Turn(
+            role="user",
+            content=keypad_turn_text(simulated.keypad),
+            metadata={"dtmf": simulated.keypad},
+        )
 
     ############################################
     ### Generate Structured Response ###########
@@ -1383,13 +1441,29 @@ class ConversationSimulator:
         )
 
     async def _voice_model_callback(
-        self, session: _VoiceSession, input: str, turns: List[Turn]
+        self,
+        session: _VoiceSession,
+        input: str,
+        turns: List[Turn],
+        keypad: Optional[str] = None,
     ) -> Turn:
         """Half-duplex voice callback: TTS → exchange_turn → STT.
 
         The fallback for transports that cannot carry both voices at once;
         everything else goes through `_voice_duplex_exchange`.
         """
+        if keypad:
+            sample_rate, _ = session.connector.audio_format
+            user_audio = keypad_audio(keypad, sample_rate)
+            if turns and turns[-1].role == "user":
+                turns[-1].audio = user_audio
+            signalled = await session.connector.send_dtmf(keypad)
+            played = (
+                self._silence_audio(session, user_audio.duration or 0.0)
+                if signalled
+                else user_audio
+            )
+            return await self._voice_exchange(session, played, turns)
         voice = self._voice
         tts_started = time.perf_counter()
         logger.debug("User TTS started: characters=%d", len(input))
@@ -1437,14 +1511,10 @@ class ConversationSimulator:
             input_ended_at = (
                 conn_turn.input_audio_ended_at or time.perf_counter()
             )
-            if conn_turn.latency_ms is not None:
-                assistant_audio_started_at = (
-                    input_ended_at + conn_turn.latency_ms / 1000.0
-                )
-        if (
-            assistant_audio_started_at is not None
-            and conn_turn.audio is not None
-        ):
+            assistant_audio_started_at = input_ended_at + (
+                (conn_turn.latency_ms or 0.0) / 1000.0
+            )
+        if conn_turn.audio is not None:
             conn_turn.audio.start_time = max(
                 0.0, assistant_audio_started_at - call_started_at
             )
@@ -1501,6 +1571,7 @@ class ConversationSimulator:
         input: str,
         turns: List[Turn],
         golden: ConversationalGolden,
+        keypad: Optional[str] = None,
     ) -> Turn:
         """Duplex voice exchange with mid-speech barge-in and floor control.
 
@@ -1509,9 +1580,21 @@ class ConversationSimulator:
         """
         call_started_at = session.started_at or time.perf_counter()
         await self._take_agent_backlog(session, turns, call_started_at)
-        user_audio, uplink_started_at = await self._send_user_utterance(
-            session, input, golden.persona, trailing_silence=True
-        )
+        exchange = self._duplex_exchange(session, golden)
+        prepared = exchange.prepare_barge(turns)
+        try:
+            if keypad:
+                user_audio, uplink_started_at = await self._press_keys(
+                    session, keypad, trailing_silence=True
+                )
+            else:
+                user_audio, uplink_started_at = await self._send_user_utterance(
+                    session, input, golden.persona, trailing_silence=True
+                )
+        except BaseException:
+            if prepared is not None:
+                prepared.cancel()
+            raise
         user_audio.start_time = max(0.0, uplink_started_at - call_started_at)
         if turns and turns[-1].role == "user":
             turns[-1].audio = user_audio
@@ -1521,7 +1604,14 @@ class ConversationSimulator:
         # in-process ones return before a single frame has been heard.
         sent_at = uplink_started_at + (user_audio.duration or 0.0)
 
-        assistant_turn = await self._run_duplex(session, golden, turns, sent_at)
+        assistant_turn = await self._run_duplex(
+            session,
+            exchange,
+            turns,
+            sent_at,
+            prepared_barge=prepared,
+            caller_spoke=(uplink_started_at, sent_at),
+        )
         if assistant_turn is not None:
             return assistant_turn
         if session.connector.call_ended:
@@ -1576,6 +1666,8 @@ class ConversationSimulator:
                 turns[index - 1], text or "", audio
             )
             return True
+        if session.schedule is not None:
+            session.schedule.on_agent_reply_start()
         turns.insert(
             index, Turn(role="assistant", content=text or "", audio=audio)
         )
@@ -1611,34 +1703,41 @@ class ConversationSimulator:
         finally:
             await events.aclose()
 
-    async def _run_duplex(
-        self,
-        session: _VoiceSession,
-        golden: ConversationalGolden,
-        turns: List[Turn],
-        sent_at: float,
-    ) -> Optional[Turn]:
-        """Listen until the agent's turn ends; None if it never spoke."""
+    def _duplex_exchange(
+        self, session: _VoiceSession, golden: ConversationalGolden
+    ) -> "DuplexExchange":
         from deepeval.voice.duplex import DuplexExchange
 
         voice = self._voice
-        exchange = DuplexExchange(
+        return DuplexExchange(
             connector=session.connector,
             tts_model=voice.tts_model,
             stt_model=voice.stt_model,
-            policy=session.policy,
+            schedule=session.schedule,
             floor=session.floor,
             golden=golden,
             language=self.language,
             a_generate_schema=self.a_generate_schema,
             call_started_at=session.started_at or time.perf_counter(),
         )
+
+    async def _run_duplex(
+        self,
+        session: _VoiceSession,
+        exchange: "DuplexExchange",
+        turns: List[Turn],
+        sent_at: float,
+        prepared_barge: Optional[asyncio.Task] = None,
+        caller_spoke: Optional[Tuple[float, float]] = None,
+    ) -> Optional[Turn]:
+        """Listen until the agent's turn ends; None if it never spoke."""
+        voice = self._voice
         result = await exchange.run(
             turns=turns,
             sent_at=sent_at,
-            barges_this_conversation=session.barges,
+            prepared_barge=prepared_barge,
+            caller_spoke=caller_spoke,
         )
-        session.barges += result.barges
         voice.tts_cost += result.tts_cost
         voice.stt_cost += result.stt_cost
         return next(
@@ -1663,9 +1762,16 @@ class ConversationSimulator:
             if persona is not None and persona.hold_timeout
             else _GREETING_TIMEOUT_S
         )
+        exchange = self._duplex_exchange(session, golden)
         try:
             await asyncio.wait_for(
-                self._run_duplex(session, golden, turns, time.perf_counter()),
+                self._run_duplex(
+                    session,
+                    exchange,
+                    turns,
+                    time.perf_counter(),
+                    prepared_barge=exchange.prepare_barge(turns),
+                ),
                 timeout=timeout,
             )
         except asyncio.TimeoutError:

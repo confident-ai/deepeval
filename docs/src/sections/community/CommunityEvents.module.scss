@@ -1,0 +1,238 @@
+// Event list in the same window frame as the homepage code cards:
+// traffic-light dots, a file name, square corners, hairlines.
+.window {
+  margin-top: 1.25rem;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-card, var(--color-fd-background));
+}
+
+.chrome {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  height: 2.4rem;
+  padding: 0 0.9rem;
+  border-bottom: 1px solid var(--color-fd-border);
+  font-size: 12px;
+}
+
+.dots {
+  display: inline-flex;
+  gap: 6px;
+
+  i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    background: #ff5f57;
+  }
+
+  i:nth-child(2) {
+    background: #febc2e;
+  }
+
+  i:nth-child(3) {
+    background: #28c840;
+  }
+}
+
+.file {
+  color: var(--color-fd-muted-foreground);
+  font-family: var(--font-mono, ui-monospace), monospace;
+}
+
+.count {
+  margin-left: auto;
+  color: var(--color-fd-muted-foreground);
+}
+
+.list {
+  margin: 0;
+  padding: 0 0.75rem;
+  list-style: none;
+}
+
+.row {
+  margin: 0;
+  padding: 0;
+
+  & + & {
+    border-top: 1px solid var(--color-fd-border);
+  }
+}
+
+.link {
+  display: grid;
+  grid-template-columns: 6.5rem minmax(0, 1fr) auto;
+  column-gap: 1.25rem;
+  align-items: start;
+  padding: 1rem 0.25rem;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 120ms ease;
+
+  &:hover {
+    background: var(--color-fd-accent);
+  }
+
+  &:hover .arrow {
+    color: var(--color-fd-foreground);
+  }
+
+  &[data-past] .title,
+  &[data-past] .day {
+    color: var(--color-fd-muted-foreground);
+  }
+}
+
+// Cards crop every cover to 4:5, the shape of most Luma posters.
+.cover {
+  aspect-ratio: 4 / 5;
+  overflow: hidden;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-muted);
+
+  img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    margin: 0;
+    object-fit: cover;
+    transition: transform 240ms ease;
+  }
+}
+
+.link:hover .cover img {
+  transform: scale(1.03);
+}
+
+.coverFallback {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: var(--color-fd-muted-foreground);
+  font-family: var(--font-heading), sans-serif;
+  font-size: 22px;
+}
+
+.when {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+  margin-bottom: 0.15rem;
+  font-family: var(--font-mono, ui-monospace), monospace;
+  font-size: 12px;
+}
+
+.day {
+  color: var(--color-fd-foreground);
+}
+
+.time {
+  color: var(--color-fd-muted-foreground);
+}
+
+.what {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+  min-width: 0;
+}
+
+.title {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--color-fd-foreground);
+  font-family: var(--font-heading), sans-serif;
+  font-size: 17px;
+  font-weight: 500;
+  letter-spacing: -0.01em;
+  line-height: 1.25;
+}
+
+// A compact filled badge: a purple pixel, then the word, on a light tint.
+.tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 2px 7px 2px 6px;
+  background: color-mix(in srgb, #760eff 10%, transparent);
+  color: #5b21b6;
+  font-family: var(--font-sans), sans-serif;
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  line-height: 1.4;
+
+  // Centered on the lowercase letters (x-height), not the full text box,
+  // which sits about 1px higher.
+  &::before {
+    content: "";
+    width: 5px;
+    height: 5px;
+    background: #760eff;
+    transform: translateY(1px);
+  }
+
+  :global(.dark) & {
+    background: color-mix(in srgb, #9d6bff 18%, transparent);
+    color: #cdb4ff;
+
+    &::before {
+      background: #b794ff;
+    }
+  }
+}
+
+.talk {
+  color: var(--color-fd-foreground);
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.meta {
+  color: var(--color-fd-muted-foreground);
+  font-size: 12px;
+}
+
+.arrow {
+  width: 15px;
+  height: 15px;
+  margin-top: 0.2rem;
+  color: var(--color-fd-muted-foreground);
+}
+
+.empty {
+  margin-top: 1.25rem;
+  padding: 1.25rem 1rem;
+  border: 1px solid var(--color-fd-border);
+  color: var(--color-fd-muted-foreground);
+  font-size: 14px;
+
+  a {
+    color: var(--color-fd-foreground);
+    text-decoration: underline;
+    text-underline-offset: 3px;
+  }
+}
+
+@media (max-width: 640px) {
+  .link {
+    grid-template-columns: 4.5rem minmax(0, 1fr);
+    column-gap: 0.9rem;
+  }
+
+  .arrow {
+    display: none;
+  }
+}
+
+.flag {
+  margin-right: 0.35em;
+  font-size: 1.1em;
+  line-height: 1;
+}

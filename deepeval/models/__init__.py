@@ -22,6 +22,7 @@ from deepeval.models.llms import (
     TheGridModel,
     OpenRouterModel,
 )
+from deepeval.models.gateway import GatewayModel
 from deepeval.models.embedding_models import (
     OpenAIEmbeddingModel,
     AzureOpenAIEmbeddingModel,
@@ -41,7 +42,7 @@ from deepeval.models.stt import (
     ElevenLabsSTTModel,
     OpenAISTTModel,
 )
-from deepeval.models.system_one import TypeSafeModel
+from deepeval.models.system_one import OpenAIDecisionModel, TypeSafeModel
 
 __all__ = [
     "DeepEvalBaseModel",
@@ -51,6 +52,7 @@ __all__ = [
     "DeepEvalBaseSTT",
     "DeepEvalBaseSystemOneModel",
     "TypeSafeModel",
+    "OpenAIDecisionModel",
     "OpenAIModel",
     "AzureOpenAIModel",
     "LocalModel",
@@ -59,6 +61,7 @@ __all__ = [
     "GeminiModel",
     "AmazonBedrockModel",
     "LiteLLMModel",
+    "GatewayModel",
     "KimiModel",
     "GrokModel",
     "DeepSeekModel",

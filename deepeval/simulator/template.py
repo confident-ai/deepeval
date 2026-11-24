@@ -28,6 +28,26 @@ class SimulationTemplate:
         return block.replace("\n", "\n" + " " * indent)
 
     @staticmethod
+    def keypad_option() -> str:
+        return textwrap.dedent(
+            """
+            Keypad:
+            The caller can press keys on their phone's keypad instead of speaking.
+            1. Press keys only when the assistant's last reply asks for keypad
+               entry ("enter", "type", "press", "use your keypad"), or the
+               scenario says the caller enters something on the keypad now.
+            2. Use only digits 0-9, * and #. Add a trailing # only when the
+               assistant asks for it.
+            3. Take the digits from the scenario or persona, never invent them.
+            4. When pressing keys, set `keypad` to the digits pressed; otherwise
+               set it to null.
+
+            Add the `keypad` key to the JSON output, for example:
+            {"simulated_input": "", "keypad": "8670940983#"}
+            """
+        )
+
+    @staticmethod
     def simulate_first_user_turn(
         golden: ConversationalGolden, language: str
     ) -> str:

@@ -336,7 +336,6 @@ from deepeval.tracing import update_current_trace
 def fetch_user(user_id: str) -> dict:
     user = users_db.get(user_id)
     update_current_trace(
-        user_id=user_id,
         metadata={"plan": user["plan"], "region": user["region"]},
     )
     return user
@@ -473,7 +472,6 @@ def retrieve(query: str) -> list[str]:
 | ------------- | ----------- | -------------------------------------------------------------------------- |
 | `name`        | `str`       | Default trace name. Override at runtime via `update_current_trace`.        |
 | `thread_id`   | `str`       | Default thread identifier. Useful for grouping conversational turns.       |
-| `user_id`     | `str`       | Default actor identifier. Override per-request via `update_current_trace`. |
 | `metadata`    | `dict`      | Default trace metadata. Merged with runtime overrides; runtime wins.       |
 | `tags`        | `list[str]` | Default tags applied to every trace produced by this agent.                |
 | `environment` | `str`       | One of `"development"`, `"staging"`, `"production"`, `"testing"`.          |

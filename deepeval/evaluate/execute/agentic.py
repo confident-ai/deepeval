@@ -69,7 +69,6 @@ from deepeval.evaluate.execute._common import (
     _skip_metrics_for_error,
     _trace_error,
     filter_duplicate_results,
-    log_prompt,
 )
 
 
@@ -355,7 +354,6 @@ async def _a_execute_span_test_case(
         trace_api.agent_spans.append(api_span)
     elif isinstance(span, LlmSpan):
         trace_api.llm_spans.append(api_span)
-        log_prompt(span, test_run_manager)
     elif isinstance(span, RetrieverSpan):
         trace_api.retriever_spans.append(api_span)
     elif isinstance(span, ToolSpan):

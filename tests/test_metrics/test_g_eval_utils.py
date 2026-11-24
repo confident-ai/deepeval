@@ -282,3 +282,72 @@ def test_conversational_geval_requires_tags_when_selected():
             [MultiTurnParams.TAGS],
             DummyConversationalMetric(),
         )
+
+
+def test_conversational_geval_accepts_context_user_description_and_chatbot_role():
+    evaluation_params = [
+        MultiTurnParams.CONTEXT,
+        MultiTurnParams.USER_DESCRIPTION,
+        MultiTurnParams.CHATBOT_ROLE,
+    ]
+    test_case = ConversationalTestCase(
+        turns=[Turn(role="user", content="hello")],
+        context=["refund policy"],
+        user_description="frustrated customer",
+        chatbot_role="support agent",
+    )
+
+    check_conversational_test_case_params(
+        test_case, evaluation_params, DummyConversationalMetric()
+    )
+    non_turn_text = construct_non_turns_test_case_string(
+        evaluation_params, test_case
+    )
+    turn_dict = convert_turn_to_dict(test_case.turns[0], evaluation_params)
+    payload = construct_geval_upload_payload(
+        name="conversational-context-test",
+        evaluation_params=evaluation_params,
+        g_eval_api_params=CONVERSATIONAL_G_EVAL_API_PARAMS,
+        criteria="criteria",
+        multi_turn=True,
+    )
+
+    assert "Context" in non_turn_text
+    assert "refund policy" in non_turn_text
+    assert "User Description" in non_turn_text
+    assert "frustrated customer" in non_turn_text
+    assert "Chatbot Role" in non_turn_text
+    assert "support agent" in non_turn_text
+    assert turn_dict == {}
+    assert payload["evaluationParams"] == [
+        "context",
+        "userDescription",
+        "chatbotRole",
+    ]
+    assert (
+        construct_geval_pull_evaluation_params(
+            payload["evaluationParams"], multi_turn=True
+        )
+        == evaluation_params
+    )
+
+
+@pytest.mark.parametrize(
+    "param",
+    [
+        MultiTurnParams.CONTEXT,
+        MultiTurnParams.USER_DESCRIPTION,
+        MultiTurnParams.CHATBOT_ROLE,
+    ],
+)
+def test_conversational_geval_requires_conversation_fields_when_selected(
+    param,
+):
+    test_case = ConversationalTestCase(
+        turns=[Turn(role="user", content="hello")],
+    )
+
+    with pytest.raises(MissingTestCaseParamsError):
+        check_conversational_test_case_params(
+            test_case, [param], DummyConversationalMetric()
+        )

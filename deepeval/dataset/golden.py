@@ -20,18 +20,11 @@ from deepeval.test_case import (
 from deepeval.test_case.llm_test_case import _MLLM_IMAGE_REGISTRY
 from .expectations import Expectations
 
-
-InterruptionLevel = Literal["rare", "normal", "frequent"]
 OverlapBehavior = Literal["yield", "adaptive", "insist"]
 
-_INTERRUPTION_LEVELS = ("rare", "normal", "frequent")
 _OVERLAP_BEHAVIORS = ("yield", "adaptive", "insist")
 
-_FREQUENCY_PROSE = {
-    "rare": "You rarely cut in while the agent is still speaking.",
-    "normal": "You sometimes cut in while the agent is still speaking.",
-    "frequent": "You often cut in while the agent is still speaking.",
-}
+_INTERRUPTION_PROSE = "You sometimes cut in while the agent is still speaking."
 _OVERLAP_PROSE = {
     "yield": "If you both end up talking at once, you back off and let the agent finish.",
     "adaptive": "If you both end up talking at once, you hold on briefly and then back off.",
@@ -39,27 +32,40 @@ _OVERLAP_PROSE = {
 }
 
 
+def _turn_range(every: Union[int, Tuple[int, int]]) -> Tuple[int, int]:
+    pair = tuple(every) if isinstance(every, (tuple, list)) else (every, every)
+    lo, hi = pair if len(pair) == 2 else (0, 0)
+    if (
+        any(isinstance(n, bool) or not isinstance(n, int) for n in (lo, hi))
+        or lo < 1
+        or lo > hi
+    ):
+        raise ValueError(
+            f"Invalid interruption cadence {every!r}; expected a whole number "
+            "of agent turns of at least 1, or a (fewest, most) pair of them."
+        )
+    return lo, hi
+
+
 @dataclass
 class InterruptionBehavior:
-    """How readily the simulated caller talks over the agent.
+    """When the simulated caller talks over the agent.
 
     Set on ``Persona(interruption_behavior=...)`` to enable duplex barge-in;
     leaving it ``None`` keeps the half-duplex turn-based path.
 
-    ``frequency`` controls how readily the caller interrupts. ``overlap``
-    controls whether they yield, adapt, or insist when both sides keep talking.
-    Floor-control timing is selected internally as a coordinated preset.
+    ``every`` is how many agent turns pass between interruptions: a number for
+    a fixed cadence, or a ``(fewest, most)`` pair to pick at random from each
+    time. ``overlap`` controls whether the caller yields, adapts, or insists
+    when both sides keep talking. Floor-control timing is selected internally
+    as a coordinated preset.
     """
 
-    frequency: InterruptionLevel = "normal"
+    every: Union[int, Tuple[int, int]] = (2, 3)
     overlap: OverlapBehavior = "adaptive"
 
     def __post_init__(self) -> None:
-        if self.frequency not in _INTERRUPTION_LEVELS:
-            raise ValueError(
-                f"Invalid interruption frequency {self.frequency!r}; expected "
-                "'rare', 'normal', or 'frequent'."
-            )
+        self.every = _turn_range(self.every)
         if self.overlap not in _OVERLAP_BEHAVIORS:
             raise ValueError(
                 f"Invalid overlap behavior {self.overlap!r}; expected "
@@ -123,9 +129,7 @@ class Persona(BaseModel):
 
         behavior: List[str] = []
         if self.interruption_behavior is not None:
-            behavior.append(
-                _FREQUENCY_PROSE[self.interruption_behavior.frequency]
-            )
+            behavior.append(_INTERRUPTION_PROSE)
             behavior.append(_OVERLAP_PROSE[self.interruption_behavior.overlap])
         if not self.speaks_first:
             behavior.append(
@@ -224,7 +228,7 @@ class Golden(BaseModel):
         default=None, serialization_alias="customColumnKeyValues"
     )
     expectations: Optional[Expectations] = Field(default=None)
-    expected_labels: Optional[Dict[str, str]] = Field(
+    expected_labels: Optional[Dict[str, Union[str, List[str]]]] = Field(
         default=None,
         serialization_alias="expectedLabels",
         validation_alias=AliasChoices("expectedLabels", "expected_labels"),
@@ -342,7 +346,7 @@ class ConversationalGolden(BaseModel):
         default=None, serialization_alias="customColumnKeyValues"
     )
     expectations: Optional[Expectations] = Field(default=None)
-    expected_labels: Optional[Dict[str, str]] = Field(
+    expected_labels: Optional[Dict[str, Union[str, List[str]]]] = Field(
         default=None,
         serialization_alias="expectedLabels",
         validation_alias=AliasChoices("expectedLabels", "expected_labels"),

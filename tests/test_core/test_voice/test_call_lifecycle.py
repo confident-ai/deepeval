@@ -16,7 +16,7 @@ from deepeval.test_case import Turn
 from deepeval.voice.duplex import _pcm_to_audio
 from deepeval.voice import CallbackVoiceConnector, LiveKitConnector, VoiceConfig
 from deepeval.voice.connectors.transports.base import iter_downlink
-from deepeval.voice.connectors.types import AgentEvent
+from deepeval.voice.connectors.types import AgentEvent, ConnectorTurn
 from deepeval.voice.recording import CallRecorder, RecordingConnector
 from tests.test_core.test_simulator.helpers import StaticSimulatorModel
 from tests.test_core.test_voice.helpers import (
@@ -24,6 +24,7 @@ from tests.test_core.test_voice.helpers import (
     EchoAgent,
     StubSTT,
     StubTTS,
+    wav_audio,
 )
 
 VOICED = b"\xe8\x03"
@@ -367,3 +368,38 @@ def test_a_line_written_after_the_call_ended_is_never_said():
 
     assert [turn.role for turn in case.turns] == ["user", "assistant"]
     assert case.metadata["Stop reason"] == "The agent ended the call"
+
+
+class _UntimedConnector(CallbackVoiceConnector):
+    async def exchange_turn(self, audio):
+        return ConnectorTurn(audio=wav_audio(0.5), transcript="Agent reply")
+
+
+@pytest.mark.asyncio
+async def test_an_untimed_agent_reply_still_has_a_start_time():
+    connector = _UntimedConnector(EchoAgent())
+    simulator = ConversationSimulator(
+        simulator_model=StaticSimulatorModel(),
+        voice_config=VoiceConfig(
+            connector=lambda: connector,
+            tts_model=StubTTS(),
+            stt_model=StubSTT(),
+            output_dir=None,
+            combine_audio_files=False,
+        ),
+    )
+    user_audio = wav_audio(0.2)
+
+    reply = await simulator._voice_exchange(
+        _VoiceSession(
+            connector=connector,
+            persona=None,
+            started_at=time.perf_counter(),
+        ),
+        user_audio,
+        [Turn(role="user", content="Hello", audio=user_audio)],
+    )
+
+    assert reply.audio is not None
+    assert reply.audio.start_time is not None
+    assert reply.audio.start_time >= user_audio.start_time

@@ -86,13 +86,13 @@ async def _run(stt):
         connector=connector,
         tts_model=None,
         stt_model=stt,
-        policy=None,
+        schedule=None,
         floor=FloorController(),
         golden=ConversationalGolden(scenario="Listen to the agent"),
         language="English",
         a_generate_schema=None,
         call_started_at=started,
-    ).run(turns=turns, sent_at=started, barges_this_conversation=0)
+    ).run(turns=turns, sent_at=started)
     speaker.cancel()
     return turns, result
 

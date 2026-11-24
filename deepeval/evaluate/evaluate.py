@@ -186,10 +186,19 @@ def assert_test(
             f"{metrics_data.name} (score: {metrics_data.score}, threshold: {metrics_data.threshold}, strict: {metrics_data.strict_mode}, error: {metrics_data.error}, reason: {metrics_data.reason})"
             for metrics_data in failed_metrics_data
         ]
-        failed_parts += [
-            f"{classification.name} (label: {classification.label}, expected: {classification.expected_label}, error: {classification.error}, reason: {classification.reason})"
-            for classification in failed_classifications
-        ]
+        labels_by_classifier: Dict[str, List[str]] = {}
+        for classification in test_result.classifications or []:
+            labels_by_classifier.setdefault(classification.name, []).append(
+                str(classification.label)
+            )
+        reported = set()
+        for classification in failed_classifications:
+            if classification.name in reported:
+                continue
+            reported.add(classification.name)
+            failed_parts.append(
+                f"{classification.name} (label: {', '.join(labels_by_classifier[classification.name])}, expected: {classification.expected_label}, error: {classification.error}, reason: {classification.reason})"
+            )
         failed_metrics_str = ", ".join(failed_parts)
 
         if failed_metrics_data and failed_classifications:
