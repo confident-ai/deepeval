@@ -68,9 +68,7 @@ def test_absence_uses_the_classifier_name():
         ("No Instruction Completeness", "Instruction Completeness"),
     ],
 )
-def test_absence_for_classifier_names_ending_in_double_s(
-    name, classifier_name
-):
+def test_absence_for_classifier_names_ending_in_double_s(name, classifier_name):
     assert _is_absence_label(name, classifier_name)
 
 
