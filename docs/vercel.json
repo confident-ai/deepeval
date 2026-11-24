@@ -46,6 +46,17 @@
       "statusCode": 301
     },
     {
+      "source": "/docs/what-is-llm-red-teaming",
+      "has": [
+        {
+          "type": "host",
+          "value": "(?:www\\.)?trydeepteam\\.com"
+        }
+      ],
+      "destination": "https://deepeval.com/blog/what-is-llm-red-teaming",
+      "statusCode": 301
+    },
+    {
       "source": "/docs/:path*",
       "has": [
         {
@@ -147,6 +158,11 @@
     {
       "source": "/guides/guides-red-teaming",
       "destination": "/docs/red-teaming-quickstart",
+      "statusCode": 301
+    },
+    {
+      "source": "/docs/what-is-llm-red-teaming",
+      "destination": "/blog/what-is-llm-red-teaming",
       "statusCode": 301
     }
   ]

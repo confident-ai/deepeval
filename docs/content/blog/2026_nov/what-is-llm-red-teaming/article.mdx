@@ -1,7 +1,9 @@
 ---
 title: What Is LLM Red Teaming?
-sidebar_label: What Is LLM Red Teaming?
-languages: [python]
+description: LLM red teaming probes AI agents and LLM apps with adversarial attacks to find vulnerabilities before attackers do. Here's how it works and how to do it.
+date: 2026-11-24
+authors: [penguine]
+category: community
 ---
 
 Large Language Model (LLM) red teaming refers to the practice of probing and attacking AI models in a controlled manner to uncover vulnerabilities and risky behaviors before malicious actors do. Unlike conventional software testing, which often focuses on code flaws, LLM red teaming specifically targets the model’s outputs and behavior under adversarial conditions.
@@ -13,7 +15,7 @@ Large Language Model (LLM) red teaming refers to the practice of probing and att
 
 With LLMs, these [adversarial "attacks”](/docs/red-teaming-adversarial-attacks) often involve cleverly crafted inputs/prompts (e.g. [prompt injection](/docs/red-teaming-adversarial-attacks-prompt-injection), [jailbreaking](/docs/red-teaming-adversarial-attacks-linear-jailbreaking), etc.) that induce the model to produce harmful or disallowed content​.
 
-:::tip DID YOU KNOW?
+:::tip[DID YOU KNOW?]
 In traditional cybersecurity, red teams simulate realistic attacks on systems to expose weaknesses​. In the context of AI, this concept has evolved to include stress-testing generative models like LLMs for a broad range of potential harms – from security issues to ethical and safety problems​
 :::
 
@@ -217,7 +219,7 @@ Different LLM systems exposes different weaknesses, and different weaknesses req
 ### 1. Identify your weaknesses
 
 :::info
-This builds from the [previous section](/docs/what-is-llm-red-teaming#model-vs-system-weakness) were we talked about model vs system weaknesses.
+This builds on the previous section, where we talked about model vs system weaknesses.
 :::
 
 It is important to note that both categories involve different vulnerabilities. Let's take PII leakage for example, if you're building a customer support LLM agent on top of OpenAI, you're most likely to be worried about PII leakage in the system through unauthorized access vulnerabilities such as RBAC, rather than personal data being exposed through the overfitting of training data.

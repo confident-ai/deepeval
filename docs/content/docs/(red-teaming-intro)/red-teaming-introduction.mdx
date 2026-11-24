@@ -39,7 +39,7 @@ prompt_injection = PromptInjection()
 red_team(model_callback=model_callback, vulnerabilities=[bias], attacks=[prompt_injection])
 ```
 
-:::tip DID YOU KNOW?
+:::tip[DID YOU KNOW?]
 Red teaming, unlike the standard LLM evaluation handled by `deepeval`, is designed to simulate how a **malicious user or bad actor might attempt to compromise your systems** through your LLM application.
 
 For those interested, read [how red teaming works](/docs/red-teaming-how-it-works) under the hood.
@@ -50,7 +50,7 @@ For those interested, read [how red teaming works](/docs/red-teaming-how-it-work
 `deepeval` offers 40+ [vulnerabilities](/docs/red-teaming-vulnerabilities), and a vulnerability in `deepeval` is a weakness that can be exploited through specific adversarial attacks. For example, a well-crafted prompt injection attack can cause your LLM system to say racist things that it normally wouldn't say.
 
 :::info
-Vulnerabilities can arise from either a [model or system weakness.](/docs/what-is-llm-red-teaming#model-vs-system-weakness)
+Vulnerabilities can arise from either a [model or system weakness.](/blog/what-is-llm-red-teaming#model-vs-system-weakness)
 :::
 
 You can define a vulnerability by importing from the `vulnerabilities` module in `deepeval`.
