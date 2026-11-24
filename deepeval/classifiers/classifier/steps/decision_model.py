@@ -78,6 +78,7 @@ class CandidateLabels(BaseModel):
 class Shape:
     multi_turn: bool
     traced: bool
+    metadata_description: Optional[str] = None
 
 
 @dataclass(frozen=True)
@@ -91,9 +92,11 @@ class Ask:
 
 
 def classify_with_decision_model(
-    classifiers: Sequence["Classifier"], test_case: TestCase
+    classifiers: Sequence["Classifier"],
+    test_case: TestCase,
+    metadata_description: Optional[str] = None,
 ) -> None:
-    state, shape = _start(classifiers, test_case)
+    state, shape = _start(classifiers, test_case, metadata_description)
     started = time.perf_counter()
     first = _first_asks(classifiers)
     if first:
@@ -121,9 +124,11 @@ def classify_with_decision_model(
 
 
 async def a_classify_with_decision_model(
-    classifiers: Sequence["Classifier"], test_case: TestCase
+    classifiers: Sequence["Classifier"],
+    test_case: TestCase,
+    metadata_description: Optional[str] = None,
 ) -> None:
-    state, shape = _start(classifiers, test_case)
+    state, shape = _start(classifiers, test_case, metadata_description)
     started = time.perf_counter()
     first = _first_asks(classifiers)
     if first:
@@ -163,7 +168,11 @@ async def a_classify_with_decision_model(
 ###############################################
 
 
-def _start(classifiers: Sequence["Classifier"], test_case: TestCase):
+def _start(
+    classifiers: Sequence["Classifier"],
+    test_case: TestCase,
+    metadata_description: Optional[str],
+):
     if not classifiers:
         raise ValueError(
             "classify_with_decision_model needs at least one classifier."
@@ -180,7 +189,7 @@ def _start(classifiers: Sequence["Classifier"], test_case: TestCase):
             )
         classifier._check_test_case(test_case)
         classifier._reset_usage()
-    return _state(classifiers[0], test_case)
+    return _state(classifiers[0], test_case, metadata_description)
 
 
 def _first_asks(classifiers: Sequence["Classifier"]) -> List[Ask]:
@@ -504,6 +513,7 @@ def _content_format(classifier: "Classifier", shape: Shape) -> str:
         template_class=TEMPLATE_CLASS,
         multi_turn=shape.multi_turn,
         traced=shape.traced,
+        metadata_description=shape.metadata_description,
     )
 
 
@@ -517,21 +527,41 @@ def _app_description(classifier: "Classifier") -> Optional[str]:
 ###############################################
 
 
-def _state(classifier: "Classifier", test_case: TestCase):
+def _state(
+    classifier: "Classifier",
+    test_case: TestCase,
+    metadata_description: Optional[str],
+):
+    state, multi_turn, traced = _content_state(classifier, test_case)
+    with_metadata = bool(metadata_description and test_case.metadata)
+    if with_metadata:
+        state["metadata"] = test_case.metadata
+    shape = Shape(
+        multi_turn=multi_turn,
+        traced=traced,
+        metadata_description=metadata_description if with_metadata else None,
+    )
+    return _jsonable(state), shape
+
+
+def _content_state(classifier: "Classifier", test_case: TestCase):
     max_chars = classifier.max_content_chars
     if isinstance(test_case, ConversationalTestCase):
         state = construct_multi_turn_state(test_case)
         state["turns"] = fit_turns(state["turns"], max_chars)
-        return _jsonable(state), Shape(multi_turn=True, traced=False)
+        return state, True, False
     if test_case._trace_dict is not None:
-        state = {"trace": fit_trace(construct_trace_dict(test_case), max_chars)}
-        return _jsonable(state), Shape(multi_turn=False, traced=True)
+        return (
+            {"trace": fit_trace(construct_trace_dict(test_case), max_chars)},
+            False,
+            True,
+        )
     state = construct_single_turn_state(test_case)
     state["test_case"] = {
         field: fit_text(value, max_chars) if isinstance(value, str) else value
         for field, value in state["test_case"].items()
     }
-    return _jsonable(state), Shape(multi_turn=False, traced=False)
+    return state, False, False
 
 
 ###############################################
