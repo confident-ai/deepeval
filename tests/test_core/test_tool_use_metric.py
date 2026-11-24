@@ -166,9 +166,7 @@ def test_tool_use_metric_with_tool_calls_uses_min_score_sync_and_async():
         async_mode=True,
     )
     async_score = asyncio.run(
-        async_metric.a_measure(
-            _tool_call_conversation(), _show_indicator=False
-        )
+        async_metric.a_measure(_tool_call_conversation(), _show_indicator=False)
     )
 
     assert async_score == 0.6
