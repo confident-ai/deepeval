@@ -161,7 +161,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         attritions = []
         for verdict in self.verdicts:
-            if verdict.verdict == Verdict.YES:
+            # A verdict the judge answered out of vocabulary is dropped to None.
+            if verdict is not None and verdict.verdict == Verdict.YES:
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -183,7 +184,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
         attritions = []
         for verdict in self.verdicts:
-            if verdict.verdict == Verdict.YES:
+            # A verdict the judge answered out of vocabulary is dropped to None.
+            if verdict is not None and verdict.verdict == Verdict.YES:
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
