@@ -87,6 +87,47 @@ def test_choice_carries_the_classifier_and_app_in_its_instructions():
     assert classifier.classifications[0].confidence == 0.9123
 
 
+def test_metadata_reaches_the_decision_model_with_its_description():
+    jev = FakeSystemOneModel(
+        answer_fn=_answering(choices={"0": _choice("Shipping", 0.9)})
+    )
+    test_case = LLMTestCase(
+        input="Where is my parcel?",
+        actual_output="On its way.",
+        metadata={"evidence": {"listening": "The agent sounds rushed."}},
+    )
+    classify_with_decision_model(
+        [_classifier(jev)],
+        test_case,
+        metadata_description='"evidence" was gathered from the call audio.',
+    )
+    state, questions = jev.calls[0]
+    assert state["metadata"] == test_case.metadata
+    assert (
+        questions["0"]
+        .instructions["content_format"]
+        .endswith(
+            "`metadata` holds context gathered outside the application: "
+            '"evidence" was gathered from the call audio.'
+        )
+    )
+
+
+def test_metadata_without_a_description_stays_out_of_the_state():
+    jev = FakeSystemOneModel(
+        answer_fn=_answering(choices={"0": _choice("Shipping", 0.9)})
+    )
+    test_case = LLMTestCase(
+        input="Where is my parcel?",
+        actual_output="On its way.",
+        metadata={"source": "crm"},
+    )
+    classify_with_decision_model([_classifier(jev)], test_case)
+    state, questions = jev.calls[0]
+    assert "metadata" not in state
+    assert "`metadata`" not in questions["0"].instructions["content_format"]
+
+
 def test_none_choice_gives_no_fitting_label_reason():
     jev = FakeSystemOneModel(
         answer_fn=_answering(choices={"0": _choice("NONE", 0.9)})
