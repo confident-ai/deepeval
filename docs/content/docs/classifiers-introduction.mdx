@@ -315,6 +315,15 @@ asyncio.run(main())
 
 Every classifier accepts a `classification_template`, a subclass of `ClassifierTemplate` whose methods return the prompt sent to the judge. Override `classify_single_turn`, `classify_traced_single_turn` and/or `classify_multi_turn` to change the wording, add examples, or tighten instructions for a smaller judge model. The [Custom Classifier](/docs/classifiers-custom#customize-your-template) page has a full example.
 
+## Multi-Label Classifiers
+
+Most classifiers pick exactly one label, because their labels rule each other out: a response cannot be both `refused` and `complied`. When one test case can match several labels at once, such as a reply that both quotes a wrong price and ignores a tool result, a classifier can return all of them instead:
+
+- A custom [`Classifier`](/docs/classifiers-custom#multi-label-classification) does this with `multi_label=True`.
+- [`IssueClassifier`](/docs/classifiers-issue) is always multi-label, since one interaction can have several failures.
+
+A multi-label classifier puts one `Classification` per matching label in `classifications`, most certain first, and `label` is the first of them. In `expected_labels` it takes a list, and passes only when it assigns exactly those labels, as shown [below](#expected-labels).
+
 ## Expected Labels
 
 A classifier on its own only produces a classification; it is `expected_labels` on the test case that decides whether that classification **passes or fails**. `expected_labels` is a dict from a classifier's `name` to the label that test case should receive, or, for a [multi-label](/docs/classifiers-custom#multi-label-classification) classifier, a list of the labels it should receive:
