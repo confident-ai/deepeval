@@ -95,13 +95,13 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 if run_system_one_eval(self, test_case):
                     return self.score
 
-                self.knowledges: List[
-                    Union[Knowledge, None]
-                ] = self._generate_knowledges(test_case.turns)
-                self.verdicts: List[
-                    Optional[KnowledgeRetentionVerdict]
-                ] = self._generate_verdicts(
-                    test_case.turns, test_case.multimodal
+                self.knowledges: List[Union[Knowledge, None]] = (
+                    self._generate_knowledges(test_case.turns)
+                )
+                self.verdicts: List[Optional[KnowledgeRetentionVerdict]] = (
+                    self._generate_verdicts(
+                        test_case.turns, test_case.multimodal
+                    )
                 )
                 self.score = self._calculate_score()
                 self.reason = self._generate_reason()
@@ -133,13 +133,13 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             if await a_run_system_one_eval(self, test_case):
                 return self.score
 
-            self.knowledges: List[
-                Union[Knowledge, None]
-            ] = await self._a_generate_knowledges(test_case.turns)
-            self.verdicts: List[
-                Optional[KnowledgeRetentionVerdict]
-            ] = await self._a_generate_verdicts(
-                test_case.turns, test_case.multimodal
+            self.knowledges: List[Union[Knowledge, None]] = (
+                await self._a_generate_knowledges(test_case.turns)
+            )
+            self.verdicts: List[Optional[KnowledgeRetentionVerdict]] = (
+                await self._a_generate_verdicts(
+                    test_case.turns, test_case.multimodal
+                )
             )
             self.score = self._calculate_score()
             self.reason = await self._a_generate_reason()
