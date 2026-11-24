@@ -12,6 +12,8 @@ export enum Event {
   SYNTHESIZER = "Synthesizer",
   CONVERSATION_SIMULATOR = "Conversation Simulator",
   BENCHMARK = "Benchmark",
+  RED_TEAMING = "Red Teaming",
+  GUARDRAILS = "Guardrails",
   INTEGRATION_INSTALLED = "Integration Installed",
   CLI_COMMAND = "CLI Command",
   LOGIN_PROMPT_SHOWN = "Login Prompt Shown",
@@ -31,6 +33,7 @@ export enum Entrypoint {
 
 export enum Feature {
   REDTEAMING = "redteaming",
+  GUARDRAILS = "guardrails",
   SYNTHESIZER = "synthesizer",
   EVALUATION = "evaluation",
   COMPONENT_EVALUATION = "component_evaluation",

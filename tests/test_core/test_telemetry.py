@@ -454,7 +454,109 @@ class TestIntegrations:
         assert props["tracing.integration"] == Integration.LANGCHAIN.value
 
 
+def shipped_red_team_component(class_name: str):
+    """Stand-in for a vulnerability, attack or guard class the library ships."""
+    component_class = type(class_name, (), {})
+    component_class.__module__ = "deepeval.red_team.vulnerabilities.bias.bias"
+    return component_class()
+
+
+class TestRedTeaming:
+    def test_one_event_per_run_with_the_outcome(self, backend):
+        with telemetry.capture_red_teaming_run(
+            vulnerabilities=[
+                shipped_red_team_component("Toxicity"),
+                shipped_red_team_component("Bias"),
+            ],
+            attacks=[shipped_red_team_component("PromptInjection")],
+            async_mode=True,
+        ) as span:
+            span.set_test_case_count(7)
+
+        assert backend.events[0][1] is Event.RED_TEAMING
+        props = backend.only()
+        assert props["red_teaming.vulnerabilities"] == ["Bias", "Toxicity"]
+        assert props["red_teaming.attacks"] == ["PromptInjection"]
+        assert props["eval.outcome"] == Outcome.COMPLETED.value
+        assert props["eval.test_case_count"] == 7
+        assert props["feature.name"] == "redteaming"
+
+    def test_user_written_names_cannot_leak(self, backend):
+        class AcmeFraudProbe:
+            def get_name(self):
+                return "acme-wire-fraud-probe"
+
+        custom = shipped_red_team_component("CustomVulnerability")
+        pulled = shipped_red_team_component("RedTeamingFramework")
+
+        with telemetry.capture_red_teaming_run(
+            vulnerabilities=[custom],
+            attacks=[AcmeFraudProbe()],
+            framework=pulled,
+        ):
+            pass
+
+        props = backend.only()
+        assert props["red_teaming.vulnerabilities"] == ["custom"]
+        assert props["red_teaming.attacks"] == ["custom"]
+        assert props["red_teaming.framework"] == "custom"
+        assert "acme" not in json.dumps(props)
+
+    def test_a_failed_run_reports_the_exception_class(self, backend):
+        with pytest.raises(ValueError):
+            with telemetry.capture_red_teaming_run():
+                raise ValueError("sk-live-secret")
+
+        props = backend.only()
+        assert props["eval.outcome"] == Outcome.ERRORED.value
+        assert props["eval.error_type"] == "ValueError"
+        assert "sk-live-secret" not in json.dumps(props)
+
+
+class TestGuardrails:
+    def test_a_guard_set_is_reported_once_per_process(self, backend):
+        from deepeval.telemetry import GuardDirection
+        from deepeval.telemetry.api import reset_guardrails_seen_for_testing
+
+        reset_guardrails_seen_for_testing()
+        guards = [shipped_red_team_component("ToxicityGuard")]
+        for _ in range(100):
+            telemetry.record_guardrails_used(GuardDirection.INPUT, guards)
+
+        props = backend.only()
+        assert backend.events[0][1] is Event.GUARDRAILS
+        assert props["guardrails.direction"] == "input"
+        assert props["guardrails.guards"] == ["ToxicityGuard"]
+
+        telemetry.record_guardrails_used(GuardDirection.OUTPUT, guards)
+        assert len(backend.events) == 2
+        reset_guardrails_seen_for_testing()
+
+
 class TestOptOut:
+    def test_the_former_red_teaming_flag_still_opts_out(
+        self, tmp_path, monkeypatch
+    ):
+        monkeypatch.delenv("DEEPEVAL_TELEMETRY_OPT_OUT", raising=False)
+        monkeypatch.setenv("DEEPTEAM_TELEMETRY_OPT_OUT", "YES")
+        monkeypatch.setenv("DEEPEVAL_HOME", str(tmp_path / "home"))
+        identity_mod.reset_cache_for_testing()
+
+        from deepeval.config.settings import reset_settings
+
+        reset_settings()
+
+        fake = FakeBackend()
+        telemetry.set_backend(fake)
+        try:
+            with telemetry.capture_red_teaming_run():
+                pass
+            assert fake.events == []
+        finally:
+            monkeypatch.delenv("DEEPTEAM_TELEMETRY_OPT_OUT", raising=False)
+            reset_settings()
+            identity_mod.reset_cache_for_testing()
+
     def test_nothing_is_emitted_when_opted_out(self, tmp_path, monkeypatch):
         monkeypatch.setenv("DEEPEVAL_TELEMETRY_OPT_OUT", "1")
         monkeypatch.setenv("DEEPEVAL_HOME", str(tmp_path / "home"))
@@ -547,6 +649,8 @@ class TestTypeSafety:
             "Synthesizer",
             "Conversation Simulator",
             "Benchmark",
+            "Red Teaming",
+            "Guardrails",
             "Integration Installed",
             "CLI Command",
             "Login Prompt Shown",

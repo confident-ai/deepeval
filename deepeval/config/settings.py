@@ -1469,6 +1469,8 @@ class Settings(BaseSettings):
           - DEEPEVAL_TELEMETRY_OPT_OUT = falsy   -> ON
           - DEEPEVAL_TELEMETRY_ENABLED = truthy  -> ON
         - Else None (unset) -> ON
+        - DEEPTEAM_TELEMETRY_OPT_OUT=YES (red teaming's former flag) is
+          always an OFF signal.
         """
 
         def normalize(x):
@@ -1482,7 +1484,15 @@ class Settings(BaseSettings):
             os.getenv("DEEPEVAL_TELEMETRY_ENABLED")
         )  # True means ON, False means OFF
 
-        off_signal = (new_opt_out is True) or (legacy_enabled is False)
+        legacy_red_team_opt_out = (
+            os.getenv("DEEPTEAM_TELEMETRY_OPT_OUT") == "YES"
+        )
+
+        off_signal = (
+            (new_opt_out is True)
+            or (legacy_enabled is False)
+            or legacy_red_team_opt_out
+        )
         on_signal = (new_opt_out is False) or (legacy_enabled is True)
 
         # Conflict: simultaneous OFF and ON signals

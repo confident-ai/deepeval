@@ -69,6 +69,13 @@ class Prop(str, Enum):
     BENCHMARK_NUM_TASKS = "benchmark.num_tasks"
     # conversation simulator
     NUM_CONVERSATIONS = "simulator.num_conversations"
+    # red teaming
+    RT_VULNERABILITIES = "red_teaming.vulnerabilities"
+    RT_ATTACKS = "red_teaming.attacks"
+    RT_FRAMEWORK = "red_teaming.framework"
+    # guardrails
+    GUARD_DIRECTION = "guardrails.direction"
+    GUARDS = "guardrails.guards"
 
 
 class Language(str, Enum):
@@ -149,6 +156,11 @@ UNKNOWN_MODEL = "other"
 # `cli.command` is validated against the Click group that dispatched it, so an
 # unrecognised name can only mean the callback ran outside normal dispatch.
 UNKNOWN_CLI_COMMAND = "unknown"
+
+
+class GuardDirection(str, Enum):
+    INPUT = "input"
+    OUTPUT = "output"
 
 
 class LoginPromptSurface(str, Enum):
@@ -247,6 +259,13 @@ class EventProperties:
     benchmark_num_tasks: Optional[int] = None
     # conversation simulator
     num_conversations: Optional[int] = None
+    # red teaming
+    rt_vulnerabilities: Optional[List[str]] = None
+    rt_attacks: Optional[List[str]] = None
+    rt_framework: Optional[str] = None
+    # guardrails
+    guard_direction: Optional[GuardDirection] = None
+    guards: Optional[List[str]] = None
 
     def to_dict(self) -> Dict[str, PropValue]:
         payload: Dict[str, PropValue] = {}
@@ -309,4 +328,9 @@ _FIELD_TO_PROP: Dict[str, Prop] = {
     "benchmark_name": Prop.BENCHMARK_NAME,
     "benchmark_num_tasks": Prop.BENCHMARK_NUM_TASKS,
     "num_conversations": Prop.NUM_CONVERSATIONS,
+    "rt_vulnerabilities": Prop.RT_VULNERABILITIES,
+    "rt_attacks": Prop.RT_ATTACKS,
+    "rt_framework": Prop.RT_FRAMEWORK,
+    "guard_direction": Prop.GUARD_DIRECTION,
+    "guards": Prop.GUARDS,
 }

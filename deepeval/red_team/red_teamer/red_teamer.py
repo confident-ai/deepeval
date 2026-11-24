@@ -19,7 +19,7 @@ from deepeval.utils import get_or_create_event_loop
 
 from deepeval.red_team.frameworks.frameworks import RedTeamingFramework
 from deepeval.red_team.frameworks.risk_category import RiskCategory
-from deepeval.red_team.telemetry import capture_red_teamer_run
+from deepeval.telemetry import capture_red_teaming_run
 from deepeval.red_team.attacks import BaseAttack
 from deepeval.red_team.utils import (
     validate_model_callback_signature,
@@ -207,15 +207,12 @@ class RedTeamer:
                 self.evaluation_model, _ = initialize_model(evaluation_model)
             if simulator_model is not None:
                 self.simulator_model, _ = initialize_model(simulator_model)
-            with capture_red_teamer_run(
-                vulnerabilities=(
-                    [v.get_name() for v in vulnerabilities]
-                    if vulnerabilities
-                    else []
-                ),
-                attacks=[a.get_name() for a in attacks] if attacks else [],
-                framework=framework.get_name() if framework else None,
-            ):
+            with capture_red_teaming_run(
+                vulnerabilities=vulnerabilities,
+                attacks=attacks,
+                framework=framework,
+                async_mode=self.async_mode,
+            ) as telemetry_span:
                 # Generate attacks
                 if (
                     reuse_simulated_test_cases
@@ -326,6 +323,9 @@ class RedTeamer:
                     test_cases=red_teaming_test_cases,
                 )
                 self.test_cases = red_teaming_test_cases
+                telemetry_span.set_test_case_count(
+                    len(red_teaming_test_cases)
+                )
 
                 if _print_assessment:
                     self._print_risk_assessment(self.risk_assessment)
@@ -416,15 +416,12 @@ class RedTeamer:
         if simulator_model is not None:
             self.simulator_model, _ = initialize_model(simulator_model)
 
-        with capture_red_teamer_run(
-            vulnerabilities=(
-                [v.get_name() for v in vulnerabilities]
-                if vulnerabilities
-                else []
-            ),
-            attacks=[a.get_name() for a in attacks] if attacks else [],
-            framework=framework.get_name() if framework else None,
-        ):
+        with capture_red_teaming_run(
+            vulnerabilities=vulnerabilities,
+            attacks=attacks,
+            framework=framework,
+            async_mode=self.async_mode,
+        ) as telemetry_span:
             # Generate attacks
             if (
                 reuse_simulated_test_cases
@@ -544,6 +541,9 @@ class RedTeamer:
                 test_cases=red_teaming_test_cases,
             )
             self.test_cases = red_teaming_test_cases
+            telemetry_span.set_test_case_count(
+                len(red_teaming_test_cases)
+            )
 
             if _print_assessment:
                 self._print_risk_assessment(self.risk_assessment)

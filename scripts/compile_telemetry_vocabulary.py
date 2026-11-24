@@ -67,6 +67,7 @@ def build() -> Dict[str, Any]:
         "loginPromptSurfaces": _values(properties.LoginPromptSurface),
         "loginOutcomes": _values(properties.LoginOutcome),
         "loginMethods": _values(properties.LoginMethod),
+        "guardDirections": _values(properties.GuardDirection),
         "telemetryKeys": _values(properties.TelemetryKey),
         "sentinels": {
             "customProvider": properties.CUSTOM_PROVIDER,

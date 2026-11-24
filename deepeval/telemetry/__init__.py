@@ -13,6 +13,7 @@ import os
 from deepeval.constants import HIDDEN_DIR, KEY_FILE
 from deepeval.telemetry.api import (
     LoginSpan,
+    RedTeamingSpan,
     capture_benchmark_run,
     capture_cli_command,
     capture_conversation_simulator_run,
@@ -20,8 +21,10 @@ from deepeval.telemetry.api import (
     capture_login_event,
     capture_login_prompt_shown,
     capture_login_prompt_shown_once,
+    capture_red_teaming_run,
     capture_synthesizer_run,
     capture_tracing_integration,
+    record_guardrails_used,
     record_login_completed,
     record_tracing_integration,
 )
@@ -73,6 +76,7 @@ from deepeval.telemetry.judge import describe_judge
 from deepeval.telemetry.properties import (
     EventProperties,
     FlushReason,
+    GuardDirection,
     Language,
     LocalStore,
     LoginMethod,
@@ -120,6 +124,7 @@ __all__ = [
     "EventProperties",
     "Feature",
     "FlushReason",
+    "GuardDirection",
     "Identity",
     "Language",
     "LoginMethod",
@@ -129,6 +134,7 @@ __all__ = [
     "NoopBackend",
     "Outcome",
     "PostHogBackend",
+    "RedTeamingSpan",
     "Prop",
     "Runtime",
     "RunAccumulator",
@@ -144,6 +150,7 @@ __all__ = [
     "capture_login_event",
     "capture_login_prompt_shown",
     "capture_login_prompt_shown_once",
+    "capture_red_teaming_run",
     "capture_synthesizer_run",
     "capture_tracing_integration",
     "current_run",
@@ -161,6 +168,7 @@ __all__ = [
     "installed_integrations",
     "read_telemetry_file",
     "record_golden",
+    "record_guardrails_used",
     "record_login_completed",
     "record_metric",
     "record_test_case",

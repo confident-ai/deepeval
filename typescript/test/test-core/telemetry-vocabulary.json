@@ -17,9 +17,11 @@
     "CLI Command",
     "Conversation Simulator",
     "Evaluation",
+    "Guardrails",
     "Integration Installed",
     "Login",
     "Login Prompt Shown",
+    "Red Teaming",
     "Synthesizer"
   ],
   "features": [
@@ -27,6 +29,7 @@
     "component_evaluation",
     "conversation_simulator",
     "evaluation",
+    "guardrails",
     "redteaming",
     "synthesizer",
     "tracing_integration",
@@ -37,6 +40,10 @@
     "manual",
     "process_exit",
     "threshold"
+  ],
+  "guardDirections": [
+    "input",
+    "output"
   ],
   "identityFileName": ".deepeval_telemetry.txt",
   "integrations": [
@@ -130,7 +137,12 @@
     "synth_evolutions",
     "benchmark_name",
     "benchmark_num_tasks",
-    "num_conversations"
+    "num_conversations",
+    "rt_vulnerabilities",
+    "rt_attacks",
+    "rt_framework",
+    "guard_direction",
+    "guards"
   ],
   "props": [
     "benchmark.name",
@@ -154,11 +166,16 @@
     "feature.last",
     "feature.name",
     "feature.status",
+    "guardrails.direction",
+    "guardrails.guards",
     "judge.model",
     "judge.provider",
     "login.method",
     "login.outcome",
     "login.surface",
+    "red_teaming.attacks",
+    "red_teaming.framework",
+    "red_teaming.vulnerabilities",
     "runtime.kind",
     "sdk.language",
     "simulator.num_conversations",
@@ -189,6 +206,8 @@
     "feature_status": "feature.status",
     "flush_reason": "eval.flush_reason",
     "golden_count": "eval.golden_count",
+    "guard_direction": "guardrails.direction",
+    "guards": "guardrails.guards",
     "in_component": "eval.in_component",
     "integration": "tracing.integration",
     "integrations": "tracing.integrations",
@@ -207,6 +226,9 @@
     "outcome": "eval.outcome",
     "prompt_surface": "login.surface",
     "provider": "judge.provider",
+    "rt_attacks": "red_teaming.attacks",
+    "rt_framework": "red_teaming.framework",
+    "rt_vulnerabilities": "red_teaming.vulnerabilities",
     "run_id": "eval.run_id",
     "runtime": "runtime.kind",
     "schema_version": "telemetry.schema_version",

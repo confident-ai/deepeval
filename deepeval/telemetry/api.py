@@ -8,7 +8,16 @@ loses the event, where the old code sent a bare one up front.
 import uuid
 from contextlib import contextmanager
 from dataclasses import replace
-from typing import Any, Container, Dict, Iterator, Optional, Set
+from typing import (
+    Any,
+    Container,
+    Dict,
+    Iterable,
+    Iterator,
+    Optional,
+    Set,
+    Tuple,
+)
 
 from deepeval.telemetry.client import (
     capture,
@@ -27,8 +36,10 @@ from deepeval.telemetry.identity import (
     set_last_feature,
 )
 from deepeval.telemetry.properties import (
+    CUSTOM_PROVIDER,
     UNKNOWN_CLI_COMMAND,
     EventProperties,
+    GuardDirection,
     LoginMethod,
     LoginOutcome,
     LoginPromptSurface,
@@ -170,6 +181,138 @@ def capture_benchmark_run(benchmark: str, num_tasks: Any) -> Iterator[None]:
         ),
     )
     yield
+
+
+class RedTeamingSpan:
+    """Lets a red teaming run report how many test cases it produced."""
+
+    def __init__(self) -> None:
+        self.test_case_count: Optional[int] = None
+
+    def set_test_case_count(self, count: int) -> None:
+        self.test_case_count = count
+
+
+# Classes under `deepeval.` whose instances carry user-written names: a
+# vulnerability defined inline, or a framework pulled from Confident AI.
+_USER_DEFINED_RED_TEAM_CLASSES = frozenset(
+    {"CustomVulnerability", "RedTeamingFramework"}
+)
+
+
+def _red_team_component_name(component: Any) -> str:
+    """A bounded name for a vulnerability, attack or framework.
+
+    Same invariant as `describe_judge`: only classes defined under `deepeval.`
+    are named, anything else collapses to `custom`.
+    """
+    try:
+        cls = type(component)
+        if not (cls.__module__ or "").startswith("deepeval."):
+            return CUSTOM_PROVIDER
+        if cls.__name__ in _USER_DEFINED_RED_TEAM_CLASSES:
+            return CUSTOM_PROVIDER
+        return cls.__name__
+    except Exception:
+        return CUSTOM_PROVIDER
+
+
+@contextmanager
+def capture_red_teaming_run(
+    vulnerabilities: Optional[Iterable[Any]] = None,
+    attacks: Optional[Iterable[Any]] = None,
+    framework: Optional[Any] = None,
+    async_mode: Optional[bool] = None,
+) -> Iterator[RedTeamingSpan]:
+    """Emit exactly one `Red Teaming` on the way out, with the outcome.
+
+    Takes the objects rather than their names so user-written names never
+    reach the payload.
+    """
+    span = RedTeamingSpan()
+    if telemetry_opt_out():
+        yield span
+        return
+
+    feature_status = get_feature_status(Feature.REDTEAMING)
+    vulnerability_names = sorted(
+        {_red_team_component_name(v) for v in vulnerabilities or []}
+    )
+    attack_names = sorted({_red_team_component_name(a) for a in attacks or []})
+    framework_name = (
+        _red_team_component_name(framework) if framework is not None else None
+    )
+    outcome = Outcome.COMPLETED
+    error_type: Optional[str] = None
+    try:
+        yield span
+    except KeyboardInterrupt:
+        outcome = Outcome.INTERRUPTED
+        raise
+    except BaseException as error:
+        outcome = Outcome.ERRORED
+        # Class name only. Messages routinely carry prompts, keys, org names.
+        error_type = type(error).__name__
+        raise
+    finally:
+        try:
+            set_last_feature(Feature.REDTEAMING)
+            capture(
+                Event.RED_TEAMING,
+                EventProperties(
+                    feature_name=Feature.REDTEAMING,
+                    feature_status=feature_status,
+                    outcome=outcome,
+                    error_type=error_type,
+                    test_case_count=span.test_case_count,
+                    async_mode=async_mode,
+                    rt_vulnerabilities=vulnerability_names,
+                    rt_attacks=attack_names,
+                    rt_framework=framework_name,
+                ),
+            )
+        except Exception:
+            pass
+
+
+_guardrails_seen: Set[Tuple[GuardDirection, Tuple[str, ...]]] = set()
+
+
+def record_guardrails_used(
+    direction: GuardDirection, guards: Iterable[Any]
+) -> None:
+    """Once per process per guard set.
+
+    Guardrails run on every production request, so counting calls would
+    measure traffic, not adoption.
+    """
+    key = (
+        direction,
+        tuple(sorted({_red_team_component_name(g) for g in guards})),
+    )
+    if key in _guardrails_seen:
+        return
+    _guardrails_seen.add(key)
+    if telemetry_opt_out():
+        return
+    try:
+        feature_status = get_feature_status(Feature.GUARDRAILS)
+        set_last_feature(Feature.GUARDRAILS)
+        capture(
+            Event.GUARDRAILS,
+            EventProperties(
+                feature_name=Feature.GUARDRAILS,
+                feature_status=feature_status,
+                guard_direction=direction,
+                guards=list(key[1]),
+            ),
+        )
+    except Exception:
+        pass
+
+
+def reset_guardrails_seen_for_testing() -> None:
+    _guardrails_seen.clear()
 
 
 def record_tracing_integration(integration: Integration) -> None:

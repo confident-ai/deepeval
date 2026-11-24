@@ -5,7 +5,7 @@ from typing import Literal
 from pydantic import BaseModel
 
 from deepeval.red_team.guardrails.guards.base_guard import BaseGuard
-from deepeval.red_team.telemetry import capture_guardrail_run
+from deepeval.telemetry import GuardDirection, record_guardrails_used
 
 
 class GuardVerdict(BaseModel):
@@ -120,40 +120,37 @@ class Guardrails:
 
         verdicts: List[GuardVerdict] = []
 
-        with capture_guardrail_run(
-            type="input",
-            guards=[guard.__name__ for guard in self.input_guards],
-        ):
-            for guard in self.input_guards:
-                start_time = time.time()
-                try:
-                    _ = guard.guard_input(input)
-                    latency = time.time() - start_time
+        record_guardrails_used(GuardDirection.INPUT, self.input_guards)
+        for guard in self.input_guards:
+            start_time = time.time()
+            try:
+                _ = guard.guard_input(input)
+                latency = time.time() - start_time
 
-                    safety_level = guard.safety_level or "unsafe"
-                    if hasattr(safety_level, "value"):
-                        safety_level = safety_level.value
+                safety_level = guard.safety_level or "unsafe"
+                if hasattr(safety_level, "value"):
+                    safety_level = safety_level.value
 
-                    verdicts.append(
-                        GuardVerdict(
-                            name=guard.__name__,
-                            safety_level=safety_level,  # type: ignore[arg-type]
-                            latency=latency,
-                            reason=guard.reason,
-                            score=guard.score,
-                        )
+                verdicts.append(
+                    GuardVerdict(
+                        name=guard.__name__,
+                        safety_level=safety_level,  # type: ignore[arg-type]
+                        latency=latency,
+                        reason=guard.reason,
+                        score=guard.score,
                     )
+                )
 
-                except Exception as e:
-                    verdicts.append(
-                        GuardVerdict(
-                            name=guard.__name__,
-                            safety_level="unsafe",
-                            latency=time.time() - start_time,
-                            error=str(e),
-                            score=0.0,
-                        )
+            except Exception as e:
+                verdicts.append(
+                    GuardVerdict(
+                        name=guard.__name__,
+                        safety_level="unsafe",
+                        latency=time.time() - start_time,
+                        error=str(e),
+                        score=0.0,
                     )
+                )
 
         return GuardResult(verdicts=verdicts)
 
@@ -172,40 +169,37 @@ class Guardrails:
 
         verdicts: List[GuardVerdict] = []
 
-        with capture_guardrail_run(
-            type="output",
-            guards=[guard.__name__ for guard in self.output_guards],
-        ):
-            for guard in self.output_guards:
-                start_time = time.time()
-                try:
-                    _ = guard.guard_output(input, output)
-                    latency = time.time() - start_time
+        record_guardrails_used(GuardDirection.OUTPUT, self.output_guards)
+        for guard in self.output_guards:
+            start_time = time.time()
+            try:
+                _ = guard.guard_output(input, output)
+                latency = time.time() - start_time
 
-                    safety_level = guard.safety_level or "unsafe"
-                    if hasattr(safety_level, "value"):
-                        safety_level = safety_level.value
+                safety_level = guard.safety_level or "unsafe"
+                if hasattr(safety_level, "value"):
+                    safety_level = safety_level.value
 
-                    verdicts.append(
-                        GuardVerdict(
-                            name=guard.__name__,
-                            safety_level=safety_level,  # type: ignore[arg-type]
-                            latency=latency,
-                            reason=guard.reason,
-                            score=guard.score,
-                        )
+                verdicts.append(
+                    GuardVerdict(
+                        name=guard.__name__,
+                        safety_level=safety_level,  # type: ignore[arg-type]
+                        latency=latency,
+                        reason=guard.reason,
+                        score=guard.score,
                     )
+                )
 
-                except Exception as e:
-                    verdicts.append(
-                        GuardVerdict(
-                            name=guard.__name__,
-                            safety_level="unsafe",
-                            latency=time.time() - start_time,
-                            error=str(e),
-                            score=0.0,
-                        )
+            except Exception as e:
+                verdicts.append(
+                    GuardVerdict(
+                        name=guard.__name__,
+                        safety_level="unsafe",
+                        latency=time.time() - start_time,
+                        error=str(e),
+                        score=0.0,
                     )
+                )
 
         return GuardResult(verdicts=verdicts)
 
