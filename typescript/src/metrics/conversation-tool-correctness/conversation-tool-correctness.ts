@@ -30,7 +30,6 @@ export interface ToolCheckScore {
   reason: string;
 }
 
-/** Tool Correctness over a conversation. Mirrors Python's `ConversationToolCorrectnessMetric`. */
 export class ConversationToolCorrectnessMetric extends BaseConversationalMetric {
   toolsCalled: ToolCall[] = [];
   checkScores: ToolCheckScore[] = [];
@@ -66,8 +65,6 @@ export class ConversationToolCorrectnessMetric extends BaseConversationalMetric 
 
     await this.startProgress();
     try {
-      // One check per pinned turn, plus one for the unpinned tools against
-      // every other assistant turn.
       const checks: [string, ToolCall[], ToolCall[]][] = [...pinned.entries()]
         .sort(([a], [b]) => a - b)
         .map(([index, tools]) => [

@@ -88,6 +88,15 @@ def _parse_column(df, col_name, parse):
     return [parse(value) for value in df[col_name].values]
 
 
+def _dump_expected_tools(golden: ConversationalGolden) -> Optional[List[Dict]]:
+    if golden.expected_tools is None:
+        return None
+    return [
+        tool.model_dump(by_alias=True, exclude_none=True)
+        for tool in golden.expected_tools
+    ]
+
+
 @dataclass
 class EvaluationDataset:
     _multi_turn: bool = field(default=False)
@@ -976,9 +985,7 @@ class EvaluationDataset:
             version=version,
         )
         try:
-            body = api_dataset.model_dump(
-                by_alias=True, exclude_none=True, mode="json"
-            )
+            body = api_dataset.model_dump(by_alias=True, exclude_none=True)
         except AttributeError:
             # Pydantic version below 2.0
             body = api_dataset.dict(by_alias=True, exclude_none=True)
@@ -1138,9 +1145,7 @@ class EvaluationDataset:
             conversationalGoldens=goldens if multi_turn else None,
         )
         try:
-            body = api_dataset.model_dump(
-                by_alias=True, exclude_none=True, mode="json"
-            )
+            body = api_dataset.model_dump(by_alias=True, exclude_none=True)
         except AttributeError:
             # Pydantic version below 2.0
             body = api_dataset.dict(by_alias=True, exclude_none=True)
@@ -1390,18 +1395,7 @@ class EvaluationDataset:
                                 "scenario": golden.scenario,
                                 "turns": turns_list,
                                 "expected_outcome": golden.expected_outcome,
-                                "expected_tools": (
-                                    [
-                                        t.model_dump(
-                                            by_alias=True,
-                                            exclude_none=True,
-                                            mode="json",
-                                        )
-                                        for t in golden.expected_tools
-                                    ]
-                                    if golden.expected_tools is not None
-                                    else None
-                                ),
+                                "expected_tools": _dump_expected_tools(golden),
                                 "user_description": golden.user_description,
                                 "persona": serialize_persona(golden.persona),
                                 "context": golden.context,
@@ -1631,18 +1625,7 @@ class EvaluationDataset:
                             "scenario": golden.scenario,
                             "turns": turns,
                             "expected_outcome": golden.expected_outcome,
-                            "expected_tools": (
-                                [
-                                    t.model_dump(
-                                        by_alias=True,
-                                        exclude_none=True,
-                                        mode="json",
-                                    )
-                                    for t in golden.expected_tools
-                                ]
-                                if golden.expected_tools is not None
-                                else None
-                            ),
+                            "expected_tools": _dump_expected_tools(golden),
                             "user_description": golden.user_description,
                             "persona": serialize_persona(golden.persona),
                             "context": golden.context,

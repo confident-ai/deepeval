@@ -109,10 +109,6 @@ export class ConversationalTestCase {
   scenario?: string;
   userDescription?: string;
   expectedOutcome?: string;
-  /**
-   * The tools the assistant should call over the whole conversation, for
-   * `ConversationToolCorrectnessMetric`. `[]` means "no tools expected".
-   */
   expectedTools?: ToolCall[];
   context?: string[];
   mcpServers?: MCPServer[];

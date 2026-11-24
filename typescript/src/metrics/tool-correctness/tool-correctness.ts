@@ -228,11 +228,6 @@ export class ToolCorrectnessMetric extends BaseMetric {
     return undefined;
   }
 
-  /**
-   * The deterministic tool-calling score and reason for one set of calls,
-   * without a judge model. Used per turn by
-   * `ConversationToolCorrectnessMetric`.
-   */
   static scoreToolCalls(
     toolsCalled: ToolCall[],
     expectedTools: ToolCall[],
@@ -241,7 +236,6 @@ export class ToolCorrectnessMetric extends BaseMetric {
       "evaluationParams" | "shouldExactMatch" | "shouldConsiderOrdering"
     > = {},
   ): { score: number; reason: string } {
-    // Skip the constructor, which sets up an LLM for tool selection.
     const scorer = Object.create(
       ToolCorrectnessMetric.prototype,
     ) as ToolCorrectnessMetric;

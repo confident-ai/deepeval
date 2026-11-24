@@ -17,8 +17,6 @@ from deepeval.test_case import (
 
 
 class _ToolCallScorer(ToolCorrectnessMetric):
-    """ToolCorrectnessMetric's deterministic scoring, without its judge model."""
-
     def __init__(
         self,
         evaluation_params: List[ToolCallParams],
@@ -85,8 +83,6 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
         with metric_progress_indicator(
             self, _show_indicator=_show_indicator, _in_component=_in_component
         ):
-            # One check per pinned turn, plus one for the unpinned tools
-            # against every other assistant turn.
             checks = [
                 (f"Turn {index}", turns[index].tools_called or [], tools)
                 for index, tools in sorted(pinned.items())

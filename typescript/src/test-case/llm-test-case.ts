@@ -51,11 +51,6 @@ export class ToolCall {
   reasoning?: string;
   output?: any;
   inputParameters?: Record<string, any>;
-  /**
-   * Only read on a conversation's `expectedTools`, by
-   * `ConversationToolCorrectnessMetric`: the index in `turns` of the
-   * assistant turn that should make this call.
-   */
   turn?: number;
 
   constructor(params: {

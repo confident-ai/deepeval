@@ -378,7 +378,6 @@ export function parseToolCalls(value: unknown): ToolCall[] | undefined {
   });
 }
 
-/** Like `parseToolCalls`, but keeps `[]` ("no tools expected"). */
 export function parseExpectedTools(value: unknown): ToolCall[] | undefined {
   const raw = typeof value === "string" ? trimAndLoadJson(value) : value;
   if (Array.isArray(raw) && raw.length === 0) return [];

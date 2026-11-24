@@ -135,7 +135,7 @@ def check_conversational_test_case_params(
         MultiTurnParams.EXPECTED_TOOLS in test_case_params
         and test_case.expected_tools is None
     ):
-        error_str = f"'expected_tools' in a conversational test case cannot be None for the '{metric.__name__}' metric. Use [] if no tools are expected."
+        error_str = f"'expected_tools' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
         metric.error = error_str
         raise MissingTestCaseParamsError(error_str)
 

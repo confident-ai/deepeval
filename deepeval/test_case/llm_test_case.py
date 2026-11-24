@@ -257,9 +257,6 @@ class ToolCall(BaseModel):
         serialization_alias="inputParameters",
         validation_alias=AliasChoices("inputParameters", "input_parameters"),
     )
-    # Only read on a conversation's expected_tools, by
-    # ConversationToolCorrectnessMetric: the index in `turns` of the
-    # assistant turn that should make this call. Not part of equality.
     turn: Optional[int] = None
 
     @field_serializer("type")

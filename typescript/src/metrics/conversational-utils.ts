@@ -41,7 +41,7 @@ export function checkConversationalTestCaseParams(
     testCase.expectedTools == null
   ) {
     fail(
-      `'expected_tools' in a conversational test case cannot be empty for the '${metric.name}' metric. Use [] if no tools are expected.`,
+      `'expected_tools' in a conversational test case cannot be empty for the '${metric.name}' metric.`,
     );
   }
   if (

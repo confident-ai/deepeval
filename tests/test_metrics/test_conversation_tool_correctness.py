@@ -186,7 +186,6 @@ def _pinned(tool, turn):
 
 
 def test_pinned_tool_must_be_called_on_its_turn():
-    # Turns: 0 user, 1 assistant, 2 user, 3 assistant.
     on_time = _conversation(
         [_search("1")], [_book()], expected_tools=[_pinned(_book(), 3)]
     )
@@ -218,7 +217,6 @@ def test_pinned_and_unpinned_tools_are_scored_separately():
 
 
 def test_pinned_turn_is_left_out_of_the_rest_of_the_conversation():
-    # Exact match on the unpinned tools ignores calls made on pinned turns.
     metric = ConversationToolCorrectnessMetric(should_exact_match=True)
     score = metric.measure(
         _conversation(

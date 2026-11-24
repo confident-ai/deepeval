@@ -95,7 +95,6 @@ describe("ConversationToolCorrectnessMetric", () => {
     expect(tc.expectedTools?.map((t) => t.name)).toEqual(["book_flight"]);
   });
   it("checks a pinned tool on its own turn", async () => {
-    // Turns: 0 user, 1 assistant, 2 user, 3 assistant.
     const pinned = new ToolCall({ name: "book_flight", turn: 3 });
     expect(
       await metric().measure(conversation([[search("1")], [book()]], [pinned])),
