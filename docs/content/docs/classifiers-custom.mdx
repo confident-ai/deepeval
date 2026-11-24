@@ -389,14 +389,14 @@ flowchart LR
     same -- yes --> reuse[Reuse match]
     same -- no --> close{Similar<br/>embedding?}
     close -- yes --> reuse
-    close -- no --> judge{Judge says<br/>same problem?}
+    close -- no --> judge{Judge says<br/>same category?}
     judge -- yes --> reuse
     judge -- no --> add[Add to pool]
 ```
 
 1. A label with the same name (ignoring case) is reused as-is.
 2. The closest labels by name similarity are found; one at or above `similarity_threshold` is reused without further checks.
-3. Otherwise the judge compares it against the `top_k` most similar labels and picks the one whose fix would also fix the proposed problem, or none.
+3. Otherwise the judge compares it against the `top_k` most similar labels and picks the one that names the same underlying category, or none.
 4. Only when nothing matches is the new label added to the pool.
 
 A match to one of your labels returns that label with no `new_label_description`; a match to a pool label returns it with its description.
@@ -465,7 +465,7 @@ You can override the default prompts by subclassing `ClassifierTemplate` and pas
 - `review_label(subject: str, label: str, content: str, app_description: str, app_note: str)`, which must keep asking for JSON with `summary`, `confidence` and `reason` fields
 - `review_app_note()`
 
-`labels` is the rendered list of label names and descriptions, `test_case_content` the rendered test case fields, and `turns` a list of dicts with the populated fields of each turn. The three `classify_*` prompts also receive the rendered `context`, `guidance`, `reason_rules`, `cite_evidence`, `suggest_labels` and `candidate_labels`, and `multi_label`. An override only needs to declare the variables it uses, and must keep asking for JSON with `label` and `reason` fields.
+`labels` is the rendered list of label names and descriptions, `test_case_content` the rendered test case fields, and `turns` a list of dicts with the populated fields of each turn, with the earliest turns dropped when the conversation is over `max_content_chars`. The three `classify_*` prompts also receive the rendered `context`, `guidance`, `reason_rules`, `cite_evidence`, `suggest_labels` and `candidate_labels`, plus `multi_label` and `allow_none`. An override only needs to declare the variables it uses, and must keep asking for JSON with `label` and `reason` fields.
 
 ```python
 from deepeval.classifiers import Classifier, ClassifierTemplate
