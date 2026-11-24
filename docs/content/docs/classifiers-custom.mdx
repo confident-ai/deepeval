@@ -144,8 +144,8 @@ failures = Classifier(
 )
 
 failures.classify(test_case)
-for result in failures.classifications:
-    print(result.label, "-", result.reason)
+for classification in failures.classifications:
+    print(classification.label, "-", classification.reason)
 ```
 
 Which prints:
