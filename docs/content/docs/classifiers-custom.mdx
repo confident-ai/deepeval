@@ -292,7 +292,7 @@ actual_output | I've reversed the duplicate charge. | True
    The assistant confirms it refunded the duplicate charge.
 ```
 
-`deepeval` then looks each passage up in the parameter it was cited from. Both passages above appear word for word, so both are `matched=True`. Had the judge cited "I refunded both charges" from `actual_output`, a sentence the reply never says, that item would still be returned, but with `matched=False`. The same goes for a real passage cited from the wrong parameter.
+`deepeval` then looks each passage up in the content, starting with the parameter it was cited from. Both passages above appear word for word, so both are `matched=True`. Had the judge cited "I refunded both charges", a sentence that appears nowhere, that item would still be returned, but with `matched=False`. A real passage cited from the wrong parameter, turn or span is still matched, and its `field`, `turn_index` and `span_index` are corrected to where it actually appears.
 
 There are **TWO** optional parameters when creating an `EvidenceConfig`:
 
@@ -303,12 +303,12 @@ Each item in a `Classification`'s `evidence` list looks like this:
 
 ```python
 Evidence(
-    field="input",                     # the test case parameter it was cited from
+    field="input",                     # the test case parameter it appears in
     quote="can I get one of them back?",
     note="The user asks for one of two duplicate charges to be returned.",
     turn_index=None,                   # the turn, for a ConversationalTestCase
     span_index=None,                   # the span, for a test case with a trace
-    matched=True,                      # False if the quote isn't in that parameter
+    matched=True,                      # False if the quote isn't in the content
 )
 ```
 
@@ -316,7 +316,9 @@ Evidence(
 flowchart LR
     quote[Cited passage<br/>and its parameter] --> find{Appears in<br/>that parameter?}
     find -- "exactly, or ignoring<br/>whitespace and escapes" --> yes[matched=True]
-    find -- no --> no[matched=False]
+    find -- no --> other{Appears<br/>elsewhere?}
+    other -- yes --> moved[matched=True,<br/>location corrected]
+    other -- no --> no[matched=False]
 ```
 
 ### Label Discovery
