@@ -136,24 +136,39 @@ def create_metric_data(metric: BaseMetric) -> MetricData:
     return metric_data
 
 
-def create_classification(
-    classifier: "BaseClassifier", expected_label: Optional[str]
-) -> Classification:
-    """Classifier counterpart of ``create_metric_data``. ``expected_label``
-    comes from ``test_case.expected_labels[classifier.name]`` and decides
-    whether the classification carries a verdict at all."""
-    return Classification(
-        name=classifier.__name__,
-        label=None if classifier.error is not None else classifier.label,
-        expectedLabel=expected_label,
-        success=classifier.is_successful(expected_label),
-        reason=None if classifier.error is not None else classifier.reason,
-        evaluationModel=classifier.evaluation_model,
-        error=classifier.error,
-        evaluationCost=classifier.evaluation_cost,
-        inputTokenCount=classifier.input_tokens,
-        outputTokenCount=classifier.output_tokens,
+def create_classifications(
+    classifier: "BaseClassifier",
+    expected_label: Optional[Union[str, List[str]]],
+) -> List[Classification]:
+    """Classifier counterpart of ``create_metric_data``: one ``Classification``
+    per label the classifier assigned, or a single one with ``label=None`` when
+    it assigned none or errored. ``expected_label`` comes from
+    ``test_case.expected_labels[classifier.name]``. Cost, tokens, model and
+    error belong to the run, so only the first carries them."""
+    success = classifier.is_successful(expected_label)
+    assigned = (
+        [c.model_copy(deep=True) for c in classifier.classifications or []]
+        if classifier.error is None
+        else []
     )
+    classifications = assigned or [
+        Classification(
+            name=classifier.__name__,
+            label=None if classifier.error is not None else classifier.label,
+            reason=None if classifier.error is not None else classifier.reason,
+        )
+    ]
+    for classification in classifications:
+        classification.name = classifier.__name__
+        classification.expected_label = expected_label
+        classification.success = success
+    first = classifications[0]
+    first.evaluation_model = classifier.evaluation_model
+    first.error = classifier.error
+    first.evaluation_cost = classifier.evaluation_cost
+    first.input_tokens = classifier.input_tokens
+    first.output_tokens = classifier.output_tokens
+    return classifications
 
 
 def create_arena_metric_data(metric: ArenaGEval, contestant: str) -> MetricData:

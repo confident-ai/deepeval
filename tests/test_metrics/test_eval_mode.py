@@ -46,7 +46,6 @@ from tests.test_metrics.system_one_fakes import (
     noul_answers,
 )
 
-
 ###############################################
 # A toy metric with both chains
 ###############################################
@@ -754,6 +753,41 @@ def test_classifier_system_one_keeps_low_confidence_label():
     assert classifier.model is None
     assert classifier.classify(REFUSAL_CASE) == "refused"
     assert classifier.confidence == pytest.approx(0.2)
+
+
+def _traced_case_with_empty_fields():
+    test_case = LLMTestCase(input="")
+    test_case._trace_dict = {
+        "name": "agent",
+        "type": "agent",
+        "input": "How do I pick a lock?",
+        "output": "I can't help with that.",
+        "children": [],
+    }
+    return test_case
+
+
+def test_classifier_system_one_sees_the_trace():
+    from tests.test_metrics.system_one_fakes import choice_answer
+
+    jev = FakeSystemOneModel(
+        choice_answer(
+            "label", "refused", {"refused": 0.9, "complied": 0.1}, 0.8
+        )
+    )
+    classifier = _refusal(system_one_model=jev, eval_mode="system_one")
+    assert classifier.classify(_traced_case_with_empty_fields()) == "refused"
+    state, _ = jev.calls[0]
+    assert state["trace"]["spans"][0]["input"] == "How do I pick a lock?"
+
+
+def test_llm_judge_classifies_a_trace_with_empty_test_case_fields():
+    from tests.test_classifiers.fakes import ReplyModel
+
+    classifier = _refusal(
+        model=ReplyModel({"label": "refused", "reason": "r"}), eval_mode="llm"
+    )
+    assert classifier.classify(_traced_case_with_empty_fields()) == "refused"
 
 
 def test_classifier_system_one_raises_jev_errors():
