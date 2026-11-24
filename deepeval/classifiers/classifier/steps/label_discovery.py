@@ -10,8 +10,6 @@ from typing import (
     Tuple,
 )
 
-import numpy as np
-
 from deepeval.classifiers.base_classifier import Label
 from deepeval.classifiers.classifier.schema import (
     ClassificationResult,
@@ -322,6 +320,14 @@ def _find_similar_labels(
 ) -> Tuple[Optional[Label], List[Label]]:
     """Returns ``(near_duplicate, similar_labels)``: an existing label at or
     above ``similarity_threshold``, or else the ``top_k`` closest labels."""
+    try:
+        import numpy as np
+    except ImportError as e:
+        raise ImportError(
+            "numpy is required for label discovery. Install it with "
+            f"`pip install numpy`. Root cause: {e}"
+        )
+
     config = classifier.label_discovery_config
     vectors = classifier.label_pool.vectors
     embeddings = np.array(
