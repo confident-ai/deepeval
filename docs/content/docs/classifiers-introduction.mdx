@@ -324,6 +324,25 @@ Most classifiers pick exactly one label, because their labels rule each other ou
 
 A multi-label classifier puts one `Classification` per matching label in `classifications`, most certain first, and `label` is the first of them. In `expected_labels` it takes a list, and passes only when it assigns exactly those labels, as shown [below](#expected-labels).
 
+## Discovering New Labels
+
+You don't always know every label up front. With a [`LabelDiscoveryConfig`](/docs/classifiers-custom#label-discovery), a classifier proposes a new label, with a name and description, whenever none of yours fit:
+
+```python
+from deepeval.classifiers import Classifier, Label, LabelDiscoveryConfig
+
+topics = Classifier(
+    name="topics",
+    labels=[Label(name="Pricing", description="Questions about what a plan or product costs.")],
+    label_discovery_config=LabelDiscoveryConfig(),
+    allow_none=True,
+)
+```
+
+Each new label joins a pool that later test cases reuse, and a proposal that means the same as an existing label is merged into it rather than added again, so the label set grows without near-duplicates. You can also seed the pool with `candidate_labels`, labels you want suggested but have not adopted yet, and cap how many new labels one test case adds with `max_new_labels`.
+
+`TopicClassifier`, `UseCaseClassifier` and `IssueClassifier` accept the same config, and are built to [discover](#quick-summary) topics, use cases and issues this way. Classifiers with label discovery are never cached, since the pool changes between calls.
+
 ## Expected Labels
 
 A classifier on its own only produces a classification; it is `expected_labels` on the test case that decides whether that classification **passes or fails**. `expected_labels` is a dict from a classifier's `name` to the label that test case should receive, or, for a [multi-label](/docs/classifiers-custom#multi-label-classification) classifier, a list of the labels it should receive:
