@@ -1,0 +1,6 @@
+# Red teaming models (separate from target)
+target:
+  purpose: "A custom chatbot"
+  callback:
+    file: "tests/test_core/test_yaml/my_callback.py"
+    function: "model_callback"

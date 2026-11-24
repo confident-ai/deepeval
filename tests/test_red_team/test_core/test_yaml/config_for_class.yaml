@@ -1,0 +1,13 @@
+# Red teaming models (separate from target)
+models:
+  simulator: 
+    model:
+      provider: custom
+      file: "tests/test_core/test_yaml/my_model.py"
+      class: "CustomModel"
+  evaluation: 
+    model:
+      provider: custom
+      file: "tests/test_core/test_yaml/my_model.py"
+      class: "CustomModel"
+
