@@ -77,16 +77,6 @@ function isBetaPage(data: unknown): boolean {
 const BETA_SECTION_MARKER = ' [beta]';
 
 type BetaSeparator = { beta?: boolean };
-type BetaMarked = { betaMarked?: boolean };
-
-function markBeta(node: PageTree.Node): void {
-  if (node.type === 'separator') return;
-  if (!(node as BetaMarked).betaMarked) {
-    node.name = withBetaMark(node.name);
-    (node as BetaMarked).betaMarked = true;
-  }
-  if (node.type === 'folder') node.children.forEach(markBeta);
-}
 
 /**
  * URLs of pages that sit under a beta separator, top level of the tree only.
@@ -115,8 +105,7 @@ export function getBetaSectionUrls(tree: PageTree.Root): Set<string> {
 /**
  * Append a β mark to sidebar labels for pages (and folders whose index is)
  * marked `beta: true`, and to section separators marked with
- * `BETA_SECTION_MARKER`. A beta section cascades: every page and folder
- * under its separator gets the mark too. Kept in `name` so the notebook layout's styled
+ * `BETA_SECTION_MARKER`. Kept in `name` so the notebook layout's styled
  * sidebar renderer stays intact; breadcrumbs strip it via `PlainBreadcrumb`.
  * Schema only allows the literal `true`; omission means not-beta.
  */
@@ -141,7 +130,6 @@ const betaTransformer: PageTreeTransformer<any> = {
     if (!file || file.format !== 'page') return node;
     if (isBetaPage(file.data)) {
       node.name = withBetaMark(node.name);
-      (node as BetaMarked).betaMarked = true;
     }
     return node;
   },
@@ -152,18 +140,6 @@ const betaTransformer: PageTreeTransformer<any> = {
     if (!file || file.format !== 'page') return node;
     if (isBetaPage(file.data)) {
       node.name = withBetaMark(node.name);
-      (node as BetaMarked).betaMarked = true;
-    }
-    return node;
-  },
-  root(node) {
-    let inBetaSection = false;
-    for (const child of node.children) {
-      if (child.type === 'separator') {
-        inBetaSection = (child as BetaSeparator).beta === true;
-      } else if (inBetaSection) {
-        markBeta(child);
-      }
     }
     return node;
   },
