@@ -110,8 +110,11 @@ ClassifierTemplateMethod = Literal[
     "agent_profile",
     "review_app_note",
     "reason_rules",
-    # System One eval modes (`DEEPEVAL_EVAL_MODE`); see EXPERIMENTAL.md.
-    "_experimental_system_one_classify",
+    # Decision model eval mode (`DEEPEVAL_EVAL_MODE`); see EXPERIMENTAL.md.
+    "_experimental_decision_model_classify",
+    "_experimental_decision_model_label_applies",
+    "_experimental_decision_model_content_format",
+    "_experimental_decision_model_candidate_labels",
 ]
 
 TemplateMethod = (

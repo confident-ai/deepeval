@@ -48,6 +48,10 @@ from deepeval.classifiers.classifier.steps.review import (
     a_review_classifications,
     review_classifications,
 )
+from deepeval.classifiers.classifier.steps.decision_model import (
+    a_classify_with_decision_model,
+    classify_with_decision_model,
+)
 from deepeval.classifiers.classifier.steps.trace import (
     construct_trace_content,
     construct_trace_dict,
@@ -63,24 +67,20 @@ from deepeval.classifiers.classifier.steps.truncate import (
 from deepeval.classifiers.utils import (
     LabelOrigin,
     ResolvedLabel,
-    SystemOneClassifySpec,
     a_generate_classification,
+    accepts_system_one_model,
     clean_reason,
     construct_multi_turn_content,
-    construct_multi_turn_state,
     construct_single_turn_content,
-    construct_single_turn_state,
     construct_turns,
     format_labels,
     generate_classification,
     normalize_labels,
+    resolve_decision_model_eval_mode,
     resolve_label,
     resolve_suggested_label,
 )
-from deepeval.config.eval_mode import (
-    ClassifierEvalModeName,
-    resolve_classifier_eval_mode,
-)
+from deepeval.config.eval_mode import ClassifierEvalModeName
 from deepeval.config.settings import get_settings
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
@@ -94,12 +94,6 @@ from deepeval.test_run.api import Classification
 from deepeval.utils import get_or_create_event_loop
 
 ClassifierTemplate = make_template_class("Classifier", feature="classifiers")
-
-# Built-in classifiers (``RefusalClassifier`` ...) share ``Classifier``'s bundle
-# entry. Public templates reach it through ``classification_template``; the
-# ``_experimental_*`` ones are not exposed on the template class, so they name
-# the bundle key explicitly.
-_EXPERIMENTAL_TEMPLATE_CLASS = "Classifier"
 
 
 @dataclass(frozen=True)
@@ -130,15 +124,15 @@ class Classifier(BaseClassifier):
     label and discovering new ones."""
 
     review_schema: Type[LabelReview] = LabelReview
+    finds_issues: bool = False
 
+    @accepts_system_one_model
     def __init__(
         self,
         name: str,
         labels: Sequence[Union[str, Label]],
         model: Optional[Union[str, DeepEvalBaseLLM]] = None,
-        system_one_model: Optional[
-            Union[str, DeepEvalBaseSystemOneModel]
-        ] = None,
+        decision_model: Optional[Union[str, DeepEvalBaseSystemOneModel]] = None,
         eval_mode: Optional[ClassifierEvalModeName] = None,
         include_reason: bool = True,
         allow_none: bool = False,
@@ -166,15 +160,18 @@ class Classifier(BaseClassifier):
             if labels or label_discovery_config is None
             else []
         )
-        self.eval_mode = resolve_classifier_eval_mode(eval_mode)
-        if self.eval_mode.uses_system_one and (
-            multi_label
-            or evidence_config is not None
-            or review_config is not None
-            or label_discovery_config is not None
+        self.eval_mode = resolve_decision_model_eval_mode(eval_mode)
+        if self.eval_mode.uses_system_one and evidence_config is not None:
+            raise ValueError(
+                "evidence_config needs an LLM judge; it is not supported in the decision_model eval mode."
+            )
+        if (
+            self.eval_mode.uses_system_one
+            and label_discovery_config is not None
+            and label_discovery_config.model is None
         ):
             raise ValueError(
-                "multi_label, evidence_config, review_config and label_discovery_config need an LLM judge; they are not supported in the system_one eval mode."
+                "label_discovery_config in the decision_model eval mode needs a model to propose new labels."
             )
         self.label_pool = LabelPool(
             normalize_labels(label_discovery_config.candidate_labels)
@@ -185,11 +182,11 @@ class Classifier(BaseClassifier):
         self.model, self.using_native_model = initialize_model(
             model, self.eval_mode
         )
-        self.system_one_model = initialize_system_one_model(
-            system_one_model, self.eval_mode
+        self.decision_model = initialize_system_one_model(
+            decision_model, self.eval_mode
         )
         self.evaluation_model = (
-            self.model or self.system_one_model
+            self.model or self.decision_model
         ).get_model_name()
         self.include_reason = include_reason
         self.allow_none = allow_none
@@ -240,6 +237,8 @@ class Classifier(BaseClassifier):
                         ),
                     )
                 )
+            elif self.eval_mode.uses_system_one:
+                classify_with_decision_model([self], test_case)
             elif self._discovers_separately():
                 self._label_then_discover(test_case)
             else:
@@ -266,14 +265,7 @@ class Classifier(BaseClassifier):
                     )
                 else:
                     raw_label, reason = generate_classification(
-                        self,
-                        prompt.text,
-                        schema_cls=ClassificationResult,
-                        system_one=(
-                            self._experimental_system_one_spec(test_case)
-                            if self.eval_mode.uses_system_one
-                            else None
-                        ),
+                        self, prompt.text, schema_cls=ClassificationResult
                     )
                     classification_seconds = time.perf_counter() - started
                     self._postprocess_classifications(
@@ -313,6 +305,9 @@ class Classifier(BaseClassifier):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if self.eval_mode.uses_system_one:
+                await a_classify_with_decision_model([self], test_case)
+                return self.label
             if self._discovers_separately():
                 await self._a_label_then_discover(test_case)
                 return self.label
@@ -341,14 +336,7 @@ class Classifier(BaseClassifier):
                 )
             else:
                 raw_label, reason = await a_generate_classification(
-                    self,
-                    prompt.text,
-                    schema_cls=ClassificationResult,
-                    system_one=(
-                        self._experimental_system_one_spec(test_case)
-                        if self.eval_mode.uses_system_one
-                        else None
-                    ),
+                    self, prompt.text, schema_cls=ClassificationResult
                 )
                 classification_seconds = time.perf_counter() - started
                 self._postprocess_classifications(
@@ -774,55 +762,6 @@ class Classifier(BaseClassifier):
                 else ""
             ),
         }
-
-    def _experimental_system_one_spec(
-        self, test_case: Union[LLMTestCase, ConversationalTestCase]
-    ) -> SystemOneClassifySpec:
-        """Used when the eval mode is `system_one`; see EXPERIMENTAL.md.
-
-        The label is one Choice over the declared labels (plus ``NONE`` when
-        ``allow_none``), and the reason is built from the answer. A test case
-        with a trace is shown as the same trace the LLM judge sees.
-        """
-        multi_turn = isinstance(test_case, ConversationalTestCase)
-        traced = not multi_turn and test_case._trace_dict is not None
-        if multi_turn:
-            state = construct_multi_turn_state(test_case)
-            state["turns"] = fit_turns(state["turns"], self.max_content_chars)
-        elif traced:
-            state = {
-                "trace": fit_trace(
-                    construct_trace_dict(test_case), self.max_content_chars
-                )
-            }
-        else:
-            state = construct_single_turn_state(test_case)
-            state["test_case"] = {
-                field: (
-                    fit_text(value, self.max_content_chars)
-                    if isinstance(value, str)
-                    else value
-                )
-                for field, value in state["test_case"].items()
-            }
-        options: Dict[str, Optional[str]] = {
-            label.name: label.description for label in self.labels
-        }
-        if self.allow_none:
-            options[NONE_LABEL] = "None of the other labels apply."
-
-        return SystemOneClassifySpec(
-            instructions=self._get_prompt(
-                "_experimental_system_one_classify",
-                template_class=_EXPERIMENTAL_TEMPLATE_CLASS,
-                allow_none=self.allow_none,
-                multi_turn=multi_turn,
-                traced=traced,
-            ),
-            options=options,
-            state=state,
-            include_reason=self.include_reason,
-        )
 
     def _choose_output_schema(
         self,

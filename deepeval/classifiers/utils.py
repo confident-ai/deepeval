@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import functools
 import logging
 import re
+import warnings
 from collections import Counter
 from dataclasses import dataclass
 from enum import Enum
@@ -21,20 +23,16 @@ from deepeval.classifiers.base_classifier import (
     BaseClassifier,
     Label,
 )
-from deepeval.metrics.utils.decision import (
-    _a_system_one_call,
-    _accrue,
-    _jsonable,
-    _record_confidence,
-    _system_one_active,
-    _system_one_call,
+from deepeval.config.eval_mode import (
+    ClassifierEvalModeName,
+    EvalMode,
+    resolve_classifier_eval_mode,
 )
 from deepeval.metrics.utils.generation import (
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
 )
 from deepeval.metrics.utils.turns import convert_turn_to_dict
-from deepeval.models.system_one.schema import ChoiceQuestion
 from deepeval.test_case import (
     ConversationalTestCase,
     LLMTestCase,
@@ -368,59 +366,6 @@ def construct_turns(test_case: ConversationalTestCase) -> List[Dict]:
 ###############################################
 # Classification decision
 ###############################################
-#
-# The single place where a classifier turns a prompt into ``(label, reason)``.
-# Under the `system_one` eval mode the label is one Jev Choice over the
-# labels, the reason is deterministic text and Jev errors surface (no
-# fallback). Otherwise it is one schema-constrained LLM call. Classifiers have
-# no `hybrid`: it resolves to `llm` (see ``resolve_classifier_eval_mode``).
-# Mirrors ``deepeval.metrics.utils.decision`` for metrics and reuses its
-# plumbing; see EXPERIMENTAL.md.
-
-
-@dataclass
-class SystemOneClassifySpec:
-    """One Choice question over a classifier's labels.
-
-    ``options`` maps each label name to its description (or ``None``), the
-    same boundary the LLM prompt shows. When ``include_reason`` is set the
-    reason is built from the answer itself; otherwise it is ``None``.
-    """
-
-    instructions: Any
-    options: Dict[str, Any]
-    state: Dict[str, Any]
-    include_reason: bool
-
-
-def _classify_question(
-    spec: SystemOneClassifySpec,
-) -> Dict[str, ChoiceQuestion]:
-    return {
-        "label": ChoiceQuestion(
-            instructions=spec.instructions,
-            options={
-                name: _jsonable(desc) for name, desc in spec.options.items()
-            },
-        )
-    }
-
-
-def _classification_accept(
-    classifier: BaseClassifier,
-    spec: SystemOneClassifySpec,
-    answers: Any,
-    cost: Any,
-) -> Tuple[Optional[str], Optional[str]]:
-    """Book the Jev answer and return ``(label, reason)``."""
-    from deepeval.metrics.utils.system_one import format_classification_reason
-
-    _accrue(classifier, cost)
-    _record_confidence(classifier, answers)
-    answer = answers["label"]
-    if not spec.include_reason:
-        return answer.choice, None
-    return answer.choice, format_classification_reason(classifier, answer)
 
 
 def generate_classification(
@@ -428,24 +373,7 @@ def generate_classification(
     prompt: Any,
     *,
     schema_cls: Type[Any],
-    system_one: Optional[SystemOneClassifySpec] = None,
 ) -> Tuple[Optional[str], Optional[str]]:
-    """Ask the judge for ``(label, reason)`` from a closed label set.
-
-    Under the ``system_one`` eval mode the label is one Choice over
-    ``system_one.options`` and the reason is deterministic text. Otherwise
-    the whole thing is one schema-constrained LLM call against
-    ``schema_cls`` (``label``, ``reason``).
-    """
-    if _system_one_active(classifier, system_one):
-        answers, cost = _system_one_call(
-            classifier,
-            classifier.system_one_model.choice,
-            _jsonable(system_one.state),
-            _classify_question(system_one),
-        )
-        return _classification_accept(classifier, system_one, answers, cost)
-
     return generate_with_schema_and_extract(
         metric=classifier,
         prompt=prompt,
@@ -460,18 +388,8 @@ async def a_generate_classification(
     prompt: Any,
     *,
     schema_cls: Type[Any],
-    system_one: Optional[SystemOneClassifySpec] = None,
 ) -> Tuple[Optional[str], Optional[str]]:
     """Async counterpart of ``generate_classification``."""
-    if _system_one_active(classifier, system_one):
-        answers, cost = await _a_system_one_call(
-            classifier,
-            classifier.system_one_model.a_choice,
-            _jsonable(system_one.state),
-            _classify_question(system_one),
-        )
-        return _classification_accept(classifier, system_one, answers, cost)
-
     return await a_generate_with_schema_and_extract(
         metric=classifier,
         prompt=prompt,
@@ -486,11 +404,11 @@ async def a_generate_classification(
 ###############################################
 #
 # JSON counterparts of the string builders above, for the state handed to a
-# System One model when the eval mode uses one. Same fields, same
+# decision model when the eval mode uses one. Same fields, same
 # populated-only rule; see EXPERIMENTAL.md.
 
 
-def _experimental_system_one_fields(test_case, params) -> Dict:
+def _experimental_decision_model_fields(test_case, params) -> Dict:
     fields: Dict = {}
     for param in params:
         value = getattr(test_case, param.value, None)
@@ -503,7 +421,7 @@ def _experimental_system_one_fields(test_case, params) -> Dict:
 
 
 def construct_single_turn_state(test_case: LLMTestCase) -> Dict:
-    fields = _experimental_system_one_fields(
+    fields = _experimental_decision_model_fields(
         test_case, SINGLE_TURN_CONTENT_PARAMS
     )
     if not fields:
@@ -515,12 +433,54 @@ def construct_single_turn_state(test_case: LLMTestCase) -> Dict:
 
 def construct_multi_turn_state(test_case: ConversationalTestCase) -> Dict:
     state: Dict = {"turns": construct_turns(test_case)}
-    fields = _experimental_system_one_fields(
+    fields = _experimental_decision_model_fields(
         test_case, MULTI_TURN_CONTENT_PARAMS
     )
     if fields:
         state["test_case"] = fields
     return state
+
+
+###############################################
+# Decision model spellings
+###############################################
+
+
+def resolve_decision_model_eval_mode(
+    eval_mode: Optional[Union[ClassifierEvalModeName, EvalMode]],
+) -> EvalMode:
+    if not isinstance(eval_mode, EvalMode):
+        if eval_mode == "decision_model":
+            eval_mode = EvalMode.SYSTEM_ONE
+        elif eval_mode == "system_one":
+            warnings.warn(
+                "The 'system_one' classifier eval mode is deprecated and will "
+                "be removed in a future release. Use 'decision_model' instead.",
+                DeprecationWarning,
+                stacklevel=3,
+            )
+    return resolve_classifier_eval_mode(eval_mode)
+
+
+def accepts_system_one_model(init):
+    @functools.wraps(init)
+    def wrapper(self, *args, **kwargs):
+        if "system_one_model" in kwargs:
+            if "decision_model" in kwargs:
+                raise TypeError(
+                    "Pass either 'decision_model' or the deprecated "
+                    "'system_one_model', not both."
+                )
+            warnings.warn(
+                "'system_one_model' is deprecated and will be removed in a "
+                "future release. Use 'decision_model' instead.",
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            kwargs["decision_model"] = kwargs.pop("system_one_model")
+        return init(self, *args, **kwargs)
+
+    return wrapper
 
 
 ###############################################

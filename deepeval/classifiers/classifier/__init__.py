@@ -8,6 +8,10 @@ from .config import (
 from .steps.classification import ClassificationStep
 from .steps.label_discovery import LabelDiscoveryStep
 from .steps.review import ClassificationReview, ReviewStep
+from .steps.decision_model import (
+    a_classify_with_decision_model,
+    classify_with_decision_model,
+)
 
 __all__ = [
     "Classifier",
@@ -21,4 +25,6 @@ __all__ = [
     "EvidenceConfig",
     "LabelDiscoveryConfig",
     "ReviewConfig",
+    "classify_with_decision_model",
+    "a_classify_with_decision_model",
 ]

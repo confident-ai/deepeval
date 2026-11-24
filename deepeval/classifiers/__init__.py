@@ -15,6 +15,8 @@ from .classifier import (
     LabelDiscoveryStep,
     ReviewConfig,
     ReviewStep,
+    a_classify_with_decision_model,
+    classify_with_decision_model,
 )
 from .data_leakage import DataLeakageClassifier
 from .escalation import EscalationClassifier
@@ -47,6 +49,8 @@ __all__ = [
     "EvidenceConfig",
     "LabelDiscoveryConfig",
     "ReviewConfig",
+    "classify_with_decision_model",
+    "a_classify_with_decision_model",
     "IssueClassifier",
     "IssueClassifierTemplate",
     "TopicClassifier",
