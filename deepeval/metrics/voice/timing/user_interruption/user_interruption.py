@@ -10,11 +10,8 @@ from deepeval.metrics.voice.utils.call_activity import (
     call_activity,
     caller_starts,
 )
-from deepeval.metrics.voice.utils.defects import defect_share_result
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.utils.defects import DefectShare
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent, on_call
 
@@ -52,7 +49,7 @@ INTERRUPTION_CONDITIONS: Dict[str, Callable[[CallerStart], bool]] = {
 }
 
 
-class UserInterruptionMetric(BaseVoiceMetric):
+class UserInterruptionMetric(BaseDefectMetric):
     def __init__(
         self,
         *,
@@ -72,7 +69,7 @@ class UserInterruptionMetric(BaseVoiceMetric):
         )
         self.use_speech_detection = use_speech_detection
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         activity = call_activity(test_case, self.use_speech_detection)
         event_key = CALLER_EVENT_KEYS[activity.source]
         eligible = []
@@ -97,7 +94,7 @@ class UserInterruptionMetric(BaseVoiceMetric):
                         overlap_seconds=round(start.overlap_seconds, 2),
                     )
                 )
-        return defect_share_result(
+        return DefectShare(
             eligible,
             defects,
             list(activity.skipped),

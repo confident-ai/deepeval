@@ -8,26 +8,23 @@ from deepeval.metrics.voice.utils.call_activity import (
 )
 from deepeval.metrics.voice.utils.defects import (
     CALL_RECORDING,
-    defect_share_result,
+    DefectShare,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent, on_call
 
 DEFECT_LABEL = "an echo"
 
 
-class EchoMetric(BaseVoiceMetric):
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+class EchoMetric(BaseDefectMetric):
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         agent_channel = test_case.agent_channel
         channels = read_call_recording(test_case.audio, agent_channel)
         # Agent sound is read the same way with or without speech detection.
         activity = recording_activity(test_case.audio, False, agent_channel)
         if channels is None or activity is None:
-            return defect_share_result(
+            return DefectShare(
                 [],
                 [],
                 [],
@@ -59,7 +56,7 @@ class EchoMetric(BaseVoiceMetric):
                         **on_call(span.start + delay, span.end - span.start),
                     )
                 )
-        return defect_share_result(
+        return DefectShare(
             eligible,
             defects,
             [],

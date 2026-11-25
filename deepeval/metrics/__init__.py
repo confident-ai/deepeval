@@ -98,6 +98,7 @@ from .voice import (
     PausesMetric,
     PitchConsistencyMetric,
     PitchVariationMetric,
+    RepromptMetric,
     ResponseDelayConsistencyMetric,
     ResponseLatencyMetric,
     SilentReplyMetric,
@@ -215,6 +216,7 @@ __all__ = [
     "AgentInterruptionMetric",
     "UserInterruptionMetric",
     "FailedResponseMetric",
+    "RepromptMetric",
     "SilentReplyMetric",
     "UnexpectedCallEndMetric",
 ]

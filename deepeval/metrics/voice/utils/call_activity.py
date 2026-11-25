@@ -27,8 +27,9 @@ from deepeval.metrics.voice.utils.defects import (
 )
 from deepeval.metrics.voice.utils.events import on_call
 from deepeval.metrics.voice.utils.speech_detection import speech_frames
-from deepeval.test_case import Audio, ConversationalTestCase
+from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from deepeval.voice.connectors import audio_utils
+from deepeval.voice.timeline import AudioTimelineEntry, build_audio_timeline
 
 EVENT_KEYS = {CALL_RECORDING: "reply_start", TURN_TIMESTAMPS: "turn"}
 CALLER_EVENT_KEYS = {CALL_RECORDING: "caller_start", TURN_TIMESTAMPS: "turn"}
@@ -123,6 +124,39 @@ def stretches(spans: Sequence[Span], own_silence: float) -> List[Span]:
         else:
             merged.append(span)
     return merged
+
+
+def _continues(
+    timeline: Dict[int, AudioTimelineEntry], previous: int, index: int
+) -> bool:
+    before, after = timeline.get(previous), timeline.get(index)
+    return (
+        before is not None
+        and after is not None
+        and after.start_time - before.end_time < CALLER_PAUSE_SECONDS
+    )
+
+
+def caller_lines(turns: Sequence[Turn]) -> List[Tuple[int, int]]:
+    """First and last turn of each caller line. Caller turns that start
+    within CALLER_PAUSE_SECONDS of the previous one ending are one line,
+    split by the transcriber, not the caller speaking again."""
+    timeline = {
+        entry.turn_index: entry for entry in build_audio_timeline(turns)
+    }
+    lines: List[Tuple[int, int]] = []
+    for index, turn in enumerate(turns):
+        if turn.role != "user":
+            continue
+        if (
+            lines
+            and lines[-1][1] == index - 1
+            and _continues(timeline, index - 1, index)
+        ):
+            lines[-1] = (lines[-1][0], index)
+        else:
+            lines.append((index, index))
+    return lines
 
 
 def sound_between(spans: Sequence[Span], start: float, end: float) -> float:

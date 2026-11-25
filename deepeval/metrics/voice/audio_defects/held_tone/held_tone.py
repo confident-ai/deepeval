@@ -1,21 +1,16 @@
 from deepeval.metrics.voice.utils.defects import (
     agent_glitch_events,
-    defect_share_result,
+    DefectShare,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 
 
-class HeldToneMetric(BaseVoiceMetric):
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+class HeldToneMetric(BaseDefectMetric):
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         eligible_turns, events, skipped = agent_glitch_events(test_case)
         defects = [event for event in events if event.type == "held_tone"]
-        return defect_share_result(
-            eligible_turns, defects, skipped, "a held tone"
-        )
+        return DefectShare(eligible_turns, defects, skipped, "a held tone")
 
     @property
     def __name__(self):

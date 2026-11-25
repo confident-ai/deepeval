@@ -1,36 +1,31 @@
-from deepeval.metrics.voice.utils.events import events_to_dicts
+from typing import List
+
 from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
+    BaseDefectMetric,
+    BaseExchangeRollUpMetric,
 )
-from deepeval.metrics.voice.utils.detectors import detect_responsiveness
-from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.responsiveness.failed_response.failed_response import (
+    FailedResponseMetric,
+)
+from deepeval.metrics.voice.responsiveness.reprompt.reprompt import (
+    RepromptMetric,
+)
+from deepeval.metrics.voice.responsiveness.silent_reply.silent_reply import (
+    SilentReplyMetric,
+)
+from deepeval.metrics.voice.responsiveness.unexpected_call_end.unexpected_call_end import (
+    UnexpectedCallEndMetric,
+)
 
 
-class AgentResponsivenessMetric(BaseVoiceMetric):
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
-        report = detect_responsiveness(test_case)
-        if not report.events:
-            reason = "The agent responded without requiring a reprompt."
-        elif report.critical:
-            reason = (
-                "A critical responsiveness failure occurred: "
-                + ", ".join(event.type for event in report.events)
-                + "."
-            )
-        else:
-            reason = (
-                f"Responsiveness was {report.score:.2f}; "
-                f"{len(report.events)} reprompt event(s) were detected."
-            )
-        return (
-            report.score,
-            reason,
-            {
-                "critical_failure": report.critical,
-                "events": events_to_dicts(report.events),
-            },
-        )
+class AgentResponsivenessMetric(BaseExchangeRollUpMetric):
+    def _parts(self) -> List[BaseDefectMetric]:
+        return [
+            FailedResponseMetric(),
+            SilentReplyMetric(),
+            UnexpectedCallEndMetric(),
+            RepromptMetric(),
+        ]
 
     @property
     def __name__(self):

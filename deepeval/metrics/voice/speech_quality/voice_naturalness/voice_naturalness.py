@@ -1,67 +1,41 @@
-from statistics import mean
-from typing import Dict, List
+from typing import List
 
-from deepeval.metrics.voice.utils.analysis import analyze_audio
-from deepeval.metrics.voice.speech_quality.voice_naturalness.utils import (
-    naturalness_score,
-    speaking_rate_wpm,
+from deepeval.metrics.voice.audio_defects.audio_clipping.audio_clipping import (
+    AudioClippingMetric,
+)
+from deepeval.metrics.voice.audio_defects.audio_dropout.audio_dropout import (
+    AudioDropoutMetric,
+)
+from deepeval.metrics.voice.audio_defects.audio_loop.audio_loop import (
+    AudioLoopMetric,
+)
+from deepeval.metrics.voice.audio_level.background_noise.background_noise import (
+    BackgroundNoiseMetric,
 )
 from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
+    BaseDefectMetric,
+    BaseRollUpMetric,
 )
-from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.prosody.pauses.pauses import PausesMetric
+from deepeval.metrics.voice.prosody.pitch_variation.pitch_variation import (
+    PitchVariationMetric,
+)
+from deepeval.metrics.voice.prosody.speaking_rate.speaking_rate import (
+    SpeakingRateMetric,
+)
 
 
-class VoiceNaturalnessMetric(BaseVoiceMetric):
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
-        scores: List[float] = []
-        turns: List[Dict] = []
-        assistant_index = 0
-        for turn in test_case.turns:
-            if turn.role != "assistant":
-                continue
-            assistant_index += 1
-            if turn.audio is None:
-                continue
-            try:
-                measurements = analyze_audio(turn.audio)
-            except (TypeError, ValueError) as error:
-                turns.append(
-                    {
-                        "turn": assistant_index,
-                        "error": str(error),
-                    }
-                )
-                continue
-            wpm = speaking_rate_wpm(turn.content, measurements)
-            score = naturalness_score(measurements, words_per_minute=wpm)
-            scores.append(score)
-            turns.append(
-                {
-                    "turn": assistant_index,
-                    "score": score,
-                    "speaking_rate_wpm": wpm,
-                    "silence_fraction": measurements.silence_fraction,
-                    "pitch_variation_hz": measurements.pitch_variation_hz,
-                    "clipping_fraction": measurements.clipping_fraction,
-                    "dropout_events": measurements.dropout_events,
-                    "loop_events": measurements.loop_events,
-                }
-            )
-        if not scores:
-            return (
-                None,
-                "No decodable assistant audio was available to evaluate.",
-                {"turns": turns},
-            )
-        score = mean(scores)
-        return (
-            score,
-            f"Assistant speech naturalness was {score:.2f} across "
-            f"{len(scores)} eligible turn(s).",
-            {"eligible_turns": len(scores), "turns": turns},
-        )
+class VoiceNaturalnessMetric(BaseRollUpMetric):
+    def _parts(self) -> List[BaseDefectMetric]:
+        return [
+            AudioClippingMetric(),
+            AudioDropoutMetric(),
+            AudioLoopMetric(),
+            PausesMetric(),
+            BackgroundNoiseMetric(),
+            SpeakingRateMetric(),
+            PitchVariationMetric(),
+        ]
 
     @property
     def __name__(self):

@@ -8,18 +8,15 @@ from deepeval.metrics.voice.utils.analysis import (
 from deepeval.metrics.voice.utils.defects import (
     MIN_COMPARED_REPLIES,
     agent_reply_measurements,
-    defect_share_result,
+    DefectShare,
     shifts_from_typical,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
-class PitchConsistencyMetric(BaseVoiceMetric):
+class PitchConsistencyMetric(BaseDefectMetric):
     # Listeners don't reliably hear pitch differences under 3-4 semitones
     # ('t Hart 1981).
     def __init__(
@@ -43,7 +40,7 @@ class PitchConsistencyMetric(BaseVoiceMetric):
         )
         self.max_shift_semitones = max_shift_semitones
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         measurements, skipped = agent_reply_measurements(test_case)
         levels = {}
         for turn, reply in measurements.items():
@@ -68,7 +65,7 @@ class PitchConsistencyMetric(BaseVoiceMetric):
             for turn, shift in shifts_from_typical(levels).items()
             if abs(shift) > self.max_shift_semitones
         ]
-        return defect_share_result(
+        return DefectShare(
             list(levels),
             defects,
             skipped,

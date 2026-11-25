@@ -3,18 +3,15 @@ from typing import Optional
 from deepeval.metrics.voice.utils.analysis import NOISE_MIN_SECONDS
 from deepeval.metrics.voice.utils.defects import (
     agent_reply_measurements,
-    defect_share_result,
+    DefectShare,
     audible_replies,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
-class BackgroundNoiseMetric(BaseVoiceMetric):
+class BackgroundNoiseMetric(BaseDefectMetric):
     # 5 dB above the +15 dB speech-to-noise minimum for intelligible speech.
     def __init__(
         self,
@@ -37,7 +34,7 @@ class BackgroundNoiseMetric(BaseVoiceMetric):
         )
         self.min_snr_db = min_snr_db
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         measurements, skipped = agent_reply_measurements(test_case)
         measurements = audible_replies(measurements, skipped)
         eligible_turns = []
@@ -61,7 +58,7 @@ class BackgroundNoiseMetric(BaseVoiceMetric):
                         estimated_snr_db=round(reply.estimated_snr_db, 1),
                     )
                 )
-        return defect_share_result(
+        return DefectShare(
             eligible_turns,
             defects,
             skipped,

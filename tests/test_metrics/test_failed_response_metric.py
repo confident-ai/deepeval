@@ -6,6 +6,7 @@ from tests.test_metrics.helpers import (
     caller_turn,
     clean_turns,
     measure,
+    timed_turn,
     without_place,
 )
 
@@ -36,6 +37,19 @@ def test_an_empty_agent_turn_is_no_reply():
         "turn": 2,
         "reply_turn": 3,
     }
+
+
+def test_one_sentence_split_into_turns_is_one_line():
+    turns = [
+        timed_turn("assistant", 2.0, 0.0),
+        timed_turn("user", 2.0, 3.0),
+        timed_turn("user", 1.0, 5.5, seed=1),
+    ]
+    metric = measure(FailedResponseMetric(), turns)
+    assert metric.score == 0.0
+    assert [without_place(e) for e in metric.score_breakdown["events"]] == [
+        {"type": "call_ended_without_reply", "turn": 1}
+    ]
 
 
 def test_every_caller_line_after_the_last_reply_fails():

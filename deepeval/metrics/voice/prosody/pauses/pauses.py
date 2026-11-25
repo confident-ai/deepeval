@@ -3,17 +3,14 @@ from typing import Optional
 from deepeval.metrics.voice.utils.analysis import SPEECH_SPAN_MIN_SECONDS
 from deepeval.metrics.voice.utils.defects import (
     agent_reply_measurements,
-    defect_share_result,
+    DefectShare,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent, placed
 
 
-class PausesMetric(BaseVoiceMetric):
+class PausesMetric(BaseDefectMetric):
     # Long pauses in spontaneous speech cluster near 1.5 s; over 50% means
     # more silence than speech.
     def __init__(
@@ -41,7 +38,7 @@ class PausesMetric(BaseVoiceMetric):
         self.max_pause_ms = max_pause_ms
         self.max_pause_percent = max_pause_percent
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         measurements, skipped = agent_reply_measurements(test_case)
         eligible_turns = []
         defects = []
@@ -76,7 +73,7 @@ class PausesMetric(BaseVoiceMetric):
                         pause_fraction=round(reply.pause_fraction, 2),
                     )
                 )
-        return defect_share_result(
+        return DefectShare(
             eligible_turns,
             defects,
             skipped,

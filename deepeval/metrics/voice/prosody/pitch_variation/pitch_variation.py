@@ -6,17 +6,14 @@ from deepeval.metrics.voice.utils.analysis import (
 )
 from deepeval.metrics.voice.utils.defects import (
     agent_reply_measurements,
-    defect_share_result,
+    DefectShare,
 )
-from deepeval.metrics.voice.base_metric import (
-    BaseVoiceMetric,
-    VoiceMetricResult,
-)
+from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
-class PitchVariationMetric(BaseVoiceMetric):
+class PitchVariationMetric(BaseDefectMetric):
     # Adults vary their pitch by about 2.2 semitones (pitch sigma): 1 is
     # flatter than normal speech, 6 nearly three times the norm.
     def __init__(
@@ -46,7 +43,7 @@ class PitchVariationMetric(BaseVoiceMetric):
         self.min_spread_semitones = min_spread_semitones
         self.max_spread_semitones = max_spread_semitones
 
-    def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
+    def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         measurements, skipped = agent_reply_measurements(test_case)
         eligible_turns = []
         defects = []
@@ -77,7 +74,7 @@ class PitchVariationMetric(BaseVoiceMetric):
                     ),
                 )
             )
-        return defect_share_result(
+        return DefectShare(
             eligible_turns,
             defects,
             skipped,

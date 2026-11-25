@@ -1,0 +1,56 @@
+import pytest
+
+from deepeval.metrics import AgentResponsivenessMetric
+from deepeval.test_case import Turn
+from tests.test_metrics.helpers import (
+    AGENT_HUNG_UP,
+    caller_turn,
+    clean_turns,
+    measure,
+    timed_turn,
+)
+
+
+def test_hanging_up_on_a_question_counts_once_for_that_exchange():
+    turns = clean_turns() + [caller_turn("Can you check my order?")]
+    metric = measure(AgentResponsivenessMetric(), turns, AGENT_HUNG_UP)
+    assert metric.score == pytest.approx(3 / 4)
+    assert metric.reason == (
+        "1 of 4 exchanges had an issue: Failed Response (1), "
+        "Unexpected Call End (1)."
+    )
+
+
+def test_a_reply_without_audio_fails_the_line_it_answers():
+    turns = clean_turns()
+    turns[3].audio = None
+    metric = measure(AgentResponsivenessMetric(), turns)
+    assert metric.score == pytest.approx(2 / 3)
+    (event,) = metric.score_breakdown["events"]
+    assert event["metric"] == "Silent Reply"
+    assert event["turn"] == 3
+
+
+def test_a_caller_line_split_into_turns_is_one_exchange():
+    turns = [
+        timed_turn("assistant", 2.0, 0.0),
+        timed_turn("user", 2.0, 3.0),
+        timed_turn("user", 1.0, 5.5, seed=1),
+    ]
+    metric = measure(AgentResponsivenessMetric(), turns)
+    assert metric.score == pytest.approx(1 / 2)
+    assert metric.reason == (
+        "1 of 2 exchanges had an issue: Failed Response (1)."
+    )
+
+
+def test_a_call_without_audio_is_skipped():
+    metric = measure(
+        AgentResponsivenessMetric(),
+        [
+            Turn(role="user", content="Hello?"),
+            Turn(role="assistant", content="Hi, how can I help?"),
+        ],
+    )
+    assert metric.score is None
+    assert metric.reason == "The call has no audio to evaluate."
