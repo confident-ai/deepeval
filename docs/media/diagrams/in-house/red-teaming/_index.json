@@ -23,8 +23,8 @@
     },
     {
       "file": "attack-budgets.webp",
-      "title": "The three attacker budgets, and where DeepTeam covers them",
-      "alt": "Three groups. Samples, or how many tries: Best-of-N, covered in DeepTeam today by encoding attacks such as Leetspeak, CharacterStream and ROT13 and by raising attacks per vulnerability type. Shots, or how much context: many-shot jailbreaking, partly covered by ContextFlooding. Turns, or how long a conversation: Crescendo and multi-turn human red teaming, covered by CrescendoJailbreaking, LinearJailbreaking and TreeJailbreaking.",
+      "title": "The three attacker budgets, and where DeepEval covers them",
+      "alt": "Three groups. Samples, or how many tries: Best-of-N, covered in DeepEval today by encoding attacks such as Leetspeak, CharacterStream and ROT13 and by raising attacks per vulnerability type. Shots, or how much context: many-shot jailbreaking, partly covered by ContextFlooding. Turns, or how long a conversation: Crescendo and multi-turn human red teaming, covered by CrescendoJailbreaking, LinearJailbreaking and TreeJailbreaking.",
       "width": 2136,
       "height": 1995
     },
