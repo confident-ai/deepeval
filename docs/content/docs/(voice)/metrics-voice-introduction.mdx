@@ -157,7 +157,7 @@ One recording, with each speaker on their own channel: caller on the left, agent
   ]}
 />
 
-Separate clips, one per turn, each placed on the call's clock by its `Audio.start_time`. The speaker comes from the turn's `role`. A clip often has silence around the speech, so the metric listens inside it for where the speech actually starts and stops. If nothing is heard, or the clip can't be decoded, the whole clip counts as speech. Stereo turn audio has its two channels averaged first.
+Separate clips, one per turn, each placed on the call's clock by its `Audio.start_time`. The speaker comes from the turn's `role`. A clip often has silence around the speech. Metrics that time the call, such as the timing and interruption metrics, listen inside each clip for where the speech actually starts and stops; if nothing is heard, or the clip can't be decoded, the whole clip counts as speech. Metrics that judge how a reply sounds, such as pitch and loudness, analyse each clip on its own. Stereo turn audio has its two channels averaged first.
 
 </Tab>
 </Tabs>
@@ -191,7 +191,7 @@ Metrics that need to know when someone is talking take `use_speech_detection`, o
   ]}
 />
 
-So background noise, bangs and hold music aren't mistaken for someone talking. It applies to both call audio and turn audio. Background voices, such as a TV, are still speech and still count. It needs `pip install onnxruntime`.
+So background noise, bangs and hold music aren't mistaken for someone talking. It applies to both call audio and turn audio, on the metrics that take it. Background voices, such as a TV, are still speech and still count. It needs `pip install onnxruntime`.
 
 ## Choose Who Judges With Eval Modes
 
