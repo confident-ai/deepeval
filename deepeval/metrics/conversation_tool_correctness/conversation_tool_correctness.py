@@ -150,9 +150,6 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
         pinned: Dict[int, List[ToolCall]],
         scorer: _ToolCallScorer,
     ) -> List[ToolCall]:
-        """Every assistant call except the one each pinned tool takes on its
-        turn (the best match), so a tool with no turn can be met on any turn
-        without a pinned call counting twice."""
         left = []
         for index, turn in enumerate(turns):
             if turn.role != "assistant":
