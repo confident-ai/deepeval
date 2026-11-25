@@ -292,7 +292,12 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
                 x1={cx}
                 x2={cx}
                 y1={top + 2 - row * LABEL_ROW}
-                y2={top + LANE_HEIGHT - 2}
+                // Stop above the clip labels so the line doesn't cross them.
+                y2={
+                  (lanes[mark.lane]?.clips ?? []).some((clip) => clip.label)
+                    ? top + LANE_HEIGHT - 16
+                    : top + LANE_HEIGHT - 2
+                }
                 className={styles.markLine}
               />
               <circle
