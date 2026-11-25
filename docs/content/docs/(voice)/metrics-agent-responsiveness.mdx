@@ -5,13 +5,12 @@ sidebar_label: Agent Responsiveness
 languages: [python]
 beta: true
 ---
-<MetricTagsDisplayer
-  voice={true} multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
+<MetricTagsDisplayer multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
 
 The agent responsiveness metric checks whether your voice agent **answered when it was spoken to**. It walks the conversation in order looking for turns the caller had to repeat, replies that never came, and calls that ended badly, returning a score between 0 and 1.
 
 :::note
-Like the other responsiveness metrics, it reads the conversation's shape rather than its audio content. A caller who has to say "hello? are you there?" is the failure it is built to catch — the kind that a transcript-based metric scores as a perfectly relevant exchange.
+This is the one voice metric that reads the conversation's shape rather than its audio content. A caller who has to say "hello? are you there?" is the failure it is built to catch — the kind that a transcript-based metric scores as a perfectly relevant exchange.
 :::
 
 ## Usage
@@ -65,32 +64,32 @@ For `AgentResponsivenessMetric` the breakdown is a list of the events that were 
 {
     "critical_failure": False,
     "events": [
-        {"type": "user_reprompted", "turn": 2, "critical": False, "offset_seconds": 0.0, "duration_seconds": 1.8, "start_time": 7.2},
+        {"type": "user_reprompted", "turn": 2, "critical": False},
     ],
 }
 ```
 
-`turn` is the zero-based position of the offending turn in the conversation: the unanswered user turn for `agent_failed_to_respond`, the agent turn for `assistant_audio_missing`, and the repeated user turn for `user_reprompted`. When that turn has decodable audio, the event covers its whole clip: `offset_seconds` is 0, `duration_seconds` is the clip's length, and `start_time` is where it starts on the call's clock (left out when the clip has no `Audio.start_time`). An `unexpected_end` event belongs to the whole call, so it has no `turn` and carries the call's `end_reason` instead. Every event has a `critical` flag. An empty `events` list means the agent answered every time it was addressed.
+`turn` is the zero-based position of the offending turn in the conversation. An empty `events` list means the agent answered every time it was addressed.
 
 ## How Is It Calculated?
 
-`AgentResponsivenessMetric` looks at each user turn that **owed a reply**, and checks what came next. A user turn that reads as a sign-off — one whose text, once any trailing periods or exclamation marks are dropped, ends in "bye", "goodbye", "thank you", "thanks", "that's all", or "that is all" — owes nothing, so a call that ends on a pleasantry is not marked as a failure.
+`AgentResponsivenessMetric` looks at each user turn that **owed a reply**, and checks what came next. A user turn that reads as a sign-off — one ending in "bye", "goodbye", "thanks", "thank you", or "that's all" — owes nothing, so a call that ends on a pleasantry is not marked as a failure.
 
-Each remaining user turn is checked against the turn that follows it, and the call's ending is checked once, producing these events:
+Each remaining user turn produces one of these outcomes:
 
 | Event                     | Detected when                                                  | Critical |
 | ------------------------- | --------------------------------------------------------------- | -------- |
 | `agent_failed_to_respond` | The user turn is the last turn of the call.                    | Yes      |
 | `assistant_audio_missing` | The agent replied, but that turn carries no audio.             | Yes      |
 | `user_reprompted`         | The next turn is another user turn — the caller spoke twice.   | No       |
-| `unexpected_end`          | The call's `end_reason` metadata is `AGENT_HANGUP`, `ERROR`, or `IDLE_TIMEOUT`. | Yes      |
+| `unexpected_end`          | The call's `end_reason` metadata is a hangup, error, or timeout. | Yes      |
 
 Any critical event forces the score to 0. Otherwise each reprompt costs 0.25, so four reprompts in a single call reach 0:
 
 <Equation formula="\text{Agent Responsiveness} = \max \left( 0,\ 1 - 0.25 \times \text{reprompts} \right)" />
 
 :::tip
-`unexpected_end` is read from the test case's `metadata`, under `end_reason` or `endReason`, and fires on `AGENT_HANGUP`, `ERROR`, and `IDLE_TIMEOUT` in any letter case. Set it yourself when you assemble test cases from production calls and your platform reports why the call ended.
+`unexpected_end` is read from the test case's `metadata`, under `end_reason` or `endReason`, and fires on `AGENT_HANGUP`, `ERROR`, and `IDLE_TIMEOUT`. Set it yourself when you assemble test cases from production calls and your platform reports why the call ended.
 :::
 
 ## FAQs
@@ -103,8 +102,8 @@ Any critical event forces the score to 0. Otherwise each reprompt costs 0.25, so
         <>
           No — it measures whether a response happened at all. Latency is scored
           by{" "}
-          <a href="/docs/metrics-response-latency">
-            ResponseLatencyMetric
+          <a href="/docs/metrics-turn-taking-naturalness">
+            TurnTakingNaturalnessMetric
           </a>
           , which reads the timing of each clip; the raw number is on each
           assistant turn's <code>latency_ms</code>.
@@ -137,7 +136,7 @@ Any critical event forces the score to 0. Otherwise each reprompt costs 0.25, so
       answer: (
         <>
           Yes. Reprompts and missing replies are read from turn order and
-          content, but an agent reply with no audio is itself a critical
+          content, but an assistant turn with no audio is itself a critical
           failure — so running this on a text-only conversation scores 0 rather
           than grading its turn-taking.
         </>

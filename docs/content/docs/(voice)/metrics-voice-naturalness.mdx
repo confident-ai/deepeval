@@ -7,7 +7,6 @@ beta: true
 ---
 
 <MetricTagsDisplayer
-  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -93,19 +92,19 @@ For `VoiceNaturalnessMetric` the breakdown is one entry per assistant turn:
 
 where _N_ is the number of eligible assistant turns and _p_ ranges over these penalties:
 
-| Penalty         | Applies when                                                                    | Penalty                                 | Maximum |
-| --------------- | ------------------------------------------------------------------------------- | --------------------------------------- | ------- |
-| Clipping        | Samples reach the ceiling of the format (an absolute value of 32760 or more).   | 25 × the fraction of clipped samples    | 0.35    |
-| Dropouts        | Short silences interrupt continuous speech.                                     | 0.08 per dropout                        | 0.25    |
-| Repeated audio  | A stretch of 0.2–2 s plays three or more times, matched by similarity as in [Audio Loop](/docs/metrics-audio-loop) — a stuck buffer. | 0.1 per extra play                      | 0.2     |
-| Excess silence  | Silence occupies more than 45% of the clip.                                     | 0.5 × (silence fraction − 0.45)         | 0.2     |
-| Low SNR         | Estimated signal-to-noise ratio falls below 15 dB.                              | (15 − SNR in dB) / 50                   | 0.2     |
-| Speaking rate   | Speech runs below 80 or above 240 words per minute.                             | (80 − wpm) / 300, or (wpm − 240) / 500  | 0.2     |
-| Pitch variation | The standard deviation of pitch is below 4 Hz or above 90 Hz.                   | flat                                    | 0.1     |
+| Penalty         | Applies when                                        | Maximum |
+| --------------- | --------------------------------------------------- | ------- |
+| Clipping        | Samples hit the ceiling of the format.              | 0.35    |
+| Dropouts        | Short silences interrupt continuous speech.         | 0.25    |
+| Repeated audio  | The same 0.25s window recurs — a stuck buffer.      | 0.2     |
+| Excess silence  | Silence occupies more than 45% of the clip.         | 0.2     |
+| Low SNR         | Estimated signal-to-noise ratio falls below 15 dB.  | 0.2     |
+| Speaking rate   | Speech runs below 80 or above 240 words per minute. | 0.2     |
+| Pitch variation | Pitch varies by less than 4 Hz or more than 90 Hz.  | 0.1     |
 
-Every penalty grows with how far past its trigger the measurement went, or with how many events were found, except pitch variation, which is a flat 0.1. Speaking rate is the number of words in the turn's `content` divided by the minutes of non-silent audio; it is skipped when the turn has no words. Pitch variation is skipped when fewer than two voiced pitch frames are found.
+Every penalty is graded by how far past its trigger the measurement went, except pitch variation, which is a flat 0.1.
 
-If an assistant turn has no audio, the metric skips that turn. A turn whose audio is not a decodable PCM WAV is also left out of the score, and recorded in the breakdown as `{"turn": ..., "error": ...}`. The `turn` number counts assistant turns from 1. If no assistant turn contains decodable audio, the metric returns no score and marks the evaluation as skipped.
+If an assistant turn has no audio, the metric skips that turn. If no assistant turn contains decodable audio, the metric returns no score and marks the evaluation as skipped.
 
 :::tip
 Use the overall score for regression thresholds and the per-turn breakdown to diagnose the cause. The raw measurements are evidence, not universal quality scores; speaking style, language, and use case can change what sounds natural.
@@ -128,11 +127,8 @@ Use the overall score for regression thresholds and the per-turn breakdown to di
       question: "Do I need a transcript?",
       answer: (
         <>
-          Only for the speaking-rate check. The assistant turn's{" "}
-          <code>content</code> is used with the audio duration and detected
-          silence to estimate speaking rate; a turn with empty{" "}
-          <code>content</code> skips that penalty and is scored on its audio
-          alone.
+          Yes. The assistant turn's <code>content</code> is used with the audio
+          duration and detected silence to estimate speaking rate.
         </>
       ),
     },

@@ -7,7 +7,6 @@ beta: true
 ---
 
 <MetricTagsDisplayer
-  voice={true}
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
@@ -69,7 +68,7 @@ For `SpeechIntelligibilityMetric` the breakdown is one entry per assistant turn:
 
 ```python
 {
-    "eligible_turns": 1,
+    "eligible_turns": 2,
     "turns": [
         {
             "turn": 1,
@@ -93,14 +92,14 @@ For `SpeechIntelligibilityMetric` the breakdown is one entry per assistant turn:
 
 Each component is itself clamped between 0 and 1:
 
-- **SNR** rises linearly from 0 at 3 dB to 1 at 25 dB of estimated signal-to-noise ratio: `(SNR − 3) / 22`.
-- **Volume** peaks when the clip's overall RMS level is -20 dBFS and falls off linearly in either direction, reaching 0 at 35 dB away: `1 − |rms_dbfs + 20| / 35`. Too quiet and too hot are both penalized.
-- **Clipping** is `1 − 30 × clipping_fraction`, so it falls to 0 once about 3.3% of samples are clipped (an absolute value of 32760 or more).
-- **Dropouts** lose 0.12 for each short mid-speech silence, reaching 0 at nine dropouts.
+- **SNR** rises from 0 at 3 dB to 1 at 25 dB of estimated signal-to-noise ratio.
+- **Volume** peaks when the clip averages -20 dBFS and falls off in either direction — too quiet and too hot are both penalized.
+- **Clipping** falls to 0 once about 3.3% of samples are clipped.
+- **Dropouts** lose 0.12 for each short mid-speech silence, reaching 0 at roughly nine dropouts.
 
 The conversation score is the mean of all eligible assistant-turn scores.
 
-If an assistant turn has no audio, the metric skips that turn. A turn whose audio is not a decodable PCM WAV is also left out of the score, and recorded in the breakdown as `{"turn": ..., "error": ...}`. If no assistant turn contains decodable audio, the metric returns no score and marks the evaluation as skipped.
+If an assistant turn has no audio, the metric skips that turn. If no assistant turn contains decodable audio, the metric returns no score and marks the evaluation as skipped.
 
 :::tip
 A low score with a healthy SNR is almost always a level problem: check the `rms_dbfs` in the breakdown before you go looking at your agent's TTS settings.
