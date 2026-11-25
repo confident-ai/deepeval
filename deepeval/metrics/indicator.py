@@ -312,6 +312,9 @@ def hydrate_classifier_from_cache(
     classification = cached.classification
     classifier.label = classification.label
     classifier.reason = classification.reason
+    classifier.classifications = [
+        c.model_copy(deep=True) for c in cached.classifications
+    ]
     classifier.error = None
     classifier.evaluation_model = classification.evaluation_model
     classifier.evaluation_cost = classification.evaluation_cost

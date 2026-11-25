@@ -457,6 +457,33 @@ def test_anthropic_opus_5_5_sends_no_temperature_or_thinking(
 
 
 @patch("deepeval.models.llms.anthropic_model.require_dependency")
+def test_anthropic_sonnet_5_5_sends_no_temperature_or_thinking(
+    mock_require_dep, settings
+):
+    """claude-sonnet-5-5 rejects a non-default `temperature` and a disabled
+    thinking block, and supports native structured outputs."""
+    with settings.edit(persist=False):
+        settings.ANTHROPIC_API_KEY = "test-key"
+
+    client = _MessagesClient()
+    mock_require_dep.return_value = SimpleNamespace(
+        Anthropic=lambda *a, **kw: client,
+        AsyncAnthropic=lambda *a, **kw: client,
+        transform_schema=lambda schema: {"title": schema.__name__},
+    )
+    model = AnthropicModel(model="claude-sonnet-5-5", temperature=0)
+
+    verdict, cost = model.generate("prompt", schema=_Verdict)
+    assert "temperature" not in client.create_kwargs
+    assert "thinking" not in client.create_kwargs
+    assert client.create_kwargs["output_config"] == {
+        "format": {"type": "json_schema", "schema": {"title": "_Verdict"}}
+    }
+    assert verdict.verdict == "yes"
+    assert cost == pytest.approx(10 * 2e-06 + 20 * 1e-05)
+
+
+@patch("deepeval.models.llms.anthropic_model.require_dependency")
 def test_anthropic_explicit_thinking_kwarg_wins(mock_require_dep, settings):
     with settings.edit(persist=False):
         settings.ANTHROPIC_API_KEY = "test-key"
@@ -528,6 +555,7 @@ def test_anthropic_raises_when_response_has_no_text_block(
     [
         ("claude-fable-5-1", 10.00, 50.00),
         ("claude-sonnet-5", 2.00, 10.00),
+        ("claude-sonnet-5-5", 2.00, 10.00),
         ("claude-3-5-haiku", 0.80, 4.00),
     ],
 )

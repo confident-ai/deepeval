@@ -101,13 +101,39 @@ def available_mcp_servers_block(
     return available_tools, available_resources, available_prompts
 
 
+def _mcp_tool_result_text(result: object) -> str:
+    structured = getattr(result, "structured_content", None)
+    if structured is None:
+        # mcp<2 exposed the field as `structuredContent`.
+        structured = getattr(result, "structuredContent", None)
+    if isinstance(structured, dict):
+        if "result" in structured:
+            return str(structured["result"])
+        return str(structured)
+    if structured is not None:
+        return str(structured)
+
+    content = getattr(result, "content", None) or []
+    texts = []
+    for item in content:
+        text = getattr(item, "text", None)
+        if text is None and isinstance(item, dict):
+            text = item.get("text")
+        if text is not None:
+            texts.append(str(text))
+    if texts:
+        return "\n".join(texts)
+
+    return str(result)
+
+
 def turn_mcp_interaction_text(turn) -> str:
     mcp_interaction = "Tools called by agent: \n"
 
     for tool in turn._mcp_tool_calls:
         if isinstance(tool, MCPToolCall):
             args = tool.args
-            result = tool.result.structuredContent["result"]
+            result = _mcp_tool_result_text(tool.result)
         else:
             args = tool.input_parameters
             result = tool.output

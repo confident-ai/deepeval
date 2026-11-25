@@ -1,12 +1,11 @@
-"""PydanticAI Modes App: validates the three execution modes documented in
-``deepeval/integrations/pydantic_ai/README.md``.
+"""PydanticAI Modes App: validates the three execution modes.
 
   - Mode 1 — bare ``agent.run_sync(...)`` with `update_current_trace` /
-    `update_current_span` from inside a tool body. Implicit ``Trace``
-    placeholder pushed by ``SpanInterceptor.on_start`` is the write target.
-    Mirrors ``pydantic_after_bare.py``.
-  - Mode 2 — ``with trace(...)`` wrapper. User-pushed ``Trace`` (non-implicit),
-    so routing flips to REST and the deepeval-managed trace owns the lifecycle.
+    `update_current_span` from inside a tool body. The trace the bridge
+    collects for the run is the write target. Mirrors
+    ``pydantic_after_bare.py``.
+  - Mode 2 — ``with trace(...)`` wrapper. The deepeval-managed trace owns the
+    lifecycle and the agent's spans join it.
   - Mode 3 — ``@observe`` decorator. Symmetric to Mode 2 from this integration's
     perspective; adds an outer deepeval span around the agent call. Mirrors
     ``pydantic_after.py``.
@@ -180,8 +179,7 @@ def invoke_with_tool_enrichment(
     agent: Agent,
 ) -> str:
     """Bare ``agent.run_sync`` — no ``@observe`` / ``with trace(...)``.
-    The implicit ``Trace`` placeholder is pushed by ``SpanInterceptor``
-    when the OTel root span starts; the tool body's
+    The bridge collects the run as its own trace; the tool body's
     ``update_current_trace(...)`` mutates it.
     """
     return agent.run_sync(prompt).output

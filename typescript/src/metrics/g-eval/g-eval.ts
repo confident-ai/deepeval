@@ -157,6 +157,7 @@ export class GEval extends BaseMetric {
     return evaluateGEvalPrompt(this, prompt, {
       topLogprobs: this.topLogprobs,
       strictMode: this.strictMode,
+      scoreMax: this.scoreRange[1],
     });
   }
 

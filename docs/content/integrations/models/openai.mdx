@@ -180,6 +180,34 @@ You can use custom providers by setting the API key and base URL with your custo
 Before passing additional generation parameters, double check the params supported by the model and your model provider in their [official docs](https://platform.openai.com/docs/api-reference/responses/create).
 :::
 
+<Only id="python">
+
+### As a Decision Model
+
+OpenAI's [Decisions API](https://developers.openai.com/api/docs/guides/decisions) can answer the bounded questions (yes/no, a rating, one option from a set) that `deepeval` metrics ask under the `hybrid` and `system_one` [eval modes](/docs/evaluation-eval-modes), and for [`JevEval`](/docs/metrics-jev-eval). Define an `OpenAIDecisionModel` and pass it as the metric's `system_one_model`:
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import OpenAIDecisionModel
+
+model = OpenAIDecisionModel(model="gpt-6-luna")
+answer_relevancy = AnswerRelevancyMetric(
+    system_one_model=model,
+    eval_mode="system_one",
+)
+```
+
+There are **ZERO** mandatory and **FOUR** optional parameters when creating an `OpenAIDecisionModel`:
+
+- [Optional] `model`: A string specifying which decision model to use. Defaults to `gpt-6-luna`, currently the only model the Decisions API supports.
+- [Optional] `api_key`: A string specifying your OpenAI API key. Defaults to `OPENAI_API_KEY` if not passed; raises an error if unset.
+- [Optional] `base_url`: A string specifying the base URL for the OpenAI API.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token. Defaults to `deepeval`'s pricing for `gpt-6-luna`. The Decisions API does not charge for output tokens.
+
+A question the model refuses to answer raises an error, so under `hybrid` that decision falls back to the LLM.
+
+</Only>
+
 ### Available OpenAI Models
 
 :::note

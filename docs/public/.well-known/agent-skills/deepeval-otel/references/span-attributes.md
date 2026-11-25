@@ -27,7 +27,6 @@ Valid on every span type:
 | `confident.span.retrieval_context` | list of strings | Retrieved chunks for the span. |
 | `confident.span.tools_called` | list of strings | Native OTLP list of JSON-serialized `ToolCall` strings. |
 | `confident.span.expected_tools` | list of strings | Native OTLP list of JSON-serialized `ToolCall` strings. |
-| `confident.span.metric_collection` | string | Name of a Confident AI metric collection to run online (server-side) evals against this span. |
 
 The allowed values for `confident.span.type` are exactly `llm`, `tool`,
 `agent`, `retriever`, and `base`. `base` is a generic span with no extra typed
@@ -63,18 +62,6 @@ Set `confident.span.type` to `llm`.
 | `confident.llm.output_token_count` | int | Output/completion tokens. Fallback: `gen_ai.usage.output_tokens`. |
 | `confident.llm.cost_per_input_token` | float | Cost per input token, for cost rollups. |
 | `confident.llm.cost_per_output_token` | float | Cost per output token, for cost rollups. |
-
-If the span references a prompt managed in Confident AI, set the discrete
-prompt fields:
-
-| Attribute key | Type | Notes |
-| --- | --- | --- |
-| `confident.span.prompt_alias` | string | Prompt alias/name. |
-| `confident.span.prompt_version` | string | Prompt version identifier. |
-| `confident.span.prompt_commit_hash` | string | Prompt commit hash. |
-| `confident.span.prompt_label` | string | Prompt label. |
-
-Set only the prompt fields that apply.
 
 ## Agent Spans
 

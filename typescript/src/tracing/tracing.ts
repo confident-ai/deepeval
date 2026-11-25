@@ -1,17 +1,20 @@
 import { AsyncLocalStorage } from "async_hooks";
 import console from "console";
+import {
+  context as otelContext,
+  type Span as OtelSpan,
+  SpanStatusCode,
+} from "@opentelemetry/api";
 
 import { getSettings } from "@/config/settings";
-import { isConfident, wait } from "@/utils";
+import { getConfidentApiKey } from "@/utils";
 import {
-  tracingEnabled,
   validateEnvironment,
   validateSamplingRate,
   toZodCompatibleISO,
   Environment,
 } from "@/tracing/utils";
 
-import { Api, Endpoints, HttpMethods } from "@/confident/api";
 import { LLMTestCase, ToolCall, resolveRetrievalContext } from "@/test-case";
 import type { BaseMetric } from "@/metrics/base-metrics";
 import { type MetricData, withoutExpectations } from "@/evaluate/types";
@@ -22,13 +25,13 @@ import {
   TraceApi,
   TraceSpanApiStatus,
 } from "@/tracing/api";
-import { TraceWorkerStatus, printTraceStatus } from "@/tracing/logging";
 import {
-  applyPendingToSpan,
-  popPendingFor,
   type PendingPayload,
+  slotKindForSpanType,
 } from "@/tracing/pending-context";
+import { ConfidentAttr } from "@/tracing/attributes";
 import { isTraceInternalEnabled } from "@/tracing/utils";
+import { otelHooks } from "@/tracing/otel/hooks";
 
 export enum SpanType {
   AGENT = "agent",
@@ -70,7 +73,6 @@ export class BaseSpan {
   input?: any;
   output?: any;
   error?: string;
-  metricCollection?: string;
   metrics?: BaseMetric[];
   /** Metric results computed locally by the trace-eval executor (for posting). */
   metricsData?: MetricData[];
@@ -93,7 +95,6 @@ export class BaseSpan {
     input?: any;
     output?: any;
     error?: string;
-    metricCollection?: string;
     metrics?: BaseMetric[];
     metadata?: Record<string, any>;
     retrievalContext?: string[];
@@ -112,7 +113,6 @@ export class BaseSpan {
     this.input = params.input;
     this.output = params.output;
     this.error = params.error;
-    this.metricCollection = params.metricCollection;
     this.metrics = params.metrics;
     this.metadata = params.metadata;
     this.retrievalContext = params.retrievalContext;
@@ -142,7 +142,6 @@ export class AgentSpan extends BaseSpan {
     input?: any;
     output?: any;
     error?: string;
-    metricCollection?: string;
     metadata?: Record<string, any>;
     retrievalContext?: string[];
     context?: string[];
@@ -160,11 +159,6 @@ export class AgentSpan extends BaseSpan {
 // LlmSpan
 export class LlmSpan extends BaseSpan {
   model: string;
-  prompt?: Prompt;
-  promptCommitHash?: string;
-  promptAlias?: string;
-  promptLabel?: string;
-  promptVersion?: string;
   costPerInputToken?: number;
   costPerOutputToken?: number;
   inputTokenCount?: number;
@@ -187,7 +181,6 @@ export class LlmSpan extends BaseSpan {
     input?: any;
     output?: any;
     error?: string;
-    metricCollection?: string;
     metadata?: Record<string, any>;
     retrievalContext?: string[];
     context?: string[];
@@ -224,7 +217,6 @@ export class RetrieverSpan extends BaseSpan {
     input?: any;
     output?: any;
     error?: string;
-    metricCollection?: string;
     metadata?: Record<string, any>;
     retrievalContext?: string[];
     context?: string[];
@@ -256,7 +248,6 @@ export class ToolSpan extends BaseSpan {
     input?: any;
     output?: any;
     error?: string;
-    metricCollection?: string;
     metadata?: Record<string, any>;
     retrievalContext?: string[];
     context?: string[];
@@ -274,16 +265,11 @@ export interface Trace {
   uuid: string;
   status: TraceSpanStatus;
   rootSpans: BaseSpan[];
-  _isOtelImplicit?: boolean;
   startTime: Date;
   endTime?: Date;
   metadata?: Record<string, any>;
   tags?: string[];
   threadId?: string;
-  userId?: string;
-  testCaseId?: string;
-  testRunId?: string;
-  turnId?: string;
   input?: any;
   output?: any;
   name?: string;
@@ -292,10 +278,8 @@ export interface Trace {
   context?: string[];
   toolsCalled?: ToolCall[];
   expectedTools?: ToolCall[];
-  metricCollection?: string;
   metrics?: BaseMetric[];
   metricsData?: MetricData[];
-  confidentApiKey?: string;
   drop?: boolean;
 }
 
@@ -332,6 +316,32 @@ export function setCurrentTrace(trace: Trace | null): void {
   });
 }
 
+/**
+ * The innermost open span: deepeval's own, or a confident-trace span deepeval
+ * collects, seen through the placeholder that stands in for it.
+ */
+export function activeSpan(): BaseSpan | undefined {
+  const span = getCurrentSpan();
+  const collected = otelHooks.collectedSpan?.();
+  if (!collected || (span && isDescendant(span, collected.uuid))) return span;
+  return collected;
+}
+
+/** The trace of `activeSpan()`. */
+export function activeTrace(): Trace | undefined {
+  return getCurrentTrace() ?? otelHooks.collectedTrace?.();
+}
+
+/** Whether `span` was opened inside the span `ancestorUuid`. */
+export function isDescendant(span: BaseSpan, ancestorUuid: string): boolean {
+  let current: BaseSpan | undefined = span;
+  while (current?.parentUuid) {
+    if (current.parentUuid === ancestorUuid) return true;
+    current = traceManager.getSpanByUuid(current.parentUuid);
+  }
+  return false;
+}
+
 export function withTracingContext<T>(
   span: BaseSpan | undefined,
   trace: Trace | undefined,
@@ -355,6 +365,7 @@ export interface TraceManagerConfig {
   environment?: Environment;
   samplingRate?: number;
   mask?: MaskFunction;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   confidentApiKey?: string;
   tracingEnabled?: boolean;
 }
@@ -364,14 +375,6 @@ export class TraceManager {
   private activeTraces: Map<string, Trace> = new Map(); // Map of traceUuid to Trace
   private activeSpans: Map<string, BaseSpan> = new Map(); // Map of spanUuid to BaseSpan
 
-  // Queue for trace posting
-  private traceQueue: Trace[] = [];
-  private isProcessing: boolean = false;
-  private minInterval: number = 200; // Minimum time between API calls (milliseconds)
-  private lastPostTime: number = 0;
-  private inFlightRequests: Set<Promise<any>> = new Set();
-  // private flushEnabled: boolean;
-
   // Configuration
   private environment: Environment;
   private samplingRate: number;
@@ -379,7 +382,6 @@ export class TraceManager {
   private evaluatingDepth: number = 0;
   private traceCaptureSinks = new Set<(trace: Trace) => void>();
   private settleHooks = new Set<() => Promise<void>>();
-  private confidentApiKey: string = "";
   private tracingEnabled: boolean = true;
 
   public addTraceCaptureSink(sink: (trace: Trace) => void): () => void {
@@ -403,6 +405,11 @@ export class TraceManager {
 
   public get isEvaluating(): boolean {
     return this.evaluatingDepth > 0;
+  }
+
+  /** Whether traces are consumed locally: by an evaluation or a capture sink. */
+  public get isCapturingTraces(): boolean {
+    return this.isEvaluating || this.traceCaptureSinks.size > 0;
   }
 
   public beginEvaluation(): () => void {
@@ -454,7 +461,7 @@ export class TraceManager {
    * Serialize a span subtree into a nested dict for trace-based metrics
    * (mirrors Python's `create_nested_spans_dict`). Keeps the eval-relevant
    * fields + recurses children; drops bookkeeping (uuids, times, status,
-   * metrics, metricCollection, metadata) and null values.
+   * metrics, metadata) and null values.
    */
   public createNestedSpansDict(span: BaseSpan): Record<string, unknown> {
     const dict: Record<string, unknown> = {};
@@ -495,16 +502,12 @@ export class TraceManager {
     if (config.mask !== undefined) {
       this.customMaskFn = config.mask;
     }
-    if (config.confidentApiKey !== undefined) {
-      this.confidentApiKey = config.confidentApiKey;
-    }
     if (config.tracingEnabled !== undefined) {
       this.tracingEnabled = config.tracingEnabled;
     }
   }
 
-  public startNewTrace(): Trace {
-    const traceUuid = crypto.randomUUID();
+  public startNewTrace(traceUuid: string = crypto.randomUUID()): Trace {
     const newTrace: Trace = {
       uuid: traceUuid,
       rootSpans: [],
@@ -524,13 +527,38 @@ export class TraceManager {
       if (trace.status === TraceSpanStatus.IN_PROGRESS) {
         trace.status = TraceSpanStatus.SUCCESS;
       }
-      if (this.traceCaptureSinks.size > 0) {
-        for (const sink of this.traceCaptureSinks) sink(trace);
-      } else if (!this.isEvaluating) {
-        this.postTrace(trace);
-      }
+      // Otherwise confident-trace exports the trace's spans.
+      for (const sink of this.traceCaptureSinks) sink(trace);
       this.activeTraces.delete(traceUuid);
     }
+  }
+
+  /** Drop an unfinished trace without capturing or posting it. */
+  public discardTrace(traceUuid: string): void {
+    const trace = this.activeTraces.get(traceUuid);
+    if (!trace) return;
+    this.activeTraces.delete(traceUuid);
+    this.traces = this.traces.filter((t) => t !== trace);
+  }
+
+  /** The Confident AI key traces are sent with, if any. */
+  public get exportApiKey(): string | undefined {
+    return getConfidentApiKey() || undefined;
+  }
+
+  /** The share of traces exported to Confident AI. */
+  public get exportSamplingRate(): number {
+    return this.samplingRate;
+  }
+
+  /** The environment an exported trace carries unless it sets one. */
+  public get exportEnvironment(): string {
+    return this.environment;
+  }
+
+  /** Whether `configure({ tracingEnabled })` lets traces export. */
+  public get exportEnabled(): boolean {
+    return this.tracingEnabled;
   }
 
   public setTraceStatus(traceUuid: string, status: TraceSpanStatus): void {
@@ -573,60 +601,6 @@ export class TraceManager {
   }
 
   // Update the span in its trace
-  public updateSpanInTrace(span: BaseSpan): void {
-    const traceUuid = span.traceUuid;
-    const trace = this.activeTraces.get(traceUuid);
-    if (!trace) {
-      throw new Error(
-        `Trace with UUID ${traceUuid} does not exist. A span must have a valid trace.`,
-      );
-    }
-    const existing = this.getSpanByUuid(span.uuid);
-    if (!existing) {
-      throw new Error(
-        `Span with UUID ${span.uuid} not found in trace ${traceUuid}.`,
-      );
-    }
-
-    Object.assign(existing, {
-      name: span.name,
-      startTime: span.startTime,
-      endTime: span.endTime,
-      status: span.status,
-      error: span.error,
-      input: span.input,
-      output: span.output,
-      metadata: span.metadata,
-      metricCollection: span.metricCollection,
-      metrics: span.metrics,
-      expectedOutput: span.expectedOutput,
-      retrievalContext: span.retrievalContext,
-      context: span.context,
-      toolsCalled: span.toolsCalled,
-      expectedTools: span.expectedTools,
-    });
-
-    if (span.type === SpanType.LLM) {
-      const llmSpan = span as LlmSpan;
-      const existingLlmSpan = existing as LlmSpan;
-      existingLlmSpan.model = llmSpan.model;
-      existingLlmSpan.costPerInputToken = llmSpan.costPerInputToken;
-      existingLlmSpan.costPerOutputToken = llmSpan.costPerOutputToken;
-      existingLlmSpan.inputTokenCount = llmSpan.inputTokenCount;
-      existingLlmSpan.promptAlias = llmSpan.promptAlias;
-      existingLlmSpan.promptCommitHash = llmSpan.promptCommitHash;
-      existingLlmSpan.promptVersion = llmSpan.promptVersion;
-      existingLlmSpan.promptLabel = llmSpan.promptLabel;
-      existingLlmSpan.outputTokenCount = llmSpan.outputTokenCount;
-    } else if (span.type === SpanType.RETRIEVER) {
-      const retrieverSpan = span as RetrieverSpan;
-      const existingRetrieverSpan = existing as RetrieverSpan;
-      existingRetrieverSpan.embedder = retrieverSpan.embedder;
-      existingRetrieverSpan.topK = retrieverSpan.topK;
-      existingRetrieverSpan.chunkSize = retrieverSpan.chunkSize;
-    }
-  }
-
   public getTraceByUuid(traceUuid: string): Trace | undefined {
     return this.activeTraces.get(traceUuid);
   }
@@ -650,141 +624,9 @@ export class TraceManager {
     setCurrentSpan(null);
   }
 
-  private shouldSampleTrace(): boolean {
-    const randomNumber = Math.random();
-    if (randomNumber > this.samplingRate) {
-      const rateStr = this.samplingRate.toFixed(2);
-      printTraceStatus(
-        TraceWorkerStatus.SUCCESS,
-        `Skipped posting trace due to sampling rate (${rateStr})`,
-      );
-      return false;
-    }
-    return true;
-  }
-
-  public postTrace(trace: Trace): string | undefined {
-    if (!tracingEnabled() || !this.tracingEnabled || trace.drop) {
-      return;
-    }
-
-    const hasApiKey =
-      trace.confidentApiKey || this.confidentApiKey || isConfident();
-    if (!hasApiKey) {
-      printTraceStatus(
-        TraceWorkerStatus.FAILURE,
-        "No Confident API key found. Skipping trace posting.",
-      );
-      return;
-    }
-
-    if (!this.shouldSampleTrace()) {
-      return;
-    }
-
-    this.traceQueue.push(trace);
-    if (!this.isProcessing) {
-      this.processTraceQueue();
-    }
-    return "ok";
-  }
-
-  /** Wait for all queued + in-flight trace posts to finish (for scripts/eval loops). */
-  public async flush(): Promise<void> {
-    while (this.traceQueue.length > 0 || this.isProcessing) {
-      await wait(20);
-    }
-    await Promise.allSettled([...this.inFlightRequests]);
-  }
-
-  private async processTraceQueue(): Promise<void> {
-    this.isProcessing = true;
-    try {
-      while (this.traceQueue.length > 0) {
-        this.cleanFinishedRequests();
-        const trace = this.traceQueue.shift();
-        if (!trace) {
-          continue;
-        }
-
-        const now = Date.now();
-        const timeSinceLast = now - this.lastPostTime;
-        if (timeSinceLast < this.minInterval) {
-          await wait(this.minInterval - timeSinceLast);
-        }
-
-        this.lastPostTime = Date.now();
-        const sendTracePromise = this.sendTrace(trace).catch((_error) => {
-          printTraceStatus(
-            TraceWorkerStatus.WARNING,
-            `Processing continues despite error with trace ${trace.uuid}`,
-          );
-        });
-        this.inFlightRequests.add(sendTracePromise);
-      }
-    } catch (error) {
-      printTraceStatus(
-        TraceWorkerStatus.FAILURE,
-        "Error in trace queue processing",
-        error instanceof Error ? error.message : String(error),
-      );
-    } finally {
-      this.isProcessing = false;
-      if (this.traceQueue.length > 0) {
-        this.processTraceQueue();
-      }
-    }
-  }
-
-  // Clean up finished requests
-  private cleanFinishedRequests(): void {
-    for (const request of this.inFlightRequests) {
-      if (
-        (request as any).status === "fulfilled" ||
-        (request as any).status === "rejected"
-      ) {
-        this.inFlightRequests.delete(request);
-      }
-    }
-  }
-
-  // Send a trace to the Confident API
-  private async sendTrace(trace: Trace): Promise<void> {
-    try {
-      const traceApi = this.createTraceApi(trace);
-      const apiKey = traceApi.confidentApiKey || this.confidentApiKey;
-      const api = new Api(apiKey);
-      const { confidentApiKey: _confidentApiKey, ...traceApiBody } = traceApi;
-
-      const response = await api.sendRequest(
-        HttpMethods.POST,
-        Endpoints.TRACES_ENDPOINT,
-        traceApiBody,
-      );
-      const queueSize = this.traceQueue.length;
-      const inFlightCount = this.inFlightRequests.size;
-      const status = `(${queueSize} trace(s) remaining in queue, ${inFlightCount} in flight)`;
-      // TODO(tanay): if env is testing, wait for log OR make test async
-      if (this.environment !== Environment.TESTING) {
-        printTraceStatus(
-          TraceWorkerStatus.SUCCESS,
-          `Successfully posted trace ${status}`,
-          response?.link,
-          this.environment,
-        );
-      }
-    } catch (error) {
-      const queueSize = this.traceQueue.length;
-      const inFlightCount = this.inFlightRequests.size;
-      const status = `(${queueSize} trace(s) remaining in queue, ${inFlightCount} in flight)`;
-      printTraceStatus(
-        TraceWorkerStatus.FAILURE,
-        `Error posting trace ${status}`,
-        error instanceof Error ? error.message : String(error),
-      );
-
-      throw error;
-    }
+  /** Wait up to `timeoutMillis` for confident-trace to export every ended span. */
+  public async flush(timeoutMillis = 30000): Promise<boolean> {
+    return (await otelHooks.flush?.(timeoutMillis)) ?? true;
   }
 
   public createTraceApi(trace: Trace): TraceApi {
@@ -849,16 +691,10 @@ export class TraceManager {
       metadata: trace.metadata,
       tags: trace.tags,
       threadId: trace.threadId,
-      userId: trace.userId,
-      testCaseId: trace.testCaseId,
-      testRunId: trace.testRunId,
-      turnId: trace.turnId,
       input: trace.input,
       output: trace.output,
       toolsCalled: trace.toolsCalled,
-      metricCollection: trace.metricCollection,
       metricsData: trace.metricsData && withoutExpectations(trace.metricsData),
-      confidentApiKey: trace.confidentApiKey,
       status:
         trace.status === TraceSpanStatus.SUCCESS
           ? TraceSpanApiStatus.SUCCESS
@@ -902,7 +738,6 @@ export class TraceManager {
       input: span.input,
       output: span.output,
       error: span.error,
-      metricCollection: span.metricCollection,
       metricsData: span.metricsData,
       expectedOutput: span.expectedOutput,
       retrievalContext: span.retrievalContext,
@@ -923,11 +758,6 @@ export class TraceManager {
       apiSpan.costPerOutputToken = llmSpan.costPerOutputToken;
       apiSpan.inputTokenCount = llmSpan.inputTokenCount;
       apiSpan.outputTokenCount = llmSpan.outputTokenCount;
-      apiSpan.promptAlias = llmSpan.prompt?._alias || llmSpan.promptAlias;
-      apiSpan.promptCommitHash =
-        llmSpan.prompt?.hash || llmSpan.promptCommitHash;
-      apiSpan.promptLabel = llmSpan.prompt?.label || llmSpan.promptLabel;
-      apiSpan.promptVersion = llmSpan.prompt?.version || llmSpan.promptVersion;
     } else if (span.type === SpanType.RETRIEVER) {
       const retrieverSpan = span as RetrieverSpan;
       apiSpan.embedder = retrieverSpan.embedder || "default-embedder";
@@ -956,10 +786,6 @@ export class TraceManager {
     if (span.expectedTools) {
       apiSpan.expectedTools = span.expectedTools;
     }
-    // Add metric collection if available
-    if (span.metricCollection) {
-      apiSpan.metricCollection = span.metricCollection;
-    }
     // Add metadata if available
     if (span.metadata) {
       apiSpan.metadata = span.metadata;
@@ -979,204 +805,185 @@ export const traceManager = new TraceManager();
 /// Tracer /////////////////////////////////////////////
 ////////////////////////////////////////////////////////
 
+// The span types confident-trace knows; any other `observe` type is custom.
+const CONFIDENT_TRACE_TYPES = new Set<string>([
+  SpanType.AGENT,
+  SpanType.LLM,
+  SpanType.RETRIEVER,
+  SpanType.TOOL,
+]);
+
+// `observe` options each span type takes.
+const OBSERVE_FIELDS: Record<string, string[]> = {
+  [SpanType.AGENT]: ["availableTools", "agentHandoffs"],
+  [SpanType.LLM]: ["model", "costPerInputToken", "costPerOutputToken"],
+  [SpanType.RETRIEVER]: ["embedder"],
+  [SpanType.TOOL]: ["description"],
+};
+
+function otelSetup(): typeof import("./otel/setup") {
+  // Loaded on first use, since setup's modules need this one initialized.
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  return require("./otel/setup");
+}
+
+function errorMessage(error: unknown): string {
+  return error instanceof Error ? error.message : String(error);
+}
+
+/**
+ * One `observe` call: a confident-trace span that deepeval collects.
+ *
+ * While it runs, deepeval code sees it through the bridge's placeholder, which
+ * is the deepeval span the trace gets when it ends.
+ */
 export class Tracer {
-  private uuid: string;
-  private traceUuid: string | null = null;
-  private parentUuid: string | null = null;
-  private startTime: Date = new Date();
-  private endTime: Date = new Date();
-  private status: TraceSpanStatus = TraceSpanStatus.IN_PROGRESS;
-  private error: string | null = null;
-  private spanType: SpanType | string;
-  private name: string;
-  private metricCollection?: string;
-  private metrics?: BaseMetric[];
-  private observeKwargs: Record<string, any>;
-  private functionKwargs: Record<string, any>;
-  private result: any = null;
-  private pendingPayload?: PendingPayload | null;
+  private readonly spanType: string;
+  private readonly name: string;
+  private readonly metrics?: BaseMetric[];
+  private readonly observeKwargs: Record<string, any>;
+  private readonly functionKwargs: Record<string, any>;
 
   constructor(
     spanType: SpanType | string | null,
     funcName: string,
-    metricCollection?: string,
     kwargs: Record<string, any> = {},
     metrics?: BaseMetric[],
   ) {
-    this.uuid = crypto.randomUUID();
     this.observeKwargs = kwargs.observeKwargs || {};
     this.functionKwargs = kwargs.functionKwargs || {};
 
     // Initialize name from options or function name
     this.name = this.observeKwargs.name || funcName;
-    this.metricCollection = metricCollection;
     this.metrics = metrics;
 
     // Initialize span type from parameter or name
     this.spanType = spanType === null ? this.name : spanType;
   }
 
-  // Enter the tracer context, creating a new span and setting up parent-child relationships.
-  public enter(): this {
-    this.startTime = new Date();
-    const currentSpan = getCurrentSpan();
-    const currentTrace = getCurrentTrace();
-    if (!currentSpan || !currentTrace) {
-      console.warn("Tracer.enter() called outside of tracing context");
-      return this;
-    }
-    this.parentUuid = currentSpan.parentUuid || null;
-    this.traceUuid = currentTrace.uuid;
-    const spanInstance = this.createSpanInstance();
-    traceManager.addSpan(spanInstance);
-    traceManager.addSpanToTrace(spanInstance);
-    return this;
-  }
-
-  // Exit the tracer context, updating the span status and handling trace completion.
-  public exit(excType?: any, excVal?: any, _excTb?: any): void {
-    this.endTime = new Date();
-    const span = getCurrentSpan();
-    if (!span || span.uuid !== this.uuid) {
-      console.error(
-        `Mismatch exiting span. Expected: ${this.uuid}, got: ${
-          span?.uuid || "None"
-        }`,
-      );
-      return;
-    }
-    span.endTime = this.endTime;
-    if (excType) {
-      span.status = TraceSpanStatus.ERRORED;
-      span.error = String(excVal);
-    } else {
-      span.status = TraceSpanStatus.SUCCESS;
-    }
-
-    if (span.input === undefined) {
-      span.input = traceManager.mask(this.functionKwargs);
-    } else {
-      span.input = traceManager.mask(span.input);
-    }
-
-    if (span.output === undefined) {
-      span.output = traceManager.mask(this.result);
-    } else {
-      span.output = traceManager.mask(span.output);
-    }
-
-    traceManager.updateSpanInTrace(span);
-    traceManager.removeSpan(span.uuid);
-    const trace = getCurrentTrace();
-    const isRootSpan = span.parentUuid === undefined;
-    if (trace && trace.uuid === span.traceUuid && isRootSpan) {
-      if (span.input === undefined) {
-        updateCurrentTrace({
-          input: this.functionKwargs,
-        });
-      }
-      if (span.output === undefined) {
-        updateCurrentTrace({
-          output: this.result,
-        });
-      }
-      if (span.status === TraceSpanStatus.ERRORED) {
-        trace.status = TraceSpanStatus.ERRORED;
-      }
-      const otherActiveSpans = Array.from(
-        traceManager.getActiveSpans().values(),
-      ).filter((activeSpan) => activeSpan.traceUuid === span.traceUuid);
-      if (otherActiveSpans.length === 0) {
-        traceManager.endTrace(span.traceUuid);
-      }
-    }
-  }
-
-  // Context manager for tracing spans - async version for TypeScript compatibility
+  /** Run `callback` inside the span. */
   public async trace<T>(callback: () => T | Promise<T>): Promise<T> {
-    const trace = getCurrentTrace() ?? traceManager.startNewTrace();
-    const parentSpan = getCurrentSpan();
-    const span = this.createSpanInstance();
-    // Link span to parent or trace
-    span.traceUuid = trace.uuid;
-    span.parentUuid = parentSpan?.uuid;
-    return await withTracingContext(span, trace, async () => {
-      this.enter(); // activate the span
-      try {
-        this.result = await callback();
-        const finalResult =
-          this.result instanceof Promise ? await this.result : this.result;
-        return finalResult;
-      } catch (error) {
-        this.error = error instanceof Error ? error.message : String(error);
-        throw error;
-      } finally {
-        this.exit(this.error ? new Error() : undefined, this.error, undefined);
+    const setup = otelSetup();
+    const parentSpan = activeSpan();
+    let trace = activeTrace();
+    let startedTrace: string | undefined;
+    // A failed async operation may leave an ended trace in context.
+    if (!trace || !traceManager.getTraceByUuid(trace.uuid)) {
+      trace = traceManager.startNewTrace();
+      startedTrace = trace.uuid;
+    }
+    const values = this.observeValues();
+    const started = withTracingContext(parentSpan, trace, () =>
+      setup.startObservedSpan(
+        this.name,
+        CONFIDENT_TRACE_TYPES.has(this.spanType)
+          ? this.spanType
+          : SpanType.CUSTOM,
+        { span: values, spanKind: slotKindForSpanType(this.spanType) },
+      ),
+    );
+    if (!started?.placeholder && startedTrace)
+      // Not collected: confident-trace isn't running, or exports the span
+      // on its own under a span it exports.
+      traceManager.discardTrace(startedTrace);
+    if (!started) return await callback();
+
+    const { span, placeholder } = started;
+    setup.exportOn(span, "span", values);
+    const spanTrace = placeholder
+      ? traceManager.getTraceByUuid(placeholder.traceUuid)
+      : undefined;
+    let result: T | undefined;
+    let failed = false;
+    let error: unknown;
+    try {
+      result = await otelContext.with(setup.observedContext(span), () =>
+        withTracingContext(
+          placeholder,
+          spanTrace,
+          async () => await callback(),
+        ),
+      );
+      return result;
+    } catch (caught) {
+      failed = true;
+      error = caught;
+      throw caught;
+    } finally {
+      this.finish(span, placeholder, result, failed, error);
+    }
+  }
+
+  private finish(
+    span: OtelSpan,
+    placeholder: BaseSpan | undefined,
+    result: unknown,
+    failed: boolean,
+    error: unknown,
+  ): void {
+    const setup = otelSetup();
+    const input = traceManager.mask(this.functionKwargs);
+    const output = traceManager.mask(result);
+    if (failed)
+      span.setStatus({
+        code: SpanStatusCode.ERROR,
+        message: errorMessage(error),
+      });
+    if (placeholder) {
+      placeholder.status = failed
+        ? TraceSpanStatus.ERRORED
+        : TraceSpanStatus.SUCCESS;
+      if (failed) placeholder.error = errorMessage(error);
+      placeholder.input =
+        placeholder.input === undefined
+          ? input
+          : traceManager.mask(placeholder.input);
+      placeholder.output =
+        placeholder.output === undefined
+          ? output
+          : traceManager.mask(placeholder.output);
+    }
+    // The content the span exports, masked like deepeval's own.
+    setup.exportOn(
+      span,
+      "span",
+      placeholder
+        ? { input: placeholder.input, output: placeholder.output }
+        : {
+            input: setup.carries(span, ConfidentAttr.SPAN_INPUT)
+              ? undefined
+              : input,
+            output: setup.carries(span, ConfidentAttr.SPAN_OUTPUT)
+              ? undefined
+              : output,
+          },
+    );
+    if (placeholder && placeholder.parentUuid === undefined) {
+      setup.exportOn(span, "trace", {
+        input: setup.carries(span, ConfidentAttr.TRACE_INPUT)
+          ? undefined
+          : input,
+        output: setup.carries(span, ConfidentAttr.TRACE_OUTPUT)
+          ? undefined
+          : output,
+      });
+      const trace = traceManager.getTraceByUuid(placeholder.traceUuid);
+      if (trace) {
+        if (trace.input === undefined) trace.input = input;
+        if (trace.output === undefined) trace.output = output;
+        if (failed) trace.status = TraceSpanStatus.ERRORED;
       }
-    });
+    }
+    // The bridge collects the span, and ends the trace with its last span.
+    span.end();
   }
 
-  private createSpanInstance(): BaseSpan {
-    const span = this.buildSpanInstance();
-    if (this.pendingPayload === undefined) {
-      this.pendingPayload = popPendingFor(this.spanType) ?? null;
-    }
-    applyPendingToSpan(span, this.pendingPayload ?? undefined);
-    return span;
-  }
-
-  private buildSpanInstance(): BaseSpan {
-    const spanKwargs: BaseSpan = {
-      uuid: this.uuid,
-      traceUuid: this.traceUuid!,
-      parentUuid: this.parentUuid || undefined,
-      startTime: this.startTime,
-      endTime: this.endTime,
-      status: TraceSpanStatus.SUCCESS,
-      children: [],
-      name: this.name,
-      input: undefined,
-      output: undefined,
-      metricCollection: this.metricCollection,
-      metrics: this.metrics,
-      type: this.spanType,
-      metadata: undefined,
-      expectedOutput: undefined,
-      retrievalContext: undefined,
-      context: undefined,
-      toolsCalled: undefined,
-      expectedTools: undefined,
-    };
-    if (this.spanType === SpanType.AGENT) {
-      const availableTools = this.observeKwargs.availableTools || [];
-      const agentHandoffs = this.observeKwargs.agentHandoffs || [];
-      return {
-        ...spanKwargs,
-        availableTools,
-        agentHandoffs,
-      } as AgentSpan;
-    } else if (this.spanType === SpanType.LLM) {
-      const model = this.observeKwargs.model;
-      return {
-        ...spanKwargs,
-        model,
-      } as LlmSpan;
-    } else if (this.spanType === SpanType.RETRIEVER) {
-      const embedder = this.observeKwargs.embedder;
-      return {
-        ...spanKwargs,
-        embedder,
-      } as RetrieverSpan;
-    } else if (this.spanType === SpanType.TOOL) {
-      return {
-        ...spanKwargs,
-        name: this.name,
-        description: this.observeKwargs.description,
-        ...this.observeKwargs,
-      } as ToolSpan;
-    } else {
-      return spanKwargs;
-    }
+  /** The span fields `observe` was given for this span. */
+  private observeValues(): PendingPayload {
+    const values: PendingPayload = { metrics: this.metrics };
+    for (const key of OBSERVE_FIELDS[this.spanType] ?? [])
+      values[key] = this.observeKwargs[key];
+    return values;
   }
 }
 
@@ -1184,7 +991,6 @@ interface AgentOptions<Args extends any[], T> {
   availableTools?: string[] | undefined;
   name?: string | undefined;
   agentHandoffs?: string[] | undefined;
-  metricCollection?: string | undefined;
   metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
@@ -1194,7 +1000,6 @@ interface LLMOptions<Args extends any[], T> {
   costPerInputToken?: number | undefined;
   costPerOutputToken?: number | undefined;
   name?: string | undefined;
-  metricCollection?: string | undefined;
   metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
@@ -1202,7 +1007,6 @@ interface LLMOptions<Args extends any[], T> {
 interface RetrieverOptions<Args extends any[], T> {
   embedder?: string;
   name?: string | undefined;
-  metricCollection?: string | undefined;
   metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
@@ -1210,7 +1014,6 @@ interface RetrieverOptions<Args extends any[], T> {
 interface ToolOptions<Args extends any[], T> {
   description?: string | undefined;
   name?: string | undefined;
-  metricCollection?: string | undefined;
   metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
@@ -1218,7 +1021,6 @@ interface ToolOptions<Args extends any[], T> {
 interface CustomOptions<Args extends any[], T> {
   type: string;
   name?: string | undefined;
-  metricCollection?: string | undefined;
   metrics?: BaseMetric[];
   fn: (...args: Args) => T | Promise<T>;
 }
@@ -1231,7 +1033,6 @@ function ObserveAgent<Args extends any[], T>(
     const tracer = new Tracer(
       SpanType.AGENT,
       defaultName,
-      options.metricCollection,
       {
         observeKwargs: {
           name: defaultName,
@@ -1259,7 +1060,6 @@ function ObserveLLM<Args extends any[], T>(
     const tracer = new Tracer(
       SpanType.LLM,
       defaultName,
-      options.metricCollection,
       {
         observeKwargs: {
           name: options.name,
@@ -1287,7 +1087,6 @@ function ObserveRetriever<Args extends any[], T>(
     const tracer = new Tracer(
       SpanType.RETRIEVER,
       defaultName,
-      options.metricCollection,
       {
         observeKwargs: {
           name: options.name,
@@ -1313,7 +1112,6 @@ function ObserveTool<Args extends any[], T>(
     const tracer = new Tracer(
       SpanType.TOOL,
       defaultName,
-      options.metricCollection,
       {
         observeKwargs: {
           name: defaultName,
@@ -1339,7 +1137,6 @@ function ObserveCustom<Args extends any[], T>(
     const tracer = new Tracer(
       options.type,
       defaultName,
-      options.metricCollection,
       {
         observeKwargs: {
           name: options.name,
@@ -1359,6 +1156,7 @@ function ObserveCustom<Args extends any[], T>(
 export function observe<Args extends any[], T>(options: {
   type?: SpanType | string;
   name?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   metricCollection?: string;
   metrics?: BaseMetric[];
   model?: string;
@@ -1374,7 +1172,14 @@ export function observe<Args extends any[], T>(options: {
   _internal?: boolean;
   fn: (...args: Args) => T | Promise<T>;
 }): (...args: Args) => Promise<T> {
-  const { type, fn, _dropIfRoot, _internal, ...rest } = options;
+  const {
+    type,
+    fn,
+    _dropIfRoot,
+    _internal,
+    metricCollection: _metricCollection,
+    ...rest
+  } = options;
 
   const observed = routeObserve<Args, T>(type, fn, rest);
   if (!_dropIfRoot && !_internal) return observed;
@@ -1392,7 +1197,6 @@ function routeObserve<Args extends any[], T>(
   fn: (...args: Args) => T | Promise<T>,
   rest: {
     name?: string;
-    metricCollection?: string;
     metrics?: BaseMetric[];
     model?: string;
     costPerInputToken?: number;
@@ -1408,7 +1212,6 @@ function routeObserve<Args extends any[], T>(
     return ObserveAgent({
       fn,
       name: rest.name,
-      metricCollection: rest.metricCollection,
       metrics: rest.metrics,
       availableTools: rest.availableTools,
       agentHandoffs: rest.agentHandoffs,
@@ -1417,7 +1220,6 @@ function routeObserve<Args extends any[], T>(
     return ObserveLLM({
       fn,
       name: rest.name,
-      metricCollection: rest.metricCollection,
       metrics: rest.metrics,
       model: rest.model,
       costPerInputToken: rest.costPerInputToken,
@@ -1427,7 +1229,6 @@ function routeObserve<Args extends any[], T>(
     return ObserveRetriever({
       fn,
       name: rest.name,
-      metricCollection: rest.metricCollection,
       metrics: rest.metrics,
       embedder: rest.embedder,
     });
@@ -1435,7 +1236,6 @@ function routeObserve<Args extends any[], T>(
     return ObserveTool({
       fn,
       name: rest.name,
-      metricCollection: rest.metricCollection,
       metrics: rest.metrics,
       description: rest.description,
     });
@@ -1444,7 +1244,6 @@ function routeObserve<Args extends any[], T>(
     return ObserveCustom({
       fn,
       name: rest.name,
-      metricCollection: rest.metricCollection,
       metrics: rest.metrics,
       type: "base",
     });
@@ -1466,6 +1265,7 @@ export interface UpdateCurrentSpanParams {
   expectedTools?: ToolCall[];
   expectedOutput?: string;
   context?: string[];
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   metricCollection?: string;
   metrics?: BaseMetric[];
 }
@@ -1481,14 +1281,23 @@ export const updateCurrentSpan = ({
   expectedTools,
   expectedOutput,
   context,
-  metricCollection,
   metrics,
 }: UpdateCurrentSpanParams) => {
-  const currentSpan = getCurrentSpan();
-
-  if (!currentSpan) {
-    return;
-  }
+  // Confident AI gets the update too when confident-trace exports the span.
+  otelHooks.updateExported?.("span", {
+    name,
+    input,
+    output,
+    testCase,
+    metadata,
+    retrievalContext,
+    toolsCalled,
+    expectedTools,
+    expectedOutput,
+    context,
+  });
+  const currentSpan = activeSpan();
+  if (!currentSpan) return;
 
   if (testCase) {
     currentSpan.input = testCase.input;
@@ -1528,9 +1337,6 @@ export const updateCurrentSpan = ({
   if (context) {
     currentSpan.context = context;
   }
-  if (metricCollection) {
-    currentSpan.metricCollection = metricCollection;
-  }
   if (metrics) {
     currentSpan.metrics = metrics;
   }
@@ -1540,9 +1346,13 @@ export interface UpdateCurrentTraceParams {
   tags?: string[];
   metadata?: Record<string, any>;
   threadId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   userId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   testCaseId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   testRunId?: string;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   turnId?: string;
   input?: any;
   output?: any;
@@ -1553,8 +1363,10 @@ export interface UpdateCurrentTraceParams {
   expectedTools?: ToolCall[];
   expectedOutput?: string;
   context?: string[];
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   metricCollection?: string;
   metrics?: BaseMetric[];
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   confidentApiKey?: string;
   drop?: boolean;
 }
@@ -1563,10 +1375,6 @@ export const updateCurrentTrace = ({
   tags,
   metadata,
   threadId,
-  userId,
-  testCaseId,
-  testRunId,
-  turnId,
   input,
   output,
   name,
@@ -1576,16 +1384,27 @@ export const updateCurrentTrace = ({
   expectedTools,
   expectedOutput,
   context,
-  metricCollection,
   metrics,
-  confidentApiKey,
   drop,
 }: UpdateCurrentTraceParams) => {
-  const currentTrace = getCurrentTrace();
-
-  if (!currentTrace) {
-    return;
-  }
+  // Confident AI gets the update too when confident-trace exports the trace.
+  otelHooks.updateExported?.("trace", {
+    tags,
+    metadata,
+    threadId,
+    input,
+    output,
+    name,
+    testCase,
+    retrievalContext,
+    toolsCalled,
+    expectedTools,
+    expectedOutput,
+    context,
+  });
+  if (drop) otelHooks.drop?.(true);
+  const currentTrace = activeTrace();
+  if (!currentTrace) return;
 
   if (testCase !== undefined) {
     currentTrace.input = testCase.input;
@@ -1606,18 +1425,6 @@ export const updateCurrentTrace = ({
   }
   if (threadId !== undefined) {
     currentTrace.threadId = threadId;
-  }
-  if (userId !== undefined) {
-    currentTrace.userId = userId;
-  }
-  if (testCaseId !== undefined) {
-    currentTrace.testCaseId = testCaseId;
-  }
-  if (testRunId !== undefined) {
-    currentTrace.testRunId = testRunId;
-  }
-  if (turnId !== undefined) {
-    currentTrace.turnId = turnId;
   }
   if (input !== undefined) {
     currentTrace.input = input;
@@ -1643,14 +1450,8 @@ export const updateCurrentTrace = ({
   if (context !== undefined) {
     currentTrace.context = context;
   }
-  if (metricCollection !== undefined) {
-    currentTrace.metricCollection = metricCollection;
-  }
   if (metrics !== undefined) {
     currentTrace.metrics = metrics;
-  }
-  if (confidentApiKey !== undefined) {
-    currentTrace.confidentApiKey = confidentApiKey;
   }
   if (drop !== undefined) {
     currentTrace.drop = drop;
@@ -1664,6 +1465,7 @@ interface UpdateLLMSpanParams {
   inputTokenCount?: number;
   outputTokenCount?: number;
   tokenIntervals?: number;
+  /** @deprecated Ignored: a Confident AI platform setting. Don't build on it. */
   prompt?: Prompt;
 }
 
@@ -1674,9 +1476,15 @@ export const updateLlmSpan = ({
   inputTokenCount,
   outputTokenCount,
   tokenIntervals,
-  prompt,
 }: UpdateLLMSpanParams) => {
-  const currentSpan = getCurrentSpan();
+  otelHooks.updateExported?.("span", {
+    model,
+    costPerInputToken,
+    costPerOutputToken,
+    inputTokenCount,
+    outputTokenCount,
+  });
+  const currentSpan = activeSpan();
   if (!currentSpan) {
     return;
   }
@@ -1702,13 +1510,6 @@ export const updateLlmSpan = ({
   if (tokenIntervals !== undefined) {
     llmSpan.tokenInterval = tokenIntervals;
   }
-  if (prompt !== undefined) {
-    llmSpan.prompt = prompt;
-    llmSpan.promptAlias = prompt._alias!;
-    llmSpan.promptCommitHash = prompt.hash!;
-    llmSpan.promptVersion = prompt.version!;
-    llmSpan.promptLabel = prompt.label!;
-  }
 };
 
 interface UpdateRetrieverSpanParams {
@@ -1722,7 +1523,8 @@ export const updateRetrieverSpan = ({
   topK,
   chunkSize,
 }: UpdateRetrieverSpanParams) => {
-  const currentSpan = getCurrentSpan();
+  otelHooks.updateExported?.("span", { embedder, topK, chunkSize });
+  const currentSpan = activeSpan();
 
   if (!currentSpan) {
     return;

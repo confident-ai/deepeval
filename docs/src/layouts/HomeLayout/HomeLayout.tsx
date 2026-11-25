@@ -95,7 +95,43 @@ const HomeLayout: React.FC<HomeLayoutProps> = ({
 
     requestStageSync();
 
+    // The right pane only scrolls with the window, so a "#section" link
+    // into it does nothing on its own. Scroll the window to the point that
+    // brings the target into view instead (desktop only; on mobile the
+    // pane is part of the page and anchors work as usual).
+    const scrollToHash = (hash: string, smooth: boolean) => {
+      if (!desktopQuery.matches) return false;
+      const id = decodeURIComponent(hash.replace(/^#/, ""));
+      const target = id ? document.getElementById(id) : null;
+      if (!target || !rightPane.contains(target)) return false;
+      const inPane =
+        target.getBoundingClientRect().top -
+        rightPane.getBoundingClientRect().top +
+        rightPane.scrollTop -
+        24;
+      const stageTop = stage.getBoundingClientRect().top + window.scrollY;
+      window.scrollTo({
+        top: stageTop - getHeaderOffset() + Math.max(0, inPane),
+        behavior: smooth ? "smooth" : "auto",
+      });
+      return true;
+    };
+    const onAnchorClick = (event: MouseEvent) => {
+      const link = (event.target as Element | null)?.closest?.("a[href^='#']");
+      if (!link || event.defaultPrevented || event.metaKey || event.ctrlKey) return;
+      const hash = link.getAttribute("href") ?? "";
+      if (scrollToHash(hash, true)) {
+        event.preventDefault();
+        history.pushState(null, "", hash);
+      }
+    };
+    document.addEventListener("click", onAnchorClick);
+    if (window.location.hash) {
+      window.setTimeout(() => scrollToHash(window.location.hash, false), 0);
+    }
+
     return () => {
+      document.removeEventListener("click", onAnchorClick);
       window.cancelAnimationFrame(resizeFrame);
       window.cancelAnimationFrame(scrollFrame);
       resizeObserver.disconnect();

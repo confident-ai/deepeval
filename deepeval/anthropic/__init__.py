@@ -12,9 +12,9 @@ except ImportError:
     AsyncAnthropic = None  # type: ignore
 
 if Anthropic or AsyncAnthropic:
-    from deepeval.anthropic.patch import patch_anthropic_classes
     from deepeval.telemetry import capture_tracing_integration
     from deepeval.tracing.integrations import Integration
+    from deepeval.tracing.otel.setup import ensure_confident_trace
 
     with capture_tracing_integration(Integration.ANTHROPIC):
-        patch_anthropic_classes()
+        ensure_confident_trace(("anthropic",))

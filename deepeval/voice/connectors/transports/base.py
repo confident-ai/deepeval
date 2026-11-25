@@ -99,6 +99,9 @@ class BaseVoiceConnector(ABC):
     max_turn_timeout_s: float = 30.0
     silence_threshold_rms: float = DEFAULT_SILENCE_RMS
 
+    async def send_dtmf(self, digits: str) -> bool:
+        return False
+
     def __init_subclass__(cls, **kwargs):
         super().__init_subclass__(**kwargs)
         # `__abstractmethods__` is not yet computed by ABCMeta at this point,
@@ -194,6 +197,10 @@ class BaseVoiceConnector(ABC):
     def supports_duplex(self) -> bool:
         """Whether the agent can be heard while the caller is speaking."""
         return False
+
+    @property
+    def supports_parallel_calls(self) -> bool:
+        return True
 
     @property
     def call_ended(self) -> bool:

@@ -196,13 +196,23 @@ export function assertJsonObjectStructure(
   });
 }
 
-export async function generateTraceJson<T>(
-  jsonPath: string,
+/** Run `fn` the way an evaluation does, so deepeval collects every trace it starts. */
+export async function asEvaluation<T>(fn: () => Promise<T> | T): Promise<T> {
+  const endEvaluation = traceManager.beginEvaluation();
+  try {
+    return await fn();
+  } finally {
+    endEvaluation();
+  }
+}
+
+/** Run `testFn` as an evaluation, and return its first trace's API payload. */
+async function collectTraceApi<T>(
   testFn: () => Promise<T> | T,
-): Promise<T> {
+): Promise<{ result: T; actualDict: any }> {
   traceManager.clearTraces();
 
-  const result = await testFn();
+  const result = await asEvaluation(testFn);
 
   const traces = traceManager.getAllTraces();
   if (traces.length === 0) {
@@ -211,6 +221,14 @@ export async function generateTraceJson<T>(
     );
   }
   const actualDict = (traceManager as any).createTraceApi(traces[0]);
+  return { result, actualDict };
+}
+
+export async function generateTraceJson<T>(
+  jsonPath: string,
+  testFn: () => Promise<T> | T,
+): Promise<T> {
+  const { result, actualDict } = await collectTraceApi(testFn);
 
   fs.mkdirSync(path.dirname(jsonPath), { recursive: true });
   fs.writeFileSync(jsonPath, JSON.stringify(actualDict, null, 2), "utf-8");
@@ -222,18 +240,7 @@ export async function assertTraceJson<T>(
   jsonPath: string,
   testFn: () => Promise<T> | T,
 ): Promise<T> {
-  traceManager.clearTraces();
-
-  const result = await testFn();
-
-  const traces = traceManager.getAllTraces();
-  if (traces.length === 0) {
-    throw new Error(
-      "No traces were generated during the test function execution.",
-    );
-  }
-
-  const actualDict = (traceManager as any).createTraceApi(traces[0]);
+  const { result, actualDict } = await collectTraceApi(testFn);
 
   if (!fs.existsSync(jsonPath)) {
     throw new Error(

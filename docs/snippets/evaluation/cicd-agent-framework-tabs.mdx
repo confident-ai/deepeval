@@ -675,6 +675,7 @@ Register the processor once and every `run(...)` becomes a trace. See the [OpenA
 import { it, expect } from "vitest";
 import { generateText } from "ai";
 import { openai } from "@ai-sdk/openai";
+import { OpenTelemetry } from "@ai-sdk/otel";
 import { configureAiSdkTracing } from "deepeval/integrations/ai-sdk";
 import { EvaluationDataset, Golden } from "deepeval/dataset";
 import { TaskCompletionMetric } from "deepeval/metrics";
@@ -686,13 +687,17 @@ const dataset = new EvaluationDataset({
 });
 
 // 2. Instrument your app
-const tracer = configureAiSdkTracing({ name: "math-app" });
+const telemetry = {
+  integrations: [
+    new OpenTelemetry({ tracer: configureAiSdkTracing({ name: "math-app" }) }),
+  ],
+};
 
 const ask = (prompt: string) =>
   generateText({
     model: openai("gpt-4o-mini"),
     prompt,
-    experimental_telemetry: { isEnabled: true, tracer },
+    telemetry,
   });
 
 // 3. Evaluate end-to-end on each golden

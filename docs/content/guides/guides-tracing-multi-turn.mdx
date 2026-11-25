@@ -74,7 +74,7 @@ flowchart LR
 When these traces are exported, Confident AI automatically groups all traces sharing `"session-123"` into a single **Thread**. This allows you to evaluate the quality of the entire sequence rather than just evaluating Trace C in isolation.
 
 :::note
-The `thread_id` is a user-defined string. You can use a database primary key, a UUID, or a combination of `user_id` and a timestamp—as long as it remains consistent across all turns of the same conversation.
+The `thread_id` is a user-defined string. You can use a database primary key, a UUID, or a combination of a user ID and a timestamp—as long as it remains consistent across all turns of the same conversation.
 :::
 
 ## Instrumenting Conversation Turns
@@ -98,11 +98,8 @@ async def generate_reply(history: list, user_message: str) -> str:
     return response.choices[0].message.content
 
 @observe
-async def handle_turn(user_message: str, thread_id: str, user_id: str) -> str:
-    update_current_trace(
-        thread_id=thread_id,
-        user_id=user_id,  # Links the thread to a specific user on Confident AI
-    )
+async def handle_turn(user_message: str, thread_id: str) -> str:
+    update_current_trace(thread_id=thread_id)
     history = conversations.get(thread_id, [])
     response = await generate_reply(history, user_message)
     conversations[thread_id] = history + [
@@ -144,10 +141,9 @@ In production, you will accumulate thousands of conversational threads. To effic
 
 ```python title="chatbot.py"
 @observe
-async def handle_turn(user_message: str, thread_id: str, user_id: str) -> str:
+async def handle_turn(user_message: str, thread_id: str) -> str:
     update_current_trace(
         thread_id=thread_id,
-        user_id=user_id,
         tags=["customer-support", "billing"],
         metadata={
             "turn_number": len(conversations.get(thread_id, [])) + 1,
@@ -308,52 +304,16 @@ asyncio.run(run("What's my name?"))
 </Tabs>
 
 :::note
-The integrations shown here focus on thread stitching. For full options — including attaching multi-turn metric collections, adding tags and metadata, and monitoring threads in Confident AI — see the dedicated integration docs for [LangGraph](/integrations/langgraph), [Pydantic AI](/integrations/pydanticai), [CrewAI](/integrations/crewai), and [LlamaIndex](/integrations/llamaindex).
+The integrations shown here focus on thread stitching. For full options — including adding tags and metadata and monitoring threads in Confident AI — see the dedicated integration docs for [LangGraph](/integrations/langgraph), [Pydantic AI](/integrations/pydanticai), [CrewAI](/integrations/crewai), and [LlamaIndex](/integrations/llamaindex).
 :::
 
 ## Catching Failing Threads In Production
 
 In production, running multi-turn LLM judges locally will block your application's response stream and degrade the user experience, so conversational evaluation has to run asynchronously. More importantly, real users will hold conversations your simulated scenarios never covered, and those failing threads are what your next eval should be built from.
 
-[Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production threads before anyone has written an eval for them, clusters them into failure modes, and turns them into `ConversationalGolden`s for your next simulation run. The steps below also set up evals that run on every thread and flag the failing ones, without adding latency to your live application.
+[Confident AI](https://www.confident-ai.com/products/llm-observability) surfaces failing production threads before anyone has written an eval for them, clusters them into failure modes, and turns them into `ConversationalGolden`s for your next simulation run.
 
-<Steps>
-<Step>
-### Create a multi-turn metric collection
-
-
-Log in to Confident AI and create a metric collection containing your desired multi-turn metrics, such as the `KnowledgeRetentionMetric`, `TurnRelevancyMetric`, or `RoleAdherenceMetric`.
-
-<VideoDisplayer
-  src={ASSETS.metricsCreateCollection}
-  confidentUrl="/docs/llm-tracing/evaluations"
-  label="Create a multi-turn metric collection on Confident AI"
-  description="Choose the conversational metrics that run on every production thread."
-/>
-
-</Step>
-<Step>
-### Attach the collection to your trace
-
-
-In your application code, reference the metric collection by name in `update_current_trace()`. When each trace is exported, Confident AI identifies the `thread_id`, reconstructs the full thread, and evaluates it against your specified metrics asynchronously.
-
-```python
-@observe
-async def handle_turn(user_message: str, thread_id: str) -> str:
-    update_current_trace(
-        thread_id=thread_id,
-        metric_collection="multi-turn-metrics",
-    )
-    # ... rest of logic
-```
-
-Because every turn carries the same `thread_id`, the evaluation always sees the whole conversation up to that point rather than the latest turn alone.
-
-</Step>
-<Step>
 ### Turn failing threads into goldens
-
 
 Replay a failing thread turn-by-turn to pinpoint exactly where the model drifted off-topic or forgot user constraints. Then turn it into a `ConversationalGolden` so the next simulation run tests the conversation that broke.
 
@@ -364,12 +324,9 @@ Replay a failing thread turn-by-turn to pinpoint exactly where the model drifted
   description="Replay every turn of a failing conversation exactly as your users saw it."
 />
 
-</Step>
-</Steps>
-
 ### Triggering Evaluation On-Demand
 
-In addition to attaching a `metric_collection` that runs automatically on every new trace, you can also trigger evaluation for a specific thread at any point using `evaluate_thread()`. This is useful when you want to evaluate a thread after it has fully completed rather than evaluating incrementally turn by turn.
+You can also trigger evaluation for a specific thread at any point using `evaluate_thread()`. This is useful when you want to evaluate a thread after it has fully completed rather than evaluating incrementally turn by turn.
 
 ```python title="chatbot.py"
 from deepeval.tracing import evaluate_thread
@@ -395,7 +352,7 @@ In this guide, you learned how to stitch individual traces together to monitor t
 :::info[Development vs Production]
 
 - **Development** — Focus on ensuring your application properly propagates the `thread_id` and custom context across turns. Verify that traces are grouping correctly in the raw trace dictionaries.
-- **Production** — Export threads to Confident AI, catch the failing conversations, and turn them into goldens for your next simulation run. Asynchronous `metric_collection`s evaluate every thread without blocking your application.
+- **Production** — Export threads to Confident AI, catch the failing conversations, and turn them into goldens for your next simulation run.
 
 :::
 
@@ -458,21 +415,6 @@ In this guide, you learned how to stitch individual traces together to monitor t
           full thread from all traces sharing that ID and runs the metric
           collection asynchronously—useful for support or sales workflows that
           have a clear end state.
-        </>
-      ),
-    },
-    {
-      question: "Can I monitor multi-turn quality continuously?",
-      answer: (
-        <>
-          Yes. Attach a multi-turn <code>metric_collection</code> via{" "}
-          <code>update_current_trace</code> and every thread is evaluated
-          asynchronously on{" "}
-          <a href="https://www.confident-ai.com/products/llm-observability">
-            Confident AI
-          </a>
-          . Replay the failing ones turn-by-turn to pinpoint where drift or
-          memory failures occurred, then turn them into goldens.
         </>
       ),
     },

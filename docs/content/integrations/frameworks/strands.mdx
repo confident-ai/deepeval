@@ -275,7 +275,7 @@ from deepeval.tracing import update_current_trace
 
 def lookup_order(order_id: str) -> dict:
     order = orders_db.get(order_id)
-    update_current_trace(user_id=order["user_id"], metadata={"order_id": order_id})
+    update_current_trace(metadata={"order_id": order_id})
     return order
 ```
 
@@ -370,11 +370,9 @@ def respond_to_user(prompt: str) -> str:
 | ------------------- | ----------- | -------------------------------------------------------------------------- |
 | `name`              | `str`       | Default trace name. Override at runtime via `update_current_trace`.        |
 | `thread_id`         | `str`       | Default thread identifier. Useful for grouping conversational turns.       |
-| `user_id`           | `str`       | Default actor identifier. Override per-request via `update_current_trace`. |
 | `metadata`          | `dict`      | Default trace metadata. Merged with runtime overrides; runtime wins.       |
 | `tags`              | `list[str]` | Default tags applied to every trace produced by this app.                  |
 | `environment`       | `str`       | One of `"development"`, `"staging"`, `"production"`, `"testing"`.          |
-| `metric_collection` | `str`       | Default metric collection applied at the trace level.                      |
 
 For runtime helpers (`update_current_trace`, `update_current_span`, `next_agent_span`, `next_llm_span`) and the test-decorator surface (`@observe`, `@assert_test`, `with trace(...)`), see the [tracing reference](/docs/evaluation-llm-tracing).
 

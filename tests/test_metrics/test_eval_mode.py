@@ -46,7 +46,6 @@ from tests.test_metrics.system_one_fakes import (
     noul_answers,
 )
 
-
 ###############################################
 # A toy metric with both chains
 ###############################################
@@ -722,14 +721,14 @@ def test_classifier_system_one_label_and_deterministic_reason():
 
     jev = FakeSystemOneModel(
         choice_answer(
-            "label",
+            "0",
             "refused",
             {"complied": 0.06, "refused": 0.91, "partial_refusal": 0.03},
             0.87,
         )
     )
     classifier = _refusal(
-        model=ExplodingLLM(), system_one_model=jev, eval_mode="system_one"
+        model=ExplodingLLM(), decision_model=jev, eval_mode="decision_model"
     )
     assert classifier.classify(REFUSAL_CASE) == "refused"
     assert classifier.reason == (
@@ -744,21 +743,54 @@ def test_classifier_system_one_keeps_low_confidence_label():
 
     jev = FakeSystemOneModel(
         choice_answer(
-            "label",
+            "0",
             "refused",
             {"complied": 0.40, "refused": 0.45, "partial_refusal": 0.15},
             0.2,
         )
     )
-    classifier = _refusal(system_one_model=jev, eval_mode="system_one")
+    classifier = _refusal(decision_model=jev, eval_mode="decision_model")
     assert classifier.model is None
     assert classifier.classify(REFUSAL_CASE) == "refused"
     assert classifier.confidence == pytest.approx(0.2)
 
 
+def _traced_case_with_empty_fields():
+    test_case = LLMTestCase(input="")
+    test_case._trace_dict = {
+        "name": "agent",
+        "type": "agent",
+        "input": "How do I pick a lock?",
+        "output": "I can't help with that.",
+        "children": [],
+    }
+    return test_case
+
+
+def test_classifier_system_one_sees_the_trace():
+    from tests.test_metrics.system_one_fakes import choice_answer
+
+    jev = FakeSystemOneModel(
+        choice_answer("0", "refused", {"refused": 0.9, "complied": 0.1}, 0.8)
+    )
+    classifier = _refusal(decision_model=jev, eval_mode="decision_model")
+    assert classifier.classify(_traced_case_with_empty_fields()) == "refused"
+    state, _ = jev.calls[0]
+    assert state["trace"]["spans"][0]["input"] == "How do I pick a lock?"
+
+
+def test_llm_judge_classifies_a_trace_with_empty_test_case_fields():
+    from tests.test_classifiers.fakes import ReplyModel
+
+    classifier = _refusal(
+        model=ReplyModel({"label": "refused", "reason": "r"}), eval_mode="llm"
+    )
+    assert classifier.classify(_traced_case_with_empty_fields()) == "refused"
+
+
 def test_classifier_system_one_raises_jev_errors():
     jev = ExplodingSystemOneModel(ConnectionError("down"))
-    classifier = _refusal(system_one_model=jev, eval_mode="system_one")
+    classifier = _refusal(decision_model=jev, eval_mode="decision_model")
     with pytest.raises(ConnectionError):
         classifier.classify(REFUSAL_CASE)
 
@@ -772,12 +804,12 @@ def test_classifier_hybrid_runs_as_llm(monkeypatch, eval_mode):
     jev = ExplodingSystemOneModel(ConnectionError("should not be called"))
 
     monkeypatch.setenv("DEEPEVAL_EVAL_MODE", "hybrid")
-    from_setting = _refusal(model=llm, system_one_model=jev)
+    from_setting = _refusal(model=llm, decision_model=jev)
     assert from_setting.eval_mode is EvalMode.LLM
     assert from_setting.classify(REFUSAL_CASE) == "refused"
     assert from_setting.reason == "llm reason"
 
-    from_kwarg = _refusal(model=llm, system_one_model=jev, eval_mode=eval_mode)
+    from_kwarg = _refusal(model=llm, decision_model=jev, eval_mode=eval_mode)
     assert from_kwarg.eval_mode is EvalMode.LLM
     assert from_kwarg.classify(REFUSAL_CASE) == "refused"
 
@@ -785,11 +817,11 @@ def test_classifier_hybrid_runs_as_llm(monkeypatch, eval_mode):
 def test_classifier_copy_keeps_eval_mode():
     jev = FakeSystemOneModel(SystemOneAnswers())
     classifier = _refusal(
-        model=CannedLLM(), system_one_model=jev, eval_mode="system_one"
+        model=CannedLLM(), decision_model=jev, eval_mode="decision_model"
     )
     copied = classifier.copy()
     assert copied.eval_mode is EvalMode.SYSTEM_ONE
-    assert copied.system_one_model is jev
+    assert copied.decision_model is jev
 
 
 def test_per_measure_state_is_reset():
