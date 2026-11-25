@@ -262,7 +262,18 @@ For most metrics the score is the share of counted items without the problem: `(
 
 ## Events
 
-Each event is one problem, placed on the call. `mark` says what its place covers:
+Each event is one problem, placed on the call. Read them from the metric after `measure()`:
+
+```python
+metric.measure(test_case)
+
+for event in metric.score_breakdown["events"]:
+    print(event["type"], event.get("start_time"), event["description"])
+```
+
+When you run metrics through `evaluate()`, the results don't include `score_breakdown`. The breakdown only appears as text in each metric's `verbose_logs`, so call `measure()` when you need the events as data.
+
+`mark` says what an event's place covers:
 
 <VoiceDiagram
   duration={6}
