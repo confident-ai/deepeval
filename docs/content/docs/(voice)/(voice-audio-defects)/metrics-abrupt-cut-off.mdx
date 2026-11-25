@@ -48,7 +48,7 @@ evaluate(test_cases=test_cases, metrics=[metric])
 
 Along with the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics), `AbruptCutoffMetric` takes:
 
-- [Optional] `use_speech_detection`: only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so a stop the caller didn't cause isn't excused by background noise. Defaults to `True`.
+- [Optional] `use_speech_detection`: only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so background noise doesn't excuse a cut-off. Only matters with call audio, since turn audio doesn't hear the caller. Defaults to `True`.
 - [Optional] `eval_mode` and `audio_decision_model`: have each cut-off [double-checked by a model](/docs/metrics-voice-introduction#second-check-with-an-audio-decision-model) that listens to it. Defaults to no second check.
 
 `score_breakdown` lists the replies where the defect was found. See [Events](#events) for what it contains:
@@ -98,7 +98,7 @@ Each reply that was cut off shows up in `score_breakdown`. Here is what the two 
 </Tab>
 <Tab value="Turn audio">
 
-There's no recording to point into here, so each event names the turn that was cut and where in that turn's audio it happened.
+There's no call audio to point into here, so each event names the turn that was cut and where in that turn's clip it happened.
 
 ```python
 {
@@ -139,15 +139,15 @@ There's no recording to point into here, so each event names the turn that was c
 | Field | What it means |
 | --- | --- |
 | `turn` | Which turn was cut, counting from 0 |
-| `offset_seconds` | Where the cut is, in seconds from the start of that turn's audio |
+| `offset_seconds` | Where the cut is, in seconds from the start of that turn's clip |
 | `duration_seconds` | 0.02 for a cut-off (the 20 ms checked), 0 for a stream cut |
-| `start_time` | The same spot, in seconds from the start of the call. Missing when the turn's audio has no start time |
+| `start_time` | The same spot, in seconds from the start of the call. Missing when the clip has no `Audio.start_time` |
 | `evidence` | Stream cuts only. Abrupt end if the sound stopped at full volume, trailing dead run if it ended in digital silence |
-| `position` | Stream cuts only. Whether the cut is near the start, middle or end of the turn's audio |
+| `position` | Stream cuts only. Whether the cut is near the start, middle or end of the clip |
 | `gap_seconds` | Stream cuts only. How long the agent was silent before speaking again |
 | `resumed_turn` | Stream cuts only. The turn where the agent picked back up |
 
-Turns whose audio can't be decoded are listed under `skipped`.
+Clips that can't be decoded are listed under `skipped`.
 
 </Tab>
 </Tabs>
@@ -189,10 +189,10 @@ Every point where the agent's channel goes quiet is checked, while the caller is
 
 **Counted:** each stretch of sound on the agent's channel. Pauses shorter than 1 second don't split a stretch.
 
-**Flagged:** a counted reply with a stop that fails the three checks. Stops while the caller was talking or as the recording ends don't count, so those replies stay clean.
+**Flagged:** a counted reply with a stop that fails the three checks. Stops while the caller was talking or as the call audio ends don't count, so those replies stay clean.
 
 - **Caller talking.** A stop doesn't count if the caller made 0.2 seconds or more of sound from 1 second before it to 0.2 seconds after. The agent stopped because the caller spoke up.
-- **Recording ending.** A stop within 0.05 seconds of the end means the sound was still going when the recording ended. [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end) reports that instead.
+- **End of the call.** A stop within 0.05 seconds of the end of the call audio means the sound was still going when it ended. [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end) reports that instead.
 - **Sound** is read in 20 ms frames: louder than about −41 dBFS counts, pauses under 0.3 seconds are closed and sounds under 0.15 seconds are dropped. The background noise is the quietest 10% of the agent channel.
 
 </Tab>
@@ -230,7 +230,7 @@ The check on a stop is the same for call audio and turn audio. Only which stops 
 | Above the background | more than **10 dB** above the background noise |
 | Not just quiet residue | above a fixed floor of about **−30 dBFS** |
 
-If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped): no agent sound on the call audio, or no agent turn whose audio decodes.
+If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped): no agent sound on the call audio, or no agent clip that decodes.
 
 :::note
 Only cuts in the middle of a sound can be heard this way. An agent that stops between two words sounds like a normal ending and is not flagged.
@@ -260,7 +260,7 @@ Only cuts in the middle of a sound can be heard this way. An agent that stops be
 | 2.8 – 5.0 s | Fades out | No |
 | 6.3 – 7.9 s | Full volume, but the caller was talking | No |
 | 10.0 – 11.6 s | Full volume, caller silent | **Yes** |
-| 13.2 – 14.0 s | Still going when the recording ends | No |
+| 13.2 – 14.0 s | Still going when the call audio ends | No |
 | **4 replies** | | **1 cut off → 3/4 = 0.75** |
 
 </Tab>
@@ -269,15 +269,14 @@ Only cuts in the middle of a sound can be heard this way. An agent that stops be
 <VoiceDiagram
   duration={20}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 3.3, end: 4.3 }, { start: 6.9, end: 9.0 }, { start: 15.6, end: 16.6 }], sounds: [{ start: 3.4, end: 4.2 }, { start: 7.0, end: 8.9 }, { start: 15.7, end: 16.5 }] },
     { label: "Agent", role: "agent", clips: [{ start: 0, end: 3.0, label: "turn 0" }, { start: 4.6, end: 7.4, label: "turn 2" }, { start: 9.6, end: 12.4, label: "turn 4" }, { start: 13.0, end: 15.2, label: "turn 5" }, { start: 17.0, end: 19.4, label: "turn 7" }], sounds: [{ start: 0.1, end: 2.9, ending: "fade" }, { start: 4.7, end: 7.4, ending: "cut" }, { start: 9.7, end: 11.2, ending: "cut" }, { start: 11.2, end: 12.4, silent: true }, { start: 13.1, end: 15.1, ending: "fade" }, { start: 17.1, end: 19.0, ending: "cut" }] },
   ]}
   marks={[
-    { at: 2.9, lane: 1, tone: "ok", label: "clean" },
-    { at: 7.4, lane: 1, tone: "ok", label: "clean: interrupted" },
-    { at: 11.2, lane: 1, tone: "bad", label: "stream cut" },
-    { at: 15.1, lane: 1, tone: "ok", label: "clean" },
-    { at: 19.0, lane: 1, tone: "bad", label: "cut off" },
+    { at: 2.9, lane: 0, tone: "ok", label: "clean" },
+    { at: 7.4, lane: 0, tone: "ok", label: "clean: interrupted" },
+    { at: 11.2, lane: 0, tone: "bad", label: "stream cut" },
+    { at: 15.1, lane: 0, tone: "ok", label: "clean" },
+    { at: 19.0, lane: 0, tone: "bad", label: "cut off" },
   ]}
 />
 

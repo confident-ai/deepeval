@@ -112,7 +112,7 @@ evaluate(
 A voice metric can read audio from two places:
 
 - **Call audio** is `audio` on the test case: one recording of the whole call.
-- **Turn audio** is `audio` on each turn: just that turn.
+- **Turn audio** is `audio` on each turn: one clip per turn.
 
 | | Stereo | Mono |
 | --- | --- | --- |
@@ -282,7 +282,7 @@ Events found in turn audio also name the turn:
 | --- | --- |
 | `turn` | Which turn it's in, counting from 0 |
 | `role` | Whose turn it is |
-| `offset_seconds` | Where it starts, in seconds from the start of that turn's audio |
+| `offset_seconds` | Where it starts, in seconds from the start of that turn's clip |
 
 For turn audio, the call-clock timing is only as accurate as the turns' `Audio.start_time`. Each metric's page lists the extra fields its own events carry.
 

@@ -64,6 +64,9 @@ const RIGHT_PAD = 6;
 const LANE_HEIGHT = 52;
 // Space above a lane: room for point labels only where a lane has them.
 const LABEL_ROOM = 22;
+// Each extra row of point labels, and roughly how wide a label character is.
+const LABEL_ROW = 14;
+const LABEL_CHAR_WIDTH = 5.6;
 const PLAIN_GAP = 8;
 const AXIS_HEIGHT = 22;
 const BAR_STEP = 3;
@@ -87,6 +90,42 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
   const plotWidth = WIDTH - LABEL_WIDTH - RIGHT_PAD;
   const x = (seconds: number) =>
     LABEL_WIDTH + (Math.max(0, Math.min(duration, seconds)) / duration) * plotWidth;
+  // Lay point labels out so none overlap: a label that would run into one
+  // already placed on its lane moves up a row.
+  const anchorFor = (cx: number) =>
+    cx > LABEL_WIDTH + plotWidth - 48
+      ? "end"
+      : cx < LABEL_WIDTH + 48
+        ? "start"
+        : "middle";
+  const labelRows = new Map<number, number>();
+  const laneRows = new Map<number, number>();
+  const placed: { lane: number; row: number; left: number; right: number }[] = [];
+  marks
+    .map((mark, index) => ({ mark, index, cx: x(mark.at) }))
+    .sort((a, b) => a.cx - b.cx)
+    .forEach(({ mark, index, cx }) => {
+      const width = mark.label.length * LABEL_CHAR_WIDTH + 8;
+      const anchor = anchorFor(cx);
+      const left =
+        anchor === "start" ? cx : anchor === "end" ? cx - width : cx - width / 2;
+      const right = left + width;
+      let row = 0;
+      while (
+        placed.some(
+          (other) =>
+            other.lane === mark.lane &&
+            other.row === row &&
+            left < other.right &&
+            right > other.left,
+        )
+      )
+        row += 1;
+      placed.push({ lane: mark.lane, row, left, right });
+      labelRows.set(index, row);
+      laneRows.set(mark.lane, Math.max(laneRows.get(mark.lane) ?? 0, row));
+    });
+
   const tops: number[] = [];
   let cursor = 0;
   lanes.forEach((_, index) => {
@@ -97,7 +136,11 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
           window.label &&
           Math.min(...(window.lanes ?? lanes.map((_, i) => i))) === index,
       );
-    cursor += labelled ? LABEL_ROOM : index === 0 ? 2 : PLAIN_GAP;
+    cursor += labelled
+      ? LABEL_ROOM + (laneRows.get(index) ?? 0) * LABEL_ROW
+      : index === 0
+        ? 2
+        : PLAIN_GAP;
     tops.push(cursor);
     cursor += LANE_HEIGHT;
   });
@@ -241,25 +284,26 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
           const cx = x(mark.at);
           const top = laneTop(mark.lane);
           const tone = mark.tone ?? "info";
-          const anchor =
-            cx > LABEL_WIDTH + plotWidth - 48
-              ? "end"
-              : cx < LABEL_WIDTH + 48
-                ? "start"
-                : "middle";
+          const anchor = anchorFor(cx);
+          const row = labelRows.get(index) ?? 0;
           return (
             <g key={`mark-${index}`} className={styles[tone]}>
               <line
                 x1={cx}
                 x2={cx}
-                y1={top + 2}
+                y1={top + 2 - row * LABEL_ROW}
                 y2={top + LANE_HEIGHT - 2}
                 className={styles.markLine}
               />
-              <circle cx={cx} cy={top + 2} r={3} className={styles.markDot} />
+              <circle
+                cx={cx}
+                cy={top + 2 - row * LABEL_ROW}
+                r={3}
+                className={styles.markDot}
+              />
               <text
                 x={cx}
-                y={top - 7}
+                y={top - 7 - row * LABEL_ROW}
                 textAnchor={anchor}
                 className={styles.markLabel}
               >
