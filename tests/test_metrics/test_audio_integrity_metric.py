@@ -3,6 +3,7 @@ import pytest
 from deepeval.metrics import AudioIntegrityMetric
 from deepeval.test_case import ConversationalTestCase, Turn
 from tests.test_metrics.helpers import (
+    recording,
     clean_turns,
     cut_short,
     measure,
@@ -68,7 +69,7 @@ def test_a_cut_off_on_the_recording_counts_against_the_reply_playing(
 ):
     test_case = ConversationalTestCase(
         turns=timed_call([0.5, 0.5, 0.5]),
-        call_recording_path=_recording_with_a_cut(tmp_path),
+        audio=recording(_recording_with_a_cut(tmp_path)),
     )
     metric = AudioIntegrityMetric(use_speech_detection=False)
     metric.measure(test_case, _show_indicator=False)
@@ -81,7 +82,7 @@ def test_a_cut_off_on_the_recording_counts_against_the_reply_playing(
 def test_cut_offs_in_turns_left_out_of_the_test_case_are_ignored(tmp_path):
     test_case = ConversationalTestCase(
         turns=timed_call([0.5, 0.5, 0.5])[-2:],
-        call_recording_path=_recording_with_a_cut(tmp_path),
+        audio=recording(_recording_with_a_cut(tmp_path)),
     )
     metric = AudioIntegrityMetric(use_speech_detection=False)
     metric.measure(test_case, _show_indicator=False)
@@ -96,7 +97,7 @@ def test_without_reply_start_times_cut_offs_come_from_each_reply(tmp_path):
     for turn in turns:
         turn.audio.start_time = None
     test_case = ConversationalTestCase(
-        turns=turns, call_recording_path=_recording_with_a_cut(tmp_path)
+        turns=turns, audio=recording(_recording_with_a_cut(tmp_path))
     )
     metric = AudioIntegrityMetric(use_speech_detection=False)
     metric.measure(test_case, _show_indicator=False)

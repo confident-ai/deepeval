@@ -19,10 +19,10 @@ DEFECT_LABEL = "an echo"
 
 class EchoMetric(BaseDefectMetric):
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        path = test_case.call_recording_path
-        channels = read_call_recording(path)
+        agent_channel = test_case.agent_channel
+        channels = read_call_recording(test_case.audio, agent_channel)
         # Agent sound is read the same way with or without speech detection.
-        activity = recording_activity(path, False)
+        activity = recording_activity(test_case.audio, False, agent_channel)
         if channels is None or activity is None:
             return DefectShare(
                 [],
@@ -30,8 +30,8 @@ class EchoMetric(BaseDefectMetric):
                 [],
                 DEFECT_LABEL,
                 no_eligible_reason="Echo needs a stereo call recording "
-                "(call_recording_path) with the caller on the left channel "
-                "and the agent on the right.",
+                "(the test case's audio) with the caller on one channel and "
+                "the agent on the other.",
                 event_key="reply_start",
             )
         caller, agent, sample_rate = channels

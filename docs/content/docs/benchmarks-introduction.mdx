@@ -18,7 +18,7 @@ LLM benchmarking provides a standardized way to quantify LLM performances across
 - HumanEval
 - GSM8K
 
-To benchmark your LLM, you will need to wrap your LLM implementation (which could be anything such as a simple API call to OpenAI, or a Hugging Face transformers model) within `deepeval`'s `DeepEvalBaseLLM` class. Visit the [custom models section](/docs/metrics-introduction#configure-llm-judges) for a detailed guide on how to create a custom model object.
+To benchmark your LLM, you will need to wrap your LLM implementation (which could be anything such as a simple API call to OpenAI, or a Hugging Face transformers model) within `deepeval`'s `DeepEvalBaseLLM` class. Visit the [custom models section](/docs/metrics-introduction#using-a-custom-llm) for a detailed guide on how to create a custom model object.
 
 :::info
 In `deepeval`, anyone can benchmark **ANY** LLM of their choice in just a few lines of code. All benchmarks offered by `deepeval` follows the implementation of their original research papers.
@@ -53,7 +53,7 @@ There are a few ways to go around this, such as fine-tuning the model on specifi
 
 ### Create A Custom LLM
 
-Start by creating a custom model which **you will be benchmarking** by inheriting the `DeepEvalBaseLLM` class (visit the [custom models section](/docs/metrics-introduction#configure-llm-judges) for a full guide on how to create a custom model):
+Start by creating a custom model which **you will be benchmarking** by inheriting the `DeepEvalBaseLLM` class (visit the [custom models section](/docs/metrics-introduction#using-a-custom-llm) for a full guide on how to create a custom model):
 
 ```python
 from transformers import AutoModelForCausalLM, AutoTokenizer

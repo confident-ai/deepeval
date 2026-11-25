@@ -3,6 +3,7 @@ import pytest
 from deepeval.metrics import AbruptCutoffMetric
 from deepeval.test_case import ConversationalTestCase
 from tests.test_metrics.helpers import (
+    recording,
     cut_short,
     measure,
     speech_like,
@@ -49,9 +50,7 @@ def _recorded_cutoff(tmp_path, *, agent, caller=(), seconds=None):
         tmp_path / "call.wav", caller=caller, agent=agent, seconds=seconds
     )
     metric.measure(
-        ConversationalTestCase(
-            turns=timed_call([0.5]), call_recording_path=path
-        ),
+        ConversationalTestCase(turns=timed_call([0.5]), audio=recording(path)),
         _show_indicator=False,
     )
     return metric

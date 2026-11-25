@@ -20,7 +20,6 @@ interface MetricTagsDisplayerProps {
   custom?: boolean;
   safety?: boolean;
   multimodal?: boolean;
-  voice?: boolean;
   community?: boolean;
 }
 
@@ -38,13 +37,10 @@ const MetricTagsDisplayer = ({
   custom = false,
   safety = false,
   multimodal = true,
-  voice = false,
   community = false,
 }: MetricTagsDisplayerProps) => {
   // Jev is text-only, so a metric with no LLM judge cannot be multimodal.
   if (!usesLLMs) multimodal = false;
-  // Voice metrics judge audio, not image inputs.
-  if (voice) multimodal = false;
 
   return (
     <div className={styles.metricTagsDisplayer}>
@@ -89,9 +85,6 @@ const MetricTagsDisplayer = ({
       )}
       {safety && (
         <div className={`${styles.pill} ${styles.safety}`}>Safety</div>
-      )}
-      {voice && (
-        <div className={`${styles.pill} ${styles.voice}`}>Voice</div>
       )}
       {multimodal && (
         <div className={`${styles.pill} ${styles.multimodal}`}>Multimodal</div>

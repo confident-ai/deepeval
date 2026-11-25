@@ -383,6 +383,11 @@ def undecodable(turn):
     )
 
 
+def recording(path) -> Audio:
+    """A stereo call recording on disk as the test case's `audio`."""
+    return Audio(url=str(path), mimeType="audio/wav")
+
+
 def recorded_call(tmp_path, *, caller, agent):
     path = stereo_recording(tmp_path / "call.wav", caller=caller, agent=agent)
     return timed_call(CLEAN_GAPS), path
@@ -391,7 +396,7 @@ def recorded_call(tmp_path, *, caller, agent):
 def measure_recording(metric, tmp_path, *, caller, agent):
     turns, path = recorded_call(tmp_path, caller=caller, agent=agent)
     metric.measure(
-        ConversationalTestCase(turns=turns, call_recording_path=path),
+        ConversationalTestCase(turns=turns, audio=recording(path)),
         _show_indicator=False,
     )
     return metric
