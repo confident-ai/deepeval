@@ -57,7 +57,7 @@ evaluate(test_cases=test_cases, metrics=[metric])
 
 There are **THREE** optional parameters specific to the `AbruptCutoffMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection) on their channel, so background noise doesn't excuse a cut-off. Only used with call audio, since turn audio doesn't hear the caller. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection) on their channel, so background noise doesn't excuse a cut-off. Only used with full call audio, since per-turn audio doesn't hear the caller. Defaulted to `True`.
 - [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each cut-off is [double-checked by an audio decision model](/docs/metrics-voice-introduction#second-check-with-an-audio-decision-model) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
 - [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
 
@@ -78,8 +78,8 @@ See [Events](#events) for what `score_breakdown` contains.
 
 Each reply that was cut off shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 ```python
 {
@@ -110,9 +110,9 @@ Each reply that was cut off shows up in `score_breakdown`. Here is what the two 
 | `duration_seconds` | Always 0.02: the 20 ms that were checked |
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
-There's no call audio to point into here, so each event names the turn that was cut and where in that turn's clip it happened.
+There's no full call audio to point into here, so each event names the turn that was cut and where in that turn's clip it happened.
 
 ```python
 {
@@ -176,12 +176,12 @@ The `AbruptCutoffMetric` score is calculated according to the following equation
 
 <Equation formula="\text{Abrupt Cut-off} = \frac{\text{Number of Agent Replies Without a Cut-off}}{\text{Total Number of Agent Replies}}" />
 
-The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio), and the two count replies and check stops differently, as below. A reply counts as cut off at most once, however many times its sound stops.
+The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio), and the two count replies and check stops differently, as below. A reply counts as cut off at most once, however many times its sound stops.
 
 ### Counting agent replies
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={10}
@@ -198,7 +198,7 @@ The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#cal
 Each stretch of agent sound is one reply. A pause under 1 second doesn't end it, so reply 1 above is one reply even though the agent paused mid-way.
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
 <VoiceDiagram
   duration={10}
@@ -220,8 +220,8 @@ Each agent clip that decodes is one reply, however many pauses it has. Clips wit
 
 A finished reply fades out. A cut one stops at near full volume.
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={8}
@@ -238,10 +238,10 @@ A finished reply fades out. A cut one stops at near full volume.
 Every point where the agent's sound stops is checked. A reply is flagged if any stop is a cut-off, except a stop where:
 
 - the caller made 0.2 seconds or more of sound from 1 second before it to 0.2 seconds after, or
-- the call audio ends within 0.05 seconds, which [Unexpected Call End](/docs/metrics-unexpected-call-end) judges instead.
+- the full call audio ends within 0.05 seconds, which [Unexpected Call End](/docs/metrics-unexpected-call-end) judges instead.
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
 <VoiceDiagram
   duration={8}
@@ -264,7 +264,7 @@ A stop is a cut-off when the last 20 ms of sound before it are:
 | Check | Rule |
 | --- | --- |
 | Still at speech volume | At least 80% of the median level of the second before |
-| Above the background | More than 10 dB above the background noise. With turn audio, only checked on clips of 2 seconds or more |
+| Above the background | More than 10 dB above the background noise. With per-turn audio, only checked on clips of 2 seconds or more |
 | Not quiet residue | Above about −30 dBFS |
 
 If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
@@ -293,10 +293,10 @@ If the model judges "no" more likely than "yes", the cut-off is dismissed and do
 
 ### Example call
 
-Two short calls where the agent sometimes stops mid-word, one scored from call audio and one from turn audio. Each row is one agent reply, how it ended and whether that counts as a cut-off.
+Two short calls where the agent sometimes stops mid-word, one scored from full call audio and one from per-turn audio. Each row is one agent reply, how it ended and whether that counts as a cut-off.
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={14}
@@ -317,11 +317,11 @@ Two short calls where the agent sometimes stops mid-word, one scored from call a
 | 2.8 – 5.0 s | Fades out | No |
 | 6.3 – 7.9 s | Full volume, but the caller was talking | No |
 | 10.0 – 11.6 s | Full volume, caller silent | **Yes** |
-| 13.2 – 14.0 s | Still going when the call audio ends | No |
+| 13.2 – 14.0 s | Still going when the full call audio ends | No |
 | **4 replies** | | **1 cut off → 3/4 = 0.75** |
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
 <VoiceDiagram
   duration={20}
@@ -359,9 +359,9 @@ Two short calls where the agent sometimes stops mid-word, one scored from call a
         <>
           A successful{" "}
           <a href="/docs/conversation-simulator-voice-interruptions">barge-in</a>{" "}
-          stops the agent mid-word on purpose. With turn audio, those turns
+          stops the agent mid-word on purpose. With per-turn audio, those turns
           carry <code>interrupted=True</code> and count as clean replies. With
-          call audio, the caller is heard speaking up, so the stop is excused
+          full call audio, the caller is heard speaking up, so the stop is excused
           the same way.
         </>
       ),
@@ -393,7 +393,7 @@ Two short calls where the agent sometimes stops mid-word, one scored from call a
         <>
           No. Only the agent's replies are scored. The caller's audio comes from
           your own TTS model, so a cut-off there is a problem with the test
-          harness, not the agent. With call audio, the caller's channel is only
+          harness, not the agent. With full call audio, the caller's channel is only
           used to tell whether the caller spoke up when the agent stopped.
         </>
       ),

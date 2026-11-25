@@ -119,7 +119,7 @@ Every reply that stood out shows up in `score_breakdown`, tagged with the part t
 | `skipped` | Replies a part couldn't judge, one entry per part |
 | `metrics` | Each part's own score and counts. A part that couldn't judge the call shows a `score` of `None` and a `reason` instead |
 
-Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`. There's no top-level `timing_source`, as only turn audio is read.
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`. There's no top-level `timing_source`, as only per-turn audio is read.
 
 `eligible_turns` is how many agent replies at least one part judged and `turns_with_events` how many at least one part flagged. The score is the share that weren't flagged.
 
@@ -129,7 +129,7 @@ The `VoiceConsistencyMetric` score is calculated according to the following equa
 
 <Equation formula="\text{Voice Consistency} = \frac{\text{Number of Agent Replies No Part Flagged}}{\text{Total Number of Agent Replies Judged}}" />
 
-The metric only reads turn audio: each agent turn's own clip. Call audio and the caller's turns are ignored.
+The metric only reads per-turn audio: each agent turn's own clip. Full call audio and the caller's turns are ignored.
 
 ### Parts
 

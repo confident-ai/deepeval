@@ -22,7 +22,7 @@ The echo metric checks whether **the agent's own voice comes back through the ca
 
 To use the `EchoMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the test case: a stereo recording of the whole call, with the caller on one channel and the agent on the other.
 
-The metric only reads [call audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio), since an echo is only heard on the caller's own channel. Without stereo call audio it is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped). Turn audio is ignored. Set `agent_channel="left"` on the test case if the agent is on the left.
+The metric only reads [full call audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio), since an echo is only heard on the caller's own channel. Without stereo full call audio it is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped). Per-turn audio is ignored. Set `agent_channel="left"` on the test case if the agent is on the left.
 
 ## Usage
 
@@ -137,7 +137,7 @@ The `EchoMetric` score is calculated according to the following equation:
   ]}
 />
 
-Each stretch of agent sound on the call audio is checked on its own, not each reply. A gap under 0.3 seconds doesn't split a stretch, so a reply with longer pauses can be several stretches. Only stretches of 2 seconds or more are counted, since a shorter one is too little to match reliably.
+Each stretch of agent sound on the full call audio is checked on its own, not each reply. A gap under 0.3 seconds doesn't split a stretch, so a reply with longer pauses can be several stretches. Only stretches of 2 seconds or more are counted, since a shorter one is too little to match reliably.
 
 ### Echo criteria
 
@@ -243,7 +243,7 @@ A call where the agent's voice leaks back through the caller's speaker during on
       answer: (
         <>
           Not by default. Detection is deterministic and runs locally over the
-          call audio, so it has no model or token cost. In the{" "}
+          full call audio, so it has no model or token cost. In the{" "}
           <code>"hybrid"</code> eval mode, each echo is also checked by an
           audio decision model, at one paid request per echo.
         </>

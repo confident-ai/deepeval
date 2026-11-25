@@ -26,7 +26,7 @@ To use the `UnexpectedCallEndMetric`, you'll have to provide a [`ConversationalT
 - `metadata` saying how the call ended, as the [`ConversationSimulator`](/docs/conversation-simulator-voice-mode) records it under `"Stop reason"`, or as your platform records it under `"end_reason"`
 - `audio` on at least one turn, so it is a voice call
 
-The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio), and only to place the call's end. The test case's own `audio` is not used.
+The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio), and only to place the call's end. The test case's own `audio` is not used.
 
 ## Usage
 

@@ -25,7 +25,7 @@ To use the `ResponseDelayConsistencyMetric`, you'll have to provide a [`Conversa
 - `audio` on the test case, a stereo recording of the whole call
 - `audio` on the caller's and agent's turns, each with a `start_time`
 
-Agent turns can also carry `latency_ms`, used with turn audio the same way as in [Response Latency](/docs/metrics-response-latency).
+Agent turns can also carry `latency_ms`, used with per-turn audio the same way as in [Response Latency](/docs/metrics-response-latency).
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
 
@@ -79,8 +79,8 @@ See [Events](#events) for what `score_breakdown` contains.
 
 Each reply whose wait broke from the usual shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 ```python
 {
@@ -113,9 +113,9 @@ Each reply whose wait broke from the usual shows up in `score_breakdown`. Here i
 | `duration_seconds` | How long the wait lasted, the same as `response_delay_seconds` |
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
-Events name the agent turn instead of a time in the call audio.
+Events name the agent turn instead of a time in the full call audio.
 
 ```python
 {
@@ -160,11 +160,11 @@ The `ResponseDelayConsistencyMetric` score is calculated according to the follow
 
 <Equation formula="\text{Response Delay Consistency} = \frac{\text{Number of Agent Replies Close to the Typical Wait}}{\text{Total Number of Timed Agent Replies}}" />
 
-The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio).
+The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio).
 
 ### Counting agent replies
 
-Replies are found and their waits measured exactly as in [Response Latency](/docs/metrics-response-latency#how-is-it-calculated), in both call audio and turn audio. With turn audio, that means the metric listens inside each clip for the speech, so silence at the start of an agent clip counts as waiting, and a turn's `latency_ms` wins over the silence heard. The same replies are left out and listed under `skipped`.
+Replies are found and their waits measured exactly as in [Response Latency](/docs/metrics-response-latency#how-is-it-calculated), in both full call audio and per-turn audio. With per-turn audio, that means the metric listens inside each clip for the speech, so silence at the start of an agent clip counts as waiting, and a turn's `latency_ms` wins over the silence heard. The same replies are left out and listed under `skipped`.
 
 ### Consistency criteria
 
@@ -201,10 +201,10 @@ A reply can pass [Response Latency](/docs/metrics-response-latency) and still be
 
 ### Example call
 
-Two calls where the agent answers in about a second, except once, one scored from call audio and one from turn audio. Each row is one agent reply, its wait, and how far that is from the typical wait.
+Two calls where the agent answers in about a second, except once, one scored from full call audio and one from per-turn audio. Each row is one agent reply, its wait, and how far that is from the typical wait.
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={24}
@@ -232,7 +232,7 @@ Two calls where the agent answers in about a second, except once, one scored fro
 | **4 replies** | | | **1 flagged → 3/4 = 0.75** |
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
 <VoiceDiagram
   duration={24}

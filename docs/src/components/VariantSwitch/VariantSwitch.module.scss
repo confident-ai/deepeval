@@ -1,0 +1,27 @@
+.switchBlock {
+  margin: 0 0 1.25em;
+}
+
+.switch {
+  display: inline-flex;
+  gap: 2px;
+  padding: 2px;
+  margin-bottom: 10px;
+  border: 1px solid var(--color-fd-border);
+  background: var(--color-fd-muted);
+}
+
+.option,
+.active {
+  padding: 3px 12px;
+  border: none;
+  font-size: 12.5px;
+  cursor: pointer;
+  background: transparent;
+  color: var(--color-fd-muted-foreground);
+}
+
+.active {
+  background: var(--color-fd-background);
+  color: var(--color-fd-foreground);
+}

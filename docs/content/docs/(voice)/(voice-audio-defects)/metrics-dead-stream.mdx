@@ -22,7 +22,7 @@ The dead stream metric checks whether your voice agent's audio **goes completely
 
 To use the `DeadStreamMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
 
-The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). Call audio on the test case is ignored. Give every clip an `Audio.start_time` so a [stream cut](#dead-stream-criteria) can be told apart from a dead stream.
+The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). Full call audio on the test case is ignored. Give every clip an `Audio.start_time` so a [stream cut](#dead-stream-criteria) can be told apart from a dead stream.
 
 ## Usage
 
@@ -152,7 +152,7 @@ A stretch of 20 ms frames where every sample is within 2 of zero is dead when it
 Exceptions:
 
 - If the agent's typical pause, across all its clips in the call, is at least 20% exact zeros, its voice writes pauses as silence. Nothing is reported for it.
-- A dead end of clip is a **stream cut** instead when the agent's own clip is next on the call, within 15 seconds. It isn't counted here. When [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) reads turn audio, it reports it as a `stream_cut`. This needs `Audio.start_time` on every clip.
+- A dead end of clip is a **stream cut** instead when the agent's own clip is next on the call, within 15 seconds. It isn't counted here. When [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) reads per-turn audio, it reports it as a `stream_cut`. This needs `Audio.start_time` on every clip.
 
 If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 

@@ -198,9 +198,9 @@ It runs the parts of both roll-ups once each, Silent Reply being in both:
 
 Issues are counted per exchange, exactly as in [Agent Responsiveness](/docs/metrics-agent-responsiveness#counting-exchanges): a caller line and the agent turns after it. An issue in an agent reply counts against the exchange that reply is in. An exchange flagged by two parts counts once.
 
-Only Abrupt Cut-off can read [call audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). With stereo call audio, each cut counts against the agent turn that started last before it. A cut before the first agent turn, such as one in turns left out of the test case, isn't counted. This needs `Audio.start_time` on every turn with audio. Without it, the call audio is ignored and every part reads turn audio.
+Only Abrupt Cut-off can read [full call audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). With stereo full call audio, each cut counts against the agent turn that started last before it. A cut before the first agent turn, such as one in turns left out of the test case, isn't counted. This needs `Audio.start_time` on every turn with audio. Without it, the full call audio is ignored and every part reads per-turn audio.
 
-A part that can't judge the call is left out of the score. If no part can, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped), as for a call with no turn audio.
+A part that can't judge the call is left out of the score. If no part can, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped), as for a call with no per-turn audio.
 
 ### Critical failures
 

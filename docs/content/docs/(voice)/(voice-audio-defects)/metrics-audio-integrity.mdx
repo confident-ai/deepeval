@@ -24,7 +24,7 @@ This is a pipeline health check, not a quality judgment. It catches the failures
 
 To use the `AudioIntegrityMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns, and `content` on them so a reply with no audio can be counted.
 
-Stereo `audio` on the test case is also used, but only by the cut-off part. See [Call audio](#call-audio) below.
+Stereo `audio` on the test case is also used, but only by the cut-off part. See [Full call audio](#call-audio) below.
 
 ## Usage
 
@@ -56,7 +56,7 @@ evaluate(test_cases=test_cases, metrics=[metric])
 
 There is **ONE** optional parameter specific to the `AudioIntegrityMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection) on their channel. Passed to the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) part, and only used with call audio. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection) on their channel. Passed to the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) part, and only used with full call audio. Defaulted to `True`.
 
 The metric doesn't take `eval_mode`. Its Abrupt Cut-off part follows the configured [voice eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes).
 
@@ -219,9 +219,9 @@ Two checks run before the parts. Either one sets the score to 0, with the reason
 
 Nothing else sets the score to 0. A reply with no audio is one flagged reply, counted by Silent Reply.
 
-### Call audio
+### Full call audio
 
-Audio Loop, Audio Dropout, Audio Clipping and Silent Reply only read turn audio. Abrupt Cut-off reads stereo call audio when the test case has it. Each cut-off it finds there counts against the agent turn that started last before the stop, so every audio turn needs an `Audio.start_time`. Without one on every turn, Abrupt Cut-off reads turn audio too. A cut before the test case's first agent turn is dropped, and a stop where the caller [barged in](/docs/conversation-simulator-voice-interruptions) isn't a cut-off.
+Audio Loop, Audio Dropout, Audio Clipping and Silent Reply only read per-turn audio. Abrupt Cut-off reads stereo full call audio when the test case has it. Each cut-off it finds there counts against the agent turn that started last before the stop, so every audio turn needs an `Audio.start_time`. Without one on every turn, Abrupt Cut-off reads per-turn audio too. A cut before the test case's first agent turn is dropped, and a stop where the caller [barged in](/docs/conversation-simulator-voice-interruptions) isn't a cut-off.
 
 ### Example call
 
@@ -295,7 +295,7 @@ A call where four of five agent replies have a problem, and one has two. Each ro
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No LLM. Every part runs locally over the audio. With call audio and{" "}
+          No LLM. Every part runs locally over the audio. With full call audio and{" "}
           <code>use_speech_detection</code> on, the cut-off part runs the small
           Silero VAD model locally over the caller's channel, so there's no
           token cost.

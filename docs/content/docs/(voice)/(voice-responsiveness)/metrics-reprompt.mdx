@@ -24,7 +24,7 @@ To use the `RepromptMetric`, you'll have to provide a [`ConversationalTestCase`]
 - `content` on each turn, which the decision model reads
 - `audio` on the turns, with `Audio.start_time` set so the wait before a repeat can be measured
 
-The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). The test case's own `audio` is not used.
+The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). The test case's own `audio` is not used.
 
 ## Usage
 
@@ -115,7 +115,7 @@ The `RepromptMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Reprompt} = \frac{\text{Number of Caller Lines Answered Without a Repeat}}{\text{Total Number of Caller Lines That Needed a Reply}}" />
 
-The metric reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio) only, to time the caller's turns. It never judges how they sound.
+The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio) only, to time the caller's turns. It never judges how they sound.
 
 ### Counting caller lines
 

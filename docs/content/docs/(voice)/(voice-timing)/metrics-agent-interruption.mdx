@@ -58,7 +58,7 @@ evaluate(test_cases=test_cases, metrics=[metric])
 There are **FOUR** optional parameters specific to the `AgentInterruptionMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
 - [Optional] `max_caller_silence_seconds`: an integer. A false start isn't counted when the caller had been silent for longer than this before starting again, since after a long silence the agent is expected to fill it. Must be greater than 0. Defaulted to `4`.
-- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so background noise isn't mistaken for the caller. With turn audio it's also used to find the agent's speech. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so background noise isn't mistaken for the caller. With per-turn audio it's also used to find the agent's speech. Defaulted to `True`.
 - [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each interruption is [double-checked by an audio decision model](#second-check) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
 - [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
 
@@ -79,8 +79,8 @@ See [Events](#events) for what `score_breakdown` contains.
 
 Each start where the agent interrupted shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 ```python
 {
@@ -125,9 +125,9 @@ Each start where the agent interrupted shows up in `score_breakdown`. Here is wh
 | `duration_seconds` | How long both talked at once. The agent's whole stretch if the caller never spoke inside it |
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
-Events name the agent turn instead of a time in the call audio.
+Events name the agent turn instead of a time in the full call audio.
 
 ```python
 {
@@ -186,12 +186,12 @@ The `AgentInterruptionMetric` score is calculated according to the following equ
 
 <Equation formula="\text{Agent Interruption} = \frac{\text{Number of Agent Starts Without an Interruption}}{\text{Total Number of Agent Starts}}" />
 
-The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). Both use the same rules; they differ in how they hear who is talking, as below.
+The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). Both use the same rules; they differ in how they hear who is talking, as below.
 
 ### Counting agent starts
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={12}
@@ -209,7 +209,7 @@ The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#cal
 A start is each time the agent starts speaking after at least 1 second of its own silence. A pause under 1 second doesn't make a new start. The agent's opening line, spoken before the caller made any sound, isn't counted. When the caller opens the call, the agent's first start is checked like any other.
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
 <VoiceDiagram
   duration={10}
@@ -223,7 +223,7 @@ A start is each time the agent starts speaking after at least 1 second of its ow
   ]}
 />
 
-The metric listens inside each clip for the speech and places it on the call's clock by the clip's `start_time`. Starts are then found the same way as with call audio, so agent speech with pauses under 1 second is one start, even across two clips, named by the first turn. Above, the caller's clip runs into the agent's, but its speech ended first, so there's no overlap.
+The metric listens inside each clip for the speech and places it on the call's clock by the clip's `start_time`. Starts are then found the same way as with full call audio, so agent speech with pauses under 1 second is one start, even across two clips, named by the first turn. Above, the caller's clip runs into the agent's, but its speech ended first, so there's no overlap.
 
 </Tab>
 </Tabs>
@@ -278,10 +278,10 @@ If the model judges "no" more likely than "yes", the interruption is dismissed a
 
 ### Example call
 
-Two calls where the agent sometimes starts over the caller, one scored from call audio and one from turn audio. Each row is one agent start and whether it interrupted the caller.
+Two calls where the agent sometimes starts over the caller, one scored from full call audio and one from per-turn audio. Each row is one agent start and whether it interrupted the caller.
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={25}
@@ -311,7 +311,7 @@ Two calls where the agent sometimes starts over the caller, one scored from call
 | **5 starts** | | **2 interruptions → 3/5 = 0.6** |
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
 <VoiceDiagram
   duration={17}
@@ -350,7 +350,7 @@ Two calls where the agent sometimes starts over the caller, one scored from call
         <>
           Attach the stereo call recording as the test case's{" "}
           <code>audio</code> and the metric ignores the turn timestamps. With
-          turn audio, silence at the edges of a clip is fine, since the metric
+          per-turn audio, silence at the edges of a clip is fine, since the metric
           listens for the speech inside it. A wrong <code>start_time</code>{" "}
           still moves the speech, though, and can report an interruption that
           didn't happen. Listen to a flagged moment before acting on it.

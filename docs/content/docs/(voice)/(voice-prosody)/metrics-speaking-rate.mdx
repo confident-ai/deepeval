@@ -25,7 +25,7 @@ To use the `SpeakingRateMetric`, you'll have to provide a [`ConversationalTestCa
 - `audio`, one clip per reply
 - `content`, the text the agent spoke in that clip
 
-The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). `audio` on the test case is not used.
+The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). `audio` on the test case is not used.
 
 ## Usage
 
@@ -133,7 +133,7 @@ The `SpeakingRateMetric` score is calculated according to the following equation
 
 <Equation formula="\text{Speaking Rate} = \frac{\text{Number of Agent Replies Spoken at a Normal Rate}}{\text{Total Number of Agent Replies}}" />
 
-The metric only reads turn audio, one agent clip at a time. The caller's turns are never checked.
+The metric only reads per-turn audio, one agent clip at a time. The caller's turns are never checked.
 
 ### Counting agent replies
 

@@ -25,7 +25,7 @@ To use the `AgentResponsivenessMetric`, you'll have to provide a [`Conversationa
 - `audio` on the turns, with `Audio.start_time` set so caller turns can be timed
 - `metadata` saying how the call ended, for [Unexpected Call End](/docs/metrics-unexpected-call-end#required-arguments)
 
-The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). The test case's own `audio` is not used.
+The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). The test case's own `audio` is not used.
 
 ## Usage
 

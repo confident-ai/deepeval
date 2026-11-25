@@ -24,7 +24,7 @@ A transcript can't show these failures. A buzzing tone after a sentence, or a st
 
 To use the `AudioGlitchMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
 
-Stereo `audio` on the test case is also used, but only by the cut-off part. See [Call audio](#call-audio) below.
+Stereo `audio` on the test case is also used, but only by the cut-off part. See [Full call audio](#call-audio) below.
 
 ## Usage
 
@@ -56,7 +56,7 @@ evaluate(test_cases=test_cases, metrics=[metric])
 
 There is **ONE** optional parameter specific to the `AudioGlitchMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection) on their channel. Passed to the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) part, and only used with call audio. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection) on their channel. Passed to the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) part, and only used with full call audio. Defaulted to `True`.
 
 `model`, `async_mode` and `evaluation_template` are still accepted so older code keeps working, but they're ignored. The metric doesn't take `eval_mode`. Its Abrupt Cut-off part follows the configured [voice eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes).
 
@@ -196,9 +196,9 @@ A reply counts if any part counted it, and is flagged if any part flagged it. A 
 
 Above, turn 1 is flagged once and turn 3 is flagged once, even though two parts flagged it: 2 of 2 replies flagged.
 
-### Call audio
+### Full call audio
 
-Held Tone, Dead Stream and Audio Clipping only read turn audio. Abrupt Cut-off reads stereo call audio when the test case has it. Each cut-off it finds there counts against the agent turn that started last before the stop, so every audio turn needs an `Audio.start_time`. Without one on every turn, Abrupt Cut-off reads turn audio too. A cut before the test case's first agent turn is dropped.
+Held Tone, Dead Stream and Audio Clipping only read per-turn audio. Abrupt Cut-off reads stereo full call audio when the test case has it. Each cut-off it finds there counts against the agent turn that started last before the stop, so every audio turn needs an `Audio.start_time`. Without one on every turn, Abrupt Cut-off reads per-turn audio too. A cut before the test case's first agent turn is dropped.
 
 ### Example call
 
@@ -272,7 +272,7 @@ A call where three of five agent replies carry a glitch, and one of them has two
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No LLM. Every part runs locally over the audio. With call audio and{" "}
+          No LLM. Every part runs locally over the audio. With full call audio and{" "}
           <code>use_speech_detection</code> on, the cut-off part runs the small
           Silero VAD model locally over the caller's channel, so there's no
           token cost.

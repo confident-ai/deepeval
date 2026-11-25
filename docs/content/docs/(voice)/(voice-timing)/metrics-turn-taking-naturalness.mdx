@@ -23,7 +23,7 @@ To use the `TurnTakingNaturalnessMetric`, you'll have to provide a [`Conversatio
 - `audio` on the test case, a stereo recording of the whole call
 - `audio` on the caller's and agent's turns, each with a `start_time`
 
-Agent turns can also carry `latency_ms`, used with turn audio as in [Response Latency](/docs/metrics-response-latency).
+Agent turns can also carry `latency_ms`, used with per-turn audio as in [Response Latency](/docs/metrics-response-latency).
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
 
@@ -78,8 +78,8 @@ See [Events](#events) for what `score_breakdown` contains.
 
 Every event the four parts raise shows up in `score_breakdown`, tagged with the part that raised it. Here is what the two calls in the [example call](#example-call) return:
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 ```python
 {
@@ -148,9 +148,9 @@ Every event the four parts raise shows up in `score_breakdown`, tagged with the 
 ```
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
-Events name turns instead of times in the call audio. Response Latency and Response Delay Consistency time one reply fewer here, since turn 9 follows another agent turn.
+Events name turns instead of times in the full call audio. Response Latency and Response Delay Consistency time one reply fewer here, since turn 9 follows another agent turn.
 
 ```python
 {
@@ -237,7 +237,7 @@ The `TurnTakingNaturalnessMetric` score is calculated according to the following
 
 ### The four parts
 
-The metric runs these metrics on the call, each with its default limits, reading [call audio or turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio) the same way they do on their own:
+The metric runs these metrics on the call, each with its default limits, reading [full call audio or per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio) the same way they do on their own:
 
 | Part | Flags an agent reply when |
 | --- | --- |
@@ -283,10 +283,10 @@ Timings depend on the connector and its end-of-turn detection, so keep the conne
 
 ### Example call
 
-Two versions of one call, one scored from call audio and one from turn audio. Each row is one agent reply and which parts flagged it.
+Two versions of one call, one scored from full call audio and one from per-turn audio. Each row is one agent reply and which parts flagged it.
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={31}
@@ -316,7 +316,7 @@ Two versions of one call, one scored from call audio and one from turn audio. Ea
 | **5 replies** | | **3 with an issue → 2/5 = 0.4** |
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
 <VoiceDiagram
   duration={31}

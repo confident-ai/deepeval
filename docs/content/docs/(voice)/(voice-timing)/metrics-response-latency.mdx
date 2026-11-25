@@ -25,7 +25,7 @@ To use the `ResponseLatencyMetric`, you'll have to provide a [`ConversationalTes
 - `audio` on the test case, a stereo recording of the whole call
 - `audio` on the caller's and agent's turns, each with a `start_time`
 
-Agent turns can also carry `latency_ms`, the response latency your connector recorded for that reply. It's only used with turn audio.
+Agent turns can also carry `latency_ms`, the response latency your connector recorded for that reply. It's only used with per-turn audio.
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
 
@@ -79,8 +79,8 @@ See [Events](#events) for what `score_breakdown` contains.
 
 Each slow reply shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 ```python
 {
@@ -113,9 +113,9 @@ Each slow reply shows up in `score_breakdown`. Here is what the two calls in the
 | `duration_seconds` | How long the wait lasted, the same as `response_delay_seconds` |
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
-Events name the agent turn instead of a time in the call audio.
+Events name the agent turn instead of a time in the full call audio.
 
 ```python
 {
@@ -168,12 +168,12 @@ The `ResponseLatencyMetric` score is calculated according to the following equat
 
 <Equation formula="\text{Response Latency} = \frac{\text{Number of Agent Replies Within the Wait Limit}}{\text{Total Number of Timed Agent Replies}}" />
 
-The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio), and the two find replies and measure waits differently, as below.
+The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio), and the two find replies and measure waits differently, as below.
 
 ### Counting agent replies
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={12}
@@ -191,7 +191,7 @@ The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#cal
 A reply is each time the agent starts speaking after at least 1 second of its own silence, when the caller spoke last. A pause under 1 second doesn't start a new reply. An opening line the agent speaks before the caller makes any sound answers no one, so it isn't counted. [Time to First Response](/docs/metrics-time-to-first-response) times it instead.
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
 <VoiceDiagram
   duration={12}
@@ -214,8 +214,8 @@ Each agent clip that directly follows a caller clip on the call's clock is one r
 
 The wait runs from where the caller's speech ends to where the agent's speech starts.
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={12}
@@ -235,7 +235,7 @@ The wait runs from where the caller's speech ends to where the agent's speech st
 The wait is the silence between the two channels, from the caller's last sound to the agent's first sound. `latency_ms` on the turns is ignored.
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
 <VoiceDiagram
   duration={10}
@@ -271,8 +271,8 @@ A reply is slow when:
 A reply isn't timed, and is listed under `skipped`, when:
 
 - the agent started more than 0.5 seconds before the caller finished, which [Agent Interruption](/docs/metrics-agent-interruption) judges instead,
-- with turn audio, the caller's or the agent's clip can't be decoded, or
-- with turn audio, the two clips touch, speech runs right up to where they meet and there's no `latency_ms`, so no silence can be heard.
+- with per-turn audio, the caller's or the agent's clip can't be decoded, or
+- with per-turn audio, the two clips touch, speech runs right up to where they meet and there's no `latency_ms`, so no silence can be heard.
 
 If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
@@ -282,10 +282,10 @@ People answer each other in about 0.2 seconds, and about 1 second of silence is 
 
 ### Example call
 
-Two calls where the agent is sometimes slow to answer, one scored from call audio and one from turn audio. Each row is one agent reply and how long the caller waited for it.
+Two calls where the agent is sometimes slow to answer, one scored from full call audio and one from per-turn audio. Each row is one agent reply and how long the caller waited for it.
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={28}
@@ -314,7 +314,7 @@ Two calls where the agent is sometimes slow to answer, one scored from call audi
 | **3 replies** | | **1 slow → 2/3 = 0.67** |
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
 <VoiceDiagram
   duration={27}
@@ -352,8 +352,8 @@ Two calls where the agent is sometimes slow to answer, one scored from call audi
       question: "Which wins, latency_ms or the audio?",
       answer: (
         <>
-          With stereo call audio, the audio always wins and{" "}
-          <code>latency_ms</code> is ignored. With turn audio,{" "}
+          With stereo full call audio, the audio always wins and{" "}
+          <code>latency_ms</code> is ignored. With per-turn audio,{" "}
           <code>latency_ms</code> wins when the agent turn has one, and the
           silence heard between the clips is only used for turns without it.
         </>

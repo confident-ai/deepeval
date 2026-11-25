@@ -16,6 +16,7 @@ import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import ImageDisplayer from "@site/src/components/ImageDisplayer";
 import AudioSample from "@site/src/components/AudioSample";
 import VoiceDiagram from "@site/src/components/VoiceDiagram";
+import VariantSwitch, { Variant } from "@site/src/components/VariantSwitch";
 import Callout from "@site/src/components/Callout";
 import Equation from "@site/src/components/Equation";
 import Mermaid from "@site/src/components/Mermaid";
@@ -55,6 +56,8 @@ export const getMDXComponents = (components?: MDXComponents) =>
     ImageDisplayer,
     AudioSample,
     VoiceDiagram,
+    VariantSwitch,
+    Variant,
     Callout,
     Equation,
     Mermaid,

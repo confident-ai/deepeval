@@ -22,7 +22,7 @@ The audio loop metric checks whether your voice agent's audio **gets stuck repea
 
 To use the `AudioLoopMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
 
-The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). Call audio on the test case is ignored. An `Audio.start_time` on each clip is optional, and only used to place events on the call's clock.
+The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). Full call audio on the test case is ignored. An `Audio.start_time` on each clip is optional, and only used to place events on the call's clock.
 
 ## Usage
 

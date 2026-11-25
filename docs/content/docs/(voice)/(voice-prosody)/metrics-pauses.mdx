@@ -24,7 +24,7 @@ To use the `PausesMetric`, you'll have to provide a [`ConversationalTestCase`](/
 
 - `audio` on the agent's turns, one clip per reply
 
-The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). `audio` on the test case is not used.
+The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). `audio` on the test case is not used.
 
 ## Usage
 
@@ -128,7 +128,7 @@ The `PausesMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Pauses} = \frac{\text{Number of Agent Replies With Natural Pauses}}{\text{Total Number of Agent Replies}}" />
 
-The metric only reads turn audio, one agent clip at a time. The caller's turns are never checked.
+The metric only reads per-turn audio, one agent clip at a time. The caller's turns are never checked.
 
 ### Counting agent replies
 

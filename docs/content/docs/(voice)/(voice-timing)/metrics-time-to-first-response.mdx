@@ -58,7 +58,7 @@ evaluate(test_cases=test_cases, metrics=[metric])
 There are **TWO** optional parameters specific to the `TimeToFirstResponseMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
 - [Optional] `max_wait_seconds`: an integer for the longest wait, in seconds, before the agent's first response. Must be greater than 0. Defaulted to `3`.
-- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts someone as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so background noise isn't mistaken for the caller's first words or, with turn audio, for a greeting. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts someone as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so background noise isn't mistaken for the caller's first words or, with per-turn audio, for a greeting. Defaulted to `True`.
 
 ### As a standalone
 
@@ -77,8 +77,8 @@ See [Events](#events) for what `score_breakdown` contains.
 
 A slow first response shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 ```python
 {
@@ -109,9 +109,9 @@ A slow first response shows up in `score_breakdown`. Here is what the two calls 
 | `duration_seconds` | How long the wait lasted, the same as `first_response_seconds` |
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
-The event names the greeting's turn instead of a time in the call audio.
+The event names the greeting's turn instead of a time in the full call audio.
 
 ```python
 {
@@ -154,12 +154,12 @@ The `TimeToFirstResponseMetric` score is calculated according to the following e
 
 <Equation formula="\text{Time to First Response} = \begin{cases} 1 & \text{if the first response starts within the wait limit} \\ 0 & \text{otherwise} \end{cases}" />
 
-The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio), and the two handle a caller who speaks first differently, as below.
+The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio), and the two handle a caller who speaks first differently, as below.
 
 ### Finding the first response
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={6.5}
@@ -177,11 +177,11 @@ The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#cal
 
 The first response is the agent's first sound on its channel. The wait depends on who spoke first:
 
-- **The agent speaks first:** from the start of the call audio to the agent's first sound.
+- **The agent speaks first:** from the start of the full call audio to the agent's first sound.
 - **The caller speaks first:** from the end of the caller's first words to the agent's first sound, or 0 if the agent starts before those words end. Pauses under 0.5 seconds stay inside the first words, as above.
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
 <VoiceDiagram
   duration={8}
@@ -210,7 +210,7 @@ The wait runs from when the call connected to that first speech. If the first sp
 | --- | --- |
 | Wait | More than `max_wait_seconds`, 3 seconds by default |
 
-The metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped) when the agent makes no sound in the call audio, or, with turn audio, when the call has no timed audio or an audio turn has no `start_time`.
+The metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped) when the agent makes no sound in the full call audio, or, with per-turn audio, when the call has no timed audio or an audio turn has no `start_time`.
 
 :::note
 The default of 3 seconds is a practical allowance for how long a line can stay silent after it connects, not a published norm. It is separate from [Response Latency](/docs/metrics-response-latency)'s 4-second limit, so tune it to your telephony setup.
@@ -218,10 +218,10 @@ The default of 3 seconds is a practical allowance for how long a line can stay s
 
 ### Example call
 
-Two calls with a slow start, one scored from call audio and one from turn audio. In the first the caller says hello first; in the second the agent's greeting clip starts on time but its speech doesn't.
+Two calls with a slow start, one scored from full call audio and one from per-turn audio. In the first the caller says hello first; in the second the agent's greeting clip starts on time but its speech doesn't.
 
-<Tabs items={["Call audio", "Turn audio"]}>
-<Tab value="Call audio">
+<Tabs items={["Full call audio", "Per-turn audio"]}>
+<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={14}
@@ -247,7 +247,7 @@ Two calls with a slow start, one scored from call audio and one from turn audio.
 | **1 response** | | **slow → 0** |
 
 </Tab>
-<Tab value="Turn audio">
+<Tab value="Per-turn audio">
 
 <VoiceDiagram
   duration={12}
@@ -282,10 +282,10 @@ Two calls with a slow start, one scored from call audio and one from turn audio.
       question: "Why is my call skipped when the caller speaks first?",
       answer: (
         <>
-          With turn audio, a caller who speaks first means the agent wasn't
+          With per-turn audio, a caller who speaks first means the agent wasn't
           expected to greet, so there's nothing to time.{" "}
           <a href="/docs/metrics-response-latency">ResponseLatencyMetric</a>{" "}
-          times the agent's answer. With call audio, the wait is timed from the
+          times the agent's answer. With full call audio, the wait is timed from the
           end of the caller's first words instead.
         </>
       ),
