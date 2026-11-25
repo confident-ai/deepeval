@@ -62,7 +62,7 @@ print(metric.score_breakdown)
 
 ## Events
 
-Each reply that was cut off shows up in `score_breakdown`. Here is what the two example calls in [How Is It Calculated?](#how-is-it-calculated) return:
+Each reply that was cut off shows up in `score_breakdown`. Here is what the two calls in the [example](#example) return:
 
 <Tabs items={["Call audio", "Turn audio"]}>
 <Tab value="Call audio">
@@ -187,6 +187,14 @@ A finished reply **fades out**. A cut one **stops at near full volume**. Call au
 
 Every point where the agent's channel goes quiet is checked, while the caller is silent.
 
+**Counted:** each stretch of sound on the agent's channel. Pauses shorter than 1 second don't split a stretch.
+
+**Flagged:** a counted reply with a stop that fails the three checks. Stops while the caller was talking or as the recording ends don't count, so those replies stay clean.
+
+- **Caller talking.** A stop doesn't count if the caller made 0.2 seconds or more of sound from 1 second before it to 0.2 seconds after. The agent stopped because the caller spoke up.
+- **Recording ending.** A stop within 0.05 seconds of the end means the sound was still going when the recording ended. [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end) reports that instead.
+- **Sound** is read in 20 ms frames: louder than about −41 dBFS counts, pauses under 0.3 seconds are closed and sounds under 0.15 seconds are dropped. The background noise is the quietest 10% of the agent channel.
+
 </Tab>
 <Tab value="Turn audio">
 
@@ -203,6 +211,14 @@ Every point where the agent's channel goes quiet is checked, while the caller is
 
 Only the end of each agent turn's clip is checked.
 
+**Counted:** every agent turn whose clip decodes, including turns with `interrupted=True`. Clips that can't be decoded are left out.
+
+**Flagged:** a counted turn whose clip ends in a cut-off or a stream cut, unless the turn has `interrupted=True`.
+
+- **Interrupted.** The metric can't hear the caller here, so it relies on the turn's [`interrupted`](/docs/conversation-simulator-voice-interruptions) flag. Stopping mid-word is what a successful barge-in should cause, so the turn counts as clean.
+- **Stream cut.** The clip ends mid-sound, or in at least 1 second of digital silence, and the very next clip in the call is the agent's own, starting within 15 seconds. This needs `Audio.start_time` on every clip.
+- **Short clips.** The 10 dB background-noise check only applies to clips of 2 seconds or more. Shorter clips only need to clear the −30 dBFS floor.
+
 </Tab>
 </Tabs>
 
@@ -218,7 +234,7 @@ The check on a stop is the same for call audio and turn audio. Only which stops 
 Only cuts in the middle of a sound can be heard this way. An agent that stops between two words sounds like a normal ending and is not flagged.
 :::
 
-### How replies are counted and flagged
+### Example
 
 <Tabs items={["Call audio", "Turn audio"]}>
 <Tab value="Call audio">
@@ -244,15 +260,6 @@ Only cuts in the middle of a sound can be heard this way. An agent that stops be
 | 10.0 – 11.6 s | Full volume, caller silent | **Yes** |
 | 13.2 – 14.0 s | Still going when the recording ends | No |
 | **4 replies** | | **1 cut off → 3/4 = 0.75** |
-
-**Counted:** each stretch of sound on the agent's channel. Pauses shorter than 1 second don't split a stretch.
-
-**Flagged:** a counted reply with a stop that fails the three checks. Stops while the caller was talking or as the recording ends don't count, so those replies stay clean.
-
-- **Caller talking.** A stop doesn't count if the caller made 0.2 seconds or more of sound from 1 second before it to 0.2 seconds after. The agent stopped because the caller spoke up.
-- **Recording ending.** A stop within 0.05 seconds of the end means the sound was still going when the recording ended. [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end) reports that instead.
-- **Sound** is read in 20 ms frames: louder than about −41 dBFS counts, pauses under 0.3 seconds are closed and sounds under 0.15 seconds are dropped. The background noise is the quietest 10% of the agent channel.
-
 
 </Tab>
 <Tab value="Turn audio">
@@ -280,14 +287,6 @@ Only cuts in the middle of a sound can be heard this way. An agent that stops be
 | 5 | Fades out | No |
 | 7 | Full volume | **Yes** |
 | **5 replies** | | **2 cut off → 3/5 = 0.6** |
-
-**Counted:** every agent turn whose clip decodes, including turns with `interrupted=True`. Clips that can't be decoded are left out.
-
-**Flagged:** a counted turn whose clip ends in a cut-off or a stream cut, unless the turn has `interrupted=True`.
-
-- **Interrupted.** The metric can't hear the caller here, so it relies on the turn's [`interrupted`](/docs/conversation-simulator-voice-interruptions) flag. Stopping mid-word is what a successful barge-in should cause, so the turn counts as clean.
-- **Stream cut.** The clip ends mid-sound, or in at least 1 second of digital silence (dotted), and the very next clip in the call is the agent's own, starting within 15 seconds. This needs `Audio.start_time` on every clip.
-- **Short clips.** The 10 dB background-noise check only applies to clips of 2 seconds or more. Shorter clips only need to clear the −30 dBFS floor.
 
 </Tab>
 </Tabs>
