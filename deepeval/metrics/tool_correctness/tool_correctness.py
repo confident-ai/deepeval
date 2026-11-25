@@ -315,9 +315,6 @@ class ToolCorrectnessMetric(BaseMetric):
         )
 
     def _issues(self) -> List[str]:
-        """What kept the score below 1, using the same matching as the score.
-        Each call is paired with at most one expected tool of the same name,
-        preferring the call that matches it best."""
         missing, wrong_inputs, wrong_outputs, matched = [], [], [], []
         unpaired = list(self.tools_called)
         for expected_tool in self.expected_tools:
@@ -365,8 +362,6 @@ class ToolCorrectnessMetric(BaseMetric):
     def _match_score(
         self, expected_tool: ToolCall, called_tool: ToolCall
     ) -> float:
-        """How well a call matches an expected tool: 0 unless the name and type
-        match, then scaled by input parameters and output when ticked."""
         if (
             expected_tool.name != called_tool.name
             or expected_tool.type != called_tool.type
@@ -378,7 +373,6 @@ class ToolCorrectnessMetric(BaseMetric):
     def _input_parameters_score(
         self, expected_tool: ToolCall, called_tool: ToolCall
     ) -> float:
-        """Compared only when ticked and set on the expected tool."""
         if (
             ToolCallParams.INPUT_PARAMETERS not in self.evaluation_params
             or expected_tool.input_parameters is None
@@ -391,7 +385,6 @@ class ToolCorrectnessMetric(BaseMetric):
     def _output_matches(
         self, expected_tool: ToolCall, called_tool: ToolCall
     ) -> bool:
-        """Compared only when ticked and set on the expected tool."""
         return (
             ToolCallParams.OUTPUT not in self.evaluation_params
             or expected_tool.output is None
@@ -569,8 +562,6 @@ class ToolCorrectnessMetric(BaseMetric):
     # Non exact matching score
     def _calculate_non_exact_match_score(self) -> float:
         total_score = 0.0
-        # Track used calls by position: identical calls are equal, so a set of
-        # calls would treat a repeated call as already used.
         used = set()
         for expected_tool in self.expected_tools:
             scores = [
