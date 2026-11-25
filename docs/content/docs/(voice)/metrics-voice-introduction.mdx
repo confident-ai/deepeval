@@ -206,7 +206,7 @@ Set it with `eval_mode` on a metric that supports it, or for every voice metric 
 
 ### Second Check With an Audio Decision Model
 
-In hybrid mode, the model hears about 5 seconds around each problem, from the stereo call audio when there is one, otherwise from the turn's own audio, and answers one yes/no question. Only these metrics support it, and each asks its own question:
+In hybrid mode, the model hears the audio around each problem and answers one yes/no question. That's at least 5 seconds around the spot or stretch where it happened, or the whole reply for a problem judged on a whole reply, from the stereo call audio when there is one, otherwise from the turn's own clip. Only these metrics support it, and each asks its own question:
 
 | Metric | Whose audio it hears | What it's asked |
 | --- | --- | --- |
