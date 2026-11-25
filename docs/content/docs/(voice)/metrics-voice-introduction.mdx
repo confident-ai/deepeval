@@ -10,7 +10,7 @@ beta: true
 
 ## Quick Summary
 
-Voice metrics score the **audio** of a call, not just its transcript. Most are deterministic: they measure the sound directly, with no model calls, so they're fast, free and repeatable. Each one returns a **score between 0 and 1**, usually the share of the call that was free of the problem, along with a **reason**. A metric passes when its score is at or above `threshold`, `0.5` by default.
+Voice metrics score the **audio** of a call, not just its transcript. Most are deterministic: they measure the sound directly, with no model calls, so they're fast, free and repeatable. The exceptions are [Transcription Accuracy](/docs/metrics-transcription-accuracy), judged by an LLM or Jev, and [Reprompt](/docs/metrics-reprompt), which asks Jev whether the caller really repeated themselves, along with the roll-ups that include it. Each one returns a **score between 0 and 1**, usually the share of the call that was free of the problem, along with a **reason**. A metric passes when its score is at or above `threshold`, `0.5` by default.
 
 <Tabs items={["Speech Quality", "Audio Defects", "Audio Level", "Prosody", "Timing", "Responsiveness"]}>
 <Tab value="Speech Quality">
