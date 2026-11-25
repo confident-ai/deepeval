@@ -368,13 +368,19 @@ def timed_turn(role, seconds, start_time, seed=0):
     )
 
 
+PLACE_KEYS = (
+    "offset_seconds",
+    "duration_seconds",
+    "start_time",
+    "mark",
+    "timing_source",
+    "description",
+)
+
+
 def without_place(event):
-    """The event minus where it sits, which is the turn's own audio span."""
-    return {
-        key: value
-        for key, value in event.items()
-        if key not in ("offset_seconds", "duration_seconds", "start_time")
-    }
+    """The event minus where it sits and how it reads on the call."""
+    return {key: value for key, value in event.items() if key not in PLACE_KEYS}
 
 
 def undecodable(turn):

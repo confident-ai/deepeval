@@ -1,9 +1,13 @@
 import pytest
 
 from deepeval.metrics.voice.utils.call_activity import (
+    Span,
     agent_starts,
     call_activity,
+    call_end,
+    interruption_place,
     recording_activity,
+    silence_after_line,
 )
 from deepeval.test_case import ConversationalTestCase
 from deepeval.voice.connectors import audio_utils
@@ -13,6 +17,7 @@ from tests.test_metrics.helpers import (
     speech_like,
     stereo_recording,
     timed_call,
+    timed_turn,
 )
 
 # speech_like's syllables leave the last quarter second of a clip silent.
@@ -105,6 +110,40 @@ def test_a_pause_under_a_second_does_not_end_the_agents_stretch(
         agent=[(0.0, speech_like(1.0)), (1.0 - TAIL + pause, speech_like(1.0))],
     )
     assert len(_starts(path)) == starts
+
+
+def test_an_interruption_is_placed_where_both_speakers_talked():
+    other = [Span(0.0, 2.5), Span(2.8, 3.2), Span(6.0, 7.0)]
+    assert interruption_place(other, 2.0, 4.0) == {
+        "start_time": 2.0,
+        "duration_seconds": 1.2,
+    }
+
+
+def test_an_interruption_with_no_overlap_is_the_interrupters_stretch():
+    assert interruption_place([Span(5.0, 6.0)], 2.0, 3.0) == {
+        "start_time": 2.0,
+        "duration_seconds": 1.0,
+    }
+
+
+def test_the_silence_after_a_line_ends_at_the_next_timed_turn():
+    turns = [
+        timed_turn("user", 2.0, 0.0),
+        timed_turn("user", 1.0, 5.0, seed=1),
+    ]
+    silence = silence_after_line(turns, 0)
+    assert silence["start_time"] == pytest.approx(2.0, abs=0.05)
+    assert silence["duration_seconds"] == pytest.approx(3.0, abs=0.05)
+    assert call_end(turns) == pytest.approx(6.0, abs=0.05)
+
+
+def test_an_untimed_line_has_no_silence_to_place():
+    turns = timed_call([0.5])
+    for turn in turns:
+        turn.audio.start_time = None
+    assert silence_after_line(turns, 0) == {}
+    assert call_end(turns) is None
 
 
 def test_call_recording_path_still_works_and_warns(tmp_path):

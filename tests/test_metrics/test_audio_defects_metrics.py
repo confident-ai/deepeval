@@ -150,3 +150,9 @@ def test_a_dead_stretch_mid_reply_is_a_dead_stream_not_a_cut_off():
     )
     assert measure(DeadStreamMetric(), turns).score == pytest.approx(2 / 3)
     assert measure(AbruptCutoffMetric(), turns).score == 1.0
+
+
+def test_a_dropout_is_described_in_milliseconds():
+    metric = measure(AudioDropoutMetric(), with_defect(1, dropout_clip))
+    (event,) = metric.score_breakdown["events"]
+    assert event["description"] == "Audio dropped out for 100 ms"

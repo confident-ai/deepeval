@@ -14,6 +14,7 @@ class AudioDropoutMetric(BaseDefectMetric):
             VoiceEvent(
                 type="audio_dropout",
                 turn=turn,
+                description=f"Audio dropped out for {duration * 1000:.0f} ms",
                 **placed(test_case.turns[turn].audio, offset, duration),
             )
             for turn, reply in measurements.items()

@@ -61,6 +61,8 @@ class PitchConsistencyMetric(BaseDefectMetric):
                 turn=turn,
                 pitch_median_hz=round(measurements[turn].pitch_median_hz, 1),
                 shift_semitones=round(shift, 1),
+                description=f"Reply was {abs(shift):.0f} semitones "
+                f"{'higher' if shift > 0 else 'lower'} than usual",
             )
             for turn, shift in shifts_from_typical(levels).items()
             if abs(shift) > self.max_shift_semitones

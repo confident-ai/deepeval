@@ -1,4 +1,7 @@
-from deepeval.metrics.voice.utils.call_activity import caller_lines
+from deepeval.metrics.voice.utils.call_activity import (
+    caller_lines,
+    silence_after_line,
+)
 from deepeval.metrics.voice.utils.defects import (
     CALLER_LINES,
     NO_CALL_AUDIO_REASON,
@@ -8,7 +11,7 @@ from deepeval.metrics.voice.utils.defects import (
 from deepeval.metrics.voice.utils.detectors import response_was_owed
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
-from deepeval.metrics.voice.utils.events import VoiceEvent
+from deepeval.metrics.voice.utils.events import RANGE, VoiceEvent
 
 
 class RepromptMetric(BaseDefectMetric):
@@ -40,11 +43,20 @@ class RepromptMetric(BaseDefectMetric):
                 and next_turn.role == "user"
                 and answered_later
             ):
+                silence = silence_after_line(turns, last)
+                wait = silence.get("duration_seconds")
                 defects.append(
                     VoiceEvent(
                         type="user_reprompted",
                         turn=first,
                         reprompt_turn=last + 1,
+                        mark=RANGE,
+                        description=(
+                            "Caller repeated themselves"
+                            if wait is None
+                            else f"Caller repeated themselves after {wait:.1f}s"
+                        ),
+                        **silence,
                     )
                 )
         return DefectShare(

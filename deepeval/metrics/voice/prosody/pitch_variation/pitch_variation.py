@@ -72,6 +72,11 @@ class PitchVariationMetric(BaseDefectMetric):
                     pitch_spread_semitones=round(
                         reply.pitch_spread_semitones, 1
                     ),
+                    description=(
+                        "Reply sounded monotone"
+                        if event_type == "monotone"
+                        else "Pitch varied erratically"
+                    ),
                 )
             )
         return DefectShare(

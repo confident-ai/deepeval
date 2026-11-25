@@ -67,6 +67,10 @@ def test_score_is_the_share_of_agent_replies_without_the_issue(
     [event] = metric.score_breakdown["events"]
     assert event["type"] == event_type
     assert event["turn"] == 1
+    assert event["mark"] == "whole_reply"
+    assert event["offset_seconds"] == 0.0
+    assert event["timing_source"] == "turn_timestamps"
+    assert event["description"]
 
 
 @pytest.mark.parametrize("metric_class,_,__,build", LEVEL_ISSUES)

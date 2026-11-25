@@ -19,7 +19,11 @@ from typing import (
     TypeVar,
 )
 
-from deepeval.metrics.voice.utils.events import VoiceEvent, events_to_dicts
+from deepeval.metrics.voice.utils.events import (
+    RANGE,
+    VoiceEvent,
+    events_to_dicts,
+)
 from deepeval.metrics.voice.utils.analysis import (
     CONTIGUOUS_CLIP_TOLERANCE_SECONDS,
     AudioMeasurements,
@@ -257,6 +261,22 @@ def shifts_from_typical(levels: Dict[int, float]) -> Dict[int, float]:
     return {turn: level - typical for turn, level in levels.items()}
 
 
+def stamped(defect: VoiceEvent, timing_source: Optional[str]) -> VoiceEvent:
+    """The defect with where its time came from, and a range mark when the
+    metric placed it without saying what the place covers."""
+    placed_on_call = (
+        defect.start_time is not None or defect.offset_seconds is not None
+    )
+    return defect.model_copy(
+        update={
+            "timing_source": defect.timing_source
+            or timing_source
+            or TURN_TIMESTAMPS,
+            "mark": defect.mark or (RANGE if placed_on_call else None),
+        }
+    )
+
+
 TURN_TIMESTAMPS_NOTE = (
     " Judged from each turn's own audio and timestamps, as no stereo call "
     "recording was available."
@@ -279,6 +299,11 @@ class DefectShare:
     counted: Tuple[str, str] = AGENT_REPLIES
     event_key: str = "turn"
     timing_source: Optional[str] = None
+
+    def __post_init__(self) -> None:
+        self.defects = [
+            stamped(defect, self.timing_source) for defect in self.defects
+        ]
 
     @property
     def scored(self) -> bool:

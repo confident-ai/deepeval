@@ -72,6 +72,11 @@ def test_talking_over_the_caller_on_a_recording(tmp_path):
     [event] = metric.score_breakdown["events"]
     assert event["type"] == "talk_over"
     assert event["overlap_seconds"] == pytest.approx(2.75, abs=0.05)
+    assert event["start_time"] == pytest.approx(3.0, abs=0.05)
+    assert event["duration_seconds"] == pytest.approx(
+        event["overlap_seconds"], abs=0.05
+    )
+    assert event["timing_source"] == "call_recording"
 
 
 def test_a_short_reply_after_the_caller_finished_is_not_a_false_start(

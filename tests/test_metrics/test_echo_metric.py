@@ -43,7 +43,9 @@ def test_the_agent_heard_back_through_the_callers_speaker_is_an_echo(
     [event] = metric.score_breakdown["events"]
     assert event["type"] == "echo"
     assert event["reply_start"] == pytest.approx(1.0, abs=0.05)
-    assert event["start_time"] == pytest.approx(1.45, abs=0.05)
+    # The whole reply the echo was found on, not the echoed copy.
+    assert event["mark"] == "whole_reply"
+    assert event["start_time"] == pytest.approx(1.0, abs=0.05)
     assert event["delay_seconds"] == pytest.approx(0.45, abs=0.01)
     assert event["level_db"] == pytest.approx(-14.0, abs=1.5)
 

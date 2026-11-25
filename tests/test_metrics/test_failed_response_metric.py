@@ -50,6 +50,11 @@ def test_one_sentence_split_into_turns_is_one_line():
     assert [without_place(e) for e in metric.score_breakdown["events"]] == [
         {"type": "call_ended_without_reply", "turn": 1}
     ]
+    # Nothing followed the line, so the mark sits where the call ended.
+    [event] = metric.score_breakdown["events"]
+    assert event["mark"] == "range"
+    assert event["start_time"] == pytest.approx(6.5, abs=0.05)
+    assert event["duration_seconds"] == 0.0
 
 
 def test_every_caller_line_after_the_last_reply_fails():

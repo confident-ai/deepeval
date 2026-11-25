@@ -9,11 +9,12 @@ from deepeval.metrics.voice.utils.call_activity import (
     CallerStart,
     call_activity,
     caller_starts,
+    interruption_place,
 )
 from deepeval.metrics.voice.utils.defects import DefectShare
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
-from deepeval.metrics.voice.utils.events import VoiceEvent, on_call
+from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 def agent_had_the_floor(start: CallerStart) -> bool:
@@ -46,6 +47,11 @@ def is_talk_over(start: CallerStart) -> bool:
 INTERRUPTION_CONDITIONS: Dict[str, Callable[[CallerStart], bool]] = {
     "false_start": is_false_start,
     "talk_over": is_talk_over,
+}
+
+CALLER_DESCRIPTIONS = {
+    "false_start": "Caller started over the agent, then stopped",
+    "talk_over": "Caller talked over the agent for {overlap:.1f}s",
 }
 
 
@@ -90,8 +96,13 @@ class UserInterruptionMetric(BaseDefectMetric):
                         type=fired[0],
                         **{event_key: key},
                         caller_seconds=round(start.stops_at - start.at, 2),
-                        **on_call(start.at, start.stops_at - start.at),
+                        **interruption_place(
+                            activity.agent, start.at, start.stops_at
+                        ),
                         overlap_seconds=round(start.overlap_seconds, 2),
+                        description=CALLER_DESCRIPTIONS[fired[0]].format(
+                            overlap=start.overlap_seconds
+                        ),
                     )
                 )
         return DefectShare(

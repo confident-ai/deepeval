@@ -8,7 +8,7 @@ from deepeval.metrics.voice.utils.call_activity import (
 from deepeval.metrics.voice.utils.defects import DefectShare
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
-from deepeval.metrics.voice.utils.events import VoiceEvent
+from deepeval.metrics.voice.utils.events import RANGE, VoiceEvent
 
 
 class ResponseLatencyMetric(BaseDefectMetric):
@@ -48,6 +48,8 @@ class ResponseLatencyMetric(BaseDefectMetric):
                 **{event_key: key},
                 **wait_span(test_case, event_key, key, delay),
                 response_delay_seconds=round(delay, 2),
+                mark=RANGE,
+                description=f"Agent took {delay:.1f}s to reply",
             )
             for key, delay in delays.items()
             if delay > self.max_latency_seconds

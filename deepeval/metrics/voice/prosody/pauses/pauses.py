@@ -59,6 +59,8 @@ class PausesMetric(BaseDefectMetric):
                         type="long_pause",
                         turn=turn,
                         longest_pause_ms=round(reply.longest_pause_ms),
+                        description="Agent paused for "
+                        f"{reply.longest_pause_ms / 1000:.1f}s mid-reply",
                         **placed(
                             test_case.turns[turn].audio,
                             *reply.longest_pause_span,
@@ -71,6 +73,8 @@ class PausesMetric(BaseDefectMetric):
                         type="too_much_silence",
                         turn=turn,
                         pause_fraction=round(reply.pause_fraction, 2),
+                        description="Reply was "
+                        f"{reply.pause_fraction * 100:.0f}% silence",
                     )
                 )
         return DefectShare(

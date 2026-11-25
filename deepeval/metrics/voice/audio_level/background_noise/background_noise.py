@@ -56,6 +56,8 @@ class BackgroundNoiseMetric(BaseDefectMetric):
                         type="background_noise",
                         turn=turn,
                         estimated_snr_db=round(reply.estimated_snr_db, 1),
+                        description="Background noise was high (SNR "
+                        f"{reply.estimated_snr_db:.0f} dB)",
                     )
                 )
         return DefectShare(

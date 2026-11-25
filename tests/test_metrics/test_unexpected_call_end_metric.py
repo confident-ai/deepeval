@@ -19,6 +19,11 @@ def test_the_agent_hanging_up_on_a_question_is_an_unexpected_end():
     assert [without_place(e) for e in metric.score_breakdown["events"]] == [
         {"type": "unexpected_end", "turn": 6, "end_reason": "agent_ended_call"}
     ]
+    # The last instant of timed audio; the final caller line has no timestamp.
+    [event] = metric.score_breakdown["events"]
+    assert event["mark"] == "moment"
+    assert event["start_time"] == pytest.approx(20.5, abs=0.05)
+    assert event["duration_seconds"] == 0.0
 
 
 @pytest.mark.parametrize(
