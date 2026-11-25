@@ -9,6 +9,7 @@ export const CONVERSATIONAL_G_EVAL_PARAMS: Partial<
   [MultiTurnParams.METADATA]: "Metadata",
   [MultiTurnParams.TAGS]: "Tags",
   [MultiTurnParams.TOOLS_CALLED]: "Tools Called",
+  [MultiTurnParams.EXPECTED_TOOLS]: "Expected Tools",
   [MultiTurnParams.RETRIEVAL_CONTEXT]: "Retrieval Context",
   [MultiTurnParams.EXPECTED_OUTCOME]: "Expected Outcome",
   [MultiTurnParams.SCENARIO]: "Scenario",
@@ -42,6 +43,8 @@ function conversationLevelValue(
       return testCase.scenario;
     case MultiTurnParams.EXPECTED_OUTCOME:
       return testCase.expectedOutcome;
+    case MultiTurnParams.EXPECTED_TOOLS:
+      return testCase.expectedTools && JSON.stringify(testCase.expectedTools);
     case MultiTurnParams.METADATA:
       return testCase.additionalMetadata;
     case MultiTurnParams.TAGS:

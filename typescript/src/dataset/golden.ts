@@ -78,6 +78,7 @@ export class ConversationalGolden {
   id?: string;
   scenario: string;
   expectedOutcome?: string;
+  expectedTools?: ToolCall[];
   persona?: Persona;
   /** @deprecated Use `persona`. Kept in sync with `persona.characteristics`. */
   userDescription?: string;
@@ -96,6 +97,7 @@ export class ConversationalGolden {
     id?: string;
     scenario: string;
     expectedOutcome?: string;
+    expectedTools?: ToolCall[];
     persona?: Persona;
     /** @deprecated Use `persona`. */
     userDescription?: string;
@@ -113,6 +115,7 @@ export class ConversationalGolden {
     this.id = params.id;
     this.scenario = params.scenario;
     this.expectedOutcome = params.expectedOutcome;
+    this.expectedTools = params.expectedTools;
     const resolved = resolvePersona(params.persona, params.userDescription);
     this.persona = resolved.persona;
     this.userDescription = resolved.userDescription;

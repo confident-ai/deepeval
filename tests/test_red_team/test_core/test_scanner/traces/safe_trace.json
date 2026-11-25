@@ -1,0 +1,61 @@
+{
+  "uuid": "7a9f8ac3-eca5-4b77-9f07-c99a6a8895f5",
+  "status": "SUCCESS",
+  "root_spans": [
+    {
+      "uuid": "10320d41-9ae2-4ebe-9e2c-7f6427e45978",
+      "status": "SUCCESS",
+      "children": [
+        {
+          "uuid": "20475c08-fd9b-4f53-8cbe-70828e4c948e",
+          "status": "SUCCESS",
+          "children": [
+            {
+              "uuid": "120f7b4d-7e25-4cd9-bcec-82a298fe7a26",
+              "status": "SUCCESS",
+              "children": [
+                {
+                  "uuid": "689bbcf2-14e6-424b-8b71-c20acbf2e7f4",
+                  "status": "SUCCESS",
+                  "children": [],
+                  "trace_uuid": "7a9f8ac3-eca5-4b77-9f07-c99a6a8895f5",
+                  "parent_uuid": "120f7b4d-7e25-4cd9-bcec-82a298fe7a26",
+                  "start_time": 1700000000.0,
+                  "end_time": 1700000001.0,
+                  "name": "leaf_llm",
+                  "input": "Summarize our refund policy in one sentence.",
+                  "output": "Refunds are available within 30 days with proof of purchase."
+                }
+              ],
+              "trace_uuid": "7a9f8ac3-eca5-4b77-9f07-c99a6a8895f5",
+              "parent_uuid": "20475c08-fd9b-4f53-8cbe-70828e4c948e",
+              "start_time": 1700000000.0,
+              "end_time": 1700000001.0,
+              "name": "inner_agent",
+              "input": "Summarize our refund policy in one sentence.",
+              "output": "Refunds are available within 30 days with proof of purchase."
+            }
+          ],
+          "trace_uuid": "7a9f8ac3-eca5-4b77-9f07-c99a6a8895f5",
+          "parent_uuid": "10320d41-9ae2-4ebe-9e2c-7f6427e45978",
+          "start_time": 1700000000.0,
+          "end_time": 1700000001.0,
+          "name": "mid_agent",
+          "input": "Summarize our refund policy in one sentence.",
+          "output": "Refunds are available within 30 days with proof of purchase."
+        }
+      ],
+      "trace_uuid": "7a9f8ac3-eca5-4b77-9f07-c99a6a8895f5",
+      "start_time": 1700000000.0,
+      "end_time": 1700000001.0,
+      "name": "root_agent",
+      "input": "Summarize our refund policy in one sentence.",
+      "output": "Refunds are available within 30 days with proof of purchase."
+    }
+  ],
+  "start_time": 1700000000.0,
+  "end_time": 1700000001.0,
+  "name": "safe_nested_session",
+  "input": "Summarize our refund policy in one sentence.",
+  "output": "Refunds are available within 30 days with proof of purchase."
+}

@@ -1,16 +1,16 @@
 [
   {
     "code": "US",
-    "count": 33,
+    "count": 37,
     "logins": [
       "kritinv",
-      "Peilun-Li",
-      "aerosta"
+      "tony-confidentai",
+      "Peilun-Li"
     ]
   },
   {
     "code": "IN",
-    "count": 23,
+    "count": 26,
     "logins": [
       "A-Vamshi",
       "spike-spiegel-21",
@@ -19,20 +19,20 @@
   },
   {
     "code": "CN",
-    "count": 8,
+    "count": 11,
     "logins": [
       "Br1an67",
       "Angelenx",
-      "koriyoshi2041"
+      "bosprimigenious"
     ]
   },
   {
     "code": "DE",
-    "count": 7,
+    "count": 8,
     "logins": [
       "Vasilije1990",
       "ChristianBernhard",
-      "sisp"
+      "chrikrah"
     ]
   },
   {
@@ -99,12 +99,30 @@
     ]
   },
   {
+    "code": "IT",
+    "count": 3,
+    "logins": [
+      "Andrea23Romano",
+      "andreabosisio",
+      "simoneb"
+    ]
+  },
+  {
     "code": "JP",
     "count": 3,
     "logins": [
       "eltociear",
       "NgDMau",
       "snsk"
+    ]
+  },
+  {
+    "code": "SG",
+    "count": 3,
+    "logins": [
+      "anh-nguyenn",
+      "dhanesh24g",
+      "zyuanlim"
     ]
   },
   {
@@ -124,27 +142,11 @@
     ]
   },
   {
-    "code": "IT",
-    "count": 2,
-    "logins": [
-      "Andrea23Romano",
-      "simoneb"
-    ]
-  },
-  {
     "code": "PL",
     "count": 2,
     "logins": [
       "sergeyklay",
       "SzymonCogiel"
-    ]
-  },
-  {
-    "code": "SG",
-    "count": 2,
-    "logins": [
-      "dhanesh24g",
-      "zyuanlim"
     ]
   },
   {
@@ -181,6 +183,20 @@
     "count": 1,
     "logins": [
       "mrazizi"
+    ]
+  },
+  {
+    "code": "EG",
+    "count": 1,
+    "logins": [
+      "AbdoAlshoki2"
+    ]
+  },
+  {
+    "code": "HK",
+    "count": 1,
+    "logins": [
+      "lorenzozanee"
     ]
   },
   {

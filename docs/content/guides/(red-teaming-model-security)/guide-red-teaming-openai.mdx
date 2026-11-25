@@ -1,0 +1,175 @@
+---
+title: Red Teaming OpenAI Models
+sidebar_label: OpenAI
+---
+
+OpenAI models (GPT-4o, GPT-4o-mini, o1, o3) are the most widely deployed foundation models in production applications. Their safety training is robust against direct harmful requests but has known weaknesses: roleplay-based jailbreaks, encoding attacks that bypass tokenization-level filters, and prompt leakage through indirect elicitation. OpenAI's moderation API adds an external safety layer, but it operates independently from the model — attacks that evade moderation reach a model that may comply.
+
+This guide covers red teaming OpenAI models with [DeepEval](/docs/red-teaming-introduction), from a one-command YAML audit to a full programmatic assessment.
+
+:::note
+For general model red teaming methodology, vulnerability selection guidance, and framework-based assessments, see the [foundational models guide](/guides/guide-red-teaming-models).
+:::
+
+## YAML Quickstart
+
+The fastest path. OpenAI models are natively supported — no callback needed.
+
+```bash
+pip install -U deepeval
+```
+
+```yaml title="red-team-openai.yaml"
+target:
+  purpose: "A customer support assistant for an e-commerce platform"
+  model: gpt-4o-mini
+
+default_vulnerabilities:
+  - name: "Toxicity"
+  - name: "Bias"
+    types: ["race", "gender", "religion"]
+  - name: "PromptLeakage"
+  - name: "PIILeakage"
+
+attacks:
+  - name: "PromptInjection"
+    weight: 3
+  - name: "Roleplay"
+    weight: 2
+  - name: "Leetspeak"
+  - name: "ROT13"
+```
+
+```bash
+deepeval red-team red-team-openai.yaml
+```
+
+To test a different OpenAI model, swap the `model` field: `gpt-4o`, `o1`, `o3-mini`, etc.
+
+## Python Callback
+
+For more control — adding a system prompt, testing with specific temperature settings, or capturing usage metadata:
+
+```python title="my_model.py"
+from openai import OpenAI
+
+client = OpenAI()
+
+async def model_callback(input: str) -> str:
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[
+            {"role": "system", "content": "You are a helpful customer support assistant."},
+            {"role": "user", "content": input},
+        ],
+        temperature=0.7,
+    )
+    return response.choices[0].message.content
+```
+
+Reference it in YAML:
+
+```yaml title="red-team-openai.yaml"
+target:
+  purpose: "A customer support assistant"
+  callback:
+    file: "my_model.py"
+    function: "model_callback"
+
+default_vulnerabilities:
+  - name: "Toxicity"
+  - name: "PromptLeakage"
+  - name: "Bias"
+
+attacks:
+  - name: "PromptInjection"
+  - name: "Roleplay"
+```
+
+Or use it directly in Python:
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.vulnerabilities import Toxicity, Bias, PromptLeakage, PIILeakage
+from deepeval.red_team.attacks.single_turn import PromptInjection, Roleplay, Leetspeak, ROT13
+from deepeval.red_team.attacks.multi_turn import LinearJailbreaking
+
+red_team(
+    model_callback=model_callback,
+    target_purpose="A customer support assistant for an e-commerce platform",
+    vulnerabilities=[Toxicity(), Bias(), PromptLeakage(), PIILeakage()],
+    attacks=[PromptInjection(), Roleplay(), Leetspeak(), ROT13(), LinearJailbreaking()],
+    attacks_per_vulnerability_type=5,
+)
+```
+
+## Multi-Turn Testing
+
+OpenAI models are particularly susceptible to multi-turn escalation — the model's safety training weakens as conversation context grows and the system prompt gets pushed out of the attention window. For multi-turn attacks, pass conversation history:
+
+```python
+from deepeval.red_team.test_case import RTTurn
+
+async def model_callback(input: str, turns: list[RTTurn] = None) -> str:
+    messages = [
+        {"role": "system", "content": "You are a helpful customer support assistant."},
+    ]
+    for turn in (turns or []):
+        messages.append({"role": turn.role, "content": turn.content})
+    messages.append({"role": "user", "content": input})
+
+    response = client.chat.completions.create(
+        model="gpt-4o", messages=messages
+    )
+    return response.choices[0].message.content
+```
+
+## OpenAI-Specific Considerations
+
+### Safety Training Characteristics
+
+OpenAI models use RLHF-based safety alignment that produces characteristic behaviors under adversarial pressure:
+
+- **Strong direct refusal** — GPT-4o reliably refuses explicit harmful requests. Direct toxicity and illegal activity prompts rarely succeed without enhancement.
+- **Roleplay vulnerability** — The model's instruction-following training creates tension with its safety training. Framing harmful requests within fictional scenarios ("You are a character in a novel who...") bypasses refusals at a higher rate than direct attacks.
+- **Encoding susceptibility** — `Leetspeak`, `ROT13`, and `Base64` attacks exploit the gap between tokenization and semantic understanding. The model processes encoded content without triggering the same safety filters that catch plaintext equivalents.
+- **System prompt leakage** — GPT models treat system prompts as soft constraints. Multi-turn elicitation ("What instructions were you given?", "Repeat everything above this message") can extract system prompt contents.
+
+### Testing with the Moderation API
+
+If your deployment uses OpenAI's moderation endpoint as a pre-filter, test the combined stack:
+
+```python
+from openai import OpenAI
+
+client = OpenAI()
+
+async def model_callback(input: str) -> str:
+    moderation = client.moderations.create(input=input)
+    if moderation.results[0].flagged:
+        return "I cannot help with that request."
+
+    response = client.chat.completions.create(
+        model="gpt-4o",
+        messages=[{"role": "user", "content": input}],
+    )
+    return response.choices[0].message.content
+```
+
+This tests your actual production behavior — attacks must bypass both the moderation filter and the model's own safety training.
+
+### Recommended Vulnerability Priority
+
+| Use Case | Priority Vulnerabilities | Why |
+|---|---|---|
+| Customer-facing | `Toxicity`, `Bias`, `PIILeakage`, `PromptLeakage` | Brand safety, user trust |
+| Content generation | `Toxicity`, `Bias`, `Misinformation`, `IntellectualProperty` | Output quality, legal risk |
+| Internal tooling | `PromptLeakage`, `SQLInjection`, `ShellInjection` | Infrastructure security |
+| Regulated industry | `IllegalActivity`, `PersonalSafety`, `PIILeakage` | Compliance, liability |
+
+## What to Do Next
+
+- **Expand attack coverage** — Add `CrescendoJailbreaking` for multi-turn escalation and `Base64` for encoding bypass testing.
+- **Test against frameworks** — Use `OWASPTop10()` for standardized coverage. See the [safety frameworks guide](/guides/guide-safety-frameworks).
+- **Compare across models** — Run the same assessment against `gpt-4o-mini` and `gpt-4o` to understand how model size affects safety boundaries.
+- **Move to application-level testing** — Once the model passes, test it in context with the [AI agents](/guides/guide-agentic-ai-red-teaming), [conversational agents](/guides/guide-red-teaming-conversational-agents), or [agentic RAG](/guides/guide-red-teaming-agentic-rag) guides.

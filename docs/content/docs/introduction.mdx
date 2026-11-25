@@ -19,7 +19,6 @@ import {
   Plug,
   Rocket,
   Route,
-  ShieldCheck,
   Sparkles,
   Workflow,
 } from "lucide-react";
@@ -210,7 +209,7 @@ the complete agent trajectory, then inspect individual spans to locate failures.
 ### DeepEval Ecosystem
 
 DeepEval can run by itself, but it also connects to adjacent tools when your
-workflow needs collaboration, monitoring, or security testing.
+workflow needs collaboration or monitoring. Security testing is built in through [red teaming](/docs/red-teaming-introduction).
 
 <Cards>
   <Card
@@ -218,13 +217,6 @@ workflow needs collaboration, monitoring, or security testing.
     title="Confident AI"
     description="AI monitoring that runs evals on production traces, clusters failing traces into failure modes, and turns them into your next eval."
     href="https://www.confident-ai.com/docs?utm_source=deepeval&utm_medium=docs&utm_content=introduction_ecosystem_card&ref_page=/docs/introduction"
-    external
-  />
-  <Card
-    icon={<ShieldCheck />}
-    title="DeepTeam"
-    description="A safety and security testing framework for red-teaming LLM applications against vulnerabilities."
-    href="https://trydeepteam.com"
     external
   />
 </Cards>

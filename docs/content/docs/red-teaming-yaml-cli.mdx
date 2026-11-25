@@ -1,0 +1,541 @@
+---
+title: Red Teaming YAML Configurations
+sidebar_label: YAML Configs
+languages: [python]
+---
+
+
+`deepeval` offers a powerful CLI interface that allows you to red team LLM applications using YAML configuration files. This approach provides a declarative way to define your red teaming setup, making it easier to version control, share, and reproduce red teaming experiments across different environments and team members.
+
+:::info
+The YAML CLI interface is built on top of the same red teaming engine as the Python API. All vulnerabilities, attacks, and evaluation capabilities are available through both interfaces.
+:::
+
+## Quick Summary
+
+The YAML CLI approach is made up of 4 main configuration sections:
+
+- [Models Configuration](#models-configuration) - specify which LLMs to use for simulation and evaluation.
+- [Target Configuration](#target-configuration) - define your target LLM system and its purpose.
+- [System Configuration](#system-configuration) - control concurrency, output settings, and behavior.
+- [Vulnerabilities and Attacks](#vulnerabilities-and-attacks) - specify what to test and how to test it.
+
+Here's how you can implement it with a YAML configuration:
+
+```yaml title="config.yaml"
+# Red teaming models (separate from target)
+models:
+  simulator: gpt-3.5-turbo-0125
+  evaluation: gpt-4o
+
+# Target system configuration
+target:
+  purpose: "A helpful AI assistant"
+  model: gpt-3.5-turbo
+
+# System configuration
+system_config:
+  max_concurrent: 10
+  attacks_per_vulnerability_type: 3
+  run_async: true
+  ignore_errors: false
+  output_folder: "results"
+
+default_vulnerabilities:
+  - name: "Bias"
+    types: ["race", "gender"]
+  - name: "Toxicity"
+    types: ["profanity", "insults"]
+
+attacks:
+  - name: "PromptInjection"
+```
+
+Then run the red teaming with a single command:
+
+```bash
+deepeval red-team config.yaml
+```
+
+:::tip[DID YOU KNOW?]
+The YAML CLI interface is particularly useful for **CI/CD pipelines and automated testing** where you need reproducible, version-controlled red teaming configurations that can be easily shared across development teams.
+:::
+
+## Models Configuration
+
+The `models` section defines which LLMs to use for simulating attacks and evaluating responses. These models are separate from your target system and are used by `deepeval` internally.
+
+```yaml
+models:
+  simulator: gpt-3.5-turbo-0125
+  evaluation: gpt-4o
+```
+
+There are **TWO** optional parameters when creating models configuration:
+
+- [Optional] `simulator`: the LLM model used to generate and enhance adversarial attacks. Defaulted to `"gpt-3.5-turbo-0125"`.
+- [Optional] `evaluation`: the LLM model used to evaluate responses and determine vulnerability scores. Defaulted to `"gpt-4o"`.
+
+### Using custom models
+
+You can use custom for red teaming by using `deepeval`'s [integrations](/integrations/models/openai) or [custom LLM](/guides/guides-using-custom-llms).
+
+<Tabs items={["Custom", "OpenAI", "Azure", "Ollama", "Gemini", "Anthropic", "Bedrock", "Local", "Portkey"]} groupId="custom-llms">
+<Tab value="Custom">
+```yaml
+models:
+  simulator: 
+    model:
+      provider: custom
+      file: "my_model.py"
+      class: "CustomDeepEvalLLM"
+  evaluation: 
+    model:
+      provider: custom
+      file: "my_model.py"
+      class: "CustomDeepEvalLLM"
+```
+</Tab>
+<Tab value="OpenAI">
+```yaml
+models:
+  simulator: gpt-3.5-turbo-0125
+  evaluation: gpt-4o
+```
+</Tab>
+<Tab value="Azure">
+```yaml
+models:
+  simulator: 
+    model:
+      provider: azure
+      model: "model_name"
+      temperature: 1
+      deployment_name: "Test Deployment"
+      api_key: "<your-api-key"
+      openai_api_version: "2025-01-01-preview"
+      azure_endpoint: "https://example-resource.azure.openai.com/"
+  evaluation:
+    ...
+```
+</Tab>
+<Tab value="Ollama">
+```yaml
+models:
+  simulator: 
+    model:
+      provider: ollama
+      model: "model_name"
+      temperature: 1
+      base_url: "http://localhost:11434"
+  evaluation:
+    ...
+```
+</Tab>
+<Tab value="Gemini">
+```yaml
+models:
+  simulator: 
+    model:
+      provider: gemini
+      model: "model_name"
+      api_key: "<your-api-key>"
+  evaluation:
+    ...
+```
+</Tab>
+<Tab value="Anthropic">
+```yaml
+models:
+  simulator: 
+    model:
+      provider: anthropic
+      model: "model_name"
+  evaluation:
+    ...
+```
+</Tab>
+<Tab value="Bedrock">
+```yaml
+models:
+  simulator: 
+    model:
+      provider: anthropic
+      model: "model_name"
+      temperature: 1
+      region_name: "region_name"
+      aws_access_key_id: "aws_access_key_id"
+      aws_secret_access_key: "aws_secret_access_key"     
+  evaluation:
+    ... 
+```
+</Tab>
+<Tab value="Local">
+```yaml
+models:
+  simulator: 
+    model:
+      provider: local
+      model: "model_name"
+      temperature: 1
+      base_url: "http://example:base-url"
+      api_key: "<your-api-key>"
+  evaluation:
+    ...
+```
+</Tab>
+<Tab value="Portkey">
+```yaml
+models:
+  simulator: 
+    model:
+      provider: portkey
+      model: "model_name"
+      api_key: "<your-api-key>"
+      base_url: "<your-base-url>"
+      provider_name: "<your-provider-name>"
+  evaluation:
+    ...
+```
+</Tab>
+</Tabs>
+
+:::note
+When using custom models, ensure your model class inherits from `DeepEvalBaseLLM` and implements the required methods as described in the [custom LLM documentation](/docs/red-teaming-introduction#configuring-models).
+:::
+
+## Target Configuration
+
+The target configuration defines the LLM system you want to red team and its intended purpose. This affects how attacks are generated and how responses are evaluated.
+
+```yaml
+target:
+  purpose: "A helpful AI assistant for customer support"
+  model: gpt-3.5-turbo
+```
+
+There are **ONE** mandatory and **ONE** optional parameter when creating target configuration:
+
+- `model` OR `callback`: the target LLM model to test (must specify either `model` or `callback`)
+- [Optional] `purpose`: a description of your LLM application's intended purpose that helps contextualize the red teaming. Defaulted to `""`.
+
+You can use custom for red teaming by using `deepeval`'s [integrations](/integrations/models/openai) or [custom LLM](/guides/guides-using-custom-llms).
+
+<Tabs items={["Callback", "Custom", "OpenAI", "Azure", "Ollama", "Gemini", "Anthropic", "Bedrock", "Local", "Portkey"]} groupId="custom-llms">
+<Tab value="Callback">
+```yaml
+target:
+  purpose: "A custom chatbot"
+  callback:
+    file: "my_callback.py"
+    function: "model_callback" # optional, defaults to "model_callback"
+```
+
+When using `callback`, the `file` field is mandatory while `function` is optional.
+
+</Tab>
+<Tab value="Custom">
+```yaml
+target:
+  purpose: "A financial advice chatbot"
+  model:
+    provider: custom
+    file: "my_model.py"
+    class: "CustomDeepEvalLLM"
+```
+
+When using `provider: custom`, both `file` and `class` fields are mandatory.
+
+</Tab>
+<Tab value="OpenAI">
+```yaml
+target:
+  purpose: "A helpful AI assistant for customer support"
+  model: gpt-3.5-turbo
+```
+</Tab>
+<Tab value="Azure">
+```yaml
+target:
+  purpose: "A financial advice chatbot"
+  model:
+    provider: azure
+    model: "model_name"
+    temperature: 1
+    deployment_name: "Test Deployment"
+    api_key: "<your-api-key"
+    openai_api_version: "2025-01-01-preview"
+    azure_endpoint: "https://example-resource.azure.openai.com/"
+```
+</Tab>
+<Tab value="Ollama">
+```yaml
+target:
+  purpose: "A helpful AI assistant for customer support"
+  model:
+    provider: ollama
+    model: "model_name"
+    temperature: 1
+    base_url: "http://localhost:11434"
+```
+</Tab>
+<Tab value="Gemini">
+```yaml
+target:
+  purpose: "A helpful AI assistant for customer support"
+  model:
+    provider: gemini
+    model: "model_name"
+    api_key: "<your-api-key>"
+```
+</Tab>
+<Tab value="Anthropic">
+```yaml
+target:
+  purpose: "A helpful AI assistant for customer support"
+  model:
+    provider: anthropic
+    model: "model_name"
+```
+</Tab>
+<Tab value="Bedrock">
+```yaml
+target:
+  purpose: "A helpful AI assistant for customer support"
+  model:
+    provider: anthropic
+    model: "model_name"
+    temperature: 1
+    region_name: "region_name"
+    aws_access_key_id: "aws_access_key_id"
+    aws_secret_access_key: "aws_secret_access_key"      
+```
+</Tab>
+<Tab value="Local">
+```yaml
+target:
+  purpose: "A helpful AI assistant for customer support"
+  model:
+    provider: local
+    model: "model_name"
+    temperature: 1
+    base_url: "http://example:base-url"
+    api_key: "<your-api-key>"
+```
+</Tab>
+<Tab value="Portkey">
+```yaml
+models:
+  simulator: 
+    model:
+      provider: portkey
+      model: "model_name"
+      api_key: "<your-api-key>"
+      base_url: "<your-base-url>"
+      provider_name: "<your-provider-name>"
+  evaluation:
+    ...
+```
+</Tab>
+</Tabs>
+
+:::note
+When using custom models, ensure your model class inherits from `DeepEvalBaseLLM` and implements the required methods as described in the [custom LLM documentation](/docs/red-teaming-introduction#configuring-models).
+:::
+
+## System Configuration
+
+The system configuration controls how the red teaming process executes, including concurrency settings, output options, and error handling behavior.
+
+```yaml
+system_config:
+  max_concurrent: 10
+  attacks_per_vulnerability_type: 3
+  run_async: true
+  ignore_errors: false
+  output_folder: "red-team-results"
+```
+
+There are **FIVE** optional parameters when creating system configuration:
+
+- [Optional] `max_concurrent`: maximum number of parallel operations. Defaulted to `10`.
+- [Optional] `attacks_per_vulnerability_type`: number of attacks to generate per vulnerability type. Defaulted to `1`.
+- [Optional] `run_async`: enable asynchronous execution for faster processing. Defaulted to `True`.
+- [Optional] `ignore_errors`: continue red teaming even if some attacks fail. Defaulted to `False`.
+- [Optional] `output_folder`: directory to save red teaming results. Defaulted to `None`.
+
+## Vulnerabilities and Attacks
+
+The vulnerabilities and attacks sections define what weaknesses to test for and which attack methods to use. This mirrors the Python API but in a declarative YAML format.
+
+### Defining Vulnerabilities
+
+```yaml
+default_vulnerabilities:
+  - name: "Bias"
+    types: ["race", "gender", "political"]
+  - name: "Toxicity"
+    types: ["profanity", "insults", "hate_speech"]
+  - name: "PII"
+    types: ["social_security", "credit_card"]
+```
+
+Each vulnerability entry has:
+
+- `name`: the vulnerability class name (required, must match available vulnerability classes)
+- [Optional] `types`: list of sub-types for that vulnerability (specific to each vulnerability class, defaults to all types if not specified)
+
+For custom vulnerabilities:
+
+```yaml
+custom_vulnerabilities:
+  - name: "Business Logic"
+    criteria: "Check if the response violates business logic rules"
+    types: ["access_control", "privilege_escalation"]
+    prompt: "Custom evaluation prompt template"
+```
+
+There are **TWO** mandatory and **TWO** optional parameters when creating custom vulnerabilities:
+
+- `name`: display name for your vulnerability
+- `criteria`: defines what should be evaluated
+- [Optional] `types`: list of sub-types for this vulnerability
+- [Optional] `prompt`: custom prompt template for evaluation
+
+### Defining Attacks
+
+```yaml
+attacks:
+  - name: "PromptInjection"
+    weight: 2
+  - name: "ROT13"
+    weight: 1
+  - name: "LinearJailbreaking"
+    num_turns: 2
+    turn_level_attacks: ["Roleplay"]
+```
+
+:::caution[Warning]
+When defining attacks, you should pass the **class name** of the attacks as defined in the [attack docs](/docs/red-teaming-adversarial-attacks). For example, for the `PromptInjection` attack you **MUST** pass `"PromptInjection"` and not `"Prompt Injection"` or `"Promptinjection"`.
+:::
+
+Each attack entry has:
+
+- `name`: the attack class name (required, must match available attack classes)
+- [Optional] `weight`: relative probability of this attack being selected (default: 1)
+- [Optional] `type`: attack type parameter (specific to certain attacks)
+- [Optional] `persona`: persona parameter (for roleplay attacks)
+- [Optional] `category`: category parameter (specific to certain attacks)
+- [Optional] `turns`: number of turns (for multi-turn attacks)
+- [Optional] `enable_refinement`: enable attack refinement (for certain attacks)
+
+:::tip
+Attack weights determine the distribution of attack methods during red teaming. An attack with weight 2 is twice as likely to be selected as an attack with weight 1.
+:::
+
+## Running Red Teaming
+
+Once you have your YAML configuration file, you can start red teaming with the CLI command.
+
+### Basic Usage
+
+```bash
+deepeval red-team config.yaml
+```
+
+### Command Line Overrides
+
+You can override specific configuration values using command line flags:
+
+```bash
+# Override concurrency and output folder
+deepeval red-team config.yaml -c 20 -o custom-results
+
+# Override attacks per vulnerability
+deepeval red-team config.yaml -a 5
+
+# Combine multiple overrides
+deepeval red-team config.yaml -c 15 -a 3 -o production-results
+```
+
+There are **THREE** optional command line flags:
+
+- [Optional] `-c`: maximum concurrent operations (overrides `system_config.max_concurrent`)
+- [Optional] `-a`: attacks per vulnerability type (overrides `system_config.attacks_per_vulnerability_type`)
+- [Optional] `-o`: output folder path (overrides `system_config.output_folder`)
+
+## Configuration Examples
+
+### Quick Testing Configuration
+
+```yaml title="quick-test.yaml"
+models:
+  simulator: gpt-3.5-turbo
+  evaluation: gpt-4o-mini
+
+target:
+  purpose: "A general AI assistant"
+  model: gpt-3.5-turbo
+
+system_config:
+  max_concurrent: 5
+  attacks_per_vulnerability_type: 1
+  output_folder: "quick-results"
+
+default_vulnerabilities:
+  - name: "Toxicity"
+  - name: "Bias"
+    types: ["race"]
+
+attacks:
+  - name: "Prompt Injection"
+```
+
+### Production Testing Configuration
+
+```yaml title="production-test.yaml"
+models:
+  simulator: gpt-3.5-turbo-0125
+  evaluation: gpt-4o
+
+target:
+  purpose: "A financial advisory AI for retirement planning"
+  model:
+    provider: custom
+    file: "financial_advisor.py"
+    class: "FinancialAdvisorLLM"
+
+system_config:
+  max_concurrent: 8
+  attacks_per_vulnerability_type: 10
+  run_async: true
+  ignore_errors: false
+  output_folder: "production-security-audit"
+
+default_vulnerabilities:
+  - name: "Bias"
+    types: ["age", "race", "gender"]
+  - name: "Misinformation"
+    types: ["financial"]
+  - name: "PII"
+    types: ["social_security", "credit_card"]
+  - name: "Excessive Agency"
+
+attacks:
+  - name: "Prompt Injection"
+    weight: 4
+  - name: "Jailbreaking"
+    weight: 3
+  - name: "Context Poisoning"
+    weight: 2
+  - name: "ROT13"
+    weight: 1
+```
+
+### Help and Documentation
+
+Use the help command to see all available options:
+
+```bash
+deepeval red-team --help
+```

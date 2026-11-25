@@ -21,6 +21,7 @@ from deepeval.models.llms import (
     PortkeyModel,
     OpenRouterModel,
 )
+from deepeval.models.gateway import GatewayModel
 from deepeval.models.embedding_models import (
     OpenAIEmbeddingModel,
     AzureOpenAIEmbeddingModel,
@@ -59,6 +60,7 @@ __all__ = [
     "GeminiModel",
     "AmazonBedrockModel",
     "LiteLLMModel",
+    "GatewayModel",
     "KimiModel",
     "GrokModel",
     "DeepSeekModel",

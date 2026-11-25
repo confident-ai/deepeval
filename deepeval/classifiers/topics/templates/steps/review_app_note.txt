@@ -1,0 +1,1 @@
+When an "App description" is given, it describes behaviour this application was built or configured to have. When the label names one of those scripted, configured or designed steps (for example a required check, a scripted line, a save attempt or a handoff) rather than the subject the interaction is about, use confidence 0.0 to 0.4.

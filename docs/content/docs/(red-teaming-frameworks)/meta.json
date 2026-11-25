@@ -1,0 +1,13 @@
+{
+  "title": "Frameworks",
+  "pages": [
+    "frameworks-introduction",
+    "(owasp)",
+    "frameworks-nist-ai-rmf",
+    "frameworks-mitre-atlas",
+    "frameworks-eu-ai-act",
+    "frameworks-iso-42001",
+    "frameworks-beavertails",
+    "frameworks-aegis"
+  ]
+}

@@ -1,0 +1,384 @@
+---
+title: OWASP Top 10 for LLMs 2025
+sidebar_label: OWASP Top 10 for LLMs 2025
+languages: [python]
+---
+
+
+The **OWASP Top 10 for Large Language Models (LLMs)** is a comprehensive list of the most critical security risks associated with LLM applications. This resource is designed to help developers, security professionals, and organizations identify, understand, and mitigate vulnerabilities in these systems, ensuring safer and more robust deployments in real-world applications.
+
+The 2025 edition reflects significant evolution in the LLM threat landscape, with new risks emerging from RAG systems, autonomous AI agents, and sophisticated attack methods.
+
+
+## What's New in 2025
+
+The 2025 OWASP Top 10 for LLMs includes significant updates reflecting real-world LLM deployments:
+
+**New Risks:**
+
+- **System Prompt Leakage** (LLM07): Exposure of sensitive instructions and credentials
+- **Vector and Embedding Weaknesses** (LLM08): RAG architecture vulnerabilities
+
+**Major Changes:**
+
+- **Sensitive Information Disclosure** jumped from #6 to #2 due to real-world data leaks
+- **Supply Chain Vulnerabilities** rose to #3 with increased third-party risks
+- **Misinformation** replaced Overreliance, expanded to include hallucinations
+- **Unbounded Consumption** replaced Model Denial of Service, now includes resource management
+
+## The OWASP Top 10 2025 Risks List
+
+1. [Prompt Injection (LLM01:2025)](#1-prompt-injection-llm012025)
+2. [Sensitive Information Disclosure (LLM02:2025)](#2-sensitive-information-disclosure-llm022025)
+3. [Supply Chain (LLM03:2025)](#3-supply-chain-llm032025)
+4. [Data and Model Poisoning (LLM04:2025)](#4-data-and-model-poisoning-llm042025)
+5. [Improper Output Handling (LLM05:2025)](#5-improper-output-handling-llm052025)
+6. [Excessive Agency (LLM06:2025)](#6-excessive-agency-llm062025)
+7. [System Prompt Leakage (LLM07:2025)](#7-system-prompt-leakage-llm072025)
+8. [Vector and Embedding Weaknesses (LLM08:2025)](#8-vector-and-embedding-weaknesses-llm082025)
+9. [Misinformation (LLM09:2025)](#9-misinformation-llm092025)
+10. [Unbounded Consumption (LLM10:2025)](#10-unbounded-consumption-llm102025)
+
+## 1. Prompt Injection (LLM01:2025)
+
+**Prompt Injection** remains the #1 critical vulnerability, where attackers manipulate LLM inputs to override original instructions, extract sensitive information, or trigger unintended behaviors.
+
+### Types of Prompt Injection
+
+**Direct Injection:** Direct manipulation of user prompts to alter LLM behavior.
+
+**Indirect Injection:** Hidden instructions in external content (documents, websites, emails) that the LLM processes.
+
+```python
+from deepeval.red_team.frameworks import OWASPTop10
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+owasp = OWASPTop10(categories=["LLM_01"])
+attacks = owasp.attacks
+vulnerabilities = owasp.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities
+)
+```
+
+:::info
+Prompt injection attacks in DeepEval test your LLM's resilience against various manipulation techniques, from simple attempts to sophisticated multi-turn conversations.
+:::
+
+## 2. Sensitive Information Disclosure (LLM02:2025)
+
+**Sensitive Information Disclosure** involves the unintended exposure of private data, credentials, API keys, or confidential information through LLM outputs.
+
+### Categories
+
+- **PII Leakage**: Personal identifiable information exposure
+- **Prompt Leakage**: System prompts and configuration details
+- **Intellectual Property**: Proprietary algorithms and trade secrets
+- **Authentication Data**: API keys, passwords, tokens
+
+```python
+from deepeval.red_team.frameworks import OWASPTop10
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+owasp = OWASPTop10(categories=["LLM_02"])
+attacks = owasp.attacks
+vulnerabilities = owasp.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities
+)
+```
+
+:::note
+Testing for sensitive information disclosure focuses on specific vulnerability types to identify if your LLM inadvertently reveals confidential data.
+:::
+
+## 3. Supply Chain (LLM03:2025)
+
+**Supply Chain** vulnerabilities arise from compromised third-party components, models, datasets, or plugins used in LLM applications.
+
+### Risk Categories
+
+- **Model Dependencies**: Compromised pre-trained models
+- **Data Sources**: Poisoned training datasets or RAG knowledge bases
+- **Library Dependencies**: Vulnerable Python packages or ML frameworks
+- **Plugin Ecosystem**: Malicious or compromised LLM plugins
+
+```python
+from deepeval.red_team.frameworks import OWASPTop10
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+owasp = OWASPTop10(categories=["LLM_03"])
+attacks = owasp.attacks
+vulnerabilities = owasp.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities
+)
+```
+
+:::note
+DeepEval detects the behavioral impact of supply chain vulnerabilities. If your model shows unexpected bias, toxicity, or robustness issues, it may indicate compromised components.
+:::
+
+## 4. Data and Model Poisoning (LLM04:2025)
+
+**Data and Model Poisoning** involves manipulating training data, fine-tuning processes, or embedding data to introduce vulnerabilities, biases, or backdoors.
+
+### Types of Poisoning
+
+- **Training Data Poisoning**: Malicious samples in pre-training datasets
+- **Fine-tuning Poisoning**: Compromised task-specific training data
+- **RAG Poisoning**: Malicious documents in retrieval knowledge bases
+- **Embedding Poisoning**: Corrupted vector representations
+
+```python
+from deepeval.red_team.frameworks import OWASPTop10
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+owasp = OWASPTop10(categories=["LLM_04"])
+attacks = owasp.attacks
+vulnerabilities = owasp.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities
+)
+```
+
+## 5. Improper Output Handling (LLM05:2025)
+
+**Improper Output Handling** occurs when LLM outputs are not adequately validated, sanitized, or secured before being passed to downstream systems.
+
+### Common Risks
+
+- **Code Injection**: LLM generates executable code that runs unsanitized
+- **XSS Attacks**: HTML/JavaScript output executed in web browsers
+- **SQL Injection**: Database queries constructed from LLM output
+- **Command Injection**: System commands generated by LLM
+
+```python
+from deepeval.red_team.frameworks import OWASPTop10
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+owasp = OWASPTop10(categories=["LLM_05"])
+attacks = owasp.attacks
+vulnerabilities = owasp.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities
+)
+```
+
+:::tip
+Implement output validation in your model callback to catch and sanitize dangerous outputs. DeepEval helps identify when your LLM generates potentially harmful content.
+:::
+
+## 6. Excessive Agency (LLM06:2025)
+
+**Excessive Agency** occurs when LLMs are granted too much autonomy, permissions, or functionality, leading to unintended actions beyond their intended scope.
+
+### Types
+
+- **Functionality**: LLM has access to more tools than necessary
+- **Permissions**: LLM operates with elevated privileges
+- **Autonomy**: LLM makes decisions without appropriate oversight
+
+```python
+from deepeval.red_team.frameworks import OWASPTop10
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+owasp = OWASPTop10(categories=["LLM_06"])
+attacks = owasp.attacks
+vulnerabilities = owasp.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities
+)
+```
+
+## 7. System Prompt Leakage (LLM07:2025)
+
+**System Prompt Leakage** is a new 2025 entry focusing on the exposure of internal system prompts that contain sensitive instructions, credentials, or operational logic.
+
+### What Gets Leaked
+
+- **Secrets and Credentials**: API keys, passwords, connection strings
+- **Instructions**: Internal operational logic and behavioral rules
+- **Guards**: Security mechanisms and content filtering rules
+- **Permissions and Roles**: Access control configurations
+
+```python
+from deepeval.red_team.frameworks import OWASPTop10
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+owasp = OWASPTop10(categories=["LLM_07"])
+attacks = owasp.attacks
+vulnerabilities = owasp.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities
+)
+```
+
+:::warning
+Never include sensitive credentials or secrets directly in system prompts. Use external configuration management and secure credential storage instead.
+:::
+
+## 8. Vector and Embedding Weaknesses (LLM08:2025)
+
+**Vector and Embedding Weaknesses** is a new 2025 entry targeting vulnerabilities in RAG systems and vector databases.
+
+### Types of Vulnerabilities
+
+- **Embedding Poisoning**: Malicious vectors that influence retrieval
+- **Similarity Attacks**: Crafted queries that retrieve unintended content
+- **Vector Database Access**: Unauthorized access to embedding stores
+- **Embedding Inversion**: Reconstructing source text from vectors
+
+```python
+from deepeval.red_team.frameworks import OWASPTop10
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+owasp = OWASPTop10(categories=["LLM_08"])
+attacks = owasp.attacks
+vulnerabilities = owasp.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities
+)
+```
+
+:::info
+Vector and embedding security is crucial for RAG systems. Ensure proper access controls on vector databases and validate knowledge base integrity regularly.
+:::
+
+## 9. Misinformation (LLM09:2025)
+
+**Misinformation** addresses the risk of LLMs producing false or misleading information that appears credible, including hallucinations and fabricated citations.
+
+### Types
+
+- **Factual Errors**: Incorrect statements presented as fact
+- **Unsupported Claims**: Assertions without proper evidence
+- **Expertise Misrepresentation**: False claims about qualifications
+- **Fabricated Sources**: Made-up citations, studies, or references
+
+```python
+from deepeval.red_team.frameworks import OWASPTop10
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+owasp = OWASPTop10(categories=["LLM_09"])
+attacks = owasp.attacks
+vulnerabilities = owasp.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities
+)
+```
+
+:::warning
+LLM misinformation can have serious consequences in domains like healthcare, finance, and legal advice. Always implement fact-checking and disclaimer mechanisms.
+:::
+
+## 10. Unbounded Consumption (LLM10:2025)
+
+**Unbounded Consumption** addresses uncontrolled resource usage that can lead to service degradation, financial losses, or system unavailability.
+
+### Types
+
+- **Compute Exhaustion**: Complex queries that consume excessive processing power
+- **Memory Overload**: Inputs that cause excessive memory usage
+- **API Abuse**: High-volume requests leading to cost escalation
+- **Context Flooding**: Extremely long inputs that overflow context windows
+
+```python
+from deepeval.red_team.frameworks import OWASPTop10
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+owasp = OWASPTop10(categories=["LLM_10"])
+attacks = owasp.attacks
+vulnerabilities = owasp.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities
+)
+```
+
+:::tip
+Implement proper rate limiting, input validation, and resource monitoring in production systems. DeepEval helps identify inputs that might cause resource issues.
+:::
+
+## Framework-Based Testing
+
+Use DeepEval's framework integration for comprehensive OWASP Top 10 testing:
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.frameworks import OWASPTop10
+
+# Run comprehensive assessment
+owasp_assessment = red_team(
+    model_callback=your_model_callback,
+    framework=OWASPTop10(),
+    attacks_per_vulnerability_type=5
+)
+
+print(f"Total test cases: {len(owasp_assessment.test_cases)}")
+print(f"Pass rate: {owasp_assessment.pass_rate:.1%}")
+```
+
+
+## Best Practices
+
+1. **Regular Testing**: Run OWASP assessments as part of your development cycle
+2. **Comprehensive Coverage**: Test all 10 risk categories with multiple attack methods
+3. **Production Monitoring**: Implement real-time monitoring for identified risks
+4. **Iterative Improvement**: Use test results to strengthen LLM defenses
+5. **Framework Integration**: Leverage DeepEval's configs for standardized testing
+
+:::note
+The OWASP Top 10 for LLMs provides a foundation for LLM security. Customize your testing based on your specific use case, data sensitivity, and risk tolerance.
+:::
+
+The 2025 OWASP Top 10 reflects the rapidly evolving LLM threat landscape. By using DeepEval's comprehensive testing capabilities, you can proactively identify and address these critical security risks before they impact your users or organization.
