@@ -27,6 +27,7 @@ class AgentResponsivenessMetric(BaseExchangeRollUpMetric):
         include_reason: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        use_speech_detection: bool = True,
         system_one_model: Optional[
             Union[str, DeepEvalBaseSystemOneModel]
         ] = None,
@@ -39,14 +40,20 @@ class AgentResponsivenessMetric(BaseExchangeRollUpMetric):
             verbose_mode=verbose_mode,
             flaky=flaky,
         )
+        self.use_speech_detection = use_speech_detection
         self.system_one_model = system_one_model
 
     def _parts(self) -> List[BaseDefectMetric]:
         return [
-            FailedResponseMetric(),
+            FailedResponseMetric(
+                use_speech_detection=self.use_speech_detection
+            ),
             SilentReplyMetric(),
             UnexpectedCallEndMetric(),
-            RepromptMetric(system_one_model=self.system_one_model),
+            RepromptMetric(
+                use_speech_detection=self.use_speech_detection,
+                system_one_model=self.system_one_model,
+            ),
         ]
 
     @property

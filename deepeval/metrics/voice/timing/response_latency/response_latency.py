@@ -46,7 +46,9 @@ class ResponseLatencyMetric(BaseDefectMetric):
             VoiceEvent(
                 type="slow_response",
                 **{event_key: key},
-                **wait_span(test_case, event_key, key, delay),
+                **wait_span(
+                    test_case, event_key, key, delay, self.use_speech_detection
+                ),
                 response_delay_seconds=round(delay, 2),
                 mark=RANGE,
                 description=f"Agent took {delay:.1f}s to reply",

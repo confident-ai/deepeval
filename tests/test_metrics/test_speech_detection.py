@@ -10,22 +10,31 @@ import requests
 from deepeval.metrics import (
     AbruptCutoffMetric,
     AgentInterruptionMetric,
+    AgentResponsivenessMetric,
+    FailedResponseMetric,
+    RepromptMetric,
     ResponseDelayConsistencyMetric,
     ResponseLatencyMetric,
     TimeToFirstResponseMetric,
     TurnTakingNaturalnessMetric,
     UserInterruptionMetric,
+    VoiceReliabilityMetric,
 )
 from deepeval.metrics.voice.utils import call_activity as activity_module
 from deepeval.metrics.voice.utils import speech_detection
-from deepeval.metrics.voice.utils.call_activity import recording_activity
-from deepeval.test_case import ConversationalTestCase
+from deepeval.metrics.voice.utils.call_activity import (
+    recording_activity,
+    turn_activity,
+)
+from deepeval.test_case import ConversationalTestCase, Turn
 from tests.test_metrics.helpers import (
     recording,
     speech_like,
     stereo_recording,
     timed_call,
+    to_audio,
     tone,
+    zeros,
 )
 
 WINDOW_SECONDS = (
@@ -40,13 +49,27 @@ RECORDING_METRICS = [
     AbruptCutoffMetric,
     UserInterruptionMetric,
 ]
+TURN_AUDIO_METRICS = [
+    AgentInterruptionMetric,
+    ResponseLatencyMetric,
+    ResponseDelayConsistencyMetric,
+    TimeToFirstResponseMetric,
+    TurnTakingNaturalnessMetric,
+    UserInterruptionMetric,
+    FailedResponseMetric,
+    RepromptMetric,
+    AgentResponsivenessMetric,
+    VoiceReliabilityMetric,
+]
 
 
 @pytest.fixture(autouse=True)
-def _fresh_recording_cache():
+def _fresh_caches():
     activity_module._recording_cache.clear()
+    activity_module._turn_audio_cache.clear()
     yield
     activity_module._recording_cache.clear()
+    activity_module._turn_audio_cache.clear()
 
 
 def _model_hears_speech_except(*quiet):
@@ -156,7 +179,81 @@ def test_each_timing_metric_hands_the_option_to_the_recording_reader(
     assert bool(calls) is use_speech_detection
 
 
-@pytest.mark.parametrize("metric_class", RECORDING_METRICS)
+@pytest.mark.parametrize(
+    "use_speech_detection,agent_starts_at", [(False, 2.5), (True, 3.5)]
+)
+def test_each_turns_audio_counts_only_the_speech_the_model_hears(
+    monkeypatch, use_speech_detection, agent_starts_at
+):
+    # Noise opens the reply's audio; the model hears no speech in it.
+    monkeypatch.setattr(
+        speech_detection,
+        "speech_probabilities",
+        _model_hears_speech_except((0.0, 1.0)),
+    )
+    reply = tone(1.0, 150)
+    reply.extend(speech_like(2.0))
+    turns = timed_call([0.5])
+    turns[1].audio = to_audio(reply, start_time=2.5)
+    activity = turn_activity(
+        ConversationalTestCase(turns=turns), use_speech_detection
+    )
+    assert activity.agent[0].start == pytest.approx(agent_starts_at, abs=0.05)
+
+
+@pytest.mark.parametrize(
+    "use_speech_detection,caller_heard",
+    [(False, (0.0, 4.0)), (True, (1.0, 1.1))],
+)
+def test_a_short_faint_word_the_model_hears_in_a_turns_audio_counts(
+    monkeypatch, use_speech_detection, caller_heard
+):
+    monkeypatch.setattr(
+        speech_detection, "speech_probabilities", _model_hears_speech_except()
+    )
+    # A faint "yes": quieter and shorter than loudness alone keeps, so
+    # without the model nothing is heard and the whole clip counts.
+    caller = zeros(1.0)
+    caller.extend(tone(0.1, 200, amplitude=280))
+    caller.extend(zeros(2.9))
+    turns = [
+        Turn(role="user", content="Yes", audio=to_audio(caller, 0.0)),
+        Turn(
+            role="assistant",
+            content="Great.",
+            audio=to_audio(speech_like(2.0), 6.0),
+        ),
+    ]
+    activity = turn_activity(
+        ConversationalTestCase(turns=turns), use_speech_detection
+    )
+    [heard] = activity.caller
+    assert (heard.start, heard.end) == pytest.approx(caller_heard, abs=0.03)
+
+
+@pytest.mark.parametrize("metric_class", TURN_AUDIO_METRICS)
+@pytest.mark.parametrize("use_speech_detection", [True, False])
+def test_each_metric_hands_the_option_to_the_turn_audio_reader(
+    monkeypatch, metric_class, use_speech_detection
+):
+    calls = []
+
+    def fake_speech_frames(samples, sample_rate, levels, min_level):
+        calls.append(len(levels))
+        return [False] * len(levels)
+
+    monkeypatch.setattr(activity_module, "speech_frames", fake_speech_frames)
+    metric = metric_class(use_speech_detection=use_speech_detection)
+    metric.measure(
+        ConversationalTestCase(turns=timed_call([0.5, 0.5])),
+        _show_indicator=False,
+    )
+    assert bool(calls) is use_speech_detection
+
+
+@pytest.mark.parametrize(
+    "metric_class", list(dict.fromkeys(RECORDING_METRICS + TURN_AUDIO_METRICS))
+)
 def test_speech_detection_is_on_by_default(metric_class):
     assert metric_class().use_speech_detection is True
 

@@ -35,6 +35,20 @@ def _reprompted_call():
     return turns
 
 
+# Roll-ups that find speech inside each turn's audio; tests judge by loudness.
+SPEECH_DETECTING = (
+    AgentResponsivenessMetric,
+    TurnTakingNaturalnessMetric,
+    VoiceReliabilityMetric,
+)
+
+
+def _metric(metric_class, **kwargs):
+    if metric_class in SPEECH_DETECTING:
+        kwargs["use_speech_detection"] = False
+    return metric_class(**kwargs)
+
+
 # (metric, clean call, call with one issue, the part that flags it, what is
 # counted on the clean call)
 ROLL_UPS = [
@@ -115,7 +129,7 @@ def _counted(metric_class):
 
 @pytest.mark.parametrize("metric_class,clean,_,__,eligible", ROLL_UPS)
 def test_a_clean_call_scores_one(metric_class, clean, _, __, eligible):
-    metric = measure(metric_class(), clean())
+    metric = measure(_metric(metric_class), clean())
     assert metric.score == 1.0
     assert metric.reason == _reason(
         metric_class, f"No {_counted(metric_class)[0]} had an issue."
@@ -128,7 +142,7 @@ def test_a_clean_call_scores_one(metric_class, clean, _, __, eligible):
 def test_an_issue_counts_against_its_reply(
     metric_class, _, with_issue, part, __
 ):
-    metric = measure(metric_class(), with_issue())
+    metric = measure(_metric(metric_class), with_issue())
     breakdown = metric.score_breakdown
     flagged, eligible = (
         breakdown["turns_with_events"],
@@ -149,7 +163,7 @@ def test_an_issue_counts_against_its_reply(
 def test_strict_mode_zeroes_an_imperfect_score(
     metric_class, _, with_issue, __, ___
 ):
-    metric = measure(metric_class(strict_mode=True), with_issue())
+    metric = measure(_metric(metric_class, strict_mode=True), with_issue())
     assert metric.score == 0.0
     assert metric.success is False
 
@@ -158,9 +172,9 @@ def test_strict_mode_zeroes_an_imperfect_score(
 @pytest.mark.parametrize("metric_class,_,with_issue,__,___", ROLL_UPS)
 async def test_sync_and_async_agree(metric_class, _, with_issue, __, ___):
     test_case = ConversationalTestCase(turns=with_issue())
-    sync_metric = metric_class()
+    sync_metric = _metric(metric_class)
     sync_metric.measure(test_case, _show_indicator=False)
-    async_metric = metric_class()
+    async_metric = _metric(metric_class)
     await async_metric.a_measure(test_case, _show_indicator=False)
     assert async_metric.score == sync_metric.score
     assert async_metric.score_breakdown == sync_metric.score_breakdown
@@ -169,7 +183,7 @@ async def test_sync_and_async_agree(metric_class, _, with_issue, __, ___):
 
 @pytest.mark.parametrize("metric_class,clean,_,__,___", ROLL_UPS)
 def test_the_breakdown_lists_every_part(metric_class, clean, _, __, ___):
-    metric = metric_class()
+    metric = _metric(metric_class)
     measure(metric, clean())
     assert list(metric.score_breakdown["metrics"]) == [
         part.__name__ for part in metric._parts()

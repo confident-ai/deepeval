@@ -16,7 +16,9 @@ from tests.test_metrics.helpers import (
 def test_a_call_without_start_times_is_skipped():
     turns = timed_call(CLEAN_GAPS)
     turns[0].audio.start_time = None
-    metric = measure(TurnTakingNaturalnessMetric(), turns)
+    metric = measure(
+        TurnTakingNaturalnessMetric(use_speech_detection=False), turns
+    )
     assert metric.score is None
     assert metric.reason == (
         "Every audio turn needs a start_time to time the call, so none was "
@@ -25,7 +27,10 @@ def test_a_call_without_start_times_is_skipped():
 
 
 def test_turn_stamps_are_named_as_the_timing_source():
-    metric = measure(TurnTakingNaturalnessMetric(), timed_call(CLEAN_GAPS))
+    metric = measure(
+        TurnTakingNaturalnessMetric(use_speech_detection=False),
+        timed_call(CLEAN_GAPS),
+    )
     assert metric.score_breakdown["timing_source"] == "turn_timestamps"
 
 

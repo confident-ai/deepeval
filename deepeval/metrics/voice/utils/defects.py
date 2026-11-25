@@ -1,6 +1,6 @@
 """Shared pieces of the single-defect voice metrics. Each one scores the
 share of agent replies free of its one defect. Caller audio is never judged;
-the timing metrics only read when the caller's turns start and end."""
+the timing metrics only read when the caller is speaking."""
 
 from contextlib import contextmanager
 from contextvars import ContextVar
@@ -25,7 +25,6 @@ from deepeval.metrics.voice.utils.events import (
     events_to_dicts,
 )
 from deepeval.metrics.voice.utils.analysis import (
-    CONTIGUOUS_CLIP_TOLERANCE_SECONDS,
     AudioMeasurements,
     analyze_audio,
 )
@@ -185,72 +184,6 @@ def call_timeline(
         and index not in timed
     ]
     return timeline, skipped, None
-
-
-def agent_reply_gaps(
-    test_case: ConversationalTestCase,
-) -> Tuple[Dict[int, float], List[Dict], Optional[str]]:
-    """Seconds from the end of each caller turn to the agent reply after it;
-    negative when the agent started before the caller's audio ended."""
-    timeline, skipped, untimed_reason = call_timeline(test_case)
-    timed = {entry.turn_index for entry in timeline}
-    gaps: Dict[int, float] = {}
-    for position, reply in enumerate(timeline):
-        if reply.role != "assistant":
-            continue
-        caller_index = reply.turn_index - 1
-        if (
-            caller_index >= 0
-            and caller_index not in timed
-            and test_case.turns[caller_index].role == "user"
-            and test_case.turns[caller_index].audio is not None
-        ):
-            skipped.append(
-                {
-                    "turn": reply.turn_index,
-                    "error": "The caller's audio before this reply could not "
-                    "be decoded to time it.",
-                }
-            )
-            continue
-        previous = timeline[position - 1] if position else None
-        if previous is None or previous.role != "user":
-            continue
-        gap = reply.start_time - previous.end_time
-        if abs(gap) <= CONTIGUOUS_CLIP_TOLERANCE_SECONDS:
-            latency_ms = test_case.turns[reply.turn_index].latency_ms
-            if latency_ms is None:
-                skipped.append(
-                    {
-                        "turn": reply.turn_index,
-                        "error": "Reply audio touches the caller's with no "
-                        "gap and no recorded latency.",
-                    }
-                )
-                continue
-            gap = latency_ms / 1000
-        gaps[reply.turn_index] = gap
-    return gaps, skipped, untimed_reason
-
-
-def agent_reply_delays(
-    test_case: ConversationalTestCase,
-) -> Tuple[Dict[int, float], List[Dict], Optional[str]]:
-    """How long the agent waited before each reply. Replies that talked over
-    the caller had no wait and are left to Agent Interruption."""
-    gaps, skipped, untimed_reason = agent_reply_gaps(test_case)
-    delays: Dict[int, float] = {}
-    for turn, gap in gaps.items():
-        if gap < -AGENT_OVERLAP_ALLOWANCE_SECONDS:
-            skipped.append(
-                {
-                    "turn": turn,
-                    "error": "Agent started before the caller finished.",
-                }
-            )
-            continue
-        delays[turn] = max(gap, 0.0)
-    return delays, skipped, untimed_reason
 
 
 def shifts_from_typical(levels: Dict[int, float]) -> Dict[int, float]:

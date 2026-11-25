@@ -12,15 +12,20 @@ from tests.test_metrics.helpers import (
 def test_an_instant_reply_among_slow_ones_is_inconsistent():
     turns = timed_call([3.0, 3.0, 0.0, 3.0])
     turns[5].latency_ms = 0.0
-    [event] = measure(ResponseDelayConsistencyMetric(), turns).score_breakdown[
-        "events"
-    ]
+    [event] = measure(
+        ResponseDelayConsistencyMetric(use_speech_detection=False), turns
+    ).score_breakdown["events"]
     assert event["turn"] == 5
-    assert event["shift_seconds"] == -3.0
+    # The other waits are heard from where the caller's speech ends, a
+    # quarter second before their clip does.
+    assert event["shift_seconds"] == pytest.approx(-3.25, abs=0.05)
 
 
 def test_delay_consistency_needs_three_replies():
-    metric = measure(ResponseDelayConsistencyMetric(), timed_call([0.5, 4.0]))
+    metric = measure(
+        ResponseDelayConsistencyMetric(use_speech_detection=False),
+        timed_call([0.5, 4.0]),
+    )
     assert metric.score is None
     assert metric.reason == (
         "At least 3 timed assistant replies are needed to compare their "

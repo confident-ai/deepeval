@@ -21,6 +21,10 @@ from deepeval.models.system_one.schema import NoulQuestion
 from deepeval.test_case import ConversationalTestCase, Turn
 from deepeval.metrics.voice.utils.events import RANGE, VoiceEvent
 
+# A caller speaking again sooner is pausing mid-thought, not kept waiting:
+# it is the wait Response Latency's default counts as slow.
+REPROMPT_MIN_WAIT_SECONDS = 4.0
+
 REPROMPT_CALL = (
     "A phone call between an AI voice agent and a caller. Each candidate is a "
     "caller line, the silence after it with no reply from the agent, and the "
@@ -66,6 +70,7 @@ class RepromptMetric(BaseDefectMetric):
         system_one_model: Optional[
             Union[str, DeepEvalBaseSystemOneModel]
         ] = None,
+        use_speech_detection: bool = True,
         flaky: bool = False,
     ):
         super().__init__(
@@ -76,6 +81,7 @@ class RepromptMetric(BaseDefectMetric):
             flaky=flaky,
         )
         self.system_one_model = system_one_model
+        self.use_speech_detection = use_speech_detection
         if isinstance(system_one_model, DeepEvalBaseSystemOneModel):
             self.evaluation_model = system_one_model.get_model_name()
 
@@ -94,7 +100,7 @@ class RepromptMetric(BaseDefectMetric):
                 counted=CALLER_LINES,
             )
         turns = test_case.turns
-        lines = caller_lines(turns)
+        lines = caller_lines(turns, self.use_speech_detection)
         eligible_turns = []
         candidates: List[VoiceEvent] = []
         evidence: List[Dict[str, Any]] = []
@@ -115,8 +121,18 @@ class RepromptMetric(BaseDefectMetric):
                 or not answered_later
             ):
                 continue
-            silence = silence_after_line(turns, last)
+            silence = silence_after_line(turns, last, self.use_speech_detection)
             wait = silence.get("duration_seconds")
+            repeat = turns[last + 1].audio
+            repeat_is_timed = (
+                repeat is not None and repeat.start_time is not None
+            )
+            if (
+                repeat_is_timed
+                and wait is not None
+                and wait < REPROMPT_MIN_WAIT_SECONDS
+            ):
+                continue
             candidates.append(
                 VoiceEvent(
                     type="user_reprompted",

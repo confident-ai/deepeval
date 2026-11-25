@@ -1,6 +1,7 @@
 import pytest
 
 from deepeval.metrics import AgentInterruptionMetric
+from deepeval.test_case import Turn
 from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 from tests.test_metrics.helpers import (
     agent_backs_off_call,
@@ -9,25 +10,54 @@ from tests.test_metrics.helpers import (
     measure_recording,
     speech_like,
     timed_call,
+    timed_turn,
+    to_audio,
+    zeros,
 )
+
+
+def test_a_reply_with_a_pause_inside_its_audio_is_still_one_reply():
+    reply = speech_like(1.0)
+    reply.extend(zeros(1.5))
+    reply.extend(speech_like(1.0, seed=1))
+    turns = [
+        timed_turn("user", 2.0, 0.0),
+        Turn(
+            role="assistant",
+            content="Sure. One more thing.",
+            audio=to_audio(reply, start_time=2.5),
+        ),
+        timed_turn("user", 2.0, 6.5, seed=1),
+        timed_turn("assistant", 2.0, 9.0, seed=1),
+    ]
+    metric = measure(AgentInterruptionMetric(use_speech_detection=False), turns)
+    assert metric.score == 1.0
+    assert metric.score_breakdown["eligible_turns"] == 2
 
 
 def test_the_agents_opening_line_is_not_an_interruption():
     metric = measure(
-        AgentInterruptionMetric(), timed_call([0.5, 0.5], greeting_at=0.5)
+        AgentInterruptionMetric(use_speech_detection=False),
+        timed_call([0.5, 0.5], greeting_at=0.5),
     )
     assert metric.score == 1.0
     assert metric.score_breakdown["eligible_turns"] == 2
 
 
 def test_a_first_reply_over_a_caller_who_opened_the_call_is_an_interruption():
-    metric = measure(AgentInterruptionMetric(), timed_call([-1.5, 0.5]))
+    metric = measure(
+        AgentInterruptionMetric(use_speech_detection=False),
+        timed_call([-1.5, 0.5]),
+    )
     assert metric.score == 0.5
     assert metric.score_breakdown["eligible_turns"] == 2
 
 
 def test_an_agent_that_backs_off_from_the_caller_made_a_false_start():
-    metric = measure(AgentInterruptionMetric(), agent_backs_off_call(1.4))
+    metric = measure(
+        AgentInterruptionMetric(use_speech_detection=False),
+        agent_backs_off_call(1.4),
+    )
     assert metric.score == 0.5
     [event] = metric.score_breakdown["events"]
     assert event["type"] == "false_start"
@@ -36,9 +66,17 @@ def test_an_agent_that_backs_off_from_the_caller_made_a_false_start():
 
 def test_a_false_start_after_a_long_caller_silence_is_excused():
     turns = agent_backs_off_call(5.4)
-    assert measure(AgentInterruptionMetric(), turns).score == 1.0
+    assert (
+        measure(
+            AgentInterruptionMetric(use_speech_detection=False), turns
+        ).score
+        == 1.0
+    )
     metric = measure(
-        AgentInterruptionMetric(max_caller_silence_seconds=7), turns
+        AgentInterruptionMetric(
+            max_caller_silence_seconds=7, use_speech_detection=False
+        ),
+        turns,
     )
     assert metric.score == 0.5
 

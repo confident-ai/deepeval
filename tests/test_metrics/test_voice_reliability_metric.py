@@ -15,7 +15,7 @@ from tests.test_metrics.helpers import (
 def test_undecodable_agent_audio_fails_the_call():
     turns = clean_turns()
     undecodable(turns[3])
-    metric = measure(VoiceReliabilityMetric(), turns)
+    metric = measure(VoiceReliabilityMetric(use_speech_detection=False), turns)
     assert metric.score == 0.0
     assert metric.score_breakdown["critical_failure"] is True
 
@@ -24,7 +24,9 @@ def test_audio_and_responsiveness_issues_count_per_exchange():
     turns = with_reply_audio(3, loop_clip()) + [
         caller_turn("Can you check my order?")
     ]
-    metric = measure(VoiceReliabilityMetric(), turns, AGENT_HUNG_UP)
+    metric = measure(
+        VoiceReliabilityMetric(use_speech_detection=False), turns, AGENT_HUNG_UP
+    )
     assert metric.score == pytest.approx(2 / 4)
     assert metric.reason == (
         "2 of 4 exchanges had an issue: Failed Response (1), "
