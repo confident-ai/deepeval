@@ -406,6 +406,14 @@ class DummyProgress:
         self.records = []
         self.tasks = list(tasks) if tasks is not None else []
 
+    # rich.progress.Progress is usable directly as a context manager
+    # (`with progress:`); mirror that so stubbed synthesizer paths work.
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc, tb):
+        return False
+
     def update(self, task_id, **kwargs):
         self.records.append(("update", task_id, kwargs))
 
