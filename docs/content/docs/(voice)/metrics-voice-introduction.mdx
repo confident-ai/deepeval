@@ -119,7 +119,15 @@ A voice metric can read audio from two places:
 | **Call audio** | Used | Ignored |
 | **Turn audio** | Used | Used |
 
-Stereo call audio wins when a test case has both. Otherwise the metric uses turn audio.
+Which one is used depends on the metric:
+
+| Metric | Audio it reads |
+| --- | --- |
+| [Abrupt Cut-off](/docs/metrics-abrupt-cut-off), [Response Latency](/docs/metrics-response-latency), [Response Delay Consistency](/docs/metrics-response-delay-consistency), [Time to First Response](/docs/metrics-time-to-first-response), [Agent Interruption](/docs/metrics-agent-interruption), [User Interruption](/docs/metrics-user-interruption), [Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) | Stereo call audio when the test case has it, otherwise turn audio |
+| [Echo](/docs/metrics-echo) | Stereo call audio only. Skipped without it |
+| Every other voice metric | Turn audio only |
+
+When a metric can read both and the test case has both, stereo call audio always wins and turn audio is ignored. Roll-up metrics, such as [Audio Integrity](/docs/metrics-audio-integrity), use whatever each of their parts uses.
 
 <Tabs items={["Call audio", "Turn audio"]}>
 <Tab value="Call audio">
@@ -154,7 +162,7 @@ Separate clips, one per turn, each placed on the call's clock by its `Audio.star
 </Tab>
 </Tabs>
 
-Call audio is more reliable, because it doesn't depend on how the call was cut into turns or how accurate their timestamps are. Not every metric can use it; each metric's page says whether it does. `timing_source` in the results says which was used: `"call_recording"` for call audio, `"turn_timestamps"` for turn audio.
+Call audio is more reliable, because it doesn't depend on how the call was cut into turns or how accurate their timestamps are. `timing_source` in the results says which was used: `"call_recording"` for call audio, `"turn_timestamps"` for turn audio.
 
 ```python
 from deepeval.test_case import Audio, ConversationalTestCase
