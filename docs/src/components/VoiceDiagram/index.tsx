@@ -90,7 +90,13 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
   const tops: number[] = [];
   let cursor = 0;
   lanes.forEach((_, index) => {
-    const labelled = marks.some((mark) => mark.lane === index);
+    const labelled =
+      marks.some((mark) => mark.lane === index) ||
+      windows.some(
+        (window) =>
+          window.label &&
+          Math.min(...(window.lanes ?? lanes.map((_, i) => i))) === index,
+      );
     cursor += labelled ? LABEL_ROOM : index === 0 ? 2 : PLAIN_GAP;
     tops.push(cursor);
     cursor += LANE_HEIGHT;
@@ -223,7 +229,7 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
                 className={styles.window}
               />
               {window.label && (
-                <text x={from + width / 2} y={top - 5} className={styles.windowLabel}>
+                <text x={from + width / 2} y={top - 4} className={styles.windowLabel}>
                   {window.label}
                 </text>
               )}

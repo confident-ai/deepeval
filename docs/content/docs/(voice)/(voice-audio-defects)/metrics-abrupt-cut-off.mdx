@@ -46,7 +46,7 @@ metric = AbruptCutoffMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-Along with the [common voice metric parameters](/docs/metrics-voice-introduction#common-parameters), `AbruptCutoffMetric` takes:
+Along with the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics), `AbruptCutoffMetric` takes:
 
 - [Optional] `use_speech_detection`: only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so a stop the caller didn't cause isn't excused by background noise. Defaults to `True`.
 - [Optional] `eval_mode` and `audio_decision_model`: have each cut-off [double-checked by a model](/docs/metrics-voice-introduction#second-check-with-an-audio-decision-model) that listens to it. Defaults to no second check.
