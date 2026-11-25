@@ -222,10 +222,34 @@ class Turn(BaseModel):
         return data
 
 
+_CALL_RECORDING_PATH_DEPRECATION = (
+    "'call_recording_path' is deprecated. Use 'audio' instead, e.g. "
+    'audio=Audio(url="call.wav").'
+)
+
+
+def _recording_audio(path: Optional[str]) -> Optional[Audio]:
+    """The call recording at `path` as `Audio`, or None when there is none.
+    A missing file reads as no recording, as `call_recording_path` did."""
+    if not path:
+        return None
+    try:
+        return Audio(url=path, mimeType="audio/wav")
+    except (FileNotFoundError, ValueError):
+        return None
+
+
 class ConversationalTestCase(BaseModel):
     # Core
     turns: List[Turn]
-    call_recording_path: Optional[str] = Field(default=None, exclude=True)
+    # A recording of the whole call. As a stereo WAV (caller on the left
+    # channel, agent on the right) voice metrics read who made sound when from
+    # it. Kept out of serialization, so it is never sent anywhere.
+    audio: Optional[Audio] = Field(default=None, exclude=True)
+    # Which channel of a stereo `audio` is the agent; the other is the caller.
+    agent_channel: Literal["left", "right"] = Field(
+        default="right", exclude=True
+    )
     scenario: Optional[str] = Field(default=None)
     context: Optional[List[str]] = Field(default=None)
     name: Optional[str] = Field(default=None)
@@ -299,9 +323,30 @@ class ConversationalTestCase(BaseModel):
         )
         self.metadata = value
 
+    @property
+    def call_recording_path(self) -> Optional[str]:
+        warnings.warn(
+            _CALL_RECORDING_PATH_DEPRECATION, DeprecationWarning, stacklevel=2
+        )
+        if self.audio is None or not self.audio.local:
+            return None
+        return self.audio.url
+
+    @call_recording_path.setter
+    def call_recording_path(self, value: Optional[str]):
+        warnings.warn(
+            _CALL_RECORDING_PATH_DEPRECATION, DeprecationWarning, stacklevel=2
+        )
+        self.audio = _recording_audio(value)
+        if self.audio is not None:
+            self.voice = True
+
     @model_validator(mode="after")
     def set_is_voice(self):
         if self.voice is True:
+            return self
+        if self.audio is not None:
+            self.voice = True
             return self
         if self.turns:
             for turn in self.turns:
@@ -356,6 +401,15 @@ class ConversationalTestCase(BaseModel):
 
     @model_validator(mode="before")
     def validate_input(cls, data):
+        if "call_recording_path" in data:
+            warnings.warn(
+                _CALL_RECORDING_PATH_DEPRECATION,
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            path = data.pop("call_recording_path")
+            if data.get("audio") is None:
+                data["audio"] = _recording_audio(path)
         turns = data.get("turns")
         context = data.get("context")
         mcp_servers = data.get("mcp_servers")

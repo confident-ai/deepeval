@@ -13,7 +13,29 @@ from deepeval.voice import CallbackVoiceConnector, VoiceConfig
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.connectors.types import ConnectorTurn
 from tests.test_core.test_simulator.helpers import StaticSimulatorModel
-from tests.test_core.test_voice.helpers import RATE, EchoAgent, StubSTT, StubTTS
+from tests.test_core.test_voice.helpers import (
+    RATE,
+    StubSTT,
+    StubTTS,
+    wav_audio,
+)
+
+# Simulated turns follow each other with no gap, so a reply shorter than
+# Agent Interruption's 1.5 s false-start limit reads as cutting in.
+CALLER_SECONDS = 1.0
+REPLY_SECONDS = 2.0
+
+
+class SpokenTTS(StubTTS):
+    async def a_synthesize(self, text: str, **kwargs):
+        return wav_audio(CALLER_SECONDS), None
+
+
+class SpokenAgent:
+    async def __call__(self, audio: Audio) -> ConnectorTurn:
+        return ConnectorTurn(
+            audio=wav_audio(REPLY_SECONDS), transcript="Agent reply"
+        )
 
 
 class SilentAgent:
@@ -35,7 +57,7 @@ def _simulate(agent, goldens: int = 2):
         simulator_model=StaticSimulatorModel(),
         voice_config=VoiceConfig(
             connector=CallbackVoiceConnector(agent),
-            tts_model=StubTTS(),
+            tts_model=SpokenTTS(),
             stt_model=StubSTT(),
             output_dir=None,
             combine_audio_files=False,
@@ -52,13 +74,13 @@ def _simulate(agent, goldens: int = 2):
 
 def _voice_metrics():
     return [
-        AgentResponsivenessMetric(),
-        TurnTakingNaturalnessMetric(),
-        VoiceReliabilityMetric(),
+        AgentResponsivenessMetric(use_speech_detection=False),
+        TurnTakingNaturalnessMetric(use_speech_detection=False),
+        VoiceReliabilityMetric(use_speech_detection=False),
     ]
 
 
-test_cases = _simulate(EchoAgent())
+test_cases = _simulate(SpokenAgent())
 
 
 @pytest.mark.parametrize("test_case", test_cases)
