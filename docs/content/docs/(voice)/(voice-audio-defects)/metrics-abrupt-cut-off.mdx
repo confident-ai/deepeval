@@ -263,12 +263,7 @@ A stop between two words sounds like a normal ending, so it isn't flagged.
 
 ### Example call
 
-Two short calls with an agent that sometimes stops mid-word, one scored from its call audio and one from turn audio.
-
-- **Call audio:** four replies end at full volume or fade out, but only one is a cut-off. The reply that stops because the caller spoke up, and the one still going when the call ends, aren't held against the agent.
-- **Turn audio:** five replies, two of them cut off. One drops into digital silence before the agent picks back up in its next clip, which is a stream cut. The other is cut at the end of the agent's last reply. The reply the caller barged into is marked `interrupted=True`, so it isn't flagged.
-
-Each row of the table is one agent reply, how it ended and whether that counts as a cut-off.
+Two short calls where the agent sometimes stops mid-word, one scored from call audio and one from turn audio. Each row is one agent reply, how it ended, and whether that counts as a cut-off.
 
 <Tabs items={["Call audio", "Turn audio"]}>
 <Tab value="Call audio">
