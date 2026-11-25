@@ -7,7 +7,10 @@ from openai import OpenAI
 from deepeval.tracing.context import update_current_span, update_llm_span
 from deepeval.tracing.context import current_span_context
 from deepeval.tracing.types import LlmSpan
-from deepeval.models.llms.constants import OPENAI_MODELS_DATA
+from deepeval.models.llms.constants import (
+    ANTHROPIC_MODELS_DATA,
+    OPENAI_MODELS_DATA,
+)
 
 if TYPE_CHECKING:
     from anthropic import Anthropic
@@ -206,6 +209,14 @@ def patch_anthropic_client(client: "Anthropic"):
                     except Exception:
                         pass
 
+                    model_data = ANTHROPIC_MODELS_DATA.get(model)
+                    cost_per_input_token = (
+                        model_data.input_price if model_data else None
+                    )
+                    cost_per_output_token = (
+                        model_data.output_price if model_data else None
+                    )
+
                     update_current_span(
                         input=kwargs.get("messages", "INPUT_MESSAGE_NOT_FOUND"),
                         output=output if output else "OUTPUT_MESSAGE_NOT_FOUND",
@@ -213,6 +224,8 @@ def patch_anthropic_client(client: "Anthropic"):
                     update_llm_span(
                         input_token_count=input_token_count,
                         output_token_count=output_token_count,
+                        cost_per_input_token=cost_per_input_token,
+                        cost_per_output_token=cost_per_output_token,
                     )
                 return response
 
