@@ -197,8 +197,10 @@ A reply counts if any part counted it, and is flagged if any part flagged it. So
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.5, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 4.3 }, { start: 5.7, end: 7.0 }, { start: 7.0, end: 7.1, silent: true }, { start: 7.1, end: 8.6, ending: "cut" }] },
   ]}
+  highlights={[
+    { start: 7.0, end: 7.1, lane: 0 },
+  ]}
   marks={[
-    { at: 2.5, lane: 0, tone: "ok", label: "clean" },
     { at: 7.05, lane: 0, tone: "bad", label: "dropout" },
     { at: 8.6, lane: 0, tone: "bad", label: "cut off" },
   ]}
@@ -228,17 +230,17 @@ A call where four of five agent replies have a problem, and one has two. Each ro
 <VoiceDiagram
   duration={24}
   lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.12, label: "turn 3" }, { start: 12.12, end: 15.12, label: "turn 5" }, { start: 18.12, end: 20.24, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 9.12, ending: "cut" }, { start: 12.12, end: 13.37 }, { start: 13.37, end: 14.13 }, { start: 14.13, end: 14.87 }, { start: 18.12, end: 19.22 }, { start: 19.22, end: 19.3, silent: true }, { start: 19.3, end: 20.24, ending: "cut" }] },
+    { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.12, label: "turn 3" }, { start: 12.12, end: 15.12, label: "turn 5" }, { start: 18.12, end: 20.24, label: "turn 7" }, { start: 22.3, end: 24, label: "turn 9" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 9.12, ending: "cut" }, { start: 12.12, end: 13.37 }, { start: 13.37, end: 14.13 }, { start: 14.13, end: 14.87 }, { start: 18.12, end: 19.22 }, { start: 19.22, end: 19.3, silent: true }, { start: 19.3, end: 20.24, ending: "cut" }] },
   ]}
-  windows={[
-    { start: 13.37, end: 14.13, lanes: [0], tone: "bad", label: "loop" },
+  highlights={[
+    { start: 13.37, end: 14.13, lane: 0 },
+    { start: 19.22, end: 19.3, lane: 0 },
+    { start: 22.3, end: 24, lane: 0 },
   ]}
   marks={[
-    { at: 3.5, lane: 0, tone: "ok", label: "clean" },
     { at: 9.12, lane: 0, tone: "bad", label: "cut off" },
-    { at: 19.26, lane: 0, tone: "bad", label: "dropout" },
-    { at: 20.24, lane: 0, tone: "bad", label: "cut off" },
-    { at: 23.25, lane: 0, tone: "bad", label: "turn 9: no audio" },
+    { at: 19.26, lane: 0, tone: "bad", label: "dropout, cut" },
+    { at: 23.6, lane: 0, tone: "bad", label: "no audio" },
   ]}
 />
 

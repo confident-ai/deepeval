@@ -128,9 +128,9 @@ The `HeldToneMetric` score is calculated according to the following equation:
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
   ]}
-  windows={[
-    { start: 0.5, end: 4.0, lanes: [0], tone: "info", label: "reply 1" },
-    { start: 5.5, end: 9.5, lanes: [0], tone: "info", label: "reply 2" },
+  brackets={[
+    { start: 0.5, end: 4.0, lane: 0, label: "reply 1" },
+    { start: 5.5, end: 9.5, lane: 0, label: "reply 2" },
   ]}
 />
 
@@ -144,6 +144,9 @@ A voice holding a vowel wobbles and drifts in pitch. A stuck tone doesn't.
   duration={8}
   lanes={[
     { label: "Agent", role: "agent", sounds: [{ start: 0.3, end: 1.4 }, { start: 1.4, end: 2.4, level: 0.7 }, { start: 2.4, end: 3.6 }, { start: 4.4, end: 6.4, level: 0.6, ending: "flat" }, { start: 6.4, end: 7.6 }] },
+  ]}
+  highlights={[
+    { start: 4.4, end: 6.4, lane: 0 },
   ]}
   marks={[
     { at: 1.9, lane: 0, tone: "ok", label: "held vowel" },
@@ -182,11 +185,11 @@ A call where the agent holds a vowel in one reply and plays a steady beep in ano
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 10.5, label: "turn 3" }, { start: 13.5, end: 17.5, label: "turn 5" }, { start: 20.5, end: 22.5, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 8.5 }, { start: 8.5, end: 9.5, level: 0.7 }, { start: 9.5, end: 10.25 }, { start: 13.5, end: 15.0 }, { start: 15.0, end: 16.5, level: 0.6, ending: "flat" }, { start: 16.5, end: 17.25 }, { start: 20.5, end: 22.25 }] },
   ]}
+  highlights={[
+    { start: 15.0, end: 16.5, lane: 0 },
+  ]}
   marks={[
-    { at: 3.5, lane: 0, tone: "ok", label: "clean" },
     { at: 9.0, lane: 0, tone: "ok", label: "clean: vowel" },
-    { at: 15.75, lane: 0, tone: "bad", label: "held tone" },
-    { at: 21.5, lane: 0, tone: "ok", label: "clean" },
   ]}
 />
 

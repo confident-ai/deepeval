@@ -121,11 +121,11 @@ The `LoudnessConsistencyMetric` score is calculated according to the following e
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 2.4, label: "turn 1" }, { start: 2.8, end: 4.8, label: "turn 3" }, { start: 5.2, end: 7.2, label: "turn 5" }, { start: 7.6, end: 9.8, label: "turn 7" }], sounds: [{ start: 0.3, end: 2.2 }, { start: 2.8, end: 4.8, silent: true }, { start: 5.3, end: 7.0 }, { start: 7.7, end: 9.6 }] },
   ]}
-  marks={[
-    { at: 1.3, lane: 0, tone: "info", label: "counted" },
-    { at: 3.8, lane: 0, tone: "skip", label: "no sound" },
-    { at: 6.2, lane: 0, tone: "info", label: "counted" },
-    { at: 8.7, lane: 0, tone: "info", label: "counted" },
+  brackets={[
+    { start: 0.2, end: 2.4, lane: 0, label: "reply 1" },
+    { start: 2.8, end: 4.8, lane: 0, tone: "skip", label: "no sound" },
+    { start: 5.2, end: 7.2, lane: 0, label: "reply 2" },
+    { start: 7.6, end: 9.8, lane: 0, label: "reply 3" },
   ]}
 />
 
@@ -140,9 +140,13 @@ At least **3** replies are needed to tell which one is off. With fewer, the metr
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 2.4 }, { start: 2.8, end: 4.8 }, { start: 5.2, end: 7.2 }, { start: 7.6, end: 9.8 }], sounds: [{ start: 0.3, end: 2.2, level: 0.6 }, { start: 2.9, end: 4.6, level: 0.6 }, { start: 5.3, end: 7.0, level: 0.25 }, { start: 7.7, end: 9.6, level: 0.65 }] },
   ]}
+  highlights={[
+    { start: 5.3, end: 7.0, lane: 0 },
+  ]}
+  brackets={[
+    { start: 0.2, end: 4.8, lane: 0, label: "typical" },
+  ]}
   marks={[
-    { at: 1.3, lane: 0, tone: "ok", label: "typical" },
-    { at: 3.8, lane: 0, tone: "ok", label: "typical" },
     { at: 6.2, lane: 0, tone: "bad", label: "much quieter" },
     { at: 8.7, lane: 0, tone: "ok", label: "close" },
   ]}
@@ -168,11 +172,8 @@ A call where one agent reply comes out much quieter than the rest. Each row is o
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 5.5, label: "turn 1" }, { start: 8.5, end: 11.5, label: "turn 3" }, { start: 14.5, end: 17.5, label: "turn 5" }, { start: 20.5, end: 23.5, label: "turn 7" }], sounds: [{ start: 2.6, end: 5.3, level: 0.6 }, { start: 8.6, end: 11.3, level: 0.6 }, { start: 14.6, end: 17.3, level: 0.25 }, { start: 20.6, end: 23.3, level: 0.65 }] },
   ]}
-  marks={[
-    { at: 4.0, lane: 0, tone: "ok", label: "clean" },
-    { at: 10.0, lane: 0, tone: "ok", label: "clean" },
-    { at: 16.0, lane: 0, tone: "bad", label: "8 dB quieter" },
-    { at: 22.0, lane: 0, tone: "ok", label: "clean" },
+  highlights={[
+    { start: 14.6, end: 17.3, lane: 0 },
   ]}
 />
 

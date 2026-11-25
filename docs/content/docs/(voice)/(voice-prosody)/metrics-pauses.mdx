@@ -137,11 +137,9 @@ The metric only reads turn audio, one agent clip at a time. The caller's turns a
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 4.6, label: "turn 1" }, { start: 5.6, end: 7.2, label: "turn 3" }], sounds: [{ start: 0.8, end: 2.2 }, { start: 2.5, end: 4.0 }, { start: 5.8, end: 7.0 }] },
   ]}
-  windows={[
-    { start: 0.8, end: 4.0, lanes: [0], tone: "info", label: "speech span" },
-  ]}
-  marks={[
-    { at: 6.4, lane: 0, tone: "skip", label: "too short" },
+  brackets={[
+    { start: 0.8, end: 4.0, lane: 0, label: "speech span" },
+    { start: 5.8, end: 7.0, lane: 0, tone: "skip", label: "too short" },
   ]}
 />
 
@@ -156,11 +154,12 @@ Only the speech span is checked. Silence before the agent starts is response tim
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 7.8, label: "turn 1" }], sounds: [{ start: 0.4, end: 1.6 }, { start: 1.75, end: 2.6 }, { start: 2.6, end: 5.2, silent: true }, { start: 5.2, end: 7.4 }] },
   ]}
-  windows={[
-    { start: 2.6, end: 5.2, lanes: [0], tone: "bad", label: "long pause" },
+  highlights={[
+    { start: 2.6, end: 5.2, lane: 0 },
   ]}
   marks={[
     { at: 1.68, lane: 0, tone: "ok", label: "too brief" },
+    { at: 3.9, lane: 0, tone: "bad", label: "long pause" },
   ]}
 />
 
@@ -186,13 +185,13 @@ A call with five agent replies: one stops for almost 3 seconds mid-reply, one is
 <VoiceDiagram
   duration={32}
   lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 2, end: 6, label: "turn 1" }, { start: 8, end: 13.5, label: "turn 3" }, { start: 16, end: 22.8, label: "turn 5" }, { start: 25, end: 28, label: "turn 7" }, { start: 30, end: 31.5, label: "turn 9" }], sounds: [{ start: 2.1, end: 5.8 }, { start: 8.1, end: 9.26 }, { start: 9.26, end: 12.0, silent: true }, { start: 12.0, end: 13.3 }, { start: 16.0, end: 16.25 }, { start: 16.85, end: 17.1 }, { start: 17.7, end: 17.95 }, { start: 18.55, end: 18.8 }, { start: 19.4, end: 19.65 }, { start: 20.25, end: 20.5 }, { start: 21.1, end: 21.35 }, { start: 21.95, end: 22.2 }, { start: 25.1, end: 27.8 }, { start: 30.1, end: 31.3 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 2, end: 6, label: "turn 1" }, { start: 8, end: 13.5, label: "turn 3" }, { start: 16, end: 22.8, label: "turn 5" }, { start: 25, end: 28, label: "turn 7" }, { start: 30, end: 32, label: "turn 9" }], sounds: [{ start: 2.1, end: 5.8 }, { start: 8.1, end: 9.26 }, { start: 9.26, end: 12.0, silent: true }, { start: 12.0, end: 13.3 }, { start: 16.0, end: 16.25 }, { start: 16.85, end: 17.1 }, { start: 17.7, end: 17.95 }, { start: 18.55, end: 18.8 }, { start: 19.4, end: 19.65 }, { start: 20.25, end: 20.5 }, { start: 21.1, end: 21.35 }, { start: 21.95, end: 22.2 }, { start: 25.1, end: 27.8 }, { start: 30.1, end: 31.3 }] },
+  ]}
+  highlights={[
+    { start: 9.26, end: 12.0, lane: 0 },
+    { start: 16.0, end: 22.2, lane: 0 },
   ]}
   marks={[
-    { at: 4, lane: 0, tone: "ok", label: "clean" },
-    { at: 10.6, lane: 0, tone: "bad", label: "long pause" },
-    { at: 19.4, lane: 0, tone: "bad", label: "too much silence" },
-    { at: 26.5, lane: 0, tone: "ok", label: "clean" },
     { at: 30.7, lane: 0, tone: "skip", label: "skipped" },
   ]}
 />

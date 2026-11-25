@@ -118,9 +118,9 @@ The `AudioClippingMetric` score is calculated according to the following equatio
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
   ]}
-  windows={[
-    { start: 0.5, end: 4.0, lanes: [0], tone: "info", label: "reply 1" },
-    { start: 5.5, end: 9.5, lanes: [0], tone: "info", label: "reply 2" },
+  brackets={[
+    { start: 0.5, end: 4.0, lane: 0, label: "reply 1" },
+    { start: 5.5, end: 9.5, lane: 0, label: "reply 2" },
   ]}
 />
 
@@ -134,6 +134,9 @@ Audio that's too loud hits the top of what a 16-bit sample can hold, and gets fl
   duration={8}
   lanes={[
     { label: "Agent", role: "agent", sounds: [{ start: 0.3, end: 3.6, level: 0.8 }, { start: 4.4, end: 7.6, level: 1, ending: "flat" }] },
+  ]}
+  highlights={[
+    { start: 4.4, end: 7.6, lane: 0 },
   ]}
   marks={[
     { at: 2.0, lane: 0, tone: "ok", label: "loud" },
@@ -159,11 +162,11 @@ A call where one of four agent replies is pushed far past full volume. Each row 
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.5, label: "turn 3" }, { start: 12.5, end: 14.5, label: "turn 5" }, { start: 17.5, end: 19.5, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25, level: 0.5 }, { start: 7.5, end: 9.25, level: 0.85 }, { start: 12.5, end: 14.25, level: 1, ending: "flat" }, { start: 17.5, end: 19.25, level: 0.5 }] },
   ]}
+  highlights={[
+    { start: 12.5, end: 14.25, lane: 0 },
+  ]}
   marks={[
-    { at: 3.5, lane: 0, tone: "ok", label: "clean" },
     { at: 8.5, lane: 0, tone: "ok", label: "clean: loud" },
-    { at: 13.5, lane: 0, tone: "bad", label: "clipped" },
-    { at: 18.5, lane: 0, tone: "ok", label: "clean" },
   ]}
 />
 

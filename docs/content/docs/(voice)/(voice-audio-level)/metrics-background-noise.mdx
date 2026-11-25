@@ -126,10 +126,10 @@ The `BackgroundNoiseMetric` score is calculated according to the following equat
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 3.2, label: "turn 1" }, { start: 4.0, end: 5.4, label: "turn 3" }, { start: 6.6, end: 9.8, label: "turn 5" }], sounds: [{ start: 0.3, end: 3.0 }, { start: 4.1, end: 5.2 }, { start: 6.7, end: 9.6 }] },
   ]}
-  marks={[
-    { at: 1.7, lane: 0, tone: "info", label: "counted" },
-    { at: 4.7, lane: 0, tone: "skip", label: "too short" },
-    { at: 8.2, lane: 0, tone: "info", label: "counted" },
+  brackets={[
+    { start: 0.2, end: 3.2, lane: 0, label: "reply 1" },
+    { start: 4.0, end: 5.4, lane: 0, tone: "skip", label: "too short" },
+    { start: 6.6, end: 9.8, lane: 0, label: "reply 2" },
   ]}
 />
 
@@ -149,6 +149,10 @@ Speech should sit far above the noise in its pauses. A noisy reply has a raised 
   lanes={[
     { label: "Clean", role: "agent", sounds: [{ start: 0.3, end: 1.8 }, { start: 1.8, end: 2.4, silent: true }, { start: 2.4, end: 3.9 }, { start: 3.9, end: 4.5, silent: true }, { start: 4.5, end: 5.7 }] },
     { label: "Noisy", role: "agent", sounds: [{ start: 0.3, end: 1.8 }, { start: 1.8, end: 2.4, level: 0.3, ending: "flat" }, { start: 2.4, end: 3.9 }, { start: 3.9, end: 4.5, level: 0.3, ending: "flat" }, { start: 4.5, end: 5.7 }] },
+  ]}
+  highlights={[
+    { start: 1.8, end: 2.4, lane: 1 },
+    { start: 3.9, end: 4.5, lane: 1 },
   ]}
   marks={[
     { at: 2.1, lane: 0, tone: "ok", label: "quiet pause" },
@@ -187,11 +191,11 @@ A call where one agent reply has a loud hiss behind it and one is too short to m
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 5.5, label: "turn 1" }, { start: 8.5, end: 11.5, label: "turn 3" }, { start: 14.5, end: 16.0, label: "turn 5" }, { start: 19.0, end: 22.0, label: "turn 7" }], sounds: [{ start: 2.6, end: 5.3 }, { start: 8.5, end: 11.5, ending: "flat" }, { start: 14.6, end: 15.8 }, { start: 19.1, end: 21.8 }] },
   ]}
+  highlights={[
+    { start: 8.5, end: 11.5, lane: 0 },
+  ]}
   marks={[
-    { at: 4.0, lane: 0, tone: "ok", label: "clean" },
-    { at: 10.0, lane: 0, tone: "bad", label: "noisy" },
     { at: 15.25, lane: 0, tone: "skip", label: "too short" },
-    { at: 20.5, lane: 0, tone: "ok", label: "clean" },
   ]}
 />
 

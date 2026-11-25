@@ -108,9 +108,9 @@ The `AudioLoopMetric` score is calculated according to the following equation:
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
   ]}
-  windows={[
-    { start: 0.5, end: 4.0, lanes: [0], tone: "info", label: "reply 1" },
-    { start: 5.5, end: 9.5, lanes: [0], tone: "info", label: "reply 2" },
+  brackets={[
+    { start: 0.5, end: 4.0, lane: 0, label: "reply 1" },
+    { start: 5.5, end: 9.5, lane: 0, label: "reply 2" },
   ]}
 />
 
@@ -125,9 +125,12 @@ A loop is a chunk of audio that plays three or more times in a row. Matching is 
   lanes={[
     { label: "Agent", role: "agent", sounds: [{ start: 0.3, end: 1.6 }, { start: 1.6, end: 2.4 }, { start: 2.4, end: 3.2 }, { start: 3.2, end: 4.0 }, { start: 4.0, end: 5.6 }] },
   ]}
-  windows={[
-    { start: 1.6, end: 2.4, lanes: [0], tone: "info", label: "chunk" },
-    { start: 2.4, end: 4.0, lanes: [0], tone: "bad", label: "repeats" },
+  highlights={[
+    { start: 2.4, end: 4.0, lane: 0 },
+  ]}
+  brackets={[
+    { start: 1.6, end: 2.4, lane: 0, label: "chunk" },
+    { start: 2.4, end: 4.0, lane: 0, tone: "bad", label: "repeats" },
   ]}
 />
 
@@ -151,13 +154,8 @@ A call where one of four agent replies gets stuck on a quarter-second syllable. 
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 10.5, label: "turn 3" }, { start: 13.5, end: 15.5, label: "turn 5" }, { start: 18.5, end: 20.5, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 8.75 }, { start: 8.75, end: 9.5 }, { start: 9.5, end: 10.25 }, { start: 13.5, end: 15.25 }, { start: 18.5, end: 20.25 }] },
   ]}
-  windows={[
-    { start: 8.75, end: 9.51, lanes: [0], tone: "bad", label: "loop" },
-  ]}
-  marks={[
-    { at: 3.5, lane: 0, tone: "ok", label: "clean" },
-    { at: 14.5, lane: 0, tone: "ok", label: "clean" },
-    { at: 19.5, lane: 0, tone: "ok", label: "clean" },
+  highlights={[
+    { start: 8.75, end: 9.51, lane: 0 },
   ]}
 />
 
