@@ -454,7 +454,168 @@ class TestIntegrations:
         assert props["tracing.integration"] == Integration.LANGCHAIN.value
 
 
+def shipped_red_team_component(class_name: str):
+    """Stand-in for a vulnerability, attack or guard class the library ships."""
+    component_class = type(class_name, (), {})
+    component_class.__module__ = "deepeval.red_team.vulnerabilities.bias.bias"
+    return component_class()
+
+
+class TestRedTeaming:
+    def test_one_event_per_run_with_the_outcome(self, backend):
+        with telemetry.capture_red_teaming_run(
+            vulnerabilities=[
+                shipped_red_team_component("Toxicity"),
+                shipped_red_team_component("Bias"),
+            ],
+            attacks=[shipped_red_team_component("PromptInjection")],
+        ):
+            for _ in range(7):
+                telemetry.record_test_case()
+            telemetry.record_metric(
+                "Bias (Red Teaming)", async_mode=True, in_component=False
+            )
+
+        assert backend.events[0][1] is Event.RED_TEAMING
+        props = backend.only()
+        assert props["red_teaming.vulnerabilities"] == ["Bias", "Toxicity"]
+        assert props["red_teaming.attacks"] == ["PromptInjection"]
+        assert props["eval.entrypoint"] == Entrypoint.RED_TEAM.value
+        assert props["eval.outcome"] == Outcome.COMPLETED.value
+        assert props["eval.test_case_count"] == 7
+        assert props["eval.metric_runs"] == 1
+        assert props["eval.async_mode"] is True
+        assert props["feature.name"] == "redteaming"
+
+    def test_agentic_runs_report_their_own_entrypoint(self, backend):
+        with telemetry.capture_red_teaming_run(
+            entrypoint=Entrypoint.AGENTIC_RED_TEAM
+        ):
+            pass
+
+        props = backend.only()
+        assert backend.events[0][1] is Event.RED_TEAMING
+        assert props["eval.entrypoint"] == "agentic_red_team"
+
+    def test_red_teaming_metrics_do_not_reach_the_standalone_path(
+        self, backend
+    ):
+        with telemetry.capture_red_teaming_run():
+            telemetry.record_metric(
+                "Bias (Red Teaming)", async_mode=False, in_component=False
+            )
+        telemetry.flush_standalone_metrics()
+
+        assert len(backend.events) == 1
+        assert backend.events[0][1] is Event.RED_TEAMING
+
+    def test_user_written_names_cannot_leak(self, backend):
+        class AcmeFraudProbe:
+            def get_name(self):
+                return "acme-wire-fraud-probe"
+
+        custom = shipped_red_team_component("CustomVulnerability")
+        pulled = shipped_red_team_component("RedTeamingFramework")
+
+        with telemetry.capture_red_teaming_run(
+            vulnerabilities=[custom],
+            attacks=[AcmeFraudProbe()],
+            framework=pulled,
+        ):
+            pass
+
+        props = backend.only()
+        assert props["red_teaming.vulnerabilities"] == ["custom"]
+        assert props["red_teaming.attacks"] == ["custom"]
+        assert props["red_teaming.framework"] == "custom"
+        assert "acme" not in json.dumps(props)
+
+    def test_a_failed_run_reports_the_exception_class(self, backend):
+        with pytest.raises(ValueError):
+            with telemetry.capture_red_teaming_run():
+                raise ValueError("sk-live-secret")
+
+        props = backend.only()
+        assert props["eval.outcome"] == Outcome.ERRORED.value
+        assert props["eval.error_type"] == "ValueError"
+        assert "sk-live-secret" not in json.dumps(props)
+
+
+class TestGuardrails:
+    """Guard checks follow the standalone metric policy under their own event."""
+
+    def test_guard_checks_become_one_event_at_exit(self, backend):
+        guard = shipped_red_team_component("ToxicityGuard")
+        for _ in range(10):
+            telemetry.record_guard(guard, async_mode=False)
+        assert backend.events == []
+
+        telemetry.flush_guardrails()
+
+        props = backend.only()
+        assert backend.events[0][1] is Event.GUARDRAILS
+        assert props["eval.metric_runs"] == 10
+        assert props["eval.metrics"] == ["ToxicityGuard"]
+        assert props["eval.flush_reason"] == FlushReason.MANUAL.value
+        assert props["feature.name"] == "guardrails"
+        assert "eval.entrypoint" not in props
+        assert "eval.test_case_count" not in props
+
+    def test_partial_flushes_sum_to_the_true_total(self, backend):
+        guard = shipped_red_team_component("ToxicityGuard")
+        for _ in range(120):
+            telemetry.record_guard(guard, async_mode=True)
+        telemetry.flush_guardrails()
+
+        assert all(event is Event.GUARDRAILS for _, event, _ in backend.events)
+        assert sum(p["eval.metric_runs"] for _, _, p in backend.events) == 120
+        assert any(
+            p["eval.flush_reason"] == FlushReason.THRESHOLD.value
+            for _, _, p in backend.events
+        )
+
+    def test_a_custom_guard_name_cannot_leak(self, backend):
+        class AcmeComplianceGuard:
+            pass
+
+        telemetry.record_guard(AcmeComplianceGuard(), async_mode=False)
+        telemetry.flush_guardrails()
+
+        assert backend.only()["eval.metrics"] == ["custom"]
+
+    def test_guard_checks_stay_out_of_evaluation_events(self, backend):
+        telemetry.record_guard(
+            shipped_red_team_component("ToxicityGuard"), async_mode=False
+        )
+        telemetry.flush_standalone_metrics()
+
+        assert backend.events == []
+
+
 class TestOptOut:
+    def test_the_former_red_teaming_flag_still_opts_out(
+        self, tmp_path, monkeypatch
+    ):
+        monkeypatch.delenv("DEEPEVAL_TELEMETRY_OPT_OUT", raising=False)
+        monkeypatch.setenv("DEEPTEAM_TELEMETRY_OPT_OUT", "YES")
+        monkeypatch.setenv("DEEPEVAL_HOME", str(tmp_path / "home"))
+        identity_mod.reset_cache_for_testing()
+
+        from deepeval.config.settings import reset_settings
+
+        reset_settings()
+
+        fake = FakeBackend()
+        telemetry.set_backend(fake)
+        try:
+            with telemetry.capture_red_teaming_run():
+                pass
+            assert fake.events == []
+        finally:
+            monkeypatch.delenv("DEEPTEAM_TELEMETRY_OPT_OUT", raising=False)
+            reset_settings()
+            identity_mod.reset_cache_for_testing()
+
     def test_nothing_is_emitted_when_opted_out(self, tmp_path, monkeypatch):
         monkeypatch.setenv("DEEPEVAL_TELEMETRY_OPT_OUT", "1")
         monkeypatch.setenv("DEEPEVAL_HOME", str(tmp_path / "home"))
@@ -547,6 +708,8 @@ class TestTypeSafety:
             "Synthesizer",
             "Conversation Simulator",
             "Benchmark",
+            "Red Teaming",
+            "Guardrails",
             "Integration Installed",
             "CLI Command",
             "Login Prompt Shown",

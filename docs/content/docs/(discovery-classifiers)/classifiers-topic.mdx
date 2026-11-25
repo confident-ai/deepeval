@@ -1,0 +1,51 @@
+---
+id: classifiers-topic
+title: Topic Classifier
+sidebar_label: Topics
+languages: [python]
+---
+
+<ClassifierTagsDisplayer custom={true} singleTurn={true} multiTurn={true} />
+
+The `TopicClassifier` in `deepeval` labels what an interaction is mainly about, such as pricing, onboarding or billing. It is a [`Classifier`](/docs/classifiers-custom) with evidence and a topic review turned on, so a subject that is only mentioned in passing is not taken for what the interaction is about.
+
+## Usage
+
+```python
+from deepeval.classifiers import TopicClassifier
+from deepeval.test_case import LLMTestCase
+
+classifier = TopicClassifier(name="topics", labels=["Pricing", "Billing", "Onboarding"])
+
+test_case = LLMTestCase(
+    input="How much is the Pro plan?",
+    actual_output="The Pro plan is $20 a month.",
+)
+
+classifier.classify(test_case)
+print(classifier.label, classifier.classifications[0].confidence)
+```
+
+Which prints:
+
+```text
+Pricing 0.95
+```
+
+It takes the same parameters as a [`Classifier`](/docs/classifiers-custom#usage), except `decision_model`, `eval_mode` and `multi_label`, with these defaults:
+
+- `labels`: optional, `()` by default, but required unless `label_discovery_config` is set.
+- `classification_template`: `TopicClassifierTemplate`.
+- `evidence_config`: `EvidenceConfig()`, so each label cites the passages that support it.
+- `review_config`: `ReviewConfig()`, so each label is verified by the topic review and dropped below `min_confidence`.
+- `allow_none`: `True`, so content that fits none of your labels gets none.
+
+Labels can also be found as they come up with a [`LabelDiscoveryConfig`](/docs/classifiers-custom#label-discovery).
+
+## How Does It Work?
+
+It runs the same steps as a [`Classifier`](/docs/classifiers-custom#how-does-it-work). The only difference is the review: it first decides for itself what the interaction is mainly about, then scores how well the label names it. A label that names something mentioned in passing, or a routine step such as a greeting or identity check, scores low and is dropped.
+
+## Customize Your Template
+
+`TopicClassifierTemplate` overrides `review_label(subject: str, label: str, content: str, app_description: str, app_note: str)`, which must keep asking for JSON with `summary`, `confidence` and `reason` fields, and `review_app_note()`, and inherits every other prompt from `ClassifierTemplate`.

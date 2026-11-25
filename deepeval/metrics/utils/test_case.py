@@ -132,6 +132,14 @@ def check_conversational_test_case_params(
         raise MissingTestCaseParamsError(error_str)
 
     if (
+        MultiTurnParams.EXPECTED_TOOLS in test_case_params
+        and test_case.expected_tools is None
+    ):
+        error_str = f"'expected_tools' in a conversational test case cannot be empty for the '{metric.__name__}' metric."
+        metric.error = error_str
+        raise MissingTestCaseParamsError(error_str)
+
+    if (
         MultiTurnParams.CHATBOT_ROLE in test_case_params
         and test_case.chatbot_role is None
     ):

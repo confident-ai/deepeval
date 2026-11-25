@@ -1,0 +1,71 @@
+---
+title: BeaverTails
+sidebar_label: BeaverTails
+languages: [python]
+---
+
+The **BeaverTails** framework integrates the [BeaverTails dataset](https://huggingface.co/datasets/PKU-Alignment/BeaverTails) — a large, human-labeled collection of harmful and borderline prompts — so DeepEval can run **dataset-driven red teaming** against real-world adversarial inputs.
+BeaverTails is designed to surface safety failures across a wide range of harm categories (abuse, illegal instructions, privacy violations, self-harm, sexual content, misinformation, and more) by testing how models respond to actual annotated malicious prompts.
+
+## Overview
+
+BeaverTails focuses on **sampling real harmful prompts** from a curated dataset rather than synthetic generation. This provides higher-fidelity signals for model behavior in the wild and helps you validate safety defenses, content filters, and ingestion pipelines.
+
+```python
+from deepeval.red_team.frameworks import BeaverTails
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+beaver_tails = BeaverTails(num_attacks=10)
+
+risk_assessment = red_team(
+    model_callback=your_model_callback,
+    framework=beaver_tails,
+)
+
+print(risk_assessment)
+```
+
+The `BeaverTails` framework accepts **FIVE** optional parameters:
+
+- [Optional] `num_attacks`: A list of strings that represent the `NIST` measure you want to test your AI application on:
+- [Optional] `data_split`: A string which decides which data is used for fetching the dataset. It is a string literal that accepts either `330k_train` or `30k_train`. Defaulted to `30k_train`.
+- [Optional] `evaluation_model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/guides/guides-using-custom-llms) of type `DeepEvalBaseLLM`. Defaulted to 'gpt-4o'.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables concurrent execution. Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to evaluate target LLM's response to dataset's input. Defaulted to `False`.
+
+## How It Works
+
+1. Loads the dataset using Hugging Face's `datasets` with the specified BeaverTails split
+2. Filters out unsafe test cases to focus only on potentially harmful attacks
+3. Randomly samples `num_attacks` prompts
+4. Evaluates if the model appropriately refuses and handles the harmful attacks from dataset
+
+## Categories & Filtering
+
+BeaverTails includes 14 harm subcategories. DeepEval supports filtering by subcategory so you can focus testing on highest-risk areas.
+
+**Example subcategories:**
+
+- `animal_abuse`
+- `child_abuse`
+- `discrimination` / `hate_speech`
+- `drug_abuse`, `weapons`
+- `financial_crime`
+- `misinformation`
+- `privacy_violation`
+- `self_harm`
+- `sexually_explicit`
+- `terrorism`
+- `violence`
+
+## Related Docs
+
+- [MITRE ATLAS framework](/docs/frameworks-mitre-atlas)
+- [NIST AI RMF framework](/docs/frameworks-nist-ai-rmf)
+- [Vulnerabilities in DeepEval](/docs/red-teaming-vulnerabilities)
+- [Adversarial attacks in DeepEval](/docs/red-teaming-adversarial-attacks)
+
+## References
+
+[BeaverTails dataset - `PKU-Alignment/BeaverTails`](https://huggingface.co/datasets/PKU-Alignment/BeaverTails) (Hugging Face)

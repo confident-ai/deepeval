@@ -1,0 +1,8 @@
+{
+  "title": "AI Agent Security",
+  "pages": [
+    "guide-agentic-ai-red-teaming",
+    "guide-red-teaming-conversational-agents",
+    "guide-red-teaming-agentic-rag"
+  ]
+}

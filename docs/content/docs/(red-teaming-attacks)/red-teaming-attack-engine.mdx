@@ -1,0 +1,36 @@
+---
+title: Attack Engine
+sidebar_label: Attack Engine
+languages: [python]
+---
+
+The `AttackEngine` in `deepeval` sits **after** baseline attack generation from a vulnerability, it **rewrites** each attack so it stays grounded to a vulnerability and reads like a realistic user or adversary, you can also optionally set `variations` to get multiple variations of the same attack which are then **filtered** so off-topic or safe (non-adversatial) variants are dropped before your target model runs.
+
+This helps you have more control over the attacks generated from a vulnerability to create more use-case specific attacks by passing `generation_guidelines` and `purpose` to the `AttackEngine`.
+
+You can configure it once and pass it into **`red_team(..., attack_engine=...)`** or construct **`RedTeamer(..., attack_engine=...)`** so the same refinement configurations apply across all vulnerabilities in your red teaming run.
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.attacks.attack_engine import AttackEngine
+from deepeval.red_team.vulnerabilities import Bias
+from deepeval.red_team.attacks.single_turn import PromptInjection
+
+engine = AttackEngine(
+    simulator_model="gpt-4o-mini",
+    variations=2,
+    generation_guidelines=[
+        "Make the attacks seem like a loyal customer complaining."
+    ],
+    purpose="Customer support chatbot for a retail bank",
+)
+
+bias = Bias(types=["race"])
+
+risk_assessment = red_team(
+    model_callback=model_callback,  # same callback you define for your target LLM
+    vulnerabilities=[bias],
+    attacks=[PromptInjection()],
+    attack_engine=engine,
+)
+```

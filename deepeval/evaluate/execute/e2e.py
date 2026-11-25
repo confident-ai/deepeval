@@ -75,8 +75,9 @@ from deepeval.test_run.cache import (
 )
 from deepeval.evaluate.types import TestResult
 from deepeval.evaluate.utils import (
+    attach_classifications,
     create_metric_data,
-    create_classification,
+    create_classifications,
     create_test_result,
 )
 from deepeval.utils import add_pbar, update_pbar, custom_console
@@ -101,6 +102,7 @@ def _reset_classifiers(classifiers: List[BaseClassifier]) -> None:
         classifier.label = None
         classifier.reason = None
         classifier.success = None
+        classifier.classifications = []
 
 
 def _collect_classifications(
@@ -108,23 +110,32 @@ def _collect_classifications(
     test_case: Union[LLMTestCase, ConversationalTestCase],
     new_cached_test_case: Optional[CachedTestCase],
 ) -> List[Classification]:
-    """Build one ``Classification`` per classifier for the local
-    ``TestResult`` (never attached to the uploaded API test case) and, when a
-    cache bucket is given, record error-free results for reuse."""
+    """Build the ``Classification``s of every classifier and, when a cache
+    bucket is given, record error-free results for reuse."""
     expected_labels = test_case.expected_labels or {}
     classifications: List[Classification] = []
     for classifier in classifiers:
-        classification = create_classification(
+        created = create_classifications(
             classifier, expected_labels.get(classifier.name)
         )
-        classifications.append(classification)
+        classifications.extend(created)
 
-        if new_cached_test_case is not None and classifier.error is None:
-            cached_classification = deepcopy(classification)
-            cached_classification.evaluation_cost = 0
+        if (
+            new_cached_test_case is not None
+            and classifier.error is None
+            and classifier.label_discovery_config is None
+        ):
+            cached_classifications = deepcopy(created)
+            if cached_classifications[0].evaluation_cost is not None:
+                cached_classifications[0].evaluation_cost = 0
             new_cached_test_case.cached_classifications.append(
                 CachedClassification(
-                    classification=cached_classification,
+                    classification=cached_classifications[0],
+                    classifications=(
+                        cached_classifications
+                        if classifier.classifications
+                        else []
+                    ),
                     classifier_configuration=Cache.create_classifier_configuration(
                         classifier
                     ),
@@ -451,10 +462,9 @@ def execute_test_cases(
                     api_test_case.update_run_duration(
                         elapsed if elapsed >= 0 else deadline_timeout
                     )
+                    attach_classifications(api_test_case, case_classifications)
                     test_run_manager.update_test_run(api_test_case, test_case)
-                    test_results.append(
-                        create_test_result(api_test_case, case_classifications)
-                    )
+                    test_results.append(create_test_result(api_test_case))
                     update_pbar(progress, pbar_id)
                 finally:
                     reset_outer_deadline(deadline_token)
@@ -851,6 +861,7 @@ async def _a_execute_llm_test_cases(
         api_test_case.update_run_duration(run_duration)
 
         ### Update Test Run ###
+        attach_classifications(api_test_case, case_classifications)
         test_run_manager.update_test_run(api_test_case, test_case)
 
         ### Cache Test Run ###
@@ -866,9 +877,7 @@ async def _a_execute_llm_test_cases(
             to_temp=True,
         )
 
-        test_results.append(
-            create_test_result(api_test_case, case_classifications)
-        )
+        test_results.append(create_test_result(api_test_case))
         update_pbar(progress, pbar_id)
 
 
@@ -984,11 +993,10 @@ async def _a_execute_conversational_test_cases(
             api_test_case.update_run_duration(run_duration)
 
         ### Update Test Run ###
+        attach_classifications(api_test_case, case_classifications)
         test_run_manager.update_test_run(api_test_case, test_case)
 
-        test_results.append(
-            create_test_result(api_test_case, case_classifications)
-        )
+        test_results.append(create_test_result(api_test_case))
         update_pbar(progress, pbar_id)
 
 

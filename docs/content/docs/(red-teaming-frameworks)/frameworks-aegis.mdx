@@ -1,0 +1,69 @@
+---
+title: Aegis
+sidebar_label: Aegis
+languages: [python]
+---
+
+The **Aegis** framework integrates the [NVIDIA Aegis AI Content Safety Dataset](https://huggingface.co/datasets/nvidia/Aegis-AI-Content-Safety-Dataset-1.0) — an open-source dataset aligned with NVIDIA’s **Content Safety Taxonomy** across 13 critical harm categories.
+Aegis enables DeepEval to perform **dataset-driven red teaming** using real human-labeled safety violations to validate model robustness against harmful or unsafe user inputs.
+
+## Overview
+
+Aegis focuses on **real-world unsafe content** from public conversations. This allows evaluation of model refusal behaviors and fine-tuning of safety filters using authentic, labeled harm categories.
+
+```python
+from deepeval.red_team.frameworks import Aegis
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+aegis = Aegis(num_attacks=10)
+
+risk_assessment = red_team(
+    model_callback=your_model_callback,
+    framework=aegis,
+)
+
+print(risk_assessment)
+```
+
+The `Aegis` framework accepts **FOUR** optional parameters:
+
+- [Optional] `num_attacks`: Number of harmful test cases to sample from the dataset. Defaulted to `15`.
+- [Optional] `evaluation_model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/guides/guides-using-custom-llms) of type `DeepEvalBaseLLM`. Defaulted to `'gpt-4o'`.
+- [Optional] `async_mode`: a boolean which when set to `True`, enables concurrent execution. Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints intermediate steps used to evaluate model responses. Defaulted to `False`.
+
+## How It Works
+
+1. Loads the Aegis dataset from Hugging Face.
+2. Filters unsafe samples labeled under NVIDIA’s harm taxonomy.
+3. Randomly samples `num_attacks` test cases.
+4. Evaluates how well the model identifies, refuses, or mitigates these harmful prompts.
+
+## Categories & Filtering
+
+Aegis covers 13 harm domains, all supported by DeepEval filtering.
+
+**Example categories:**
+
+- `sexual_content`
+- `violence`
+- `hate_speech`
+- `self_harm`
+- `misinformation`
+- `privacy_violation`
+- `child_exploitation`
+- `drugs`
+- `terrorism`
+
+## Related Docs
+
+- [MITRE ATLAS framework](/docs/frameworks-mitre-atlas)
+- [NIST AI RMF framework](/docs/frameworks-nist-ai-rmf)
+- [BeaverTails dataset framework](/docs/frameworks-beavertails)
+- [Vulnerabilities in DeepEval](/docs/red-teaming-vulnerabilities)
+- [Adversarial attacks in DeepEval](/docs/red-teaming-adversarial-attacks)
+
+## References
+
+[NVIDIA Aegis AI Content Safety Dataset](https://huggingface.co/datasets/nvidia/Aegis-AI-Content-Safety-Dataset-1.0) (Hugging Face)

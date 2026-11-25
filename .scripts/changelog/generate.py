@@ -23,7 +23,7 @@ from rich.live import Live
 
 from dataclasses import dataclass
 from typing import Callable, Dict, Iterable, List, Optional, Tuple
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field
 
 #################
 # Configuration #
@@ -96,7 +96,6 @@ class AiReleaseNote(BaseModel):
         min_length=10,
         max_length=500,
     )
-    category: str
     confidence: Optional[float] = Field(
         default=None,
         ge=0.0,
@@ -108,13 +107,6 @@ class AiReleaseNote(BaseModel):
         description="Optional internal notes; not written to changelog.",
         max_length=400,
     )
-
-    @field_validator("category")
-    @classmethod
-    def validate_category(cls, category: str) -> str:
-        if category not in CATEGORY_ORDER:
-            raise ValueError(f"category must be one of: {CATEGORY_ORDER}")
-        return category
 
 
 class AiMonthSummary(BaseModel):
@@ -132,6 +124,7 @@ class AiMonthSummary(BaseModel):
 
 PR_NUM_RE = re.compile(r"\(#(\d+)\)|pull request #(\d+)", re.IGNORECASE)
 MERGE_SUBJECT_RE = re.compile(r"^Merge pull request #(\d+)\b", re.IGNORECASE)
+SQUASH_SUBJECT_RE = re.compile(r"\(#(\d+)\)\s*$")
 user_cache: Dict[str, Tuple[str, str]] = (
     {}
 )  # maps login to (display_name, html_url)
@@ -324,20 +317,24 @@ def commits_in_range(base: str, head: str) -> List[Commit]:
     # get sha and subject for commit subjects in range
     # No --first-parent: release tags often sit on a fork-sync merge whose first
     # parent leaves the range immediately, which hides every PR merge behind it.
+    # Merge commits cover merged PRs; squash-merged PRs land as a single
+    # non-merge commit whose subject ends in "(#123)", so keep those too.
     raw = sh(
         [
             "git",
             "log",
-            "--merges",
-            "--format=%H%x00%s",
+            "--format=%H%x00%P%x00%s",
             f"{base}..{head}",
         ]
     )
     commits: List[Commit] = []
     for line in raw.splitlines():
-        if "\x00" not in line:
+        if line.count("\x00") < 2:
             continue
-        sha, subj = line.split("\x00", 1)
+        sha, parents, subj = line.split("\x00", 2)
+        is_merge = len(parents.split()) > 1
+        if not is_merge and not SQUASH_SUBJECT_RE.search(subj):
+            continue
         commits.append(Commit(sha=sha.strip(), subject=subj.strip()))
     return commits
 
@@ -495,6 +492,94 @@ def get_ai_model(model_name: str):
     return OpenAIModel(model=model_name)
 
 
+# Each changelog section, described for the category classifier. The
+# descriptions are the boundaries the judge uses, so they say where one
+# category stops and the next starts.
+CATEGORY_DESCRIPTIONS: Dict[str, str] = {
+    "Breaking Change": (
+        "Users must change their code, configuration or data to keep working: "
+        "a public API, argument, default or behaviour is removed, renamed or "
+        "changed incompatibly. Not a new opt-in option or a bug fix."
+    ),
+    "New Feature": (
+        "Adds a capability users did not have before, such as a new metric, "
+        "model, integration, CLI command or public option. Not a change to "
+        "how an existing capability behaves."
+    ),
+    "Experimental Feature": (
+        "A new capability explicitly marked as experimental, beta, preview or "
+        "prototype, whose API may still change."
+    ),
+    "Improvement": (
+        "Makes an existing capability better without adding a new one: "
+        "performance, accuracy, ergonomics, error messages, documentation, "
+        "tests, tooling or internal refactors. Not a fix for incorrect "
+        "behaviour."
+    ),
+    "Bug Fix": (
+        "Corrects behaviour that was wrong: a crash, error, regression, "
+        "incorrect result or broken build. Not a security vulnerability."
+    ),
+    "Security": (
+        "Fixes a vulnerability or hardens against one, or changes how "
+        "credentials, secrets or user data are protected."
+    ),
+}
+assert list(CATEGORY_DESCRIPTIONS) == CATEGORY_ORDER
+
+
+def get_category_classifier(model):
+    """A deepeval ``Classifier`` that sorts a PR into one changelog section."""
+    from deepeval.classifiers import Classifier, Label
+
+    return Classifier(
+        name="changelog_category",
+        description=(
+            "Sorts a merged pull request of an open-source Python developer "
+            "tool into the changelog section it belongs in, from its title, "
+            "body and the release note written for it."
+        ),
+        labels=[
+            Label(name=name, description=description)
+            for name, description in CATEGORY_DESCRIPTIONS.items()
+        ],
+        model=model,
+        include_reason=False,
+        async_mode=False,
+    )
+
+
+def ai_category_for_pr(
+    classifier,
+    *,
+    pr_number: int,
+    title: str,
+    body: str,
+    entry: str,
+) -> tuple[str, float]:
+    from deepeval.test_case import LLMTestCase
+
+    pr_text = f"PR title: {title.strip()}"
+    if body.strip():
+        pr_text += f"\n\nPR body:\n{body.strip()}"
+    test_case = LLMTestCase(
+        input=sanitize_for_multimodal_sentinel(pr_text),
+        actual_output=sanitize_for_multimodal_sentinel(entry),
+    )
+    try:
+        category = classifier.classify(test_case, _show_indicator=False)
+    except Exception as e:
+        raise RuntimeError(
+            f"--ai failed to categorize PR #{pr_number}. "
+            f"Title={title!r}. Error={type(e).__name__}: {e}"
+        ) from e
+    if category not in CATEGORY_ORDER:
+        raise RuntimeError(
+            f"--ai gave PR #{pr_number} an unknown category {category!r}."
+        )
+    return category, classifier.evaluation_cost or 0.0
+
+
 def build_ai_prompt(*, title: str, body: str) -> str:
     # Keep the instructions short + strict; rely on the schema for structure.
     return f"""
@@ -503,7 +588,6 @@ You are writing release notes for an open-source Python developer tool.
 Task:
 Given a PR title and PR body, produce:
 - entry: one short, ClickHouse-style release note line (no markdown, no PR refs, no URLs)
-- category: choose the best match from the allowed categories
 
 Style rules (very important):
 - Focus on the user-visible change and outcome.
@@ -519,14 +603,6 @@ Style rules (very important):
 
 If the PR is unclear, write the safest high-level improvement without guessing details.
 IMPORTANT: Output only valid JSON with no code fences or comments.
-
-Allowed categories:
-- Breaking Change
-- New Feature
-- Experimental Feature
-- Improvement
-- Bug Fix
-- Security
 
 PR title:
 {title.strip()}
@@ -1095,10 +1171,13 @@ def build_release_entries(
     version = display_version(tag)
     version_date = {version: tag_date}
     ai = None
+    category_classifier = None
     ai_cache: dict[int, AiReleaseNote] = {}
+    category_cache: dict[int, str] = {}
     ai_total_cost = 0.0
     if use_ai:
         ai = get_ai_model(ai_model)
+        category_classifier = get_category_classifier(ai)
 
     def _status(msg: str) -> None:
         if status_cb is not None:
@@ -1200,10 +1279,22 @@ def build_release_entries(
                 ai_cache[pr_num] = note
                 ai_total_cost += cost if cost is not None else 0
 
+            if pr_num in category_cache:
+                category = category_cache[pr_num]
+            else:
+                category, cost = ai_category_for_pr(
+                    category_classifier,
+                    pr_number=pr_num,
+                    title=title,
+                    body=body_clean,
+                    entry=note.entry,
+                )
+                category_cache[pr_num] = category
+                ai_total_cost += cost
+
             bullet = mdx_escape(clean_title(note.entry.strip()))
             if not bullet.endswith("."):
                 bullet += "."
-            category = note.category
             title_out = bullet
         else:
             title_out = mdx_escape(clean_title(title))
