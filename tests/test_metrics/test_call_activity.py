@@ -8,6 +8,7 @@ from deepeval.metrics.voice.utils.call_activity import (
 from deepeval.test_case import ConversationalTestCase
 from deepeval.voice.connectors import audio_utils
 from tests.test_metrics.helpers import (
+    recording,
     RATE,
     speech_like,
     stereo_recording,
@@ -19,7 +20,9 @@ TAIL = 0.25
 
 
 def _starts(path):
-    return agent_starts(recording_activity(path, use_speech_detection=False))
+    return agent_starts(
+        recording_activity(recording(path), use_speech_detection=False)
+    )
 
 
 def test_spans_come_from_each_channels_loudness(tmp_path):
@@ -28,7 +31,7 @@ def test_spans_come_from_each_channels_loudness(tmp_path):
         caller=[(0.5, speech_like(2.0))],
         agent=[(3.0, speech_like(2.0, base_hz=230.0))],
     )
-    activity = recording_activity(path, use_speech_detection=False)
+    activity = recording_activity(recording(path), use_speech_detection=False)
     assert activity.source == "call_recording"
     [caller] = activity.caller
     [agent] = activity.agent
@@ -45,11 +48,10 @@ def test_a_missing_or_mono_recording_falls_back_to_turn_timestamps(
     mono.write_bytes(
         audio_utils.pcm16_to_wav_bytes(speech_like(1.0).tobytes(), RATE, 1)
     )
-    for path in (str(tmp_path / "missing.wav"), str(mono)):
-        assert recording_activity(path, use_speech_detection=False) is None
-        test_case = ConversationalTestCase(
-            turns=timed_call([0.5]), call_recording_path=path
-        )
+    assert recording_activity(None, use_speech_detection=False) is None
+    for audio in (None, recording(mono)):
+        assert recording_activity(audio, use_speech_detection=False) is None
+        test_case = ConversationalTestCase(turns=timed_call([0.5]), audio=audio)
         activity = call_activity(test_case, use_speech_detection=False)
         assert activity.source == "turn_timestamps"
         assert [span.turn for span in activity.agent] == [1]
@@ -103,3 +105,43 @@ def test_a_pause_under_a_second_does_not_end_the_agents_stretch(
         agent=[(0.0, speech_like(1.0)), (1.0 - TAIL + pause, speech_like(1.0))],
     )
     assert len(_starts(path)) == starts
+
+
+def test_call_recording_path_still_works_and_warns(tmp_path):
+    path = stereo_recording(
+        tmp_path / "call.wav", agent=[(0.5, speech_like(1.0))]
+    )
+    with pytest.warns(DeprecationWarning, match="call_recording_path"):
+        test_case = ConversationalTestCase(
+            turns=timed_call([0.5]), call_recording_path=path
+        )
+    assert test_case.audio is not None
+    activity = call_activity(test_case, use_speech_detection=False)
+    assert activity.source == "call_recording"
+    with pytest.warns(DeprecationWarning):
+        missing = ConversationalTestCase(
+            turns=timed_call([0.5]),
+            call_recording_path=str(tmp_path / "missing.wav"),
+        )
+    assert missing.audio is None
+
+
+def test_agent_channel_says_which_side_is_the_agent(tmp_path):
+    # Left channel speaks at 0.5 s, right at 3.0 s. Here the agent is on the
+    # left, the reverse of the usual layout.
+    path = stereo_recording(
+        tmp_path / "left-agent.wav",
+        caller=[(0.5, speech_like(2.0))],
+        agent=[(3.0, speech_like(2.0, base_hz=230.0))],
+    )
+    default = recording_activity(recording(path), False)
+    left = recording_activity(recording(path), False, agent_channel="left")
+    assert default.agent[0].start == pytest.approx(3.0, abs=0.03)
+    assert left.agent[0].start == pytest.approx(0.5, abs=0.03)
+    assert left.caller[0].start == pytest.approx(3.0, abs=0.03)
+
+    test_case = ConversationalTestCase(
+        turns=timed_call([0.5]), audio=recording(path), agent_channel="left"
+    )
+    activity = call_activity(test_case, use_speech_detection=False)
+    assert activity.agent[0].start == pytest.approx(0.5, abs=0.03)

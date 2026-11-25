@@ -15,7 +15,11 @@ from deepeval.metrics.voice import (
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.timeline import render_timeline_wav
-from tests.test_metrics.helpers import speech_like, stereo_recording
+from tests.test_metrics.helpers import (
+    recording,
+    speech_like,
+    stereo_recording,
+)
 
 
 def make_tone(
@@ -353,9 +357,7 @@ def test_turn_taking_reads_hand_overs_from_a_recording(tmp_path):
     )
     metric = TurnTakingNaturalnessMetric(use_speech_detection=False)
     metric.measure(
-        ConversationalTestCase(
-            turns=voice_case().turns, call_recording_path=path
-        ),
+        ConversationalTestCase(turns=voice_case().turns, audio=recording(path)),
         _show_indicator=False,
     )
     breakdown = metric.score_breakdown
