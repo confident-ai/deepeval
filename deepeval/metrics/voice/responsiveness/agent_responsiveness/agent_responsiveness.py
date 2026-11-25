@@ -1,4 +1,4 @@
-from typing import List
+from typing import List, Optional, Union
 
 from deepeval.metrics.voice.base_metric import (
     BaseDefectMetric,
@@ -16,15 +16,37 @@ from deepeval.metrics.voice.responsiveness.silent_reply.silent_reply import (
 from deepeval.metrics.voice.responsiveness.unexpected_call_end.unexpected_call_end import (
     UnexpectedCallEndMetric,
 )
+from deepeval.models.base_model import DeepEvalBaseSystemOneModel
 
 
 class AgentResponsivenessMetric(BaseExchangeRollUpMetric):
+    def __init__(
+        self,
+        *,
+        threshold: Optional[float] = 0.5,
+        include_reason: bool = True,
+        strict_mode: bool = False,
+        verbose_mode: bool = False,
+        system_one_model: Optional[
+            Union[str, DeepEvalBaseSystemOneModel]
+        ] = None,
+        flaky: bool = False,
+    ):
+        super().__init__(
+            threshold=threshold,
+            include_reason=include_reason,
+            strict_mode=strict_mode,
+            verbose_mode=verbose_mode,
+            flaky=flaky,
+        )
+        self.system_one_model = system_one_model
+
     def _parts(self) -> List[BaseDefectMetric]:
         return [
             FailedResponseMetric(),
             SilentReplyMetric(),
             UnexpectedCallEndMetric(),
-            RepromptMetric(),
+            RepromptMetric(system_one_model=self.system_one_model),
         ]
 
     @property

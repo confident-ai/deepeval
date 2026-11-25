@@ -1,8 +1,15 @@
+import asyncio
 import json
 from abc import abstractmethod
 from dataclasses import replace
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from deepeval.config.voice_eval_mode import (
+    VoiceEvalMode,
+    VoiceEvalModeName,
+    resolve_voice_eval_mode,
+)
+from deepeval.errors import DeepEvalError
 from deepeval.metrics.base_metric import BaseConversationalMetric
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
@@ -18,8 +25,14 @@ from deepeval.metrics.voice.utils.defects import (
     TURN_TIMESTAMPS,
     TURN_TIMESTAMPS_NOTE,
     DefectShare,
+    dismissed_note,
     shared_analysis,
     untimed_call_reason,
+)
+from deepeval.metrics.voice.utils.decision_check import (
+    EventSpeaker,
+    confirm_defects,
+    event_clip,
 )
 from deepeval.metrics.voice.utils.events import (
     WHOLE_REPLY,
@@ -34,6 +47,8 @@ from deepeval.metrics.voice.utils.roll_up import (
     caller_line_start_of_turn,
     exchange_of,
 )
+from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
+from deepeval.models.system_one.hume_model import HumeDecisionModel
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 
 VoiceMetricResult = Tuple[Optional[float], str, Dict]
@@ -92,8 +107,21 @@ def _place_reply_events(breakdown: Dict, test_case: ConversationalTestCase):
         event["mark"] = WHOLE_REPLY
 
 
+def _default_audio_decision_model() -> DeepEvalBaseAudioDecisionModel:
+    try:
+        return HumeDecisionModel()
+    except DeepEvalError as e:
+        raise DeepEvalError(
+            f"The {VoiceEvalMode.HYBRID} voice eval mode checks flagged "
+            f"events with Hume, but it is not usable: {e} Pass another "
+            "`audio_decision_model`, or switch back with `deepeval "
+            f"set-voice-eval-mode {VoiceEvalMode.DETERMINISTIC}`."
+        ) from e
+
+
 class BaseVoiceMetric(BaseConversationalMetric):
     _required_test_case_params: List[MultiTurnParams] = []
+    audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None
 
     def __init__(
         self,
@@ -137,10 +165,28 @@ class BaseVoiceMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if self._calls_a_model():
+                return await asyncio.to_thread(self._run, test_case)
             return self._run(test_case)
+
+    def _calls_a_model(self) -> bool:
+        return self.audio_decision_model is not None
+
+    def _use_audio_decision_model(
+        self,
+        model: Optional[DeepEvalBaseAudioDecisionModel],
+        eval_mode: Optional[VoiceEvalModeName],
+    ) -> None:
+        self.eval_mode = resolve_voice_eval_mode(eval_mode)
+        if self.eval_mode is VoiceEvalMode.DETERMINISTIC:
+            self.audio_decision_model = None
+            return
+        self.audio_decision_model = model or _default_audio_decision_model()
+        self.evaluation_model = self.audio_decision_model.get_model_name()
 
     def _run(self, test_case: ConversationalTestCase) -> Optional[float]:
         self.error = None
+        self.evaluation_cost = None
         score, reason, breakdown = self._evaluate(test_case)
         _place_reply_events(breakdown, test_case)
         if (
@@ -171,8 +217,33 @@ class BaseVoiceMetric(BaseConversationalMetric):
 class BaseDefectMetric(BaseVoiceMetric):
     """A metric scoring the share of items free of one defect."""
 
+    # With an audio decision model, a clip of each flagged event is asked
+    # this; a "no" dismisses the event.
+    event_question: Optional[str] = None
+    event_speaker: EventSpeaker = "assistant"
+
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
-        return self.defect_share(test_case).result()
+        return self.confirmed_defect_share(test_case).result()
+
+    def confirmed_defect_share(
+        self, test_case: ConversationalTestCase
+    ) -> DefectShare:
+        share = self.defect_share(test_case)
+        if (
+            self.audio_decision_model is None
+            or not self.event_question
+            or not share.defects
+        ):
+            return share
+        return confirm_defects(self, test_case, share)
+
+    def _event_clip(
+        self,
+        test_case: ConversationalTestCase,
+        event: VoiceEvent,
+        recording: Optional[Tuple[Any, Any, int]],
+    ) -> Optional[bytes]:
+        return event_clip(test_case, event, self.event_speaker, recording)
 
     @abstractmethod
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
@@ -189,6 +260,9 @@ class BaseRollUpMetric(BaseVoiceMetric):
     @abstractmethod
     def _parts(self) -> List[BaseDefectMetric]:
         raise NotImplementedError
+
+    def _calls_a_model(self) -> bool:
+        return any(part._calls_a_model() for part in self._parts())
 
     def _critical_events(
         self, test_case: ConversationalTestCase
@@ -248,9 +322,18 @@ class BaseRollUpMetric(BaseVoiceMetric):
         metrics: Dict[str, Dict] = {}
         unscored_reasons: List[str] = []
         timing_source = None
+        dismissed = 0
         for part in self._parts():
             name = part.__name__
-            share = part.defect_share(part_test_case)
+            share = part.confirmed_defect_share(part_test_case)
+            dismissed += share.dismissed
+            if part.evaluation_cost:
+                self.evaluation_cost = (
+                    self.evaluation_cost or 0.0
+                ) + part.evaluation_cost
+            self.evaluation_model = (
+                self.evaluation_model or part.evaluation_model
+            )
             for entry in share.skipped:
                 if entry not in skipped:
                     skipped.append(entry)
@@ -301,6 +384,8 @@ class BaseRollUpMetric(BaseVoiceMetric):
         }
         if self.reports_timing_source and timing_source is not None:
             breakdown["timing_source"] = timing_source
+        if dismissed:
+            breakdown["dismissed_events"] = dismissed
         if not eligible:
             reasons = set(unscored_reasons)
             reason = (
@@ -324,6 +409,7 @@ class BaseRollUpMetric(BaseVoiceMetric):
             )
         if self.reports_timing_source and timing_source == TURN_TIMESTAMPS:
             reason += TURN_TIMESTAMPS_NOTE
+        reason += dismissed_note(dismissed)
         return 1.0 - len(flagged_by) / len(eligible), reason, breakdown
 
 

@@ -419,3 +419,12 @@ def agent_backs_off_call(caller_pause):
         timed_turn("user", 2.0, agent_at + 0.4, seed=1),
         timed_turn("assistant", 2.0, agent_at + 3.0, seed=2),
     ]
+
+
+def clip_shape(clip):
+    """The channel count and length in seconds of a WAV clip."""
+    import io
+    import wave
+
+    with wave.open(io.BytesIO(clip)) as wav:
+        return wav.getnchannels(), wav.getnframes() / wav.getframerate()

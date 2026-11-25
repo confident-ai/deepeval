@@ -1,9 +1,14 @@
+import asyncio
+import threading
 from array import array
 
 import pytest
 
 from deepeval.metrics import EchoMetric
+from deepeval.models import OpenAIAudioDecisionModel
+from deepeval.models.system_one.openai_audio_model import AudioVerdict
 from deepeval.test_case import ConversationalTestCase
+from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 from tests.test_metrics.helpers import (
     recording,
     speech_like,
@@ -16,7 +21,7 @@ def _scaled(clip, gain):
     return array("h", (int(value * gain) for value in clip))
 
 
-def _echo_on_recording(tmp_path, *, caller):
+def _echo_on_recording(tmp_path, *, caller, metric=None):
     reply = speech_like(3.0)
     path = stereo_recording(
         tmp_path / "call.wav",
@@ -24,7 +29,7 @@ def _echo_on_recording(tmp_path, *, caller):
         caller=caller(reply),
         seconds=7.0,
     )
-    metric = EchoMetric()
+    metric = metric or EchoMetric()
     metric.measure(
         ConversationalTestCase(turns=timed_call([0.5]), audio=recording(path)),
         _show_indicator=False,
@@ -77,3 +82,73 @@ def test_echo_needs_a_call_recording():
     )
     assert metric.score is None
     assert "stereo call recording" in metric.reason
+
+
+def test_an_echo_the_decision_model_cannot_hear_is_dismissed(tmp_path):
+    model = FakeAudioDecisionModel(probability=0.3)
+    metric = _echo_on_recording(
+        tmp_path,
+        caller=lambda reply: [(1.45, _scaled(reply, 0.2))],
+        metric=EchoMetric(eval_mode="hybrid", audio_decision_model=model),
+    )
+    assert metric.score == 1.0
+    assert metric.score_breakdown["dismissed_events"] == 1
+    assert len(model.clips) == 1
+
+
+class _ThreadRecordingEchoMetric(EchoMetric):
+    def defect_share(self, test_case):
+        self.scored_on = threading.current_thread()
+        return super().defect_share(test_case)
+
+
+def test_an_async_measure_with_a_decision_model_runs_off_the_loop(tmp_path):
+    reply = speech_like(3.0)
+    path = stereo_recording(
+        tmp_path / "call.wav",
+        agent=[(0.0, speech_like(0.5, seed=4)), (1.0, reply)],
+        caller=[(1.45, _scaled(reply, 0.2))],
+        seconds=7.0,
+    )
+    metric = _ThreadRecordingEchoMetric(
+        eval_mode="hybrid",
+        audio_decision_model=FakeAudioDecisionModel(probability=0.9),
+    )
+
+    async def measure():
+        await metric.a_measure(
+            ConversationalTestCase(
+                turns=timed_call([0.5]), audio=recording(path)
+            ),
+            _show_indicator=False,
+        )
+        return threading.current_thread()
+
+    loop_thread = asyncio.run(measure())
+    assert metric.score == 0.0
+    assert metric.scored_on is not loop_thread
+
+
+def test_an_openai_audio_model_that_says_no_dismisses_the_echo(
+    tmp_path, monkeypatch
+):
+    monkeypatch.setattr(
+        OpenAIAudioDecisionModel,
+        "_verdict",
+        lambda self, messages: (
+            AudioVerdict(answer="no", confidence=0.7),
+            0.001,
+        ),
+    )
+    metric = _echo_on_recording(
+        tmp_path,
+        caller=lambda reply: [(1.45, _scaled(reply, 0.2))],
+        metric=EchoMetric(
+            eval_mode="hybrid",
+            audio_decision_model=OpenAIAudioDecisionModel(api_key="k"),
+        ),
+    )
+    assert metric.score == 1.0
+    assert metric.score_breakdown["dismissed_events"] == 1
+    assert metric.evaluation_model == "OpenAI gpt-audio"
+    assert metric.evaluation_cost == 0.001
