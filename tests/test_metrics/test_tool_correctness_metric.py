@@ -1,7 +1,12 @@
 import os
 import pytest
 from deepeval.metrics import ToolCorrectnessMetric
-from deepeval.test_case import LLMTestCase, ToolCall, ToolCallType
+from deepeval.test_case import (
+    LLMTestCase,
+    ToolCall,
+    ToolCallParams,
+    ToolCallType,
+)
 
 pytestmark = pytest.mark.skipif(
     os.getenv("OPENAI_API_KEY") is None
@@ -128,3 +133,147 @@ class TestToolCorrectnessMetricType:
         metric.measure(test_case, _show_indicator=False)
 
         assert metric.score == 1.0
+
+
+def _measure(called, expected, **kwargs):
+    metric = ToolCorrectnessMetric(async_mode=False, **kwargs)
+    metric.measure(
+        LLMTestCase(
+            input="Book me a flight.",
+            actual_output="Booked.",
+            tools_called=called,
+            expected_tools=expected,
+        ),
+        _show_indicator=False,
+    )
+    return metric
+
+
+class TestToolCorrectnessMatching:
+    def test_expected_tool_without_input_parameters_matches_any_call(self):
+        metric = _measure(
+            [ToolCall(name="search", input_parameters={"to": "NYC"})],
+            [ToolCall(name="search")],
+            evaluation_params=[ToolCallParams.INPUT_PARAMETERS],
+            should_consider_ordering=True,
+        )
+        assert metric.score == 1
+
+    def test_expected_tool_without_output_matches_any_call(self):
+        metric = _measure(
+            [ToolCall(name="search", output=["UA1"])],
+            [ToolCall(name="search")],
+            evaluation_params=[ToolCallParams.OUTPUT],
+            should_exact_match=True,
+        )
+        assert metric.score == 1
+
+    def test_repeated_identical_calls_each_count(self):
+        metric = _measure(
+            [ToolCall(name="search"), ToolCall(name="search")],
+            [ToolCall(name="search"), ToolCall(name="search")],
+        )
+        assert metric.score == 1
+
+    def test_input_parameters_left_blank_are_not_compared(self):
+        metric = _measure(
+            [ToolCall(name="search", input_parameters={"to": "NYC"})],
+            [ToolCall(name="search")],
+            evaluation_params=[ToolCallParams.INPUT_PARAMETERS],
+        )
+        assert metric.score == 1
+
+    def test_call_without_input_parameters_does_not_match_expected_ones(self):
+        metric = _measure(
+            [ToolCall(name="search")],
+            [ToolCall(name="search", input_parameters={"to": "NYC"})],
+            evaluation_params=[ToolCallParams.INPUT_PARAMETERS],
+        )
+        assert metric.score == 0
+        assert "different input parameters for ['search']" in metric.reason
+
+    def test_empty_expected_input_parameters_mean_none_expected(self):
+        metric = _measure(
+            [ToolCall(name="search", input_parameters={"to": "NYC"})],
+            [ToolCall(name="search", input_parameters={})],
+            evaluation_params=[ToolCallParams.INPUT_PARAMETERS],
+        )
+        assert metric.score == 0
+
+
+class TestToolCorrectnessReason:
+    def test_reason_only_lists_tools_that_were_not_called(self):
+        metric = _measure(
+            [
+                ToolCall(
+                    name="item_not_arrived_flow",
+                    input_parameters={"tracking": "MP867"},
+                    output={"status": "lost"},
+                )
+            ],
+            [
+                ToolCall(name="item_not_arrived_flow"),
+                ToolCall(name="cancel_order"),
+            ],
+        )
+        assert metric.score == 0.5
+        assert "missing tools ['cancel_order']" in metric.reason
+
+    def test_reason_names_tools_with_different_input_parameters(self):
+        metric = _measure(
+            [
+                ToolCall(name="search", input_parameters={"to": "LAX"}),
+                ToolCall(name="book"),
+            ],
+            [
+                ToolCall(name="search", input_parameters={"to": "NYC"}),
+                ToolCall(name="book"),
+            ],
+            evaluation_params=[ToolCallParams.INPUT_PARAMETERS],
+        )
+        assert metric.score == 0.5
+        assert "different input parameters for ['search']" in metric.reason
+        assert "missing tools" not in metric.reason
+
+    def test_reason_names_tools_with_a_different_output(self):
+        metric = _measure(
+            [ToolCall(name="search", output=["UA2"])],
+            [ToolCall(name="search", output=["UA1"])],
+            evaluation_params=[ToolCallParams.OUTPUT],
+        )
+        assert metric.score == 0
+        assert "different output for ['search']" in metric.reason
+
+    def test_ordering_does_not_call_a_missing_tool_out_of_order(self):
+        metric = _measure(
+            [ToolCall(name="search")],
+            [ToolCall(name="search"), ToolCall(name="book")],
+            should_consider_ordering=True,
+        )
+        assert "missing tools ['book']" in metric.reason
+        assert "out-of-order" not in metric.reason
+
+    def test_ordering_names_tools_with_different_input_parameters(self):
+        metric = _measure(
+            [ToolCall(name="search", input_parameters={"to": "NYC", "on": 1})],
+            [ToolCall(name="search", input_parameters={"to": "NYC", "on": 2})],
+            evaluation_params=[ToolCallParams.INPUT_PARAMETERS],
+            should_consider_ordering=True,
+        )
+        assert metric.score == 0.5
+        assert "different input parameters for ['search']" in metric.reason
+
+    def test_reason_says_when_no_tools_were_expected(self):
+        metric = _measure([ToolCall(name="search")], [])
+        assert metric.score == 0
+        assert "no tools were expected, but ['search'] were called" in (
+            metric.reason
+        )
+
+    def test_include_reason_false_leaves_no_reason(self):
+        metric = _measure(
+            [ToolCall(name="search")],
+            [ToolCall(name="search")],
+            include_reason=False,
+        )
+        assert metric.reason is None
