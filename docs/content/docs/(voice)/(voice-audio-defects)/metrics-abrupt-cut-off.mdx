@@ -66,7 +66,7 @@ print(metric.score_breakdown)
 
 ## Events
 
-Every reply flagged as cut off is listed under `events` in `score_breakdown`. Below are the breakdowns for the two example calls in [How Is It Calculated?](#how-is-it-calculated):
+Each reply that was cut off shows up in `score_breakdown`. Here is what the two example calls in [How Is It Calculated?](#how-is-it-calculated) return:
 
 <Tabs items={["Recording mode", "Per-turn mode"]}>
 <Tab value="Recording mode">
@@ -80,6 +80,9 @@ Every reply flagged as cut off is listed under `events` in `score_breakdown`. Be
             "type": "abrupt_cutoff",
             "duration_seconds": 0.02,
             "start_time": 11.58,
+            "mark": "moment",
+            "timing_source": "call_recording",
+            "description": "Agent's audio cut off abruptly",
             "reply_start": 10.0,
             "stopped_at_seconds": 11.6,
         }
@@ -89,14 +92,17 @@ Every reply flagged as cut off is listed under `events` in `score_breakdown`. Be
 }
 ```
 
-| Field | Meaning |
+| Field | What it means |
 | --- | --- |
-| `reply_start` | Where the flagged reply started on the recording, in seconds |
-| `stopped_at_seconds` | Where its sound stopped |
-| `start_time`, `duration_seconds` | The last 20 ms before the stop, on the call's clock |
+| `reply_start` | When the cut reply started, in seconds into the call |
+| `stopped_at_seconds` | When its sound stopped |
+| `start_time` | Where the 20 ms checked before the stop begins |
+| `duration_seconds` | Always 0.02: the 20 ms that were checked |
 
 </Tab>
 <Tab value="Per-turn mode">
+
+There's no recording to point into here, so each event names the turn that was cut and where in that turn's audio it happened.
 
 ```python
 {
@@ -110,6 +116,9 @@ Every reply flagged as cut off is listed under `events` in `score_breakdown`. Be
             "offset_seconds": 1.6,
             "duration_seconds": 0.0,
             "start_time": 11.2,
+            "mark": "moment",
+            "timing_source": "turn_timestamps",
+            "description": "Agent's audio cut off abruptly",
             "position": "middle",
             "evidence": "trailing_dead_run",
             "gap_seconds": 0.6,
@@ -121,6 +130,9 @@ Every reply flagged as cut off is listed under `events` in `score_breakdown`. Be
             "offset_seconds": 1.98,
             "duration_seconds": 0.02,
             "start_time": 18.98,
+            "mark": "moment",
+            "timing_source": "turn_timestamps",
+            "description": "Agent's audio cut off abruptly",
         },
     ],
     "skipped": [],
@@ -128,23 +140,32 @@ Every reply flagged as cut off is listed under `events` in `score_breakdown`. Be
 }
 ```
 
-| Field | Meaning |
+| Field | What it means |
 | --- | --- |
-| `turn` | The turn's zero-based position in the conversation |
-| `offset_seconds`, `duration_seconds` | Where the event sits inside the turn's clip. For `abrupt_cutoff`, the last 20 ms before the sound stops |
-| `start_time` | The same point on the call's clock. Left out when the clip has no `Audio.start_time` |
-| `evidence` | `stream_cut` only: `"abrupt_end"` when the sound stopped at full volume, `"trailing_dead_run"` when it ended in digital silence |
-| `position` | `stream_cut` only: whether the cut falls in the `"start"`, `"middle"` or `"end"` of the clip |
-| `gap_seconds`, `resumed_turn` | `stream_cut` only: how long until the agent's next clip, and which turn that is |
+| `turn` | Which turn was cut, counting from 0 |
+| `offset_seconds` | Where the cut is, in seconds from the start of that turn's audio |
+| `duration_seconds` | 0.02 for a cut-off (the 20 ms checked), 0 for a stream cut |
+| `start_time` | The same spot, in seconds from the start of the call. Missing when the turn's audio has no start time |
+| `evidence` | Stream cuts only. Abrupt end if the sound stopped at full volume, trailing dead run if it ended in digital silence |
+| `position` | Stream cuts only. Whether the cut is near the start, middle or end of the turn's audio |
+| `gap_seconds` | Stream cuts only. How long the agent was silent before speaking again |
+| `resumed_turn` | Stream cuts only. The turn where the agent picked back up |
 
-Clips that can't be decoded are listed under `skipped` with the error.
+Turns whose audio can't be decoded are listed under `skipped`.
 
 </Tab>
 </Tabs>
 
-`eligible_turns` is the number of agent replies and `turns_with_events` the number cut off, so the score is `(eligible_turns - turns_with_events) / eligible_turns`. `timing_source` says which mode was used: `"call_recording"` or `"turn_timestamps"`.
+Every event also has:
 
-<include cwd>snippets/voice/event-place.mdx</include>
+| Field | What it means |
+| --- | --- |
+| `type` | Abrupt cut-off, or stream cut for a reply that was cut and then resumed |
+| `mark` | Always moment here: the event points at the spot the cut happened |
+| `timing_source` | Where the timing came from: the call recording, or the turns' timestamps |
+| `description` | A one-line summary |
+
+`eligible_turns` is how many agent replies were counted and `turns_with_events` how many were cut off. The score is the share that weren't.
 
 ## How Is It Calculated?
 
