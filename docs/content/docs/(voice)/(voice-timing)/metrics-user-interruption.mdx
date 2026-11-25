@@ -193,7 +193,7 @@ The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#cal
 <Tab value="Call audio">
 
 <VoiceDiagram
-  duration={12}
+  duration={11}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 0.4, end: 2.0 }, { start: 2.5, end: 3.4 }, { start: 6.0, end: 6.5 }, { start: 8.4, end: 10.4 }] },
     { label: "Agent", role: "agent", sounds: [{ start: 4.0, end: 7.8 }] },
@@ -211,13 +211,13 @@ A caller line is each time the caller starts speaking after at least 1 second of
 <Tab value="Turn audio">
 
 <VoiceDiagram
-  duration={12}
+  duration={10}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 2.4, end: 5.2, label: "turn 1" }], sounds: [{ start: 3.2, end: 5.2 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 0, end: 3.0, label: "turn 0" }, { start: 6.0, end: 9.0, label: "turn 2" }], sounds: [{ start: 0.2, end: 3.0 }, { start: 6.0, end: 9.0 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 2.4, end: 5.2 }], sounds: [{ start: 3.2, end: 5.2 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0, end: 3.0 }, { start: 6.0, end: 9.0 }], sounds: [{ start: 0.2, end: 3.0 }, { start: 6.0, end: 9.0 }] },
   ]}
   marks={[
-    { at: 3.2, lane: 0, tone: "ok", label: "clean: no overlap" },
+    { at: 3.2, lane: 0, tone: "info", label: "line 1" },
   ]}
 />
 
@@ -237,6 +237,10 @@ The metric listens inside each clip for the speech and places it on the call's c
   marks={[
     { at: 2.4, lane: 0, tone: "bad", label: "false start" },
     { at: 7.4, lane: 0, tone: "bad", label: "talk-over" },
+  ]}
+  highlights={[
+    { start: 2.4, end: 3.6, lane: 0 },
+    { start: 7.4, end: 10.0, lane: 0 },
   ]}
 />
 
@@ -272,17 +276,18 @@ Two calls where the caller sometimes cuts into the agent, one scored from call a
 <Tab value="Call audio">
 
 <VoiceDiagram
-  duration={23}
+  duration={22.5}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 3.6, end: 5.6 }, { start: 7.4, end: 7.8 }, { start: 9.0, end: 10.2 }, { start: 13.4, end: 16.4 }, { start: 17.6, end: 19.6 }] },
     { label: "Agent", role: "agent", sounds: [{ start: 0.2, end: 3.0 }, { start: 6.4, end: 11.0 }, { start: 11.8, end: 16.0 }, { start: 20.4, end: 22.0 }] },
   ]}
   marks={[
-    { at: 3.6, lane: 0, tone: "ok", label: "clean" },
-    { at: 7.6, lane: 0, tone: "skip", label: "mm-hm" },
     { at: 9.0, lane: 0, tone: "bad", label: "false start" },
     { at: 13.4, lane: 0, tone: "bad", label: "talk-over" },
-    { at: 17.6, lane: 0, tone: "ok", label: "clean" },
+  ]}
+  highlights={[
+    { start: 9.0, end: 10.2, lane: 0 },
+    { start: 13.4, end: 16.0, lane: 0 },
   ]}
 />
 
@@ -299,16 +304,18 @@ Two calls where the caller sometimes cuts into the agent, one scored from call a
 <Tab value="Turn audio">
 
 <VoiceDiagram
-  duration={23}
+  duration={22.5}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 2.4, end: 5.2, label: "turn 1" }, { start: 8.0, end: 9.2, label: "turn 3" }, { start: 13.5, end: 16.5, label: "turn 5" }, { start: 17.6, end: 19.6, label: "turn 6" }], sounds: [{ start: 3.2, end: 5.2 }, { start: 8.0, end: 9.2 }, { start: 13.5, end: 16.5 }, { start: 17.6, end: 19.6 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 0, end: 3.0, label: "turn 0" }, { start: 6.0, end: 11.0, label: "turn 2" }, { start: 12.0, end: 16.0, label: "turn 4" }, { start: 20.4, end: 22.0, label: "turn 7" }], sounds: [{ start: 0.2, end: 3.0 }, { start: 6.0, end: 11.0 }, { start: 12.0, end: 16.0 }, { start: 20.4, end: 22.0 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0, end: 3.0 }, { start: 6.0, end: 11.0 }, { start: 12.0, end: 16.0 }, { start: 20.4, end: 22.0 }], sounds: [{ start: 0.2, end: 3.0 }, { start: 6.0, end: 11.0 }, { start: 12.0, end: 16.0 }, { start: 20.4, end: 22.0 }] },
   ]}
   marks={[
-    { at: 3.2, lane: 0, tone: "ok", label: "clean" },
     { at: 8.0, lane: 0, tone: "bad", label: "false start" },
     { at: 13.5, lane: 0, tone: "bad", label: "talk-over" },
-    { at: 17.6, lane: 0, tone: "ok", label: "clean" },
+  ]}
+  highlights={[
+    { start: 8.0, end: 9.2, lane: 0 },
+    { start: 13.5, end: 16.0, lane: 0 },
   ]}
 />
 

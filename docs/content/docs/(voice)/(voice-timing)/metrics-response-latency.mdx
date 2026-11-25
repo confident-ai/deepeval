@@ -196,8 +196,8 @@ A reply is each time the agent starts speaking after at least 1 second of its ow
 <VoiceDiagram
   duration={12}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.6, label: "turn 0" }, { start: 6.4, end: 8.8, label: "turn 2" }], sounds: [{ start: 0.3, end: 2.3 }, { start: 6.6, end: 8.6 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 2.9, end: 5.6, label: "turn 1" }, { start: 9.0, end: 11.6, label: "turn 3" }], sounds: [{ start: 3.5, end: 5.4 }, { start: 9.4, end: 11.4 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.6 }, { start: 6.4, end: 8.8 }], sounds: [{ start: 0.3, end: 2.3 }, { start: 6.6, end: 8.6 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 2.9, end: 5.6 }, { start: 9.0, end: 11.6 }], sounds: [{ start: 3.5, end: 5.4 }, { start: 9.4, end: 11.4 }] },
   ]}
   marks={[
     { at: 3.5, lane: 1, tone: "info", label: "reply 1" },
@@ -223,9 +223,12 @@ The wait runs from where the caller's speech ends to where the agent's speech st
     { label: "Caller", role: "caller", sounds: [{ start: 0.4, end: 2.4 }, { start: 5.2, end: 7.2 }] },
     { label: "Agent", role: "agent", sounds: [{ start: 3.2, end: 4.8 }, { start: 11.8, end: 12 }] },
   ]}
-  windows={[
-    { start: 2.4, end: 3.2, tone: "ok", label: "0.8 s" },
-    { start: 7.2, end: 11.8, tone: "bad", label: "4.6 s" },
+  brackets={[
+    { start: 2.4, end: 3.2, lane: 1, tone: "ok", label: "0.8 s" },
+    { start: 7.2, end: 11.8, lane: 1, tone: "bad", label: "4.6 s" },
+  ]}
+  highlights={[
+    { start: 7.2, end: 11.8, lane: 1 },
   ]}
 />
 
@@ -235,16 +238,19 @@ The wait is the silence between the two channels, from the caller's last sound t
 <Tab value="Turn audio">
 
 <VoiceDiagram
-  duration={12}
+  duration={10}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.6, label: "turn 0" }], sounds: [{ start: 0.3, end: 2.3 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 2.8, end: 9.6, label: "turn 1" }], sounds: [{ start: 7.4, end: 9.4 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.6 }], sounds: [{ start: 0.3, end: 2.3 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 2.8, end: 9.6 }], sounds: [{ start: 7.4, end: 9.4 }] },
   ]}
-  windows={[
-    { start: 2.3, end: 7.4, tone: "bad", label: "5.1 s wait" },
+  brackets={[
+    { start: 2.3, end: 7.4, lane: 1, tone: "bad", label: "5.1 s wait" },
   ]}
   marks={[
     { at: 2.8, lane: 1, tone: "skip", label: "clip starts" },
+  ]}
+  highlights={[
+    { start: 2.3, end: 7.4, lane: 1 },
   ]}
 />
 
@@ -288,11 +294,13 @@ Two calls where the agent is sometimes slow to answer, one scored from call audi
     { label: "Agent", role: "agent", sounds: [{ start: 0.2, end: 2.0 }, { start: 5.4, end: 7.4 }, { start: 14.8, end: 16.8 }, { start: 20.6, end: 22.6 }, { start: 25.0, end: 27.0 }] },
   ]}
   marks={[
-    { at: 1.1, lane: 1, tone: "skip", label: "greeting" },
     { at: 5.4, lane: 1, tone: "ok", label: "0.8 s" },
     { at: 14.8, lane: 1, tone: "bad", label: "4.8 s" },
     { at: 20.6, lane: 1, tone: "ok", label: "1.2 s" },
     { at: 25.0, lane: 1, tone: "skip", label: "over caller" },
+  ]}
+  highlights={[
+    { start: 10.0, end: 14.8, lane: 1 },
   ]}
 />
 
@@ -311,7 +319,7 @@ Two calls where the agent is sometimes slow to answer, one scored from call audi
 <VoiceDiagram
   duration={27}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.3, label: "turn 0" }, { start: 5.6, end: 7.8, label: "turn 2" }, { start: 15.0, end: 17.2, label: "turn 4" }, { start: 21.0, end: 23.2, label: "turn 6" }], sounds: [{ start: 0.3, end: 2.3 }, { start: 5.8, end: 7.8 }, { start: 15.2, end: 17.2 }, { start: 21.2, end: 23.2 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.3 }, { start: 5.6, end: 7.8 }, { start: 15.0, end: 17.2 }, { start: 21.0, end: 23.2 }], sounds: [{ start: 0.3, end: 2.3 }, { start: 5.8, end: 7.8 }, { start: 15.2, end: 17.2 }, { start: 21.2, end: 23.2 }] },
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 5.1, label: "turn 1" }, { start: 8.0, end: 14.4, label: "turn 3" }, { start: 18.0, end: 20.2, label: "turn 5" }, { start: 23.6, end: 26.2, label: "turn 7" }], sounds: [{ start: 3.1, end: 5.1 }, { start: 12.4, end: 14.4 }, { start: 18.2, end: 20.2 }, { start: 24.2, end: 26.2 }] },
   ]}
   marks={[
@@ -319,6 +327,9 @@ Two calls where the agent is sometimes slow to answer, one scored from call audi
     { at: 12.4, lane: 1, tone: "bad", label: "4.6 s" },
     { at: 18.2, lane: 1, tone: "bad", label: "latency_ms" },
     { at: 24.2, lane: 1, tone: "ok", label: "1.0 s" },
+  ]}
+  highlights={[
+    { start: 7.8, end: 12.4, lane: 1 },
   ]}
 />
 

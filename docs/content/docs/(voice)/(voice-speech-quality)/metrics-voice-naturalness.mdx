@@ -181,13 +181,17 @@ A call with four agent replies: one clean, one clipped and rushed, one with a lo
 <VoiceDiagram
   duration={27}
   lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 3.5, end: 6.5, label: "turn 1" }, { start: 10.5, end: 13.5, label: "turn 3" }, { start: 17.5, end: 23.0, label: "turn 5" }, { start: 24.5, end: 26.0, label: "turn 7" }], sounds: [{ start: 3.6, end: 6.3 }, { start: 10.6, end: 13.3 }, { start: 17.6, end: 18.76 }, { start: 18.76, end: 21.5, silent: true }, { start: 21.5, end: 22.8 }, { start: 24.6, end: 25.8 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 3.5, end: 6.5, label: "turn 1" }, { start: 10.5, end: 13.5, label: "turn 3" }, { start: 17.5, end: 23.0, label: "turn 5" }, { start: 24.5, end: 26.0 }], sounds: [{ start: 3.6, end: 6.3 }, { start: 10.6, end: 13.3 }, { start: 17.6, end: 18.76 }, { start: 18.76, end: 21.5, silent: true }, { start: 21.5, end: 22.8 }, { start: 24.6, end: 25.8 }] },
   ]}
   marks={[
     { at: 5.0, lane: 0, tone: "ok", label: "clean" },
     { at: 11.6, lane: 0, tone: "bad", label: "clipped, rushed" },
     { at: 20.1, lane: 0, tone: "bad", label: "long pause" },
-    { at: 25.2, lane: 0, tone: "ok", label: "clean" },
+    { at: 25.2, lane: 0, tone: "skip", label: "too short" },
+  ]}
+  highlights={[
+    { start: 10.6, end: 13.3, lane: 0 },
+    { start: 18.76, end: 21.5, lane: 0 },
   ]}
 />
 

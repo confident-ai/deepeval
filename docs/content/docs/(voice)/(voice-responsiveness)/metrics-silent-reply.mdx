@@ -126,7 +126,7 @@ The metric reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-tur
 <VoiceDiagram
   duration={10}
   lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 2.8, label: "turn 1" }, { start: 6.6, end: 9.2, label: "turn 5" }], sounds: [{ start: 0.5, end: 2.6 }, { start: 6.7, end: 9.0 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 2.8 }, { start: 6.6, end: 9.2 }], sounds: [{ start: 0.5, end: 2.6 }, { start: 6.7, end: 9.0 }] },
   ]}
   marks={[
     { at: 1.6, lane: 0, tone: "info", label: "counted" },
@@ -142,12 +142,15 @@ Every agent turn with text or audio is one reply, including a turn with text but
 <VoiceDiagram
   duration={10}
   lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 2.8, label: "turn 1" }, { start: 6.6, end: 9.2, label: "turn 5" }], sounds: [{ start: 0.5, end: 2.6 }, { start: 6.7, end: 9.0, silent: true }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 2.8 }, { start: 6.6, end: 9.2 }], sounds: [{ start: 0.5, end: 2.6 }, { start: 6.7, end: 9.0, silent: true }] },
   ]}
   marks={[
     { at: 2.6, lane: 0, tone: "ok", label: "heard" },
     { at: 4.5, lane: 0, tone: "bad", label: "no audio" },
     { at: 9.0, lane: 0, tone: "bad", label: "no speech" },
+  ]}
+  highlights={[
+    { start: 6.7, end: 9.0, lane: 0 },
   ]}
 />
 
@@ -174,6 +177,9 @@ A short call where one reply was never played and another was played as silence.
     { at: 8.5, lane: 0, tone: "bad", label: "no audio" },
     { at: 13.0, lane: 0, tone: "bad", label: "no speech" },
     { at: 19.0, lane: 0, tone: "ok", label: "heard" },
+  ]}
+  highlights={[
+    { start: 12.0, end: 14.0, lane: 0 },
   ]}
 />
 

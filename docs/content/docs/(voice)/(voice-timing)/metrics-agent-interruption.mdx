@@ -212,13 +212,13 @@ A start is each time the agent starts speaking after at least 1 second of its ow
 <Tab value="Turn audio">
 
 <VoiceDiagram
-  duration={12}
+  duration={10}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0, end: 3.5, label: "turn 0" }], sounds: [{ start: 0.3, end: 2.3 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 2.8, end: 5.0, label: "turn 1" }, { start: 7.0, end: 9.4, label: "turn 2" }], sounds: [{ start: 3.0, end: 5.0 }, { start: 7.2, end: 9.2 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 0, end: 3.5 }], sounds: [{ start: 0.3, end: 2.3 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 2.8, end: 5.0 }, { start: 7.0, end: 9.4 }], sounds: [{ start: 3.0, end: 5.0 }, { start: 7.2, end: 9.2 }] },
   ]}
   marks={[
-    { at: 3.0, lane: 1, tone: "ok", label: "clean: no overlap" },
+    { at: 3.0, lane: 1, tone: "info", label: "start 1" },
     { at: 7.2, lane: 1, tone: "info", label: "start 2" },
   ]}
 />
@@ -239,6 +239,10 @@ The metric listens inside each clip for the speech and places it on the call's c
   marks={[
     { at: 2.4, lane: 1, tone: "bad", label: "false start" },
     { at: 7.4, lane: 1, tone: "bad", label: "talk-over" },
+  ]}
+  highlights={[
+    { start: 2.4, end: 3.4, lane: 1 },
+    { start: 7.4, end: 10.4, lane: 1 },
   ]}
 />
 
@@ -287,11 +291,12 @@ Two calls where the agent sometimes starts over the caller, one scored from call
   ]}
   marks={[
     { at: 1.1, lane: 1, tone: "skip", label: "opening line" },
-    { at: 5.8, lane: 1, tone: "ok", label: "clean" },
     { at: 10.8, lane: 1, tone: "bad", label: "false start" },
-    { at: 13.0, lane: 1, tone: "ok", label: "clean" },
     { at: 17.6, lane: 1, tone: "bad", label: "talk-over" },
-    { at: 22.0, lane: 1, tone: "ok", label: "clean" },
+  ]}
+  highlights={[
+    { start: 10.8, end: 11.8, lane: 1 },
+    { start: 17.6, end: 19.6, lane: 1 },
   ]}
 />
 
@@ -311,14 +316,16 @@ Two calls where the agent sometimes starts over the caller, one scored from call
 <VoiceDiagram
   duration={17}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0, end: 3.5, label: "turn 0" }, { start: 6.0, end: 9.0, label: "turn 2" }, { start: 13.0, end: 15.5, label: "turn 5" }], sounds: [{ start: 0.3, end: 2.3 }, { start: 6.0, end: 9.0 }, { start: 13.0, end: 15.5 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 0, end: 3.5 }, { start: 6.0, end: 9.0 }, { start: 13.0, end: 15.5 }], sounds: [{ start: 0.3, end: 2.3 }, { start: 6.0, end: 9.0 }, { start: 13.0, end: 15.5 }] },
     { label: "Agent", role: "agent", clips: [{ start: 2.8, end: 5.0, label: "turn 1" }, { start: 7.6, end: 8.6, label: "turn 3" }, { start: 10.0, end: 12.0, label: "turn 4" }, { start: 14.0, end: 16.0, label: "turn 6" }], sounds: [{ start: 3.0, end: 5.0 }, { start: 7.6, end: 8.6 }, { start: 10.0, end: 12.0 }, { start: 14.0, end: 16.0 }] },
   ]}
   marks={[
-    { at: 3.0, lane: 1, tone: "ok", label: "clean" },
     { at: 7.6, lane: 1, tone: "bad", label: "false start" },
-    { at: 10.0, lane: 1, tone: "ok", label: "clean" },
     { at: 14.0, lane: 1, tone: "bad", label: "talk-over" },
+  ]}
+  highlights={[
+    { start: 7.6, end: 8.6, lane: 1 },
+    { start: 14.0, end: 15.5, lane: 1 },
   ]}
 />
 

@@ -157,13 +157,13 @@ It runs these four metrics on the call, each with its default settings apart fro
 <VoiceDiagram
   duration={12}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 2.6, end: 4.6, label: "turn 1" }, { start: 7.8, end: 9.6, label: "turn 3" }], sounds: [{ start: 2.7, end: 4.4 }, { start: 7.9, end: 9.4 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 2.0, label: "turn 0" }, { start: 5.2, end: 7.2, label: "turn 2" }, { start: 10.0, end: 11.8, label: "turn 4" }], sounds: [{ start: 0.3, end: 1.8 }, { start: 5.3, end: 7.0 }, { start: 10.1, end: 11.6 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 2.6, end: 4.6 }, { start: 7.8, end: 9.6 }], sounds: [{ start: 2.7, end: 4.4 }, { start: 7.9, end: 9.4 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 2.0 }, { start: 5.2, end: 7.2 }, { start: 10.0, end: 11.8 }], sounds: [{ start: 0.3, end: 1.8 }, { start: 5.3, end: 7.0 }, { start: 10.1, end: 11.6 }] },
   ]}
-  windows={[
-    { start: 0.1, end: 2.3, tone: "info", label: "exchange 1" },
-    { start: 2.5, end: 7.5, tone: "info", label: "exchange 2" },
-    { start: 7.7, end: 11.9, tone: "info", label: "exchange 3" },
+  brackets={[
+    { start: 0.2, end: 2.0, lane: 0, label: "exchange 1" },
+    { start: 2.6, end: 7.2, lane: 0, label: "exchange 2" },
+    { start: 7.8, end: 11.8, lane: 0, label: "exchange 3" },
   ]}
 />
 
@@ -185,12 +185,16 @@ The caller is kept waiting once, and the agent hangs up on their last question. 
     { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 11.0, end: 12.5, label: "turn 2" }, { start: 16.5, end: 18.5, label: "turn 4" }, { start: 22.5, end: 24.5, label: "turn 6" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 11.0, end: 12.25 }, { start: 16.5, end: 18.25 }, { start: 22.5, end: 24.25 }] },
     { label: "Agent", role: "agent", clips: [{ start: 0, end: 2.0, label: "turn 0" }, { start: 13.5, end: 15.5, label: "turn 3" }, { start: 19.5, end: 21.5, label: "turn 5" }], sounds: [{ start: 0, end: 1.75 }, { start: 13.5, end: 15.25 }, { start: 19.5, end: 21.25 }] },
   ]}
-  windows={[
-    { start: 0, end: 2.5, tone: "ok", label: "1" },
-    { start: 2.9, end: 10.9, tone: "bad", label: "2" },
-    { start: 11.0, end: 16.3, tone: "ok", label: "3" },
-    { start: 16.5, end: 22.3, tone: "ok", label: "4" },
-    { start: 22.5, end: 26, tone: "bad", label: "5" },
+  brackets={[
+    { start: 0, end: 2.5, lane: 0, label: "1" },
+    { start: 3.0, end: 10.9, lane: 0, label: "2" },
+    { start: 11.0, end: 16.3, lane: 0, label: "3" },
+    { start: 16.5, end: 22.3, lane: 0, label: "4" },
+    { start: 22.5, end: 26, lane: 0, label: "5" },
+  ]}
+  highlights={[
+    { start: 5.0, end: 11.0, lane: 1 },
+    { start: 24.5, end: 26, lane: 1 },
   ]}
   marks={[
     { at: 11.0, lane: 0, tone: "bad", label: "repeat" },

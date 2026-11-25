@@ -158,8 +158,8 @@ One recording, with each speaker on their own channel: caller on the left, agent
 <VoiceDiagram
   duration={10}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0.0, end: 2.8, label: "turn 0" }, { start: 5.7, end: 8.2, label: "turn 2" }], sounds: [{ start: 0.3, end: 2.4 }, { start: 6.0, end: 7.8 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 2.8, end: 5.7, label: "turn 1" }, { start: 8.2, end: 10, label: "turn 3" }], sounds: [{ start: 3.0, end: 5.4 }, { start: 8.3, end: 9.8 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 0.0, end: 2.8 }, { start: 5.7, end: 8.2 }], sounds: [{ start: 0.3, end: 2.4 }, { start: 6.0, end: 7.8 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 2.8, end: 5.7 }, { start: 8.2, end: 10 }], sounds: [{ start: 3.0, end: 5.4 }, { start: 8.3, end: 9.8 }] },
   ]}
 />
 
@@ -185,7 +185,7 @@ test_case = ConversationalTestCase(
 Metrics that need to know when someone is talking take `use_speech_detection`, on by default. Without it, any sound counts as talking. With it, a stretch only counts when the [Silero VAD](https://github.com/snakers4/silero-vad) model hears speech in it:
 
 <VoiceDiagram
-  duration={8}
+  duration={7}
   lanes={[
     { label: "Loudness", role: "caller", sounds: [{ start: 0.3, end: 2.6 }, { start: 3.4, end: 3.7, level: 0.5 }, { start: 4.6, end: 6.4, level: 0.35, ending: "flat" }] },
     { label: "Speech", role: "caller", sounds: [{ start: 0.3, end: 2.6 }] },
@@ -287,10 +287,12 @@ When you run metrics through `evaluate()`, the results don't include `score_brea
     { label: "Range", role: "agent", sounds: [{ start: 0.4, end: 2.2 }, { start: 2.2, end: 3.6, silent: true }, { start: 3.6, end: 5.6 }] },
     { label: "Whole reply", role: "agent", sounds: [{ start: 0.4, end: 5.6 }] },
   ]}
-  windows={[
-    { start: 3.55, end: 3.62, lanes: [0], tone: "bad", label: "cut off here" },
-    { start: 2.2, end: 3.6, lanes: [1], tone: "bad", label: "dead air" },
-    { start: 0.4, end: 5.6, lanes: [2], tone: "bad", label: "spoken too fast" },
+  marks={[
+    { at: 3.6, lane: 0, tone: "bad", label: "cut off" },
+  ]}
+  highlights={[
+    { start: 2.2, end: 3.6, lane: 1 },
+    { start: 0.4, end: 5.6, lane: 2 },
   ]}
 />
 

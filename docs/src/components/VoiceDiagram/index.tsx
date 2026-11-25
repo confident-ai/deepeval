@@ -88,6 +88,7 @@ const BRACKET_ROOM = 28;
 // Each extra row of point labels, and roughly how wide a label character is.
 const LABEL_ROW = 14;
 const LABEL_CHAR_WIDTH = 5.6;
+const CLIP_CHAR_WIDTH = 5.2;
 const PLAIN_GAP = 8;
 const AXIS_HEIGHT = 22;
 const BAR_STEP = 3;
@@ -245,7 +246,15 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
                       y={top + LANE_HEIGHT - 7}
                       className={styles.clipLabel}
                     >
-                      {clip.label}
+                      {/* If any label on the lane won't fit, drop "turn " from all of them. */}
+                      {(lane.clips ?? []).some(
+                        (other) =>
+                          other.label &&
+                          other.label.length * CLIP_CHAR_WIDTH + 8 >
+                            x(other.end) - x(other.start),
+                      )
+                        ? clip.label.replace(/^turn\s+/, "")
+                        : clip.label}
                     </text>
                   )}
                 </g>

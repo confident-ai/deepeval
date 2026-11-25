@@ -162,13 +162,13 @@ The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#cal
 <Tab value="Call audio">
 
 <VoiceDiagram
-  duration={8}
+  duration={6.5}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 0.5, end: 1.0 }, { start: 1.3, end: 1.8 }] },
     { label: "Agent", role: "agent", sounds: [{ start: 3.0, end: 6.0 }] },
   ]}
-  windows={[
-    { start: 1.8, end: 3.0, tone: "info", label: "wait" },
+  brackets={[
+    { start: 1.8, end: 3.0, lane: 1, label: "wait" },
   ]}
   marks={[
     { at: 3.0, lane: 1, tone: "info", label: "first sound" },
@@ -186,11 +186,11 @@ The first response is the agent's first sound on its channel. The wait depends o
 <VoiceDiagram
   duration={8}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 5.6, end: 8, label: "turn 1" }], sounds: [{ start: 5.8, end: 7.8 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 5.2, label: "turn 0" }], sounds: [{ start: 2.6, end: 5.0 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 5.6, end: 8 }], sounds: [{ start: 5.8, end: 7.8 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 5.2 }], sounds: [{ start: 2.6, end: 5.0 }] },
   ]}
-  windows={[
-    { start: 0, end: 2.6, lanes: [1], tone: "info", label: "wait" },
+  brackets={[
+    { start: 0, end: 2.6, lane: 1, label: "wait" },
   ]}
   marks={[
     { at: 0.4, lane: 1, tone: "skip", label: "clip starts" },
@@ -229,12 +229,15 @@ Two calls with a slow start, one scored from call audio and one from turn audio.
     { label: "Caller", role: "caller", sounds: [{ start: 0.6, end: 1.6 }, { start: 8.0, end: 10.0 }] },
     { label: "Agent", role: "agent", sounds: [{ start: 5.0, end: 7.4 }, { start: 11.0, end: 13.0 }] },
   ]}
-  windows={[
-    { start: 1.6, end: 5.0, tone: "bad", label: "3.4 s" },
+  brackets={[
+    { start: 1.6, end: 5.0, lane: 1, tone: "bad", label: "3.4 s" },
   ]}
   marks={[
     { at: 1.1, lane: 0, tone: "info", label: "hello" },
     { at: 5.0, lane: 1, tone: "bad", label: "slow" },
+  ]}
+  highlights={[
+    { start: 1.6, end: 5.0, lane: 1 },
   ]}
 />
 
@@ -249,14 +252,17 @@ Two calls with a slow start, one scored from call audio and one from turn audio.
 <VoiceDiagram
   duration={12}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 6.4, end: 8.6, label: "turn 1" }], sounds: [{ start: 6.6, end: 8.6 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 6.0, label: "turn 0" }, { start: 9.0, end: 11.2, label: "turn 2" }], sounds: [{ start: 3.6, end: 6.0 }, { start: 9.2, end: 11.2 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 6.4, end: 8.6 }], sounds: [{ start: 6.6, end: 8.6 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 6.0, label: "turn 0" }, { start: 9.0, end: 11.2 }], sounds: [{ start: 3.6, end: 6.0 }, { start: 9.2, end: 11.2 }] },
   ]}
-  windows={[
-    { start: 0, end: 3.6, lanes: [1], tone: "bad", label: "3.6 s" },
+  brackets={[
+    { start: 0, end: 3.6, lane: 1, tone: "bad", label: "3.6 s" },
   ]}
   marks={[
     { at: 3.6, lane: 1, tone: "bad", label: "slow" },
+  ]}
+  highlights={[
+    { start: 0, end: 3.6, lane: 1 },
   ]}
 />
 

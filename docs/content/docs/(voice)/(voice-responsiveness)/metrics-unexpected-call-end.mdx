@@ -119,7 +119,7 @@ Each test case is one call, so there is one thing to judge: how it ended.
 ### Ending criteria
 
 <VoiceDiagram
-  duration={10}
+  duration={8.5}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 0.2, end: 2.4, label: "question" }, { start: 6.2, end: 8.0, label: "goodbye" }], sounds: [{ start: 0.3, end: 2.2 }, { start: 6.3, end: 7.8 }] },
     { label: "Agent", role: "agent", clips: [{ start: 3.0, end: 5.4, label: "reply" }], sounds: [{ start: 3.1, end: 5.2 }] },
@@ -147,8 +147,8 @@ The caller asks a question and the agent hangs up instead of answering. The tabl
 <VoiceDiagram
   duration={12}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 9.0, end: 11.0, label: "turn 3" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 9.0, end: 10.75 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 0, end: 2.0, label: "turn 0" }, { start: 6.0, end: 8.0, label: "turn 2" }], sounds: [{ start: 0, end: 1.75 }, { start: 6.0, end: 7.75 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0 }, { start: 9.0, end: 11.0 }], sounds: [{ start: 3.0, end: 4.75 }, { start: 9.0, end: 10.75 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0, end: 2.0 }, { start: 6.0, end: 8.0 }], sounds: [{ start: 0, end: 1.75 }, { start: 6.0, end: 7.75 }] },
   ]}
   marks={[
     { at: 11.0, lane: 0, tone: "bad", label: "agent hung up" },

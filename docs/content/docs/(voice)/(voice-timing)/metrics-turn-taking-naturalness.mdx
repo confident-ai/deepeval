@@ -251,16 +251,19 @@ In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-wit
 ### Combining the parts
 
 <VoiceDiagram
-  duration={12}
+  duration={11}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 0.4, end: 2.0 }, { start: 7.0, end: 9.0 }] },
     { label: "Agent", role: "agent", sounds: [{ start: 2.8, end: 4.2 }, { start: 4.8, end: 10.4 }] },
   ]}
-  windows={[
-    { start: 2.8, end: 10.4, lanes: [1], tone: "bad", label: "one reply" },
+  brackets={[
+    { start: 2.8, end: 10.4, lane: 1, label: "one reply" },
   ]}
   marks={[
     { at: 7.0, lane: 0, tone: "bad", label: "cuts in" },
+  ]}
+  highlights={[
+    { start: 7.0, end: 9.0, lane: 0 },
   ]}
 />
 
@@ -292,11 +295,14 @@ Two versions of one call, one scored from call audio and one from turn audio. Ea
     { label: "Agent", role: "agent", sounds: [{ start: 3.2, end: 5.4 }, { start: 12.8, end: 15.0 }, { start: 18.6, end: 23.0 }, { start: 25.0, end: 26.0 }, { start: 28.0, end: 30.0 }] },
   ]}
   marks={[
-    { at: 3.2, lane: 1, tone: "ok", label: "clean" },
     { at: 12.8, lane: 1, tone: "bad", label: "slow" },
     { at: 20.0, lane: 0, tone: "bad", label: "cuts in" },
     { at: 25.0, lane: 1, tone: "bad", label: "false start" },
-    { at: 28.0, lane: 1, tone: "ok", label: "clean" },
+  ]}
+  highlights={[
+    { start: 8.0, end: 12.8, lane: 1 },
+    { start: 20.0, end: 22.0, lane: 0 },
+    { start: 25.0, end: 26.0, lane: 1 },
   ]}
 />
 
@@ -315,15 +321,18 @@ Two versions of one call, one scored from call audio and one from turn audio. Ea
 <VoiceDiagram
   duration={31}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0.4, end: 2.4, label: "0" }, { start: 6.0, end: 8.0, label: "2" }, { start: 15.6, end: 17.6, label: "4" }, { start: 20.0, end: 22.0, label: "6" }, { start: 24.0, end: 27.0, label: "7" }], sounds: [{ start: 0.4, end: 2.4 }, { start: 6.0, end: 8.0 }, { start: 15.6, end: 17.6 }, { start: 20.0, end: 22.0 }, { start: 24.0, end: 27.0 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 0.4, end: 2.4 }, { start: 6.0, end: 8.0 }, { start: 15.6, end: 17.6 }, { start: 20.0, end: 22.0, label: "6" }, { start: 24.0, end: 27.0 }], sounds: [{ start: 0.4, end: 2.4 }, { start: 6.0, end: 8.0 }, { start: 15.6, end: 17.6 }, { start: 20.0, end: 22.0 }, { start: 24.0, end: 27.0 }] },
     { label: "Agent", role: "agent", clips: [{ start: 3.2, end: 5.4, label: "1" }, { start: 8.2, end: 15.0, label: "3" }, { start: 18.6, end: 23.0, label: "5" }, { start: 25.0, end: 26.0, label: "8" }, { start: 28.0, end: 30.0, label: "9" }], sounds: [{ start: 3.2, end: 5.4 }, { start: 12.8, end: 15.0 }, { start: 18.6, end: 23.0 }, { start: 25.0, end: 26.0 }, { start: 28.0, end: 30.0 }] },
   ]}
   marks={[
-    { at: 3.2, lane: 1, tone: "ok", label: "clean" },
     { at: 12.8, lane: 1, tone: "bad", label: "slow" },
     { at: 20.0, lane: 0, tone: "bad", label: "cuts in" },
     { at: 25.0, lane: 1, tone: "bad", label: "false start" },
-    { at: 28.0, lane: 1, tone: "ok", label: "clean" },
+  ]}
+  highlights={[
+    { start: 8.0, end: 12.8, lane: 1 },
+    { start: 20.0, end: 22.0, lane: 0 },
+    { start: 25.0, end: 26.0, lane: 1 },
   ]}
 />
 

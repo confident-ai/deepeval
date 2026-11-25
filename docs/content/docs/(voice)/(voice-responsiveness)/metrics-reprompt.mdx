@@ -122,12 +122,12 @@ The metric reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-tur
 <VoiceDiagram
   duration={10}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0.2, end: 2.4, label: "turn 0" }, { start: 2.8, end: 4.0, label: "turn 1" }, { start: 7.4, end: 9.6, label: "turn 3" }], sounds: [{ start: 0.3, end: 2.2 }, { start: 2.9, end: 3.9 }, { start: 7.5, end: 9.4 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 4.6, end: 6.8, label: "turn 2" }], sounds: [{ start: 4.7, end: 6.6 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 0.2, end: 2.4, label: "turn 0" }, { start: 2.8, end: 4.0, label: "turn 1" }, { start: 7.4, end: 9.6 }], sounds: [{ start: 0.3, end: 2.2 }, { start: 2.9, end: 3.9 }, { start: 7.5, end: 9.4 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 4.6, end: 6.8 }], sounds: [{ start: 4.7, end: 6.6 }] },
   ]}
-  windows={[
-    { start: 0.2, end: 4.0, lanes: [0], tone: "info", label: "line 1" },
-    { start: 7.4, end: 9.6, lanes: [0], tone: "info", label: "line 2" },
+  brackets={[
+    { start: 0.2, end: 4.0, lane: 0, label: "line 1" },
+    { start: 7.4, end: 9.6, lane: 0, label: "line 2" },
   ]}
 />
 
@@ -141,8 +141,11 @@ Caller turns in a row are one line when the next one's speech starts less than 1
     { label: "Caller", role: "caller", clips: [{ start: 0.2, end: 2.4, label: "line" }, { start: 7.4, end: 8.8, label: "next line" }], sounds: [{ start: 0.3, end: 2.2 }, { start: 7.5, end: 8.6 }] },
     { label: "Agent", role: "agent", clips: [{ start: 9.8, end: 13.0, label: "reply" }], sounds: [{ start: 9.9, end: 12.8 }] },
   ]}
-  windows={[
-    { start: 2.2, end: 7.5, lanes: [0, 1], tone: "bad", label: "no reply" },
+  brackets={[
+    { start: 2.2, end: 7.5, lane: 1, tone: "bad", label: "no reply" },
+  ]}
+  highlights={[
+    { start: 2.2, end: 7.5, lane: 1 },
   ]}
   marks={[
     { at: 7.5, lane: 0, tone: "bad", label: "spoke again" },
@@ -173,13 +176,16 @@ The caller speaks again three times before the agent replies, but only once beca
 <VoiceDiagram
   duration={40}
   lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 11.0, end: 12.5, label: "turn 2" }, { start: 16.5, end: 18.5, label: "turn 4" }, { start: 20.0, end: 21.0, label: "turn 5" }, { start: 25.0, end: 27.0, label: "turn 7" }, { start: 32.0, end: 34.0, label: "turn 8" }, { start: 38.0, end: 39.0, label: "turn 10" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 11.0, end: 12.25 }, { start: 16.5, end: 18.25 }, { start: 20.0, end: 20.75 }, { start: 25.0, end: 26.75 }, { start: 32.0, end: 33.75 }, { start: 38.0, end: 38.75 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 0, end: 2.0, label: "turn 0" }, { start: 13.5, end: 15.5, label: "turn 3" }, { start: 22.0, end: 24.0, label: "turn 6" }, { start: 35.0, end: 37.0, label: "turn 9" }], sounds: [{ start: 0, end: 1.75 }, { start: 13.5, end: 15.25 }, { start: 22.0, end: 23.75 }, { start: 35.0, end: 36.75 }] },
+    { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "1" }, { start: 11.0, end: 12.5, label: "2" }, { start: 16.5, end: 18.5, label: "4" }, { start: 20.0, end: 21.0, label: "5" }, { start: 25.0, end: 27.0, label: "7" }, { start: 32.0, end: 34.0, label: "8" }, { start: 38.0, end: 39.0 }], sounds: [{ start: 3.0, end: 4.75 }, { start: 11.0, end: 12.25 }, { start: 16.5, end: 18.25 }, { start: 20.0, end: 20.75 }, { start: 25.0, end: 26.75 }, { start: 32.0, end: 33.75 }, { start: 38.0, end: 38.75 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0, end: 2.0 }, { start: 13.5, end: 15.5 }, { start: 22.0, end: 24.0 }, { start: 35.0, end: 37.0 }], sounds: [{ start: 0, end: 1.75 }, { start: 13.5, end: 15.25 }, { start: 22.0, end: 23.75 }, { start: 35.0, end: 36.75 }] },
   ]}
   marks={[
     { at: 11.0, lane: 0, tone: "bad", label: "repeat" },
-    { at: 20.0, lane: 0, tone: "ok", label: "clean: short pause" },
-    { at: 32.0, lane: 0, tone: "ok", label: "clean: not a repeat" },
+    { at: 20.0, lane: 0, tone: "ok", label: "short pause" },
+    { at: 32.0, lane: 0, tone: "ok", label: "not a repeat" },
+  ]}
+  highlights={[
+    { start: 4.75, end: 11.0, lane: 1 },
   ]}
 />
 
