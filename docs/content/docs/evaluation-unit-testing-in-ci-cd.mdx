@@ -233,7 +233,7 @@ def hyperparameters():
 There are **TWO** mandatory and **ONE** optional parameter for `assert_test()` in this mode:
 
 - `test_case`: a `ConversationalTestCase` produced by the simulator.
-- `metrics`: a list of `BaseConversationalMetric`s. See [multi-turn metrics](/docs/metrics-introduction#default-metrics) (`TurnRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, `ConversationCompletenessMetric`).
+- `metrics`: a list of `BaseConversationalMetric`s. See [multi-turn metrics](/docs/metrics-introduction#multi-turn-metrics) (`TurnRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, `ConversationCompletenessMetric`).
 - [Optional] `run_async`: defaults to `True`.
 
 </Case>
@@ -266,7 +266,7 @@ it.each(testCases)(
 
 The test case goes to `expect()`, and `toPass()` takes one argument:
 
-- `metrics`: an array of `BaseConversationalMetric`s. See [multi-turn metrics](/docs/metrics-introduction#default-metrics) (`TurnRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, `ConversationCompletenessMetric`).
+- `metrics`: an array of `BaseConversationalMetric`s. See [multi-turn metrics](/docs/metrics-introduction#multi-turn-metrics) (`TurnRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, `ConversationCompletenessMetric`).
 
 `logHyperparameters()` is the counterpart to Python's `@deepeval.log_hyperparameters` decorator — call it once anywhere in the file. Outside of `npx deepeval test run` there's no test run to label, so it's a no-op; pass `hyperparameters` to `evaluate()` instead.
 

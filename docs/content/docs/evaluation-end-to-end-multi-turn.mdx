@@ -241,7 +241,7 @@ evaluate(
 There are **TWO** mandatory and **SIX** optional parameters when calling `evaluate()` for multi-turn end-to-end evaluation:
 
 - `test_cases`: a list of `ConversationalTestCase`s (or an `EvaluationDataset`). You cannot mix `LLMTestCase`s and `ConversationalTestCase`s in the same test run.
-- `metrics`: a list of metrics of type `BaseConversationalMetric`. See the [multi-turn metrics](/docs/metrics-introduction#default-metrics) for the full list (e.g. `TurnRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, `ConversationCompletenessMetric`). Can be omitted when `classifiers` is provided.
+- `metrics`: a list of metrics of type `BaseConversationalMetric`. See the [multi-turn metrics](/docs/metrics-introduction#multi-turn-metrics) for the full list (e.g. `TurnRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, `ConversationCompletenessMetric`). Can be omitted when `classifiers` is provided.
 - [Optional] `classifiers`: a list of [`Classifier`](/docs/classifiers-custom)s to label each conversation alongside the metrics. See [classifiers](/docs/classifiers-introduction).
 - [Optional] `identifier`: a string label for this test run.
 - [Optional] `async_config`: an `AsyncConfig` controlling concurrency. See [async configs](/docs/evaluation-flags-and-configs#async-configs).
@@ -284,7 +284,7 @@ await evaluate(conversationalTestCases, [new TurnRelevancyMetric()]);
 There are **TWO** mandatory and **FIVE** optional parameters when calling `evaluate()` for multi-turn end-to-end evaluation. The two mandatory ones are positional; the optional ones go in a third options object:
 
 - `testCases`: an array of `ConversationalTestCase`s. You cannot mix `LLMTestCase`s and `ConversationalTestCase`s in the same test run.
-- `metrics`: an array of metrics of type `BaseConversationalMetric`. See the [multi-turn metrics](/docs/metrics-introduction#default-metrics) for the full list (e.g. `TurnRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, `ConversationCompletenessMetric`).
+- `metrics`: an array of metrics of type `BaseConversationalMetric`. See the [multi-turn metrics](/docs/metrics-introduction#multi-turn-metrics) for the full list (e.g. `TurnRelevancyMetric`, `KnowledgeRetentionMetric`, `RoleAdherenceMetric`, `ConversationCompletenessMetric`).
 - [Optional] `identifier`: a string label for this test run.
 - [Optional] `hyperparameters`: the model, prompt, and settings that produced these outputs. See [hyperparameters](#hyperparameters).
 - [Optional] `displayConfig`: a `DisplayConfig` controlling console output. See [display configs](/docs/evaluation-flags-and-configs#display-configs).

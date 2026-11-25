@@ -28,6 +28,7 @@ from deepeval.metrics.voice.utils.call_activity import (
 )
 from deepeval.test_case import ConversationalTestCase, Turn
 from tests.test_metrics.helpers import (
+    recording,
     speech_like,
     stereo_recording,
     timed_call,
@@ -88,7 +89,7 @@ def _model_hears_speech_except(*quiet):
 
 
 def _caller_spans(path, use_speech_detection):
-    activity = recording_activity(path, use_speech_detection)
+    activity = recording_activity(recording(path), use_speech_detection)
     return [(round(s.start, 1), round(s.end, 1)) for s in activity.caller]
 
 
@@ -147,9 +148,7 @@ def test_caller_noise_under_the_agent_is_not_an_interruption(
     )
     metric = AgentInterruptionMetric(use_speech_detection=use_speech_detection)
     metric.measure(
-        ConversationalTestCase(
-            turns=timed_call([0.5]), call_recording_path=path
-        ),
+        ConversationalTestCase(turns=timed_call([0.5]), audio=recording(path)),
         _show_indicator=False,
     )
     assert metric.score == score
@@ -174,9 +173,7 @@ def test_each_timing_metric_hands_the_option_to_the_recording_reader(
     )
     metric = metric_class(use_speech_detection=use_speech_detection)
     metric.measure(
-        ConversationalTestCase(
-            turns=timed_call([0.5]), call_recording_path=path
-        ),
+        ConversationalTestCase(turns=timed_call([0.5]), audio=recording(path)),
         _show_indicator=False,
     )
     assert bool(calls) is use_speech_detection
@@ -359,9 +356,9 @@ def _count_readings(monkeypatch):
     readings = []
     real = activity_module._recording_activity
 
-    def counted(wav, use_speech_detection):
+    def counted(wav, use_speech_detection, agent_channel):
         readings.append(use_speech_detection)
-        return real(wav, use_speech_detection)
+        return real(wav, use_speech_detection, agent_channel)
 
     monkeypatch.setattr(activity_module, "_recording_activity", counted)
     return readings
@@ -380,9 +377,11 @@ def test_copies_of_the_same_call_are_read_once(tmp_path, monkeypatch):
     first = _short_call(tmp_path / "first.wav")
     copy = str(tmp_path / "copy.wav")
     shutil.copy(first, copy)
-    assert recording_activity(first, False) == recording_activity(copy, False)
+    assert recording_activity(recording(first), False) == recording_activity(
+        recording(copy), False
+    )
     assert readings == [False]
-    recording_activity(copy, True)
+    recording_activity(recording(copy), True)
     assert readings == [False, True]
 
 
@@ -390,9 +389,9 @@ def test_a_rewritten_file_is_read_again(tmp_path, monkeypatch):
     readings = _count_readings(monkeypatch)
     path = tmp_path / "call.wav"
     stereo_recording(path, agent=[(0.0, speech_like(1.5))])
-    recording_activity(str(path), False)
+    recording_activity(recording(path), False)
     _short_call(path)
-    recording_activity(str(path), False)
+    recording_activity(recording(path), False)
     assert len(readings) == 2
 
 
@@ -409,7 +408,7 @@ def test_metrics_reading_the_same_call_at_once_share_one_reading(
 
     def read(path):
         start.wait()
-        results.append(recording_activity(path, False))
+        results.append(recording_activity(recording(path), False))
 
     threads = [threading.Thread(target=read, args=(path,)) for path in paths]
     for thread in threads:
