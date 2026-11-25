@@ -84,6 +84,17 @@
   stroke-linecap: round;
 }
 
+.highlight {
+  fill: var(--vd-tone);
+  fill-opacity: 0.14;
+}
+
+.litBar {
+  stroke: var(--vd-tone);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
 .silent {
   stroke: var(--vd-lane);
   stroke-width: 2;

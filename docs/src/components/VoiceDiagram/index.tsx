@@ -45,6 +45,13 @@ interface Mark {
   label: string;
 }
 
+interface Highlight {
+  start: number;
+  end: number;
+  lane: number;
+  tone?: Tone;
+}
+
 interface Bracket {
   start: number;
   end: number;
@@ -63,6 +70,8 @@ interface VoiceDiagramProps {
   marks?: Mark[];
   /** Curly braces above a lane, grouping a span under one label. */
   brackets?: Bracket[];
+  /** Colours the waveform over a span and tints it, to show where a problem is. */
+  highlights?: Highlight[];
   /** Hide the seconds axis, for diagrams about shape rather than time. */
   hideAxis?: boolean;
   unit?: string;
@@ -96,6 +105,7 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
   windows = [],
   marks = [],
   brackets = [],
+  highlights = [],
   hideAxis = false,
   unit = "s",
   caption,
@@ -207,6 +217,18 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
                 y2={mid}
                 className={styles.baseline}
               />
+              {highlights
+                .filter((highlight) => highlight.lane === index)
+                .map((highlight, highlightIndex) => (
+                  <rect
+                    key={`highlight-${highlightIndex}`}
+                    x={x(highlight.start)}
+                    y={top + 3}
+                    width={Math.max(2, x(highlight.end) - x(highlight.start))}
+                    height={LANE_HEIGHT - 6}
+                    className={`${styles.highlight} ${styles[highlight.tone ?? "bad"]}`}
+                  />
+                ))}
               {(lane.clips ?? []).map((clip, clipIndex) => (
                 <g key={`clip-${clipIndex}`}>
                   <rect
@@ -254,6 +276,12 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
                   if (ending === "fade" && progress > 0.7)
                     envelope = Math.max(0.06, 1 - (progress - 0.7) / 0.3);
                   const amp = maxAmp * level * envelope * wobble(bx);
+                  const lit = highlights.find(
+                    (highlight) =>
+                      highlight.lane === index &&
+                      bx >= x(highlight.start) &&
+                      bx <= x(highlight.end),
+                  );
                   bars.push(
                     <line
                       key={bx}
@@ -261,7 +289,11 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
                       x2={bx}
                       y1={mid - amp}
                       y2={mid + amp}
-                      className={styles.bar}
+                      className={
+                        lit
+                          ? `${styles.litBar} ${styles[lit.tone ?? "bad"]}`
+                          : styles.bar
+                      }
                     />,
                   );
                 }
