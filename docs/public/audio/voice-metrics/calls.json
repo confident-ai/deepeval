@@ -1,0 +1,459 @@
+{
+ "audio-dropout": {
+  "file": "audio-dropout.mp3",
+  "stereo": false,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.0,
+    "end": 5.233,
+    "text": "Your appointment is confirmed for Tuesday the fourteenth at three in the afternoon."
+   }
+  ],
+  "metadata": {}
+ },
+ "audio-clipping": {
+  "file": "audio-clipping.flac",
+  "stereo": false,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.0,
+    "end": 4.272,
+    "text": "Great news! Your refund has been approved and is on its way!"
+   }
+  ],
+  "metadata": {}
+ },
+ "audio-loop": {
+  "file": "audio-loop.mp3",
+  "stereo": false,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.0,
+    "end": 5.935,
+    "text": null
+   }
+  ],
+  "metadata": {}
+ },
+ "abrupt-cut-off": {
+  "file": "abrupt-cut-off.mp3",
+  "stereo": false,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.0,
+    "end": 3.246,
+    "text": "Your current balance is two hundred and fifty dollars and twelve cents."
+   }
+  ],
+  "metadata": {}
+ },
+ "held-tone": {
+  "file": "held-tone.mp3",
+  "stereo": false,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.0,
+    "end": 4.652,
+    "text": null
+   }
+  ],
+  "metadata": {}
+ },
+ "dead-stream": {
+  "file": "dead-stream.mp3",
+  "stereo": false,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.0,
+    "end": 7.165,
+    "text": null
+   }
+  ],
+  "metadata": {}
+ },
+ "echo": {
+  "file": "echo.mp3",
+  "stereo": true,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.0,
+    "end": 3.498,
+    "text": "Your order is ready for pickup at the downtown store."
+   }
+  ],
+  "metadata": {}
+ },
+ "background-noise": {
+  "file": "background-noise.mp3",
+  "stereo": false,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.0,
+    "end": 6.232,
+    "text": null
+   }
+  ],
+  "metadata": {}
+ },
+ "loudness": {
+  "file": "loudness.mp3",
+  "stereo": true,
+  "turns": [
+   {
+    "role": "user",
+    "start": 0.3,
+    "end": 3.493,
+    "text": "Hi, I'm calling about the bill I got this morning."
+   },
+   {
+    "role": "assistant",
+    "start": 4.193,
+    "end": 7.739,
+    "text": "Sure, could you read me the account number at the top of the bill?"
+   }
+  ],
+  "metadata": {}
+ },
+ "loudness-consistency": {
+  "file": "loudness-consistency.mp3",
+  "stereo": true,
+  "turns": [
+   {
+    "role": "user",
+    "start": 0.3,
+    "end": 2.697,
+    "text": "Hi, can you check on an order for me?"
+   },
+   {
+    "role": "assistant",
+    "start": 3.397,
+    "end": 7.045,
+    "text": "Sure, I can help with that. What's the order number?"
+   },
+   {
+    "role": "user",
+    "start": 7.645,
+    "end": 10.328,
+    "text": "It's four four seven two one."
+   },
+   {
+    "role": "assistant",
+    "start": 11.128,
+    "end": 14.24,
+    "text": "Thanks. I've found it, it shipped yesterday."
+   },
+   {
+    "role": "user",
+    "start": 14.84,
+    "end": 16.886,
+    "text": "Great, when will it arrive?"
+   },
+   {
+    "role": "assistant",
+    "start": 17.586,
+    "end": 20.293,
+    "text": "It should be with you on Thursday."
+   }
+  ],
+  "metadata": {}
+ },
+ "volume-variance": {
+  "file": "volume-variance.mp3",
+  "stereo": false,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.0,
+    "end": 8.877,
+    "text": "Your new plan includes unlimited calls, ten gigabytes of data, and free international texts to over fifty countries."
+   }
+  ],
+  "metadata": {}
+ },
+ "pitch-variation": {
+  "file": "pitch-variation.mp3",
+  "stereo": false,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.0,
+    "end": 6.944,
+    "text": "Your appointment is on Monday at nine. Please bring your insurance card and arrive ten minutes early."
+   }
+  ],
+  "metadata": {}
+ },
+ "abrupt-pitch-jump": {
+  "file": "abrupt-pitch-jump.mp3",
+  "stereo": false,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.0,
+    "end": 4.463,
+    "text": "Your package will arrive on Wednesday afternoon between two and four."
+   }
+  ],
+  "metadata": {}
+ },
+ "pitch-consistency": {
+  "file": "pitch-consistency.mp3",
+  "stereo": true,
+  "turns": [
+   {
+    "role": "user",
+    "start": 0.3,
+    "end": 3.299,
+    "text": "Hi, I'm calling to check on my flight booking."
+   },
+   {
+    "role": "assistant",
+    "start": 3.999,
+    "end": 6.361,
+    "text": "Thanks for waiting, I've found your booking."
+   },
+   {
+    "role": "user",
+    "start": 6.961,
+    "end": 9.139,
+    "text": "Great, what time does it leave?"
+   },
+   {
+    "role": "assistant",
+    "start": 9.939,
+    "end": 13.149,
+    "text": "Your flight leaves at seven fifteen tomorrow morning."
+   },
+   {
+    "role": "user",
+    "start": 13.749,
+    "end": 15.021,
+    "text": "Okay, perfect."
+   },
+   {
+    "role": "assistant",
+    "start": 15.721,
+    "end": 18.85,
+    "text": "Would you like me to add a checked bag?"
+   }
+  ],
+  "metadata": {}
+ },
+ "speaking-rate": {
+  "file": "speaking-rate.mp3",
+  "stereo": false,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.0,
+    "end": 5.642,
+    "text": "Our support number is five five five, two one three, four eight nine zero, and we're open from eight to six on weekdays."
+   }
+  ],
+  "metadata": {}
+ },
+ "pauses": {
+  "file": "pauses.mp3",
+  "stereo": false,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.0,
+    "end": 9.47,
+    "text": null
+   }
+  ],
+  "metadata": {}
+ },
+ "response-latency": {
+  "file": "response-latency.mp3",
+  "stereo": true,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.3,
+    "end": 4.556,
+    "text": "Hi, thanks for calling Acme support, how can I help you?"
+   },
+   {
+    "role": "user",
+    "start": 5.056,
+    "end": 7.586,
+    "text": "Hi, can you tell me when my order will arrive?"
+   },
+   {
+    "role": "assistant",
+    "start": 12.086,
+    "end": 15.135,
+    "text": "Sure, it's scheduled to arrive this Thursday."
+   }
+  ],
+  "metadata": {}
+ },
+ "response-delay-consistency": {
+  "file": "response-delay-consistency.mp3",
+  "stereo": true,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.3,
+    "end": 4.556,
+    "text": "Hi, thanks for calling Acme support, how can I help you?"
+   },
+   {
+    "role": "user",
+    "start": 5.056,
+    "end": 7.111,
+    "text": "What time do you open tomorrow?"
+   },
+   {
+    "role": "assistant",
+    "start": 7.711,
+    "end": 10.276,
+    "text": "We open at eight in the morning."
+   },
+   {
+    "role": "user",
+    "start": 10.776,
+    "end": 13.735,
+    "text": "And do you close early on Fridays?"
+   },
+   {
+    "role": "assistant",
+    "start": 18.735,
+    "end": 21.303,
+    "text": "Yes, on Fridays we close at four."
+   },
+   {
+    "role": "user",
+    "start": 21.803,
+    "end": 23.443,
+    "text": "And are you open on Sundays?"
+   },
+   {
+    "role": "assistant",
+    "start": 24.143,
+    "end": 27.041,
+    "text": "No, we're closed on Sundays."
+   }
+  ],
+  "metadata": {}
+ },
+ "time-to-first-response": {
+  "file": "time-to-first-response.mp3",
+  "stereo": true,
+  "turns": [
+   {
+    "role": "user",
+    "start": 1.6,
+    "end": 2.064,
+    "text": "Hello?"
+   },
+   {
+    "role": "user",
+    "start": 3.664,
+    "end": 5.419,
+    "text": "Hello, is anyone there?"
+   },
+   {
+    "role": "assistant",
+    "start": 6.219,
+    "end": 10.475,
+    "text": "Hi, thanks for calling Acme support, how can I help you?"
+   }
+  ],
+  "metadata": {}
+ },
+ "agent-interruption": {
+  "file": "agent-interruption.mp3",
+  "stereo": true,
+  "turns": [
+   {
+    "role": "assistant",
+    "start": 0.3,
+    "end": 4.556,
+    "text": "Hi, thanks for calling Acme support, how can I help you?"
+   },
+   {
+    "role": "user",
+    "start": 5.056,
+    "end": 11.12,
+    "text": "I was charged twice for my subscription last month and I'd like to know whether you can refund one of the payments."
+   },
+   {
+    "role": "assistant",
+    "start": 8.72,
+    "end": 12.267,
+    "text": "I can help you with your subscription, let me take a look."
+   }
+  ],
+  "metadata": {}
+ },
+ "failed-response": {
+  "file": "failed-response.mp3",
+  "stereo": true,
+  "turns": [
+   {
+    "role": "user",
+    "start": 0.3,
+    "end": 3.044,
+    "text": "Can you tell me what my current balance is?"
+   }
+  ],
+  "metadata": {}
+ },
+ "silent-reply": {
+  "file": "silent-reply.mp3",
+  "stereo": true,
+  "turns": [
+   {
+    "role": "user",
+    "start": 0.3,
+    "end": 2.581,
+    "text": "Can I change my delivery date to Saturday?"
+   },
+   {
+    "role": "assistant",
+    "start": 3.281,
+    "end": 6.281,
+    "text": "Sure, I can move your delivery to Saturday."
+   },
+   {
+    "role": "user",
+    "start": 6.681,
+    "end": 8.525,
+    "text": "Hello? Are you still there?"
+   }
+  ],
+  "metadata": {}
+ },
+ "unexpected-call-end": {
+  "file": "unexpected-call-end.mp3",
+  "stereo": true,
+  "turns": [
+   {
+    "role": "user",
+    "start": 0.3,
+    "end": 3.839,
+    "text": "I'd like to cancel my order from yesterday."
+   },
+   {
+    "role": "assistant",
+    "start": 4.539,
+    "end": 7.337,
+    "text": "Okay, let me pull up your account, one moment while I"
+   }
+  ],
+  "metadata": {
+   "end_reason": "ERROR"
+  }
+ }
+}

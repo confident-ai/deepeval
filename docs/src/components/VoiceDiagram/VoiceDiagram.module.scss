@@ -1,0 +1,146 @@
+.figure {
+  --vd-caller: #3b82f6;
+  --vd-agent: #8b5cf6;
+  --vd-neutral: var(--color-fd-muted-foreground);
+  --vd-bad: #ef4444;
+  --vd-ok: #10b981;
+  --vd-skip: #a1a1aa;
+  --vd-info: #f59e0b;
+  --vd-tone: var(--vd-info);
+  --vd-lane: var(--vd-neutral);
+
+  margin: 1.5em 0;
+  padding: 12px 14px 8px;
+  border: 1px solid var(--color-fd-border);
+  border-radius: 0;
+  background: var(--color-fd-card);
+}
+
+.title {
+  margin-bottom: 10px;
+  font-size: 13px;
+  font-weight: 400;
+  color: var(--color-fd-muted-foreground);
+}
+
+.svg {
+  display: block;
+  width: 100%;
+  height: auto;
+  overflow: visible;
+  font-family: inherit;
+}
+
+.caller {
+  --vd-lane: var(--vd-caller);
+}
+.agent {
+  --vd-lane: var(--vd-agent);
+}
+.neutral {
+  --vd-lane: var(--vd-neutral);
+}
+.bad {
+  --vd-tone: var(--vd-bad);
+}
+.ok {
+  --vd-tone: var(--vd-ok);
+}
+.skip {
+  --vd-tone: var(--vd-skip);
+}
+.info {
+  --vd-tone: var(--vd-info);
+}
+
+.track {
+  fill: var(--vd-lane);
+  fill-opacity: 0.06;
+}
+
+.laneLabel {
+  fill: var(--color-fd-muted-foreground);
+  font-size: 12px;
+  font-weight: 400;
+  text-anchor: end;
+  dominant-baseline: middle;
+}
+
+.baseline {
+  stroke: var(--vd-lane);
+  stroke-opacity: 0.25;
+  stroke-width: 1;
+}
+
+.bar {
+  stroke: var(--vd-lane);
+  stroke-width: 2;
+  stroke-linecap: round;
+}
+
+.silent {
+  stroke: var(--vd-lane);
+  stroke-width: 2;
+  stroke-dasharray: 2 4;
+  stroke-opacity: 0.7;
+}
+
+.clip {
+  fill: none;
+  stroke: var(--vd-lane);
+  stroke-opacity: 0.55;
+  stroke-dasharray: 4 3;
+}
+
+.clipLabel {
+  fill: var(--color-fd-muted-foreground);
+  font-size: 9.5px;
+}
+
+.window {
+  fill: var(--vd-tone);
+  fill-opacity: 0.12;
+  stroke: var(--vd-tone);
+  stroke-opacity: 0.7;
+  stroke-dasharray: 3 3;
+}
+
+.windowLabel {
+  fill: var(--vd-tone);
+  font-size: 10.5px;
+  font-weight: 400;
+  text-anchor: middle;
+}
+
+.markLine {
+  stroke: var(--vd-tone);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 2;
+}
+
+.markDot {
+  fill: var(--vd-tone);
+}
+
+.markLabel {
+  fill: var(--vd-tone);
+  font-size: 10.5px;
+  font-weight: 400;
+}
+
+.tick {
+  stroke: var(--color-fd-muted-foreground);
+  stroke-opacity: 0.6;
+}
+
+.tickLabel {
+  fill: var(--color-fd-muted-foreground);
+  font-size: 10px;
+  text-anchor: middle;
+}
+
+.caption {
+  margin-top: 8px;
+  font-size: 12.5px;
+  color: var(--color-fd-muted-foreground);
+}

@@ -74,7 +74,7 @@ There are **ONE** mandatory and **FIVE** optional parameters when creating a `Vo
 - [Optional] `stt_model`: a [`DeepEvalBaseSTT`](#tts-and-stt-models) that transcribes your agent's spoken replies. Defaulted to `OpenAISTTModel`.
 - [Optional] `output_dir`: a string directory to save conversation audio files into, or `None` to skip writing audio to disk. Left unset, it falls back to the `DEEPEVAL_VOICE_FOLDER` [environment variable](/docs/environment-variables) and then to `".deepeval-voice-simulations"`.
 - [Optional] `combine_audio_files`: a boolean which when set to `True` (and `output_dir` is set), also writes a single stitched WAV of the full conversation alongside the per-turn files. Has no effect when `output_dir` is `None`. Defaulted to `True`.
-- [Optional] `record_call`: a boolean which when set to `True`, records the whole call as it happened — both sides, in real time — and exposes it as [`call_recording_path`](#what-a-voice-simulation-produces) on each `ConversationalTestCase`. Defaulted to `False`.
+- [Optional] `record_call`: a boolean which when set to `True`, records the whole call as it happened — both sides, in real time — and attaches it as [`audio`](#what-a-voice-simulation-produces) on each `ConversationalTestCase`. Defaulted to `False`.
 
 :::info
 `combine_audio_files` stitches the clips attached to each `Turn`, so it contains exactly what the metrics see. `record_call` tapes every frame that crossed the wire — including agent speech that never became a turn and only the part of a barge the caller actually sent — with the caller on the left channel and your agent on the right.
@@ -163,7 +163,7 @@ Each simulated conversation is returned as a regular `ConversationalTestCase`, e
 - Every user `Turn` carries the synthesized `audio` that was played to your agent.
 - Every assistant `Turn` carries your agent's reply `audio`, the transcript as `content`, and the measured response time in `latency_ms`.
 - When [interruptions](/docs/conversation-simulator-voice-interruptions) are enabled, an assistant turn cut short by a barge-in gets `interrupted=True`. Frustrated barges can also surface on user turns via `metadata`.
-- When `record_call=True`, `call_recording_path` points to a stereo WAV of the entire call — caller on the left channel, your agent on the right.
+- When `record_call=True`, the test case's `audio` holds a stereo WAV of the entire call — caller on the left channel, your agent on the right.
 
 Unless `output_dir` is `None`, the audio is also written to disk — one file per turn, plus a combined recording of the whole conversation when `combine_audio_files=True`, plus the full-call recording as `deepeval-call-recording.wav` when `record_call=True`:
 

@@ -1,0 +1,158 @@
+---
+id: metrics-speech-intelligibility
+title: Speech Intelligibility
+sidebar_label: Speech Intelligibility
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The speech intelligibility metric measures how easy your voice agent is to **hear and understand**. It runs four single-issue voice metrics on the agent's replies and returns the share of replies none of them flagged, between 0 and 1.
+
+:::note
+`SpeechIntelligibilityMetric` scores the signal, not the words. It answers "could a listener make this out?" — not "was the reply correct?". Pair it with a transcript metric such as `TurnRelevancyMetric` for the content side of the same turn.
+:::
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import SpeechIntelligibilityMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks for the store's opening hours on a public holiday.",
+    expected_outcome="The agent states the holiday opening hours.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = SpeechIntelligibilityMetric(threshold=0.7)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **FIVE** optional parameters when creating a `SpeechIntelligibilityMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.8
+print(metric.score_breakdown)
+```
+
+For `SpeechIntelligibilityMetric` the breakdown counts the replies, lists every issue found, and gives each part's own result:
+
+```python
+{
+    "eligible_turns": 5,
+    "turns_with_events": 1,
+    "events": [
+        {"type": "background_noise", "turn": 3, "estimated_snr_db": 14.2, "offset_seconds": 0.0, "duration_seconds": 4.2, "start_time": 10.5, "metric": "Background Noise"},
+    ],
+    "skipped": [{"turn": 9, "error": "Reply is under 2 seconds, too short to measure its noise."}],
+    "metrics": {
+        "Background Noise": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
+        "Loudness": {"score": 1.0, "eligible_turns": 5, "turns_with_events": 0},
+        "Audio Clipping": {"score": 1.0, "eligible_turns": 5, "turns_with_events": 0},
+        "Audio Dropout": {"score": 1.0, "eligible_turns": 5, "turns_with_events": 0},
+    },
+}
+```
+
+`eligible_turns` is how many agent replies were judged and `turns_with_events` how many had at least one issue. `events` holds each part's events unchanged, tagged with the `metric` that raised them; the part's own page explains its fields. `skipped` collects the replies a part could not judge. `metrics` gives each part's own `score`, `eligible_turns` and `turns_with_events`, or `{"score": None, "reason": ...}` when that part could not judge the call. The reason for the call above reads "1 of 5 agent replies had an issue: Background Noise (1)."
+
+<include cwd>snippets/voice/event-place.mdx</include>
+
+## How Is It Calculated?
+
+`SpeechIntelligibilityMetric` runs these single-issue metrics on the call, each with its default limits:
+
+| Part                                               | Flags an agent reply that                            |
+| -------------------------------------------------- | ---------------------------------------------------- |
+| [Background Noise](/docs/metrics-background-noise) | has hiss, hum or room noise too close to the speech. |
+| [Loudness](/docs/metrics-loudness)                 | is spoken too quietly or too loudly.                 |
+| [Audio Clipping](/docs/metrics-audio-clipping)     | is distorted from being too loud.                    |
+| [Audio Dropout](/docs/metrics-audio-dropout)       | cuts out for a fraction of a second mid-speech.      |
+
+The score is the share of judged agent replies that none of the parts flagged:
+
+<Equation formula="\text{Speech Intelligibility} = 1 - \frac{\text{Agent replies flagged by at least one part}}{\text{Agent replies judged}}" />
+
+A reply flagged by two parts counts once. A part that cannot judge the call at all, such as Background Noise when every reply is under 2 seconds, is left out of the score. If no part can judge the call, for example because no agent reply has decodable audio, the metric is skipped.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why did my score change?",
+      answer: (
+        <>
+          This metric used to blend weighted noise, volume, clipping and
+          dropout components per reply. It now rolls up the single-issue
+          metrics listed above and scores the share of replies with no issue,
+          so a reply with any problem counts fully against the score, and a
+          reply with two problems counts once.
+        </>
+      ),
+    },
+    {
+      question: "How is this different from voice naturalness?",
+      answer: (
+        <>
+          Intelligibility asks whether the speech is <em>audible</em>: noise,
+          loudness, clipping and dropouts.{" "}
+          <a href="/docs/metrics-voice-naturalness">Voice naturalness</a> asks
+          whether it sounds <em>human</em>: it shares the noise, clipping and
+          dropout checks, drops loudness, and adds pauses, speaking rate, pitch
+          variation and repeated audio. A robotic but perfectly clean voice
+          scores well here and poorly there.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Every part is deterministic and runs locally over the audio
+          samples, so it has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does the metric evaluate user audio?",
+      answer: (
+        <>
+          No. Only the agent's replies are judged. The simulated caller's audio
+          comes from your own TTS model, so scoring it would measure your test
+          harness rather than your agent.
+        </>
+      ),
+    },
+  ]}
+/>

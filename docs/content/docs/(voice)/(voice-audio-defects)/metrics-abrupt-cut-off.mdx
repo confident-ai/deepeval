@@ -1,0 +1,348 @@
+---
+id: metrics-abrupt-cut-off
+title: Abrupt Cut-off
+sidebar_label: Abrupt Cut-off
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The abrupt cut-off metric checks whether your voice agent's replies **stop mid-sound**, as in "Your balance is two hundred and" followed by nothing. It returns the share of agent replies that end cleanly, between 0 and 1.
+
+<AudioSample name="abrupt-cut-off" />
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import AbruptCutoffMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = AbruptCutoffMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **SEVEN** optional parameters when creating an `AbruptCutoffMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies when the test case's `audio` is a stereo call recording. Defaulted to `True`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+`score_breakdown` lists the replies where the defect was found. See [Events](#events) for what it contains:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.75
+print(metric.score_breakdown)
+```
+
+## Events
+
+Every reply flagged as cut off is listed under `events` in `score_breakdown`. Below are the breakdowns for the two example calls in [How Is It Calculated?](#how-is-it-calculated):
+
+<Tabs items={["Recording mode", "Per-turn mode"]}>
+<Tab value="Recording mode">
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 1,
+    "events": [
+        {
+            "type": "abrupt_cutoff",
+            "duration_seconds": 0.02,
+            "start_time": 11.58,
+            "reply_start": 10.0,
+            "stopped_at_seconds": 11.6,
+        }
+    ],
+    "skipped": [],
+    "timing_source": "call_recording",
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `reply_start` | Where the flagged reply started on the recording, in seconds |
+| `stopped_at_seconds` | Where its sound stopped |
+| `start_time`, `duration_seconds` | The last 20 ms before the stop, on the call's clock |
+
+</Tab>
+<Tab value="Per-turn mode">
+
+```python
+{
+    "eligible_turns": 5,
+    "turns_with_events": 2,
+    "events": [
+        {
+            "type": "stream_cut",
+            "turn": 4,
+            "role": "assistant",
+            "offset_seconds": 1.6,
+            "duration_seconds": 0.0,
+            "start_time": 11.2,
+            "position": "middle",
+            "evidence": "trailing_dead_run",
+            "gap_seconds": 0.6,
+            "resumed_turn": 5,
+        },
+        {
+            "type": "abrupt_cutoff",
+            "turn": 7,
+            "offset_seconds": 1.98,
+            "duration_seconds": 0.02,
+            "start_time": 18.98,
+        },
+    ],
+    "skipped": [],
+    "timing_source": "turn_timestamps",
+}
+```
+
+| Field | Meaning |
+| --- | --- |
+| `turn` | The turn's zero-based position in the conversation |
+| `offset_seconds`, `duration_seconds` | Where the event sits inside the turn's clip. For `abrupt_cutoff`, the last 20 ms before the sound stops |
+| `start_time` | The same point on the call's clock. Left out when the clip has no `Audio.start_time` |
+| `evidence` | `stream_cut` only: `"abrupt_end"` when the sound stopped at full volume, `"trailing_dead_run"` when it ended in digital silence |
+| `position` | `stream_cut` only: whether the cut falls in the `"start"`, `"middle"` or `"end"` of the clip |
+| `gap_seconds`, `resumed_turn` | `stream_cut` only: how long until the agent's next clip, and which turn that is |
+
+Clips that can't be decoded are listed under `skipped` with the error.
+
+</Tab>
+</Tabs>
+
+`eligible_turns` is the number of agent replies and `turns_with_events` the number cut off, so the score is `(eligible_turns - turns_with_events) / eligible_turns`. `timing_source` says which mode was used: `"call_recording"` or `"turn_timestamps"`.
+
+<include cwd>snippets/voice/event-place.mdx</include>
+
+## How Is It Calculated?
+
+The score is the share of the agent's replies that end cleanly:
+
+<Equation formula="\text{Abrupt Cut-off} = \frac{\text{Agent Replies Without a Cut-off}}{\text{Agent Replies}}" />
+
+A reply is flagged at most once, however many times its sound stops. What counts as **one reply** depends on which audio the test case has.
+
+### Which audio is used
+
+Audio can be attached in two places, and each can be stereo or mono:
+
+| | Stereo (caller left, agent right) | Mono |
+| --- | --- | --- |
+| **`audio` on the test case** (the whole call) | **Recording mode.** Audio on the turns is ignored. | Not used. Falls back to **per-turn mode**. |
+| **`audio` on each turn** (that turn only) | **Per-turn mode.** The two channels are averaged first. | **Per-turn mode.** |
+
+Either way, the metric has to know whose voice it's hearing. With the test case's `audio` it's the channel: left is the caller, right is the agent. With each turn's `audio` it's the turn's `role`. A mono recording of the whole call mixes both voices into one channel, so there's no way to tell them apart, which is why it isn't used.
+
+Recording mode is used whenever the test case's `audio` is a 16-bit stereo WAV, even if the turns also carry audio. Everything else is per-turn mode. If neither the test case nor any agent turn has usable audio, the metric is skipped.
+
+### What counts as a cut-off
+
+A finished reply **fades out**. A cut one **stops at near full volume**. Each mode looks for that in a different place:
+
+<Tabs items={["Recording mode", "Per-turn mode"]}>
+<Tab value="Recording mode">
+
+<VoiceDiagram
+  duration={8}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 1.6 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 2.0, end: 4.4, ending: "fade" }, { start: 5.4, end: 7.4, ending: "cut" }] },
+  ]}
+  marks={[
+    { at: 4.4, lane: 1, tone: "ok", label: "fades out" },
+    { at: 7.4, lane: 1, tone: "bad", label: "stops at full volume" },
+  ]}
+/>
+
+Every point where the agent's channel goes quiet is checked, while the caller is silent.
+
+</Tab>
+<Tab value="Per-turn mode">
+
+<VoiceDiagram
+  duration={8}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.3, end: 3.4, label: "turn 0" }, { start: 4.4, end: 7.4, label: "turn 2" }], sounds: [{ start: 0.4, end: 3.2, ending: "fade" }, { start: 4.5, end: 7.0, ending: "cut" }] },
+  ]}
+  marks={[
+    { at: 3.2, lane: 0, tone: "ok", label: "fades out" },
+    { at: 7.0, lane: 0, tone: "bad", label: "stops at full volume" },
+  ]}
+/>
+
+Only the end of each agent turn's clip is checked.
+
+</Tab>
+</Tabs>
+
+The check on a stop is **the same in both modes**. Only which stops get checked differs. The metric finds where the sound stops (the last 5 ms frame louder than about −41 dBFS) and compares the last 20 ms before it with the second of speech before that. The stop is a cut-off only when **all three** hold:
+
+| Check | The last 20 ms of sound must be |
+| --- | --- |
+| Still at speech volume | at least **80%** as loud as the median level of the second before |
+| Above the background | more than **10 dB** above the background noise |
+| Not just quiet residue | above a fixed floor of about **−30 dBFS** |
+
+:::note
+Only cuts in the middle of a sound can be heard this way. An agent that stops between two words sounds like a normal ending and is not flagged.
+:::
+
+### How replies are counted and flagged
+
+<Tabs items={["Recording mode", "Per-turn mode"]}>
+<Tab value="Recording mode">
+
+<VoiceDiagram
+  duration={14}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 2.3 }, { start: 7.6, end: 9.4 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 2.8, end: 5.0, ending: "fade" }, { start: 6.3, end: 7.9, ending: "cut" }, { start: 10.0, end: 11.6, ending: "cut" }, { start: 13.2, end: 14, ending: "cut" }] },
+  ]}
+  marks={[
+    { at: 5.0, lane: 1, tone: "ok", label: "clean" },
+    { at: 7.9, lane: 1, tone: "ok", label: "clean: caller spoke" },
+    { at: 11.6, lane: 1, tone: "bad", label: "cut off" },
+    { at: 14, lane: 1, tone: "ok", label: "clean: call ended" },
+  ]}
+/>
+
+| Agent reply | How it ends | Cut off? |
+| --- | --- | --- |
+| 2.8 – 5.0 s | Fades out | No |
+| 6.3 – 7.9 s | Full volume, but the caller was talking | No |
+| 10.0 – 11.6 s | Full volume, caller silent | **Yes** |
+| 13.2 – 14.0 s | Still going when the recording ends | No |
+| **4 replies** | | **1 cut off → 3/4 = 0.75** |
+
+**Counted:** each stretch of sound on the agent's channel. Pauses shorter than 1 second don't split a stretch.
+
+**Flagged:** a counted reply with a stop that fails the three checks. Stops while the caller was talking or as the recording ends don't count, so those replies stay clean.
+
+- **Caller talking.** A stop doesn't count if the caller made 0.2 seconds or more of sound from 1 second before it to 0.2 seconds after. The agent stopped because the caller spoke up.
+- **Recording ending.** A stop within 0.05 seconds of the end means the sound was still going when the recording ended. [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end) reports that instead.
+- **Sound** is read in 20 ms frames: louder than about −41 dBFS counts, pauses under 0.3 seconds are closed and sounds under 0.15 seconds are dropped. The background noise is the quietest 10% of the agent channel.
+
+<include cwd>snippets/voice/speech-detection.mdx</include>
+
+</Tab>
+<Tab value="Per-turn mode">
+
+<VoiceDiagram
+  duration={20}
+  lanes={[
+    { label: "Caller", role: "caller", clips: [{ start: 3.3, end: 4.3 }, { start: 6.9, end: 9.0 }, { start: 15.6, end: 16.6 }], sounds: [{ start: 3.4, end: 4.2 }, { start: 7.0, end: 8.9 }, { start: 15.7, end: 16.5 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0, end: 3.0, label: "turn 0" }, { start: 4.6, end: 7.4, label: "turn 2" }, { start: 9.6, end: 12.4, label: "turn 4" }, { start: 13.0, end: 15.2, label: "turn 5" }, { start: 17.0, end: 19.4, label: "turn 7" }], sounds: [{ start: 0.1, end: 2.9, ending: "fade" }, { start: 4.7, end: 7.4, ending: "cut" }, { start: 9.7, end: 11.2, ending: "cut" }, { start: 11.2, end: 12.4, silent: true }, { start: 13.1, end: 15.1, ending: "fade" }, { start: 17.1, end: 19.0, ending: "cut" }] },
+  ]}
+  marks={[
+    { at: 2.9, lane: 1, tone: "ok", label: "clean" },
+    { at: 7.4, lane: 1, tone: "ok", label: "clean: interrupted" },
+    { at: 11.2, lane: 1, tone: "bad", label: "stream cut" },
+    { at: 15.1, lane: 1, tone: "ok", label: "clean" },
+    { at: 19.0, lane: 1, tone: "bad", label: "cut off" },
+  ]}
+/>
+
+| Agent turn | How it ends | Cut off? |
+| --- | --- | --- |
+| 0 | Fades out | No |
+| 2 | Full volume, but `interrupted=True` | No |
+| 4 | Digital silence, then the agent resumes in turn 5 | **Yes** (`stream_cut`) |
+| 5 | Fades out | No |
+| 7 | Full volume | **Yes** |
+| **5 replies** | | **2 cut off → 3/5 = 0.6** |
+
+**Counted:** every agent turn whose clip decodes, including turns with `interrupted=True`. Clips that can't be decoded are left out.
+
+**Flagged:** a counted turn whose clip ends in a cut-off or a stream cut, unless the turn has `interrupted=True`.
+
+- **Interrupted.** The metric can't hear the caller here, so it relies on the turn's [`interrupted`](/docs/conversation-simulator-voice-interruptions) flag. Stopping mid-word is what a successful barge-in should cause, so the turn counts as clean.
+- **Stream cut.** The clip ends mid-sound, or in at least 1 second of digital silence (dotted), and the very next clip in the call is the agent's own, starting within 15 seconds. This needs `Audio.start_time` on every clip.
+- **Short clips.** The 10 dB background-noise check only applies to clips of 2 seconds or more. Shorter clips only need to clear the −30 dBFS floor.
+
+</Tab>
+</Tabs>
+
+### When the metric is skipped
+
+The metric is skipped, rather than scored, when nothing is counted: in recording mode when the agent made no sound on the recording, and in per-turn mode when no agent clip decodes.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why isn't a reply the simulated caller interrupted flagged?",
+      answer: (
+        <>
+          A successful{" "}
+          <a href="/docs/conversation-simulator-voice-interruptions">barge-in</a>{" "}
+          stops the agent mid-word on purpose. Those turns carry{" "}
+          <code>interrupted=True</code> and count as clean replies.
+        </>
+      ),
+    },
+    {
+      question: "Why is a cut that the agent picked up again not a dead stream?",
+      answer: (
+        <>
+          The listener hears a reply that stops, so it is reported here once.{" "}
+          <a href="/docs/metrics-dead-stream">DeadStreamMetric</a> only reports
+          stretches of true silence inside a reply.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Detection is deterministic and runs locally over the audio
+          samples, so it has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the simulated user's audio too?",
+      answer: (
+        <>
+          No. Only assistant turns are inspected. The caller's audio is produced
+          by your own TTS model, so defects there are a problem with the test
+          harness rather than with the agent under test.
+        </>
+      ),
+    },
+  ]}
+/>
+
+<include cwd>snippets/voice/audio-decision-check.mdx</include>

@@ -245,6 +245,22 @@ npx deepeval test run example.test.ts
 
 Unset, it means `llm`, so existing setups behave as before; the `DEEPEVAL_MODE` feature channel has no effect on it. An <Term py="eval_mode" ts="evalMode"/> argument on a metric overrides it, and <Term py="deepeval set-eval-mode" ts="npx deepeval set-eval-mode"/> sets it for you. Unrecognised values mean unset. G-Eval metrics are LLM-as-a-judge by definition and ignore it.
 
+#### DeepEval voice eval mode
+
+`DEEPEVAL_VOICE_EVAL_MODE` sets how the voice metrics with an audio check decide:
+
+| Value           | What happens                                                                                    |
+| --------------- | ----------------------------------------------------------------------------------------------- |
+| `deterministic` | The default. The metric's own detector decides and no model is called.                          |
+| `hybrid`        | An audio decision model (Hume by default) double-checks each flagged event before it is scored. |
+
+```bash
+export DEEPEVAL_VOICE_EVAL_MODE=hybrid
+export HUME_API_KEY=<your-hume-api-key>
+```
+
+An `eval_mode` argument on a voice metric overrides it, and `deepeval set-voice-eval-mode` sets it for you. Unrecognised values mean unset. It is separate from `DEEPEVAL_EVAL_MODE`.
+
 ## Tracing
 
 <Only id="python">
