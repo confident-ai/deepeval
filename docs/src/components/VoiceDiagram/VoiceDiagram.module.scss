@@ -134,6 +134,18 @@
   font-weight: 400;
 }
 
+.bracket {
+  fill: none;
+  stroke: var(--vd-tone);
+  stroke-width: 1.5;
+}
+
+.bracketLabel {
+  fill: var(--vd-tone);
+  font-size: 10.5px;
+  text-anchor: middle;
+}
+
 .tick {
   stroke: var(--color-fd-muted-foreground);
   stroke-opacity: 0.6;

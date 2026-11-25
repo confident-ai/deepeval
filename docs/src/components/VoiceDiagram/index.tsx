@@ -45,6 +45,15 @@ interface Mark {
   label: string;
 }
 
+interface Bracket {
+  start: number;
+  end: number;
+  lane: number;
+  /** A word or two drawn above the brace. */
+  label?: string;
+  tone?: Tone;
+}
+
 interface VoiceDiagramProps {
   title?: string;
   /** Seconds shown on the time axis. */
@@ -52,6 +61,8 @@ interface VoiceDiagramProps {
   lanes: Lane[];
   windows?: Window[];
   marks?: Mark[];
+  /** Curly braces above a lane, grouping a span under one label. */
+  brackets?: Bracket[];
   /** Hide the seconds axis, for diagrams about shape rather than time. */
   hideAxis?: boolean;
   unit?: string;
@@ -64,6 +75,7 @@ const RIGHT_PAD = 6;
 const LANE_HEIGHT = 52;
 // Space above a lane: room for point labels only where a lane has them.
 const LABEL_ROOM = 22;
+const BRACKET_ROOM = 28;
 // Each extra row of point labels, and roughly how wide a label character is.
 const LABEL_ROW = 14;
 const LABEL_CHAR_WIDTH = 5.6;
@@ -83,6 +95,7 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
   lanes,
   windows = [],
   marks = [],
+  brackets = [],
   hideAxis = false,
   unit = "s",
   caption,
@@ -141,6 +154,9 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
       : index === 0
         ? 2
         : PLAIN_GAP;
+    // Braces sit above any point labels, so give them their own room.
+    if (brackets.some((bracket) => bracket.lane === index))
+      cursor += BRACKET_ROOM;
     tops.push(cursor);
     cursor += LANE_HEIGHT;
   });
@@ -314,6 +330,40 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
               >
                 {mark.label}
               </text>
+            </g>
+          );
+        })}
+
+        {brackets.map((bracket, index) => {
+          const x1 = x(bracket.start);
+          const x2 = x(bracket.end);
+          const mid = (x1 + x2) / 2;
+          const labelled = marks.some((mark) => mark.lane === bracket.lane);
+          // The brace's base line, just above the lane or its point labels.
+          const y =
+            laneTop(bracket.lane) -
+            6 -
+            (labelled
+              ? LABEL_ROOM + (laneRows.get(bracket.lane) ?? 0) * LABEL_ROW - 4
+              : 0);
+          const h = Math.min(6, (x2 - x1) / 4);
+          const d = [
+            `M${x1},${y + h}`,
+            `Q${x1},${y} ${x1 + h},${y}`,
+            `L${mid - h},${y}`,
+            `Q${mid},${y} ${mid},${y - h}`,
+            `Q${mid},${y} ${mid + h},${y}`,
+            `L${x2 - h},${y}`,
+            `Q${x2},${y} ${x2},${y + h}`,
+          ].join(" ");
+          return (
+            <g key={`bracket-${index}`} className={styles[bracket.tone ?? "info"]}>
+              <path d={d} className={styles.bracket} />
+              {bracket.label && (
+                <text x={mid} y={y - h - 4} className={styles.bracketLabel}>
+                  {bracket.label}
+                </text>
+              )}
             </g>
           );
         })}

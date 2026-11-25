@@ -189,9 +189,9 @@ The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#cal
     { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 1.8 }] },
     { label: "Agent", role: "agent", sounds: [{ start: 2.4, end: 3.8 }, { start: 4.3, end: 5.6 }, { start: 7.0, end: 9.2 }] },
   ]}
-  windows={[
-    { start: 2.3, end: 5.7, lanes: [1], tone: "info", label: "reply 1" },
-    { start: 6.9, end: 9.3, lanes: [1], tone: "info", label: "reply 2" },
+  brackets={[
+    { start: 2.4, end: 5.6, lane: 1, label: "reply 1" },
+    { start: 7.0, end: 9.2, lane: 1, label: "reply 2" },
   ]}
 />
 
@@ -205,9 +205,9 @@ Each stretch of agent sound is one reply. A pause under 1 second doesn't end it,
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.2, end: 5.8, label: "turn 1" }, { start: 6.8, end: 9.4, label: "turn 3" }], sounds: [{ start: 2.4, end: 3.8 }, { start: 4.3, end: 5.6 }, { start: 7.0, end: 9.2 }] },
   ]}
-  windows={[
-    { start: 2.2, end: 5.8, lanes: [0], tone: "info", label: "reply 1" },
-    { start: 6.8, end: 9.4, lanes: [0], tone: "info", label: "reply 2" },
+  brackets={[
+    { start: 2.2, end: 5.8, lane: 0, label: "reply 1" },
+    { start: 6.8, end: 9.4, lane: 0, label: "reply 2" },
   ]}
 />
 
