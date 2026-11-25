@@ -3,8 +3,9 @@
 Templates live under a feature's source tree in one of two layouts:
 
 * Flat (default): the directory holds a ``class.txt`` marker naming the owning
-  class, and the sibling ``<method>.txt`` files are that class's methods —
-  ``**/templates/class.txt`` + ``**/templates/<method>.txt``.
+  class, and every ``<method>.txt`` beside it or in its subfolders is one of
+  that class's methods, keyed by file name alone —
+  ``**/templates/class.txt`` + ``**/templates/[<group>/]<method>.txt``.
 * Nested (multi-class, e.g. ``dag``): the directory has no ``class.txt`` marker
   and instead groups methods under one subfolder per class —
   ``**/templates/<ClassName>/<method>.txt``.
@@ -86,9 +87,16 @@ def _collect_from_disk(
         marker = templates_dir / "class.txt"
         if marker.is_file():
             class_name = marker.read_text(encoding="utf-8").strip()
-            for path in templates_dir.glob("*.txt"):
-                if path.name == "class.txt":
+            sources: dict[str, Path] = {}
+            for path in sorted(templates_dir.rglob("*.txt")):
+                if path == marker:
                     continue
+                if path.stem in sources:
+                    raise ValueError(
+                        f"Template {path.stem!r} of {class_name} is defined "
+                        f"twice: {sources[path.stem]} and {path}."
+                    )
+                sources[path.stem] = path
                 classes[class_name][path.stem] = path.read_text(
                     encoding="utf-8"
                 )

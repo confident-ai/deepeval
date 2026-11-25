@@ -8,7 +8,15 @@ loses the event, where the old code sent a bare one up front.
 import uuid
 from contextlib import contextmanager
 from dataclasses import replace
-from typing import Any, Container, Dict, Iterator, Optional, Set
+from typing import (
+    Any,
+    Container,
+    Dict,
+    Iterable,
+    Iterator,
+    Optional,
+    Set,
+)
 
 from deepeval.telemetry.client import (
     capture,
@@ -19,6 +27,7 @@ from deepeval.telemetry.context import (
     RunAccumulator,
     pop_run,
     push_run,
+    record_guardrail,
 )
 from deepeval.telemetry.events import Entrypoint, Event, Feature
 from deepeval.telemetry.identity import (
@@ -27,6 +36,7 @@ from deepeval.telemetry.identity import (
     set_last_feature,
 )
 from deepeval.telemetry.properties import (
+    CUSTOM_PROVIDER,
     UNKNOWN_CLI_COMMAND,
     EventProperties,
     LoginMethod,
@@ -170,6 +180,106 @@ def capture_benchmark_run(benchmark: str, num_tasks: Any) -> Iterator[None]:
         ),
     )
     yield
+
+
+# Classes under `deepeval.` whose instances carry user-written names: a
+# vulnerability defined inline, or a framework pulled from Confident AI.
+_USER_DEFINED_RED_TEAM_CLASSES = frozenset(
+    {"CustomVulnerability", "RedTeamingFramework"}
+)
+
+
+def _red_team_component_name(component: Any) -> str:
+    """A bounded name for a vulnerability, attack, framework or guard.
+
+    Same invariant as `describe_judge`: only classes defined under `deepeval.`
+    are named, anything else collapses to `custom`.
+    """
+    try:
+        cls = type(component)
+        if not (cls.__module__ or "").startswith("deepeval."):
+            return CUSTOM_PROVIDER
+        if cls.__name__ in _USER_DEFINED_RED_TEAM_CLASSES:
+            return CUSTOM_PROVIDER
+        return cls.__name__
+    except Exception:
+        return CUSTOM_PROVIDER
+
+
+@contextmanager
+def capture_red_teaming_run(
+    vulnerabilities: Optional[Iterable[Any]] = None,
+    attacks: Optional[Iterable[Any]] = None,
+    framework: Optional[Any] = None,
+    entrypoint: Entrypoint = Entrypoint.RED_TEAM,
+) -> Iterator[RunAccumulator]:
+    """Open a run scope and emit exactly one `Red Teaming` on the way out.
+
+    The same shape as `capture_evaluation_run`: red teaming metrics measured
+    inside the scope count towards this run rather than the standalone path,
+    and test cases are recorded with `record_test_case`. Takes the objects
+    rather than their names so user-written names never reach the payload.
+    """
+    if telemetry_opt_out():
+        yield RunAccumulator(entrypoint=entrypoint)
+        return
+
+    feature_status = get_feature_status(Feature.REDTEAMING)
+    vulnerability_names = sorted(
+        {_red_team_component_name(v) for v in vulnerabilities or []}
+    )
+    attack_names = sorted({_red_team_component_name(a) for a in attacks or []})
+    framework_name = (
+        _red_team_component_name(framework) if framework is not None else None
+    )
+    accumulator, token = push_run(entrypoint, str(uuid.uuid4()))
+
+    outcome = Outcome.COMPLETED
+    error_type: Optional[str] = None
+    try:
+        yield accumulator
+    except KeyboardInterrupt:
+        outcome = Outcome.INTERRUPTED
+        raise
+    except BaseException as error:
+        outcome = Outcome.ERRORED
+        # Class name only. Messages routinely carry prompts, keys, org names.
+        error_type = type(error).__name__
+        raise
+    finally:
+        pop_run(token)
+        try:
+            # Never `return` from this block: that would discard an exception
+            # on its way out of the user's red teaming run.
+            set_last_feature(Feature.REDTEAMING)
+            capture(
+                Event.RED_TEAMING,
+                replace(
+                    accumulator.snapshot(),
+                    outcome=outcome,
+                    error_type=error_type,
+                    feature_name=Feature.REDTEAMING,
+                    feature_status=feature_status,
+                    rt_vulnerabilities=vulnerability_names,
+                    rt_attacks=attack_names,
+                    rt_framework=framework_name,
+                ),
+            )
+        except Exception:
+            pass
+
+
+def record_guard(guard: Any, async_mode: bool) -> None:
+    """One guard check, the guardrail equivalent of a metric's `start_measure`.
+
+    Batched into `Guardrails` events by the same threshold, interval and
+    process-exit policy as standalone metrics.
+    """
+    record_guardrail(
+        _red_team_component_name(guard),
+        async_mode=async_mode,
+        model=getattr(guard, "model", None),
+    )
 
 
 def record_tracing_integration(integration: Integration) -> None:

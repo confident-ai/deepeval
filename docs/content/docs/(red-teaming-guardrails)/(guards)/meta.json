@@ -1,0 +1,12 @@
+{
+  "title": "Guards",
+  "pages": [
+    "guardrails-prompt-injection-guard",
+    "guardrails-topical-guard",
+    "guardrails-toxicity-guard",
+    "guardrails-privacy-guard",
+    "guardrails-illegal-guard",
+    "guardrails-hallucination-guard",
+    "guardrails-cybersecurity-guard"
+  ]
+}

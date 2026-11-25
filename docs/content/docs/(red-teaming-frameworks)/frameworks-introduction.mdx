@@ -1,0 +1,198 @@
+---
+title: Red Teaming Frameworks
+sidebar_label: Introduction
+languages: [python]
+---
+
+The DeepEval Frameworks define structured methodologies for **AI red teaming and risk assessment**.
+Each framework maps to a recognized safety or security standard, helping you test your model's robustness against **real-world adversarial behavior, dataset risks, and system vulnerabilities**.
+
+DeepEval supports multiple frameworks — from dataset-based testing (_BeaverTails, Aegis_) to security and governance standards (_MITRE ATLAS, NIST AI RMF, OWASP Top 10 for LLMs_).
+
+## Available Frameworks
+
+Here are the list of frameworks available in `deepeval`:
+
+- [OWASP](#owasp-top-10)
+  - [OWASP Top 10 for Agents 2026](#owasp-top-10-for-agents-2026)
+  - [OWASP Top 10 for LLMs 2025](#owasp-top-10-for-llms-2025)
+- [NIST AI RMF](#nist-ai-rmf)
+- [MITRE ATLAS](#mitre-atlas)
+- [EU AI Act](#eu-ai-act)
+- [ISO/IEC 42001](#isoiec-42001)
+- [BeaverTails](#beavertails)
+- [Aegis](#aegis)
+
+### OWASP Top 10
+
+#### OWASP Top 10 for Agents 2026
+
+The OWASP Top 10 for Agentic Applications (ASI) identifies the most critical security risks introduced by autonomous and semi-autonomous AI agents.
+It focuses on failures arising from goal misalignment, tool misuse, delegated trust, inter-agent communication, persistent memory, and emergent autonomous behavior.
+
+- Tests for goal hijacking, tool misuse, identity abuse, memory poisoning, and rogue agents
+- Simulates cascading failures and inter-agent communication vulnerabilities
+- Ideal for multi-agent systems, tool-using agents, and autonomous AI applications
+
+```python
+from deepeval.red_team.frameworks import OWASP_ASI_2026
+owasp_asi = OWASP_ASI_2026(num_attacks=10)
+
+risk = red_team(
+    model_callback=your_model_callback,
+    framework=owasp_asi
+)
+```
+
+[Learn more about OWASP Top 10 for Agents 2026](/docs/frameworks-owasp-top-10-for-agentic-applications)
+
+#### OWASP Top 10 for LLMs 2025
+
+The OWASP Top 10 for LLMs framework identifies the most critical security risks in LLM applications.
+It reflects the 2025 OWASP edition, covering vulnerabilities in RAG systems, agents, and model integrations.
+
+- Tests for prompt injection, system prompt leakage, vector weaknesses, and more
+- Simulates real-world exploit attempts and harmful outputs
+- Ideal for application-level AI security assessments
+
+```python
+from deepeval.red_team.frameworks import OWASPTop10
+owasp = OWASPTop10(num_attacks=10)
+
+risk = red_team(
+    model_callback=your_model_callback,
+    framework=owasp
+)
+```
+
+[Learn more about OWASP Top 10 for LLMs](/docs/frameworks-owasp-top-10-for-llms)
+
+### NIST AI RMF
+
+The NIST AI Risk Management Framework (RMF) provides a structured approach to identifying, managing, and mitigating AI risks.
+It focuses on trustworthiness, robustness, and accountability — aligning LLM behavior with regulatory and ethical standards.
+
+- Tests safety, fairness, and robustness dimensions
+- Suitable for compliance-driven AI governance workflows
+
+```python
+from deepeval.red_team.frameworks import NIST
+nist = NIST(num_attacks=10)
+
+risk = red_team(
+    model_callback=your_model_callback,
+    framework=nist
+)
+```
+
+[Learn more about NIST AI RMF](/docs/frameworks-nist-ai-rmf)
+
+### MITRE ATLAS
+
+The MITRE ATLAS framework integrates the MITRE ATLAS knowledge base, focusing on adversarial tactics and techniques used against AI systems.  
+It evaluates system resilience across attack phases like Reconnaissance, Resource Development, Initial Access, and Impact.
+
+- Tests adversarial behavior patterns from the ATLAS taxonomy
+- Detects vulnerabilities such as prompt injection, data poisoning, and exfiltration
+- Ideal for AI security simulation and penetration testing
+
+```python
+from deepeval.red_team.frameworks import MITRE
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+atlas = MITRE(num_attacks=10)
+
+risk = red_team(
+    model_callback=your_model_callback,
+    framework=atlas
+)
+```
+
+[Learn more about MITRE ATLAS](/docs/frameworks-mitre-atlas)
+
+### EU AI Act
+
+The EU Artificial Intelligence Act (Regulation (EU) 2024/1689) is the world's first comprehensive legal framework for AI.
+DeepEval's EU AI Act module operationalises Article 5 prohibited practices and Annex III high-risk use cases so you can red-team against the obligations regulators actually check.
+
+- Tests Article 5 prohibited practices — subliminal manipulation, exploitation of vulnerable groups, social scoring, biometric categorisation, and remote biometric identification
+- Tests Annex III high-risk use cases — critical infrastructure, education, employment, essential services, law enforcement, migration, and justice/democracy
+- Ideal for EU-market AI compliance, regulatory risk assessments, and fundamental-rights impact assessments
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+eu_ai_act = EUAIAct()
+
+risk = red_team(
+    model_callback=your_model_callback,
+    framework=eu_ai_act
+)
+```
+
+[Learn more about EU AI Act](/docs/frameworks-eu-ai-act)
+
+### ISO/IEC 42001
+
+ISO/IEC 42001:2023 is the first international standard for AI Management Systems (AIMS).
+DeepEval's ISO 42001 module operationalises the seven Annex A controls whose intent can be exercised behaviourally — so you can generate red-team evidence that supports your management-system documentation.
+
+- Tests fairness, robustness, security, privacy, transparency, safety/ethical use, and human oversight
+- Maps each control to concrete vulnerabilities and attack strategies
+- Ideal for organisations pursuing ISO/IEC 42001 certification alongside their AIMS lifecycle controls
+
+```python
+from deepeval.red_team.frameworks import ISO42001
+iso_42001 = ISO42001()
+
+risk = red_team(
+    model_callback=your_model_callback,
+    framework=iso_42001
+)
+```
+
+[Learn more about ISO/IEC 42001](/docs/frameworks-iso-42001)
+
+### BeaverTails
+
+The BeaverTails framework integrates the PKU BeaverTails dataset — a large, human-labeled dataset of harmful and borderline prompts.
+It performs dataset-driven red teaming, surfacing model weaknesses across categories like abuse, misinformation, and privacy violations.
+
+- Uses real-world harmful prompts instead of synthetic generation
+- Validates content safety and refusal behavior
+
+```python
+from deepeval.red_team.frameworks import BeaverTails
+beaver = BeaverTails(num_attacks=10)
+
+risk = red_team(
+    model_callback=your_model_callback,
+    framework=beaver
+)
+```
+
+[Learn more about BeaverTails](/docs/frameworks-beavertails)
+
+### Aegis
+
+The Aegis framework integrates the NVIDIA Aegis AI Content Safety Dataset, which follows NVIDIA's content safety taxonomy across 13 harm categories.
+It provides a comprehensive safety evaluation using real human-labeled harmful content.
+
+- Tests for harmful user messages across multiple safety dimensions
+- Useful for evaluating model robustness under real-world safety challenges
+
+```python
+from deepeval.red_team.frameworks import Aegis
+aegis = Aegis(num_attacks=10)
+
+risk = red_team(
+    model_callback=your_model_callback,
+    framework=aegis
+)
+```
+
+[Learn more about Aegis](/docs/frameworks-aegis)
+
+:::tip
+You can customize and add more attacks and vulnerabilities to already existing frameworks to specialise red-teaming to your LLM's use case.
+:::

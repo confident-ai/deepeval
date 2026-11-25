@@ -68,6 +68,7 @@ CONVERSATIONAL_G_EVAL_PARAMS = {
     MultiTurnParams.METADATA: "Metadata",
     MultiTurnParams.TAGS: "Tags",
     MultiTurnParams.TOOLS_CALLED: "Tools Called",
+    MultiTurnParams.EXPECTED_TOOLS: "Expected Tools",
     MultiTurnParams.RETRIEVAL_CONTEXT: "Retrieval Context",
     MultiTurnParams.EXPECTED_OUTCOME: "Expected Outcome",
     MultiTurnParams.SCENARIO: "Scenario",
@@ -98,6 +99,7 @@ CONVERSATIONAL_G_EVAL_API_PARAMS = {
     MultiTurnParams.EXPECTED_OUTCOME: "expectedOutcome",
     MultiTurnParams.RETRIEVAL_CONTEXT: "retrievalContext",
     MultiTurnParams.TOOLS_CALLED: "toolsCalled",
+    MultiTurnParams.EXPECTED_TOOLS: "expectedTools",
     MultiTurnParams.AUDIO: "audio",
     MultiTurnParams.CONTEXT: "context",
     MultiTurnParams.USER_DESCRIPTION: "userDescription",
@@ -257,20 +259,14 @@ def no_log_prob_support(model: Union[str, DeepEvalBaseLLM]):
 
     if isinstance(model, str):
         model_data = OPENAI_MODELS_DATA.get(model)
-        if not model_data.supports_log_probs:
-            return True
-    elif (
-        isinstance(model, OpenAIModel)
-        and not model.model_data.supports_log_probs
-    ):
-        return True
-    elif (
-        isinstance(model, AzureOpenAIModel)
-        and not model.model_data.supports_log_probs
-    ):
-        return True
+        return not model_data.supports_log_probs
+    if isinstance(model, (OpenAIModel, AzureOpenAIModel)):
+        # An OpenAI model missing from the registry is treated as unsupported.
+        return not model.model_data.supports_log_probs
 
-    return False
+    # Any other model is asked directly; "unknown" (None) is still attempted.
+    supports_log_probs = getattr(model, "supports_log_probs", None)
+    return callable(supports_log_probs) and supports_log_probs() is False
 
 
 def construct_g_eval_params_string(

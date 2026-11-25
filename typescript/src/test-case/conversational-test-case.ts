@@ -32,6 +32,7 @@ export enum MultiTurnParams {
   RETRIEVAL_CONTEXT = "retrievalContext",
   CHATBOT_ROLE = "chatbotRole",
   TOOLS_CALLED = "toolsCalled",
+  EXPECTED_TOOLS = "expectedTools",
   MCP_TOOLS = "mcpToolsCalled",
   MCP_RESOURCES = "mcpResourcesCalled",
   MCP_PROMPTS = "mcpPromptsCalled",
@@ -108,6 +109,7 @@ export class ConversationalTestCase {
   scenario?: string;
   userDescription?: string;
   expectedOutcome?: string;
+  expectedTools?: ToolCall[];
   context?: string[];
   mcpServers?: MCPServer[];
   name?: string;
@@ -128,6 +130,7 @@ export class ConversationalTestCase {
     scenario?: string;
     userDescription?: string;
     expectedOutcome?: string;
+    expectedTools?: ToolCall[];
     context?: string[];
     mcpServers?: MCPServer[];
     name?: string;
@@ -146,6 +149,7 @@ export class ConversationalTestCase {
     this.scenario = params.scenario;
     this.userDescription = params.userDescription;
     this.expectedOutcome = params.expectedOutcome;
+    this.expectedTools = params.expectedTools;
     this.context = params.context;
     this.mcpServers = params.mcpServers;
     this.name = params.name;

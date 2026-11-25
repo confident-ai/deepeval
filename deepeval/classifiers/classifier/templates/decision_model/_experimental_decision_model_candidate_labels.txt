@@ -1,0 +1,17 @@
+{{ content_format }}{% if app_description %}
+
+The application being traced is: {{ app_description }}{% endif %}
+
+The classifier is named "{{ name }}".{% if description %} Its purpose: "{{ description }}".{% endif %}{% if existing_labels %}
+
+None of the classifier's existing labels fit this content well. Existing labels (do NOT propose these or rephrasings of them): {{ existing_labels }}.{% endif %}
+
+Propose exactly {{ count }} distinct candidate labels that this content could belong to under this classifier. Each label must be:
+- name: a concise topic name, 2-5 words, Title Case, distinct from every existing label (case-insensitive) and from the other candidates.
+- description: one sentence of matching criteria starting with "Traces where..." or "Conversations about...". It will be saved as the label's permanent description, so write it to generalise beyond this one example.
+Order them from most to least likely to fit this content.
+
+Content:
+{{ content }}
+
+Return a JSON object with a "labels" array of {"name": ..., "description": ...} objects.

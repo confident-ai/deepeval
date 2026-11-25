@@ -1,4 +1,4 @@
-from typing import Any, List, Optional, TYPE_CHECKING, Union
+from typing import Any, List, Literal, Optional, TYPE_CHECKING, Union
 
 from pydantic import (
     AliasChoices,
@@ -9,7 +9,6 @@ from pydantic import (
     field_serializer,
 )
 from pydantic_core import to_jsonable_python
-from deepeval.config.eval_mode import ClassifierEvalModeName
 
 if TYPE_CHECKING:
     from deepeval.models import DeepEvalBaseLLM
@@ -26,7 +25,7 @@ class Expectations(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
     model: ExpectationModel = Field(default=None, repr=False)
-    eval_mode: Optional[ClassifierEvalModeName] = Field(default=None)
+    eval_mode: Optional[Literal["llm", "system_one"]] = Field(default=None)
 
     @field_serializer("model")
     def serialize_model(self, model) -> Optional[str]:

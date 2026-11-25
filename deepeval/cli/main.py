@@ -37,6 +37,7 @@ from deepeval.cli.auth import LOGIN_HELP, login_command, logout_command
 from deepeval.cli.diagnose import diagnose_command
 from deepeval.cli.generate.command import generate_command
 from deepeval.cli.inspect import inspect_command
+from deepeval.cli.red_team.command import RED_TEAM_HELP, red_team_command
 from deepeval.cli.setup import (
     SETUP_CONTEXT_SETTINGS,
     SETUP_HELP,
@@ -61,6 +62,7 @@ app.add_typer(test_app, name="test")
 app.command(name="generate")(generate_command)
 app.command(name="inspect")(inspect_command)
 app.command(name="diagnose")(diagnose_command)
+app.command(name="red-team", help=RED_TEAM_HELP)(red_team_command)
 app.command(name="login", help=LOGIN_HELP)(login_command)
 app.command(name="logout")(logout_command)
 app.command(

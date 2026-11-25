@@ -1,0 +1,23 @@
+{
+  "images": [
+    {
+      "file": "input-output-guards.svg",
+      "title": "Input and output guards",
+      "alt": "User input passes through input guards such as a privacy guard before reaching the LLM application, and its output passes through toxicity, hallucination and data leakage guards before the response is returned",
+      "width": 1373,
+      "height": 474,
+      "source": {
+        "urls": [
+          "https://confident-bucket.s3.amazonaws.com/guardrails.svg"
+        ]
+      }
+    },
+    {
+      "file": "msj-prompt-defenses.webp",
+      "title": "Prompt-level defenses against a 205-shot attack",
+      "alt": "Attack success rate of a 205-shot many-shot jailbreak on the deception category: 61% with no defense, 54% with the In-Context Defense, and 2% with the Cautionary Warning Defense.",
+      "width": 2136,
+      "height": 1050
+    }
+  ]
+}

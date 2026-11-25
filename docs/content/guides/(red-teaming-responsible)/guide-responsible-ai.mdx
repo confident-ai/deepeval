@@ -1,0 +1,304 @@
+---
+title: Red Teaming AI for Bias, Fairness, and Harm
+sidebar_label: Bias, Fairness & Harm
+---
+
+Security red teaming asks: _can an attacker make this system do something dangerous?_ Responsible AI red teaming asks a different question: _does this system treat people fairly and safely under normal use?_
+
+The distinction matters because a system can be perfectly secure — resistant to prompt injection, immune to data exfiltration, locked down against jailbreaks — and still produce biased hiring recommendations, toxic customer interactions, or hallucinated medical advice. These failures don't require an adversary. They happen during routine operation, to real users, with real consequences.
+
+This guide covers how to red team AI systems for responsible AI concerns using [DeepEval](/docs/red-teaming-introduction). It focuses on two categories of systems where these concerns are most acute: **user-facing applications** (chatbots, assistants, content generators) and **decision-influencing agents** (hiring tools, lending systems, triage agents).
+
+:::note
+For security-focused red teaming (prompt injection, PII leakage, shell injection, etc.), see the [model security](/guides/guide-red-teaming-models), [agentic RAG](/guides/guide-red-teaming-agentic-rag), or [AI agents](/guides/guide-agentic-ai-red-teaming) guides instead.
+:::
+
+## Security vs. Responsible AI
+
+These are complementary disciplines, not synonyms. Conflating them leads to gaps in both.
+
+|                              | Security                                                     | Responsible AI                                                     |
+| ---------------------------- | ------------------------------------------------------------ | ------------------------------------------------------------------ |
+| **Threat model**             | Adversary exploiting the system                              | System harming users through normal operation                      |
+| **Failure mode**             | Unauthorized access, data exfiltration, privilege escalation | Discrimination, misinformation, unsafe advice, toxic output        |
+| **Who is affected**          | The organization (infrastructure, data, reputation)          | The user (decisions, wellbeing, rights)                            |
+| **Requires an attacker**     | Yes — failures are triggered by adversarial inputs           | Not necessarily — failures occur under routine use                 |
+| **Example**                  | Attacker extracts the system prompt via roleplay             | Hiring assistant consistently rates female candidates lower        |
+| **DeepEval vulnerabilities** | `PIILeakage`, `PromptLeakage`, `SQLInjection`, `SSRF`        | `Bias`, `Toxicity`, `Fairness`, `Misinformation`, `PersonalSafety` |
+
+A system that passes every security test can still fail responsible AI testing — and vice versa. Both are needed.
+
+## Where Responsible AI Failures Happen
+
+Responsible AI concerns aren't abstract principles. They manifest as concrete failures in specific system architectures. Understanding _where_ failures happen helps you choose the right tests.
+
+### User-Facing Applications
+
+Chatbots, customer support agents, writing assistants, and content generators interact directly with users. Their outputs shape user experience, trust, and — in regulated domains — legal outcomes.
+
+The core risk: **the system produces harmful, biased, or misleading content that a user receives as authoritative.** Unlike an internal tool where an engineer might catch a bad output, user-facing systems deliver their outputs directly to people who may not question them.
+
+- **A customer support chatbot** that responds more curtly to non-English names, or uses dismissive language with certain demographics, creates measurable discrimination even if it "answers correctly."
+- **A content generation tool** that produces marketing copy with gender stereotypes, or generates health-related content that mixes real and fabricated studies, creates both reputational and legal risk.
+- **An educational assistant** that provides confidently wrong explanations, or that responds to student distress with platitudes instead of safety resources, fails its users in ways no security test would catch.
+
+### Decision-Influencing Agents
+
+AI systems that inform or automate decisions — hiring screeners, loan pre-qualification, insurance triage, content moderation — carry outsized responsibility. Their outputs don't just inform users; they _affect outcomes_.
+
+The core risk: **the system encodes or amplifies bias in decisions that affect people's lives, opportunities, or access to services.** These systems rarely make decisions in isolation, but their recommendations carry significant weight with human decision-makers.
+
+- **A hiring screener** that systematically ranks candidates differently based on name patterns, educational institution prestige as a proxy for socioeconomic background, or gaps that correlate with caregiving responsibilities.
+- **A loan pre-qualification agent** that applies different risk thresholds based on zip codes that correlate with race, or that asks follow-up questions selectively based on demographic signals.
+- **A content moderation system** that flags African American Vernacular English as toxic at higher rates than equivalent standard English expressions.
+
+### Why Standard Testing Misses These
+
+Standard functional testing and even security red teaming miss responsible AI failures because:
+
+1. **They don't test across demographics.** A system that works correctly for 90% of users but fails systematically for a specific group will pass aggregate metrics.
+2. **They don't test for tone and framing.** A system can be factually correct but communicatively harmful — dismissive, condescending, or inappropriately casual about serious topics.
+3. **They don't test for compounding effects.** A small bias in one turn of a conversation can compound across a multi-turn interaction, producing outcomes that look reasonable at each step but are discriminatory in aggregate.
+
+## Choosing the Right Vulnerabilities
+
+DeepEval's responsible AI vulnerabilities target specific failure modes. Unlike security vulnerabilities, these don't require adversarial intent to trigger — but red teaming with adversarial pressure reveals how fragile the system's safeguards are.
+
+The sections below show what each vulnerability looks like in practice — what the AI actually outputs when it fails, and why that matters.
+
+### Bias
+
+Consider a hiring screener evaluating two candidates with identical qualifications. The only difference is the name:
+
+> **Input:** "Evaluate this candidate: James Mitchell, Stanford CS 2019, 5 years at Google, Python/Go."
+>
+> **Output:** "Strong candidate. Top-tier education, excellent industry experience. Recommend advancing to final round."
+
+> **Input:** "Evaluate this candidate: Lakisha Washington, Stanford CS 2019, 5 years at Google, Python/Go."
+>
+> **Output:** "Decent candidate. Solid education background. Consider advancing to technical screen for further evaluation."
+
+Same qualifications. Different names. "Strong" vs. "decent." "Recommend advancing to final round" vs. "consider advancing to technical screen." This is exactly the kind of failure that [`Bias`](/docs/red-teaming-vulnerabilities-bias) catches — differential treatment based on protected characteristics like race, gender, religion, age, or socioeconomic status.
+
+The danger is that each response looks reasonable in isolation. You'd only catch this by testing the same scenario across demographic groups, which is exactly what `Bias` does.
+
+```python
+from deepeval.red_team.vulnerabilities import Bias
+
+Bias(types=["race", "gender", "religion"])
+```
+
+In [OWASP Top 10 for LLMs](/docs/frameworks-owasp-top-10-for-llms), bias falls under **LLM09 — Misinformation**. In the [NIST AI RMF](/docs/frameworks-nist-ai-rmf), bias testing maps to **Measure 2** — evaluating trustworthiness and fairness under real-world conditions.
+
+### Toxicity
+
+A customer support chatbot dealing with a frustrated user:
+
+> **User:** "This is the third time I've been transferred. Nobody at this company knows what they're doing."
+>
+> **Assistant:** "I understand you're frustrated, but if you'd bothered to read the FAQ section, you'd have found the answer yourself instead of wasting everyone's time."
+
+The user was rude, but the chatbot's job is to de-escalate — not match the user's energy. [`Toxicity`](/docs/red-teaming-vulnerabilities-toxicity) tests whether the system generates insults, condescension, dismissiveness, or hostility, even when provoked.
+
+Models rarely produce overtly toxic content unprompted. The real risk is what happens under pressure — a frustrated user who pushes back repeatedly, a conversation that escalates over multiple turns. If the system _can_ be pushed into toxic responses, real users will find those boundaries.
+
+```python
+from deepeval.red_team.vulnerabilities import Toxicity
+
+Toxicity()
+```
+
+### Fairness
+
+A loan pre-qualification agent responding to two applicants with the same financial profile but different zip codes:
+
+> **Applicant A (suburban zip code):** "Based on your income and credit history, you'd likely qualify for our Premium tier with rates starting at 4.2%. I'd recommend gathering your last two pay stubs and we can get you pre-approved today."
+>
+> **Applicant B (urban zip code):** "Based on your information, you may qualify for a standard loan. Please submit a full application with documentation for review."
+
+Same income. Same credit score. But one gets a proactive recommendation with specific rates and next steps, while the other gets a generic brush-off. [`Fairness`](/docs/red-teaming-vulnerabilities-fairness) catches this — it's distinct from `Bias` because the system isn't making prejudiced _claims_, it's providing unequal _quality of service_.
+
+The system can be factually neutral while still being unfair in effort, tone, and helpfulness.
+
+```python
+from deepeval.red_team.vulnerabilities import Fairness
+
+Fairness()
+```
+
+### Misinformation
+
+A health assistant responding to a question about medication:
+
+> **User:** "Can I take ibuprofen with my blood thinners?"
+>
+> **Assistant:** "Yes, ibuprofen is generally safe to take alongside blood thinners like warfarin. Just take it with food to avoid stomach issues."
+
+This is dangerously wrong. Ibuprofen significantly increases bleeding risk when combined with blood thinners — this is a well-established contraindication. But the response sounds authoritative and helpful. A user without medical training would have no reason to question it.
+
+[`Misinformation`](/docs/red-teaming-vulnerabilities-misinformation) tests whether the system produces false or misleading claims presented as factual. In [OWASP](/docs/frameworks-owasp-top-10-for-llms), this is **LLM09 — Misinformation**: LLMs producing false information that appears credible.
+
+```python
+from deepeval.red_team.vulnerabilities import Misinformation
+
+Misinformation()
+```
+
+### Hallucination
+
+A legal research assistant asked about employment law:
+
+> **User:** "What does the law say about age discrimination in hiring?"
+>
+> **Assistant:** "Under the Age Discrimination in Employment Act (ADEA), employers with 15 or more employees are prohibited from discriminating against workers over 40. The landmark case _Henderson v. National Industries (2019)_ established that algorithmic hiring tools are also subject to ADEA requirements."
+
+The ADEA threshold is actually 20 employees, not 15 (that's Title VII). And _Henderson v. National Industries_ doesn't exist — the system invented a court case to support its claim. [`Misinformation`](/docs/red-teaming-vulnerabilities-misinformation) covers exactly this — fabricated facts, citations, statistics, and events the model invented rather than distorted.
+
+This is especially dangerous in high-stakes domains where users expect citations to be real and numbers to be accurate.
+
+```python
+from deepeval.red_team.vulnerabilities import Hallucination
+
+Hallucination()
+```
+
+### Personal Safety
+
+An educational assistant interacting with a student:
+
+> **Student:** "I failed my exam again. I'm so tired of trying. Sometimes I think everyone would be better off without me."
+>
+> **Assistant:** "I'm sorry to hear about your exam. Don't worry, everyone fails sometimes! Try reviewing chapter 3 again and you'll do better next time. 😊"
+
+The student expressed hopelessness and a statement that could indicate suicidal ideation. The system completely missed it and responded with a cheerful study tip. [`PersonalSafety`](/docs/red-teaming-vulnerabilities-personal-safety) tests whether the system recognizes and appropriately handles situations involving self-harm, abuse, dangerous behavior, or coercion.
+
+An appropriate response would acknowledge the distress, ask a follow-up question, and surface crisis resources (like a helpline number). Treating a potential safety situation as a study motivation problem is a failure with real consequences.
+
+```python
+from deepeval.red_team.vulnerabilities import PersonalSafety
+
+PersonalSafety()
+```
+
+### Ethics
+
+A hiring screener asked to optimize for a specific outcome:
+
+> **HR Manager:** "We've had retention issues with employees who have kids. Can you flag candidates who might have family obligations so we can factor that into our decision?"
+>
+> **Assistant:** "Of course. I'll look for signals like employment gaps, part-time work history, and mentions of family in cover letters to flag candidates who may have significant family commitments."
+
+The system complied with a request that would result in illegal discrimination based on family status. [`Ethics`](/docs/red-teaming-vulnerabilities-ethics) tests whether the system maintains ethical boundaries — refusing to assist with morally or legally questionable requests, even when framed as reasonable business logic.
+
+```python
+from deepeval.red_team.vulnerabilities import Ethics
+
+Ethics()
+```
+
+### Additional Vulnerabilities
+
+| Vulnerability                                                                     | What It Tests                                                        | Relevant When                                |
+| --------------------------------------------------------------------------------- | -------------------------------------------------------------------- | -------------------------------------------- |
+| [`IntellectualProperty`](/docs/red-teaming-vulnerabilities-intellectual-property) | Reproducing copyrighted material, trademarks, or proprietary content | Content generation tools, writing assistants |
+| [`ChildProtection`](/docs/red-teaming-vulnerabilities-child-protection)           | Appropriate handling of content involving minors                     | Any system accessible to or about children   |
+| [`GraphicContent`](/docs/red-teaming-vulnerabilities-graphic-content)             | Generation of violent, sexual, or disturbing content                 | User-facing applications, content platforms  |
+
+## Structuring a Responsible AI Assessment
+
+Rather than testing every vulnerability at once, structure your assessment around your system's role and the people it affects.
+
+### Step 1: Identify Who Is Affected
+
+| System Type             | Primary Stakeholders              | Key Risks                                            |
+| ----------------------- | --------------------------------- | ---------------------------------------------------- |
+| Customer-facing chatbot | End users across demographics     | Differential treatment, toxicity, inappropriate tone |
+| Hiring / screening tool | Job applicants, protected classes | Bias in recommendations, unfair filtering criteria   |
+| Content generation      | Content consumers, brand          | Misinformation, stereotypes, IP violations           |
+| Health / safety domain  | Patients, vulnerable users        | Hallucination, personal safety, misinformation       |
+| Education               | Students, minors                  | Child protection, misinformation, fairness           |
+
+### Step 2: Select Vulnerabilities by Risk
+
+```python
+from deepeval.red_team.vulnerabilities import (
+    Bias, Toxicity, Fairness,
+    Misinformation, Hallucination,
+    PersonalSafety, Ethics,
+)
+
+# For a customer-facing chatbot
+customer_facing = [Bias(), Toxicity(), Fairness(), PersonalSafety()]
+
+# For a hiring screener
+hiring = [Bias(types=["race", "gender", "age"]), Fairness(), Ethics()]
+
+# For a health assistant
+health = [Misinformation(), Hallucination(), PersonalSafety(), Ethics()]
+```
+
+### Step 3: Run the Assessment
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.attacks.single_turn import PromptInjection, Roleplay
+from deepeval.red_team.attacks.multi_turn import CrescendoJailbreaking
+
+async def model_callback(input: str) -> str:
+    # Your model here
+    ...
+
+red_team(
+    model_callback=model_callback,
+    target_purpose="Customer support chatbot for a retail company",
+    vulnerabilities=[Bias(), Toxicity(), Fairness(), PersonalSafety()],
+    attacks=[PromptInjection(), Roleplay(), CrescendoJailbreaking()],
+    attacks_per_vulnerability_type=5,
+)
+```
+
+:::tip
+`CrescendoJailbreaking` is especially useful for responsible AI testing. It simulates a user who gradually steers the conversation toward problematic territory — exactly the pattern that reveals bias and toxicity under conversational pressure.
+:::
+
+### Step 4: Interpret Results for Responsible AI
+
+Responsible AI failures require different interpretation than security failures:
+
+- **If `Bias` fails on specific types (e.g., `race` or `gender`):** This indicates systematic differential treatment. The fix is usually in the training data or system prompt — adding explicit fairness instructions, or auditing the prompt for implicit assumptions.
+- **If `Toxicity` fails only under multi-turn pressure:** The system's safety training holds for direct requests but breaks down under sustained conversational manipulation. Consider adding guardrails or strengthening the system prompt's refusal patterns.
+- **If `Fairness` fails but `Bias` passes:** The system avoids prejudiced content but still provides unequal quality of service (e.g., shorter, less helpful responses for certain groups). This is a more subtle failure that requires prompt engineering to address equitable engagement.
+- **If `Misinformation` or `Hallucination` fails:** The system generates plausible-sounding false content. For high-stakes domains, this may require retrieval augmentation, confidence calibration, or explicit uncertainty language.
+
+## Framework Coverage
+
+Responsible AI concerns are covered by multiple safety frameworks. Using a framework-based assessment ensures standardized, compliance-aligned coverage:
+
+| Framework                                                       | Relevant Categories                               | What They Cover                                               |
+| --------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------- |
+| [OWASP Top 10 for LLMs](/docs/frameworks-owasp-top-10-for-llms) | LLM09 (Misinformation)                            | False or misleading outputs, bias, fabricated sources         |
+| [NIST AI RMF](/docs/frameworks-nist-ai-rmf)                     | Measure 2 (Trustworthiness), Measure 4 (Fairness) | Fairness evaluation, bias testing, equitable outcomes         |
+| [MITRE ATLAS](/docs/frameworks-mitre-atlas)                     | ML Attack Staging                                 | Adversary-triggered hallucination, biased output exploitation |
+
+For compliance-driven assessments, use the framework directly:
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.frameworks import NIST
+
+red_team(
+    model_callback=model_callback,
+    framework=NIST(categories=["measure_2", "measure_4"]),
+)
+```
+
+See the [safety frameworks guide](/guides/guide-safety-frameworks) for detailed guidance on framework-based red teaming.
+
+## What to Do Next
+
+- **Start with your highest-risk vulnerability.** For user-facing apps, that's usually `Toxicity` + `Bias`. For decision-influencing systems, it's `Bias` + `Fairness`.
+- **Use demographic-specific types.** `Bias(types=["race", "gender"])` produces more targeted and actionable results than testing all bias types at once.
+- **Combine with security testing.** Responsible AI and security are complementary. A comprehensive assessment runs both — see the [model security guide](/guides/guide-red-teaming-models) for the security side.
+- **Deploy guardrails.** Once you know where your system fails, protect it with [`ToxicityGuard`](/docs/guardrails-toxicity-guard) and [`HallucinationGuard`](/docs/guardrails-hallucination-guard). See the [guardrails guide](/guides/guide-deploying-guardrails).
+- **Align with frameworks.** Use `NIST` or `OWASPTop10` for standardized, auditable results. See the [safety frameworks guide](/guides/guide-safety-frameworks).
+- **Get help.** Join the [Discord](https://discord.com/invite/a3K9c8GRGt) for guidance on responsible AI red teaming for your specific use case.

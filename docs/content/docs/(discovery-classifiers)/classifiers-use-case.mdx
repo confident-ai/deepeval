@@ -1,0 +1,51 @@
+---
+id: classifiers-use-case
+title: Use Case Classifier
+sidebar_label: Use Cases
+languages: [python]
+---
+
+<ClassifierTagsDisplayer custom={true} singleTurn={true} multiTurn={true} />
+
+The `UseCaseClassifier` in `deepeval` labels what the user was trying to get done, such as cancelling a plan or getting a refund. It is a [`Classifier`](/docs/classifiers-custom) with evidence and a use-case review turned on, so a step the system took is not mistaken for the user's goal.
+
+## Usage
+
+```python
+from deepeval.classifiers import UseCaseClassifier
+from deepeval.test_case import LLMTestCase
+
+classifier = UseCaseClassifier(name="use cases", labels=["Cancel Subscription", "Get Refund"])
+
+test_case = LLMTestCase(
+    input="I want to stop paying for this.",
+    actual_output="I can cancel your subscription now.",
+)
+
+classifier.classify(test_case)
+print(classifier.label, classifier.classifications[0].confidence)
+```
+
+Which prints:
+
+```text
+Cancel Subscription 0.91
+```
+
+It takes the same parameters as a [`Classifier`](/docs/classifiers-custom#usage), except `decision_model`, `eval_mode` and `multi_label`, with these defaults:
+
+- `labels`: optional, `()` by default, but required unless `label_discovery_config` is set.
+- `classification_template`: `UseCaseClassifierTemplate`.
+- `evidence_config`: `EvidenceConfig()`, so each label cites the passages that support it.
+- `review_config`: `ReviewConfig()`, so each label is verified by the use-case review and dropped below `min_confidence`.
+- `allow_none`: `True`, so content that fits none of your labels gets none.
+
+Labels can also be found as they come up with a [`LabelDiscoveryConfig`](/docs/classifiers-custom#label-discovery).
+
+## How Does It Work?
+
+It runs the same steps as a [`Classifier`](/docs/classifiers-custom#how-does-it-work). The only difference is the review: it first decides for itself what the user wanted, then scores how well the label names it. A label that names something the AI or the system did, such as a transfer or an identity check, rather than the user's goal, scores low and is dropped.
+
+## Customize Your Template
+
+`UseCaseClassifierTemplate` overrides `review_label(subject: str, label: str, content: str, app_description: str, app_note: str)`, which must keep asking for JSON with `summary`, `confidence` and `reason` fields, and `review_app_note()`, and inherits every other prompt from `ClassifierTemplate`.
