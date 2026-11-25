@@ -31,6 +31,38 @@ def _format_breakdown(breakdown: Dict) -> str:
         return str(breakdown)
 
 
+def _place_reply_events(breakdown: Dict, test_case: ConversationalTestCase):
+    """An event about a whole reply, such as its loudness or pitch, spans
+    that reply's audio; give it the reply's place when the metric gave none."""
+    # Imported here: the voice utils import this module.
+    from deepeval.metrics.voice.utils.analysis import decode_audio
+    from deepeval.metrics.voice.utils.events import placed
+
+    events = breakdown.get("events") if isinstance(breakdown, dict) else None
+    for event in events or []:
+        turn = event.get("turn") if isinstance(event, dict) else None
+        if turn is None or "offset_seconds" in event or "start_time" in event:
+            continue
+        if not 0 <= turn < len(test_case.turns):
+            continue
+        audio = test_case.turns[turn].audio
+        if audio is None:
+            continue
+        try:
+            samples, sample_rate = decode_audio(audio)
+        except (TypeError, ValueError):
+            continue
+        event.update(
+            {
+                key: value
+                for key, value in placed(
+                    audio, 0.0, len(samples) / sample_rate
+                ).items()
+                if value is not None
+            }
+        )
+
+
 class BaseVoiceMetric(BaseConversationalMetric):
     _required_test_case_params: List[MultiTurnParams] = []
 
@@ -81,6 +113,7 @@ class BaseVoiceMetric(BaseConversationalMetric):
     def _run(self, test_case: ConversationalTestCase) -> Optional[float]:
         self.error = None
         score, reason, breakdown = self._evaluate(test_case)
+        _place_reply_events(breakdown, test_case)
         if (
             score is not None
             and self.strict_mode

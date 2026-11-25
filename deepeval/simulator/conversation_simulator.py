@@ -31,7 +31,7 @@ from deepeval.metrics.utils import (
     initialize_model,
     trimAndLoadJson,
 )
-from deepeval.test_case import ConversationalTestCase, Turn
+from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from deepeval.simulator.template import (
     SimulationTemplate,
 )
@@ -61,7 +61,6 @@ from deepeval.dataset import ConversationalGolden
 if TYPE_CHECKING:
     from deepeval.dataset import Persona
     from deepeval.models.base_model import DeepEvalBaseSTT, DeepEvalBaseTTS
-    from deepeval.test_case import Audio
     from deepeval.voice.connectors.transports.base import BaseVoiceConnector
     from deepeval.voice.config import VoiceConfig
     from deepeval.voice.connectors.types import AgentEvent
@@ -767,6 +766,8 @@ class ConversationSimulator:
                 )
                 await stack.enter_async_context(session.connector)
                 session.started_at = time.perf_counter()
+                if session.recorder is not None:
+                    session.recorder.start(session.started_at)
                 logger.debug(
                     "Voice connector connected after %.2fs",
                     time.perf_counter() - connect_started,
@@ -1037,7 +1038,10 @@ class ConversationSimulator:
         conversational_test_case._dataset_alias = golden._dataset_alias
         conversational_test_case._dataset_id = golden._dataset_id
         conversational_test_case._dataset_version = golden._dataset_version
-        conversational_test_case.call_recording_path = call_recording_path
+        if call_recording_path is not None:
+            conversational_test_case.audio = Audio(
+                url=call_recording_path, mimeType="audio/wav"
+            )
         if voice is not None and voice.config.output_dir is not None:
             save_started = time.perf_counter()
             logger.debug("Saving voice audio to %s", voice.config.output_dir)

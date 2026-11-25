@@ -15,6 +15,11 @@ from deepeval.metrics.voice import (
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.timeline import render_timeline_wav
+from tests.test_metrics.helpers import (
+    recording,
+    speech_like,
+    stereo_recording,
+)
 
 
 def make_tone(
@@ -320,7 +325,7 @@ def test_audio_integrity_fails_undecodable_assistant_audio():
 def test_audio_analysis_without_numpy_says_numpy_is_required(monkeypatch):
     import builtins
 
-    from deepeval.metrics.voice import _analysis
+    from deepeval.metrics.voice.utils import analysis as _analysis
 
     real_import = builtins.__import__
 
@@ -334,3 +339,39 @@ def test_audio_analysis_without_numpy_says_numpy_is_required(monkeypatch):
 
     with pytest.raises(ImportError, match="numpy is required"):
         _analysis.rms(array("h", [1, 2, 3]))
+
+
+def test_turn_taking_reads_hand_overs_from_a_recording(tmp_path):
+    path = stereo_recording(
+        tmp_path / "call.wav",
+        agent=[
+            (0.0, speech_like(1.5)),
+            (4.5, speech_like(3.0)),
+            (8.5, speech_like(1.0)),
+        ],
+        caller=[
+            (2.0, speech_like(2.0)),
+            (5.0, speech_like(0.5)),
+            (6.0, speech_like(2.0)),
+        ],
+    )
+    metric = TurnTakingNaturalnessMetric(use_speech_detection=False)
+    metric.measure(
+        ConversationalTestCase(turns=voice_case().turns, audio=recording(path)),
+        _show_indicator=False,
+    )
+    breakdown = metric.score_breakdown
+    assert breakdown["timing_source"] == "call_recording"
+    assert [
+        (round(t["at_seconds"]), t["to"], t["kind"])
+        for t in breakdown["transitions"]
+    ] == [
+        (2, "user", "gap"),
+        (4, "assistant", "gap"),
+        (6, "user", "user_barge_in"),
+        (8, "assistant", "gap"),
+    ]
+    assert breakdown["transitions"][2]["gap_seconds"] == pytest.approx(
+        -1.25, abs=0.05
+    )
+    assert breakdown["response_delays"]["count"] == 2

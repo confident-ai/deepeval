@@ -10,17 +10,21 @@ import pytest
 
 from deepeval.metrics import TranscriptionAccuracyMetric
 from deepeval.errors import MissingTestCaseParamsError
-from deepeval.metrics.transcription_accuracy.schema import (
+from deepeval.metrics.voice.speech_quality.transcription_accuracy.schema import (
     TranscriptionAccuracyScoreReason,
     TranscriptionAccuracyVerdict,
     Verdicts,
 )
 from deepeval.metrics.base_metric import Verdict
-from deepeval.metrics.transcription_accuracy.transcription_accuracy import (
+from deepeval.metrics.voice.speech_quality.transcription_accuracy.transcription_accuracy import (
     VERBATIM_TRANSCRIPTION_PROMPT,
     _verdict_for_audio_exchange,
     get_audio_exchanges,
     get_transcribed_exchanges,
+)
+from deepeval.metrics.voice.speech_quality.transcription_accuracy.utils import (
+    word_errors,
+    words_for_error_rate,
 )
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSTT, OpenAISTTModel
 from deepeval.test_case import (
@@ -629,3 +633,174 @@ def test_whisper_is_not_asked_to_transcribe_verbatim(monkeypatch):
     )
 
     assert "prompt" not in metric.stt_model.transcription_kwargs
+
+
+# ----------------------------------------------------------- without an llm
+
+
+def _heard(*pairs):
+    turns = []
+    for spoken, transcribed in pairs:
+        turns.append(Turn(role="user", content=spoken))
+        turns.append(
+            Turn(
+                role="assistant",
+                content="Okay.",
+                provider_transcript=transcribed,
+            )
+        )
+    return turns
+
+
+def _measure_without_llm(turns, **metric_kwargs):
+    metric = TranscriptionAccuracyMetric(
+        use_llm=False,
+        async_mode=metric_kwargs.pop("async_mode", False),
+        **metric_kwargs,
+    )
+    metric.measure(ConversationalTestCase(turns=turns))
+    return metric
+
+
+@pytest.mark.parametrize(
+    "spoken,transcribed",
+    [
+        ("I can start in fifteen years", "I can start in 15 years"),
+        ("Yes, please.", "Yes, please. yes please"),
+        ("Um, I need, uh, a refund", "I need a refund"),
+        ("I’d like two hundred and five", "I'd like 205"),
+        ("Call five five five one two three four", "call 555-1234"),
+    ],
+)
+def test_harmless_differences_are_not_misheard_words(spoken, transcribed):
+    assert word_errors(spoken, transcribed) == (
+        0,
+        len(words_for_error_rate(spoken)),
+    )
+
+
+def test_a_wrong_number_is_one_misheard_word():
+    assert word_errors(
+        "I can start in fifteen days", "I can start in fifty days"
+    ) == (
+        1,
+        6,
+    )
+
+
+def test_an_empty_transcript_misses_every_word():
+    assert word_errors("hello there", "") == (2, 2)
+
+
+def test_without_an_llm_the_score_is_the_share_of_lines_within_the_limit():
+    metric = _measure_without_llm(
+        _heard(
+            ("Send fifteen boxes please", "send fifty boxes please"),
+            ("Please send it to Toronto", "please send it to Toronto"),
+        )
+    )
+
+    assert metric.score == 0.5
+    assert metric.score_breakdown == {
+        "word_error_percent": 11.1,
+        "lines": 2,
+        "lines_over_limit": 1,
+    }
+    assert metric.reason == (
+        "1 of 2 lines had over 20% of words misheard; 11.1% of words were "
+        "misheard overall."
+    )
+    assert "1 of 4 words wrong, 25%" in metric.verdicts[0].reason
+
+
+def test_the_word_error_limit_can_be_changed():
+    turns = _heard(("I can start in fifteen days", "I can start in fifty days"))
+
+    assert _measure_without_llm(turns).score == 1.0
+    assert _measure_without_llm(turns, max_word_error_percent=10).score == 0.0
+
+
+def test_strict_mode_applies_without_an_llm():
+    metric = _measure_without_llm(
+        _heard(
+            ("Send it to Toronto", "send it to Toronto"),
+            ("My name is Siobhan", "my name is a car"),
+        ),
+        strict_mode=True,
+    )
+
+    assert metric.score == 0
+
+
+def test_without_an_llm_no_model_is_built(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    metric = TranscriptionAccuracyMetric(use_llm=False)
+
+    assert metric.model is None
+    assert metric.evaluation_model is None
+    assert metric.max_word_error_percent == 20
+
+
+def test_async_without_an_llm_matches_sync():
+    turns = _heard(("Send it to Toronto", "send it to Toronto"))
+
+    assert _measure_without_llm(turns, async_mode=True).score == 1.0
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"use_llm": False, "model": "gpt-4o"},
+        {"use_llm": False, "eval_mode": "llm"},
+        {"max_word_error_percent": 10},
+        {"use_llm": False, "max_word_error_percent": -1},
+    ],
+)
+def test_settings_that_do_not_apply_are_refused(kwargs):
+    with pytest.raises(ValueError):
+        TranscriptionAccuracyMetric(**kwargs)
+
+
+def test_audio_mode_without_an_llm_counts_words_in_each_clip():
+    stt = StubSTT(["I need fifteen boxes", "Sure, fifteen boxes."])
+    metric = TranscriptionAccuracyMetric(
+        use_llm=False, compare_against="audio", stt_model=stt, async_mode=False
+    )
+    metric.measure(
+        ConversationalTestCase(
+            turns=[
+                Turn(
+                    role="user",
+                    content="I need fifteen boxes",
+                    provider_transcript="I need fifty boxes",
+                    audio=_clip(start_time=0.0),
+                ),
+                Turn(
+                    role="assistant",
+                    content="Sure, fifteen boxes.",
+                    audio=_clip(start_time=1.0),
+                ),
+            ]
+        )
+    )
+
+    assert metric.score == 0.5
+    assert metric.score_breakdown["word_error_percent"] == 14.3
+    assert "The caller was heard saying 'I need fifteen boxes'" in (
+        metric.verdicts[0].reason
+    )
+
+
+def test_a_call_with_nothing_to_compare_raises_instead_of_passing():
+    turns = [
+        Turn(role="assistant", content="Hi, how can I help?"),
+        Turn(
+            role="user",
+            content="I need a refund.",
+            provider_transcript="I need a refund.",
+        ),
+        Turn(role="assistant", content="Sure."),
+    ]
+    with pytest.raises(MissingTestCaseParamsError, match="nothing"):
+        _measure_without_llm(turns)
