@@ -399,6 +399,16 @@ class Settings(BaseSettings):
         )
     )
 
+    # Whether a voice metric's flagged events get a second check by an audio
+    # decision model (`deepeval set-voice-eval-mode`). Unset means
+    # `deterministic`. See deepeval.config.voice_eval_mode.
+    DEEPEVAL_VOICE_EVAL_MODE: Optional[Literal["deterministic", "hybrid"]] = (
+        Field(
+            None,
+            description="How voice metrics decide: 'deterministic' (default, no model calls) or 'hybrid' (an audio decision model double-checks each flagged event).",
+        )
+    )
+
     # SQLite store only. When truthy, `test_cases`, `traces` and `spans` rows
     # also store their full serialized object in `payload_json` (the
     # `test_runs` row always does). Off by default: it roughly doubles the
@@ -787,6 +797,11 @@ class Settings(BaseSettings):
     TYPESAFE_COST_PER_INPUT_TOKEN: Optional[PositiveFloat] = Field(
         None,
         description="TypeSafe AI input token cost (used for cost reporting).",
+    )
+
+    # Hume (audio decisions).
+    HUME_API_KEY: Optional[SecretStr] = Field(
+        None, description="Hume API key for the Audio Decisions API."
     )
 
     #
@@ -1345,6 +1360,14 @@ class Settings(BaseSettings):
         from deepeval.config.eval_mode import normalize_eval_mode
 
         mode = normalize_eval_mode(v)
+        return mode.value if mode is not None else None
+
+    @field_validator("DEEPEVAL_VOICE_EVAL_MODE", mode="before")
+    @classmethod
+    def _normalize_voice_eval_mode(cls, v):
+        from deepeval.config.voice_eval_mode import normalize_voice_eval_mode
+
+        mode = normalize_voice_eval_mode(v)
         return mode.value if mode is not None else None
 
     @field_validator("CONFIDENT_REGION", mode="before")

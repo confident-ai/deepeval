@@ -49,6 +49,7 @@ class ProviderSlug(str, Enum):
     CARTESIA = "cartesia"
     DEEPGRAM = "deepgram"
     ELEVENLABS = "elevenlabs"
+    HUME = "hume"
 
 
 def slugify(value: Union[str, ProviderSlug]) -> str:

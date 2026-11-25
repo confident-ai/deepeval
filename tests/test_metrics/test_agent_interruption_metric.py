@@ -2,8 +2,10 @@ import pytest
 
 from deepeval.metrics import AgentInterruptionMetric
 from deepeval.test_case import Turn
+from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 from tests.test_metrics.helpers import (
     agent_backs_off_call,
+    clip_shape,
     measure,
     measure_recording,
     speech_like,
@@ -156,3 +158,60 @@ def test_the_callers_whole_pause_decides_whether_a_false_start_is_excused(
         caller=[(2.0, speech_like(1.5)), (7.45, speech_like(1.5))],
     )
     assert metric.score == 1.0
+
+
+def _talk_over(tmp_path, model):
+    return measure_recording(
+        AgentInterruptionMetric(
+            use_speech_detection=False,
+            eval_mode="hybrid",
+            audio_decision_model=model,
+        ),
+        tmp_path,
+        agent=[(0.0, speech_like(1.5)), (3.0, speech_like(3.0))],
+        caller=[(2.0, speech_like(4.0))],
+    )
+
+
+def test_an_interruption_the_decision_model_hears_no_caller_in_is_dismissed(
+    tmp_path,
+):
+    model = FakeAudioDecisionModel(probability=0.1)
+    metric = _talk_over(tmp_path, model)
+    assert metric.score == 1.0
+    assert metric.score_breakdown["dismissed_events"] == 1
+    assert metric.reason.endswith(
+        "1 flagged event was dismissed by the audio decision model."
+    )
+    assert metric.evaluation_model == "fake-hume"
+    assert metric.evaluation_cost == pytest.approx(0.001)
+    [clip] = model.clips
+    channels, seconds = clip_shape(clip)
+    # Context around the 2.75 s overlap, cut short by the recording's end.
+    assert channels == 1
+    assert 2.75 < seconds <= 5.0
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param(FakeAudioDecisionModel(probability=0.9), id="confirmed"),
+        pytest.param(
+            FakeAudioDecisionModel(error=RuntimeError("down")), id="failed"
+        ),
+    ],
+)
+def test_an_interruption_the_decision_model_confirms_or_cannot_judge_stays(
+    tmp_path, model
+):
+    metric = _talk_over(tmp_path, model)
+    assert metric.score == 0.0
+    assert "dismissed_events" not in metric.score_breakdown
+
+
+def test_a_failed_decision_check_is_logged(tmp_path, caplog):
+    _talk_over(tmp_path, FakeAudioDecisionModel(error=RuntimeError("down")))
+    assert (
+        "Agent Interruption kept a flagged event its audio decision check "
+        "failed on: down"
+    ) in caplog.text

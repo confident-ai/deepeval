@@ -216,6 +216,15 @@ TURN_TIMESTAMPS_NOTE = (
 )
 
 
+def dismissed_note(dismissed: int) -> str:
+    if not dismissed:
+        return ""
+    events = "event was" if dismissed == 1 else "events were"
+    return (
+        f" {dismissed} flagged {events} dismissed by the audio decision model."
+    )
+
+
 @dataclass
 class DefectShare:
     """What a single-defect metric found on a call: the items it judged, the
@@ -232,6 +241,7 @@ class DefectShare:
     counted: Tuple[str, str] = AGENT_REPLIES
     event_key: str = "turn"
     timing_source: Optional[str] = None
+    dismissed: int = 0
 
     def __post_init__(self) -> None:
         self.defects = [
@@ -257,6 +267,8 @@ class DefectShare:
         }
         if self.timing_source is not None:
             breakdown["timing_source"] = self.timing_source
+        if self.dismissed:
+            breakdown["dismissed_events"] = self.dismissed
         if not self.scored:
             return None, self.no_eligible_reason, breakdown
         if not defective_turns:
@@ -268,5 +280,6 @@ class DefectShare:
             )
         if self.timing_source == TURN_TIMESTAMPS:
             reason += TURN_TIMESTAMPS_NOTE
+        reason += dismissed_note(self.dismissed)
         score = 1.0 - len(defective_turns) / len(self.eligible_turns)
         return score, reason, breakdown
