@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import BaseConversationalMetric
@@ -88,8 +88,8 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
                 for index, tools in sorted(pinned.items())
             ]
             if unpinned or not pinned:
-                label = "Rest of the conversation" if pinned else "Conversation"
-                called = self._tools_called(turns, skip=set(pinned))
+                label = "Any turn" if pinned else "Conversation"
+                called = self._tools_left_for_any_turn(turns, pinned)
                 checks.append((label, called, unpinned))
 
             scorer = _ToolCallScorer(
@@ -136,16 +136,40 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
         )
 
     @staticmethod
-    def _tools_called(
-        turns: List[Turn], skip: Optional[Set[int]] = None
-    ) -> List[ToolCall]:
-        skip = skip or set()
+    def _tools_called(turns: List[Turn]) -> List[ToolCall]:
         return [
             tool
-            for index, turn in enumerate(turns)
-            if turn.role == "assistant" and index not in skip
+            for turn in turns
+            if turn.role == "assistant"
             for tool in (turn.tools_called or [])
         ]
+
+    @staticmethod
+    def _tools_left_for_any_turn(
+        turns: List[Turn], pinned: Dict[int, List[ToolCall]]
+    ) -> List[ToolCall]:
+        """Every assistant call, minus one call per tool pinned to its turn,
+        so an unpinned tool can be met on any turn but a pinned call is not
+        counted twice."""
+        left = []
+        for index, turn in enumerate(turns):
+            if turn.role != "assistant":
+                continue
+            calls = list(turn.tools_called or [])
+            for expected in pinned.get(index, []):
+                match = next(
+                    (
+                        call
+                        for call in calls
+                        if call.name == expected.name
+                        and call.type == expected.type
+                    ),
+                    None,
+                )
+                if match is not None:
+                    calls.remove(match)
+            left.extend(calls)
+        return left
 
     def _pinned_tools(
         self, turns: List[Turn], expected_tools: List[ToolCall]

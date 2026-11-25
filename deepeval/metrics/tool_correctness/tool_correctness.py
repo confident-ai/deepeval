@@ -28,7 +28,6 @@ from deepeval.metrics import BaseMetric
 from deepeval.metrics.tool_correctness.schema import ToolSelectionScore
 from deepeval.templates import make_template_class
 
-
 ToolCorrectnessTemplate = make_template_class("ToolCorrectnessMetric")
 
 TOOL_SELECTION_LEVELS = [
@@ -325,19 +324,38 @@ class ToolCorrectnessMetric(BaseMetric):
                     issues.append(f"tool type mismatches {type_mismatches}")
                 return f"Incorrect tool usage: {' and '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
         else:
-            used_expected = set(self.tools_called).intersection(
-                set(self.expected_tools)
-            )
-            missing = set(self.expected_tools) - used_expected
+            missing = self._missing_tool_names()
             if self._calculate_non_exact_match_score() == 1:
                 return f"All expected tools {expected_tools_names} were called (order not considered)."
             else:
                 issues = []
-                if missing or not type_mismatches:
-                    issues.append(f"missing tools {list(missing)}")
+                if missing:
+                    issues.append(f"missing tools {missing}")
+                elif not type_mismatches:
+                    issues.append(
+                        "tools called with different input parameters or output"
+                    )
                 if type_mismatches:
                     issues.append(f"tool type mismatches {type_mismatches}")
                 return f"Incomplete tool usage: {'; '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
+
+    def _missing_tool_names(self) -> List[str]:
+        unmatched = list(self.tools_called)
+        missing = []
+        for expected_tool in self.expected_tools:
+            match = next(
+                (
+                    called_tool
+                    for called_tool in unmatched
+                    if called_tool.name == expected_tool.name
+                ),
+                None,
+            )
+            if match is None:
+                missing.append(expected_tool.name)
+            else:
+                unmatched.remove(match)
+        return missing
 
     def _get_type_mismatches(self) -> List[str]:
         mismatches = []
