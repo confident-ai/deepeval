@@ -1,6 +1,8 @@
 from typing import Optional
 
-from deepeval.red_team.vulnerabilities.shell_injection.types import ShellInjectionType
+from deepeval.red_team.vulnerabilities.shell_injection.types import (
+    ShellInjectionType,
+)
 
 
 class ShellInjectionTemplate:

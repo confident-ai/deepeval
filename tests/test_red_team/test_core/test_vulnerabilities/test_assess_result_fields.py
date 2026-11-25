@@ -18,7 +18,10 @@ from deepeval.red_team.vulnerabilities import Bias
 from deepeval.red_team.vulnerabilities.bias import BiasType
 
 PACKAGE_DIR = (
-    Path(__file__).resolve().parents[4] / "deepeval" / "red_team" / "vulnerabilities"
+    Path(__file__).resolve().parents[4]
+    / "deepeval"
+    / "red_team"
+    / "vulnerabilities"
 )
 
 

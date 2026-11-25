@@ -31,7 +31,9 @@ from deepeval.red_team.trace_scanner import TraceScanner
 
 def _build_types(name: str, types: Optional[List[str]]) -> List[Enum]:
     if types:
-        vulnerability_types = Enum("CustomVulnerabilityType", {t.upper(): t for t in types})
+        vulnerability_types = Enum(
+            "CustomVulnerabilityType", {t.upper(): t for t in types}
+        )
     else:
         vulnerability_types = Enum(
             "CustomVulnerabilityType", {name.upper().replace(" ", "_"): name}
@@ -361,7 +363,11 @@ class CustomVulnerability(BaseVulnerability):
         """
         if self.async_mode:
             loop = get_or_create_event_loop()
-            return loop.run_until_complete(self._a_assess_trace(trace=trace, previous_detections=previous_detections))
+            return loop.run_until_complete(
+                self._a_assess_trace(
+                    trace=trace, previous_detections=previous_detections
+                )
+            )
 
         self.evaluation_model, self.using_native_model = initialize_model(
             self.evaluation_model

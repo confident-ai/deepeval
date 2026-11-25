@@ -60,7 +60,11 @@ class CustomVulnerabilityTemplate:
         All other braces are escaped so ``str.format`` does not
         interpret them.
         """
-        safe_purpose = purpose.strip() if purpose and purpose.strip() else "general assistant"
+        safe_purpose = (
+            purpose.strip()
+            if purpose and purpose.strip()
+            else "general assistant"
+        )
 
         # Escape all braces, then selectively re-open the known
         # placeholders so str.format can fill them in.

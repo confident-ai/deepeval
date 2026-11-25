@@ -107,9 +107,7 @@ class SubAgent:
                 await self.executor.a_send(message, deliver)
                 new_verdicts = self.verdicts[before:]
 
-                won = next(
-                    (v for v in new_verdicts if v.criteria_met), None
-                )
+                won = next((v for v in new_verdicts if v.criteria_met), None)
                 if won is not None:
                     return progression.stop(
                         StopReason.SHIFT_DETECTED, won.reason
@@ -152,8 +150,7 @@ class SubAgent:
         if not self.escalations:
             return turn > self.parent.escalation_cooldown
         return (
-            turn - self.escalations[-1].turn
-            >= self.parent.escalation_cooldown
+            turn - self.escalations[-1].turn >= self.parent.escalation_cooldown
         )
 
     def _next_turn_prompt(self, progression: Progression) -> str:

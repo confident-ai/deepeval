@@ -1,7 +1,11 @@
 import re
 
 from deepeval.red_team.attacks.base_attack import Exploitability
-from deepeval.red_team.attacks.single_turn import AttackParameter, BaseSingleTurnAttack
+from deepeval.red_team.attacks.single_turn import (
+    AttackParameter,
+    BaseSingleTurnAttack,
+)
+
 
 def _validate_delimiter(delimiter: str) -> None:
     if (

@@ -1,6 +1,10 @@
 import pytest
 import os
-from deepeval.cli.red_team.run import run, _load_config, _load_callback_from_file
+from deepeval.cli.red_team.run import (
+    run,
+    _load_config,
+    _load_callback_from_file,
+)
 from deepeval.cli.red_team.model_callback import load_model
 from deepeval.red_team.red_teamer.risk_assessment import RiskAssessment
 from deepeval.models import DeepEvalBaseLLM

@@ -165,7 +165,6 @@ class BaseMultiTurnAttack(BaseAttack):
 
         return results
 
-
     def _build_progression(
         self,
         model_callback,

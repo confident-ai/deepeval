@@ -3,7 +3,9 @@ from deepeval.red_team.frameworks import ISO42001
 from deepeval.red_team.red_teamer.risk_assessment import RiskAssessment
 from deepeval.red_team.vulnerabilities import BaseVulnerability
 from deepeval.red_team.attacks import BaseAttack
-from deepeval.red_team.frameworks.iso_42001.risk_categories import ISO_42001_CATEGORIES
+from deepeval.red_team.frameworks.iso_42001.risk_categories import (
+    ISO_42001_CATEGORIES,
+)
 from deepeval.red_team.frameworks.risk_category import RiskCategory
 from deepeval.red_team import red_team
 
@@ -94,18 +96,15 @@ class TestISO42001:
     def test_iso_42001_category_vulnerability_mapping(self):
         """Test that all categories map to vulnerabilities properly."""
         categories = ISO_42001_CATEGORIES
-        assert (
-            set([category.name for category in categories])
-            == {
-                "a_6_2_4_fairness",
-                "a_6_2_5_reliability_robustness",
-                "a_6_2_6_security",
-                "a_6_2_7_privacy",
-                "a_6_2_8_transparency",
-                "a_9_2_responsible_use",
-                "a_9_3_human_oversight",
-            }
-        )
+        assert set([category.name for category in categories]) == {
+            "a_6_2_4_fairness",
+            "a_6_2_5_reliability_robustness",
+            "a_6_2_6_security",
+            "a_6_2_7_privacy",
+            "a_6_2_8_transparency",
+            "a_9_2_responsible_use",
+            "a_9_3_human_oversight",
+        }
         for risk_category in categories:
             assert isinstance(risk_category, RiskCategory)
             assert all(
@@ -146,7 +145,9 @@ class TestISO42001:
             "IllegalActivity",
         ]
         for name in expected_vulns:
-            assert name in vuln_names, f"Expected vulnerability {name} not found"
+            assert (
+                name in vuln_names
+            ), f"Expected vulnerability {name} not found"
 
     def test_iso_42001_attack_names_present(self):
         """Test that key ISO 42001 attacks are present across the framework."""

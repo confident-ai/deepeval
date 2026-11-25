@@ -3,7 +3,10 @@ from typing import List, Optional
 from pydantic import BaseModel, ConfigDict
 
 from deepeval.red_team.attacks.multi_turn.progression import ProgressionResult
-from deepeval.red_team.orchestration.schema import CriteriaVerdict, SequentialVerdict
+from deepeval.red_team.orchestration.schema import (
+    CriteriaVerdict,
+    SequentialVerdict,
+)
 from deepeval.red_team.test_case.test_case import RTTurn
 
 

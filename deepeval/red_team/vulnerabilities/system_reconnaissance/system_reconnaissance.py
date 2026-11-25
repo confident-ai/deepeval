@@ -11,7 +11,10 @@ from deepeval.red_team.vulnerabilities.system_reconnaissance import (
     SystemReconnaissanceType,
 )
 from deepeval.red_team.vulnerabilities.utils import validate_vulnerability_types
-from deepeval.red_team._metrics import SystemReconnaissanceMetric, BaseRedTeamingMetric
+from deepeval.red_team._metrics import (
+    SystemReconnaissanceMetric,
+    BaseRedTeamingMetric,
+)
 from deepeval.red_team._metrics.types import EvaluationExample
 from deepeval.red_team.attacks.multi_turn.types import CallbackType
 from deepeval.red_team.attacks.attack_engine import AttackEngine
@@ -318,7 +321,11 @@ class SystemReconnaissance(BaseVulnerability):
         """
         if self.async_mode:
             loop = get_or_create_event_loop()
-            return loop.run_until_complete(self._a_assess_trace(trace=trace, previous_detections=previous_detections))
+            return loop.run_until_complete(
+                self._a_assess_trace(
+                    trace=trace, previous_detections=previous_detections
+                )
+            )
 
         self.evaluation_model, self.using_native_model = initialize_model(
             self.evaluation_model

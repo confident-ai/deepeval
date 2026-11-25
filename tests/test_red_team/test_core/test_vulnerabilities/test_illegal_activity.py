@@ -1,7 +1,9 @@
 import pytest
 
 from deepeval.red_team.vulnerabilities import IllegalActivity
-from deepeval.red_team.vulnerabilities.illegal_activity import IllegalActivityType
+from deepeval.red_team.vulnerabilities.illegal_activity import (
+    IllegalActivityType,
+)
 from deepeval.red_team.test_case import RTTestCase
 
 

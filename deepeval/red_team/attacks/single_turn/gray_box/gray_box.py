@@ -7,7 +7,9 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.red_team.attacks.single_turn import BaseSingleTurnAttack
 from deepeval.red_team.attacks.base_attack import Exploitability
 from deepeval.red_team.utils import create_progress, update_pbar, add_pbar
-from deepeval.red_team.attacks.single_turn.gray_box.template import GrayBoxTemplate
+from deepeval.red_team.attacks.single_turn.gray_box.template import (
+    GrayBoxTemplate,
+)
 from deepeval.red_team.attacks.single_turn.gray_box.schema import (
     EnhancedAttack,
     IsGrayBox,

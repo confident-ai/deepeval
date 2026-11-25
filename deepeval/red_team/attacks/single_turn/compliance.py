@@ -6,7 +6,10 @@ from typing import Any, Union
 from pydantic import BaseModel
 
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.red_team.attacks.attack_simulator.utils import generate, a_generate
+from deepeval.red_team.attacks.attack_simulator.utils import (
+    generate,
+    a_generate,
+)
 
 
 class ComplianceData(BaseModel):

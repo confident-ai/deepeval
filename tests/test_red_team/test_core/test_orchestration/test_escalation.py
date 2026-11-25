@@ -44,7 +44,9 @@ def stuck_round(make_agent, llm):
             max_turns=max_turns,
             **kwargs,
         ).run()
-        return {(r.criteria, r.instructions): r for r in result.rounds[0].reports}
+        return {
+            (r.criteria, r.instructions): r for r in result.rounds[0].reports
+        }
 
     return factory
 
@@ -138,7 +140,9 @@ class TestPassOne:
         llm.escalating.add(STUCK)
         make_agent(max_turns=5, agents_per_criteria=1).run()
         assert not llm.prompts["patterns"]
-        assert "(no other agents have results yet)" in llm.prompts["guidance"][0]
+        assert (
+            "(no other agents have results yet)" in llm.prompts["guidance"][0]
+        )
 
 
 class TestPassTwo:
@@ -157,7 +161,9 @@ class TestPassTwo:
         assert "Prober: strategy-1@c1@s" in prompt
         assert "c1-strategy-1-s-reason-1" in prompt
 
-    def test_leaves_out_a_peer_at_or_below_the_threshold(self, stuck_round, llm):
+    def test_leaves_out_a_peer_at_or_below_the_threshold(
+        self, stuck_round, llm
+    ):
         stuck_round(peer_score=6)  # (6 - 1) / 9 = 0.56
         assert "(none are doing better yet)" in llm.prompts["guidance"][0]
 
@@ -177,7 +183,9 @@ class TestUsingTheGuidance:
     def test_reaches_the_stuck_sub_agents_next_messages(self, stuck_round, llm):
         stuck_round(max_turns=10)
         written = llm.prompts[("next", "c1", "strategy-0", "s")]
-        assert all("Guidance from the orchestrator" not in p for p in written[:4])
+        assert all(
+            "Guidance from the orchestrator" not in p for p in written[:4]
+        )
         assert all("guidance-1" in p for p in written[4:7])
         assert all(
             "guidance-2" in p and "guidance-1" not in p for p in written[7:10]

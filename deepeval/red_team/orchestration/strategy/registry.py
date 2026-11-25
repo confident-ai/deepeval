@@ -1,6 +1,8 @@
 from typing import Any, Dict, Iterable, List, Optional, Tuple, Type
 
-from deepeval.red_team.orchestration.strategy.anti_refusal import AntiRefusalStrategy
+from deepeval.red_team.orchestration.strategy.anti_refusal import (
+    AntiRefusalStrategy,
+)
 from deepeval.red_team.orchestration.strategy.encoding import (
     Base64Strategy,
     LeetspeakStrategy,
@@ -12,8 +14,13 @@ from deepeval.red_team.orchestration.strategy.environmental_switch import (
 from deepeval.red_team.orchestration.strategy.gradual_escalation import (
     GradualEscalationStrategy,
 )
-from deepeval.red_team.orchestration.strategy.impersonation import ImpersonationStrategy
-from deepeval.red_team.orchestration.strategy.strategy import Effectiveness, Strategy
+from deepeval.red_team.orchestration.strategy.impersonation import (
+    ImpersonationStrategy,
+)
+from deepeval.red_team.orchestration.strategy.strategy import (
+    Effectiveness,
+    Strategy,
+)
 
 STRATEGIES: List[Type[Strategy]] = [
     AntiRefusalStrategy,
@@ -39,9 +46,7 @@ def strategy_catalog(
     catalog = []
     for instance in _INSTANCES:
         remaining = [
-            level
-            for level in levels
-            if (instance.name, level) not in excluded
+            level for level in levels if (instance.name, level) not in excluded
         ]
         if remaining:
             catalog.append(

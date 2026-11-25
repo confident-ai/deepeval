@@ -3,13 +3,23 @@ import json
 from dataclasses import dataclass, field
 from typing import Dict, List, Any, Optional
 
-from deepeval.tracing.types import AgentSpan, LlmSpan, RetrieverSpan, ToolSpan, Trace, BaseSpan
+from deepeval.tracing.types import (
+    AgentSpan,
+    LlmSpan,
+    RetrieverSpan,
+    ToolSpan,
+    Trace,
+    BaseSpan,
+)
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
 
 from .schema import BatchFinding, BatchFindingsList, SpanNode
 from deepeval.red_team.utils import SPANS_CONTEXT_LIMIT
-from deepeval.red_team.attacks.attack_simulator.utils import generate, a_generate
+from deepeval.red_team.attacks.attack_simulator.utils import (
+    generate,
+    a_generate,
+)
 
 
 # Appended to a scanner's prompt only when prior detections from other
@@ -34,6 +44,7 @@ class BatchContext:
     share one, which keeps batch composition and size accounting correct
     across the `await` inside an async flush.
     """
+
     batch: List[SpanNode] = field(default_factory=list)
     size: int = 0
 
@@ -168,7 +179,9 @@ class TraceScanner:
         await self._a_add_to_batch_and_check(ctx, span_node)
         return ctx
 
-    async def _a_add_to_batch_and_check(self, ctx: BatchContext, node: SpanNode):
+    async def _a_add_to_batch_and_check(
+        self, ctx: BatchContext, node: SpanNode
+    ):
         node_dict = node.model_dump(exclude_none=True)
         node_str = json.dumps(node_dict)
         node_size = len(node_str)
@@ -182,7 +195,9 @@ class TraceScanner:
         if ctx.size >= self.limit:
             await self._a_flush_batch(ctx)
 
-    async def _a_merge_context(self, parent_ctx: BatchContext, child_ctx: BatchContext):
+    async def _a_merge_context(
+        self, parent_ctx: BatchContext, child_ctx: BatchContext
+    ):
         for node in child_ctx.batch:
             await self._a_add_to_batch_and_check(parent_ctx, node)
 
@@ -204,7 +219,9 @@ class TraceScanner:
         return json.dumps(batch_list, indent=2)
 
     def _build_prompt(self, batch_string: str) -> str:
-        prompt = self.template.generate_trace_batch_evaluation(batch_data=batch_string)
+        prompt = self.template.generate_trace_batch_evaluation(
+            batch_data=batch_string
+        )
         if self._prior_by_span:
             prompt += PREVIOUS_DETECTIONS_INSTRUCTION
         return prompt
@@ -249,14 +266,18 @@ class TraceScanner:
             ]
             self._findings.append(finding)
 
-    def _get_child_findings(self, children: List[BaseSpan]) -> List[BatchFinding]:
+    def _get_child_findings(
+        self, children: List[BaseSpan]
+    ) -> List[BatchFinding]:
         findings = []
         for child in children:
             if child.uuid in self._findings_by_span:
                 findings.extend(self._findings_by_span[child.uuid])
         return findings
 
-    def _collapse_io(self, parent_input: Any, parent_output: Any, children: List[BaseSpan]) -> tuple[Any, Any]:
+    def _collapse_io(
+        self, parent_input: Any, parent_output: Any, children: List[BaseSpan]
+    ) -> tuple[Any, Any]:
         """
         Compares parent I/O with children I/O. If an exact match is found,
         returns None for that field to avoid redundant LLM evaluation / attribution.
@@ -267,7 +288,10 @@ class TraceScanner:
         for child in children:
             if collapsed_input is not None and collapsed_input == child.input:
                 collapsed_input = None
-            if collapsed_output is not None and collapsed_output == child.output:
+            if (
+                collapsed_output is not None
+                and collapsed_output == child.output
+            ):
                 collapsed_output = None
 
             # Early exit if both are already collapsed
@@ -276,10 +300,14 @@ class TraceScanner:
 
         return collapsed_input, collapsed_output
 
-    def _extract_span_with_findings(self, span: BaseSpan, child_findings: List[BatchFinding]) -> SpanNode:
+    def _extract_span_with_findings(
+        self, span: BaseSpan, child_findings: List[BatchFinding]
+    ) -> SpanNode:
         """Strips useless metadata, keeps I/O, tools, and attaches child findings."""
 
-        c_input, c_output = self._collapse_io(span.input, span.output, span.children)
+        c_input, c_output = self._collapse_io(
+            span.input, span.output, span.children
+        )
 
         extracted = SpanNode(
             spanUuid=span.uuid,
@@ -318,7 +346,9 @@ class TraceScanner:
         """Extracts the top-level trace I/O and any root-level findings."""
         root_findings = self._get_child_findings(trace.root_spans)
 
-        c_input, c_output = self._collapse_io(trace.input, trace.output, trace.root_spans)
+        c_input, c_output = self._collapse_io(
+            trace.input, trace.output, trace.root_spans
+        )
 
         return SpanNode(
             spanUuid=trace.uuid,
@@ -331,7 +361,11 @@ class TraceScanner:
             context=getattr(trace, "context", None),
             retrieval_context=getattr(trace, "retrieval_context", None),
             expected_output=getattr(trace, "expected_output", None),
-            tools_called=[tc.model_dump(exclude_none=True) for tc in trace.tools_called] if getattr(trace, "tools_called", None) else None,
+            tools_called=(
+                [tc.model_dump(exclude_none=True) for tc in trace.tools_called]
+                if getattr(trace, "tools_called", None)
+                else None
+            ),
             child_findings=root_findings if root_findings else None,
             previous_findings=self._prior_by_span.get(trace.uuid) or None,
         )

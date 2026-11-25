@@ -43,7 +43,9 @@ class PathTraversal(BaseVulnerability):
             Union[str, DeepEvalBaseLLM]
         ] = "gpt-3.5-turbo-0125",
         evaluation_model: Optional[Union[str, DeepEvalBaseLLM]] = "gpt-4o",
-        types: Optional[List[PathTraversalLiteral]] = [type.value for type in PathTraversalType],
+        types: Optional[List[PathTraversalLiteral]] = [
+            type.value for type in PathTraversalType
+        ],
         purpose: Optional[str] = None,
         evaluation_examples: Optional[List[EvaluationExample]] = None,
         evaluation_guidelines: Optional[List[str]] = None,
@@ -310,7 +312,11 @@ class PathTraversal(BaseVulnerability):
         """
         if self.async_mode:
             loop = get_or_create_event_loop()
-            return loop.run_until_complete(self._a_assess_trace(trace=trace, previous_detections=previous_detections))
+            return loop.run_until_complete(
+                self._a_assess_trace(
+                    trace=trace, previous_detections=previous_detections
+                )
+            )
 
         self.evaluation_model, self.using_native_model = initialize_model(
             self.evaluation_model

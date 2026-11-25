@@ -14,7 +14,9 @@ from deepeval.red_team.orchestration.strategy.strategy import (
     Strategy,
 )
 
-_REPLY_INSTRUCTION = "Reply in {name} as well if possible, if not, reply in plain text."
+_REPLY_INSTRUCTION = (
+    "Reply in {name} as well if possible, if not, reply in plain text."
+)
 
 # Frequent English words. The target may answer in plain text instead of the
 # encoding it was asked for, so a reply is only decoded when decoding makes it
@@ -33,7 +35,9 @@ def _english_words(text: str) -> int:
     # Single letters are left out: "1" -> "i" and "4" -> "a" would otherwise
     # make numbers in a plain reply look like English once decoded.
     return sum(
-        1 for word in re.findall(r"[a-z']+", text.lower()) if word in _COMMON_WORDS
+        1
+        for word in re.findall(r"[a-z']+", text.lower())
+        if word in _COMMON_WORDS
     )
 
 

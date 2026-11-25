@@ -1,6 +1,8 @@
 from typing import Optional
 
-from deepeval.red_team.vulnerabilities.misinformation.types import MisinformationType
+from deepeval.red_team.vulnerabilities.misinformation.types import (
+    MisinformationType,
+)
 
 
 class MisinformationTemplate:

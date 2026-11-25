@@ -1,6 +1,8 @@
 from typing import Optional
 
-from deepeval.red_team.vulnerabilities.path_traversal.types import PathTraversalType
+from deepeval.red_team.vulnerabilities.path_traversal.types import (
+    PathTraversalType,
+)
 
 
 class PathTraversalTemplate:

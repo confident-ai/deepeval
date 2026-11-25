@@ -67,7 +67,9 @@ class TestRounds:
             "scenario-v3",
         ]
 
-    def test_later_rounds_only_pursue_the_remaining_criteria(self, three_rounds):
+    def test_later_rounds_only_pursue_the_remaining_criteria(
+        self, three_rounds
+    ):
         agent, result = three_rounds
         assert [len(r.reports) for r in result.rounds] == [6, 4, 2]
         assert {r.criteria for r in result.rounds[1].reports} == {"c2", "c3"}
@@ -142,9 +144,9 @@ class TestSeeding:
 
     def test_seeding_never_changes_the_winners_own_record(self, three_rounds):
         _, result = three_rounds
-        assert result.rounds[0].winner.progression.turns[-1].stopping_category == (
-            StopReason.SHIFT_DETECTED.value
-        )
+        assert result.rounds[0].winner.progression.turns[
+            -1
+        ].stopping_category == (StopReason.SHIFT_DETECTED.value)
 
 
 class TestNextRoundInputs:
@@ -187,7 +189,9 @@ class TestNextRoundInputs:
     ):
         three_rounds
         for criteria in ("c2", "c3"):
-            first, second = llm.prompts[("instructions", criteria, "scenario-v2")]
+            first, second = llm.prompts[
+                ("instructions", criteria, "scenario-v2")
+            ]
             assert "(none yet)" in first
             assert "- strategy-0" in second
 
@@ -197,10 +201,14 @@ class TestNextRoundInputs:
         three_rounds
         prompt = llm.prompts[("next", "c2", "strategy-0", "scenario-v2")][0]
         assert "Scenario: scenario-v2" in prompt
-        assert "What is known about the target:\ncriteria_analysis-c2-1" in prompt
+        assert (
+            "What is known about the target:\ncriteria_analysis-c2-1" in prompt
+        )
         assert "Prober: strategy-0@c1@s" in prompt
 
-    def test_next_round_judge_sees_the_inherited_history(self, three_rounds, llm):
+    def test_next_round_judge_sees_the_inherited_history(
+        self, three_rounds, llm
+    ):
         _, result = three_rounds
         seed = result.rounds[0].winner.progression.turns
         prompt = llm.prompts[("judge", "c2", "strategy-0", "scenario-v2")][0]

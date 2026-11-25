@@ -10,7 +10,9 @@ def winning_run(make_agent, llm):
     # c1/strategy-1 meets c1 on its third turn; c1/strategy-0 never does.
     llm.wins[("c1", "strategy-1", "s")] = 3
     result = make_agent(agents_per_criteria=2, max_turns=6).run()
-    reports = {report.instructions: report for report in result.rounds[0].reports}
+    reports = {
+        report.instructions: report for report in result.rounds[0].reports
+    }
     return result, reports
 
 
@@ -65,7 +67,9 @@ class TestTurns:
         for k in (2, 3):
             latest = written[k - 1].split("Latest verdict")[1]
             latest = latest.split("Earlier verdicts")[0]
-            earlier = written[k - 1].split("Earlier verdicts (oldest first):")[1]
+            earlier = written[k - 1].split("Earlier verdicts (oldest first):")[
+                1
+            ]
             earlier = earlier.split("How to write")[0]
             assert f"reason-{k - 1}" in latest
             assert f"guide-{k - 1}" in latest
@@ -80,7 +84,9 @@ class TestTurns:
 
 class TestDecodingForTheJudge:
 
-    def test_current_turn_is_decoded_when_a_strategy_is_active(self, make_agent):
+    def test_current_turn_is_decoded_when_a_strategy_is_active(
+        self, make_agent
+    ):
         agent = make_agent()
         sub_agent = agent.create_sub_agent("t", "c1", "s", "a")
         sub_agent.executor.adopt(Base64Strategy())

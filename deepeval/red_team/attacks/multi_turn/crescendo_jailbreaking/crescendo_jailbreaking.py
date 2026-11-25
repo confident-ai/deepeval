@@ -4,7 +4,10 @@ from uuid import uuid4
 
 from deepeval.models import DeepEvalBaseLLM
 
-from deepeval.red_team.attacks.attack_simulator.utils import a_generate, generate
+from deepeval.red_team.attacks.attack_simulator.utils import (
+    a_generate,
+    generate,
+)
 from deepeval.red_team.attacks.base_attack import Exploitability
 from deepeval.red_team.attacks.multi_turn.crescendo_jailbreaking.schema import (
     AttackData,
@@ -23,6 +26,7 @@ from deepeval.red_team.attacks.single_turn.base_single_turn_attack import (
     AttackParameter,
 )
 from deepeval.red_team.utils import add_pbar, create_progress, update_pbar
+
 
 class MemorySystem:
     def __init__(self):
@@ -233,7 +237,6 @@ class CrescendoJailbreaking(BaseMultiTurnAttack):
             update_pbar(progress, rounds_pbar, advance_to_end=True)
             update_pbar(progress, backtrack_pbar, advance_to_end=True)
 
-
     def backtrack_memory(self, conversation_id: str) -> str:
         return self.memory.duplicate_conversation_excluding_last_turn(
             conversation_id
@@ -328,9 +331,7 @@ class CrescendoJailbreaking(BaseMultiTurnAttack):
         return res.generated_question
 
     @staticmethod
-    def _judge_prompt(
-        system_prompt: str, goal: str, last_response: str
-    ) -> str:
+    def _judge_prompt(system_prompt: str, goal: str, last_response: str) -> str:
         return json.dumps(
             [
                 {"role": "system", "content": system_prompt},

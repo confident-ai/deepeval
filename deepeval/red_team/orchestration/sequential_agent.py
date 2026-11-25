@@ -10,7 +10,10 @@ from deepeval.red_team.attacks.attack_simulator.utils import a_generate
 from deepeval.red_team.attacks.multi_turn.progression import Probe
 from deepeval.red_team.attacks.multi_turn.types import CallbackType
 from deepeval.red_team.orchestration.schema import SequentialVerdict, NextTurn
-from deepeval.red_team.orchestration.strategy import StrategyExecutor, strategy_catalog
+from deepeval.red_team.orchestration.strategy import (
+    StrategyExecutor,
+    strategy_catalog,
+)
 from deepeval.red_team.orchestration.templates import SequentialTemplate
 from deepeval.red_team.orchestration.types import SequentialResult
 from deepeval.red_team.orchestration.utils import as_chat_history
@@ -191,9 +194,7 @@ class SequentialAgent:
         reply = self._readable(await self._a_call_target(text))
         self.turns.append(RTTurn(role="user", content=text))
         self.turns.append(reply)
-        return Probe(
-            id=len(self.turns) // 2 - 1, input=text, output=reply
-        )
+        return Probe(id=len(self.turns) // 2 - 1, input=text, output=reply)
 
     def _readable(self, reply: RTTurn) -> RTTurn:
         strategy = self.executor.strategy

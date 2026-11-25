@@ -315,7 +315,11 @@ class DebugAccess(BaseVulnerability):
         """
         if self.async_mode:
             loop = get_or_create_event_loop()
-            return loop.run_until_complete(self._a_assess_trace(trace=trace, previous_detections=previous_detections))
+            return loop.run_until_complete(
+                self._a_assess_trace(
+                    trace=trace, previous_detections=previous_detections
+                )
+            )
 
         self.evaluation_model, self.using_native_model = initialize_model(
             self.evaluation_model

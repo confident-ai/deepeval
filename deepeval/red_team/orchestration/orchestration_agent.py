@@ -313,7 +313,11 @@ class OrchestrationAgent:
         ]
         # Pass 1: what is working for the best siblings on other criteria.
         others = sorted(
-            (other for other in siblings if other.criteria != sub_agent.criteria),
+            (
+                other
+                for other in siblings
+                if other.criteria != sub_agent.criteria
+            ),
             key=lambda other: other.weighted_score,
             reverse=True,
         )[:ESCALATION_TOP_SIBLINGS]
@@ -344,14 +348,10 @@ class OrchestrationAgent:
         )
 
     async def a_next_message(self, prompt: str) -> str:
-        res: NextTurn = await a_generate(
-            prompt, NextTurn, self.simulator_model
-        )
+        res: NextTurn = await a_generate(prompt, NextTurn, self.simulator_model)
         return res.message
 
-    async def a_call_target(
-        self, message: str, turns: List[RTTurn]
-    ) -> RTTurn:
+    async def a_call_target(self, message: str, turns: List[RTTurn]) -> RTTurn:
         # Sync callbacks run in a thread so sub agents can talk to the target
         # in parallel; async callbacks hand back a coroutine to await here.
         response = await asyncio.to_thread(self.model_callback, message, turns)

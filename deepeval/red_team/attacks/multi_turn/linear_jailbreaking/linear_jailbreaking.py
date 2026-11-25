@@ -2,10 +2,15 @@ from typing import List, Optional, Union
 
 from deepeval.models import DeepEvalBaseLLM
 
-from deepeval.red_team.attacks.attack_simulator.utils import a_generate, generate
+from deepeval.red_team.attacks.attack_simulator.utils import (
+    a_generate,
+    generate,
+)
 from deepeval.red_team.attacks.base_attack import Exploitability
 from deepeval.red_team.attacks.multi_turn.base_schema import NonRefusal
-from deepeval.red_team.attacks.multi_turn.base_template import BaseMultiTurnTemplate
+from deepeval.red_team.attacks.multi_turn.base_template import (
+    BaseMultiTurnTemplate,
+)
 from deepeval.red_team.attacks.multi_turn.linear_jailbreaking.schema import (
     Feedback,
     Improvement,

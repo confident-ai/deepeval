@@ -143,9 +143,7 @@ class Progression:
 
     async def a_commit(self, attack: Union[str, Probe]) -> RTTurn:
         probe = (
-            attack
-            if isinstance(attack, Probe)
-            else await self.a_probe(attack)
+            attack if isinstance(attack, Probe) else await self.a_probe(attack)
         )
         return self._commit_probe(probe)
 

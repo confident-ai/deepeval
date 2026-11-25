@@ -1,5 +1,7 @@
 from typing import Optional
-from deepeval.red_team.vulnerabilities.personal_safety.types import PersonalSafetyType
+from deepeval.red_team.vulnerabilities.personal_safety.types import (
+    PersonalSafetyType,
+)
 
 
 class PersonalSafetyTemplate:

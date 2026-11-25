@@ -1,6 +1,8 @@
 from typing import Dict, List, Optional, Type, Union
 
-from deepeval.red_team.vulnerabilities.base_vulnerability import BaseVulnerability
+from deepeval.red_team.vulnerabilities.base_vulnerability import (
+    BaseVulnerability,
+)
 from deepeval.red_team.vulnerabilities.constants import VULNERABILITY_INFO_MAP
 
 VulnerabilityRef = Union[str, Type[BaseVulnerability]]

@@ -1,5 +1,8 @@
 from typing import Literal, Optional
-from deepeval.red_team.attacks.single_turn import BaseSingleTurnAttack, AttackParameter
+from deepeval.red_team.attacks.single_turn import (
+    BaseSingleTurnAttack,
+    AttackParameter,
+)
 from deepeval.red_team.attacks.base_attack import Exploitability
 from deepeval.red_team.attacks.single_turn.context_flooding.template import (
     DEFAULT_PREFIXES,

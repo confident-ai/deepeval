@@ -1,7 +1,9 @@
 import pytest
 
 from deepeval.red_team.vulnerabilities import AgentIdentityAbuse
-from deepeval.red_team.vulnerabilities.agent_identity_abuse import AgentIdentityAbuseType
+from deepeval.red_team.vulnerabilities.agent_identity_abuse import (
+    AgentIdentityAbuseType,
+)
 from deepeval.red_team.test_case import RTTestCase
 
 
