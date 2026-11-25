@@ -18,9 +18,18 @@ The failed response metric checks whether your voice agent **answered every call
 
 <AudioSample name="failed-response" />
 
+## Required Arguments
+
+To use the `FailedResponseMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
+
+- `content` on each turn, to tell which caller lines needed a reply
+- `audio` on the turns, with `Audio.start_time` set so caller turns can be placed on the call's clock
+
+The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). The test case's own `audio` is not used.
+
 ## Usage
 
-Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+The `FailedResponseMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
 
 ```python
 from deepeval import evaluate
@@ -46,44 +55,147 @@ metric = FailedResponseMetric(threshold=1.0)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **SIX** optional parameters when creating a `FailedResponseMetric`:
+There is **ONE** optional parameter specific to the `FailedResponseMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
-- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `use_speech_detection`: a boolean which, when set to `True`, finds where each speaker's speech starts and stops inside every turn's own audio, so silence or noise at the edges of a clip is not mistaken for speaking. Defaulted to `True`.
-- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, finds where the speech is inside each turn's clip with [speech detection](/docs/metrics-voice-introduction#speech-detection), so silence or noise at a clip's edges isn't counted as speaking. It decides which caller turns join into one line, and where the silence after a line starts. Defaulted to `True`.
 
-`score_breakdown` lists the caller lines that went unanswered:
+### As a standalone
+
+You can also run the `FailedResponseMetric` on a single test case as a standalone, one-off execution:
 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.75
+print(metric.score, metric.reason)
 print(metric.score_breakdown)
 ```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each caller line that went unanswered shows up in `score_breakdown`. Here is what the [example call](#example-call) returns:
 
 ```python
 {
     "eligible_turns": 4,
-    "turns_with_events": 1,
-    "events": [{"type": "call_ended_without_reply", "turn": 7, "start_time": 41.0, "duration_seconds": 0.0, "mark": "range", "timing_source": "turn_timestamps", "description": "Call ended without a reply"}],
+    "turns_with_events": 2,
+    "events": [
+        {
+            "type": "empty_reply",
+            "turn": 4,
+            "duration_seconds": 2.74,
+            "start_time": 12.26,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Agent's reply was empty",
+            "reply_turn": 5,
+        },
+        {
+            "type": "call_ended_without_reply",
+            "turn": 8,
+            "duration_seconds": 0.24,
+            "start_time": 22.76,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Call ended without a reply",
+        },
+    ],
     "skipped": [],
 }
 ```
 
-Unlike most voice metrics, `turn` here is the zero-based position of the **caller** line that went unanswered (its first turn, when the line spans several). An event's `type` is `call_ended_without_reply` when the call ended before the agent spoke again, or `empty_reply` when the agent's next turn had neither text nor audio; `reply_turn` then points to that empty turn. `start_time` and `duration_seconds` place the silence after the line on the call's clock: from where the line's speech ends to where the next timed turn's speech starts, or to the end of the call's last audio when nothing followed (left out when the line has no `Audio.start_time`).
+| Field | What it means |
+| --- | --- |
+| `type` | Call ended without reply if no agent turn came after the line, empty reply if the agent's next turn had no text and no audio |
+| `turn` | The caller line's first turn, counting from 0. Unlike most voice metrics, this is a caller turn |
+| `reply_turn` | Empty replies only. The agent turn that was empty |
+| `start_time` | Where the caller line's speech ends, in seconds into the call |
+| `duration_seconds` | The silence after it: up to where the next turn's speech starts, or to the end of the call's last audio |
 
-<include cwd>snippets/voice/event-place.mdx</include>
+`start_time` and `duration_seconds` are missing when the line's last turn has no `Audio.start_time`.
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many caller lines needed a reply and `turns_with_events` how many went unanswered. The score is the share that were answered.
 
 ## How Is It Calculated?
 
-`FailedResponseMetric` checks every caller line that needed a reply, and scores the share the agent answered:
+The `FailedResponseMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Failed Response} = \frac{\text{Caller lines followed by an agent reply}}{\text{Caller lines that needed a reply}}" />
+<Equation formula="\text{Failed Response} = \frac{\text{Number of Caller Lines Answered}}{\text{Total Number of Caller Lines That Needed a Reply}}" />
 
-Caller turns whose speech starts less than 1 second after the previous caller turn's speech ends are one line: a transcriber often splits one sentence into several turns. Turns without an `Audio.start_time` can't be timed, so each is its own line. A caller line needs a reply unless it closes the call: once any trailing periods or exclamation marks are dropped, the text of its last turn ends in "bye", "goodbye", "thank you", "thanks", "that's all" or "that is all". Several caller lines in a row share the agent's next reply, so when the call ends after them, each of them counts as unanswered. A reply only has to exist; whether it was heard is checked by [`SilentReplyMetric`](/docs/metrics-silent-reply), and how long it took by [`ResponseLatencyMetric`](/docs/metrics-response-latency). When the agent hangs up right after a question, this metric and [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end) both fail: one reports the unanswered question, the other how the call ended. A conversation with no audio on any turn is not a voice call, so the metric is skipped, as it is when no caller line needed a reply.
+The metric reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio) only, to time the caller's turns. It never judges how they sound.
+
+### Counting caller lines
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Caller", role: "caller", clips: [{ start: 0.2, end: 2.4, label: "turn 0" }, { start: 2.8, end: 4.0, label: "turn 1" }, { start: 7.4, end: 9.6, label: "turn 3" }], sounds: [{ start: 0.3, end: 2.2 }, { start: 2.9, end: 3.9 }, { start: 7.5, end: 9.4 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 4.6, end: 6.8, label: "turn 2" }], sounds: [{ start: 4.7, end: 6.6 }] },
+  ]}
+  windows={[
+    { start: 0.2, end: 4.0, lanes: [0], tone: "info", label: "line 1" },
+    { start: 7.4, end: 9.6, lanes: [0], tone: "info", label: "line 2" },
+  ]}
+/>
+
+A transcriber often splits one sentence into several turns. Caller turns in a row are one line when the next one's speech starts less than 1 second after the previous one's speech ends, as with turns 0 and 1 above. The metric listens inside each clip for where the speech starts and stops. A turn without an `Audio.start_time` can't be timed, so it is always a line of its own.
+
+### Reply criteria
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Caller", role: "caller", clips: [{ start: 0.2, end: 2.4, label: "turn 0" }, { start: 5.6, end: 7.8, label: "turn 2" }], sounds: [{ start: 0.3, end: 2.2 }, { start: 5.7, end: 7.6 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }], sounds: [{ start: 3.1, end: 4.8 }] },
+  ]}
+  marks={[
+    { at: 2.2, lane: 0, tone: "ok", label: "answered" },
+    { at: 7.6, lane: 0, tone: "bad", label: "call ended" },
+  ]}
+/>
+
+A caller line needs a reply unless it closes the call. It is unanswered when:
+
+- no agent turn comes after it before the call ends, or
+- the agent's next turn has no text and no audio.
+
+Several caller lines in a row share the agent's next reply, so if the call ends after them, each one is unanswered.
+
+| Check | Rule |
+| --- | --- |
+| Closes the call | The text of the line's last turn ends in "bye", "goodbye", "thank you", "thanks", "that's all" or "that is all", ignoring trailing periods and exclamation marks |
+| Answered | Any agent turn after the line, with text or audio |
+
+A reply only has to exist. Whether it could be heard is [Silent Reply](/docs/metrics-silent-reply)'s job, and how long it took is [Response Latency](/docs/metrics-response-latency)'s. If no turn has audio, or no caller line needed a reply, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Example call
+
+A caller asks about an order, but the agent sends one empty reply and the call ends before its last answer. Each row is one caller line and whether the agent answered it.
+
+<VoiceDiagram
+  duration={24}
+  lanes={[
+    { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 5.5, end: 6.5, label: "turn 2" }, { start: 10.5, end: 12.5, label: "turn 4" }, { start: 15.0, end: 17.0, label: "turn 6" }, { start: 21.0, end: 23.0, label: "turn 8" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 5.5, end: 6.25 }, { start: 10.5, end: 12.25 }, { start: 15.0, end: 16.75 }, { start: 21.0, end: 22.75 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0, end: 2.0, label: "turn 0" }, { start: 7.5, end: 9.5, label: "turn 3" }, { start: 18.0, end: 20.0, label: "turn 7" }], sounds: [{ start: 0, end: 1.75 }, { start: 7.5, end: 9.25 }, { start: 18.0, end: 19.75 }] },
+  ]}
+  marks={[
+    { at: 6.25, lane: 0, tone: "ok", label: "answered" },
+    { at: 12.25, lane: 0, tone: "bad", label: "empty reply" },
+    { at: 16.75, lane: 0, tone: "ok", label: "answered" },
+    { at: 22.75, lane: 0, tone: "bad", label: "call ended" },
+  ]}
+/>
+
+| Caller line | What came next | Unanswered? |
+| --- | --- | --- |
+| Turns 1–2, "Can you check my order" "number 4512?" | Agent reply in turn 3 | No |
+| Turn 4, "Can I change the address?" | Turn 5, an agent turn with no text or audio | **Yes** (`empty_reply`) |
+| Turn 6, "Hello? Can I change it?" | Agent reply in turn 7 | No |
+| Turn 8, "Twelve Oak Street." | The call ended | **Yes** (`call_ended_without_reply`) |
+| **4 caller lines** | | **2 unanswered → 2/4 = 0.5** |
 
 ## FAQs
 
@@ -96,7 +208,21 @@ Caller turns whose speech starts less than 1 second after the previous caller tu
           <a href="/docs/metrics-agent-responsiveness">
             AgentResponsivenessMetric
           </a>{" "}
-          runs this metric together with silent replies, unexpected call ends and reprompts, and scores the share of exchanges none of them flagged. This metric checks only whether each caller line got a reply, and points to the lines that did not.
+          runs this metric together with silent replies, unexpected call ends
+          and reprompts, and scores the share of exchanges none of them
+          flagged. This metric checks only whether each caller line got a
+          reply, and points to the lines that didn't.
+        </>
+      ),
+    },
+    {
+      question: "Why does Unexpected Call End fail too when the agent hangs up on a question?",
+      answer: (
+        <>
+          They report two sides of one failure. This metric reports the
+          unanswered question, and{" "}
+          <a href="/docs/metrics-unexpected-call-end">UnexpectedCallEndMetric</a>{" "}
+          reports how the call ended.
         </>
       ),
     },
@@ -104,15 +230,20 @@ Caller turns whose speech starts less than 1 second after the previous caller tu
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. It only reads the order of the turns, their text and whether they carry audio, so it has no model or token cost.
+          No. It reads the order of the turns, their text and the timing of
+          their audio, so it has no model or token cost. With{" "}
+          <code>use_speech_detection</code> on, the small Silero VAD model runs
+          locally over each clip.
         </>
       ),
     },
     {
-      question: "Does it check the simulated user's audio too?",
+      question: "Does it judge the caller's audio?",
       answer: (
         <>
-          No. It reads the text of the caller's lines to know whether each one needed a reply. The caller's audio itself is never read or judged.
+          No. It reads the text of the caller's lines to know whether each one
+          needed a reply, and the timing of their audio to join turns into
+          lines. How the caller sounds is never judged.
         </>
       ),
     },

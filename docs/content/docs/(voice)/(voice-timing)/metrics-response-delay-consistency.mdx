@@ -18,9 +18,20 @@ The response delay consistency metric checks whether your voice agent **takes ab
 
 <AudioSample name="response-delay-consistency" />
 
+## Required Arguments
+
+To use the `ResponseDelayConsistencyMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with audio on at least one of:
+
+- `audio` on the test case, a stereo recording of the whole call
+- `audio` on the caller's and agent's turns, each with a `start_time`
+
+Agent turns can also carry `latency_ms`, used with turn audio the same way as in [Response Latency](/docs/metrics-response-latency).
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
+
 ## Usage
 
-Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+The `ResponseDelayConsistencyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
 
 ```python
 from deepeval import evaluate
@@ -46,55 +57,220 @@ metric = ResponseDelayConsistencyMetric(threshold=0.8, max_shift_seconds=2)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **SEVEN** optional parameters when creating a `ResponseDelayConsistencyMetric`:
+There are **TWO** optional parameters specific to the `ResponseDelayConsistencyMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
-- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `max_shift_seconds`: an integer for how far, in seconds, a reply's wait may sit from the agent's typical wait. Must be greater than 0. Defaulted to `2`.
-- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Without a stereo `audio` on the test case, it finds where each speaker's speech starts and stops inside every turn's own audio instead. Defaulted to `True`.
-- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `max_shift_seconds`: an integer for how far, in seconds, a reply's wait may be from the agent's typical wait, slower or faster. Must be greater than 0. Defaulted to `2`.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts someone as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so background noise doesn't shorten or stretch a wait. Defaulted to `True`.
 
-`score_breakdown` lists the replies where the issue was found:
+### As a standalone
+
+You can also run the `ResponseDelayConsistencyMetric` on a single test case as a standalone, one-off execution:
 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.75
+print(metric.score, metric.reason)
 print(metric.score_breakdown)
 ```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each reply whose wait broke from the usual shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
+
+<Tabs items={["Call audio", "Turn audio"]}>
+<Tab value="Call audio">
 
 ```python
 {
     "eligible_turns": 4,
     "turns_with_events": 1,
     "events": [
-        {"type": "delay_shift", "turn": 5, "duration_seconds": 4.8, "start_time": 26.7, "response_delay_seconds": 4.8, "shift_seconds": 3.9}
+        {
+            "type": "delay_shift",
+            "duration_seconds": 4.0,
+            "start_time": 12.6,
+            "mark": "range",
+            "timing_source": "call_recording",
+            "description": "Reply came 2.9s slower than usual",
+            "reply_start": 16.6,
+            "response_delay_seconds": 4.0,
+            "shift_seconds": 2.9,
+        }
+    ],
+    "skipped": [],
+    "timing_source": "call_recording",
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `reply_start` | When the reply started, in seconds into the call |
+| `response_delay_seconds` | How long the caller waited for it |
+| `shift_seconds` | How far that wait is from the typical wait. Negative when faster |
+| `start_time` | Where the wait begins: when the caller stopped talking |
+| `duration_seconds` | How long the wait lasted, the same as `response_delay_seconds` |
+
+</Tab>
+<Tab value="Turn audio">
+
+Events name the agent turn instead of a time in the call audio.
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 1,
+    "events": [
+        {
+            "type": "delay_shift",
+            "turn": 5,
+            "duration_seconds": 3.8,
+            "start_time": 12.6,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Reply came 2.8s slower than usual",
+            "response_delay_seconds": 3.8,
+            "shift_seconds": 2.8,
+        }
     ],
     "skipped": [],
     "timing_source": "turn_timestamps",
 }
 ```
 
-`turn` is the agent reply's zero-based position in the conversation, `response_delay_seconds` is how long the caller waited for it, and `shift_seconds` is how far that sits from the agent's typical wait (negative when faster). `start_time` and `duration_seconds` place the wait itself on the call's clock, ending where the reply starts. Replies the agent started while the caller was still talking are listed under `skipped`, and so, without a recording, are agent replies whose audio, or the caller's audio before them, could not be decoded. With a call recording, events and `skipped` entries carry `reply_start`, where in the recording the agent started, instead of `turn`. `timing_source` says whether the call recording or the turn timestamps were used.
+| Field | What it means |
+| --- | --- |
+| `turn` | Which agent turn it was, counting from 0 |
+| `response_delay_seconds` | How long the caller waited: the turn's `latency_ms` when it has one, otherwise the silence heard |
+| `shift_seconds` | How far that wait is from the typical wait. Negative when faster |
+| `start_time` | Where the wait begins, counted back from where the reply's speech starts |
+| `duration_seconds` | How long the wait lasted, the same as `response_delay_seconds` |
 
-<include cwd>snippets/voice/event-place.mdx</include>
+</Tab>
+</Tabs>
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`. Replies that couldn't be timed are listed under `skipped` with the reason.
+
+`eligible_turns` is how many agent replies were timed and `turns_with_events` how many broke from the usual wait. The score is the share that didn't.
 
 ## How Is It Calculated?
 
-`ResponseDelayConsistencyMetric` compares every timed agent reply against the agent's typical reply, and scores the share that stay close:
+The `ResponseDelayConsistencyMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Response Delay Consistency} = \frac{\text{Agent replies within max\_shift\_seconds of the typical wait}}{\text{Agent replies that follow a caller turn}}" />
+<Equation formula="\text{Response Delay Consistency} = \frac{\text{Number of Agent Replies Close to the Typical Wait}}{\text{Total Number of Timed Agent Replies}}" />
 
-Each wait is measured the same way as in [`ResponseLatencyMetric`](/docs/metrics-response-latency), from the stereo call recording when the test case has one, with the same `use_speech_detection` behaviour; on a recording an opening line the agent speaks before the caller makes any sound is left out, while a first reply to a caller who opened the call is timed like any other. The agent's typical wait is the median across its replies, so one odd reply is flagged on its own rather than shifting the rest. This needs at least **three** timed replies to tell which one is off; with fewer, the metric is skipped. Without a recording, every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
+The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio).
 
-The default of **2 seconds** reflects that a reply suddenly two seconds slower, or faster, than usual stands out as much as a slow reply does. This default has the weakest outside reference of the timing metrics, so tune it to your agent.
+### Counting agent replies
+
+Replies are found and their waits measured exactly as in [Response Latency](/docs/metrics-response-latency#how-is-it-calculated), in both call audio and turn audio. With turn audio, that means the metric listens inside each clip for the speech, so silence at the start of an agent clip counts as waiting, and a turn's `latency_ms` wins over the silence heard. The same replies are left out and listed under `skipped`.
+
+### Consistency criteria
+
+<VoiceDiagram
+  duration={10}
+  hideAxis
+  lanes={[
+    { label: "Reply 1", role: "agent", sounds: [{ start: 1.0, end: 3.0 }] },
+    { label: "Reply 2", role: "agent", sounds: [{ start: 1.2, end: 3.2 }] },
+    { label: "Reply 3", role: "agent", sounds: [{ start: 4.0, end: 6.0 }] },
+    { label: "Reply 4", role: "agent", sounds: [{ start: 1.1, end: 3.1 }] },
+  ]}
+  windows={[
+    { start: 0, end: 1.0, lanes: [0], tone: "ok", label: "1.0 s" },
+    { start: 0, end: 1.2, lanes: [1], tone: "ok", label: "1.2 s" },
+    { start: 0, end: 4.0, lanes: [2], tone: "bad", label: "4.0 s" },
+    { start: 0, end: 1.1, lanes: [3], tone: "ok", label: "1.1 s" },
+  ]}
+/>
+
+The typical wait is the median of all the replies' waits, so one odd reply is flagged on its own rather than moving the rest. Above, the typical wait is 1.15 seconds, and only reply 3 is far from it.
+
+| Check | Rule |
+| --- | --- |
+| Shift | More than `max_shift_seconds` from the typical wait, 2 seconds by default, slower or faster |
+| Replies needed | At least 3 timed replies. With fewer, there's no telling which one is off |
+
+With fewer than 3 timed replies, or nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+:::note
+A reply can pass [Response Latency](/docs/metrics-response-latency) and still be flagged here. A 3.8-second wait is under the 4-second latency limit, but stands out after a string of 1-second replies.
+:::
+
+### Example call
+
+Two calls where the agent answers in about a second, except once, one scored from call audio and one from turn audio. Each row is one agent reply, its wait, and how far that is from the typical wait.
+
+<Tabs items={["Call audio", "Turn audio"]}>
+<Tab value="Call audio">
+
+<VoiceDiagram
+  duration={24}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.4, end: 2.4 }, { start: 5.4, end: 7.4 }, { start: 10.6, end: 12.6 }, { start: 18.8, end: 20.8 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 3.2, end: 4.8 }, { start: 8.4, end: 10.0 }, { start: 16.6, end: 18.2 }, { start: 22.0, end: 23.6 }] },
+  ]}
+  marks={[
+    { at: 3.2, lane: 1, tone: "ok", label: "0.8 s" },
+    { at: 8.4, lane: 1, tone: "ok", label: "1.0 s" },
+    { at: 16.6, lane: 1, tone: "bad", label: "4.0 s" },
+    { at: 22.0, lane: 1, tone: "ok", label: "1.2 s" },
+  ]}
+/>
+
+| Agent reply | Wait | Shift from 1.1 s | Flagged? |
+| --- | --- | --- | --- |
+| 3.2 s | 0.8 s | −0.3 s | No |
+| 8.4 s | 1.0 s | −0.1 s | No |
+| 16.6 s | 4.0 s | +2.9 s | **Yes** |
+| 22.0 s | 1.2 s | +0.1 s | No |
+| **4 replies** | | | **1 flagged → 3/4 = 0.75** |
+
+</Tab>
+<Tab value="Turn audio">
+
+<VoiceDiagram
+  duration={24}
+  lanes={[
+    { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.3, label: "turn 0" }, { start: 5.2, end: 7.4, label: "turn 2" }, { start: 10.4, end: 12.6, label: "turn 4" }, { start: 18.4, end: 20.6, label: "turn 6" }], sounds: [{ start: 0.3, end: 2.3 }, { start: 5.4, end: 7.4 }, { start: 10.6, end: 12.6 }, { start: 18.6, end: 20.6 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 2.6, end: 4.9, label: "turn 1" }, { start: 7.6, end: 10.0, label: "turn 3" }, { start: 12.8, end: 18.0, label: "turn 5" }, { start: 20.8, end: 22.8, label: "turn 7" }], sounds: [{ start: 3.3, end: 4.9 }, { start: 8.4, end: 10.0 }, { start: 16.4, end: 18.0 }, { start: 21.2, end: 22.8 }] },
+  ]}
+  marks={[
+    { at: 3.3, lane: 1, tone: "ok", label: "1.0 s" },
+    { at: 8.4, lane: 1, tone: "ok", label: "1.0 s" },
+    { at: 16.4, lane: 1, tone: "bad", label: "3.8 s" },
+    { at: 21.2, lane: 1, tone: "ok", label: "0.6 s" },
+  ]}
+/>
+
+Turn 5's clip starts 0.2 seconds after the caller's, but its speech starts 3.8 seconds after the caller's speech ends.
+
+| Agent turn | Wait | Shift from 1.0 s | Flagged? |
+| --- | --- | --- | --- |
+| 1 | 1.0 s | 0 s | No |
+| 3 | 1.0 s | 0 s | No |
+| 5 | 3.8 s | +2.8 s | **Yes** |
+| 7 | 0.6 s | −0.4 s | No |
+| **4 replies** | | | **1 flagged → 3/4 = 0.75** |
+
+</Tab>
+</Tabs>
 
 ## FAQs
 
 <FAQs
   qas={[
+    {
+      question: "Why is a fast reply flagged?",
+      answer: (
+        <>
+          A reply that comes much faster than usual breaks the rhythm too,
+          often because the agent answered before the caller had finished
+          their thought. The shift is checked in both directions.
+        </>
+      ),
+    },
     {
       question: "How is this different from turn-taking naturalness?",
       answer: (
@@ -102,7 +278,10 @@ The default of **2 seconds** reflects that a reply suddenly two seconds slower, 
           <a href="/docs/metrics-turn-taking-naturalness">
             TurnTakingNaturalnessMetric
           </a>{" "}
-          runs this metric together with response latency and both kinds of interruption, and scores the share of agent replies none of them flagged. This metric points only to the replies whose wait broke from the agent's usual rhythm, and lets you change its limit.
+          runs this metric together with response latency and both kinds of
+          interruption, and scores the share of agent replies none of them
+          flagged. This metric only points to the replies whose wait broke from
+          the agent's usual rhythm.
         </>
       ),
     },
@@ -110,18 +289,9 @@ The default of **2 seconds** reflects that a reply suddenly two seconds slower, 
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. It only reads when each speaker is making sound, from the call
-          recording or from each turn's start and audio length, so it has no
-          model or token cost.
-        </>
-      ),
-    },
-    {
-      question: "Does it check the simulated user's audio too?",
-      answer: (
-        <>
-          No. It uses the caller's turns only to know when the caller was
-          speaking. Only the agent is judged.
+          No. It only reads when each speaker is talking, so it has no model or
+          token cost. With <code>use_speech_detection</code> on, it runs the
+          small Silero VAD model locally.
         </>
       ),
     },

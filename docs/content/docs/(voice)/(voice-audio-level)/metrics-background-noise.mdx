@@ -18,9 +18,17 @@ The background noise metric checks whether your voice agent's speech has **a con
 
 <AudioSample name="background-noise" />
 
+## Required Arguments
+
+To use the `BackgroundNoiseMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
+
+- `audio` on the agent's turns
+
+The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). Call audio on the test case is ignored.
+
 ## Usage
 
-Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+The `BackgroundNoiseMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
 
 ```python
 from deepeval import evaluate
@@ -42,54 +50,158 @@ simulator = ConversationSimulator(
 )
 test_cases = simulator.simulate([golden])
 
-metric = BackgroundNoiseMetric(threshold=0.8, min_snr_db=20)
+metric = BackgroundNoiseMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **SEVEN** optional parameters when creating a `BackgroundNoiseMetric`:
+There are **THREE** optional parameters specific to the `BackgroundNoiseMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
-- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `min_snr_db`: an integer for the lowest signal-to-noise ratio, in dB, that a reply may have before its noise counts as an issue. Must be `0` or more. Defaulted to `20`.
-- [Optional] `audio_decision_model`: the audio decision model the `hybrid` eval mode uses, such as `HumeDecisionModel`. It hears a short clip of each flagged event and dismisses the ones it judges not real. Defaulted to `None`, which means `HumeDecisionModel()`.
-- [Optional] `eval_mode`: `"deterministic"`, where the metric calls no model, or `"hybrid"`, where an audio decision model double-checks each flagged event. See [Second check with an audio decision model](#second-check-with-an-audio-decision-model). Defaulted to the `DEEPEVAL_VOICE_EVAL_MODE` setting, or `"deterministic"` when it is unset.
-- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `min_snr_db`: an integer for the lowest signal-to-noise ratio, in dB, a reply may have before it counts as noisy. Must be `0` or more. Defaulted to `20`.
+- [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each noisy reply is [double-checked by an audio decision model](/docs/metrics-voice-introduction#second-check-with-an-audio-decision-model) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
+- [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
 
-`score_breakdown` lists the replies where the issue was found:
+### As a standalone
+
+You can also run the `BackgroundNoiseMetric` on a single test case as a standalone, one-off execution:
 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.75
+print(metric.score, metric.reason)
 print(metric.score_breakdown)
 ```
 
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each noisy reply shows up in `score_breakdown`. Here is what the [example call](#example-call) returns:
+
 ```python
 {
-    "eligible_turns": 4,
+    "eligible_turns": 3,
     "turns_with_events": 1,
-    "events": [{"type": "background_noise", "turn": 3, "estimated_snr_db": 14.2, "offset_seconds": 0.0, "duration_seconds": 4.2, "start_time": 10.5}],
-    "skipped": [],
+    "events": [
+        {
+            "type": "background_noise",
+            "turn": 3,
+            "timing_source": "turn_timestamps",
+            "description": "Background noise was high (SNR 13 dB)",
+            "estimated_snr_db": 13.3,
+            "offset_seconds": 0.0,
+            "duration_seconds": 3.0,
+            "start_time": 8.5,
+            "mark": "whole_reply",
+        }
+    ],
+    "skipped": [
+        {
+            "turn": 5,
+            "error": "Reply is under 2 seconds, too short to measure its noise.",
+        }
+    ],
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation, and `estimated_snr_db` is the reply's estimated signal-to-noise ratio. The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, that have no audible sound, or that are under two seconds long, are listed under `skipped`.
+| Field | What it means |
+| --- | --- |
+| `estimated_snr_db` | How far the reply's speech sits above its background noise, in dB |
 
-<include cwd>snippets/voice/event-place.mdx</include>
+Each event covers the whole reply, so `offset_seconds` is 0 and `duration_seconds` is the clip's length. Replies that are too short, silent or can't be decoded are listed under `skipped`.
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many agent replies were counted and `turns_with_events` how many were noisy. The score is the share that weren't.
 
 ## How Is It Calculated?
 
-`BackgroundNoiseMetric` checks every audible agent reply with at least two seconds of audio and scores the share of them without the issue:
+The `BackgroundNoiseMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Background Noise} = \frac{\text{Agent replies at or above min\_snr\_db}}{\text{Audible agent replies with two or more seconds of audio}}" />
+<Equation formula="\text{Background Noise} = \frac{\text{Number of Agent Replies Without Background Noise}}{\text{Total Number of Agent Replies}}" />
 
-Each reply is cut into 20 ms frames. The **speech level** is the 90th percentile of the frames loud enough to be speech (about −41 dBFS or louder), and the **noise level** is the 10th percentile of all frames that are not digital silence, which lands in the pauses between words. The signal-to-noise ratio is the gap between the two in dB. A reply with a ratio below `min_snr_db` has background noise.
+### Counting agent replies
 
-The default of **20 dB** sits 5 dB above the +15 dB speech-to-noise ratio that speech-intelligibility guidance treats as the minimum for clearly understood speech, so it flags noise that starts to get in the way. Produced speech, such as audiobooks, keeps its noise about 40 dB below the voice, and clean synthetic speech usually measures above 60 dB. Noise at −45 dBFS behind normal speech measures about 30 dB and passes.
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 3.2, label: "turn 1" }, { start: 4.0, end: 5.4, label: "turn 3" }, { start: 6.6, end: 9.8, label: "turn 5" }], sounds: [{ start: 0.3, end: 3.0 }, { start: 4.1, end: 5.2 }, { start: 6.7, end: 9.6 }] },
+  ]}
+  marks={[
+    { at: 1.7, lane: 0, tone: "info", label: "counted" },
+    { at: 4.7, lane: 0, tone: "skip", label: "too short" },
+    { at: 8.2, lane: 0, tone: "info", label: "counted" },
+  ]}
+/>
 
-Noise is measured in the pauses between words, and a reply under **two seconds** rarely has one, so shorter replies are skipped. A reply with no audible sound at all (no 20 ms frame reaches speech level, about −41 dBFS) is skipped too; [`SilentReplyMetric`](/docs/metrics-silent-reply) reports it. If no agent reply is long enough, the metric is skipped.
+Each agent clip is one reply. A reply is skipped when it:
+
+- is under 2 seconds long, since noise is measured in the pauses between words and a short reply rarely has one,
+- has no audible sound at all, which [Silent Reply](/docs/metrics-silent-reply) reports instead, or
+- can't be decoded.
+
+### Noise criteria
+
+Speech should sit far above the noise in its pauses. A noisy reply has a raised floor between words.
+
+<VoiceDiagram
+  duration={6}
+  hideAxis
+  lanes={[
+    { label: "Clean", role: "agent", sounds: [{ start: 0.3, end: 1.8 }, { start: 1.8, end: 2.4, silent: true }, { start: 2.4, end: 3.9 }, { start: 3.9, end: 4.5, silent: true }, { start: 4.5, end: 5.7 }] },
+    { label: "Noisy", role: "agent", sounds: [{ start: 0.3, end: 1.8 }, { start: 1.8, end: 2.4, level: 0.3, ending: "flat" }, { start: 2.4, end: 3.9 }, { start: 3.9, end: 4.5, level: 0.3, ending: "flat" }, { start: 4.5, end: 5.7 }] },
+  ]}
+  marks={[
+    { at: 2.1, lane: 0, tone: "ok", label: "quiet pause" },
+    { at: 2.1, lane: 1, tone: "bad", label: "noise" },
+  ]}
+/>
+
+Each reply is cut into 20 ms frames, and a reply is noisy when:
+
+| Check | Rule |
+| --- | --- |
+| Speech level | The 90th percentile of frames at speech volume (about −41 dBFS or louder) |
+| Noise level | The 10th percentile of all frames, leaving out digital silence |
+| Noisy | Speech level is less than `min_snr_db` (20 dB) above the noise level |
+
+If no reply is long enough, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+:::note
+The default of 20 dB is 5 dB above the +15 dB speech-to-noise ratio that intelligibility guidance treats as the minimum for clear speech. Clean synthetic speech usually measures above 40 dB.
+:::
+
+### Second check
+
+In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), each noisy reply is double-checked before it counts. The audio decision model hears the **agent's** whole reply, from that turn's own clip, and is asked:
+
+> Is there distracting background noise behind the speaker?
+
+If the model judges "no" more likely than "yes", the reply is dismissed and doesn't count against the score.
+
+### Example call
+
+A call where one agent reply has a loud hiss behind it and one is too short to measure. Each row is one agent reply, its signal-to-noise ratio and whether that counts as noisy.
+
+<VoiceDiagram
+  duration={22}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 5.5, label: "turn 1" }, { start: 8.5, end: 11.5, label: "turn 3" }, { start: 14.5, end: 16.0, label: "turn 5" }, { start: 19.0, end: 22.0, label: "turn 7" }], sounds: [{ start: 2.6, end: 5.3 }, { start: 8.5, end: 11.5, ending: "flat" }, { start: 14.6, end: 15.8 }, { start: 19.1, end: 21.8 }] },
+  ]}
+  marks={[
+    { at: 4.0, lane: 0, tone: "ok", label: "clean" },
+    { at: 10.0, lane: 0, tone: "bad", label: "noisy" },
+    { at: 15.25, lane: 0, tone: "skip", label: "too short" },
+    { at: 20.5, lane: 0, tone: "ok", label: "clean" },
+  ]}
+/>
+
+| Agent turn | Signal-to-noise | Noisy? |
+| --- | --- | --- |
+| 1 | 45.7 dB | No |
+| 3 | 13.3 dB | **Yes** |
+| 5 | Under 2 seconds | Skipped |
+| 7 | 45.7 dB | No |
+| **3 replies** | | **1 noisy → 2/3 = 0.67** |
 
 ## FAQs
 
@@ -102,9 +214,10 @@ Noise is measured in the pauses between words, and a reply under **two seconds**
           <a href="/docs/metrics-speech-intelligibility">
             SpeechIntelligibilityMetric
           </a>{" "}
-          blends noise with volume, clipping and dropouts into one score. This
-          metric reports noise alone, so you can see whether it is the reason a
-          call sounded bad.
+          runs this metric together with loudness, clipping and dropouts, and
+          scores the share of replies none of them flagged. This metric reports
+          noise alone, so you can see whether it is the reason a call sounded
+          bad.
         </>
       ),
     },
@@ -112,8 +225,8 @@ Noise is measured in the pauses between words, and a reply under **two seconds**
       question: "What should I set min_snr_db to?",
       answer: (
         <>
-          Keep the default of 20 dB for most agents. Raise it, to 25 or 30 dB,
-          if your agent should sound studio-clean; lower it if your agent
+          Keep the default of 20 dB for most agents. Raise it to 25 or 30 dB if
+          your agent should sound studio-clean. Lower it if your agent
           deliberately plays ambient sound, like a busy call center.
         </>
       ),
@@ -122,22 +235,22 @@ Noise is measured in the pauses between words, and a reply under **two seconds**
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio
-          samples, so it has no model or token cost.
+          Not by default. Detection is deterministic and runs locally over the
+          audio, so it has no model or token cost. In the{" "}
+          <code>"hybrid"</code> eval mode, each noisy reply is also checked by
+          an audio decision model, at one paid request per noisy reply.
         </>
       ),
     },
     {
-      question: "Does it check the simulated user's audio too?",
+      question: "Does it check the caller's audio too?",
       answer: (
         <>
-          No. Only assistant turns are inspected. The caller's audio is produced
-          by your own TTS model, so defects there are a problem with the test
-          harness rather than with the agent under test.
+          No. Only the agent's replies are scored. The caller's audio comes from
+          your own TTS model, so noise there is a problem with the test harness,
+          not the agent.
         </>
       ),
     },
   ]}
 />
-
-<include cwd>snippets/voice/audio-decision-check.mdx</include>

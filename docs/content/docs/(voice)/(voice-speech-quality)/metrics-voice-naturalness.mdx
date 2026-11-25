@@ -14,15 +14,20 @@ beta: true
   referenceless={true}
 />
 
-The voice naturalness metric measures how naturally your voice agent speaks across a conversation. It runs seven single-issue voice metrics on the agent's replies and returns the share of replies none of them flagged, between 0 and 1.
+The voice naturalness metric checks whether your voice agent **sounds like a person talking**. It runs seven single-issue voice metrics on the agent's replies and returns the share of replies none of them flagged, between 0 and 1.
 
-:::note
-`VoiceNaturalnessMetric` is a deterministic acoustic check, not a human mean-opinion score (MOS). It is best used to catch regressions such as clipping, dropouts, repeated audio, long pauses, background noise, implausible speaking rates, or a flat or swinging pitch.
-:::
+## Required Arguments
+
+To use the `VoiceNaturalnessMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
+
+- `audio` on the agent's turns
+- `content` on the agent's turns, to measure the speaking rate
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
 
 ## Usage
 
-Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+The `VoiceNaturalnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
 
 ```python
 from deepeval import evaluate
@@ -48,89 +53,156 @@ metric = VoiceNaturalnessMetric(threshold=0.7)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **FIVE** optional parameters when creating a `VoiceNaturalnessMetric`:
+The `VoiceNaturalnessMetric` takes only the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics). Its parts always run with their default limits. To change a limit, run that part on its own.
 
-- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
-- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+### As a standalone
 
-Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
+You can also run the `VoiceNaturalnessMetric` on a single test case as a standalone, one-off execution:
 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.75
+print(metric.score, metric.reason)
 print(metric.score_breakdown)
 ```
 
-For `VoiceNaturalnessMetric` the breakdown counts the replies, lists every issue found, and gives each part's own result:
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Every event a part raised shows up in `score_breakdown`, tagged with that part. Here is what the [example call](#example-call) returns:
 
 ```python
 {
     "eligible_turns": 4,
-    "turns_with_events": 1,
+    "turns_with_events": 2,
     "events": [
-        {"type": "clipping", "turn": 3, "role": "assistant", "offset_seconds": 1.02, "duration_seconds": 0.48, "start_time": 11.52, "position": "middle", "fraction": 0.031, "metric": "Audio Clipping"},
-        {"type": "too_fast", "turn": 3, "speech_rate_wpm": 236, "offset_seconds": 0.0, "duration_seconds": 4.2, "start_time": 10.5, "metric": "Speaking Rate"},
+        {
+            "type": "clipping",
+            "turn": 3,
+            "role": "assistant",
+            "offset_seconds": 1.048,
+            "duration_seconds": 0.155,
+            "start_time": 11.548,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Audio was clipped",
+            "position": "middle",
+            "fraction": 0.014,
+            "metric": "Audio Clipping",
+        },
+        {
+            "type": "long_pause",
+            "turn": 5,
+            "offset_seconds": 1.26,
+            "duration_seconds": 2.74,
+            "start_time": 18.76,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Agent paused for 2.7s mid-reply",
+            "longest_pause_ms": 2740,
+            "metric": "Pauses",
+        },
+        {
+            "type": "too_fast",
+            "turn": 3,
+            "timing_source": "turn_timestamps",
+            "description": "Agent spoke too fast (239 wpm)",
+            "speech_rate_wpm": 239,
+            "metric": "Speaking Rate",
+            "offset_seconds": 0.0,
+            "duration_seconds": 3.0,
+            "start_time": 10.5,
+            "mark": "whole_reply",
+        },
     ],
-    "skipped": [{"turn": 7, "error": "Reply is under 2 seconds, too short to measure its noise."}],
+    "skipped": [
+        {"turn": 7, "error": "Reply has under 2 seconds of speech."},
+        {"turn": 7, "error": "Reply is under 2 seconds, too short to measure its noise."},
+        {"turn": 7, "error": "Reply has no text or under 2 seconds of speech."},
+        {"turn": 7, "error": "Reply has under 1s of voiced speech to follow its pitch."},
+    ],
     "metrics": {
         "Audio Clipping": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
         "Audio Dropout": {"score": 1.0, "eligible_turns": 4, "turns_with_events": 0},
         "Audio Loop": {"score": 1.0, "eligible_turns": 4, "turns_with_events": 0},
-        "Pauses": {"score": 1.0, "eligible_turns": 4, "turns_with_events": 0},
+        "Pauses": {"score": 0.6666666666666667, "eligible_turns": 3, "turns_with_events": 1},
         "Background Noise": {"score": 1.0, "eligible_turns": 3, "turns_with_events": 0},
-        "Speaking Rate": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
-        "Pitch Variation": {"score": 1.0, "eligible_turns": 4, "turns_with_events": 0},
+        "Speaking Rate": {"score": 0.6666666666666667, "eligible_turns": 3, "turns_with_events": 1},
+        "Pitch Variation": {"score": 1.0, "eligible_turns": 3, "turns_with_events": 0},
     },
 }
 ```
 
-`eligible_turns` is how many agent replies were judged and `turns_with_events` how many had at least one issue. `events` holds each part's events unchanged, tagged with the `metric` that raised them; the part's own page explains its fields. `skipped` collects the replies a part could not judge. `metrics` gives each part's own `score`, `eligible_turns` and `turns_with_events`, or `{"score": None, "reason": ...}` when that part could not judge the call. The reason for the call above reads "1 of 4 agent replies had an issue: Audio Clipping (1), Speaking Rate (1)."
+| Field | What it means |
+| --- | --- |
+| `metric` | The part that raised the event. That part's page explains the event's other fields |
+| `skipped` | Replies a part couldn't judge, one entry per part, so a reply can appear more than once |
+| `metrics` | Each part's own score and counts. A part that couldn't judge any reply shows a `score` of `None` and a `reason` instead |
 
-<include cwd>snippets/voice/event-place.mdx</include>
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`. There's no top-level `timing_source`, as only turn audio is read.
+
+`eligible_turns` is how many agent replies at least one part judged and `turns_with_events` how many at least one part flagged. The score is the share that weren't flagged.
 
 ## How Is It Calculated?
 
-`VoiceNaturalnessMetric` runs these single-issue metrics on the call, each with its default limits:
+The `VoiceNaturalnessMetric` score is calculated according to the following equation:
 
-| Part                                               | Flags an agent reply that                                 |
-| -------------------------------------------------- | --------------------------------------------------------- |
-| [Audio Clipping](/docs/metrics-audio-clipping)     | is distorted from being too loud.                         |
-| [Audio Dropout](/docs/metrics-audio-dropout)       | cuts out for a fraction of a second mid-speech.           |
-| [Audio Loop](/docs/metrics-audio-loop)             | gets stuck repeating the same chunk of audio.             |
-| [Pauses](/docs/metrics-pauses)                     | has a long gap mid-sentence, or more silence than speech. |
-| [Background Noise](/docs/metrics-background-noise) | has hiss, hum or room noise too close to the speech.      |
-| [Speaking Rate](/docs/metrics-speaking-rate)       | is spoken too fast or too slow.                           |
-| [Pitch Variation](/docs/metrics-pitch-variation)   | is read flat, or swings wildly in pitch.                  |
+<Equation formula="\text{Voice Naturalness} = \frac{\text{Number of Agent Replies No Part Flagged}}{\text{Total Number of Agent Replies Judged}}" />
 
-The score is the share of judged agent replies that none of the parts flagged:
+The metric only reads turn audio: each agent turn's own clip. Call audio and the caller's turns are ignored.
 
-<Equation formula="\text{Voice Naturalness} = 1 - \frac{\text{Agent replies flagged by at least one part}}{\text{Agent replies judged}}" />
+### Parts
 
-A reply flagged by two parts counts once. A part that cannot judge the call at all, such as Background Noise when every reply is under 2 seconds, is left out of the score. If no part can judge the call, for example because no agent reply has decodable audio, the metric is skipped.
+Each agent turn with audio is one reply. These seven parts judge it, each with its default limits:
 
-:::tip
-Use the overall score for regression thresholds, and the `metrics` entries to see which part is pulling it down. To change a part's limit, run that part on its own with the limit you want.
-:::
+| Part | Flags a reply that | Judges a reply with |
+| --- | --- | --- |
+| [Audio Clipping](/docs/metrics-audio-clipping) | is distorted from being too loud | audio that decodes |
+| [Audio Dropout](/docs/metrics-audio-dropout) | cuts out for a moment mid-speech | audio that decodes |
+| [Audio Loop](/docs/metrics-audio-loop) | repeats the same chunk of audio | audio that decodes |
+| [Pauses](/docs/metrics-pauses) | pauses over 2 seconds, or is over 50% silence | 2 seconds of speech or more |
+| [Background Noise](/docs/metrics-background-noise) | has speech under 20 dB above the noise | a clip of 2 seconds or more that isn't silent |
+| [Speaking Rate](/docs/metrics-speaking-rate) | is under 110 or over 200 words per minute | text and 2 seconds of speech or more |
+| [Pitch Variation](/docs/metrics-pitch-variation) | moves its pitch under 1 or over 6 semitones | 1 second of voiced speech or more |
+
+### Combining parts
+
+- A reply counts if at least one part judged it.
+- A reply is flagged if at least one part flagged it. Two parts flagging the same reply count once.
+- A part that can't judge any reply, such as Background Noise when every reply is under 2 seconds, is left out.
+
+If no part can judge any reply, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Example call
+
+A call with four agent replies: one clean, one clipped and rushed, one with a long pause, and one too short for most parts. Each row is one reply, the parts that judged it and the ones that flagged it.
+
+<VoiceDiagram
+  duration={27}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 3.5, end: 6.5, label: "turn 1" }, { start: 10.5, end: 13.5, label: "turn 3" }, { start: 17.5, end: 23.0, label: "turn 5" }, { start: 24.5, end: 26.0, label: "turn 7" }], sounds: [{ start: 3.6, end: 6.3 }, { start: 10.6, end: 13.3 }, { start: 17.6, end: 18.76 }, { start: 18.76, end: 21.5, silent: true }, { start: 21.5, end: 22.8 }, { start: 24.6, end: 25.8 }] },
+  ]}
+  marks={[
+    { at: 5.0, lane: 0, tone: "ok", label: "clean" },
+    { at: 11.6, lane: 0, tone: "bad", label: "clipped, rushed" },
+    { at: 20.1, lane: 0, tone: "bad", label: "long pause" },
+    { at: 25.2, lane: 0, tone: "ok", label: "clean" },
+  ]}
+/>
+
+| Agent turn | Judged by | Flagged by |
+| --- | --- | --- |
+| 1 | All 7 parts | None |
+| 3 | All 7 parts | Audio Clipping, Speaking Rate (239 wpm) |
+| 5 | All 7 parts | Pauses (2.7 s pause) |
+| 7 | Audio Clipping, Audio Dropout and Audio Loop, as it's only 1.5 s long | None |
+| **4 replies** | | **2 flagged → 2/4 = 0.5** |
 
 ## FAQs
 
 <FAQs
   qas={[
-    {
-      question: "Why did my score change?",
-      answer: (
-        <>
-          This metric used to average a weighted penalty per reply. It now
-          rolls up the single-issue metrics listed above and scores the share
-          of replies with no issue, so a reply with any problem counts fully
-          against the score, and a reply with two problems counts once.
-        </>
-      ),
-    },
     {
       question: "How is this different from the single-issue metrics it runs?",
       answer: (
@@ -144,16 +216,33 @@ Use the overall score for regression thresholds, and the `metrics` entries to se
       ),
     },
     {
-      question: "Does this metric call an LLM or an external speech model?",
+      question: "Is this a mean-opinion score (MOS)?",
       answer: (
         <>
-          No. Every part is deterministic and runs locally over the audio
-          samples, so it has no model or token cost.
+          No. It's a set of acoustic checks, not a human rating. It's best for
+          catching regressions such as clipping, dropouts, repeated audio, long
+          pauses, background noise, rushed or dragging speech, or a flat or
+          swinging pitch.
         </>
       ),
     },
     {
-      question: "Does the metric evaluate user audio?",
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Every part runs locally over the audio, so it has no model or
+          token cost. The one exception is the{" "}
+          <code>"hybrid"</code>{" "}
+          <a href="/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes">
+            voice eval mode
+          </a>
+          , set with <code>DEEPEVAL_VOICE_EVAL_MODE</code>: Background Noise
+          then has each noisy reply double-checked by an audio decision model.
+        </>
+      ),
+    },
+    {
+      question: "Does the metric evaluate the caller's audio?",
       answer: <>No. Only the agent's replies are judged.</>,
     },
   ]}

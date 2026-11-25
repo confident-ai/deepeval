@@ -18,9 +18,18 @@ The silent reply metric checks whether your voice agent's replies **could actual
 
 <AudioSample name="silent-reply" />
 
+## Required Arguments
+
+To use the `SilentReplyMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
+
+- `audio` on the agent's turns
+- `content` on the agent's turns, so a reply with text but no audio can be caught
+
+The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). The test case's own `audio` is not used.
+
 ## Usage
 
-Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+The `SilentReplyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
 
 ```python
 from deepeval import evaluate
@@ -46,43 +55,135 @@ metric = SilentReplyMetric(threshold=1.0)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **FIVE** optional parameters when creating a `SilentReplyMetric`:
+The `SilentReplyMetric` takes only the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics).
 
-- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
-- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+### As a standalone
 
-`score_breakdown` lists the replies where the issue was found:
+You can also run the `SilentReplyMetric` on a single test case as a standalone, one-off execution:
 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.75
+print(metric.score, metric.reason)
 print(metric.score_breakdown)
 ```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each reply the caller couldn't hear shows up in `score_breakdown`. Here is what the [example call](#example-call) returns:
 
 ```python
 {
     "eligible_turns": 4,
-    "turns_with_events": 1,
-    "events": [{"type": "no_audio", "turn": 3}],
-    "skipped": [{"turn": 5, "error": "Audio is not a decodable PCM WAV."}],
+    "turns_with_events": 2,
+    "events": [
+        {
+            "type": "no_audio",
+            "turn": 3,
+            "timing_source": "turn_timestamps",
+            "description": "Reply had no audio",
+        },
+        {
+            "type": "no_speech",
+            "turn": 5,
+            "timing_source": "turn_timestamps",
+            "description": "Reply had no audible speech",
+            "offset_seconds": 0.0,
+            "duration_seconds": 2.0,
+            "start_time": 12.0,
+            "mark": "whole_reply",
+        },
+    ],
+    "skipped": [],
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. An event's `type` is `no_audio` when the reply has text but no audio, or `no_speech` when its audio holds nothing above the speech floor. A `no_speech` event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded are listed under `skipped`.
+| Field | What it means |
+| --- | --- |
+| `type` | No audio if the reply has text but no audio, no speech if its audio holds no audible sound |
+| `turn` | Which agent turn was silent, counting from 0 |
+| `duration_seconds` | No speech only. The length of the reply's clip |
+| `start_time` | No speech only. Where the reply starts, in seconds into the call. Missing when the clip has no `Audio.start_time` |
 
-<include cwd>snippets/voice/event-place.mdx</include>
+A reply with no audio has nothing to place on the call, so its event has no `start_time` or `mark`. Agent turns whose audio can't be decoded are listed under `skipped`.
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many agent replies were counted and `turns_with_events` how many were silent. The score is the share that could be heard.
 
 ## How Is It Calculated?
 
-`SilentReplyMetric` checks every agent turn that has text to say or audio, and scores the share the caller could hear:
+The `SilentReplyMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Silent Reply} = \frac{\text{Agent replies with audible speech}}{\text{Agent replies with text or audio}}" />
+<Equation formula="\text{Silent Reply} = \frac{\text{Number of Agent Replies With Audible Sound}}{\text{Total Number of Agent Replies}}" />
 
-A reply is silent when it carries no audio at all, or when its audio is inaudible: no 20 ms frame reaches speech level (an RMS of 300, about −41 dBFS). A turn with audio but no text is checked too, so an empty clip sent without a transcript still counts as a silent reply. The level metrics, such as [`LoudnessMetric`](/docs/metrics-loudness), skip inaudible replies and leave them to this metric. An agent turn with neither text nor audio is not a silent reply but no reply at all, and is reported by [`FailedResponseMetric`](/docs/metrics-failed-response). A reply that goes dead partway through is reported by [`DeadStreamMetric`](/docs/metrics-dead-stream). A conversation with no audio on any turn is not a voice call, so the metric is skipped, as it is when no agent turn has text or audio (`No assistant turn had text or audio.`).
+The metric reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio) only, and only the agent's turns.
+
+### Counting agent replies
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 2.8, label: "turn 1" }, { start: 6.6, end: 9.2, label: "turn 5" }], sounds: [{ start: 0.5, end: 2.6 }, { start: 6.7, end: 9.0 }] },
+  ]}
+  marks={[
+    { at: 1.6, lane: 0, tone: "info", label: "counted" },
+    { at: 4.5, lane: 0, tone: "info", label: "text only: counted" },
+    { at: 7.8, lane: 0, tone: "info", label: "counted" },
+  ]}
+/>
+
+Every agent turn with text or audio is one reply, including a turn with text but no clip, and a clip with no text. An agent turn with neither isn't a silent reply but no reply at all, so it is left to [Failed Response](/docs/metrics-failed-response). Clips that can't be decoded are skipped.
+
+### Silence criteria
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 2.8, label: "turn 1" }, { start: 6.6, end: 9.2, label: "turn 5" }], sounds: [{ start: 0.5, end: 2.6 }, { start: 6.7, end: 9.0, silent: true }] },
+  ]}
+  marks={[
+    { at: 2.6, lane: 0, tone: "ok", label: "heard" },
+    { at: 4.5, lane: 0, tone: "bad", label: "no audio" },
+    { at: 9.0, lane: 0, tone: "bad", label: "no speech" },
+  ]}
+/>
+
+A reply is silent when:
+
+| Check | Rule |
+| --- | --- |
+| No audio | The turn has text but no `audio` |
+| No audible sound | Every 20 ms of the clip is below an RMS level of 300, about −41 dBFS |
+
+A reply that goes quiet only partway through is [Dead Stream](/docs/metrics-dead-stream)'s to report. The level metrics, such as [Loudness](/docs/metrics-loudness), skip inaudible replies and leave them to this metric. If no turn has audio, or no agent turn has text or audio, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Example call
+
+A short call where one reply was never played and another was played as silence. Each row is one agent reply and whether the caller could hear it.
+
+<VoiceDiagram
+  duration={20}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 12.0, end: 14.0, label: "turn 5" }, { start: 18.0, end: 20.0, label: "turn 7" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 12.0, end: 14.0, silent: true }, { start: 18.0, end: 19.75 }] },
+  ]}
+  marks={[
+    { at: 4.0, lane: 0, tone: "ok", label: "heard" },
+    { at: 8.5, lane: 0, tone: "bad", label: "no audio" },
+    { at: 13.0, lane: 0, tone: "bad", label: "no speech" },
+    { at: 19.0, lane: 0, tone: "ok", label: "heard" },
+  ]}
+/>
+
+| Agent turn | Audio | Silent? |
+| --- | --- | --- |
+| 1, "Sure, what's the number?" | Speech | No |
+| 3, "One moment." | None | **Yes** (`no_audio`) |
+| 5, "It ships tomorrow." | A clip of digital silence | **Yes** (`no_speech`) |
+| 7, "Tomorrow." | Speech | No |
+| **4 replies** | | **2 silent → 2/4 = 0.5** |
 
 ## FAQs
 
@@ -95,7 +196,10 @@ A reply is silent when it carries no audio at all, or when its audio is inaudibl
           <a href="/docs/metrics-agent-responsiveness">
             AgentResponsivenessMetric
           </a>{" "}
-          runs this metric together with failed responses, unexpected call ends and reprompts, and scores the share of exchanges none of them flagged. This metric checks only whether each reply could be heard, and points to the replies that were silent.
+          runs this metric together with failed responses, unexpected call
+          ends and reprompts, and scores the share of exchanges none of them
+          flagged. This metric checks only whether each reply could be heard,
+          and points to the replies that were silent.
         </>
       ),
     },
@@ -103,15 +207,18 @@ A reply is silent when it carries no audio at all, or when its audio is inaudibl
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio samples, so it has no model or token cost.
+          No. Detection is deterministic and runs locally over the audio, so
+          it has no model or token cost.
         </>
       ),
     },
     {
-      question: "Does it check the simulated user's audio too?",
+      question: "Does it check the caller's audio too?",
       answer: (
         <>
-          No. Only assistant turns are inspected. The caller's audio is produced by your own TTS model, so defects there are a problem with the test harness rather than with the agent under test.
+          No. Only the agent's turns are checked. The caller's audio comes from
+          your own TTS model, so silence there is a problem with the test
+          harness, not the agent.
         </>
       ),
     },

@@ -14,15 +14,21 @@ beta: true
   referenceless={true}
 />
 
-The audio integrity metric checks whether your voice agent's audio **arrived intact**. It runs five single-issue voice metrics for cut-off, looping, dropping, clipped or silent replies, and returns the share of agent replies none of them flagged, between 0 and 1.
+The audio integrity metric checks whether your voice agent's audio **arrived intact**: no reply cut off, looping, dropping out, clipped or silent. It rolls five single-issue metrics into one score, the share of agent replies none of them flagged, between 0 and 1.
 
 :::note
-This is a pipeline health check rather than a quality judgment. It catches the failures that make a call unusable — silence where a reply should be, a repeating buffer, a reply that stops mid-word — not whether the agent sounded good.
+This is a pipeline health check, not a quality judgment. It catches the failures that make a call unusable, not whether the agent sounded good.
 :::
+
+## Required Arguments
+
+To use the `AudioIntegrityMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns, and `content` on them so a reply with no audio can be counted.
+
+Stereo `audio` on the test case is also used, but only by the cut-off part. See [Call audio](#call-audio) below.
 
 ## Usage
 
-Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+The `AudioIntegrityMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
 
 ```python
 from deepeval import evaluate
@@ -48,87 +54,202 @@ metric = AudioIntegrityMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **SIX** optional parameters when creating an `AudioIntegrityMetric`:
+There is **ONE** optional parameter specific to the `AudioIntegrityMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
-- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `audio` on the test case, and is passed to the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) check. Defaulted to `True`.
-- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection) on their channel. Passed to the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) part, and only used with call audio. Defaulted to `True`.
 
-Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
+The metric doesn't take `eval_mode`. Its Abrupt Cut-off part follows the configured [voice eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes).
+
+### As a standalone
+
+You can also run the `AudioIntegrityMetric` on a single test case as a standalone, one-off execution:
 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.75
+print(metric.score, metric.reason)
 print(metric.score_breakdown)
 ```
 
-For `AudioIntegrityMetric` the breakdown counts the replies, lists every issue found, and gives each part's own result:
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+`score_breakdown` lists every part's events, and each part's own result. Here is what the [example call](#example-call) returns:
 
 ```python
 {
-    "eligible_turns": 4,
-    "turns_with_events": 1,
+    "eligible_turns": 5,
+    "turns_with_events": 4,
     "events": [
-        {"type": "abrupt_cutoff", "turn": 3, "offset_seconds": 3.42, "duration_seconds": 0.02, "start_time": 13.92, "metric": "Abrupt Cut-off"},
-        {"type": "audio_dropout", "turn": 3, "offset_seconds": 1.12, "duration_seconds": 0.08, "start_time": 11.62, "metric": "Audio Dropout"},
-        {"type": "audio_dropout", "turn": 3, "offset_seconds": 2.9, "duration_seconds": 0.06, "start_time": 13.4, "metric": "Audio Dropout"},
+        {
+            "type": "abrupt_cutoff",
+            "turn": 3,
+            "offset_seconds": 1.605,
+            "duration_seconds": 0.02,
+            "start_time": 9.105,
+            "mark": "moment",
+            "timing_source": "turn_timestamps",
+            "description": "Agent's audio cut off abruptly",
+            "metric": "Abrupt Cut-off",
+        },
+        {
+            "type": "abrupt_cutoff",
+            "turn": 7,
+            "offset_seconds": 2.105,
+            "duration_seconds": 0.02,
+            "start_time": 20.225,
+            "mark": "moment",
+            "timing_source": "turn_timestamps",
+            "description": "Agent's audio cut off abruptly",
+            "metric": "Abrupt Cut-off",
+        },
+        {
+            "type": "audio_loop",
+            "turn": 5,
+            "offset_seconds": 1.25,
+            "duration_seconds": 0.76,
+            "start_time": 13.37,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Audio repeated for 0.8s",
+            "metric": "Audio Loop",
+        },
+        {
+            "type": "audio_dropout",
+            "turn": 7,
+            "offset_seconds": 1.1,
+            "duration_seconds": 0.08,
+            "start_time": 19.22,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Audio dropped out for 80 ms",
+            "metric": "Audio Dropout",
+        },
+        {
+            "type": "no_audio",
+            "turn": 9,
+            "timing_source": "turn_timestamps",
+            "description": "Reply had no audio",
+            "metric": "Silent Reply",
+        },
     ],
     "skipped": [],
     "metrics": {
-        "Abrupt Cut-off": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
-        "Audio Loop": {"score": 1.0, "eligible_turns": 4, "turns_with_events": 0},
+        "Abrupt Cut-off": {"score": 0.5, "eligible_turns": 4, "turns_with_events": 2},
+        "Audio Loop": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
         "Audio Dropout": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
         "Audio Clipping": {"score": 1.0, "eligible_turns": 4, "turns_with_events": 0},
-        "Silent Reply": {"score": 1.0, "eligible_turns": 4, "turns_with_events": 0},
+        "Silent Reply": {"score": 0.8, "eligible_turns": 5, "turns_with_events": 1},
     },
 }
 ```
 
-`eligible_turns` is how many agent replies were judged and `turns_with_events` how many had at least one issue. `events` holds each part's events unchanged, tagged with the `metric` that raised them; the part's own page explains its fields. `skipped` collects the replies a part could not judge. `metrics` gives each part's own `score`, `eligible_turns` and `turns_with_events`, or `{"score": None, "reason": ...}` when that part could not judge the call. The reason for the call above reads "1 of 4 agent replies had an issue: Abrupt Cut-off (1), Audio Dropout (1)."
+| Field | What it means |
+| --- | --- |
+| `metric` | Which part raised the event |
+| `metrics` | Each part's own score and counts, or a `score` of None and a `reason` when that part had nothing to judge |
 
-When the call has no agent turns, or an agent turn's audio cannot be decoded, the breakdown is the critical failure instead:
+Each event is unchanged from the part that raised it, so its other fields are explained on that part's page.
+
+When the call has no agent turns, or an agent turn's audio can't be decoded, the breakdown is a critical failure instead, and the score is 0:
 
 ```python
 {
     "critical_failure": True,
-    "events": [{"type": "audio_undecodable", "turn": 3, "reason": "Audio is not a decodable PCM WAV."}],
+    "events": [
+        {"type": "audio_undecodable", "turn": 3, "reason": "Audio is not a decodable PCM WAV."}
+    ],
 }
 ```
 
-<include cwd>snippets/voice/event-place.mdx</include>
+| Field | What it means |
+| --- | --- |
+| `critical_failure` | Always True. The parts weren't run |
+| `reason` | Why the turn's audio couldn't be decoded |
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), where it has a place on the call.
+
+`eligible_turns` is how many agent replies were counted and `turns_with_events` how many at least one part flagged. The score is the share no part flagged.
 
 ## How Is It Calculated?
 
-`AudioIntegrityMetric` runs these single-issue metrics on the call, each with its default limits:
+The `AudioIntegrityMetric` score is calculated according to the following equation:
 
-| Part                                           | Flags an agent reply that                       |
-| ---------------------------------------------- | ----------------------------------------------- |
-| [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) | stops mid-sound instead of fading out.          |
-| [Audio Loop](/docs/metrics-audio-loop)         | gets stuck repeating the same chunk of audio.   |
-| [Audio Dropout](/docs/metrics-audio-dropout)   | cuts out for a fraction of a second mid-speech. |
-| [Audio Clipping](/docs/metrics-audio-clipping) | is distorted from being too loud.               |
-| [Silent Reply](/docs/metrics-silent-reply)     | has text but no audio, or audio with no audible sound. |
+<Equation formula="\text{Audio Integrity} = \frac{\text{Number of Agent Replies No Part Flagged}}{\text{Total Number of Agent Replies}}" />
 
-The score is the share of judged agent replies that none of the parts flagged:
+### Counting agent replies
 
-<Equation formula="\text{Audio Integrity} = 1 - \frac{\text{Agent replies flagged by at least one part}}{\text{Agent replies judged}}" />
+The metric runs five single-issue metrics on the call, each with its default limits:
 
-A reply flagged by two parts counts once, however many events it lists. A part that cannot judge the call at all is left out of the score, and if no part can judge it, the metric is skipped.
+| Part | Flags an agent reply that |
+| --- | --- |
+| [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) | Stops mid-sound instead of fading out |
+| [Audio Loop](/docs/metrics-audio-loop) | Gets stuck repeating the same chunk |
+| [Audio Dropout](/docs/metrics-audio-dropout) | Cuts out for a fraction of a second mid-speech |
+| [Audio Clipping](/docs/metrics-audio-clipping) | Is distorted from being too loud |
+| [Silent Reply](/docs/metrics-silent-reply) | Has text but no audio, or audio with no audible sound |
 
-Two checks run before the parts and force the score to 0, with the reason "A critical failure occurred: ..." naming them:
+A reply counts if any part counted it, and is flagged if any part flagged it. So an agent turn with text and no audio counts, through Silent Reply. A reply flagged by two parts counts once. A part with nothing to judge is left out, and if no part has anything to judge, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
-| Event                    | Meaning                                                    |
-| ------------------------ | ---------------------------------------------------------- |
-| `assistant_turn_missing` | The conversation contains no agent turns at all.           |
-| `audio_undecodable`      | An agent turn's audio could not be decoded. Carries the `turn` and a `reason`. |
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.5, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 4.3 }, { start: 5.7, end: 7.0 }, { start: 7.0, end: 7.1, silent: true }, { start: 7.1, end: 8.6, ending: "cut" }] },
+  ]}
+  marks={[
+    { at: 2.5, lane: 0, tone: "ok", label: "clean" },
+    { at: 7.05, lane: 0, tone: "bad", label: "dropout" },
+    { at: 8.6, lane: 0, tone: "bad", label: "cut off" },
+  ]}
+/>
 
-Nothing else zeroes the score: a reply with no audio at all is one flagged reply, counted by Silent Reply.
+Above, turn 3 is flagged by two parts but counts once: 1 of 2 replies flagged.
 
-With a stereo call recording (the test case's `audio`), cut-offs are read from the recording, and each one counts against the agent reply that started last before the cut. A cut before the test case's first agent reply, such as one in turns left out of the test case, is not counted. That needs `start_time` on every audio turn; without it, cut-offs are read from each reply's own audio. A reply that stops because the caller [barged in](/docs/conversation-simulator-voice-interruptions) is not counted as cut off.
+### Critical failures
+
+Two checks run before the parts. Either one sets the score to 0, with the reason "A critical failure occurred: ..." naming it:
+
+| Event | When |
+| --- | --- |
+| `assistant_turn_missing` | The call has no agent turns at all |
+| `audio_undecodable` | An agent turn's audio can't be decoded |
+
+Nothing else sets the score to 0. A reply with no audio is one flagged reply, counted by Silent Reply.
+
+### Call audio
+
+Audio Loop, Audio Dropout, Audio Clipping and Silent Reply only read turn audio. Abrupt Cut-off reads stereo call audio when the test case has it. Each cut-off it finds there counts against the agent turn that started last before the stop, so every audio turn needs an `Audio.start_time`. Without one on every turn, Abrupt Cut-off reads turn audio too. A cut before the test case's first agent turn is dropped, and a stop where the caller [barged in](/docs/conversation-simulator-voice-interruptions) isn't a cut-off.
+
+### Example call
+
+A call where four of five agent replies have a problem, and one has two. Each row is one agent reply and the parts that flagged it.
+
+<VoiceDiagram
+  duration={24}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.12, label: "turn 3" }, { start: 12.12, end: 15.12, label: "turn 5" }, { start: 18.12, end: 20.24, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 9.12, ending: "cut" }, { start: 12.12, end: 13.37 }, { start: 13.37, end: 14.13 }, { start: 14.13, end: 14.87 }, { start: 18.12, end: 19.22 }, { start: 19.22, end: 19.3, silent: true }, { start: 19.3, end: 20.24, ending: "cut" }] },
+  ]}
+  windows={[
+    { start: 13.37, end: 14.13, lanes: [0], tone: "bad", label: "loop" },
+  ]}
+  marks={[
+    { at: 3.5, lane: 0, tone: "ok", label: "clean" },
+    { at: 9.12, lane: 0, tone: "bad", label: "cut off" },
+    { at: 19.26, lane: 0, tone: "bad", label: "dropout" },
+    { at: 20.24, lane: 0, tone: "bad", label: "cut off" },
+    { at: 23.25, lane: 0, tone: "bad", label: "turn 9: no audio" },
+  ]}
+/>
+
+| Agent turn | What happens | Flagged by |
+| --- | --- | --- |
+| 1 | Normal speech | – |
+| 3 | Stops at full volume | Abrupt Cut-off |
+| 5 | A syllable plays four times in a row | Audio Loop |
+| 7 | An 80 ms dropout, then stops at full volume | Audio Dropout, Abrupt Cut-off |
+| 9 | Text, but no audio | Silent Reply |
+| **5 replies** | | **4 flagged → 1/5 = 0.2** |
 
 ## FAQs
 
@@ -138,11 +259,22 @@ With a stereo call recording (the test case's `audio`), cut-offs are read from t
       question: "Why did my score change?",
       answer: (
         <>
-          This metric used to subtract a weighted severity for each defect and
-          zero the call on several kinds of event. It now rolls up the
-          single-issue metrics listed above and scores the share of replies
-          with no issue. Only a call with no agent turns, or agent audio that
-          cannot be decoded, still scores 0.
+          This metric used to subtract a weighted severity for each problem and
+          set the score to 0 on several kinds of event. It now rolls up the
+          single-issue metrics above and scores the share of replies with no
+          problem. Only a call with no agent turns, or agent audio that can't
+          be decoded, still scores 0.
+        </>
+      ),
+    },
+    {
+      question: "How is this different from Audio Glitch?",
+      answer: (
+        <>
+          Both run the cut-off and clipping checks.{" "}
+          <a href="/docs/metrics-audio-glitch">AudioGlitchMetric</a> adds held
+          tones and dead stream, and skips undecodable audio instead of
+          scoring 0. This metric adds loops, dropouts and silent replies.
         </>
       ),
     },
@@ -153,8 +285,7 @@ With a stereo call recording (the test case's `audio`), cut-offs are read from t
           <a href="/docs/metrics-voice-reliability">VoiceReliabilityMetric</a>{" "}
           runs these same parts together with{" "}
           <a href="/docs/metrics-agent-responsiveness">agent responsiveness</a>
-          's, and counts per exchange rather than per reply. Use audio
-          integrity when you only want to know whether the audio arrived.
+          's, and counts per exchange rather than per reply.
         </>
       ),
     },
@@ -162,20 +293,10 @@ With a stereo call recording (the test case's `audio`), cut-offs are read from t
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No LLM. Every part runs locally over the audio samples. With a call
-          recording and <code>use_speech_detection</code> on, the cut-off
-          check runs the small Silero VAD model locally over the caller's
-          channel, so it has no token cost.
-        </>
-      ),
-    },
-    {
-      question: "Does it check the simulated user's audio too?",
-      answer: (
-        <>
-          No. Only the agent's replies are judged. The caller's audio is
-          produced by your own TTS model, so defects there are a problem with
-          the test harness rather than with the agent under test.
+          No LLM. Every part runs locally over the audio. With call audio and{" "}
+          <code>use_speech_detection</code> on, the cut-off part runs the small
+          Silero VAD model locally over the caller's channel, so there's no
+          token cost.
         </>
       ),
     },

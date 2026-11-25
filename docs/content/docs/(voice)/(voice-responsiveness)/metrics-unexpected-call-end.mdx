@@ -18,9 +18,19 @@ The unexpected call end metric checks whether your voice agent's call **ended pr
 
 <AudioSample name="unexpected-call-end" />
 
+## Required Arguments
+
+To use the `UnexpectedCallEndMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
+
+- `content` on each turn, to tell whether the call wrapped up
+- `metadata` saying how the call ended, as the [`ConversationSimulator`](/docs/conversation-simulator-voice-mode) records it under `"Stop reason"`, or as your platform records it under `"end_reason"`
+- `audio` on at least one turn, so it is a voice call
+
+The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio), and only to place the call's end. The test case's own `audio` is not used.
+
 ## Usage
 
-Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+The `UnexpectedCallEndMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
 
 ```python
 from deepeval import evaluate
@@ -46,48 +56,111 @@ metric = UnexpectedCallEndMetric(threshold=1.0)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **FIVE** optional parameters when creating an `UnexpectedCallEndMetric`:
+The `UnexpectedCallEndMetric` takes only the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics).
 
-- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
-- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+### As a standalone
 
-`score_breakdown` lists the call's ending when it was unexpected:
+You can also run the `UnexpectedCallEndMetric` on a single test case as a standalone, one-off execution:
 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.0
+print(metric.score, metric.reason)
 print(metric.score_breakdown)
 ```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+A call that ended badly shows up in `score_breakdown` as one event. Here is what the [example call](#example-call) returns:
 
 ```python
 {
     "eligible_turns": 1,
     "turns_with_events": 1,
-    "events": [{"type": "unexpected_end", "turn": 7, "end_reason": "agent_ended_call", "start_time": 41.0, "duration_seconds": 0.0, "mark": "moment", "timing_source": "turn_timestamps", "description": "Call ended unexpectedly (agent_ended_call)"}],
+    "events": [
+        {
+            "type": "unexpected_end",
+            "turn": 3,
+            "duration_seconds": 0.0,
+            "start_time": 11.0,
+            "mark": "moment",
+            "timing_source": "turn_timestamps",
+            "description": "Call ended unexpectedly (agent_ended_call)",
+            "end_reason": "agent_ended_call",
+        }
+    ],
     "skipped": [],
 }
 ```
 
-`turn` is the zero-based position of the call's last turn. `start_time` is where the call's last timed audio ends, on the call's clock (left out when no turn has an `Audio.start_time`). `end_reason` is `agent_ended_call` when a simulation recorded that the agent hung up, or the call's own `end_reason` metadata, such as `ERROR`, otherwise.
+| Field | What it means |
+| --- | --- |
+| `end_reason` | Agent ended call when the simulator recorded the agent hanging up. Otherwise the test case's own `end_reason`, such as `ERROR` |
+| `turn` | The call's last turn, counting from 0 |
+| `start_time` | Where the call's last timed audio ends, in seconds into the call. Missing when no turn has an `Audio.start_time` |
+| `duration_seconds` | Always 0: the end is a single moment |
 
-<include cwd>snippets/voice/event-place.mdx</include>
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is always 1, the call, and `turns_with_events` is 1 when it ended badly. The score is 0 if it did and 1 if it didn't.
 
 ## How Is It Calculated?
 
-`UnexpectedCallEndMetric` judges how the call ended:
+The `UnexpectedCallEndMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Unexpected Call End} = \begin{cases} 0 & \text{if the call ended unexpectedly} \\ 1 & \text{otherwise} \end{cases}" />
 
-A call ends unexpectedly when:
+### Counting calls
 
-- the agent hung up before the call wrapped up. The [`ConversationSimulator`](/docs/conversation-simulator-voice-mode) records this as the `Stop reason` "The agent ended the call"; a call you bring in can record it as `end_reason` `AGENT_HANGUP` in its `metadata`. A call has wrapped up when the caller's last line closes it, that is, ends in "bye", "goodbye", "thank you", "thanks", "that's all" or "that is all" (ignoring trailing periods or exclamation marks), or when the agent's last line contains the word "bye" or "goodbye".
-- its `metadata` `end_reason` (or `endReason`) is `ERROR` or `IDLE_TIMEOUT`, in any letter case, however the conversation went.
+Each test case is one call, so there is one thing to judge: how it ended.
 
-A call with no recorded ending, such as a simulation that ran its full number of turns, ended normally. When the agent hangs up right after a question, this metric and [`FailedResponseMetric`](/docs/metrics-failed-response) both fail: one reports how the call ended, the other the unanswered question. A conversation with no audio on any turn is not a voice call, so the metric is skipped.
+### Ending criteria
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Caller", role: "caller", clips: [{ start: 0.2, end: 2.4, label: "question" }, { start: 6.2, end: 8.0, label: "goodbye" }], sounds: [{ start: 0.3, end: 2.2 }, { start: 6.3, end: 7.8 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 3.0, end: 5.4, label: "reply" }], sounds: [{ start: 3.1, end: 5.2 }] },
+  ]}
+  marks={[
+    { at: 2.4, lane: 0, tone: "bad", label: "hang-up: unexpected" },
+    { at: 8.0, lane: 0, tone: "ok", label: "hang-up: normal" },
+  ]}
+/>
+
+The agent hanging up is only a problem if the call hadn't wrapped up. Above, a hang-up right after the question would be unexpected, while one after the caller's goodbye is normal. The checks run in this order:
+
+| Check | Rule |
+| --- | --- |
+| Error or timeout | The `metadata` `end_reason` (or `endReason`) is `ERROR` or `IDLE_TIMEOUT`, in any letter case. Always unexpected, however the call went |
+| Wrapped up | The caller's last line ends in "bye", "goodbye", "thank you", "thanks", "that's all" or "that is all", ignoring trailing periods and exclamation marks, or the agent's last line contains the word "bye" or "goodbye". Then the end is normal |
+| Agent hung up | The `metadata` `"Stop reason"` is "The agent ended the call", or `end_reason` is `AGENT_HANGUP`. Unexpected |
+
+A call with none of these, such as a simulation that ran its full number of turns, ended normally. If no turn has audio, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Example call
+
+The caller asks a question and the agent hangs up instead of answering. The table walks through the checks for this one call.
+
+<VoiceDiagram
+  duration={12}
+  lanes={[
+    { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 9.0, end: 11.0, label: "turn 3" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 9.0, end: 10.75 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0, end: 2.0, label: "turn 0" }, { start: 6.0, end: 8.0, label: "turn 2" }], sounds: [{ start: 0, end: 1.75 }, { start: 6.0, end: 7.75 }] },
+  ]}
+  marks={[
+    { at: 11.0, lane: 0, tone: "bad", label: "agent hung up" },
+  ]}
+/>
+
+| Check | This call | Result |
+| --- | --- | --- |
+| Error or timeout | No `end_reason` | No |
+| Wrapped up | Caller's last line is "Can I change the address?", agent's is "It ships tomorrow." | No |
+| Agent hung up | `"Stop reason"` is "The agent ended the call" | **Yes** |
+| **1 call** | | **Ended unexpectedly → 0** |
 
 ## FAQs
 
@@ -100,7 +173,21 @@ A call with no recorded ending, such as a simulation that ran its full number of
           <a href="/docs/metrics-agent-responsiveness">
             AgentResponsivenessMetric
           </a>{" "}
-          runs this metric together with failed responses, silent replies and reprompts, and scores the share of exchanges none of them flagged, so a bad ending costs it one exchange. This metric judges only the ending.
+          runs this metric together with failed responses, silent replies and
+          reprompts, and scores the share of exchanges none of them flagged,
+          so a bad ending costs it one exchange. This metric judges only the
+          ending.
+        </>
+      ),
+    },
+    {
+      question: "Why does Failed Response fail too when the agent hangs up on a question?",
+      answer: (
+        <>
+          They report two sides of one failure. This metric reports how the
+          call ended, and{" "}
+          <a href="/docs/metrics-failed-response">FailedResponseMetric</a>{" "}
+          reports the question left unanswered.
         </>
       ),
     },
@@ -108,15 +195,8 @@ A call with no recorded ending, such as a simulation that ran its full number of
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. It only reads the call's recorded ending and the text of its last turns, so it has no model or token cost.
-        </>
-      ),
-    },
-    {
-      question: "Does it check the simulated user's audio too?",
-      answer: (
-        <>
-          No. It reads the text of the caller's last line to see whether it closed the call. The caller's audio itself is never read or judged.
+          No. It reads the call's recorded ending and the text of its last
+          turns, so it has no model or token cost.
         </>
       ),
     },

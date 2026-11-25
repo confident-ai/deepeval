@@ -18,9 +18,15 @@ The audio clipping metric checks whether your voice agent's audio is **distorted
 
 <AudioSample name="audio-clipping" />
 
+## Required Arguments
+
+To use the `AudioClippingMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
+
+The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). Call audio on the test case is ignored. An `Audio.start_time` on each clip is optional, and only used to place events on the call's clock.
+
 ## Usage
 
-Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+The `AudioClippingMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
 
 ```python
 from deepeval import evaluate
@@ -46,58 +52,150 @@ metric = AudioClippingMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **FIVE** optional parameters when creating an `AudioClippingMetric`:
+The `AudioClippingMetric` has no optional parameters of its own. It takes only the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics).
 
-- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
-- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+### As a standalone
 
-`score_breakdown` lists the replies where the defect was found:
+You can also run the `AudioClippingMetric` on a single test case as a standalone, one-off execution:
 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.75
+print(metric.score, metric.reason)
 print(metric.score_breakdown)
 ```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each clipped reply shows up in `score_breakdown` as one event. Here is what the [example call](#example-call) returns:
 
 ```python
 {
     "eligible_turns": 4,
     "turns_with_events": 1,
-    "events": [{"type": "clipping", "turn": 3, "role": "assistant", "offset_seconds": 1.02, "duration_seconds": 0.48, "start_time": 11.52, "position": "middle", "fraction": 0.031}],
+    "events": [
+        {
+            "type": "clipping",
+            "turn": 5,
+            "role": "assistant",
+            "offset_seconds": 0.048,
+            "duration_seconds": 1.657,
+            "start_time": 12.548,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Audio was clipped",
+            "position": "start",
+            "fraction": 0.0836,
+        }
+    ],
     "skipped": [],
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation. `offset_seconds` and `duration_seconds` give the clipped span inside the reply (from the first clipped sample to the last), `start_time` places it on the call's clock and is left out when the clip has no `Audio.start_time`, and `fraction` is the share of the reply's samples that were clipped. Agent replies whose audio could not be decoded are listed under `skipped` with the error.
+| Field | What it means |
+| --- | --- |
+| `offset_seconds` | Where the first clipped sample is, in seconds from the start of the clip |
+| `duration_seconds` | From the first clipped sample to the last |
+| `fraction` | The share of the clip's samples that were clipped |
+| `position` | Whether the clipped stretch starts near the start, middle or end of the clip |
 
-<include cwd>snippets/voice/event-place.mdx</include>
+Clips that can't be decoded are listed under `skipped`. Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many agent replies were counted and `turns_with_events` how many were clipped. The score is the share that weren't.
 
 ## How Is It Calculated?
 
-`AudioClippingMetric` checks every agent reply that has audio and scores the share of them without the defect:
+The `AudioClippingMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Audio Clipping} = \frac{\text{Agent replies without the defect}}{\text{Agent replies with decodable audio}}" />
+<Equation formula="\text{Audio Clipping} = \frac{\text{Number of Agent Replies Without Clipping}}{\text{Total Number of Agent Replies}}" />
 
-A reply is clipped when **more than 1% of its samples** sit at full scale (an absolute 16-bit value of 32,760 or more).
+### Counting agent replies
 
-If no agent reply has decodable audio, the metric is skipped.
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
+  ]}
+  windows={[
+    { start: 0.5, end: 4.0, lanes: [0], tone: "info", label: "reply 1" },
+    { start: 5.5, end: 9.5, lanes: [0], tone: "info", label: "reply 2" },
+  ]}
+/>
+
+Each agent clip that decodes is one reply. The caller's clips are never checked.
+
+### Clipping criteria
+
+Audio that's too loud hits the top of what a 16-bit sample can hold, and gets flattened there.
+
+<VoiceDiagram
+  duration={8}
+  lanes={[
+    { label: "Agent", role: "agent", sounds: [{ start: 0.3, end: 3.6, level: 0.8 }, { start: 4.4, end: 7.6, level: 1, ending: "flat" }] },
+  ]}
+  marks={[
+    { at: 2.0, lane: 0, tone: "ok", label: "loud" },
+    { at: 6.0, lane: 0, tone: "bad", label: "clipped" },
+  ]}
+/>
+
+A reply is clipped when:
+
+| Check | Rule |
+| --- | --- |
+| Clipped sample | 32,760 or more, either way from zero |
+| Share of the clip | More than 1% of its samples are clipped |
+
+A few clipped samples on one loud syllable don't count. If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Example call
+
+A call where one of four agent replies is pushed far past full volume. Each row is one agent reply and whether it was clipped.
+
+<VoiceDiagram
+  duration={20}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.5, label: "turn 3" }, { start: 12.5, end: 14.5, label: "turn 5" }, { start: 17.5, end: 19.5, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25, level: 0.5 }, { start: 7.5, end: 9.25, level: 0.85 }, { start: 12.5, end: 14.25, level: 1, ending: "flat" }, { start: 17.5, end: 19.25, level: 0.5 }] },
+  ]}
+  marks={[
+    { at: 3.5, lane: 0, tone: "ok", label: "clean" },
+    { at: 8.5, lane: 0, tone: "ok", label: "clean: loud" },
+    { at: 13.5, lane: 0, tone: "bad", label: "clipped" },
+    { at: 18.5, lane: 0, tone: "ok", label: "clean" },
+  ]}
+/>
+
+| Agent turn | What happens | Clipped? |
+| --- | --- | --- |
+| 1 | Normal volume | No |
+| 3 | Three times louder, but under full scale | No |
+| 5 | 8.4% of samples at full scale | **Yes** |
+| 7 | Normal volume | No |
+| **4 replies** | | **1 clipped → 3/4 = 0.75** |
 
 ## FAQs
 
 <FAQs
   qas={[
     {
-      question: "How does this differ from audio glitch?",
+      question: "How does this differ from audio glitch and audio integrity?",
       answer: (
         <>
-          <a href="/docs/metrics-audio-glitch">AudioGlitchMetric</a> runs this
-          metric together with held tones, dead stream and cut-offs, and scores
-          the share of agent replies none of them flagged. This metric reports
-          only clipping.
+          Both <a href="/docs/metrics-audio-glitch">AudioGlitchMetric</a> and{" "}
+          <a href="/docs/metrics-audio-integrity">AudioIntegrityMetric</a> run
+          this metric as one of their parts. This metric reports only
+          clipping.
+        </>
+      ),
+    },
+    {
+      question: "Is a loud agent the same as a clipped one?",
+      answer: (
+        <>
+          No. A loud agent that stays under full scale isn't clipped. Use{" "}
+          <a href="/docs/metrics-loudness">LoudnessMetric</a> to check volume.
         </>
       ),
     },
@@ -105,18 +203,18 @@ If no agent reply has decodable audio, the metric is skipped.
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio
-          samples, so it has no model or token cost.
+          No. Detection is deterministic and runs locally over the audio, so it
+          has no model or token cost.
         </>
       ),
     },
     {
-      question: "Does it check the simulated user's audio too?",
+      question: "Does it check the caller's audio for clipping too?",
       answer: (
         <>
-          No. Only assistant turns are inspected. The caller's audio is produced
-          by your own TTS model, so defects there are a problem with the test
-          harness rather than with the agent under test.
+          No. Only the agent's replies are scored. The caller's audio comes from
+          your own TTS model, so clipping there is a problem with the test
+          harness, not the agent.
         </>
       ),
     },

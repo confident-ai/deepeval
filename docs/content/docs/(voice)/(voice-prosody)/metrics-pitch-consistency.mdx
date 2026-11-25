@@ -18,9 +18,17 @@ The pitch consistency metric checks whether your voice agent **keeps the same vo
 
 <AudioSample name="pitch-consistency" />
 
+## Required Arguments
+
+To use the `PitchConsistencyMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
+
+- `audio` on the agent's turns, one clip per reply, for at least three replies
+
+The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). `audio` on the test case is not used.
+
 ## Usage
 
-Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+The `PitchConsistencyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
 
 ```python
 from deepeval import evaluate
@@ -46,50 +54,148 @@ metric = PitchConsistencyMetric(threshold=0.8, max_shift_semitones=4)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **SIX** optional parameters when creating a `PitchConsistencyMetric`:
+There is **ONE** optional parameter specific to the `PitchConsistencyMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
-- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `max_shift_semitones`: an integer for how far, in semitones, a reply's pitch may sit from the agent's typical pitch. Defaulted to `4`.
-- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `max_shift_semitones`: an integer for how far, in semitones, a reply's pitch may sit from the agent's typical pitch. Must be greater than 0, or a `ValueError` is raised. Defaulted to `4`.
 
-`max_shift_semitones` must be greater than 0, or a `ValueError` is raised.
+### As a standalone
 
-`score_breakdown` lists the replies where the issue was found:
+You can also run the `PitchConsistencyMetric` on a single test case as a standalone, one-off execution:
 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.75
+print(metric.score, metric.reason)
 print(metric.score_breakdown)
 ```
 
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each reply whose pitch drifted too far shows up in `score_breakdown`. Here is what the [example call](#example-call) returns:
+
 ```python
 {
-    "eligible_turns": 4,
-    "turns_with_events": 1,
+    "eligible_turns": 5,
+    "turns_with_events": 2,
     "events": [
-        {"type": "pitch_shift", "turn": 3, "pitch_median_hz": 212.4, "shift_semitones": 5.1, "offset_seconds": 0.0, "duration_seconds": 4.2, "start_time": 10.5}
+        {
+            "type": "pitch_shift",
+            "turn": 3,
+            "timing_source": "turn_timestamps",
+            "description": "Reply was 4 semitones lower than usual",
+            "pitch_median_hz": 178.4,
+            "shift_semitones": -4.3,
+            "offset_seconds": 0.0,
+            "duration_seconds": 3.0,
+            "start_time": 7.0,
+            "mark": "whole_reply",
+        },
+        {
+            "type": "pitch_shift",
+            "turn": 7,
+            "timing_source": "turn_timestamps",
+            "description": "Reply was 5 semitones higher than usual",
+            "pitch_median_hz": 298.7,
+            "shift_semitones": 4.6,
+            "offset_seconds": 0.0,
+            "duration_seconds": 3.0,
+            "start_time": 17.0,
+            "mark": "whole_reply",
+        },
     ],
-    "skipped": [{"turn": 5, "error": "Reply has under 1s of voiced speech to follow its pitch."}],
+    "skipped": [
+        {
+            "turn": 11,
+            "error": "Reply has under 1s of voiced speech to follow its pitch.",
+        }
+    ],
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation, `pitch_median_hz` is the reply's median pitch, and `shift_semitones` is how far that sits from the agent's typical pitch (negative when deeper). The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, or that have under one second of voiced speech, are listed under `skipped`.
+| Field | What it means |
+| --- | --- |
+| `pitch_median_hz` | The reply's median pitch, in Hz |
+| `shift_semitones` | How far that sits from the agent's typical pitch, in semitones. Negative when deeper |
 
-<include cwd>snippets/voice/event-place.mdx</include>
+Each event covers the whole reply: `offset_seconds` is 0 and `duration_seconds` is the clip's length. The `description` rounds the shift to a whole number. Replies with under 1 second of voiced speech, or audio that can't be decoded, are listed under `skipped`.
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many agent replies were compared and `turns_with_events` how many drifted. The score is the share that didn't.
 
 ## How Is It Calculated?
 
-`PitchConsistencyMetric` compares every agent reply with at least one second of voiced speech against the agent's typical reply, and scores the share that stay close:
+The `PitchConsistencyMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Pitch Consistency} = \frac{\text{Agent replies within max\_shift\_semitones of the typical pitch}}{\text{Agent replies with one or more seconds of voiced speech}}" />
+<Equation formula="\text{Pitch Consistency} = \frac{\text{Number of Agent Replies Near the Typical Pitch}}{\text{Total Number of Agent Replies}}" />
 
-Each reply's pitch is the median of its 40 ms frames, tracked with the YIN method (de Cheveigné & Kawahara, 2002). The agent's typical pitch is the median across its replies, so a single odd reply is flagged on its own rather than dragging the reply after it down too. This needs at least **three** replies to tell which one is off; with fewer, the metric is skipped.
+The metric only reads turn audio, one agent clip at a time. The caller's turns are never checked.
 
-The default of **4 semitones** comes from 't Hart (1981): differences under about 3 semitones don't matter to listeners in conversation, and some can't tell differences under 4 apart.
+### Counting agent replies
+
+<VoiceDiagram
+  duration={14}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 3.5, label: "turn 1" }, { start: 4.5, end: 7.5, label: "turn 3" }, { start: 8.5, end: 11.5, label: "turn 5" }, { start: 12.5, end: 13.3, label: "turn 7" }], sounds: [{ start: 0.6, end: 3.3 }, { start: 4.6, end: 7.3 }, { start: 8.6, end: 11.3 }, { start: 12.55, end: 13.2 }] },
+  ]}
+  windows={[
+    { start: 0.5, end: 3.5, lanes: [0], tone: "info", label: "reply 1" },
+    { start: 4.5, end: 7.5, lanes: [0], tone: "info", label: "reply 2" },
+    { start: 8.5, end: 11.5, lanes: [0], tone: "info", label: "reply 3" },
+  ]}
+  marks={[
+    { at: 12.9, lane: 0, tone: "skip", label: "too short" },
+  ]}
+/>
+
+Each agent clip that decodes is one reply, if it has at least 1 second of voiced speech. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz, and leaves out stretches that are near silent or have no clear pitch. A reply's pitch is the median of what's left.
+
+It takes at least **3** replies to tell which one is off. With fewer, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Pitch shift criteria
+
+The agent's typical pitch is the median across all counted replies. A median means one odd reply is flagged on its own, rather than pulling the typical pitch towards it and making the others look off too.
+
+| Check | Rule |
+| --- | --- |
+| Pitch shift | More than `max_shift_semitones` (4 by default) above or below the typical pitch |
+
+Before taking each median, up to 120 ms sitting about an octave off the pitch around it is folded back, since pitch trackers often lock onto the octave for a moment.
+
+:::note
+The default of 4 semitones comes from 't Hart (1981): differences under about 3 semitones don't matter to listeners in conversation, and some can't tell differences under 4 apart.
+:::
+
+### Example call
+
+A call with six agent replies: most sit near 230 Hz, one is clearly deeper, one clearly higher, and one is too short to judge. Each row is one agent reply, its median pitch and how far that is from the typical 228.7 Hz.
+
+<VoiceDiagram
+  duration={28}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2, end: 5, label: "turn 1" }, { start: 7, end: 10, label: "turn 3" }, { start: 12, end: 15, label: "turn 5" }, { start: 17, end: 20, label: "turn 7" }, { start: 22, end: 25, label: "turn 9" }, { start: 27, end: 27.8, label: "turn 11" }], sounds: [{ start: 2.1, end: 4.8 }, { start: 7.1, end: 9.8 }, { start: 12.1, end: 14.8 }, { start: 17.1, end: 19.8 }, { start: 22.1, end: 24.8 }, { start: 27.05, end: 27.7 }] },
+  ]}
+  marks={[
+    { at: 3.5, lane: 0, tone: "ok", label: "clean" },
+    { at: 8.5, lane: 0, tone: "bad", label: "deeper" },
+    { at: 13.5, lane: 0, tone: "ok", label: "clean" },
+    { at: 18.5, lane: 0, tone: "bad", label: "higher" },
+    { at: 23.5, lane: 0, tone: "ok", label: "clean" },
+    { at: 27.4, lane: 0, tone: "skip", label: "skipped" },
+  ]}
+/>
+
+| Agent turn | Median pitch | Shift | Flagged? |
+| --- | --- | --- | --- |
+| 1 | 228.7 Hz | 0 semitones | No |
+| 3 | 178.4 Hz | −4.3 semitones | **Yes** |
+| 5 | 238.6 Hz | +0.7 semitones | No |
+| 7 | 298.7 Hz | +4.6 semitones | **Yes** |
+| 9 | 223.6 Hz | −0.4 semitones | No |
+| 11 | Under 1 s of voiced speech | | Skipped |
+| **5 replies** | | | **2 flagged → 3/5 = 0.6** |
 
 ## FAQs
 
@@ -100,9 +206,10 @@ The default of **4 semitones** comes from 't Hart (1981): differences under abou
       answer: (
         <>
           <a href="/docs/metrics-voice-consistency">VoiceConsistencyMetric</a>{" "}
-          runs this metric together with loudness consistency and scores the
-          share of replies neither flagged. This metric checks pitch only and
-          points to the replies that drifted.
+          runs this metric together with{" "}
+          <a href="/docs/metrics-loudness-consistency">loudness consistency</a>{" "}
+          and scores the share of replies neither flagged. This metric checks
+          pitch only and points to the replies that drifted.
         </>
       ),
     },
@@ -110,18 +217,18 @@ The default of **4 semitones** comes from 't Hart (1981): differences under abou
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio
-          samples, so it has no model or token cost.
+          No. Detection is deterministic and runs locally over the audio, so it
+          has no model or token cost.
         </>
       ),
     },
     {
-      question: "Does it check the simulated user's audio too?",
+      question: "Does it check the caller's audio too?",
       answer: (
         <>
-          No. Only assistant turns are inspected. The caller's audio is produced
-          by your own TTS model, so defects there are a problem with the test
-          harness rather than with the agent under test.
+          No. Only the agent's replies are scored. The caller's audio comes
+          from your own TTS model, so a problem there is with the test harness,
+          not the agent.
         </>
       ),
     },

@@ -18,9 +18,17 @@ The loudness consistency metric checks whether your voice agent **keeps the same
 
 <AudioSample name="loudness-consistency" />
 
+## Required Arguments
+
+To use the `LoudnessConsistencyMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
+
+- `audio` on at least three of the agent's turns
+
+The metric only reads [turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). Call audio on the test case is ignored.
+
 ## Usage
 
-Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+The `LoudnessConsistencyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
 
 ```python
 from deepeval import evaluate
@@ -42,52 +50,139 @@ simulator = ConversationSimulator(
 )
 test_cases = simulator.simulate([golden])
 
-metric = LoudnessConsistencyMetric(threshold=0.8, max_shift_db=5)
+metric = LoudnessConsistencyMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **SIX** optional parameters when creating a `LoudnessConsistencyMetric`:
+There is **ONE** optional parameter specific to the `LoudnessConsistencyMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
-- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
 - [Optional] `max_shift_db`: an integer for how far, in dB, a reply's loudness may sit from the agent's typical loudness. Must be greater than `0`. Defaulted to `5`.
-- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
-`score_breakdown` lists the replies where the issue was found:
+### As a standalone
+
+You can also run the `LoudnessConsistencyMetric` on a single test case as a standalone, one-off execution:
 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.75
+print(metric.score, metric.reason)
 print(metric.score_breakdown)
 ```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each reply that was clearly louder or quieter than usual shows up in `score_breakdown`. Here is what the [example call](#example-call) returns:
 
 ```python
 {
     "eligible_turns": 4,
     "turns_with_events": 1,
     "events": [
-        {"type": "loudness_shift", "turn": 3, "speech_dbfs": -9.1, "shift_db": 6.4, "offset_seconds": 0.0, "duration_seconds": 4.2, "start_time": 10.5}
+        {
+            "type": "loudness_shift",
+            "turn": 5,
+            "timing_source": "turn_timestamps",
+            "description": "Reply was 8 dB quieter than usual",
+            "speech_dbfs": -27.1,
+            "shift_db": -8.0,
+            "offset_seconds": 0.0,
+            "duration_seconds": 3.0,
+            "start_time": 14.5,
+            "mark": "whole_reply",
+        }
     ],
     "skipped": [],
 }
 ```
 
-`turn` is the turn's zero-based position in the conversation, `speech_dbfs` is the reply's speech level, and `shift_db` is how far that sits from the agent's typical level (negative when quieter). The event covers the whole reply: `offset_seconds` is 0, `duration_seconds` is the reply's length, and `start_time` is where the reply starts on the call's clock (left out when the clip has no `Audio.start_time`). Agent replies whose audio could not be decoded, or that have no audible sound, are listed under `skipped`.
+| Field | What it means |
+| --- | --- |
+| `speech_dbfs` | The reply's speech level, in dBFS |
+| `shift_db` | How far that sits from the agent's typical level. Negative when quieter |
 
-<include cwd>snippets/voice/event-place.mdx</include>
+Each event covers the whole reply, so `offset_seconds` is 0 and `duration_seconds` is the clip's length. Replies that are silent or can't be decoded are listed under `skipped`.
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many agent replies were compared and `turns_with_events` how many were off. The score is the share that weren't.
 
 ## How Is It Calculated?
 
-`LoudnessConsistencyMetric` compares every agent reply against the agent's typical reply, and scores the share that stay close:
+The `LoudnessConsistencyMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Loudness Consistency} = \frac{\text{Agent replies within max\_shift\_db of the typical loudness}}{\text{Audible agent replies with decodable audio}}" />
+<Equation formula="\text{Loudness Consistency} = \frac{\text{Number of Agent Replies Near the Typical Loudness}}{\text{Total Number of Agent Replies}}" />
 
-Each reply's level is the same speech level [`LoudnessMetric`](/docs/metrics-loudness) uses: the 90th percentile of its 20 ms speech frames, so pauses don't pull it down. The agent's typical level is the median across its replies, so a single odd reply is flagged on its own rather than dragging the reply after it down too. This needs at least **three** audible replies to tell which one is off; with fewer, the metric is skipped. A reply with no audible sound at all (no 20 ms frame reaches speech level, about −41 dBFS) is skipped and left out of the median; [`SilentReplyMetric`](/docs/metrics-silent-reply) reports it.
+### Counting agent replies
 
-The default of **5 dB** is the change listeners clearly notice; 3 dB is only just perceptible. On real agent calls, replies stay within about 2.5 dB of each other.
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 2.4, label: "turn 1" }, { start: 2.8, end: 4.8, label: "turn 3" }, { start: 5.2, end: 7.2, label: "turn 5" }, { start: 7.6, end: 9.8, label: "turn 7" }], sounds: [{ start: 0.3, end: 2.2 }, { start: 2.8, end: 4.8, silent: true }, { start: 5.3, end: 7.0 }, { start: 7.7, end: 9.6 }] },
+  ]}
+  marks={[
+    { at: 1.3, lane: 0, tone: "info", label: "counted" },
+    { at: 3.8, lane: 0, tone: "skip", label: "no sound" },
+    { at: 6.2, lane: 0, tone: "info", label: "counted" },
+    { at: 8.7, lane: 0, tone: "info", label: "counted" },
+  ]}
+/>
+
+Each agent clip is one reply, however long. A reply is skipped, and left out of the comparison, when it has no audible sound at all, which [Silent Reply](/docs/metrics-silent-reply) reports instead, or can't be decoded.
+
+At least **3** replies are needed to tell which one is off. With fewer, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Shift criteria
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 2.4 }, { start: 2.8, end: 4.8 }, { start: 5.2, end: 7.2 }, { start: 7.6, end: 9.8 }], sounds: [{ start: 0.3, end: 2.2, level: 0.6 }, { start: 2.9, end: 4.6, level: 0.6 }, { start: 5.3, end: 7.0, level: 0.25 }, { start: 7.7, end: 9.6, level: 0.65 }] },
+  ]}
+  marks={[
+    { at: 1.3, lane: 0, tone: "ok", label: "typical" },
+    { at: 3.8, lane: 0, tone: "ok", label: "typical" },
+    { at: 6.2, lane: 0, tone: "bad", label: "much quieter" },
+    { at: 8.7, lane: 0, tone: "ok", label: "close" },
+  ]}
+/>
+
+Each reply's speech level is the same one [Loudness](/docs/metrics-loudness) uses: the 90th percentile of its 20 ms frames at speech volume. The agent's typical level is the median across its replies, so one odd reply is flagged on its own instead of shifting what counts as typical.
+
+| Check | Rule |
+| --- | --- |
+| Shift | The reply's speech level minus the typical level |
+| Off | The shift is more than `max_shift_db` (5 dB) either way |
+
+:::note
+A 3 dB change is only just noticeable, and 5 dB is clearly noticeable.
+:::
+
+### Example call
+
+A call where one agent reply comes out much quieter than the rest. Each row is one agent reply, how far it sits from the typical −19.2 dBFS and whether that counts as off.
+
+<VoiceDiagram
+  duration={24}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 5.5, label: "turn 1" }, { start: 8.5, end: 11.5, label: "turn 3" }, { start: 14.5, end: 17.5, label: "turn 5" }, { start: 20.5, end: 23.5, label: "turn 7" }], sounds: [{ start: 2.6, end: 5.3, level: 0.6 }, { start: 8.6, end: 11.3, level: 0.6 }, { start: 14.6, end: 17.3, level: 0.25 }, { start: 20.6, end: 23.3, level: 0.65 }] },
+  ]}
+  marks={[
+    { at: 4.0, lane: 0, tone: "ok", label: "clean" },
+    { at: 10.0, lane: 0, tone: "ok", label: "clean" },
+    { at: 16.0, lane: 0, tone: "bad", label: "8 dB quieter" },
+    { at: 22.0, lane: 0, tone: "ok", label: "clean" },
+  ]}
+/>
+
+| Agent turn | Speech level | Shift | Off? |
+| --- | --- | --- | --- |
+| 1 | −19.2 dBFS | 0.0 dB | No |
+| 3 | −19.2 dBFS | 0.0 dB | No |
+| 5 | −27.1 dBFS | −8.0 dB | **Yes** |
+| 7 | −18.4 dBFS | +0.8 dB | No |
+| **4 replies** | | | **1 off → 3/4 = 0.75** |
 
 ## FAQs
 
@@ -104,21 +199,31 @@ The default of **5 dB** is the change listeners clearly notice; 3 dB is only jus
       ),
     },
     {
-      question: "Does this metric call an LLM or an external speech model?",
+      question: "How is this different from volume variance?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio
-          samples, so it has no model or token cost.
+          <a href="/docs/metrics-volume-variance">VolumeVarianceMetric</a>{" "}
+          checks whether the volume drifts within one reply. This metric
+          compares whole replies with each other.
         </>
       ),
     },
     {
-      question: "Does it check the simulated user's audio too?",
+      question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Only assistant turns are inspected. The caller's audio is produced
-          by your own TTS model, so defects there are a problem with the test
-          harness rather than with the agent under test.
+          No. Detection is deterministic and runs locally over the audio, so it
+          has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the caller's audio too?",
+      answer: (
+        <>
+          No. Only the agent's replies are scored. The caller's audio comes from
+          your own TTS model, so a problem there is with the test harness, not
+          the agent.
         </>
       ),
     },

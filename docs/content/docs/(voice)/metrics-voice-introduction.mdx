@@ -127,7 +127,13 @@ Which one is used depends on the metric:
 | [Echo](/docs/metrics-echo) | Stereo call audio only. Skipped without it |
 | Every other voice metric | Turn audio only |
 
-When a metric can read both and the test case has both, stereo call audio always wins and turn audio is ignored. Roll-up metrics, such as [Audio Integrity](/docs/metrics-audio-integrity), use whatever each of their parts uses.
+When a metric can read both and the test case has both, stereo call audio always wins and turn audio is ignored. It's the better source because it's one continuous recording with both speakers on the same clock:
+
+- **Exact timing.** Who spoke when comes from the sound itself, not from where each turn was cut or how accurate its `Audio.start_time` is.
+- **Overlaps are visible.** The metric hears both sides at once, so it can tell when the caller and agent talked over each other, or whether the caller spoke up just as the agent stopped.
+- **Nothing is lost between turns.** Sound that falls outside every turn's clip, such as a reply that starts late or runs on, is still there.
+
+Roll-up metrics, such as [Audio Integrity](/docs/metrics-audio-integrity), use whatever each of their parts uses.
 
 <Tabs items={["Call audio", "Turn audio"]}>
 <Tab value="Call audio">
@@ -162,7 +168,7 @@ Separate clips, one per turn, each placed on the call's clock by its `Audio.star
 </Tab>
 </Tabs>
 
-Call audio is more reliable, because it doesn't depend on how the call was cut into turns or how accurate their timestamps are. `timing_source` in the results says which was used: `"call_recording"` for call audio, `"turn_timestamps"` for turn audio.
+`timing_source` in the results says which was used: `"call_recording"` for call audio, `"turn_timestamps"` for turn audio.
 
 ```python
 from deepeval.test_case import Audio, ConversationalTestCase
@@ -208,13 +214,11 @@ Set it with `eval_mode` on a metric that supports it, or for every voice metric 
 
 In hybrid mode, the model hears the audio around each problem and answers one yes/no question. That's at least 5 seconds around the spot or stretch where it happened, or the whole reply for a problem judged on a whole reply, from the stereo call audio when there is one, otherwise from the turn's own clip. Only these metrics support it, and each asks its own question:
 
-| Metric | Whose audio it hears | What it's asked |
-| --- | --- | --- |
-| [Abrupt Cut-off](/docs/metrics-abrupt-cut-off#second-check) | Agent | Does the speaker's voice cut off abruptly, mid-word or mid-sentence? |
-| [Echo](/docs/metrics-echo#second-check) | Caller | Can the AI agent's own voice be heard echoed back on this caller's line? |
-| [Background Noise](/docs/metrics-background-noise#second-check) | Agent | Is there distracting background noise behind the speaker? |
-| [Agent Interruption](/docs/metrics-agent-interruption#second-check) | Caller | Is a person speaking in this clip, rather than only background noise, breathing or silence? |
-| [User Interruption](/docs/metrics-user-interruption#second-check) | Caller | Is a person speaking in this clip, rather than only background noise, breathing or silence? |
+- [Abrupt Cut-off](/docs/metrics-abrupt-cut-off#second-check), hearing the agent: "Does the speaker's voice cut off abruptly, mid-word or mid-sentence?"
+- [Echo](/docs/metrics-echo#second-check), hearing the caller: "Can the AI agent's own voice be heard echoed back on this caller's line?"
+- [Background Noise](/docs/metrics-background-noise#second-check), hearing the agent: "Is there distracting background noise behind the speaker?"
+- [Agent Interruption](/docs/metrics-agent-interruption#second-check), hearing the caller: "Is a person speaking in this clip, rather than only background noise, breathing or silence?"
+- [User Interruption](/docs/metrics-user-interruption#second-check), hearing the caller: "Is a person speaking in this clip, rather than only background noise, breathing or silence?"
 
 [Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) passes the setting to its interruption parts. Roll-ups that include Background Noise, such as [Voice Naturalness](/docs/metrics-voice-naturalness) and [Speech Intelligibility](/docs/metrics-speech-intelligibility), don't take `eval_mode` themselves, but follow `DEEPEVAL_VOICE_EVAL_MODE` for that part. Other voice metrics ignore it.
 
