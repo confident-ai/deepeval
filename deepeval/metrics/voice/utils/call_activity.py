@@ -27,7 +27,7 @@ from deepeval.metrics.voice.utils.defects import (
 )
 from deepeval.metrics.voice.utils.events import on_call
 from deepeval.metrics.voice.utils.speech_detection import speech_frames
-from deepeval.test_case import ConversationalTestCase, Turn
+from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.timeline import AudioTimelineEntry, build_audio_timeline
 
@@ -341,7 +341,9 @@ def _frame_levels(samples: Any, sample_rate: int) -> List[float]:
     ]
 
 
-def _read_channels(wav: bytes) -> Optional[Tuple[Any, Any, int]]:
+def _read_channels(
+    wav: bytes, agent_channel: str = "right"
+) -> Optional[Tuple[Any, Any, int]]:
     try:
         pcm, sample_rate, channels = audio_utils.wav_bytes_to_pcm16(wav)
     except (EOFError, ValueError, wave.Error):
@@ -350,24 +352,32 @@ def _read_channels(wav: bytes) -> Optional[Tuple[Any, Any, int]]:
         return None
     np = get_numpy()
     frames = np.frombuffer(pcm[: len(pcm) // 4 * 4], dtype="<i2").reshape(-1, 2)
+    if agent_channel == "left":
+        return frames[:, 1], frames[:, 0], sample_rate
     return frames[:, 0], frames[:, 1], sample_rate
 
 
-def read_call_recording(path: Optional[str]) -> Optional[Tuple[Any, Any, int]]:
-    """The caller and agent channels of a 16-bit stereo WAV, and its rate."""
-    if not path:
+def _recording_bytes(audio: Optional[Audio]) -> Optional[bytes]:
+    if audio is None:
         return None
     try:
-        with open(path, "rb") as file:
-            return _read_channels(file.read())
-    except OSError:
+        return audio.get_bytes()
+    except Exception:
         return None
+
+
+def read_call_recording(
+    audio: Optional[Audio], agent_channel: str = "right"
+) -> Optional[Tuple[Any, Any, int]]:
+    """The caller and agent channels of a 16-bit stereo WAV, and its rate."""
+    wav = _recording_bytes(audio)
+    return None if wav is None else _read_channels(wav, agent_channel)
 
 
 def _recording_activity(
-    wav: bytes, use_speech_detection: bool
+    wav: bytes, use_speech_detection: bool, agent_channel: str
 ) -> Optional[CallActivity]:
-    channels = _read_channels(wav)
+    channels = _read_channels(wav, agent_channel)
     if channels is None:
         return None
     caller_samples, agent_samples, sample_rate = channels
@@ -402,14 +412,14 @@ def _recording_activity(
 
 # Keyed by the recording's content, so metrics handed separate copies of the
 # same call share one reading of it.
-_recording_cache: "OrderedDict[Tuple[str, bool], Optional[CallActivity]]" = (
-    OrderedDict()
-)
+_recording_cache: (
+    "OrderedDict[Tuple[str, bool, str], Optional[CallActivity]]"
+) = OrderedDict()
 _recording_cache_lock = threading.Lock()
-_recording_key_locks: Dict[Tuple[str, bool], threading.Lock] = {}
+_recording_key_locks: Dict[Tuple[str, bool, str], threading.Lock] = {}
 
 
-def _cached_activity(key: Tuple[str, bool]) -> Tuple[bool, Any]:
+def _cached_activity(key: Tuple[str, bool, str]) -> Tuple[bool, Any]:
     with _recording_cache_lock:
         if key in _recording_cache:
             _recording_cache.move_to_end(key)
@@ -418,17 +428,15 @@ def _cached_activity(key: Tuple[str, bool]) -> Tuple[bool, Any]:
 
 
 def recording_activity(
-    path: Optional[str], use_speech_detection: bool
+    audio: Optional[Audio],
+    use_speech_detection: bool,
+    agent_channel: str = "right",
 ) -> Optional[CallActivity]:
-    """None unless `path` is a readable 16-bit stereo WAV."""
-    if not path:
+    """None unless `audio` is a readable 16-bit stereo WAV."""
+    wav = _recording_bytes(audio)
+    if wav is None:
         return None
-    try:
-        with open(path, "rb") as file:
-            wav = file.read()
-    except OSError:
-        return None
-    key = (hashlib.sha256(wav).hexdigest(), use_speech_detection)
+    key = (hashlib.sha256(wav).hexdigest(), use_speech_detection, agent_channel)
     found, activity = _cached_activity(key)
     if found:
         return activity
@@ -439,7 +447,7 @@ def recording_activity(
         found, activity = _cached_activity(key)
         if found:
             return activity
-        activity = _recording_activity(wav, use_speech_detection)
+        activity = _recording_activity(wav, use_speech_detection, agent_channel)
         with _recording_cache_lock:
             _recording_cache[key] = activity
             while len(_recording_cache) > RECORDING_CACHE_SIZE:
@@ -452,7 +460,7 @@ def call_recording_activity(
     test_case: ConversationalTestCase, use_speech_detection: bool
 ) -> Optional[CallActivity]:
     return recording_activity(
-        test_case.call_recording_path, use_speech_detection
+        test_case.audio, use_speech_detection, test_case.agent_channel
     )
 
 

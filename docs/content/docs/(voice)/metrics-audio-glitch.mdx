@@ -1,0 +1,206 @@
+---
+id: metrics-audio-glitch
+title: Audio Glitch
+sidebar_label: Audio Glitch
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={true}
+  referenceless={true}
+/>
+
+The audio glitch metric checks whether a call's audio **carried sounds nobody meant to make**. It listens to the recording itself — not the transcript — for held tones, dead stream, stream cuts and clipping on both the caller's and the agent's side, and returns a score between 0 and 1, where 1 means every turn with audio was clean.
+
+:::note
+This metric exists because a transcript cannot show these failures. A text-to-speech engine that emits a buzzing tone after a sentence, or a phone stream that drops to digital silence mid-answer, leaves nothing for a speech-to-text model to write down — the model either skips the sound or guesses the words it expected. Detection here is signal analysis over the audio samples. The LLM is used only to write the reason.
+:::
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode), or any `ConversationalTestCase` whose turns carry [`Audio`](/docs/evaluation-voice#audio-data-model) clips. Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import AudioGlitchMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to confirm their start date.",
+    expected_outcome="The agent reads back the date and asks a follow-up.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = AudioGlitchMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **EIGHT** optional parameters when creating an `AudioGlitchMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. The model only writes the reason; it never sees the audio and never changes the score. Defaulted to <DefaultLLMModel />.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a reason for the evaluation score. Defaulted to `True`.
+- [Optional] `async_mode`: a boolean which, when set to `True`, enables [concurrent execution within the `measure()` method](/docs/metrics-introduction#measuring-metrics-in-async). Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, prints the speaker baselines and every event during an `evaluate()` run. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `evaluation_template`: a class of type `AudioGlitchTemplate`, which allows you to [override the default prompt](/docs/metrics-introduction#customizing-metric-prompts) used to write the reason. Defaulted to `deepeval`'s `AudioGlitchTemplate`.
+
+Every event the metric found is recorded on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.83
+print(metric.score_breakdown)
+```
+
+The breakdown lists the turns it checked, the events, and the per-speaker baselines the events were judged against:
+
+```python
+{
+    "turns_with_audio": 12,
+    "turns_with_events": 2,
+    "events": [
+        {
+            "type": "held_tone",
+            "turn": 3,
+            "role": "assistant",
+            "offset_seconds": 6.44,
+            "duration_seconds": 1.6,
+            "start_time": 66.44,
+            "position": "end",
+            "pitch_hz": 190.8,
+            "periodicity": 0.985,
+            "level_dbfs": -24.0,
+            "jitter": 0.0039,
+            "glide": 0.0008,
+            "hold_ratio": 5.71,
+            "pitch_ratio": 0.98,
+        },
+        {
+            "type": "dead_stream",
+            "turn": 8,
+            "role": "user",
+            "offset_seconds": 2.1,
+            "duration_seconds": 3.4,
+            "start_time": 255.3,
+            "position": "middle",
+            "runs_to_end": False,
+        },
+    ],
+    "baselines": {
+        "assistant": {"role": "assistant", "clips": 6, "median_pitch_hz": 195.2, "typical_hold_seconds": 0.28, "digital_silence": False},
+        "user": {"role": "user", "clips": 6, "median_pitch_hz": 197.0, "typical_hold_seconds": 0.36, "digital_silence": False},
+    },
+    "timeline_available": True,
+}
+```
+
+`turn` is the turn's zero-based position in the conversation, `offset_seconds` is where the event sits inside that turn's clip, and `start_time` is the same moment measured from the start of the call when the clip carries `Audio.start_time`, so the moment can be found in the recording. An empty `events` list means nothing was detected.
+
+## How Is It Calculated?
+
+`AudioGlitchMetric` decodes every turn that has audio — caller and agent alike — and records an event for each glitch it finds. The score is the share of those turns with no event:
+
+<Equation formula="\text{Audio Glitch} = \frac{|\{\text{turns with audio and no event}\}|}{|\{\text{turns with audio}\}|}" />
+
+Each clip is cut into short frames and measured for loudness, pitch and how periodic the sound is. Speech has a texture: its pitch moves from frame to frame, its loudness rises and falls with syllables, and its pauses still carry faint room noise. Each event is a way that texture breaks:
+
+| Event               | Detected when                                                                                                                                                              |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `held_tone`         | One pitch is held for at least 0.8 s with no frame-to-frame jitter and no glide, and the hold is at least three times as long as anything that speaker otherwise holds, at least 1.3× the pitch of their voice, or 2.5 s long outright. |
+| `dead_stream`       | At least 0.5 s of exact digital zero between two stretches of speech in the same clip (1 s when the run reaches the end of the clip). Real pauses are quiet, not zero — so this only fires for a speaker whose pauses normally carry noise. |
+| `stream_cut`        | A clip stops while the speaker is still loud, or ends in digital zero, and the **same** speaker starts again within 15 s. Needs `Audio.start_time` on every clip.          |
+| `clipping`          | More than 1% of samples sit at full scale. Carries the clipped span and `fraction`.                                                                                        |
+| `audio_undecodable` | The clip could not be decoded to PCM. Carries a `reason`.                                                                                                                  |
+
+The thresholds are relative to the speaker, not fixed: `typical_hold_seconds` is the 90th percentile of how long that speaker holds any steady pitch across their clips, `median_pitch_hz` is the pitch of their voice with tone-length runs left out, and `digital_silence` records whether that speaker's typical pause is partly exact zeros — true for some synthetic voices and never for a recording, in which case a zero run is how their audio is silenced rather than lost stream, and `dead_stream` is not raised for them. A deep voice or a slow talker therefore sets their own bar. The remaining constants (the 0.8 s minimum, the jitter and glide bounds, the 0.5 s dead-stream floor) are fixed in code, as they are for every other voice metric.
+
+A speaker with a single clip has no hold baseline, so a tone at their own pitch is only caught by the 2.5 s rule. A turn without audio is skipped; a test case where no turn has audio raises rather than scoring.
+
+:::caution
+Production clips are usually cut at the speech-to-text engine's turn boundaries. An artifact the agent's TTS emits _after_ the last word — the common case — lands after the agent's end timestamp, so make sure each clip runs until the next speaker starts, or it will never be inside a clip for this metric to find.
+:::
+
+The reason is written by the LLM from the event list together with each event's turn text, the previous turn's text, the speaker and the position in the turn. It is asked to name every event with its time and to state patterns across events — for example that every tone follows a sentence ending in a number — but it cannot add or remove events, so the score is the same on every run.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why does it check the caller's audio too?",
+      answer: (
+        <>
+          Because the failures it looks for are not all the agent's. A caller's
+          phone stream dropping to dead silence mid-answer is what makes an
+          agent interrupt or re-prompt, and it only shows up on the caller's
+          side. Every event carries its <code>role</code>, so the two sides are
+          easy to tell apart in the breakdown.
+        </>
+      ),
+    },
+    {
+      question: "A tone I can hear was not flagged. Why?",
+      answer: (
+        <>
+          Check the run in <code>verbose_mode</code>. The usual reasons are
+          that it is shorter than 0.8 s, that its pitch wobbles or slides the
+          way a voice does, or that the speaker has only one clip, so there is
+          no hold baseline and only the 2.5 s rule applies. Also check that the
+          tone is inside a clip at all: TTS artifacts after the last word often
+          fall past the turn's end timestamp.
+        </>
+      ),
+    },
+    {
+      question: "Does the LLM change the score?",
+      answer: (
+        <>
+          No. Detection is deterministic and runs locally over the audio
+          samples; the LLM only turns the event list into a reason, and is not
+          called at all when there are no events. Set{" "}
+          <code>include_reason=False</code> to skip it entirely.
+        </>
+      ),
+    },
+    {
+      question: "How is this different from Audio Integrity?",
+      answer: (
+        <>
+          <a href="/docs/metrics-audio-integrity">AudioIntegrityMetric</a>{" "}
+          checks that the agent's audio arrived at all — missing, looping or
+          cut-off clips — and only looks at assistant turns. This metric looks
+          inside clips that did arrive, on both sides, for sounds that should
+          not be there, and ties each one to a moment in the call.
+        </>
+      ),
+    },
+    {
+      question: "What about words the transcript got wrong?",
+      answer: (
+        <>
+          That is{" "}
+          <a href="/docs/metrics-transcription-accuracy">
+            TranscriptionAccuracyMetric
+          </a>
+          's job. The two are complementary: transcription accuracy owns "the
+          words were wrong", this metric owns "the sound was wrong".
+        </>
+      ),
+    },
+  ]}
+/>

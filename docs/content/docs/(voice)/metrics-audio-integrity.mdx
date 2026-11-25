@@ -1,0 +1,162 @@
+---
+id: metrics-audio-integrity
+title: Audio Integrity
+sidebar_label: Audio Integrity
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The audio integrity metric checks whether your voice agent's audio **arrived intact**. It looks for missing, undecodable, looping, dropping, clipped, or abruptly cut audio across the call and returns a score between 0 and 1, where 1 means no defects were found.
+
+:::note
+This is a pipeline health check rather than a quality judgment. It catches the failures that make a call unusable — silence where a reply should be, a repeating buffer, a reply that stops mid-word — not whether the agent sounded good.
+:::
+
+## Usage
+
+Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import AudioIntegrityMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = AudioIntegrityMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **FIVE** optional parameters when creating an `AudioIntegrityMetric`:
+
+- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score)  # e.g. 0.72
+print(metric.score_breakdown)
+```
+
+Unlike `VoiceNaturalnessMetric` and `SpeechIntelligibilityMetric`, which score every turn, `AudioIntegrityMetric` reports a list of the defects it found:
+
+```python
+{
+    "critical_failure": False,
+    "events": [
+        {"type": "abrupt_cutoff", "turn": 3, "critical": False},
+        {
+            "type": "audio_dropout",
+            "turn": 3,
+            "count": 2,
+            "severity": 0.16,
+            "critical": False,
+        },
+    ],
+}
+```
+
+`turn` is the turn's zero-based position in the conversation. An empty `events` list means nothing was detected.
+
+## How Is It Calculated?
+
+`AudioIntegrityMetric` inspects every assistant turn and records an event for each defect it finds. A clean call scores 1; otherwise the score is 1 minus the summed severity of every defect, clamped at 0 — unless a critical event occurred, in which case the score is 0 outright:
+
+<Equation formula="\text{Audio Integrity} = \max \left( 0,\ 1 - \sum_{e} \text{severity}(e) \right)" />
+
+**Critical events zero the score** because they cannot be averaged away by turns that happened to be fine:
+
+| Event                    | Meaning                                                     |
+| ------------------------ | ----------------------------------------------------------- |
+| `assistant_turn_missing` | The conversation contains no assistant turns at all.        |
+| `audio_missing`          | An assistant turn has no audio attached.                    |
+| `audio_undecodable`      | The audio could not be decoded to PCM. Carries a `reason`.  |
+| `audio_loop`             | Three or more repeated windows — a stuck or looping buffer. |
+
+Non-critical events subtract a bounded severity:
+
+| Event           | Detected when                                     | Severity                         |
+| --------------- | ------------------------------------------------- | -------------------------------- |
+| `abrupt_cutoff` | The clip still has energy at its very last frame. | 0.12 flat                        |
+| `audio_loop`    | One or two repeated 0.25s windows.                | 0.15 each                        |
+| `audio_dropout` | Short silences interrupting continuous speech.    | 0.08 each, capped at 0.35        |
+| `clipping`      | More than 1% of samples are clipped.              | 10× the fraction, capped at 0.35 |
+
+:::caution
+`abrupt_cutoff` fires on any clip ending at full energy, which is exactly what a successful [barge-in](/docs/conversation-simulator-voice-interruptions) produces. When interruptions are enabled, expect this event on interrupted turns and read it as evidence the interruption landed rather than as a defect.
+:::
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why is my score 0 when only one turn had a problem?",
+      answer: (
+        <>
+          A critical event zeroes the whole call. Missing audio, undecodable
+          audio, or a badly looping buffer means the recording cannot be trusted
+          as a record of the conversation, so partial credit would be
+          misleading. Check <code>critical_failure</code> in the breakdown.
+        </>
+      ),
+    },
+    {
+      question: "How does this differ from voice reliability?",
+      answer: (
+        <>
+          <a href="/docs/metrics-voice-reliability">VoiceReliabilityMetric</a>{" "}
+          is this metric averaged with{" "}
+          <a href="/docs/metrics-agent-responsiveness">agent responsiveness</a>{" "}
+          into one operational number. Use audio integrity when you want to know{" "}
+          <em>which</em> half is broken.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Detection is deterministic and runs locally over the audio
+          samples, so it has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the simulated user's audio too?",
+      answer: (
+        <>
+          No. Only assistant turns are inspected. The caller's audio is produced
+          by your own TTS model, so defects there are a problem with the test
+          harness rather than with the agent under test.
+        </>
+      ),
+    },
+  ]}
+/>

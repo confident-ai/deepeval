@@ -79,7 +79,7 @@ There are **ONE** mandatory and **SIX** optional parameters when creating a `Con
 
 - `model_callback`: a callback that wraps around your conversational agent. Required unless you're simulating a voice agent through `voice_config`.
 - [Optional] `voice_config`: a `VoiceConfig` that puts the simulator in [voice mode](/docs/conversation-simulator-voice-mode) — simulated user turns are spoken to your voice agent over a live connection and replies are transcribed back, with audio and latency captured on every turn. Mutually exclusive with `model_callback`: provide exactly one.
-- [Optional] `simulator_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](/docs/metrics-introduction#configure-llm-judges) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `simulator_model`: a string specifying which of OpenAI's GPT models to use for generation, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `async_mode`: a boolean which when set to `True`, enables **concurrent simulation of conversations**. Defaulted to `True`.
 - [Optional] `max_concurrent`: an integer that determines the maximum number of conversations that can be generated in parallel at any point in time. You can decrease this value if you're running into rate limit errors. Defaulted to `5`.
 - [Optional] `simulation_graph`: the root `SimulationNode` of a simulation graph for the simulated user. When omitted, `deepeval` falls back to an LLM-driven default node. Pass `default_simulation_node(template=MyTemplate)` here to use a [custom prompt template](/docs/conversation-simulator-custom-templates). See [Simulation Graph](/docs/conversation-simulator-simulation-graph).
@@ -209,7 +209,7 @@ Customize the simulator around your application's conversation state, stopping c
         <>
           Yes. <code>simulator_model</code> accepts any of OpenAI's GPT models by
           name, or{" "}
-          <a href="/docs/metrics-introduction#configure-llm-judges">any custom LLM</a>{" "}
+          <a href="/docs/metrics-introduction#using-a-custom-llm">any custom LLM</a>{" "}
           of type <code>DeepEvalBaseLLM</code>. Note it only powers the role-played
           user — your actual chatbot still runs through your{" "}
           <a href="/docs/conversation-simulator-model-callback">model_callback</a>.
