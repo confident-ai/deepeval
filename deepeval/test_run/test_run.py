@@ -17,6 +17,7 @@ from deepeval.test_run.api import (
     ConversationalApiTestCase,
     TestRunHttpResponse,
     MetricData,
+    Classification,
 )
 from deepeval.tracing.utils import make_json_serializable
 from deepeval.tracing.api import SpanApiType, span_api_type_literals
@@ -420,6 +421,15 @@ class TestRun(BaseModel):
         )
         return valid_scores
 
+    def has_metrics_data(self) -> bool:
+        """Whether any test case ran metrics, on itself or on its trace, as
+        opposed to a run whose test cases only carry classifications."""
+        return any(
+            test_case.metrics_data
+            or getattr(test_case, "trace", None) is not None
+            for test_case in [*self.test_cases, *self.conversational_test_cases]
+        )
+
     def calculate_test_passes_and_fails(self):
         test_passed = 0
         test_failed = 0
@@ -609,11 +619,12 @@ class TestRunManager:
         api_test_case: Union[LLMApiTestCase, ConversationalApiTestCase],
         test_case: Union[LLMTestCase, ConversationalTestCase],
     ):
-        # Classifier-only results are local for now, so a case with no metric
-        # data and no trace has nothing to add to the (uploadable) test run.
+        # A case with no metric data, classifications or trace has nothing to
+        # add to the (uploadable) test run.
         if (
             api_test_case.metrics_data is not None
             and len(api_test_case.metrics_data) == 0
+            and not api_test_case.classifications
             and getattr(api_test_case, "trace", None) is None
         ):
             return
@@ -670,12 +681,14 @@ class TestRunManager:
         return "Cannot display metrics for component-level evals, please run 'deepeval view' to see results on Confident AI."
 
     @staticmethod
-    def _get_metric_status(metric_data: MetricData) -> str:
-        """Get formatted status string for a metric."""
+    def _get_metric_status(
+        metric_data: Union[MetricData, Classification],
+    ) -> str:
+        """Get formatted status string for a metric or classification."""
         if metric_data.error:
             return "[red]ERRORED[/red]"
         elif metric_data.success is None:
-            # No threshold: the metric has no pass/fail verdict
+            # No threshold or expected label: no pass/fail verdict
             return "[dim]NONE[/dim]"
         elif metric_data.success:
             return "[green]PASSED[/green]"
@@ -704,21 +717,29 @@ class TestRunManager:
         test_case, display: TestRunResultDisplay
     ) -> bool:
         """Determine if test case should be skipped based on display filter."""
-        if display == TestRunResultDisplay.PASSING and not test_case.success:
+        if (
+            display == TestRunResultDisplay.PASSING
+            and test_case.success is not True
+        ):
             return True
-        elif display == TestRunResultDisplay.FAILING and test_case.success:
+        elif (
+            display == TestRunResultDisplay.FAILING
+            and test_case.success is not False
+        ):
             return True
         return False
 
     @staticmethod
     def _count_metric_results(
-        metrics_data: List[MetricData],
+        metrics_data: List[Union[MetricData, Classification]],
     ) -> tuple[int, int, int, int]:
-        """Count passing and failing metrics, with flaky sub-counts.
+        """Count passing and failing metrics and classifications, with flaky
+        sub-counts.
 
         Flaky metrics are included in pass/fail, and additionally counted
-        in the flaky sub-count of their verdict. Metrics without a verdict
-        (success=None, e.g. no threshold) are excluded from all counts.
+        in the flaky sub-count of their verdict. Results without a verdict
+        (success=None, e.g. no threshold or no expected label) are excluded
+        from all counts.
         """
         pass_count = 0
         fail_count = 0
@@ -727,15 +748,29 @@ class TestRunManager:
         for metric_data in metrics_data:
             if metric_data.success is None:
                 continue
+            flaky = getattr(metric_data, "flaky", False)
             if metric_data.success:
                 pass_count += 1
-                if metric_data.flaky:
+                if flaky:
                     flaky_pass_count += 1
             else:
                 fail_count += 1
-                if metric_data.flaky:
+                if flaky:
                     flaky_fail_count += 1
         return pass_count, fail_count, flaky_pass_count, flaky_fail_count
+
+    @staticmethod
+    def _classifier_verdicts(
+        classifications: List[Classification],
+    ) -> List[Classification]:
+        """One classification per classifier: a classifier's labels share
+        its verdict, so it counts once however many labels it assigned."""
+        return list(
+            {
+                classification.name: classification
+                for classification in classifications
+            }.values()
+        )
 
     @staticmethod
     def _format_verdict_counts(
@@ -787,6 +822,24 @@ class TestRunManager:
                 "",
             )
 
+    def _add_classification_rows(
+        self, table: Table, classifications: List[Classification]
+    ):
+        """Add classification detail rows to the table."""
+        for classification in classifications:
+            evaluation_model = classification.evaluation_model or "n/a"
+            table.add_row(
+                "",
+                str(classification.name),
+                f"{classification.label} "
+                f"(expected={classification.expected_label}, "
+                f"evaluation model={evaluation_model}, "
+                f"reason={classification.reason}, "
+                f"error={classification.error})",
+                self._get_metric_status(classification),
+                "",
+            )
+
     def _add_separator_row(self, table: Table):
         """Add empty separator row between test cases."""
         table.add_row(*[""] * len(table.columns))
@@ -815,8 +868,14 @@ class TestRunManager:
                 test_case, display
             ):
                 continue
+            classifications = test_case.classifications or []
             pass_count, fail_count, flaky_pass_count, flaky_fail_count = (
-                self._count_metric_results(test_case.metrics_data)
+                self._count_metric_results(
+                    [
+                        *test_case.metrics_data,
+                        *self._classifier_verdicts(classifications),
+                    ]
+                )
             )
             self._add_test_case_header_row(
                 table,
@@ -827,6 +886,7 @@ class TestRunManager:
                 flaky_fail_count,
             )
             self._add_metric_rows(table, test_case.metrics_data)
+            self._add_classification_rows(table, classifications)
 
             if index < len(test_run.test_cases) - 1:
                 self._add_separator_row(table)
@@ -899,9 +959,13 @@ class TestRunManager:
                     f"[dim]No turns recorded for {conversational_test_case_name}.[/dim]"
                 )
             if conversational_test_case.metrics_data is not None:
+                classifications = conversational_test_case.classifications or []
                 pass_count, fail_count, flaky_pass_count, flaky_fail_count = (
                     self._count_metric_results(
-                        conversational_test_case.metrics_data
+                        [
+                            *conversational_test_case.metrics_data,
+                            *self._classifier_verdicts(classifications),
+                        ]
                     )
                 )
                 self._add_test_case_header_row(
@@ -915,6 +979,7 @@ class TestRunManager:
                 self._add_metric_rows(
                     table, conversational_test_case.metrics_data
                 )
+                self._add_classification_rows(table, classifications)
 
             if index < len(test_run.conversational_test_cases) - 1:
                 self._add_separator_row(table)
@@ -1203,7 +1268,7 @@ class TestRunManager:
         # which the dashboard can render. Just warn so it's not mistaken
         # for a successful run.
         valid_scores = test_run.construct_metrics_scores()
-        if valid_scores == 0:
+        if valid_scores == 0 and test_run.has_metrics_data():
             console.print(
                 "\n[bold yellow]⚠ WARNING:[/bold yellow] All metrics errored "
                 "across every test case — no metric scores were recorded. "
@@ -1257,11 +1322,19 @@ class TestRunManager:
                 if test_run.evaluation_cost
                 else "None"
             )
+            judged_tests = test_run.test_passed + test_run.test_failed
+            # Test cases with no verdict (e.g. classifiers without expected
+            # labels) count toward neither, so there may be nothing to rate.
+            pass_rate = (
+                f"{round((test_run.test_passed / judged_tests) * 100, 2)}%"
+                if judged_tests
+                else "N/A"
+            )
             capture_login_prompt_shown(LoginPromptSurface.POST_EVAL)
             console.print(
                 f"\n\n[rgb(5,245,141)]✓[/rgb(5,245,141)] Evaluation completed 🎉! (time taken: {round(runDuration, 2)}s | token cost: {token_cost})\n"
-                f"» Test Results ({test_run.test_passed + test_run.test_failed} total tests):\n",
-                f"  » Pass Rate: {round((test_run.test_passed / (test_run.test_passed + test_run.test_failed)) * 100, 2)}% | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
+                f"» Test Results ({judged_tests} total tests):\n",
+                f"  » Pass Rate: {pass_rate} | Passed: [bold green]{test_run.test_passed}[/bold green] | Failed: [bold red]{test_run.test_failed}[/bold red]\n\n",
                 "=" * 80,
                 "\n\n» Want to share evals with your team, or a place for your test cases to live? ❤️ 🏡\n"
                 "  » Run [bold]'deepeval view'[/bold] to analyze and save testing results on [rgb(106,0,255)]Confident AI[/rgb(106,0,255)].\n\n",

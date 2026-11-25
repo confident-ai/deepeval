@@ -22,7 +22,6 @@ from deepeval.evaluate.utils import (
     validate_evaluate_inputs,
 )
 from deepeval.evaluate.console_report import EvaluationConsoleReport
-from deepeval.evaluate.local_store import save_results_locally
 from deepeval.dataset import Golden
 from deepeval.prompt import Prompt
 from deepeval.test_case.utils import (
@@ -353,21 +352,6 @@ def evaluate(
                 confident_link=None,
                 test_run_id=None,
             )
-
-        if not metrics and not has_expectations:
-            # Classifier-only run: classifications are local-only for now, so
-            # there is no test run to finalize or upload; only save locally.
-            result = EvaluationResult(
-                test_results=test_results,
-                confident_link=None,
-                test_run_id=None,
-            )
-            save_results_locally(
-                result,
-                results_folder=display_config.results_folder,
-                results_subfolder=display_config.results_subfolder,
-            )
-            return result
 
         global_test_run_manager.save_test_run(TEMP_FILE_PATH)
 

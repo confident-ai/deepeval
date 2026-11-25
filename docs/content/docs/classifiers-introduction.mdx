@@ -425,10 +425,10 @@ A value that is not one of the classifier's labels raises a `ValueError` before 
       question: "Are classifications sent to Confident AI?",
       answer: (
         <>
-          Not yet. They appear in the console report and on{" "}
-          <code>TestResult.classifications</code>, but are not part of the
-          uploaded test run and do not change the uploaded pass/fail status or
-          cost of a test case.
+          Yes. Each test case is uploaded with its classifications, which
+          count toward its pass/fail status and evaluation cost the same way
+          metrics do, including in runs with no metrics. They also appear in
+          the console report and on <code>TestResult.classifications</code>.
         </>
       ),
     },
