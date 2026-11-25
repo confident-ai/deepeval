@@ -20,10 +20,12 @@ The turn-taking naturalness metric measures the **rhythm of the call**: how long
 
 To use the `TurnTakingNaturalnessMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with audio on at least one of:
 
-- `audio` on the test case, a stereo recording of the whole call
+- `audio` on the test case, a stereo recording of the whole call\*
 - `audio` on the caller's and agent's turns, each with a `start_time`
 
 Agent turns can also carry `latency_ms`, used with per-turn audio as in [Response Latency](/docs/metrics-response-latency).
+
+\* Full call audio has to be stereo, with the caller and agent on separate channels. Mono full call audio is ignored, because the two voices can't be told apart.
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
 
@@ -288,7 +290,7 @@ Two versions of one call, one scored from full call audio and one from per-turn 
 <Tabs items={["Full call audio", "Per-turn audio"]}>
 <Tab value="Full call audio">
 
-<VoiceDiagram channels="call"
+<VoiceDiagram
   duration={31}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 0.4, end: 2.4 }, { start: 6.0, end: 8.0 }, { start: 15.6, end: 17.6 }, { start: 20.0, end: 22.0 }, { start: 24.0, end: 27.0 }] },
@@ -318,7 +320,7 @@ Two versions of one call, one scored from full call audio and one from per-turn 
 </Tab>
 <Tab value="Per-turn audio">
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={31}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 0.4, end: 2.4 }, { start: 6.0, end: 8.0 }, { start: 15.6, end: 17.6 }, { start: 20.0, end: 22.0, label: "6" }, { start: 24.0, end: 27.0 }], sounds: [{ start: 0.4, end: 2.4 }, { start: 6.0, end: 8.0 }, { start: 15.6, end: 17.6 }, { start: 20.0, end: 22.0 }, { start: 24.0, end: 27.0 }] },

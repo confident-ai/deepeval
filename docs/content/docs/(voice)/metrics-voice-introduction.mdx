@@ -110,13 +110,10 @@ evaluate(
 
 A voice metric can read audio from two places:
 
-- **Full call audio** is `audio` on the test case: one recording of the whole call.
+- **Full call audio\*** is `audio` on the test case: one recording of the whole call.
 - **Per-turn audio** is `audio` on each turn: one clip per turn.
 
-| | Stereo | Mono |
-| --- | --- | --- |
-| **Full call audio** | Used | Ignored |
-| **Per-turn audio** | Used | Used |
+\* Full call audio has to be stereo, with the caller and agent on separate channels. Mono full call audio is ignored, because there's no way to tell the two voices apart.
 
 Which one a metric uses depends on what it measures:
 
@@ -136,9 +133,6 @@ Roll-up metrics, such as [Audio Integrity](/docs/metrics-audio-integrity), use w
 <Tabs items={["Full call audio", "Per-turn audio"]}>
 <Tab value="Full call audio">
 
-<VariantSwitch items={["Stereo", "Mono"]}>
-<Variant value="Stereo">
-
 <VoiceDiagram
   duration={10}
   lanes={[
@@ -151,47 +145,10 @@ Roll-up metrics, such as [Audio Integrity](/docs/metrics-audio-integrity), use w
   ]}
 />
 
-**Used.** One recording, with each speaker on their own channel: caller on the left, agent on the right, the way the simulator records. Both are on one clock, so a metric can see exactly when each side spoke and overlapped. For a recording made the other way round, set `agent_channel="left"` on the test case.
-
-</Variant>
-<Variant value="Mono">
-
-<VoiceDiagram
-  duration={10}
-  lanes={[
-    { label: "Mono", role: "neutral", sounds: [{ start: 0.3, end: 2.4 }, { start: 3.0, end: 5.4 }, { start: 6.0, end: 7.8 }, { start: 8.3, end: 9.8 }] },
-  ]}
-  brackets={[
-    { start: 0.3, end: 2.4, lane: 0, label: "caller?", tone: "skip" },
-    { start: 3.0, end: 5.4, lane: 0, label: "agent?", tone: "skip" },
-  ]}
-/>
-
-**Ignored.** Both voices are mixed into one channel, so there's no way to tell the caller from the agent. The metric uses per-turn audio instead, or is skipped if there is none.
-
-</Variant>
-</VariantSwitch>
+One recording, with each speaker on their own channel: caller on the left, agent on the right, the way the simulator records. Both are on one clock, so a metric can see exactly when each side spoke and overlapped. For a recording made the other way round, set `agent_channel="left"` on the test case.
 
 </Tab>
 <Tab value="Per-turn audio">
-
-<VariantSwitch items={["Stereo", "Mono"]}>
-<Variant value="Stereo">
-
-<VoiceDiagram
-  duration={4}
-  lanes={[
-    { label: "Left", role: "agent", clips: [{ start: 0.4, end: 3.6, label: "turn 1" }], sounds: [{ start: 0.6, end: 3.3 }] },
-    { label: "Right", role: "agent", clips: [{ start: 0.4, end: 3.6, label: "turn 1" }], sounds: [{ start: 0.6, end: 3.3, level: 0.6 }] },
-    { label: "Measured", role: "agent", clips: [{ start: 0.4, end: 3.6, label: "turn 1" }], sounds: [{ start: 0.6, end: 3.3, level: 0.7 }] },
-  ]}
-  hideAxis
-/>
-
-**Used, as one channel.** A stereo clip's two channels are averaged into one before anything is measured. The speaker still comes from the turn's `role`, so it scores exactly like mono per-turn audio.
-
-</Variant>
-<Variant value="Mono">
 
 <VoiceDiagram
   duration={10}
@@ -201,10 +158,7 @@ Roll-up metrics, such as [Audio Integrity](/docs/metrics-audio-integrity), use w
   ]}
 />
 
-**Used.** Separate clips, one per turn, each placed on the call's clock by its `Audio.start_time`. The speaker comes from the turn's `role`. A clip often has silence around the speech. Metrics that time the call, such as the timing and interruption metrics, listen inside each clip for where the speech actually starts and stops; if nothing is heard, or the clip can't be decoded, the whole clip counts as speech. Metrics that judge how a reply sounds, such as pitch and loudness, analyse each clip on its own.
-
-</Variant>
-</VariantSwitch>
+Separate clips, one per turn, each placed on the call's clock by its `Audio.start_time`. The speaker comes from the turn's `role`. A clip often has silence around the speech. Metrics that time the call, such as the timing and interruption metrics, listen inside each clip for where the speech actually starts and stops; if nothing is heard, or the clip can't be decoded, the whole clip counts as speech. Metrics that judge how a reply sounds, such as pitch and loudness, analyse each clip on its own. If a turn's clip is stereo, its two channels are averaged into one first.
 
 </Tab>
 </Tabs>

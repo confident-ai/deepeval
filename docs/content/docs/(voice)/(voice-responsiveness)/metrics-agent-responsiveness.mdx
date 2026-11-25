@@ -154,7 +154,7 @@ It runs these four metrics on the call, each with its default settings apart fro
 
 ### Counting exchanges
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={12}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 2.6, end: 4.6 }, { start: 7.8, end: 9.6 }], sounds: [{ start: 2.7, end: 4.4 }, { start: 7.9, end: 9.4 }] },
@@ -179,7 +179,7 @@ A part that can't judge the call is left out of the score. If neither the turns 
 
 The caller is kept waiting once, and the agent hangs up on their last question. Each row is one exchange and the parts that flagged it.
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={26}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 11.0, end: 12.5, label: "turn 2" }, { start: 16.5, end: 18.5, label: "turn 4" }, { start: 22.5, end: 24.5, label: "turn 6" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 11.0, end: 12.25 }, { start: 16.5, end: 18.25 }, { start: 22.5, end: 24.25 }] },

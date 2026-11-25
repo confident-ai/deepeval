@@ -103,7 +103,7 @@ The `AudioLoopMetric` score is calculated according to the following equation:
 
 ### Counting agent replies
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={10}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
@@ -120,7 +120,7 @@ Each agent clip that decodes is one reply. The caller's clips are never checked.
 
 A loop is a chunk of audio that plays three or more times in a row. Matching is by how alike the sound is, not identical bytes, so a loop is still found after the audio is re-encoded on its way through the call.
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={6}
   lanes={[
     { label: "Agent", role: "agent", sounds: [{ start: 0.3, end: 1.6 }, { start: 1.6, end: 2.4 }, { start: 2.4, end: 3.2 }, { start: 3.2, end: 4.0 }, { start: 4.0, end: 5.6 }] },
@@ -149,7 +149,7 @@ If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introdu
 
 A call where one of four agent replies gets stuck on a quarter-second syllable. Each row is one agent reply and whether it looped.
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={21}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 10.5, label: "turn 3" }, { start: 13.5, end: 15.5, label: "turn 5" }, { start: 18.5, end: 20.5, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 8.75 }, { start: 8.75, end: 9.5 }, { start: 9.5, end: 10.25 }, { start: 13.5, end: 15.25 }, { start: 18.5, end: 20.25 }] },

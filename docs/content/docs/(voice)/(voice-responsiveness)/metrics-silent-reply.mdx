@@ -123,7 +123,7 @@ The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-aud
 
 ### Counting agent replies
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={10}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 2.8 }, { start: 6.6, end: 9.2 }], sounds: [{ start: 0.5, end: 2.6 }, { start: 6.7, end: 9.0 }] },
@@ -139,7 +139,7 @@ Every agent turn with text or audio is one reply, including a turn with text but
 
 ### Silence criteria
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={10}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 2.8 }, { start: 6.6, end: 9.2 }], sounds: [{ start: 0.5, end: 2.6 }, { start: 6.7, end: 9.0, silent: true }] },
@@ -167,7 +167,7 @@ A reply that goes quiet only partway through is [Dead Stream](/docs/metrics-dead
 
 A short call where one reply was never played and another was played as silence. Each row is one agent reply and whether the caller could hear it.
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={20}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 12.0, end: 14.0, label: "turn 5" }, { start: 18.0, end: 20.0, label: "turn 7" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 12.0, end: 14.0, silent: true }, { start: 18.0, end: 19.75 }] },

@@ -22,10 +22,12 @@ The response latency metric checks whether your voice agent **answers without a 
 
 To use the `ResponseLatencyMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with audio on at least one of:
 
-- `audio` on the test case, a stereo recording of the whole call
+- `audio` on the test case, a stereo recording of the whole call\*
 - `audio` on the caller's and agent's turns, each with a `start_time`
 
 Agent turns can also carry `latency_ms`, the response latency your connector recorded for that reply. It's only used with per-turn audio.
+
+\* Full call audio has to be stereo, with the caller and agent on separate channels. Mono full call audio is ignored, because the two voices can't be told apart.
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
 
@@ -175,7 +177,7 @@ The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introdu
 <Tabs items={["Full call audio", "Per-turn audio"]}>
 <Tab value="Full call audio">
 
-<VoiceDiagram channels="call"
+<VoiceDiagram
   duration={12}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 2.6, end: 4.6 }, { start: 8.0, end: 10.0 }] },
@@ -193,7 +195,7 @@ A reply is each time the agent starts speaking after at least 1 second of its ow
 </Tab>
 <Tab value="Per-turn audio">
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={12}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.6 }, { start: 6.4, end: 8.8 }], sounds: [{ start: 0.3, end: 2.3 }, { start: 6.6, end: 8.6 }] },
@@ -217,7 +219,7 @@ The wait runs from where the caller's speech ends to where the agent's speech st
 <Tabs items={["Full call audio", "Per-turn audio"]}>
 <Tab value="Full call audio">
 
-<VoiceDiagram channels="call"
+<VoiceDiagram
   duration={12}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 0.4, end: 2.4 }, { start: 5.2, end: 7.2 }] },
@@ -237,7 +239,7 @@ The wait is the silence between the two channels, from the caller's last sound t
 </Tab>
 <Tab value="Per-turn audio">
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={10}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.6 }], sounds: [{ start: 0.3, end: 2.3 }] },
@@ -287,7 +289,7 @@ Two calls where the agent is sometimes slow to answer, one scored from full call
 <Tabs items={["Full call audio", "Per-turn audio"]}>
 <Tab value="Full call audio">
 
-<VoiceDiagram channels="call"
+<VoiceDiagram
   duration={28}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 2.6, end: 4.6 }, { start: 8.0, end: 10.0 }, { start: 17.4, end: 19.4 }, { start: 23.2, end: 26.2 }] },
@@ -316,7 +318,7 @@ Two calls where the agent is sometimes slow to answer, one scored from full call
 </Tab>
 <Tab value="Per-turn audio">
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={27}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.3 }, { start: 5.6, end: 7.8 }, { start: 15.0, end: 17.2 }, { start: 21.0, end: 23.2 }], sounds: [{ start: 0.3, end: 2.3 }, { start: 5.8, end: 7.8 }, { start: 15.2, end: 17.2 }, { start: 21.2, end: 23.2 }] },

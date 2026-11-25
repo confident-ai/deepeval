@@ -28,7 +28,9 @@ To use the `VoiceReliabilityMetric`, you'll have to provide a [`ConversationalTe
 - `content` on each turn
 - `audio` on the turns, with `Audio.start_time` set so caller turns can be timed
 - `metadata` saying how the call ended, for [Unexpected Call End](/docs/metrics-unexpected-call-end#required-arguments)
-- optionally, `audio` on the test case, a stereo recording of the whole call, for the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) check
+- optionally, `audio` on the test case, a stereo recording of the whole call\*, for the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) check
+
+\* Full call audio has to be stereo, with the caller and agent on separate channels. Mono full call audio is ignored, because the two voices can't be told apart.
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
 
@@ -217,7 +219,7 @@ Nothing else zeroes the score.
 
 The same call as in [Agent Responsiveness](/docs/metrics-agent-responsiveness#example-call), but the agent's reply in turn 3 is clipped. Each row is one exchange and the parts that flagged it.
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={26}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 11.0, end: 12.5, label: "turn 2" }, { start: 16.5, end: 18.5, label: "turn 4" }, { start: 22.5, end: 24.5, label: "turn 6" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 11.0, end: 12.25 }, { start: 16.5, end: 18.25 }, { start: 22.5, end: 24.25 }] },

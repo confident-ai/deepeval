@@ -22,10 +22,12 @@ The response delay consistency metric checks whether your voice agent **takes ab
 
 To use the `ResponseDelayConsistencyMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with audio on at least one of:
 
-- `audio` on the test case, a stereo recording of the whole call
+- `audio` on the test case, a stereo recording of the whole call\*
 - `audio` on the caller's and agent's turns, each with a `start_time`
 
 Agent turns can also carry `latency_ms`, used with per-turn audio the same way as in [Response Latency](/docs/metrics-response-latency).
+
+\* Full call audio has to be stereo, with the caller and agent on separate channels. Mono full call audio is ignored, because the two voices can't be told apart.
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
 
@@ -206,7 +208,7 @@ Two calls where the agent answers in about a second, except once, one scored fro
 <Tabs items={["Full call audio", "Per-turn audio"]}>
 <Tab value="Full call audio">
 
-<VoiceDiagram channels="call"
+<VoiceDiagram
   duration={24}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 0.4, end: 2.4 }, { start: 5.4, end: 7.4 }, { start: 10.6, end: 12.6 }, { start: 18.8, end: 20.8 }] },
@@ -234,7 +236,7 @@ Two calls where the agent answers in about a second, except once, one scored fro
 </Tab>
 <Tab value="Per-turn audio">
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={24}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.3 }, { start: 5.2, end: 7.4 }, { start: 10.4, end: 12.6 }, { start: 18.4, end: 20.6 }], sounds: [{ start: 0.3, end: 2.3 }, { start: 5.4, end: 7.4 }, { start: 10.6, end: 12.6 }, { start: 18.6, end: 20.6 }] },

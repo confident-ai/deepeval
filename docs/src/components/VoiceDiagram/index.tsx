@@ -1,6 +1,4 @@
-"use client";
-
-import React, { useState } from "react";
+import React from "react";
 import styles from "./VoiceDiagram.module.scss";
 
 type Tone = "bad" | "ok" | "skip" | "info";
@@ -78,11 +76,6 @@ interface VoiceDiagramProps {
   hideAxis?: boolean;
   unit?: string;
   caption?: React.ReactNode;
-  /** Adds a Stereo / Mono switch. "call" shows what mono full call audio
-   * would mean (ignored); "turn" notes stereo clips are averaged first. */
-  channels?: "call" | "turn";
-  /** What the Mono view of full call audio says; defaults to the fallback. */
-  monoNote?: React.ReactNode;
 }
 
 const WIDTH = 600;
@@ -114,7 +107,7 @@ const wobble = (x: number) => {
 // Rounded so server and browser write identical attribute values.
 const r2 = (n: number) => Math.round(n * 100) / 100;
 
-const DiagramBody: React.FC<VoiceDiagramProps> = ({
+const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
   title,
   duration,
   lanes,
@@ -451,57 +444,6 @@ const DiagramBody: React.FC<VoiceDiagramProps> = ({
       </svg>
       {caption && <figcaption className={styles.caption}>{caption}</figcaption>}
     </figure>
-  );
-};
-
-const MONO_CALL_NOTE =
-  "Mono full call audio can't tell the caller from the agent, so it isn't used: the metric reads per-turn audio instead.";
-const STEREO_TURN_NOTE =
-  "Each stereo clip's two channels are averaged into one first, so it's scored exactly like mono.";
-
-const VoiceDiagram: React.FC<VoiceDiagramProps> = (props) => {
-  const { channels, monoNote, ...rest } = props;
-  const [mode, setMode] = useState<"Stereo" | "Mono">("Stereo");
-  if (!channels) return <DiagramBody {...rest} />;
-
-  let shown: VoiceDiagramProps = rest;
-  if (channels === "call" && mode === "Mono") {
-    // Every voice on one channel: nothing says whose sound is whose.
-    const sounds = rest.lanes
-      .flatMap((lane) => lane.sounds ?? [])
-      .filter((sound) => !sound.silent)
-      .sort((a, b) => a.start - b.start);
-    shown = {
-      ...rest,
-      lanes: [{ label: "Mono", role: "neutral", sounds }],
-      marks: [],
-      windows: [],
-      brackets: [],
-      highlights: [],
-      caption: monoNote ?? MONO_CALL_NOTE,
-    };
-  } else if (channels === "turn" && mode === "Stereo") {
-    shown = { ...rest, caption: rest.caption ?? STEREO_TURN_NOTE };
-  }
-
-  return (
-    <div className={styles.channelBlock}>
-      <div className={styles.channelSwitch} role="radiogroup" aria-label="Channels">
-        {(["Stereo", "Mono"] as const).map((option) => (
-          <button
-            key={option}
-            type="button"
-            role="radio"
-            aria-checked={mode === option}
-            className={mode === option ? styles.channelActive : styles.channelOption}
-            onClick={() => setMode(option)}
-          >
-            {option}
-          </button>
-        ))}
-      </div>
-      <DiagramBody {...shown} />
-    </div>
   );
 };
 

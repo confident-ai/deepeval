@@ -103,7 +103,7 @@ The `AudioDropoutMetric` score is calculated according to the following equation
 
 ### Counting agent replies
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={10}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
@@ -120,7 +120,7 @@ Each agent clip that decodes is one reply. The caller's clips are never checked.
 
 A dropout is a short gap where the sound falls away in the middle of speech. A pause between words keeps the room's background noise, or fades in and out. A dropout doesn't.
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={6}
   lanes={[
     { label: "Agent", role: "agent", sounds: [{ start: 0.3, end: 1.6 }, { start: 1.6, end: 1.85, level: 0.08, ending: "flat" }, { start: 1.85, end: 3.4 }, { start: 3.4, end: 3.5, silent: true }, { start: 3.5, end: 5.6 }] },
@@ -155,7 +155,7 @@ If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introdu
 
 A call where the agent's audio drops out in one of four replies. Each row is one agent reply and whether it had a dropout.
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={21}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.65, label: "turn 3" }, { start: 12.65, end: 15.15, label: "turn 5" }, { start: 18.15, end: 20.15, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 8.5 }, { start: 8.5, end: 8.65, level: 0.08, ending: "flat" }, { start: 8.65, end: 9.4 }, { start: 12.65, end: 13.75 }, { start: 13.75, end: 13.83, silent: true }, { start: 13.83, end: 14.9 }, { start: 18.15, end: 19.9 }] },

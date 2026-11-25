@@ -174,38 +174,3 @@
   color: var(--color-fd-muted-foreground);
 }
 
-.channelBlock {
-  margin: 1.25em 0;
-
-  &:first-child {
-    margin-top: 0;
-  }
-
-  .figure {
-    margin-top: 0;
-  }
-}
-
-.channelSwitch {
-  display: inline-flex;
-  gap: 2px;
-  padding: 2px;
-  margin-bottom: 6px;
-  border: 1px solid var(--color-fd-border);
-  background: var(--color-fd-muted);
-}
-
-.channelOption,
-.channelActive {
-  padding: 2px 10px;
-  border: none;
-  font-size: 12px;
-  cursor: pointer;
-  background: transparent;
-  color: var(--color-fd-muted-foreground);
-}
-
-.channelActive {
-  background: var(--color-fd-background);
-  color: var(--color-fd-foreground);
-}

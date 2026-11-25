@@ -192,7 +192,7 @@ The metric runs five single-issue metrics on the call, each with its default lim
 
 A reply counts if any part counted it, and is flagged if any part flagged it. So an agent turn with text and no audio counts, through Silent Reply. A reply flagged by two parts counts once. A part with nothing to judge is left out, and if no part has anything to judge, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={10}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.5, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 4.3 }, { start: 5.7, end: 7.0 }, { start: 7.0, end: 7.1, silent: true }, { start: 7.1, end: 8.6, ending: "cut" }] },
@@ -227,7 +227,7 @@ Audio Loop, Audio Dropout, Audio Clipping and Silent Reply read per-turn audio, 
 
 A call where four of five agent replies have a problem, and one has two. Each row is one agent reply and the parts that flagged it.
 
-<VoiceDiagram channels="turn"
+<VoiceDiagram
   duration={24}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.12, label: "turn 3" }, { start: 12.12, end: 15.12, label: "turn 5" }, { start: 18.12, end: 20.24, label: "turn 7" }, { start: 22.3, end: 24, label: "turn 9" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 9.12, ending: "cut" }, { start: 12.12, end: 13.37 }, { start: 13.37, end: 14.13 }, { start: 14.13, end: 14.87 }, { start: 18.12, end: 19.22 }, { start: 19.22, end: 19.3, silent: true }, { start: 19.3, end: 20.24, ending: "cut" }] },
