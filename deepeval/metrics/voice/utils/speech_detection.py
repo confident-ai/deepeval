@@ -138,19 +138,17 @@ def speech_probabilities(samples: Any, sample_rate: int) -> List[float]:
 
 
 def speech_frames(
-    samples: Any, sample_rate: int, levels: Sequence[float]
+    samples: Any,
+    sample_rate: int,
+    levels: Sequence[float],
+    min_level: float = audio_utils.DEFAULT_SILENCE_RMS,
 ) -> List[bool]:
     """For each 20 ms frame with level `levels[i]`, whether the speaker is
     speaking: loud enough for this speaker AND heard as speech."""
-    voiced = [
-        level for level in levels if level >= audio_utils.DEFAULT_SILENCE_RMS
-    ]
+    voiced = [level for level in levels if level >= min_level]
     if not voiced:
         return [False] * len(levels)
-    bar = max(
-        audio_utils.DEFAULT_SILENCE_RMS,
-        SPEECH_MIN_LEVEL_RATIO * statistics.median(voiced),
-    )
+    bar = max(min_level, SPEECH_MIN_LEVEL_RATIO * statistics.median(voiced))
     probabilities = speech_probabilities(samples, sample_rate)
     if not probabilities:
         return [False] * len(levels)

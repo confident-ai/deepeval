@@ -53,7 +53,7 @@ There are **SEVEN** optional parameters when creating a `ResponseLatencyMetric`:
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
 - [Optional] `max_latency_seconds`: an integer for the longest wait, in seconds, between the caller finishing and the agent starting to speak. Must be greater than 0. Defaulted to `4`.
-- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Without a stereo `call_recording_path`, it finds where each speaker's speech starts and stops inside every turn's own audio instead. Defaulted to `True`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 `score_breakdown` lists the replies where the issue was found:
@@ -93,7 +93,7 @@ With a call recording, the wait runs from the caller's last sound to the agent's
 
 <include cwd>snippets/voice/speech-detection.mdx</include>
 
-Without a recording, the wait runs from the end of the caller's audio to the moment the agent starts speaking, both placed on the call timeline by each turn's `start_time`. When the two clips touch with no gap, the `latency_ms` your connector recorded for the reply is used instead; a reply with neither is listed under `skipped`. An overlap of up to half a second counts as no wait; a longer one is listed under `skipped`. Every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
+Without a recording, the wait is the `latency_ms` your connector recorded for the reply, such as the response latency ElevenLabs, LiveKit or Pipecat report. A reply without one is timed from where the caller's speech ends to where the agent's speech starts, found inside each turn's audio and placed on the call timeline by its `start_time`, so a pause left inside a clip still counts as waiting. When speech runs right up to where two touching clips meet, so no silence can be heard between them, that reply is listed under `skipped`. An overlap of up to half a second counts as no wait; a longer one is listed under `skipped`. Every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
 
 People answer each other in about **0.2 seconds** (Stivers et al., 2009), and conversation treats about **one second** of silence as the standard maximum (Jefferson, 1989). A voice agent also has to transcribe, think and speak before it can answer, so the default of **4 seconds** allows for that. On real phone calls labelled by human reviewers, 4 seconds matched their judgement best, while 2 seconds flagged almost every call.
 

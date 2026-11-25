@@ -53,7 +53,7 @@ There are **SEVEN** optional parameters when creating a `ResponseDelayConsistenc
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
 - [Optional] `max_shift_seconds`: an integer for how far, in seconds, a reply's wait may sit from the agent's typical wait. Must be greater than 0. Defaulted to `2`.
-- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Without a stereo `call_recording_path`, it finds where each speaker's speech starts and stops inside every turn's own audio instead. Defaulted to `True`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 `score_breakdown` lists the replies where the issue was found:

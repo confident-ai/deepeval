@@ -48,7 +48,7 @@ There are **SIX** optional parameters when creating a `TurnTakingNaturalnessMetr
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`, and is passed to all four timing checks. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Without a stereo `call_recording_path`, it finds where each speaker's speech starts and stops inside every turn's own audio instead. It is passed to all four timing checks. Defaulted to `True`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
@@ -110,7 +110,7 @@ When the test case has a stereo `call_recording_path` (caller on the left channe
 
 <include cwd>snippets/voice/speech-detection.mdx</include>
 
-Without a recording, every audio turn needs a `start_time`; when one is missing there is no honest way to tell when anyone spoke, so the metric is skipped with the reason "Every audio turn needs a start_time to time the call, so none was inferred."
+Without a recording, who spoke when comes from the speech found inside each turn's audio, placed on the call timeline by its `start_time`. Every audio turn needs a `start_time`; when one is missing there is no honest way to tell when anyone spoke, so the metric is skipped with the reason "Every audio turn needs a start_time to time the call, so none was inferred."
 
 :::caution
 Timings depend on the connector and its end-of-turn detection, so they only compare within a `VoiceProtocol`: keep the connector fixed when tracking this score over time.

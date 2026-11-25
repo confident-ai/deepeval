@@ -48,7 +48,7 @@ There are **SIX** optional parameters when creating a `VoiceReliabilityMetric`:
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`, and is passed to the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) check. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. With a stereo `call_recording_path` it is passed to the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) check; without one, [Failed Response](/docs/metrics-failed-response) and [Reprompt](/docs/metrics-reprompt) use it to find the speech inside each turn's own audio. Defaulted to `True`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
@@ -113,7 +113,7 @@ When the call has no agent turns, or an agent turn's audio cannot be decoded, th
 | [Audio Dropout](/docs/metrics-audio-dropout)             | Audio Integrity      | an agent reply that cuts out mid-speech.                |
 | [Audio Clipping](/docs/metrics-audio-clipping)           | Audio Integrity      | an agent reply distorted from being too loud.           |
 
-Each issue is counted against an **exchange**: a caller line and the agent's reply to it. Caller turns that start less than 1 second after the previous one ends are one line, as in [Reprompt](/docs/metrics-reprompt). An agent turn spoken before the caller's first line is an exchange of its own. The score is the share of judged exchanges that none of the parts flagged:
+Each issue is counted against an **exchange**: a caller line and the agent's reply to it. Caller turns whose speech starts less than 1 second after the previous one's speech ends are one line, as in [Reprompt](/docs/metrics-reprompt). An agent turn spoken before the caller's first line is an exchange of its own. The score is the share of judged exchanges that none of the parts flagged:
 
 <Equation formula="\text{Voice Reliability} = 1 - \frac{\text{Exchanges flagged by at least one part}}{\text{Exchanges judged}}" />
 

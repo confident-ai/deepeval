@@ -97,7 +97,8 @@ class AgentInterruptionMetric(BaseDefectMetric):
             if is_opening_line(index, start):
                 continue
             key = start.turn if event_key == "turn" else round(start.at, 2)
-            eligible.append(key)
+            if key not in eligible:
+                eligible.append(key)
             fired = [
                 name
                 for name, condition in INTERRUPTION_CONDITIONS.items()

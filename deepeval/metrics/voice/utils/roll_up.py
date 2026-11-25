@@ -39,12 +39,12 @@ def agent_turn_at(
 
 
 def caller_line_start_of_turn(
-    test_case: ConversationalTestCase,
+    test_case: ConversationalTestCase, use_speech_detection: bool
 ) -> Dict[int, int]:
     """Each caller turn mapped to the first turn of its caller line."""
     return {
         turn: first
-        for first, last in caller_lines(test_case.turns)
+        for first, last in caller_lines(test_case.turns, use_speech_detection)
         for turn in range(first, last + 1)
     }
 

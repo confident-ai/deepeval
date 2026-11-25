@@ -128,10 +128,10 @@ def test_responsiveness_and_reliability_critical_failure_override():
         ]
     )
 
-    responsiveness = AgentResponsivenessMetric().measure(
-        test_case, _show_indicator=False
-    )
-    reliability = VoiceReliabilityMetric().measure(
+    responsiveness = AgentResponsivenessMetric(
+        use_speech_detection=False
+    ).measure(test_case, _show_indicator=False)
+    reliability = VoiceReliabilityMetric(use_speech_detection=False).measure(
         test_case, _show_indicator=False
     )
 

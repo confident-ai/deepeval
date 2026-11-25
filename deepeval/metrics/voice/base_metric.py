@@ -332,10 +332,13 @@ class BaseExchangeRollUpMetric(BaseRollUpMetric):
     """Rolls up per exchange: a caller line and the agent's reply to it."""
 
     counted = EXCHANGES
+    use_speech_detection: bool
     _line_start_of_turn: Dict[int, int]
 
     def _prepare(self, test_case: ConversationalTestCase) -> None:
-        self._line_start_of_turn = caller_line_start_of_turn(test_case)
+        self._line_start_of_turn = caller_line_start_of_turn(
+            test_case, self.use_speech_detection
+        )
 
     def _roll_up_key(
         self,

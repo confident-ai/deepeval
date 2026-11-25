@@ -50,7 +50,13 @@ class ResponseDelayConsistencyMetric(BaseDefectMetric):
             VoiceEvent(
                 type="delay_shift",
                 **{event_key: key},
-                **wait_span(test_case, event_key, key, delays[key]),
+                **wait_span(
+                    test_case,
+                    event_key,
+                    key,
+                    delays[key],
+                    self.use_speech_detection,
+                ),
                 response_delay_seconds=round(delays[key], 2),
                 shift_seconds=round(shift, 2),
                 mark=RANGE,

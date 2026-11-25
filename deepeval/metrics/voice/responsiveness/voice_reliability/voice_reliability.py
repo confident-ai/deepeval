@@ -43,7 +43,9 @@ class VoiceReliabilityMetric(BaseExchangeRollUpMetric):
 
         parts: List[BaseDefectMetric] = []
         for part in [
-            *AgentResponsivenessMetric()._parts(),
+            *AgentResponsivenessMetric(
+                use_speech_detection=self.use_speech_detection
+            )._parts(),
             *AudioIntegrityMetric(
                 use_speech_detection=self.use_speech_detection
             )._parts(),

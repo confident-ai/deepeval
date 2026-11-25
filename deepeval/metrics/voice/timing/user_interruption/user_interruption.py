@@ -84,7 +84,8 @@ class UserInterruptionMetric(BaseDefectMetric):
             if start.stops_at - start.at < BACKCHANNEL_MAX_SECONDS:
                 continue
             key = start.turn if event_key == "turn" else round(start.at, 2)
-            eligible.append(key)
+            if key not in eligible:
+                eligible.append(key)
             fired = [
                 name
                 for name, condition in INTERRUPTION_CONDITIONS.items()

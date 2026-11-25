@@ -74,9 +74,9 @@ def _simulate(agent, goldens: int = 2):
 
 def _voice_metrics():
     return [
-        AgentResponsivenessMetric(),
-        TurnTakingNaturalnessMetric(),
-        VoiceReliabilityMetric(),
+        AgentResponsivenessMetric(use_speech_detection=False),
+        TurnTakingNaturalnessMetric(use_speech_detection=False),
+        VoiceReliabilityMetric(use_speech_detection=False),
     ]
 
 

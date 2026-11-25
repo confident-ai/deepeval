@@ -51,7 +51,10 @@ METRICS = [metric_class for metric_class, _, _, _ in TIMING_ISSUES] + [
 
 @pytest.mark.parametrize("metric_class,label,_,__", TIMING_ISSUES)
 def test_a_clean_call_scores_one(metric_class, label, _, __):
-    metric = measure(metric_class(), timed_call(CLEAN_GAPS, greeting_at=1.0))
+    metric = measure(
+        metric_class(use_speech_detection=False),
+        timed_call(CLEAN_GAPS, greeting_at=1.0),
+    )
     assert metric.score == 1.0
     assert metric.reason == f"No agent reply had {label}.{STAMPS_NOTE}"
     assert metric.score_breakdown["eligible_turns"] == 3
@@ -63,7 +66,10 @@ def test_a_clean_call_scores_one(metric_class, label, _, __):
 def test_score_is_the_share_of_agent_replies_without_the_issue(
     metric_class, label, event_type, gaps
 ):
-    metric = measure(metric_class(), timed_call(gaps, greeting_at=1.0))
+    metric = measure(
+        metric_class(use_speech_detection=False),
+        timed_call(gaps, greeting_at=1.0),
+    )
     assert metric.score == pytest.approx(2 / 3)
     assert metric.reason == f"1 of 3 agent replies had {label}.{STAMPS_NOTE}"
     [event] = metric.score_breakdown["events"]
@@ -75,7 +81,7 @@ def test_score_is_the_share_of_agent_replies_without_the_issue(
 def test_a_call_missing_a_start_time_is_skipped(metric_class):
     turns = timed_call(CLEAN_GAPS, greeting_at=1.0)
     turns[1].audio.start_time = None
-    metric = measure(metric_class(), turns)
+    metric = measure(metric_class(use_speech_detection=False), turns)
     assert metric.score is None
     assert "start_time" in metric.reason
 
@@ -90,7 +96,7 @@ def test_a_call_without_agent_audio_is_skipped(metric_class):
         ),
         Turn(role="assistant", content="Hi, how can I help?"),
     ]
-    metric = measure(metric_class(), turns)
+    metric = measure(metric_class(use_speech_detection=False), turns)
     assert metric.score is None
     assert metric.skipped is True
 
@@ -101,7 +107,7 @@ def test_undecodable_agent_audio_is_skipped_not_failed(
 ):
     turns = timed_call([0.5, 0.5, 0.5, 0.5], greeting_at=1.0)
     undecodable(turns[4])
-    metric = measure(metric_class(), turns)
+    metric = measure(metric_class(use_speech_detection=False), turns)
     assert metric.score == 1.0
     assert metric.score_breakdown["eligible_turns"] == 3
     assert metric.score_breakdown["skipped"] == [
@@ -114,9 +120,14 @@ def test_undecodable_agent_audio_is_skipped_not_failed(
 
 def test_talking_over_the_caller_fails_only_agent_interruption():
     turns = timed_call([0.5, -1.5, 0.5, 0.5], greeting_at=1.0)
-    assert measure(AgentInterruptionMetric(), turns).score == 0.75
+    assert (
+        measure(
+            AgentInterruptionMetric(use_speech_detection=False), turns
+        ).score
+        == 0.75
+    )
     for metric_class in (ResponseLatencyMetric, ResponseDelayConsistencyMetric):
-        metric = measure(metric_class(), turns)
+        metric = measure(metric_class(use_speech_detection=False), turns)
         assert metric.score == 1.0
         assert metric.score_breakdown["skipped"] == [
             {"turn": 4, "error": "Agent started before the caller finished."}
@@ -125,23 +136,41 @@ def test_talking_over_the_caller_fails_only_agent_interruption():
 
 def test_a_brief_overlap_is_not_an_interruption():
     turns = timed_call([0.5, -0.3, 0.5])
-    assert measure(AgentInterruptionMetric(), turns).score == 1.0
-    metric = measure(ResponseLatencyMetric(), turns)
+    assert (
+        measure(
+            AgentInterruptionMetric(use_speech_detection=False), turns
+        ).score
+        == 1.0
+    )
+    metric = measure(ResponseLatencyMetric(use_speech_detection=False), turns)
     assert metric.score_breakdown["eligible_turns"] == 3
 
 
 def test_timing_limits_are_configurable():
     slow = timed_call([0.5, 4.0, 0.5])
     assert measure(
-        ResponseLatencyMetric(max_latency_seconds=3), slow
+        ResponseLatencyMetric(
+            max_latency_seconds=3, use_speech_detection=False
+        ),
+        slow,
     ).score == pytest.approx(2 / 3)
     assert (
-        measure(ResponseDelayConsistencyMetric(max_shift_seconds=4), slow).score
+        measure(
+            ResponseDelayConsistencyMetric(
+                max_shift_seconds=4, use_speech_detection=False
+            ),
+            slow,
+        ).score
         == 1.0
     )
     late = timed_call(CLEAN_GAPS, greeting_at=5.0)
     assert (
-        measure(TimeToFirstResponseMetric(max_wait_seconds=6), late).score
+        measure(
+            TimeToFirstResponseMetric(
+                max_wait_seconds=6, use_speech_detection=False
+            ),
+            late,
+        ).score
         == 1.0
     )
     for metric_class, setting in (
@@ -156,17 +185,22 @@ def test_timing_limits_are_configurable():
 
 @pytest.mark.parametrize("metric_class,_,__,gaps", TIMING_ISSUES)
 def test_timing_events_hold_plain_numbers(metric_class, _, __, gaps):
-    [event] = measure(metric_class(), timed_call(gaps)).score_breakdown[
-        "events"
-    ]
+    [event] = measure(
+        metric_class(use_speech_detection=False), timed_call(gaps)
+    ).score_breakdown["events"]
     for value in event.values():
         assert type(value) in (str, int, float)
 
 
 def test_a_collision_is_only_an_agent_interruption():
     turns = agent_backs_off_call(1.4)
-    assert measure(AgentInterruptionMetric(), turns).score == 0.5
-    metric = measure(UserInterruptionMetric(), turns)
+    assert (
+        measure(
+            AgentInterruptionMetric(use_speech_detection=False), turns
+        ).score
+        == 0.5
+    )
+    metric = measure(UserInterruptionMetric(use_speech_detection=False), turns)
     assert metric.score == 1.0
     assert metric.score_breakdown["eligible_turns"] == 2
 

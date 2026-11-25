@@ -44,12 +44,13 @@ metric = RepromptMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **FIVE** optional parameters when creating a `RepromptMetric`:
+There are **SIX** optional parameters when creating a `RepromptMetric`:
 
 - [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `use_speech_detection`: a boolean which, when set to `True`, finds where each speaker's speech starts and stops inside every turn's own audio, so silence or noise at the edges of a clip is not mistaken for speaking. Defaulted to `True`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 `score_breakdown` lists the caller lines that had to be repeated:
@@ -65,12 +66,12 @@ print(metric.score_breakdown)
 {
     "eligible_turns": 4,
     "turns_with_events": 1,
-    "events": [{"type": "user_reprompted", "turn": 2, "reprompt_turn": 3, "start_time": 9.0, "duration_seconds": 3.1, "mark": "range", "timing_source": "turn_timestamps", "description": "Caller repeated themselves after 3.1s"}],
+    "events": [{"type": "user_reprompted", "turn": 2, "reprompt_turn": 3, "start_time": 9.0, "duration_seconds": 4.6, "mark": "range", "timing_source": "turn_timestamps", "description": "Caller repeated themselves after 4.6s"}],
     "skipped": [],
 }
 ```
 
-Like [`FailedResponseMetric`](/docs/metrics-failed-response), `turn` here is the zero-based position of the **caller** line the agent did not answer in time, and `reprompt_turn` is the caller line that came straight after it. `start_time` and `duration_seconds` place the silence the caller sat through on the call's clock: from the end of the line to the start of the repeat (left out when those turns have no `Audio.start_time`). The reason reads, for example, "1 of 4 caller lines had to be repeated before the agent replied."
+Like [`FailedResponseMetric`](/docs/metrics-failed-response), `turn` here is the zero-based position of the **caller** line the agent did not answer in time, and `reprompt_turn` is the caller line that came straight after it. `start_time` and `duration_seconds` place the silence the caller sat through on the call's clock: from where the line's speech ends to where the repeat's speech starts (left out when those turns have no `Audio.start_time`). The reason reads, for example, "1 of 4 caller lines had to be repeated before the agent replied."
 
 <include cwd>snippets/voice/event-place.mdx</include>
 
@@ -80,7 +81,7 @@ Like [`FailedResponseMetric`](/docs/metrics-failed-response), `turn` here is the
 
 <Equation formula="\text{Reprompt} = \frac{\text{Caller lines answered before the caller spoke again}}{\text{Caller lines that needed a reply}}" />
 
-Caller turns that start less than 1 second after the previous caller turn ends are one line: a transcriber often splits one sentence into several turns, and that is not the caller speaking again. Turns without an `Audio.start_time` can't be timed, so each is its own line. A caller line needs a reply unless it closes the call: once any trailing periods or exclamation marks are dropped, the text of its last turn ends in "bye", "goodbye", "thank you", "thanks", "that's all" or "that is all". A line counts as repeated when the very next turn is another caller line and the agent does reply later in the call. A line the agent never answers at all is left to [`FailedResponseMetric`](/docs/metrics-failed-response), so the two metrics never flag the same line. A conversation with no audio on any turn is not a voice call, so the metric is skipped, as it is when no caller line needed a reply.
+Caller turns whose speech starts less than 1 second after the previous caller turn's speech ends are one line: a transcriber often splits one sentence into several turns, and that is not the caller speaking again. Turns without an `Audio.start_time` can't be timed, so each is its own line. A caller line needs a reply unless it closes the call: once any trailing periods or exclamation marks are dropped, the text of its last turn ends in "bye", "goodbye", "thank you", "thanks", "that's all" or "that is all". A line counts as repeated when the very next turn is another caller line and the agent does reply later in the call. When both lines are timed, the caller must also have waited at least 4 seconds in silence before speaking again, the wait [`ResponseLatencyMetric`](/docs/metrics-response-latency) counts as slow by default; a shorter pause is the caller stopping mid-thought, not waiting for the agent. A line the agent never answers at all is left to [`FailedResponseMetric`](/docs/metrics-failed-response), so the two metrics never flag the same line. A conversation with no audio on any turn is not a voice call, so the metric is skipped, as it is when no caller line needed a reply.
 
 ## FAQs
 

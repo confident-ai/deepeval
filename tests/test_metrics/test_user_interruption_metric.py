@@ -1,6 +1,7 @@
 import pytest
 
 from deepeval.metrics import UserInterruptionMetric
+from deepeval.test_case import Turn
 from tests.test_metrics.helpers import (
     CLEAN_GAPS,
     STAMPS_NOTE,
@@ -9,12 +10,33 @@ from tests.test_metrics.helpers import (
     speech_like,
     timed_call,
     timed_turn,
+    to_audio,
+    zeros,
 )
+
+
+def test_a_caller_turn_with_a_pause_inside_its_audio_is_still_one_turn():
+    line = speech_like(1.5)
+    line.extend(zeros(1.5))
+    line.extend(speech_like(1.5, seed=1))
+    turns = [
+        timed_turn("assistant", 2.0, 0.0),
+        Turn(
+            role="user",
+            content="Yes. And another thing.",
+            audio=to_audio(line, start_time=2.5),
+        ),
+        timed_turn("assistant", 2.0, 7.5, seed=1),
+    ]
+    metric = measure(UserInterruptionMetric(use_speech_detection=False), turns)
+    assert metric.score == 1.0
+    assert metric.score_breakdown["eligible_turns"] == 1
 
 
 def test_a_caller_who_waits_for_the_agent_interrupts_no_one():
     metric = measure(
-        UserInterruptionMetric(), timed_call(CLEAN_GAPS, greeting_at=1.0)
+        UserInterruptionMetric(use_speech_detection=False),
+        timed_call(CLEAN_GAPS, greeting_at=1.0),
     )
     assert metric.score == 1.0
     assert metric.reason == (
@@ -25,12 +47,12 @@ def test_a_caller_who_waits_for_the_agent_interrupts_no_one():
 
 def test_the_caller_talking_over_the_agent_from_turn_timestamps():
     turns = [
-        timed_turn("assistant", 3.0, 0.0),
+        timed_turn("assistant", 3.5, 0.0),
         timed_turn("user", 2.0, 2.0),
         timed_turn("assistant", 2.0, 4.5, seed=1),
         timed_turn("user", 2.0, 7.0, seed=1),
     ]
-    metric = measure(UserInterruptionMetric(), turns)
+    metric = measure(UserInterruptionMetric(use_speech_detection=False), turns)
     assert metric.score == 0.5
     assert metric.reason == (
         "1 of 2 caller turns had the caller interrupting the agent."

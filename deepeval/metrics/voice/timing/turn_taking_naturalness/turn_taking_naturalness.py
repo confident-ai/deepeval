@@ -87,10 +87,12 @@ class TurnTakingNaturalnessMetric(BaseRollUpMetric):
             )
             for span in activity.agent
         }
-        self._caller_start_at = {
-            (round(start.at, 2) if self._on_recording else start.turn): start.at
-            for start in caller_starts(activity)
-        }
+        self._caller_start_at = {}
+        for start in caller_starts(activity):
+            self._caller_start_at.setdefault(
+                round(start.at, 2) if self._on_recording else start.turn,
+                start.at,
+            )
 
     def _reply_key(self, reply: Span) -> Optional[float]:
         return round(reply.start, 2) if self._on_recording else reply.turn

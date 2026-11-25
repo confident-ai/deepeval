@@ -1,3 +1,5 @@
+from typing import Optional
+
 from deepeval.metrics.voice.utils.call_activity import (
     caller_lines,
     silence_after_line,
@@ -15,6 +17,25 @@ from deepeval.metrics.voice.utils.events import RANGE, VoiceEvent
 
 
 class FailedResponseMetric(BaseDefectMetric):
+    def __init__(
+        self,
+        *,
+        threshold: Optional[float] = 0.5,
+        include_reason: bool = True,
+        strict_mode: bool = False,
+        verbose_mode: bool = False,
+        use_speech_detection: bool = True,
+        flaky: bool = False,
+    ):
+        super().__init__(
+            threshold=threshold,
+            include_reason=include_reason,
+            strict_mode=strict_mode,
+            verbose_mode=verbose_mode,
+            flaky=flaky,
+        )
+        self.use_speech_detection = use_speech_detection
+
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         defect_label = "no reply from the agent"
         if not call_has_audio(test_case):
@@ -29,7 +50,7 @@ class FailedResponseMetric(BaseDefectMetric):
         turns = test_case.turns
         eligible_turns = []
         defects = []
-        for first, last in caller_lines(turns):
+        for first, last in caller_lines(turns, self.use_speech_detection):
             if not response_was_owed(turns[last].content):
                 continue
             eligible_turns.append(first)
@@ -48,7 +69,9 @@ class FailedResponseMetric(BaseDefectMetric):
                         turn=first,
                         mark=RANGE,
                         description="Call ended without a reply",
-                        **silence_after_line(turns, last),
+                        **silence_after_line(
+                            turns, last, self.use_speech_detection
+                        ),
                     )
                 )
             elif (
@@ -62,7 +85,9 @@ class FailedResponseMetric(BaseDefectMetric):
                         reply_turn=reply_turn,
                         mark=RANGE,
                         description="Agent's reply was empty",
-                        **silence_after_line(turns, last),
+                        **silence_after_line(
+                            turns, last, self.use_speech_detection
+                        ),
                     )
                 )
         return DefectShare(

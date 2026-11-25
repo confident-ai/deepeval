@@ -8,6 +8,8 @@ from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from deepeval.voice.connectors import audio_utils
 
 RATE = 8000
+# speech_like's syllables leave the last quarter second of a clip silent.
+TAIL = 0.25
 
 
 def speech_like(

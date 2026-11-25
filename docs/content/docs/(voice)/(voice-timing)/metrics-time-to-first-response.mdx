@@ -53,7 +53,7 @@ There are **SEVEN** optional parameters when creating a `TimeToFirstResponseMetr
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
 - [Optional] `max_wait_seconds`: an integer for the longest wait, in seconds, between the call connecting and the agent starting to speak. Must be greater than 0. Defaulted to `3`.
-- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Without a stereo `call_recording_path`, it finds where each speaker's speech starts and stops inside every turn's own audio instead. Defaulted to `True`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 `score_breakdown` lists the greeting when it was late:
@@ -98,7 +98,7 @@ If the agent makes no sound on the recording, the metric is skipped.
 
 <include cwd>snippets/voice/speech-detection.mdx</include>
 
-Without a recording, the wait is the greeting's `start_time`, which counts from the moment the call connected. Read from turn timestamps, the metric only applies when the agent speaks first. When the caller opens the call, the agent was not expected to greet, so the metric is skipped; its reply is judged by [`ResponseLatencyMetric`](/docs/metrics-response-latency) instead. Every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
+Without a recording, the wait runs from the moment the call connected to the first speech in the greeting's audio, placed by its `start_time`. Read from turn timestamps, the metric only applies when the agent speaks first. When the caller opens the call, the agent was not expected to greet, so the metric is skipped; its reply is judged by [`ResponseLatencyMetric`](/docs/metrics-response-latency) instead. Every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped.
 
 The default of **3 seconds** is the two-second response-latency limit plus one second for the line to connect, since the clock starts at connection rather than at a caller's last word. It is a practical allowance rather than a published norm, so tune it to your telephony setup.
 

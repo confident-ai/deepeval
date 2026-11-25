@@ -14,12 +14,18 @@ from tests.test_metrics.helpers import (
 def test_an_undecodable_greeting_is_still_timed():
     turns = timed_call(CLEAN_GAPS, greeting_at=5.0)
     undecodable(turns[0])
-    assert measure(TimeToFirstResponseMetric(), turns).score == 0.0
+    assert (
+        measure(
+            TimeToFirstResponseMetric(use_speech_detection=False), turns
+        ).score
+        == 0.0
+    )
 
 
 def test_a_prompt_greeting_passes_time_to_first_response():
     metric = measure(
-        TimeToFirstResponseMetric(), timed_call(CLEAN_GAPS, greeting_at=1.0)
+        TimeToFirstResponseMetric(use_speech_detection=False),
+        timed_call(CLEAN_GAPS, greeting_at=1.0),
     )
     assert metric.score == 1.0
     assert metric.score_breakdown["eligible_turns"] == 1
@@ -27,7 +33,8 @@ def test_a_prompt_greeting_passes_time_to_first_response():
 
 def test_a_slow_greeting_fails_time_to_first_response():
     metric = measure(
-        TimeToFirstResponseMetric(), timed_call(CLEAN_GAPS, greeting_at=5.0)
+        TimeToFirstResponseMetric(use_speech_detection=False),
+        timed_call(CLEAN_GAPS, greeting_at=5.0),
     )
     assert metric.score == 0.0
     assert metric.score_breakdown["events"] == [
@@ -45,7 +52,10 @@ def test_a_slow_greeting_fails_time_to_first_response():
 
 
 def test_a_call_the_caller_opens_has_no_first_response_score():
-    metric = measure(TimeToFirstResponseMetric(), timed_call(CLEAN_GAPS))
+    metric = measure(
+        TimeToFirstResponseMetric(use_speech_detection=False),
+        timed_call(CLEAN_GAPS),
+    )
     assert metric.score is None
     assert metric.reason == (
         "The caller spoke first, so the agent was not expected to greet."

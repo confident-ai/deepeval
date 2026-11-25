@@ -54,7 +54,7 @@ There are **SIX** optional parameters when creating a `UserInterruptionMetric`:
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Without a stereo `call_recording_path`, it finds where each speaker's speech starts and stops inside every turn's own audio instead. Defaulted to `True`.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 `score_breakdown` lists the caller turns where the issue was found:
@@ -101,7 +101,7 @@ Pauses under a second do not end either speaker's stretch of speech. Caller soun
 
 <include cwd>snippets/voice/speech-detection.mdx</include>
 
-Without a recording, every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped. It is also skipped when the caller never spoke for a second or more.
+Without a recording, who spoke when comes from the speech found inside each turn's audio, placed on the call timeline by its `start_time`. When both voices are mixed into one clip, talking over each other sounds like one speaker, so an overlap only shows where the clips themselves overlap. Every audio turn in the call needs a `start_time`; without one there is no honest way to tell when anyone spoke, so the metric is skipped. It is also skipped when the caller never spoke for a second or more.
 
 ## FAQs
 

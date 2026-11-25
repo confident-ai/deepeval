@@ -5,12 +5,12 @@ from deepeval.metrics.voice.utils.call_activity import (
     CallActivity,
     call_recording_activity,
     stretches,
+    turn_activity,
 )
 from deepeval.metrics.voice.utils.defects import (
     CALL_RECORDING,
     TURN_TIMESTAMPS,
     DefectShare,
-    untimed_call_reason,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
@@ -53,27 +53,30 @@ class TimeToFirstResponseMetric(BaseDefectMetric):
             f"a first response over {self.max_wait_seconds} seconds after "
             "the call connected"
         )
-        untimed_reason = untimed_call_reason(test_case)
-        audio_turns = (
-            []
-            if untimed_reason
-            else sorted(
-                (turn.audio.start_time, index)
-                for index, turn in enumerate(test_case.turns)
-                if turn.audio is not None
-            )
-        )
-        if not audio_turns:
+        activity = turn_activity(test_case, self.use_speech_detection)
+        heard = [(span.start, span.turn) for span in activity.agent]
+        heard += [(span.start, span.turn) for span in activity.caller]
+        timed = {turn for _, turn in heard}
+        # Audio that can't be decoded still has a start to time it by.
+        heard += [
+            (turn.audio.start_time, index)
+            for index, turn in enumerate(test_case.turns)
+            if index not in timed
+            and turn.audio is not None
+            and turn.audio.start_time is not None
+            and activity.untimed_reason is None
+        ]
+        if not heard:
             return DefectShare(
                 [],
                 [],
                 [],
                 defect_label,
-                no_eligible_reason=untimed_reason
+                no_eligible_reason=activity.untimed_reason
                 or "The call had no timed audio.",
                 timing_source=TURN_TIMESTAMPS,
             )
-        greeting_at, greeting_turn = audio_turns[0]
+        greeting_at, greeting_turn = min(heard)
         if test_case.turns[greeting_turn].role != "assistant":
             return DefectShare(
                 [],
