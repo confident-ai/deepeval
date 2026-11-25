@@ -39,6 +39,49 @@ class TestSaveAndLoad:
             golden.comments is not None for golden in dataset_csv.goldens
         )
 
+    @pytest.mark.parametrize("file_type", ["json", "jsonl", "csv"])
+    @pytest.mark.parametrize("from_test_case", [False, True])
+    def test_conversation_expected_tools_round_trip(
+        self, tmp_path, file_type, from_test_case
+    ):
+        pinned = ToolCall(
+            name="lookup", input_parameters={"query": "a,b"}, turn=1
+        )
+        turns = [
+            Turn(role="user", content="Look that up."),
+            Turn(role="assistant", content="Done."),
+        ]
+        dataset = EvaluationDataset()
+        for expected in ([pinned], [], None):
+            if from_test_case:
+                dataset.add_test_case(
+                    ConversationalTestCase(
+                        scenario="Lookup", turns=turns, expected_tools=expected
+                    )
+                )
+            else:
+                dataset.add_golden(
+                    ConversationalGolden(
+                        scenario="Lookup", turns=turns, expected_tools=expected
+                    )
+                )
+
+        path = dataset.save_as(
+            file_type, tmp_path, include_test_cases=from_test_case
+        )
+        reloaded = EvaluationDataset()
+        getattr(reloaded, f"add_goldens_from_{file_type}_file")(path)
+        with_tool, no_tools, unspecified = reloaded.goldens
+        assert with_tool.expected_tools is not None
+        (tool,) = with_tool.expected_tools
+        assert (tool.name, tool.input_parameters, tool.turn) == (
+            "lookup",
+            {"query": "a,b"},
+            1,
+        )
+        assert no_tools.expected_tools == []
+        assert unspecified.expected_tools is None
+
     def test_dataset_save_load_conversational_goldens(self):
         """Load ConversationalGoldens from both CSV and JSON and check their count and a sample field."""
         current_dir = os.path.dirname(os.path.abspath(__file__))
@@ -58,6 +101,9 @@ class TestSaveAndLoad:
         )
         assert all(
             golden.scenario is not None for golden in dataset_csv.goldens
+        )
+        assert all(
+            golden.expected_tools is None for golden in dataset_csv.goldens
         )
         assert all(golden.name is not None for golden in dataset_json.goldens)
         assert all(
