@@ -1,0 +1,6 @@
+- Cite up to {{ max_items }} evidence items in `"evidence"`: only the passages that directly show the label applies, most important first. One strong passage beats several weak ones; never pad the list to reach the maximum, and never cite instructions, plans, or context that merely led to the behaviour.{% if allow_none %} Return an empty list for `"NONE"`.{% endif %}
+- `"quote"`: copy one short passage verbatim, character for character, at most {{ max_quote_chars }} characters, from a single field of the {{ subject }} you were shown. Never paraphrase, summarize, translate, or join separate passages.
+- `"field"`: the field the quote comes from: one of {{ fields }}.
+{% if subject == "trace" %}- `"span_index"`: the 'index' of the span the quote comes from, or null when it comes from the trace's own top-level fields.
+{% elif subject == "conversation" %}- `"turn_index"`: the 'index' of the turn the quote comes from, or null when it comes from the conversation's own fields.
+{% endif %}- `"note"`: one plain sentence of about 10 to 20 words that tells a reader who has not seen the {{ subject }} what went wrong or what happened here and how it shows the label, naming the concrete detail (for example, "Agent told the customer refunds close after 7 days, but the policy tool returned a 30-day window.").

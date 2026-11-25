@@ -43,9 +43,7 @@ class TestNextSpanPureContextAPI:
     def test_stacked_typed_slots_are_independent(self):
         """``with next_agent_span(...), next_llm_span(...):`` keeps each
         slot separate; popping one does not drain the other."""
-        with next_agent_span(name="A"), next_llm_span(
-            model="gpt-4"
-        ):
+        with next_agent_span(name="A"), next_llm_span(model="gpt-4"):
             agent_payload = pop_pending_for("agent")
             assert agent_payload == {"name": "A"}
 
@@ -65,9 +63,7 @@ class TestNextSpanPureContextAPI:
     def test_typed_overrides_base_on_key_overlap(self):
         """When base + typed both set the same key, the typed slot wins
         (more specific wins)."""
-        with next_span(name="base"), next_agent_span(
-            name="typed"
-        ):
+        with next_span(name="base"), next_agent_span(name="typed"):
             payload = pop_pending_for("agent")
             assert payload["name"] == "typed"
 
@@ -75,9 +71,7 @@ class TestNextSpanPureContextAPI:
         """``next_agent_span(...)`` is NOT consumed by
         ``pop_pending_for('llm')``. Base slot still goes (it's
         any-type)."""
-        with next_span(metadata={"k": "v"}), next_agent_span(
-            name="A"
-        ):
+        with next_span(metadata={"k": "v"}), next_agent_span(name="A"):
             llm_payload = pop_pending_for("llm")
             # Base flowed through, agent slot untouched.
             assert llm_payload == {"metadata": {"k": "v"}}
@@ -90,9 +84,7 @@ class TestNextSpanPureContextAPI:
         for its scope; on exit, outer is restored."""
         with next_agent_span(name="outer"):
             with next_agent_span(name="inner"):
-                assert pop_pending_for("agent") == {
-                    "name": "inner"
-                }
+                assert pop_pending_for("agent") == {"name": "inner"}
 
             # Outer scope's value is back, ready to be consumed once.
             assert pop_pending_for("agent") == {"name": "outer"}

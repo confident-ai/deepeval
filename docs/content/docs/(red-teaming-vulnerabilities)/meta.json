@@ -1,0 +1,14 @@
+{
+  "title": "Vulnerabilities",
+  "pages": [
+    "red-teaming-vulnerabilities",
+    "red-teaming-custom-vulnerability",
+    "red-teaming-evaluation-guidelines",
+    "(vulns-data-privacy)",
+    "(responsible-ai)",
+    "(security)",
+    "(safety)",
+    "(business)",
+    "(agentic)"
+  ]
+}

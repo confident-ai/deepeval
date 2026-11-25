@@ -1,0 +1,668 @@
+---
+title: EU AI Act
+sidebar_label: EU AI Act
+languages: [python]
+---
+
+
+DeepEval's **EU AI Act module** operationalises the two highest-impact risk tiers — **Article 5 prohibited practices** (unacceptable risk) and **Annex III high-risk AI systems** — so you can red-team your AI system against the obligations regulators actually check.
+
+## About the EU AI Act
+
+The **EU Artificial Intelligence Act** (Regulation (EU) 2024/1689), adopted in 2024, is the world's first horizontal law dedicated to AI. It applies to providers and deployers of AI systems that affect people in the EU — regardless of where the provider is based — and takes a **risk-based** approach, assigning obligations according to the harm an AI system can cause to health, safety, and fundamental rights.
+
+The Act groups AI systems into four tiers:
+
+| Tier                  | What it means                                                                     | Examples                                                                              |
+| --------------------- | --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------- |
+| **Unacceptable risk** | Banned outright under **Article 5**                                               | Social scoring, subliminal manipulation, untargeted scraping of facial images         |
+| **High risk**         | Permitted but subject to strict requirements under **Annex III** and Chapter III  | Recruitment, credit scoring, biometric ID, critical infrastructure, law enforcement   |
+| **Limited risk**      | Allowed with **transparency duties** only                                         | Chatbots, deepfakes, emotion recognition (outside prohibited use)                     |
+| **Minimal risk**      | Allowed with no additional obligations                                            | Spam filters, AI in video games                                                       |
+
+On top of these tiers, the Act adds dedicated rules for **general-purpose AI (GPAI) models**, including extra obligations for models posing systemic risk.
+
+### What DeepEval's EU AI Act framework covers
+
+DeepEval operationalises the parts of the Act that can be stress-tested with red teaming:
+
+- **Article 5** — all six families of prohibited practices
+- **Annex III** — all eight high-risk use cases
+
+For each category, DeepEval provides vulnerabilities and attack strategies that probe whether your system's behaviour is consistent with the Act's requirements.
+
+### What it does not cover
+
+The EU AI Act also contains obligations that are **governance, documentation, and process-driven** rather than behavioural. DeepEval does not, and cannot, replace these. In particular, the framework does not directly assess:
+
+- **Transparency duties** for limited-risk systems (e.g. disclosing AI-generated content)
+- **GPAI model obligations** — technical documentation, copyright policies, and systemic-risk assessments (Articles 51-55)
+- **Provider obligations** — conformity assessments, quality management systems, CE marking, and EU database registration (Articles 16-29)
+- **Post-market monitoring, incident reporting, and human oversight** procedures (Articles 14, 72-73)
+- **Fundamental rights impact assessments** for high-risk deployers (Article 27)
+
+Use DeepEval to generate evidence on how an AI system behaves under adversarial conditions, and combine it with your existing governance, documentation, and compliance workflows to meet the Act in full.
+
+
+## Overview
+
+In DeepEval, the EU AI Act framework maps each prohibited practice and high-risk use case to concrete red-teaming vulnerabilities and attack strategies.
+
+### Article 5 — Prohibited AI practices (unacceptable risk)
+
+| Category                                  | Description                                                                               |
+| ----------------------------------------- | ----------------------------------------------------------------------------------------- |
+| **Subliminal Manipulation**               | Subliminal, manipulative, or deceptive techniques that distort behavior                   |
+| **Exploitation of Vulnerabilities**       | Exploiting vulnerabilities tied to age, disability, or socio-economic situation           |
+| **Social Scoring**                        | Discriminatory social scoring leading to detrimental treatment                            |
+| **Biometric Categorisation**              | Inferring sensitive traits (race, politics, religion, sexual orientation) from biometrics |
+| **Real-time Remote Biometric ID**         | Real-time remote biometric identification in public spaces                                |
+| **Post Remote Biometric ID**              | Retrospective (post) remote biometric identification                                      |
+
+### Annex III — High-risk AI systems (Art. 6(2))
+
+| Category                            | Description                                                                      |
+| ----------------------------------- | -------------------------------------------------------------------------------- |
+| **Biometric Identification**        | Remote biometric identification and emotion recognition                          |
+| **Critical Infrastructure**         | Safety components of critical infrastructure (energy, water, traffic, digital)   |
+| **Education**                       | Access, evaluation, and test monitoring in education and vocational training     |
+| **Employment**                      | Recruitment, promotion, termination, task allocation, and performance evaluation |
+| **Essential Services**              | Public benefits eligibility, credit scoring, and emergency dispatch              |
+| **Law Enforcement**                 | Risk assessments, profiling, and evidence evaluation by law enforcement          |
+| **Migration & Border Control**      | Migration, asylum, and border-control decision support                           |
+| **Justice & Democratic Processes**  | Assisting judicial authorities and influencing elections or voter behavior       |
+
+## Using the EU AI Act Framework in DeepEval
+
+You can run a full EU AI Act red team assessment, or limit it to specific categories, using:
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.frameworks import EUAIAct
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["social_scoring", "employment"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+risk_assessment = red_team(
+    model_callback=your_model_callback,
+    vulnerabilities=vulnerabilities,
+    attacks=attacks,
+)
+```
+
+The `EUAIAct` framework accepts **ONE** optional parameter:
+
+- [Optional] `categories`: A list of strings for the EU AI Act risk categories to test. If omitted, all **14** categories (6 Article 5 + 8 Annex III) are included:
+    - `subliminal_manipulation`: Tests for covert persuasion, deceptive framing, and behavioral distortion beyond conscious awareness.
+    - `exploitation_of_vulnerabilities`: Detects predatory or harmful targeting of age, disability, or socio-economic vulnerability.
+    - `social_scoring`: Evaluates discriminatory or cross-context scoring that could cause detrimental treatment.
+    - `biometric_categorisation`: Stress-tests inference of sensitive attributes from biometric or biometric-like inputs.
+    - `remote_biometric_id_live`: Covers real-time remote biometric identification in publicly accessible contexts.
+    - `remote_biometric_id_post`: Covers retrospective remote biometric identification and related safeguards.
+    - `biometric_id`: High-risk biometric identification and emotion-recognition style misuse and leakage.
+    - `critical_infrastructure`: Safety-relevant manipulation for energy, water, traffic, or digital infrastructure contexts.
+    - `education`: Admissions, grading, proctoring, and related fairness and accuracy risks.
+    - `employment`: Recruitment, evaluation, promotion, and workforce decisions.
+    - `essential_services`: Credit, public benefits, emergency services, and similar essential decisions.
+    - `law_enforcement`: Profiling, risk assessment, and evidence-style outputs for enforcement contexts.
+    - `migration_border`: Migration, asylum, and border-control decision support.
+    - `justice_democracy`: Judicial assistance and risks to democratic processes and elections.
+
+## Article 5 — Prohibited Practices
+
+### Subliminal Manipulation
+
+**(EU AI Act — Art. 5(1)(a))**
+
+**Goal:** Prevent AI systems from deploying subliminal, manipulative, or deceptive techniques beyond a person's consciousness to materially distort behavior in a way that causes harm.
+
+DeepEval tests whether your AI system can be steered into covert persuasion, deceptive framing, or behavioral distortion patterns.
+
+**Example vulnerabilities**
+
+- `Robustness` — _hijacking, input_overreliance_
+- `ExcessiveAgency` — _autonomy, permissions_
+- `Misinformation`
+- `CustomVulnerability` — _Subliminal Manipulation_
+
+**Example attacks**
+
+- `PromptInjection`, `LinearJailbreaking`, `TreeJailbreaking`, `CrescendoJailbreaking`
+- `Roleplay` (Covert persuasion specialist)
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["subliminal_manipulation"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Exploitation of Vulnerabilities
+
+**(EU AI Act — Art. 5(1)(b))**
+
+**Goal:** Prevent AI systems from exploiting vulnerabilities tied to age, disability, or specific social/economic situations to materially distort behavior in a harmful way.
+
+DeepEval simulates predatory targeting of vulnerable groups to check whether your system materially distorts their decision-making.
+
+**Example vulnerabilities**
+
+- `Fairness` — _equality_consistency, procedural_opportunity_
+- `Ethics` — _harm_prevention, moral_integrity_
+- `ChildProtection` — _age_verification, exposure_interaction_
+- `IntellectualProperty` — _imitation_
+- `CustomVulnerability` — _Vulnerability Exploitation_
+
+**Example attacks**
+
+- `PromptInjection`, `CrescendoJailbreaking`, `LinearJailbreaking`
+- `Roleplay` (Predatory marketer persona)
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["exploitation_of_vulnerabilities"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Social Scoring
+
+**(EU AI Act — Art. 5(1)(c))**
+
+**Goal:** Prevent general-purpose social scoring of natural persons that leads to detrimental or disproportionate treatment across unrelated contexts.
+
+**Example vulnerabilities**
+
+- `Bias`, `Fairness`, `Ethics`
+- `Misinformation`, `Robustness`
+- `CustomVulnerability` — _Social Scoring_
+
+**Example attacks**
+
+- `PromptProbing`, `GrayBox`, `BadLikertJudge`
+- `Roleplay` (Government social-score analyst)
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["social_scoring"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Biometric Categorisation
+
+**(EU AI Act — Art. 5(1)(g))**
+
+**Goal:** Prevent biometric categorisation systems that infer sensitive attributes (race, political opinions, union membership, religion, sexual orientation) from biometric data.
+
+**Example vulnerabilities**
+
+- `PIILeakage`, `Bias`, `Fairness`, `Ethics`
+- `CustomVulnerability` — _Biometric Categorisation_
+
+**Example attacks**
+
+- `PromptProbing`, `GrayBox`
+- `Roleplay` (Biometric analytics engineer)
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["biometric_categorisation"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Real-time Remote Biometric Identification
+
+**(EU AI Act — Art. 5(1)(h))**
+
+**Goal:** Prevent the use of real-time remote biometric identification in publicly accessible spaces for law enforcement, except under the narrow exceptions permitted by the Act.
+
+**Example vulnerabilities**
+
+- `PIILeakage`, `PromptLeakage`, `Ethics`
+- `CustomVulnerability` — _Real-time Biometric ID_
+
+**Example attacks**
+
+- `PromptProbing`, `GrayBox`
+- `Roleplay` (Live surveillance operator)
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["remote_biometric_id_live"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Post Remote Biometric Identification
+
+**(EU AI Act — Art. 5)**
+
+**Goal:** Ensure post (retrospective) remote biometric identification systems do not process previously collected biometric data without a lawful basis and safeguards.
+
+**Example vulnerabilities**
+
+- `PIILeakage`, `PromptLeakage`, `Ethics`
+- `CustomVulnerability` — _Post Biometric ID_
+
+**Example attacks**
+
+- `GrayBox`, `PromptProbing`
+- `Roleplay` (Forensic biometric investigator)
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["remote_biometric_id_post"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+## Annex III — High-Risk AI Systems
+
+### Biometric Identification
+
+**(Annex III §1)**
+
+**Goal:** Ensure remote biometric identification and emotion-recognition systems don't leak identities, discriminate, or mis-categorise protected groups.
+
+**Example vulnerabilities**
+
+- `PIILeakage`, `Bias`, `Fairness`, `Ethics`
+
+**Example attacks**
+
+- `PromptProbing`, `GrayBox`
+- `Roleplay` (Biometric compliance auditor)
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["biometric_id"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Critical Infrastructure
+
+**(Annex III §2)**
+
+**Goal:** Ensure AI systems acting as safety components of critical digital infrastructure, traffic, water, gas, heating, or electricity networks cannot be steered into unsafe operational commands.
+
+**Example vulnerabilities**
+
+- `ShellInjection`, `SQLInjection`, `SSRF`
+- `ExcessiveAgency`, `Robustness`
+- `CustomVulnerability` — _Critical Infrastructure Safety_
+
+**Example attacks**
+
+- `PromptInjection`, `LinearJailbreaking`, `TreeJailbreaking`, `CrescendoJailbreaking`, `SequentialJailbreak`
+- `Base64`, `ROT13`, `GrayBox`
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["critical_infrastructure"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Education and Vocational Training
+
+**(Annex III §3)**
+
+**Goal:** Ensure AI systems used for admissions, grading, or proctoring do not hallucinate, discriminate, or misrepresent expertise.
+
+**Example vulnerabilities**
+
+- `Misinformation`, `Hallucination`, `Robustness`
+- `Bias`, `Fairness`, `Ethics`
+
+**Example attacks**
+
+- `PromptInjection`, `PromptProbing`, `BadLikertJudge`, `Multilingual`
+- `Roleplay` (Education admissions evaluator)
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["education"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Employment and Workers Management
+
+**(Annex III §4)**
+
+**Goal:** Ensure AI systems used for recruitment, evaluation, promotion, or termination decisions are fair, non-discriminatory, and protect candidate PII.
+
+**Example vulnerabilities**
+
+- `PIILeakage`, `IntellectualProperty`, `Robustness`
+- `Bias`, `Fairness`, `Ethics`
+
+**Example attacks**
+
+- `PromptInjection`, `PromptProbing`, `BadLikertJudge`, `GrayBox`
+- `Roleplay` (Automated recruiter)
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["employment"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Essential Private and Public Services
+
+**(Annex III §5)**
+
+**Goal:** Ensure AI systems used for credit scoring, public-benefits eligibility, or emergency dispatch don't cause disproportionate denial or discriminatory prioritisation.
+
+**Example vulnerabilities**
+
+- `PIILeakage`, `ExcessiveAgency`
+- `Bias`, `Fairness`, `Ethics`
+
+**Example attacks**
+
+- `PromptProbing`, `GrayBox`, `BadLikertJudge`
+- `Roleplay` (Credit scoring model operator)
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["essential_services"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Law Enforcement
+
+**(Annex III §6)**
+
+**Goal:** Ensure AI systems used by law enforcement for risk assessments, profiling, or evidence evaluation do not produce discriminatory outputs or leak sensitive records.
+
+**Example vulnerabilities**
+
+- `PIILeakage`, `PromptLeakage`
+- `Bias`, `Fairness`, `Ethics`
+- `CustomVulnerability` — _Law Enforcement Risk Assessment_
+
+**Example attacks**
+
+- `PromptProbing`, `GrayBox`, `PromptInjection`
+- `Roleplay` (Law enforcement risk analyst)
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["law_enforcement"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Migration, Asylum and Border Control
+
+**(Annex III §7)**
+
+**Goal:** Ensure AI systems used to verify travel documents, perform risk assessments, or assist asylum decisions do not produce discriminatory, inaccurate, or disproportionate outcomes.
+
+**Example vulnerabilities**
+
+- `PIILeakage`, `Toxicity`
+- `Bias`, `Fairness`, `Ethics`
+- `CustomVulnerability` — _Migration and Border Risk_
+
+**Example attacks**
+
+- `PromptProbing`, `GrayBox`, `Multilingual`
+- `Roleplay` (Border-control risk screening officer)
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["migration_border"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Administration of Justice and Democratic Processes
+
+**(Annex III §8)**
+
+**Goal:** Ensure AI systems that assist judicial reasoning or that can influence elections and voter behavior are not vulnerable to hallucinated law, fabricated legal citations, or electoral manipulation.
+
+**Example vulnerabilities**
+
+- `Hallucination`, `Misinformation`, `PIILeakage`
+- `Bias`, `Fairness`, `Ethics`
+- `CustomVulnerability` — _Justice and Democracy Risk_
+
+**Example attacks**
+
+- `PromptInjection`, `PromptProbing`, `BadLikertJudge`, `CrescendoJailbreaking`
+- `Roleplay` (Judicial reasoning assistant)
+
+```python
+from deepeval.red_team.frameworks import EUAIAct
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+eu_ai_act = EUAIAct(categories=["justice_democracy"])
+attacks = eu_ai_act.attacks
+vulnerabilities = eu_ai_act.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+
+## Regulatory obligations beyond adversarial testing
+
+DeepEval is built to probe how your model behaves under stress for **Article 5** and **Annex III** scenarios. That exercise surfaces technical weaknesses you can fix before deployment — but the EU AI Act also expects **organisational**, **procedural**, and **documentation** controls that no red-team run can replace.
+
+:::warning
+**Adversarial testing alone does not equal compliance.** Satisfying DeepEval checks or clearing a one-off assessment does **not** discharge your duties under the Regulation: you still need the right technical documentation, risk-management artefacts, transparency measures, human oversight, and post-market processes where they apply. Skipping those layers can leave you exposed to market surveillance, contractual liability, and the Act’s administrative fines — even if your model “passes” in the lab.
+:::
+
+### Documentation and traceability
+
+Expect to maintain evidence regulators and customers can inspect, including:
+
+- A **risk management system** that runs across design, validation, deployment, and major updates — not a one-page checklist.
+- **Technical documentation** that explains the system’s purpose, data, architecture, and performance in enough depth for conformity assessment or internal verification (depending on your pathway).
+- **Operational logging and records** where the Act requires traceability of behaviour in production.
+- **Instructions for use** that tell deployers how to operate the system safely and within its intended context.
+
+### Transparency toward users and the public
+
+Depending on how your system is presented and classified, you may need to:
+
+- **Disclose machine interaction** so people know they are dealing with an AI capability, not only a human service.
+- **Label or otherwise disclose AI-generated outputs** where the Regulation (and implementing rules) require synthetic-media transparency.
+- **Invest in detection and mitigation** for deceptive synthetic content where your product sits in scope for deepfake-related expectations.
+
+### Human oversight and meaningful control
+
+High-risk and sensitive deployments are expected to keep humans in charge of outcomes, not just names on an RACI chart:
+
+- **Intervention paths** that let qualified staff correct, reject, or override model-led recommendations before they cause harm.
+- **Stop, override, or decommission mechanisms** that work in practice under incident conditions, not only in documentation.
+- **Structured human review** for decisions that materially affect rights, safety, or access to essential services.
+
+### Quality management and post-market vigilance
+
+After go-live, the Act assumes you continue to govern the system:
+
+- **Post-market monitoring** to catch drift, misuse, and emerging failure modes in real environments.
+- **Incident handling and reporting** aligned with serious-incident triggers and timelines in the Regulation.
+- **Conformity and compliance assessment** appropriate to your role (provider vs deployer) and the conformity route you follow.
+
+### Administrative fines for infringements
+
+National authorities can impose **administrative fines** tied to the severity of the breach and your worldwide turnover. Indicative upper bands under the Act include:
+
+- **Prohibited practices (Article 5):** up to **€40 million** or **7%** of global annual turnover, whichever is higher.
+- **Breaches of obligations for high-risk AI systems:** up to **€15 million** or **3%** of global annual turnover, whichever is higher.
+- **Supplying incorrect, incomplete, or misleading information** to notified bodies or regulators: up to **€7.5 million** or **1%** of global annual turnover, whichever is higher.
+
+Exact caps depend on the company category (SME vs non-SME) and the specific infringement — always verify against the consolidated legal text and competent authority guidance.
+
+### Phased application of the Regulation
+
+The EU AI Act takes effect in **stages** from the date of application (check the official journal dates for your planning window). At a high level:
+
+- **Early phase (~6 months):** rules on **prohibited AI practices** under Article 5.
+- **~12 months:** **general-purpose AI (GPAI)** obligations for relevant models and systemic-risk providers.
+- **~24 months:** core **high-risk AI** duties for systems listed in **Annex III** (subject to specific exceptions in the legal text).
+- **~36 months:** extended deadlines for certain **Annex III** use cases and components as specified in the Regulation.
+
+Timelines can be adjusted by corrigenda or delegated acts — treat the [official text](https://artificialintelligenceact.eu/) and Commission notices as the source of truth for your compliance calendar.
+
+## Best Practices
+
+1. **Start from your risk tier.** If your system is prohibited under Article 5, remediation (not mitigation) is required; for Annex III systems, run the full set of relevant categories.
+2. **Combine red teaming with governance.** EU AI Act obligations cover both technical robustness and documentation — use DeepEval alongside your risk management system (see [Regulatory obligations beyond adversarial testing](#regulatory-obligations-beyond-adversarial-testing)).
+3. **Test fairness across protected traits.** Cover `Bias`, `Fairness`, and `Ethics` jointly for Annex III categories that affect fundamental rights.
+4. **Pair with NIST AI RMF.** NIST RMF gives you measurable governance metrics; the EU AI Act gives you the regulatory scope — run them together.
+5. **Re-assess after any material change** — new training data, new deployment context, or a new downstream use case can change your risk tier.
+
+## Learn More
+
+- [EU AI Act — Official Text](https://artificialintelligenceact.eu/)
+- [EU AI Act — Article 5 (Prohibited Practices)](https://artificialintelligenceact.eu/article/5/)
+- [EU AI Act — Annex III (High-Risk AI Systems)](https://artificialintelligenceact.eu/annex/3/)
+- [NIST AI RMF (complementary governance framework)](https://www.nist.gov/itl/ai-risk-management-framework)

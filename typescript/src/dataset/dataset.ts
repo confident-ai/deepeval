@@ -17,6 +17,7 @@ import {
   joinContext,
   joinRetrievalContext,
   parseToolCalls,
+  parseExpectedTools,
   parseTurns,
   pickKey,
   reconstructRetrievalContext,
@@ -165,6 +166,9 @@ function multiTurnRecord(
     scenario: golden.scenario ?? null,
     turns: golden.turns?.length ? JSON.parse(formatTurns(golden.turns)) : null,
     expected_outcome: golden.expectedOutcome ?? null,
+    expected_tools: golden.expectedTools
+      ? (serializeModels(golden.expectedTools) ?? [])
+      : null,
     user_description: golden.userDescription ?? null,
     persona: serializePersona(golden.persona),
     context: golden.context ?? null,
@@ -496,6 +500,7 @@ export class EvaluationDataset {
                 id: goldenData.id,
                 scenario: goldenData.scenario,
                 expectedOutcome: goldenData.expectedOutcome,
+                expectedTools: parseExpectedTools(goldenData.expectedTools),
                 // Confident AI still stores the flattened string, so rebuild
                 // the persona instead of tripping the deprecation warning.
                 persona: goldenData.userDescription
