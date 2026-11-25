@@ -62,7 +62,7 @@ print(metric.score_breakdown)
 
 ## Events
 
-Each reply that was cut off shows up in `score_breakdown`. Here is what the two calls in the [example](#example) return:
+Each reply that was cut off shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
 
 <Tabs items={["Call audio", "Turn audio"]}>
 <Tab value="Call audio">
@@ -166,7 +166,7 @@ A reply is flagged at most once, however many times its sound stops. What counts
 
 The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). The check on each stop is the same for both; what differs is which stops get checked.
 
-### Counting agent replies
+### Counting agent replies with abrupt cut-off
 
 <Tabs items={["Call audio", "Turn audio"]}>
 <Tab value="Call audio">
@@ -261,7 +261,7 @@ If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introdu
 A stop between two words sounds like a normal ending, so it isn't flagged.
 :::
 
-### Example
+### Example call
 
 Two short calls with an agent that sometimes stops mid-word, one scored from its call audio and one from turn audio.
 
