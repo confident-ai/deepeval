@@ -9,11 +9,17 @@
   --vd-tone: var(--vd-info);
   --vd-lane: var(--vd-neutral);
 
-  margin: 1.5em 0;
+  margin: 1.25em 0;
+
   padding: 12px 14px 8px;
   border: 1px solid var(--color-fd-border);
   border-radius: 0;
   background: var(--color-fd-card);
+
+  // Inside a tab or any container, don't stack a gap on top of its padding.
+  &:first-child {
+    margin-top: 0;
+  }
 }
 
 .title {
