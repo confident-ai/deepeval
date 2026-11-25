@@ -170,7 +170,7 @@ def test_evidence_is_rejected_in_system_one_mode():
             name="topic",
             labels=["pricing"],
             model=ReplyModel({}),
-            eval_mode="system_one",
+            eval_mode="decision_model",
             evidence_config=EvidenceConfig(),
         )
 

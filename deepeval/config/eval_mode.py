@@ -32,7 +32,7 @@ EvalModeName = Literal["llm", "hybrid", "system_one"]
 
 # A classifier is already one Choice over its labels, so there is no LLM
 # extraction for `hybrid` to keep: its `eval_mode` argument takes these only.
-ClassifierEvalModeName = Literal["llm", "system_one"]
+ClassifierEvalModeName = Literal["llm", "decision_model"]
 
 
 class EvalMode(str, Enum):

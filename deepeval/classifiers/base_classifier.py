@@ -116,7 +116,7 @@ class BaseClassifier(PromptMixin):
     using_native_model: Optional[bool] = None
     # System One (Jev); mirrors `BaseMetric`. See EXPERIMENTAL.md.
     eval_mode: Optional[EvalMode] = None
-    system_one_model: Optional[DeepEvalBaseSystemOneModel] = None
+    decision_model: Optional[DeepEvalBaseSystemOneModel] = None
     confidence: Optional[float] = None
     system_one_fallback_reason: Optional[str] = None
     _system_one_outcomes: Optional[list] = None

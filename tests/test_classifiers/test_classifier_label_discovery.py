@@ -114,7 +114,7 @@ def test_suggestion_is_rejected_in_system_one_mode():
             name="topic",
             labels=LABELS,
             model=ReplyModel({}),
-            eval_mode="system_one",
+            eval_mode="decision_model",
             label_discovery_config=LabelDiscoveryConfig(),
         )
 

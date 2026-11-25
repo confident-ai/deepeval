@@ -1,0 +1,166 @@
+---
+id: metrics-conversation-tool-correctness
+title: Conversation Tool Correctness
+sidebar_label: Conversation Tool Correctness
+languages: [python, typescript]
+---
+<MetricTagsDisplayer multiTurn={true} usesLLMs={false} agent={true} referenceBased={true} />
+
+The conversation tool correctness metric is a multi-turn agentic metric that evaluates whether your AI agent called the tools it was expected to call over a conversation. It is the multi-turn version of [tool correctness](/docs/metrics-tool-correctness), and is fully deterministic.
+
+:::note
+If you don't have expected tools and want an LLM to judge tool selection instead, use the [tool use metric](/docs/metrics-tool-use).
+:::
+
+## Required Arguments
+
+To use the `ConversationToolCorrectnessMetric`, you'll have to provide the following arguments when creating a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases):
+
+- `turns`
+- <Term py="expected_tools" ts="expectedTools"/>
+
+<Term py="expected_tools" ts="expectedTools"/> are the tools the assistant should call anywhere in the conversation. To require a tool on a specific turn, set `turn` on its `ToolCall` to that assistant turn's index in `turns`.
+
+You can learn more about how it is calculated [here](#how-is-it-calculated).
+
+## Usage
+
+The `ConversationToolCorrectnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-llm-evals) multi-turn evaluation:
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase, ToolCall
+from deepeval.metrics import ConversationToolCorrectnessMetric
+from deepeval import evaluate
+
+convo_test_case = ConversationalTestCase(
+    turns=[
+        Turn(role="user", content="Find me a flight to Tokyo."),
+        Turn(role="assistant", content="Here are three options.", tools_called=[ToolCall(name="search_flights")]),
+        Turn(role="user", content="Book the first one."),
+        Turn(role="assistant", content="Done, you're booked."),
+    ],
+    expected_tools=[
+        ToolCall(name="search_flights"),
+        ToolCall(name="book_flight", turn=3),
+    ],
+)
+metric = ConversationToolCorrectnessMetric(threshold=0.5)
+
+# To run metric as a standalone
+# metric.measure(convo_test_case)
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[convo_test_case], metrics=[metric])
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { Turn, ConversationalTestCase, ToolCall } from "deepeval/test-case";
+import { ConversationToolCorrectnessMetric } from "deepeval/metrics";
+import { evaluate } from "deepeval";
+
+const convoTestCase = new ConversationalTestCase({
+  turns: [
+    new Turn({ role: "user", content: "Find me a flight to Tokyo." }),
+    new Turn({ role: "assistant", content: "Here are three options.", toolsCalled: [new ToolCall({ name: "search_flights" })] }),
+    new Turn({ role: "user", content: "Book the first one." }),
+    new Turn({ role: "assistant", content: "Done, you're booked." }),
+  ],
+  expectedTools: [
+    new ToolCall({ name: "search_flights" }),
+    new ToolCall({ name: "book_flight", turn: 3 }),
+  ],
+});
+const metric = new ConversationToolCorrectnessMetric({ threshold: 0.5 });
+
+// To run metric as a standalone
+// await metric.measure(convoTestCase);
+// console.log(metric.score, metric.reason);
+
+await evaluate([convoTestCase], [metric]);
+```
+
+</Case>
+
+</Switch>
+
+<Switch>
+
+<Case id="python">
+
+There are **NINE** optional parameters when creating a `ConversationToolCorrectnessMetric`:
+
+</Case>
+
+<Case id="typescript">
+
+There are **EIGHT** optional parameters when creating a `ConversationToolCorrectnessMetric`:
+
+</Case>
+
+</Switch>
+
+- [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
+- [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: a list of `ToolCallParams` to compare besides the tool name, `ToolCallParams.INPUT_PARAMETERS` and/or `ToolCallParams.OUTPUT`. Defaulted to an empty list.
+- [Optional] <Term py="should_consider_ordering" ts="shouldConsiderOrdering"/>: a boolean which when set to <Term py="True" ts="true"/>, requires the expected tools to be called in order. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="should_exact_match" ts="shouldExactMatch"/>: a boolean which when set to <Term py="True" ts="true"/>, requires the tools called to exactly match the expected tools. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
+- [Optional] <Term py="strict_mode" ts="strictMode"/>: a boolean which when set to <Term py="True" ts="true"/>, enforces a binary metric score: 1 for perfection, 0 otherwise. It also overrides the current threshold and sets it to 1. Defaulted to <Term py="False" ts="false"/>.
+- <Only id="python">
+    [Optional] `async_mode`: a boolean which when set to `True`, enables [concurrent execution within the `measure()` method.](/docs/metrics-introduction#measuring-metrics-in-async) Defaulted to `True`.
+  </Only>
+- [Optional] <Term py="verbose_mode" ts="verboseMode"/>: a boolean which when set to <Term py="True" ts="true"/>, prints the intermediate steps used to calculate said metric to the console, as outlined in the [How Is It Calculated](#how-is-it-calculated) section. Defaulted to <Term py="False" ts="false"/>.
+- [Optional] `flaky`: a boolean which when set to <Term py="True" ts="true"/>, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to <Term py="False" ts="false"/>.
+
+### As a standalone
+
+You can also run the `ConversationToolCorrectnessMetric` on a single test case as a standalone, one-off execution.
+
+<Switch>
+
+<Case id="python">
+
+```python
+...
+
+metric.measure(convo_test_case)
+print(metric.score, metric.reason)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+...
+
+await metric.measure(convoTestCase);
+console.log(metric.score, metric.reason);
+```
+
+</Case>
+
+</Switch>
+
+## How Is It Calculated?
+
+The **conversation tool correctness metric** score is calculated using the following steps:
+
+1. Group the expected tools into checks: one for each turn that has pinned tools, and one for the unpinned tools. A pinned turn is compared with its own tool calls, and the unpinned tools are compared with the tool calls of every other assistant turn.
+
+2. Score each check with the [tool correctness](/docs/metrics-tool-correctness#how-is-it-calculated) equation:
+
+<Equation formula="\text{Check Score} = \frac{\text{Number of Correctly Used Tools (or Correct Input Parameters/Outputs)}}{\text{Total Number of Tools Called}}" />
+
+3. Average the check scores:
+
+<Equation formula="\text{Conversation Tool Correctness} = \frac{\sum \text{Check Scores}}{\text{Number of Checks}}" />
+
+In the example above, `book_flight` is pinned to turn 3 but never called, so that check scores 0, the unpinned `search_flights` check scores 1, and the final score is 0.5.

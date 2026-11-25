@@ -169,6 +169,9 @@ class ConversationalApiTestCase(BaseModel):
     order: Union[int, None] = Field(None)
     scenario: Optional[str] = Field(None)
     expected_outcome: Optional[str] = Field(None, alias="expectedOutcome")
+    expected_tools: Optional[List[ToolCall]] = Field(
+        None, alias="expectedTools"
+    )
     user_description: Optional[str] = Field(None, alias="userDescription")
     context: Optional[list] = Field(None)
     comments: Optional[str] = Field(None)

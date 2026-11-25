@@ -117,6 +117,7 @@ export function buildTestCaseEntry(
         turns: testCase.turns.map((t, i) => convertTurn(t, i)),
         scenario: testCase.scenario,
         expectedOutcome: testCase.expectedOutcome,
+        expectedTools: testCase.expectedTools?.map(convertTool),
         userDescription: testCase.userDescription,
         imagesMapping: testCase.getImagesMapping(),
       },
