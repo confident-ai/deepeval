@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Set, Tuple
+from typing import Dict, List, Optional, Tuple
 
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import BaseConversationalMetric
@@ -87,16 +87,16 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
                 (f"Turn {index}", turns[index].tools_called or [], tools)
                 for index, tools in sorted(pinned.items())
             ]
-            if unpinned or not pinned:
-                label = "Rest of the conversation" if pinned else "Conversation"
-                called = self._tools_called(turns, skip=set(pinned))
-                checks.append((label, called, unpinned))
-
             scorer = _ToolCallScorer(
                 self.evaluation_params,
                 self.should_exact_match,
                 self.should_consider_ordering,
             )
+            if unpinned or not pinned:
+                label = "Any turn" if pinned else "Conversation"
+                called = self._tools_left_for_any_turn(turns, pinned, scorer)
+                checks.append((label, called, unpinned))
+
             self.check_scores = []
             for label, called, expected in checks:
                 score, reason = scorer.score(called, expected)
@@ -136,16 +136,35 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
         )
 
     @staticmethod
-    def _tools_called(
-        turns: List[Turn], skip: Optional[Set[int]] = None
-    ) -> List[ToolCall]:
-        skip = skip or set()
+    def _tools_called(turns: List[Turn]) -> List[ToolCall]:
         return [
             tool
-            for index, turn in enumerate(turns)
-            if turn.role == "assistant" and index not in skip
+            for turn in turns
+            if turn.role == "assistant"
             for tool in (turn.tools_called or [])
         ]
+
+    @staticmethod
+    def _tools_left_for_any_turn(
+        turns: List[Turn],
+        pinned: Dict[int, List[ToolCall]],
+        scorer: _ToolCallScorer,
+    ) -> List[ToolCall]:
+        left = []
+        for index, turn in enumerate(turns):
+            if turn.role != "assistant":
+                continue
+            calls = list(turn.tools_called or [])
+            for expected in pinned.get(index, []):
+                best = max(
+                    calls,
+                    key=lambda call: scorer._match_score(expected, call),
+                    default=None,
+                )
+                if best is not None and scorer._match_score(expected, best) > 0:
+                    calls.remove(best)
+            left.extend(calls)
+        return left
 
     def _pinned_tools(
         self, turns: List[Turn], expected_tools: List[ToolCall]
