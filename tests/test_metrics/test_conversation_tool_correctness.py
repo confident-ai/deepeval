@@ -211,12 +211,12 @@ def test_pinned_and_unpinned_tools_are_scored_separately():
     assert score == 0.5
     assert [c["check"] for c in metric.check_scores] == [
         "Turn 3",
-        "Rest of the conversation",
+        "Any turn",
     ]
     assert "Turn 3 (0.00)" in metric.reason
 
 
-def test_pinned_turn_is_left_out_of_the_rest_of_the_conversation():
+def test_a_pinned_call_is_not_counted_again_for_any_turn():
     metric = ConversationToolCorrectnessMetric(should_exact_match=True)
     score = metric.measure(
         _conversation(
@@ -252,3 +252,44 @@ def test_turn_does_not_change_tool_equality_or_unset_payloads():
         _pinned(_book(), 3).model_dump(by_alias=True, exclude_none=True)["turn"]
         == 3
     )
+
+
+def test_unpinned_tool_can_be_called_on_a_pinned_turn():
+    metric = ConversationToolCorrectnessMetric()
+    score = metric.measure(
+        _conversation(
+            [_search("1"), _book()],
+            [],
+            expected_tools=[_search("1"), _pinned(_book(), 1)],
+        ),
+        _show_indicator=False,
+    )
+    assert score == 1
+
+
+def test_one_call_cannot_meet_a_pinned_and_an_unpinned_tool():
+    metric = ConversationToolCorrectnessMetric()
+    score = metric.measure(
+        _conversation(
+            [_book()],
+            expected_tools=[_book(), _pinned(_book(), 1)],
+        ),
+        _show_indicator=False,
+    )
+    assert score == 0.5
+
+
+def test_pinned_tool_uses_the_call_that_matches_its_input_parameters():
+    metric = ConversationToolCorrectnessMetric(
+        evaluation_params=[ToolCallParams.INPUT_PARAMETERS],
+        should_exact_match=True,
+    )
+    score = metric.measure(
+        _conversation(
+            [_search("LAX"), _search("NYC")],
+            expected_tools=[_search("LAX"), _pinned(_search("NYC"), 1)],
+        ),
+        _show_indicator=False,
+    )
+    assert score == 0.5
+    assert [c["score"] for c in metric.check_scores] == [0, 1]
