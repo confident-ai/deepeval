@@ -104,7 +104,9 @@ def test_a_caller_interruption_the_decision_model_dismisses_is_dropped(
     model = FakeAudioDecisionModel(probability=0.2)
     metric = measure_recording(
         UserInterruptionMetric(
-            use_speech_detection=False, audio_decision_model=model
+            use_speech_detection=False,
+            eval_mode="hybrid",
+            audio_decision_model=model,
         ),
         tmp_path,
         agent=[(0.0, speech_like(4.0))],

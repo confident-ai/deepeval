@@ -54,7 +54,8 @@ There are **EIGHT** optional parameters when creating an `AgentInterruptionMetri
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
 - [Optional] `max_caller_silence_seconds`: an integer. A false start is not counted when the caller's pause, from when they stopped speaking to when they started again, was longer than this. Must be greater than 0. Defaulted to `4`.
 - [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`. Defaulted to `True`.
-- [Optional] `audio_decision_model`: an audio decision model, such as `HumeDecisionModel`, that hears a short clip of each flagged event and dismisses the ones it judges not real. See [Second check with an audio decision model](#second-check-with-an-audio-decision-model). Defaulted to `None`.
+- [Optional] `audio_decision_model`: the audio decision model the `hybrid` eval mode uses, such as `HumeDecisionModel`. It hears a short clip of each flagged event and dismisses the ones it judges not real. Defaulted to `None`, which means `HumeDecisionModel()`.
+- [Optional] `eval_mode`: `"deterministic"`, where the metric calls no model, or `"hybrid"`, where an audio decision model double-checks each flagged event. See [Second check with an audio decision model](#second-check-with-an-audio-decision-model). Defaulted to the `DEEPEVAL_VOICE_EVAL_MODE` setting, or `"deterministic"` when it is unset.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 `score_breakdown` lists the agent starts where the issue was found:

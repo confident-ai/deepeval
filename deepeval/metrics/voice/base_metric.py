@@ -4,6 +4,12 @@ from abc import abstractmethod
 from dataclasses import replace
 from typing import Any, Dict, List, Optional, Set, Tuple
 
+from deepeval.config.voice_eval_mode import (
+    VoiceEvalMode,
+    VoiceEvalModeName,
+    resolve_voice_eval_mode,
+)
+from deepeval.errors import DeepEvalError
 from deepeval.metrics.base_metric import BaseConversationalMetric
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.utils import (
@@ -42,6 +48,7 @@ from deepeval.metrics.voice.utils.roll_up import (
     exchange_of,
 )
 from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
+from deepeval.models.system_one.hume_model import HumeDecisionModel
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 
 
@@ -101,6 +108,18 @@ def _place_reply_events(breakdown: Dict, test_case: ConversationalTestCase):
         event["mark"] = WHOLE_REPLY
 
 
+def _default_audio_decision_model() -> DeepEvalBaseAudioDecisionModel:
+    try:
+        return HumeDecisionModel()
+    except DeepEvalError as e:
+        raise DeepEvalError(
+            f"The {VoiceEvalMode.HYBRID} voice eval mode checks flagged "
+            f"events with Hume, but it is not usable: {e} Pass another "
+            "`audio_decision_model`, or switch back with `deepeval "
+            f"set-voice-eval-mode {VoiceEvalMode.DETERMINISTIC}`."
+        ) from e
+
+
 class BaseVoiceMetric(BaseConversationalMetric):
     _required_test_case_params: List[MultiTurnParams] = []
     audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None
@@ -155,11 +174,16 @@ class BaseVoiceMetric(BaseConversationalMetric):
         return self.audio_decision_model is not None
 
     def _use_audio_decision_model(
-        self, model: Optional[DeepEvalBaseAudioDecisionModel]
+        self,
+        model: Optional[DeepEvalBaseAudioDecisionModel],
+        eval_mode: Optional[VoiceEvalModeName],
     ) -> None:
-        self.audio_decision_model = model
-        if model is not None:
-            self.evaluation_model = model.get_model_name()
+        self.eval_mode = resolve_voice_eval_mode(eval_mode)
+        if self.eval_mode is VoiceEvalMode.DETERMINISTIC:
+            self.audio_decision_model = None
+            return
+        self.audio_decision_model = model or _default_audio_decision_model()
+        self.evaluation_model = self.audio_decision_model.get_model_name()
 
     def _run(self, test_case: ConversationalTestCase) -> Optional[float]:
         self.error = None

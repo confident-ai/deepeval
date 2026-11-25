@@ -49,7 +49,9 @@ def _recorded_cutoff(
     tmp_path, *, agent, caller=(), seconds=None, audio_decision_model=None
 ):
     metric = AbruptCutoffMetric(
-        use_speech_detection=False, audio_decision_model=audio_decision_model
+        use_speech_detection=False,
+        eval_mode="hybrid" if audio_decision_model else None,
+        audio_decision_model=audio_decision_model,
     )
     path = stereo_recording(
         tmp_path / "call.wav", caller=caller, agent=agent, seconds=seconds

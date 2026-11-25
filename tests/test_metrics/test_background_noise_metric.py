@@ -54,7 +54,10 @@ def test_short_clips_keep_the_earlier_snr_estimate():
 def test_noise_the_decision_model_does_not_hear_is_dismissed():
     model = FakeAudioDecisionModel(probability=0.1)
     turns = with_reply_audio(1, with_noise(agent_speech(), -30))
-    metric = measure(BackgroundNoiseMetric(audio_decision_model=model), turns)
+    metric = measure(
+        BackgroundNoiseMetric(eval_mode="hybrid", audio_decision_model=model),
+        turns,
+    )
     assert metric.score == 1.0
     assert metric.score_breakdown["dismissed_events"] == 1
     # The whole reply it was measured on.

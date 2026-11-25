@@ -125,7 +125,9 @@ def test_the_callers_whole_pause_decides_whether_a_false_start_is_excused(
 def _talk_over(tmp_path, model):
     return measure_recording(
         AgentInterruptionMetric(
-            use_speech_detection=False, audio_decision_model=model
+            use_speech_detection=False,
+            eval_mode="hybrid",
+            audio_decision_model=model,
         ),
         tmp_path,
         agent=[(0.0, speech_like(1.5)), (3.0, speech_like(3.0))],

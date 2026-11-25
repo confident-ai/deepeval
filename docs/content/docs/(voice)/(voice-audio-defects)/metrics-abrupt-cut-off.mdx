@@ -53,7 +53,8 @@ There are **SEVEN** optional parameters when creating an `AbruptCutoffMetric`:
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
 - [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`. Defaulted to `True`.
-- [Optional] `audio_decision_model`: an audio decision model, such as `HumeDecisionModel`, that hears a short clip of each flagged event and dismisses the ones it judges not real. See [Second check with an audio decision model](#second-check-with-an-audio-decision-model). Defaulted to `None`.
+- [Optional] `audio_decision_model`: the audio decision model the `hybrid` eval mode uses, such as `HumeDecisionModel`. It hears a short clip of each flagged event and dismisses the ones it judges not real. Defaulted to `None`, which means `HumeDecisionModel()`.
+- [Optional] `eval_mode`: `"deterministic"`, where the metric calls no model, or `"hybrid"`, where an audio decision model double-checks each flagged event. See [Second check with an audio decision model](#second-check-with-an-audio-decision-model). Defaulted to the `DEEPEVAL_VOICE_EVAL_MODE` setting, or `"deterministic"` when it is unset.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 `score_breakdown` lists the replies where the defect was found:

@@ -78,7 +78,9 @@ def test_the_decision_model_checks_the_interruption_parts(tmp_path):
     )
     model = FakeAudioDecisionModel(probability=0.1)
     metric = TurnTakingNaturalnessMetric(
-        use_speech_detection=False, audio_decision_model=model
+        use_speech_detection=False,
+        eval_mode="hybrid",
+        audio_decision_model=model,
     )
     metric.measure(
         ConversationalTestCase(

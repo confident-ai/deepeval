@@ -90,7 +90,7 @@ def test_an_echo_the_decision_model_cannot_hear_is_dismissed(tmp_path):
     metric = _echo_on_recording(
         tmp_path,
         caller=lambda reply: [(1.45, _scaled(reply, 0.2))],
-        metric=EchoMetric(audio_decision_model=model),
+        metric=EchoMetric(eval_mode="hybrid", audio_decision_model=model),
     )
     assert metric.score == 1.0
     assert metric.score_breakdown["dismissed_events"] == 1
@@ -112,7 +112,8 @@ def test_an_async_measure_with_a_decision_model_runs_off_the_loop(tmp_path):
         seconds=7.0,
     )
     metric = _ThreadRecordingEchoMetric(
-        audio_decision_model=FakeAudioDecisionModel(probability=0.9)
+        eval_mode="hybrid",
+        audio_decision_model=FakeAudioDecisionModel(probability=0.9),
     )
 
     async def measure():
@@ -144,7 +145,8 @@ def test_an_openai_audio_model_that_says_no_dismisses_the_echo(
         tmp_path,
         caller=lambda reply: [(1.45, _scaled(reply, 0.2))],
         metric=EchoMetric(
-            audio_decision_model=OpenAIAudioDecisionModel(api_key="k")
+            eval_mode="hybrid",
+            audio_decision_model=OpenAIAudioDecisionModel(api_key="k"),
         ),
     )
     assert metric.score == 1.0
