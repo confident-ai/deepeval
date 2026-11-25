@@ -1,0 +1,372 @@
+---
+title: ISO/IEC 42001
+sidebar_label: ISO/IEC 42001
+languages: [python]
+---
+
+
+DeepEval's **ISO/IEC 42001 module** operationalises the seven Annex A controls that can be stress-tested behaviourally — fairness, robustness, security, privacy, transparency, safety/ethical use, and human oversight — so you can red-team your AI system against the obligations of the world's first management-system standard for AI.
+
+## About ISO/IEC 42001:2023
+
+**ISO/IEC 42001:2023 — Information technology — Artificial intelligence — Management system** is the first international standard that specifies requirements for establishing, implementing, maintaining, and continually improving an **Artificial Intelligence Management System (AIMS)**. It is structured like ISO 9001 or ISO 27001: a clause-based main body (Clauses 4-10) plus an **Annex A** of reference controls grouped by AI-specific risk areas.
+
+The standard targets organisations that **provide, develop, or use** AI systems and pushes them to:
+
+| Pillar                          | What it expects                                                                                  |
+| ------------------------------- | ------------------------------------------------------------------------------------------------ |
+| **Governance & accountability** | Clear ownership of AI risks, policies, and decisions across the lifecycle                        |
+| **AI-specific risk management** | Identification, treatment, and continual review of risks unique to AI systems                    |
+| **Lifecycle controls**          | Data, model, deployment, and post-deployment controls aligned with Annex A                       |
+| **Human oversight**             | Meaningful human review and intervention for impactful decisions                                 |
+| **Transparency & disclosure**   | Documented system behaviour, intended use, and limitations communicated to stakeholders          |
+
+### What DeepEval's ISO 42001 framework covers
+
+DeepEval focuses on the Annex A controls whose intent can be **observed in the model's behaviour** under adversarial conditions:
+
+- **A.6.2.4** — Fairness & Bias Prevention
+- **A.6.2.5** — Robustness & Resilience
+- **A.6.2.6** — Security & Vulnerability Management
+- **A.6.2.7** — Privacy & Data Protection
+- **A.6.2.8** — Transparency & Trustworthiness
+- **A.9.2** — Safety & Ethical Use
+- **A.9.3** — Accountability & Human Oversight
+
+For each control, DeepEval provides vulnerabilities and attack strategies that probe whether the system's behaviour is consistent with the control's intent.
+
+### What it does not cover
+
+Several Annex A controls are **governance, documentation, or process** obligations rather than behavioural ones. DeepEval does not, and cannot, replace these. The framework deliberately omits:
+
+- **A.7.2 / A.7.4** — Data lineage, data quality, and data provenance recordkeeping
+- **A.8.3** — External reporting of AI system behaviour and incidents
+- **A.9.4** — Intended use, intended users, and out-of-scope use documentation
+- **A.10.2** — Allocation of responsibilities for third-party AI components and suppliers
+- **A.4.2 / A.6.2.3 / A.7.3 / A.8.2 / A.10.3 / A.10.4** — Purely governance-focused controls (AI policy, AI roles, risk assessment processes, customer-facing impact assessments, supplier audits)
+
+Use DeepEval to generate **behavioural evidence** on how your AI system reacts to adversarial pressure, and combine it with your management system documentation, lifecycle records, and supplier controls to satisfy ISO/IEC 42001 in full.
+
+
+## Overview
+
+In DeepEval, the ISO 42001 framework maps each in-scope Annex A control to concrete red-teaming vulnerabilities and attack strategies.
+
+| Control     | Theme                                  | Description                                                                              |
+| ----------- | -------------------------------------- | ---------------------------------------------------------------------------------------- |
+| **A.6.2.4** | Fairness & Bias Prevention             | Avoids unfair bias across race, gender, age, religion, and political orientation         |
+| **A.6.2.5** | Robustness & Resilience                | Performs consistently under expected and adversarial conditions                          |
+| **A.6.2.6** | Security & Vulnerability Management    | Resists adversarial threats, prompt leakage, injection, and access-control bypass        |
+| **A.6.2.7** | Privacy & Data Protection              | Processes personal data lawfully and does not leak PII or system prompts                 |
+| **A.6.2.8** | Transparency & Trustworthiness         | Explainable behaviour without fabricated reasoning or unsupported claims                 |
+| **A.9.2**   | Safety & Ethical Use                   | Operates within usage boundaries and refuses misuse, harmful, or illegal requests        |
+| **A.9.3**   | Accountability & Human Oversight       | Preserves human-in-the-loop checkpoints; resists silent autonomy escalation              |
+
+## Using the ISO 42001 Framework in DeepEval
+
+You can run a full ISO 42001 red team assessment, or limit it to specific controls, using:
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.frameworks import ISO42001
+from somewhere import your_model_callback
+
+iso_42001 = ISO42001(categories=["A.6.2.6", "A.6.2.7"])
+attacks = iso_42001.attacks
+vulnerabilities = iso_42001.vulnerabilities
+
+risk_assessment = red_team(
+    model_callback=your_model_callback,
+    vulnerabilities=vulnerabilities,
+    attacks=attacks,
+)
+```
+
+The `ISO42001` framework accepts **ONE** optional parameter:
+
+- [Optional] `categories`: A list of Annex A control identifiers. If omitted, all **7** in-scope controls are included:
+    - `A.6.2.4`: Disparate treatment across protected groups under direct, multilingual, and emotionally-charged framings.
+    - `A.6.2.5`: Output stability under context poisoning, goal redirection, and progressive multi-turn pressure.
+    - `A.6.2.6`: Prompt leakage, prompt/code injection, and access-control bypass against tool-using agents.
+    - `A.6.2.7`: Direct, indirect, and cross-context PII exposure plus system-prompt and credential extraction.
+    - `A.6.2.8`: Fabricated explanations and unsupported reasoning under injected or poisoned context.
+    - `A.9.2`: Compliance with usage boundaries under social-engineering and escalating multi-turn pressure.
+    - `A.9.3`: Removal, skipping, or silent bypass of human-in-the-loop checkpoints.
+
+## Annex A — In-Scope Controls
+
+### Fairness & Bias Prevention
+
+**(ISO/IEC 42001 — A.6.2.4)**
+
+**Goal:** Ensure the AI system avoids unfair bias against protected groups and does not produce toxic outputs targeting people on the basis of identity.
+
+DeepEval probes whether your system can be steered into disparate or toxic treatment across race, gender, religion, and political orientation under direct, multilingual, and emotionally-charged framings.
+
+**Example vulnerabilities**
+
+- `Bias` — _race, gender, religion, politics_
+- `Toxicity` — _insults, profanity, threats, mockery_
+
+**Example attacks**
+
+- `Roleplay`, `Multilingual`, `EmotionalManipulation`, `LinearJailbreaking`
+
+```python
+from deepeval.red_team.frameworks import ISO42001
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+iso_42001 = ISO42001(categories=["A.6.2.4"])
+attacks = iso_42001.attacks
+vulnerabilities = iso_42001.vulnerabilities
+
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Robustness & Resilience
+
+**(ISO/IEC 42001 — A.6.2.5)**
+
+**Goal:** Ensure the AI system performs consistently and predictably under both expected and adversarial conditions, without hallucinating, over-relying on inputs, or being hijacked.
+
+**Example vulnerabilities**
+
+- `Robustness` — _input_overreliance, hijacking_
+- `Hallucination`
+- `Misinformation` — _factual_errors, unsupported_claims, expertize_misrepresentation_
+
+**Example attacks**
+
+- `ContextPoisoning`, `GoalRedirection`
+- `SequentialJailbreak`, `CrescendoJailbreaking`, `TreeJailbreaking`
+
+```python
+from deepeval.red_team.frameworks import ISO42001
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+iso_42001 = ISO42001(categories=["A.6.2.5"])
+attacks = iso_42001.attacks
+vulnerabilities = iso_42001.vulnerabilities
+
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Security & Vulnerability Management
+
+**(ISO/IEC 42001 — A.6.2.6)**
+
+**Goal:** Ensure the AI system is protected against adversarial threats and unauthorised actions — including prompt leakage, injection attacks against tool-using agents, and access-control bypass.
+
+**Example vulnerabilities**
+
+- `PromptLeakage` — _secrets_and_credentials, instructions_
+- `ShellInjection`, `SQLInjection`, `SSRF`
+- `DebugAccess`
+- `RBAC`, `BFLA`, `BOLA`
+
+**Example attacks**
+
+- `PromptInjection`, `Base64`
+- `AuthorityEscalation`, `SystemOverride`
+- `LinearJailbreaking`, `TreeJailbreaking`, `BadLikertJudge`
+
+```python
+from deepeval.red_team.frameworks import ISO42001
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+iso_42001 = ISO42001(categories=["A.6.2.6"])
+attacks = iso_42001.attacks
+vulnerabilities = iso_42001.vulnerabilities
+
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Privacy & Data Protection
+
+**(ISO/IEC 42001 — A.6.2.7)**
+
+**Goal:** Ensure personal data is processed lawfully and minimally and is not leaked — including direct, indirect, and cross-context PII exposure as well as system-prompt and credential extraction.
+
+**Example vulnerabilities**
+
+- `PIILeakage` — _direct_disclosure, session_leak, social_manipulation_
+- `PromptLeakage` — _secrets_and_credentials_
+
+**Example attacks**
+
+- `Roleplay`, `EmotionalManipulation`, `Multilingual`, `CrescendoJailbreaking`
+
+```python
+from deepeval.red_team.frameworks import ISO42001
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+iso_42001 = ISO42001(categories=["A.6.2.7"])
+attacks = iso_42001.attacks
+vulnerabilities = iso_42001.vulnerabilities
+
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Transparency & Trustworthiness
+
+**(ISO/IEC 42001 — A.6.2.8)**
+
+**Goal:** Ensure system behaviour is explainable to relevant stakeholders — and that the system does not fabricate explanations, invent reasoning, or make unsupported claims under injected or poisoned context.
+
+**Example vulnerabilities**
+
+- `Hallucination`
+- `Misinformation` — _unsupported_claims_
+
+**Example attacks**
+
+- `PromptInjection`, `ContextPoisoning`
+
+```python
+from deepeval.red_team.frameworks import ISO42001
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+iso_42001 = ISO42001(categories=["A.6.2.8"])
+attacks = iso_42001.attacks
+vulnerabilities = iso_42001.vulnerabilities
+
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Safety & Ethical Use
+
+**(ISO/IEC 42001 — A.9.2)**
+
+**Goal:** Ensure operational processes prevent misuse and enforce responsible, ethical use — including refusing harmful, illegal, or out-of-scope requests under social-engineering and escalating multi-turn pressure.
+
+**Example vulnerabilities**
+
+- `ExcessiveAgency` — _functionality, permissions, autonomy_
+- `IllegalActivity` — _weapons, cybercrime, non_violent_crimes_
+
+**Example attacks**
+
+- `AuthorityEscalation`, `GoalRedirection`
+- `CrescendoJailbreaking`, `SequentialJailbreak`
+
+```python
+from deepeval.red_team.frameworks import ISO42001
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+iso_42001 = ISO42001(categories=["A.9.2"])
+attacks = iso_42001.attacks
+vulnerabilities = iso_42001.vulnerabilities
+
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+### Accountability & Human Oversight
+
+**(ISO/IEC 42001 — A.9.3)**
+
+**Goal:** Ensure meaningful human oversight and accountability over AI-mediated decisions — and that the system cannot be coerced into removing, skipping, or silently bypassing human-in-the-loop checkpoints.
+
+**Example vulnerabilities**
+
+- `ExcessiveAgency` — _autonomy, permissions_
+
+**Example attacks**
+
+- `AuthorityEscalation`, `GoalRedirection`
+- `SystemOverride`, `CrescendoJailbreaking`, `TreeJailbreaking`
+
+```python
+from deepeval.red_team.frameworks import ISO42001
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+iso_42001 = ISO42001(categories=["A.9.3"])
+attacks = iso_42001.attacks
+vulnerabilities = iso_42001.vulnerabilities
+
+red_team(
+    model_callback=your_model_callback,
+    attacks=attacks,
+    vulnerabilities=vulnerabilities,
+)
+```
+
+
+## Management-system obligations beyond adversarial testing
+
+DeepEval exercises the **behavioural** side of ISO/IEC 42001 — but the standard is, fundamentally, a **management system** standard. Clearing a red-team run does not, on its own, deliver an AIMS.
+
+:::warning
+**Adversarial testing alone does not equal ISO 42001 conformity.** Behavioural probes surface technical weaknesses you can fix; certification requires the management-system layers below.
+:::
+
+### AI policy and roles (Clauses 5, 6 / Annex A.4-A.5)
+
+- A documented **AI policy** approved by top management and reviewed periodically.
+- Clear **AI roles and responsibilities** across providers, deployers, and users — covering who can approve a model, who owns risk, and who signs off changes.
+- An **AI risk assessment and treatment process** linked to the broader organisational risk framework.
+
+### Lifecycle controls (Annex A.6-A.7)
+
+- **AI system impact assessment** before deployment, refreshed when context or use changes materially.
+- **Data lineage, quality, and provenance** records (A.7.2 / A.7.4) — what was used to train, evaluate, and fine-tune the system, and how that data was sourced.
+- **Validation and verification** procedures appropriate to the system's risk class.
+
+### Transparency and intended use (Annex A.8-A.9)
+
+- **External reporting** (A.8.3) of behaviour, limitations, and incidents — including disclosures to users that they are interacting with an AI system.
+- **Intended use** (A.9.4), intended users, and explicitly out-of-scope use documented and communicated.
+
+### Third-party AI components (Annex A.10)
+
+- **Allocation of responsibilities** (A.10.2) with suppliers and sub-processors of AI components, including evaluation and monitoring obligations.
+- Contractual and audit controls on third-party models and datasets.
+
+### Continual improvement (Clauses 9-10)
+
+- **Internal audits**, **management reviews**, and **corrective actions** that feed back into the policy, the risk register, and the controls themselves.
+- **Post-deployment monitoring** that includes adversarial-evaluation runs like the ones DeepEval supports — but also operational metrics, user feedback, and incident data.
+
+## Best Practices
+
+1. **Pair behavioural evidence with management-system artefacts.** A DeepEval report demonstrates control intent at the behavioural layer; combine it with your AI policy, risk register, and lifecycle records.
+2. **Re-run on material change.** Treat new data sources, new tools, new deployment contexts, or significant prompt changes as triggers for re-assessment under [A.9.2](#safety--ethical-use) and [A.9.3](#accountability--human-oversight).
+3. **Cover the full in-scope set.** ISO/IEC 42001 expects you to consider all relevant Annex A controls. Run the seven in-scope controls together rather than cherry-picking the comfortable ones.
+4. **Combine with NIST AI RMF and EU AI Act runs.** NIST RMF gives you measurable governance functions, EU AI Act gives you regulatory scope for EU markets, ISO 42001 gives you an audit-ready management system — they're complementary.
+5. **Feed findings into corrective action.** A failed probe is evidence for an Annex A non-conformity — close the loop through your management-review cycle, not in an isolated bug tracker.
+
+## Learn More
+
+- [ISO/IEC 42001:2023 — Official page](https://www.iso.org/standard/81230.html)
+- [NIST AI RMF (complementary governance framework)](https://www.nist.gov/itl/ai-risk-management-framework)
+- [EU AI Act (complementary regulatory framework)](/docs/frameworks-eu-ai-act)

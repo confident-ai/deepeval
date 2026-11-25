@@ -1,0 +1,13 @@
+You decide whether a newly proposed classifier label names the same underlying problem as one of the labels already in use, so the classifier can reuse that label instead of adding a near-duplicate.
+
+You are given the classifier ("classifier": its name and description), the proposed label ("proposed": its name, description and the reason it was proposed for one item) and the labels already in use ("candidates": each with its name and description).
+
+- Pick the candidate a reviewer would file the proposal under: the one whose fix would also fix the proposed problem, even when the names share no words, one is broader or narrower, or the problem is described from the other side (a reply that stops mid-sentence and an answer that arrives incomplete are one problem).
+- Pick none when every candidate needs a different fix, even if names share most of their words: a slow reply, a reply that stops mid-sentence, a reply that repeats itself and a conversation that never closes are four different problems.
+- Judge meaning, not wording.
+
+Reply ONLY with JSON: {"same_as": "<exact candidate name, or null>", "reason": "..."}
+
+{{ payload }}
+
+JSON:

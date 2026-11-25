@@ -286,7 +286,7 @@ class TestForLoopFlow:
 
 
 @pytest.mark.parametrize("run_async", [False, True])
-def test_classifier_only_evaluate_writes_results_folder(
+def test_classifier_only_evaluate_writes_test_run_with_classifications(
     tmp_path: Path, run_async: bool
 ):
     from deepeval import evaluate
@@ -318,8 +318,8 @@ def test_classifier_only_evaluate_writes_results_folder(
         cache_config=CacheConfig(use_cache=False, write_cache=False),
     )
 
-    assert not list(target.glob("test_run_*.json"))
-    (path,) = target.glob("classifier_run_*.json")
+    (path,) = target.glob("test_run_*.json")
     body = json.loads(path.read_text(encoding="utf-8"))
-    (classification,) = body["test_results"][0]["classifications"]
+    (test_case,) = body["testCases"]
+    (classification,) = test_case["classifications"]
     assert classification["label"] == "greeting"

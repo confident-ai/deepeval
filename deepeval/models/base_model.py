@@ -10,6 +10,7 @@ from typing import (
     Union,
     TYPE_CHECKING,
 )
+from deepeval.errors import LogProbsUnsupportedError
 from deepeval.models.utils import parse_model_name
 from dataclasses import dataclass
 
@@ -136,6 +137,21 @@ class DeepEvalBaseLLM(ABC):
         """
         raise NotImplementedError(
             "batch_generate is not implemented for this model"
+        )
+
+    def generate_raw_response(self, *args, **kwargs) -> Tuple[Any, Any]:
+        """Returns `(response, cost)` where `response` has the OpenAI chat
+        completion shape, including `choices[0].logprobs`. Override it to give
+        `GEval` probability-weighted scores; models that cannot return log
+        probabilities leave it as is.
+        """
+        raise LogProbsUnsupportedError(
+            f"{type(self).__name__} does not return log probabilities."
+        )
+
+    async def a_generate_raw_response(self, *args, **kwargs) -> Tuple[Any, Any]:
+        raise LogProbsUnsupportedError(
+            f"{type(self).__name__} does not return log probabilities."
         )
 
     # Capabilities

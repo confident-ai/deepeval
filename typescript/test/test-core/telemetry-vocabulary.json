@@ -5,10 +5,12 @@
     "source": "deepeval/telemetry/"
   },
   "entrypoints": [
+    "agentic_red_team",
     "compare",
     "evals_iterator",
     "evaluate",
     "pytest",
+    "red_team",
     "standalone",
     "vitest"
   ],
@@ -17,9 +19,11 @@
     "CLI Command",
     "Conversation Simulator",
     "Evaluation",
+    "Guardrails",
     "Integration Installed",
     "Login",
     "Login Prompt Shown",
+    "Red Teaming",
     "Synthesizer"
   ],
   "features": [
@@ -27,6 +31,7 @@
     "component_evaluation",
     "conversation_simulator",
     "evaluation",
+    "guardrails",
     "redteaming",
     "synthesizer",
     "tracing_integration",
@@ -130,7 +135,10 @@
     "synth_evolutions",
     "benchmark_name",
     "benchmark_num_tasks",
-    "num_conversations"
+    "num_conversations",
+    "rt_vulnerabilities",
+    "rt_attacks",
+    "rt_framework"
   ],
   "props": [
     "benchmark.name",
@@ -159,6 +167,9 @@
     "login.method",
     "login.outcome",
     "login.surface",
+    "red_teaming.attacks",
+    "red_teaming.framework",
+    "red_teaming.vulnerabilities",
     "runtime.kind",
     "sdk.language",
     "simulator.num_conversations",
@@ -207,6 +218,9 @@
     "outcome": "eval.outcome",
     "prompt_surface": "login.surface",
     "provider": "judge.provider",
+    "rt_attacks": "red_teaming.attacks",
+    "rt_framework": "red_teaming.framework",
+    "rt_vulnerabilities": "red_teaming.vulnerabilities",
     "run_id": "eval.run_id",
     "runtime": "runtime.kind",
     "schema_version": "telemetry.schema_version",

@@ -2,7 +2,6 @@
   "title": "Blog",
   "pages": [
     "index",
-
     "---[Megaphone]Announcements---",
     "2026_sep/introducing-jev-in-deepeval/article",
     "2026_sep/introducing-sqlite-local-storage/article",
@@ -10,8 +9,8 @@
     "2026_jun/typescript-in-deepeval-monorepo/article",
     "2026_may/introducing-deepeval-4/article",
     "2026_apr/deepeval-got-a-new-look/article",
-
     "---[Users]Community---",
+    "2026_nov/what-is-llm-red-teaming/article",
     "2026_oct/ultimate-llm-evaluation-guide/article",
     "2026_sep/introducing-jev-as-a-judge/article",
     "2026_aug/how-to-evaluate-conversational-agent/article",
@@ -22,7 +21,6 @@
     "2025_jun/rag-contract-assistant-deepeval-guide/article",
     "2025_jun/use-case-cognee-ai-memory/article",
     "2025_may/top-5-geval-use-cases/article",
-
     "---[Scale]Comparisons---",
     "2026_nov/top-5-open-source-voice-ai-evaluation-tools/article",
     "2026_jul/top-5-llm-evaluation-frameworks/article",
@@ -31,6 +29,13 @@
     "2025_mar/deepeval-vs-langfuse/article",
     "2025_mar/deepeval-vs-ragas/article",
     "2025_mar/deepeval-vs-trulens/article",
-    "2026_aug/best-llm-evaluation-platforms/article"
+    "2026_aug/best-llm-evaluation-platforms/article",
+    "---[FlaskConical]Research---",
+    "2026_oct/jailbreak-price-curve/article",
+    "2025_jun/multi-turn-jailbreaking-analysis/article",
+    "2025_jun/claude-sonnet-4-defense-analysis/article",
+    "2025_jun/ai-safety-paradox/article",
+    "2025_may/shakespeare-claude-jailbreak/article",
+    "2025_may/breaking-gemini-pro/article"
   ]
 }

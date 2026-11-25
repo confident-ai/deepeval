@@ -1,0 +1,199 @@
+---
+title: Red Teaming Against Safety Frameworks
+sidebar_label: Safety Frameworks
+---
+
+Manually selecting vulnerabilities and attacks for every assessment requires domain expertise and risks missing critical threat categories. AI safety frameworks solve this by providing standardized, research-backed risk taxonomies that automatically map to the right vulnerabilities and attack techniques. DeepEval supports 6 frameworks out of the box, covering everything from the OWASP Top 10 to dataset-driven benchmarks.
+
+This guide explains how to use safety frameworks in DeepEval for structured, compliance-aligned red teaming. It covers framework selection, category scoping, result interpretation, and when to use frameworks versus manual vulnerability selection.
+
+## Available Frameworks
+
+DeepEval supports two types of frameworks: **category-based** frameworks that map risk categories to vulnerabilities and attacks, and **dataset-based** frameworks that use curated adversarial datasets for evaluation.
+
+### Category-Based Frameworks
+
+| Framework                                  | Class            | Categories                                                                                                | Focus                                                                                        |
+| ------------------------------------------ | ---------------- | --------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| OWASP Top 10 for LLMs 2025                 | `OWASPTop10`     | `LLM_01` – `LLM_10`                                                                                       | Broad LLM security risks: prompt injection, data leakage, excessive agency, misinformation   |
+| OWASP Top 10 for Agentic Applications 2026 | `OWASP_ASI_2026` | `ASI_01` – `ASI_10`                                                                                       | Agent-specific risks: tool abuse, goal drift, inter-agent communication, autonomous behavior |
+| NIST AI RMF                                | `NIST`           | `measure_1` – `measure_4`                                                                                 | Risk management measurement lanes aligned with the NIST AI Risk Management Framework         |
+| MITRE ATLAS                                | `MITRE`          | `reconnaissance`, `resource_development`, `initial_access`, `ml_attack_staging`, `exfiltration`, `impact` | Adversary tactics mapped from the MITRE ATLAS threat matrix                                  |
+
+Each category within a framework maps to a specific set of vulnerabilities and attack techniques. When you run a framework assessment, DeepEval executes red teaming for each category independently and aggregates the results.
+
+### Dataset-Based Frameworks
+
+| Framework   | Class         | Source                                                    | Focus                                                |
+| ----------- | ------------- | --------------------------------------------------------- | ---------------------------------------------------- |
+| BeaverTails | `BeaverTails` | PKU-Alignment/BeaverTails (Hugging Face)                  | Safety classification on curated unsafe prompts      |
+| Aegis       | `Aegis`       | nvidia/Aegis-AI-Content-Safety-Dataset-1.0 (Hugging Face) | Content safety evaluation on NVIDIA's safety dataset |
+
+Dataset frameworks load adversarial inputs from their respective datasets, run them through your `model_callback`, and evaluate the responses using DeepEval's `HarmMetric`. These are useful for benchmarking against established safety datasets without generating synthetic attacks.
+
+## Running a Framework Assessment
+
+Using a framework is the simplest way to run a comprehensive assessment. Pass the framework instance to `red_team()` instead of specifying individual vulnerabilities and attacks:
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.frameworks import OWASPTop10
+
+async def model_callback(input: str) -> str:
+    return f"I'm sorry but I can't help with that: {input}"
+
+risk_assessment = red_team(
+    model_callback=model_callback,
+    framework=OWASPTop10()
+)
+```
+
+This runs the full OWASP Top 10 assessment across all 10 categories, each with its own mapped vulnerabilities and attacks.
+
+:::caution
+When using a `framework`, you cannot also pass `vulnerabilities` or `attacks`. The framework defines both. If you need custom control over which vulnerabilities and attacks to use, skip the framework and pass them directly.
+:::
+
+## Scoping to Specific Categories
+
+Every framework accepts a `categories` parameter that lets you scope the assessment to specific risk categories. This is useful for focused testing, faster iteration, or when you only need coverage for a subset of the standard.
+
+### OWASP Top 10 for LLMs
+
+```python
+from deepeval.red_team.frameworks import OWASPTop10
+
+framework = OWASPTop10(categories=[
+    "LLM_01",  # Prompt Injection
+    "LLM_02",  # Sensitive Information Disclosure
+    "LLM_07",  # System Prompt Leakage
+])
+
+red_team(model_callback=model_callback, framework=framework)
+```
+
+The 10 categories are:
+
+| Category | Risk                             |
+| -------- | -------------------------------- |
+| `LLM_01` | Prompt Injection                 |
+| `LLM_02` | Sensitive Information Disclosure |
+| `LLM_03` | Supply Chain                     |
+| `LLM_04` | Data and Model Poisoning         |
+| `LLM_05` | Improper Output Handling         |
+| `LLM_06` | Excessive Agency                 |
+| `LLM_07` | System Prompt Leakage            |
+| `LLM_08` | Vector and Embedding Weaknesses  |
+| `LLM_09` | Misinformation                   |
+| `LLM_10` | Unbounded Consumption            |
+
+### OWASP Top 10 for Agentic Applications
+
+```python
+from deepeval.red_team.frameworks import OWASP_ASI_2026
+
+framework = OWASP_ASI_2026(categories=[
+    "ASI_01",  # First agentic risk category
+    "ASI_03",
+    "ASI_06",
+])
+
+red_team(model_callback=model_callback, framework=framework)
+```
+
+Use `OWASP_ASI_2026` when red teaming AI agents, tool-calling systems, or multi-agent pipelines. See the [AI agents guide](/guides/guide-agentic-ai-red-teaming) for a detailed walkthrough of agentic red teaming.
+
+### NIST AI RMF
+
+```python
+from deepeval.red_team.frameworks import NIST
+
+framework = NIST(categories=["measure_1", "measure_2"])
+
+red_team(model_callback=model_callback, framework=framework)
+```
+
+The NIST AI RMF framework maps to four measurement lanes (`measure_1` through `measure_4`), each covering different aspects of AI risk management.
+
+### MITRE ATLAS
+
+```python
+from deepeval.red_team.frameworks import MITRE
+
+framework = MITRE(categories=["reconnaissance", "initial_access", "impact"])
+
+red_team(model_callback=model_callback, framework=framework)
+```
+
+MITRE ATLAS maps adversary tactics to red teaming probes. Categories include `reconnaissance`, `resource_development`, `initial_access`, `ml_attack_staging`, `exfiltration`, and `impact`.
+
+## Running Dataset Frameworks
+
+Dataset-based frameworks work differently—they load pre-curated adversarial inputs rather than generating synthetic attacks:
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.frameworks import BeaverTails
+
+red_team(
+    model_callback=model_callback,
+    framework=BeaverTails()
+)
+```
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.frameworks import Aegis
+
+red_team(
+    model_callback=model_callback,
+    framework=Aegis()
+)
+```
+
+Dataset frameworks are useful for:
+
+- **Benchmarking** — Comparing your model's safety profile against a fixed, reproducible set of adversarial inputs.
+- **Regression testing** — Running the same dataset after model updates to detect safety regressions.
+- **Compliance evidence** — Demonstrating that your model was tested against an established safety dataset.
+
+## Choosing the Right Framework
+
+The framework you choose depends on your application type, compliance requirements, and what you need to demonstrate:
+
+| Scenario                                        | Recommended framework            |
+| ----------------------------------------------- | -------------------------------- |
+| General LLM application security audit          | `OWASPTop10`                     |
+| AI agent or tool-calling system                 | `OWASP_ASI_2026`                 |
+| US government or NIST compliance                | `NIST`                           |
+| Threat modeling against known adversary tactics | `MITRE`                          |
+| Benchmarking on established safety datasets     | `BeaverTails` or `Aegis`         |
+| Internal security review for stakeholders       | `OWASPTop10` (widely recognized) |
+
+For most teams, **`OWASPTop10` is the best starting point**. It provides broad coverage, maps to well-understood risk categories, and produces results that security teams and stakeholders are familiar with.
+
+If your system is an AI agent with tool access, run **`OWASP_ASI_2026`** in addition to (or instead of) `OWASPTop10`.
+
+## Frameworks vs. Manual Selection
+
+| Use frameworks when...                                       | Use manual selection when...                                      |
+| ------------------------------------------------------------ | ----------------------------------------------------------------- |
+| You need standardized, compliance-aligned coverage           | You have a specific threat model with known weaknesses            |
+| You want to demonstrate adherence to an industry standard    | You need to test custom vulnerabilities not covered by frameworks |
+| You're running an initial assessment and need broad coverage | You're isolating and stress-testing a specific vulnerability      |
+| You need reproducible results across teams and time periods  | You're building custom attack chains or pipelines                 |
+
+The two approaches are complementary. A common workflow is:
+
+1. Run a framework assessment (e.g., `OWASPTop10`) for broad coverage.
+2. Identify the weakest categories from the results.
+3. Use manual vulnerability and attack selection to deep-dive into those areas.
+4. Run `assess()` on individual vulnerabilities to measure fix effectiveness.
+
+## What to Do Next
+
+- **Start with `OWASPTop10`** — Run a full assessment to establish a baseline across all 10 risk categories.
+- **Scope down for iteration** — Use `categories` to focus on the weakest areas and re-run faster.
+- **Layer with manual selection** — After the framework assessment, use the [custom pipelines guide](/guides/guide-custom-red-teaming-pipelines) to build targeted tests for specific failure modes.
+- **Deploy guardrails** — Use the [guardrails guide](/guides/guide-deploying-guardrails) to protect against the vulnerabilities the framework assessment uncovered.
+- **Benchmark with datasets** — Run `BeaverTails` or `Aegis` to measure your model against established safety benchmarks.

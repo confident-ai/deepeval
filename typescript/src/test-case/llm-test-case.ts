@@ -51,6 +51,7 @@ export class ToolCall {
   reasoning?: string;
   output?: any;
   inputParameters?: Record<string, any>;
+  turn?: number;
 
   constructor(params: {
     name: string;
@@ -59,6 +60,7 @@ export class ToolCall {
     reasoning?: string;
     output?: any;
     inputParameters?: Record<string, any>;
+    turn?: number;
   }) {
     this.name = params.name;
     this.description = params.description;
@@ -66,6 +68,7 @@ export class ToolCall {
     this.reasoning = params.reasoning;
     this.output = params.output;
     this.inputParameters = params.inputParameters;
+    this.turn = params.turn;
   }
 }
 

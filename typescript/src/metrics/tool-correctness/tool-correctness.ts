@@ -228,6 +228,29 @@ export class ToolCorrectnessMetric extends BaseMetric {
     return undefined;
   }
 
+  static scoreToolCalls(
+    toolsCalled: ToolCall[],
+    expectedTools: ToolCall[],
+    options: Pick<
+      ToolCorrectnessMetricOptions,
+      "evaluationParams" | "shouldExactMatch" | "shouldConsiderOrdering"
+    > = {},
+  ): { score: number; reason: string } {
+    const scorer = Object.create(
+      ToolCorrectnessMetric.prototype,
+    ) as ToolCorrectnessMetric;
+    Object.assign(scorer, {
+      toolsCalled,
+      expectedTools,
+      evaluationParams: options.evaluationParams ?? [],
+      shouldExactMatch: options.shouldExactMatch ?? false,
+      shouldConsiderOrdering: options.shouldConsiderOrdering ?? false,
+      strictMode: false,
+      threshold: 0,
+    });
+    return { score: scorer.calculateScore(), reason: scorer.generateReason() };
+  }
+
   // --- scoring ---
 
   private calculateScore(): number {

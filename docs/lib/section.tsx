@@ -17,7 +17,7 @@ import { baseOptions } from "@/lib/layout.shared";
 import { getMDXComponents } from "@/components/mdx";
 import { gitConfig } from "@/lib/shared";
 import { getPageContributors } from "@/lib/contributors";
-import { getPageDescription } from "@/lib/source";
+import { getBetaSectionUrls, getPageDescription } from "@/lib/source";
 import Footer from "@/src/layouts/Footer";
 import NavHeader from "@/src/layouts/NavHeader";
 import TocFooter from "@/src/components/TocFooter";
@@ -168,6 +168,9 @@ export function createSection(config: SectionConfig) {
 
     const MDX = page.data.body;
     const markdownUrl = getMarkdownUrl?.(page);
+    const isBeta =
+      page.data.beta === true ||
+      getBetaSectionUrls(source.getPageTree()).has(page.url);
 
     // Meta strip rendered underneath the TOC (and mirrored into the
     // mobile TOC popover) — "Last updated" + contributor avatars. Kept
@@ -210,7 +213,7 @@ export function createSection(config: SectionConfig) {
           <DocsDescription className="mb-0 text-[15px] font-light">
             {page.data.description}
           </DocsDescription>
-          {markdownUrl || page.data.beta === true ? (
+          {markdownUrl || isBeta ? (
             // `MarkdownCopyButton` / `ViewOptionsPopover` default to fumadocs'
             // `size="sm"` variant (the smallest they expose). The className
             // overrides here trim padding + icon size one notch smaller so
@@ -220,7 +223,7 @@ export function createSection(config: SectionConfig) {
             // hardcodes `size-3.5` directly on its chevron child — a plain
             // parent selector loses that specificity fight, so we force it.
             <div className="flex flex-row gap-2 items-center mb-4">
-              {page.data.beta === true ? <BetaBadge /> : null}
+              {isBeta ? <BetaBadge /> : null}
               {markdownUrl ? (
                 <>
                   <MarkdownCopyButton

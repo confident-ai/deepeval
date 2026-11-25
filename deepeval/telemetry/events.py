@@ -24,6 +24,8 @@ class Event(str, Enum):
     SYNTHESIZER = "Synthesizer"
     CONVERSATION_SIMULATOR = "Conversation Simulator"
     BENCHMARK = "Benchmark"
+    RED_TEAMING = "Red Teaming"
+    GUARDRAILS = "Guardrails"
     INTEGRATION_INSTALLED = "Integration Installed"
     CLI_COMMAND = "CLI Command"
     LOGIN_PROMPT_SHOWN = "Login Prompt Shown"
@@ -44,10 +46,13 @@ class Entrypoint(str, Enum):
     VITEST = "vitest"
     COMPARE = "compare"
     STANDALONE = "standalone"
+    RED_TEAM = "red_team"
+    AGENTIC_RED_TEAM = "agentic_red_team"
 
 
 class Feature(str, Enum):
     REDTEAMING = "redteaming"
+    GUARDRAILS = "guardrails"
     SYNTHESIZER = "synthesizer"
     EVALUATION = "evaluation"
     COMPONENT_EVALUATION = "component_evaluation"

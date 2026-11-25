@@ -1,0 +1,167 @@
+---
+title: Red Teaming Anthropic Claude
+sidebar_label: Anthropic Claude
+---
+
+Anthropic's Claude models (Sonnet, Opus, Haiku) are trained with Constitutional AI (CAI) — a self-critique alignment method where the model evaluates its own outputs against a set of principles before responding. This produces safety behavior that is structurally different from RLHF-only models: Claude tends to reason about _why_ a request is harmful rather than pattern-matching on surface-level triggers. The result is stronger resistance to direct jailbreaks but a different set of weaknesses — particularly around multi-turn consistency manipulation and appeals to the model's own helpfulness principles.
+
+This guide covers red teaming Anthropic Claude with [DeepEval](/docs/red-teaming-introduction).
+
+:::note
+For general model red teaming methodology, vulnerability selection guidance, and framework-based assessments, see the [foundational models guide](/guides/guide-red-teaming-models).
+:::
+
+## YAML Quickstart
+
+Claude requires a custom callback since DeepEval's native YAML target supports OpenAI models. Create the callback first:
+
+```python title="my_model.py"
+import anthropic
+
+client = anthropic.Anthropic()
+
+async def model_callback(input: str) -> str:
+    message = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": input}],
+    )
+    return message.content[0].text
+```
+
+```yaml title="red-team-claude.yaml"
+target:
+  purpose: "A financial advisory assistant for retail banking customers"
+  callback:
+    file: "my_model.py"
+    function: "model_callback"
+
+default_vulnerabilities:
+  - name: "Toxicity"
+  - name: "Bias"
+    types: ["race", "gender", "religion"]
+  - name: "PromptLeakage"
+  - name: "IllegalActivity"
+
+attacks:
+  - name: "Roleplay"
+    weight: 3
+  - name: "PromptInjection"
+    weight: 2
+  - name: "Leetspeak"
+  - name: "LinearJailbreaking"
+    num_turns: 5
+```
+
+```bash
+deepeval red-team red-team-claude.yaml
+```
+
+## Python Assessment
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.vulnerabilities import Toxicity, Bias, PromptLeakage, IllegalActivity, Misinformation
+from deepeval.red_team.attacks.single_turn import PromptInjection, Roleplay, Leetspeak
+from deepeval.red_team.attacks.multi_turn import LinearJailbreaking, CrescendoJailbreaking
+import anthropic
+
+client = anthropic.Anthropic()
+
+async def model_callback(input: str) -> str:
+    message = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=1024,
+        messages=[{"role": "user", "content": input}],
+    )
+    return message.content[0].text
+
+red_team(
+    model_callback=model_callback,
+    target_purpose="A financial advisory assistant for retail banking customers",
+    vulnerabilities=[
+        Toxicity(), Bias(), PromptLeakage(),
+        IllegalActivity(), Misinformation(),
+    ],
+    attacks=[
+        PromptInjection(), Roleplay(), Leetspeak(),
+        LinearJailbreaking(), CrescendoJailbreaking(),
+    ],
+    attacks_per_vulnerability_type=5,
+)
+```
+
+## Multi-Turn Testing
+
+Claude's Constitutional AI training makes it particularly interesting to test across multiple turns. The model's self-critique mechanism can be worn down through gradual context manipulation — where each turn subtly shifts the model's assessment of what constitutes a helpful response.
+
+```python
+from deepeval.red_team.test_case import RTTurn
+
+async def model_callback(input: str, turns: list[RTTurn] = None) -> str:
+    messages = []
+    for turn in (turns or []):
+        messages.append({"role": turn.role, "content": turn.content})
+    messages.append({"role": "user", "content": input})
+
+    message = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=1024,
+        messages=messages,
+    )
+    return message.content[0].text
+```
+
+## Claude-Specific Considerations
+
+### Safety Training Characteristics
+
+Claude's Constitutional AI alignment produces distinctive behaviors that affect red teaming strategy:
+
+- **Principled refusal** — Claude refuses harmful requests by reasoning about principles rather than pattern-matching keywords. This makes it more resistant to simple encoding attacks (`Leetspeak`, `ROT13`) than RLHF-only models, because the model evaluates semantic intent after decoding.
+- **Helpfulness tension** — Claude's training heavily weights being helpful, thorough, and honest. Attacks that frame harmful requests as educational, research-oriented, or safety-focused exploit this tension — the model's helpfulness principle can override its harm-avoidance principle.
+- **Multi-turn consistency pressure** — Once Claude commits to a line of reasoning, it tends to remain consistent. An attacker who establishes a benign framing in early turns can gradually escalate, leveraging the model's own prior responses as implicit permission.
+- **System prompt adherence** — Claude treats system prompts as strong constraints relative to other models. `PromptLeakage` attacks are less likely to succeed through direct elicitation but can still work through indirect approaches (summarization requests, translation tasks).
+
+### Testing with System Prompts
+
+Claude's system prompt is passed as a separate parameter, not a message:
+
+```python
+async def model_callback(input: str) -> str:
+    message = client.messages.create(
+        model="claude-sonnet-4-20250514",
+        max_tokens=1024,
+        system="You are a financial advisor. Never provide specific investment recommendations.",
+        messages=[{"role": "user", "content": input}],
+    )
+    return message.content[0].text
+```
+
+Test with your production system prompt to evaluate real-world safety boundaries.
+
+### Recommended Attack Strategy
+
+| Attack | Effectiveness Against Claude | Why |
+|---|---|---|
+| `Roleplay` | High | Exploits helpfulness-vs-safety tension through fictional framing |
+| `LinearJailbreaking` | High | Gradual multi-turn escalation wears down principled refusal |
+| `CrescendoJailbreaking` | High | Context accumulation exploits consistency pressure |
+| `PromptInjection` | Medium | Claude evaluates intent semantically, not just pattern-matching |
+| `Leetspeak` / `ROT13` | Lower | CAI self-critique catches encoded harmful content more reliably |
+
+### Recommended Vulnerability Priority
+
+| Use Case | Priority Vulnerabilities | Why |
+|---|---|---|
+| Customer-facing | `Toxicity`, `Bias`, `PIILeakage` | Brand safety, user trust |
+| Regulated industry | `IllegalActivity`, `Misinformation`, `PersonalSafety` | Compliance, liability |
+| Internal tooling | `PromptLeakage`, `SQLInjection`, `ShellInjection` | Infrastructure boundaries |
+| Content generation | `Bias`, `Misinformation`, `IntellectualProperty` | Output quality, legal risk |
+
+## What to Do Next
+
+- **Prioritize multi-turn attacks** — Claude's primary weakness is gradual escalation, not single-shot jailbreaks. Run `LinearJailbreaking` and `CrescendoJailbreaking` with higher turn counts (`num_turns: 5+`).
+- **Compare Sonnet vs. Haiku** — Smaller models (Haiku) may have weaker safety boundaries than larger ones (Sonnet, Opus). Run the same assessment across model sizes.
+- **Test against frameworks** — Use `OWASPTop10()` for standardized coverage. See the [safety frameworks guide](/guides/guide-safety-frameworks).
+- **Move to application-level testing** — Once the model passes, test it in context with the [AI agents](/guides/guide-agentic-ai-red-teaming), [conversational agents](/guides/guide-red-teaming-conversational-agents), or [agentic RAG](/guides/guide-red-teaming-agentic-rag) guides.
