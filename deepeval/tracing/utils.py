@@ -61,6 +61,17 @@ def _normalize_provider_string(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "", value.lower())
 
 
+# OpenTelemetry ``gen_ai.provider.name`` values not named like their provider.
+_GEN_AI_PROVIDER_ALIASES: Dict[str, str] = {
+    "aws.bedrock": Provider.BEDROCK.value,
+    "azure.ai.inference": Provider.AZURE.value,
+    "azure.ai.openai": Provider.AZURE.value,
+    "gcp.gemini": Provider.GEMINI.value,
+    "gcp.gen_ai": Provider.GEMINI.value,
+    "gcp.vertex_ai": Provider.VERTEX_AI.value,
+}
+
+
 def normalize_span_provider_for_platform(raw: Optional[Any]) -> Optional[str]:
     """Map raw provider strings (e.g. LangChain ``\"openai\"``) to ``Provider`` values."""
     if raw is None:
@@ -68,6 +79,10 @@ def normalize_span_provider_for_platform(raw: Optional[Any]) -> Optional[str]:
     s = str(raw).strip()
     if not s:
         return None
+
+    alias = _GEN_AI_PROVIDER_ALIASES.get(s.lower())
+    if alias:
+        return alias
 
     normalized_raw = _normalize_provider_string(s)
     head = re.split(r"[\s./\\]+", s, maxsplit=1)[0]

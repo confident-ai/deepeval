@@ -225,14 +225,14 @@ def test_persona_interruption_behavior_selects_the_duplex_path():
         scenario="Refund",
         persona=Persona(
             characteristics="A caller who talks over you.",
-            interruption_behavior=InterruptionBehavior(frequency="frequent"),
+            interruption_behavior=InterruptionBehavior(every=(1, 2)),
         ),
     )
 
-    policy, floor = simulator._build_interruption(golden)
+    schedule, floor = simulator._build_interruption(golden)
 
-    assert policy is not None and floor is not None
-    assert policy.level == "frequent"
+    assert schedule is not None and floor is not None
+    assert schedule.every == (1, 2)
 
 
 def test_no_interruption_behavior_keeps_the_half_duplex_path():
@@ -241,21 +241,21 @@ def test_no_interruption_behavior_keeps_the_half_duplex_path():
         scenario="Refund", persona=Persona(characteristics="A calm caller.")
     )
 
-    policy, floor = simulator._build_interruption(golden)
+    schedule, floor = simulator._build_interruption(golden)
 
-    assert policy is None and floor is None
+    assert schedule is None and floor is None
 
 
 def test_deprecated_voice_config_interruption_settings_still_applies():
     with pytest.warns(DeprecationWarning, match="interruption_settings"):
         simulator = _simulator(
             RecordingAgent(),
-            interruption_settings=InterruptionBehavior(frequency="rare"),
+            interruption_settings=InterruptionBehavior(every=5),
         )
     golden = ConversationalGolden(
         scenario="Refund", persona=Persona(characteristics="A calm caller.")
     )
 
-    policy, _ = simulator._build_interruption(golden)
+    schedule, _ = simulator._build_interruption(golden)
 
-    assert policy is not None and policy.level == "rare"
+    assert schedule is not None and schedule.every == (5, 5)

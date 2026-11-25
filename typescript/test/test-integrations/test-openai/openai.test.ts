@@ -6,7 +6,6 @@ import { setTracingContext } from "@/tracing/trace-context";
 import { traceManager } from "@/tracing/tracing";
 import { Environment } from "@/tracing/utils";
 import { instrumentOpenAI } from "@/openai";
-import { unpatchOpenAI } from "@/openai/patch";
 
 import { generateTraceJson, assertTraceJson } from "../utils";
 
@@ -22,12 +21,14 @@ const FIXTURES_DIR = path.join(__dirname, "fixtures");
 const GENERATE_SCHEMAS = process.env.GENERATE_SCHEMAS === "true";
 
 describe("OpenAI Basic Integration Tests", () => {
+  let stopTracing: () => void;
+
   beforeAll(() => {
-    instrumentOpenAI(client);
+    stopTracing = instrumentOpenAI(client);
   });
 
   afterAll(() => {
-    unpatchOpenAI(client);
+    stopTracing();
   });
 
   beforeEach(() => {

@@ -12,21 +12,39 @@ from deepeval.tracing.api import (
 from deepeval.utils import make_model_config
 
 
+class Evidence(BaseModel):
+    model_config = make_model_config(extra="ignore", populate_by_name=True)
+
+    field: str
+    quote: str
+    note: str = ""
+    span_index: Optional[int] = Field(None, alias="spanIndex")
+    turn_index: Optional[int] = Field(None, alias="turnIndex")
+    matched: bool = False
+
+
 class Classification(BaseModel):
-    """Classifier counterpart of ``MetricData``: one classifier's result on
-    one test case. ``success`` is ``None`` when the test case declared no
-    expected label for this classifier.
+    """Classifier counterpart of ``MetricData``: one label a classifier gave
+    one test case, or a single ``label=None`` entry when it gave none,
+    uploaded to Confident AI with that test case. ``success`` is ``None``
+    when the test case declared no expected label for this classifier.
+    ``confidence`` is the review step's score for the label, set only when
+    the classifier has a ``review_config``."""
 
-    Local-only: classifications live on ``TestResult`` and are never attached
-    to the API test cases that are uploaded to Confident AI."""
-
-    model_config = make_model_config(extra="ignore")
+    model_config = make_model_config(extra="ignore", populate_by_name=True)
 
     name: str
     label: Optional[str] = None
-    expected_label: Optional[str] = Field(None, alias="expectedLabel")
+    expected_label: Optional[Union[str, List[str]]] = Field(
+        None, alias="expectedLabel"
+    )
     success: Optional[bool] = None
     reason: Optional[str] = None
+    new_label_description: Optional[str] = Field(
+        None, alias="newLabelDescription"
+    )
+    evidence: List[Evidence] = Field(default_factory=list)
+    confidence: Optional[float] = None
     evaluation_model: Optional[str] = Field(None, alias="evaluationModel")
     error: Optional[str] = None
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
@@ -60,6 +78,7 @@ class LLMApiTestCase(BaseModel):
     # make these optional, not all test cases in a conversation will be evaluated
     success: Union[bool, None] = Field(None)
     metrics_data: Union[ApiMetricsData, None] = Field(None, alias="metricsData")
+    classifications: Optional[List[Classification]] = Field(None)
     run_duration: Union[float, None] = Field(None, alias="runDuration")
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
 
@@ -132,6 +151,7 @@ class TurnApi(BaseModel):
     retrieval_context: Optional[list] = Field(None, alias="retrievalContext")
     tools_called: Optional[List[ToolCall]] = Field(None, alias="toolsCalled")
     comments: Optional[str] = Field(None)
+    metadata: Optional[Dict] = Field(None)
 
 
 class ConversationalApiTestCase(BaseModel):
@@ -140,14 +160,18 @@ class ConversationalApiTestCase(BaseModel):
         None, alias="expectationsData"
     )
     name: str
-    success: bool
+    success: Optional[bool] = Field(None)
     metrics_data: ApiMetricsData = Field(alias="metricsData")
+    classifications: Optional[List[Classification]] = Field(None)
     run_duration: float = Field(0.0, alias="runDuration")
     evaluation_cost: Union[float, None] = Field(None, alias="evaluationCost")
     turns: List[TurnApi] = Field(default_factory=lambda: [])
     order: Union[int, None] = Field(None)
     scenario: Optional[str] = Field(None)
     expected_outcome: Optional[str] = Field(None, alias="expectedOutcome")
+    expected_tools: Optional[List[ToolCall]] = Field(
+        None, alias="expectedTools"
+    )
     user_description: Optional[str] = Field(None, alias="userDescription")
     context: Optional[list] = Field(None)
     comments: Optional[str] = Field(None)

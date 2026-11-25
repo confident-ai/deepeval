@@ -1,21 +1,26 @@
 {
   "name": "langchain-single-tool-test",
-  "uuid": "e06544e1-8fa5-4652-b6a5-8e2f1429b91b",
+  "uuid": "58ded691540f75b348d02e889a24290d",
   "baseSpans": [],
   "agentSpans": [
     {
-      "uuid": "019ed9d8-9b50-74be-91db-a029a4236990",
+      "uuid": "c52f09edd570c619",
       "name": "single_tool_chain",
       "status": "SUCCESS",
       "type": "agent",
-      "traceUuid": "e06544e1-8fa5-4652-b6a5-8e2f1429b91b",
-      "startTime": "2026-06-18T08:28:31.952Z",
-      "endTime": "2026-06-18T08:28:34.342Z",
+      "traceUuid": "58ded691540f75b348d02e889a24290d",
+      "startTime": "2026-10-23T08:54:52.875Z",
+      "endTime": "2026-10-23T08:54:55.011Z",
       "input": {
         "messages": [
           {
             "role": "user",
-            "content": "Use the get_weather tool to get weather for San Francisco."
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_weather tool to get weather for San Francisco."
+              }
+            ]
           }
         ]
       },
@@ -23,269 +28,163 @@
         "messages": [
           {
             "role": "user",
-            "content": "Use the get_weather tool to get weather for San Francisco."
+            "parts": [
+              {
+                "type": "text",
+                "content": "Use the get_weather tool to get weather for San Francisco."
+              }
+            ]
           },
           {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain_core",
-              "messages",
-              "AIMessage"
-            ],
-            "kwargs": {
-              "id": "chatcmpl-Ds2OuiRWdgnqz9EL9ehj7lOXZcC5P",
-              "content": "",
-              "additional_kwargs": {
-                "tool_calls": [
-                  {
-                    "id": "call_XnBlwNtuMNzIOr2Revk5HU1W",
-                    "type": "function",
-                    "function": {
-                      "name": "get_weather",
-                      "arguments": "{\"city\":\"San Francisco\"}"
-                    }
-                  }
-                ]
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": ""
               },
-              "response_metadata": {
-                "tokenUsage": {
-                  "promptTokens": 57,
-                  "completionTokens": 15,
-                  "totalTokens": 72
-                },
-                "finish_reason": "tool_calls",
-                "model_provider": "openai",
-                "model_name": "gpt-4o-mini-2024-07-18",
-                "usage": {
-                  "prompt_tokens": 57,
-                  "completion_tokens": 15,
-                  "total_tokens": 72,
-                  "prompt_tokens_details": {
-                    "cached_tokens": 0,
-                    "audio_tokens": 0
-                  },
-                  "completion_tokens_details": {
-                    "reasoning_tokens": 0,
-                    "audio_tokens": 0,
-                    "accepted_prediction_tokens": 0,
-                    "rejected_prediction_tokens": 0
-                  }
-                },
-                "system_fingerprint": "fp_3fb44b05a1"
-              },
-              "type": "ai",
-              "tool_calls": [
-                {
-                  "name": "get_weather",
-                  "args": {
-                    "city": "San Francisco"
-                  },
-                  "type": "tool_call",
-                  "id": "call_XnBlwNtuMNzIOr2Revk5HU1W"
-                }
-              ],
-              "invalid_tool_calls": [],
-              "usage_metadata": {
-                "output_tokens": 15,
-                "input_tokens": 57,
-                "total_tokens": 72,
-                "input_token_details": {
-                  "audio": 0,
-                  "cache_read": 0
-                },
-                "output_token_details": {
-                  "audio": 0,
-                  "reasoning": 0
+              {
+                "type": "tool_call",
+                "name": "get_weather",
+                "id": "call_9dFBS3hej1GHFKIsKsU9he25",
+                "arguments": {
+                  "city": "San Francisco"
                 }
               }
-            }
+            ]
           },
           {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain_core",
-              "messages",
-              "ToolMessage"
-            ],
-            "kwargs": {
-              "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Foggy, 58F\",\"tool_call_id\":\"call_XnBlwNtuMNzIOr2Revk5HU1W\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.1.31\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}",
-              "tool_call_id": "call_XnBlwNtuMNzIOr2Revk5HU1W",
-              "additional_kwargs": {},
-              "response_metadata": {}
-            }
-          },
-          {
-            "lc": 1,
-            "type": "constructor",
-            "id": [
-              "langchain_core",
-              "messages",
-              "AIMessage"
-            ],
-            "kwargs": {
-              "id": "chatcmpl-Ds2OvhldhK2VJxGLRwhWm8ZpH19wX",
-              "content": "The current weather in San Francisco is foggy with a temperature of 58\u00b0F.",
-              "additional_kwargs": {},
-              "response_metadata": {
-                "tokenUsage": {
-                  "promptTokens": 171,
-                  "completionTokens": 18,
-                  "totalTokens": 189
-                },
-                "finish_reason": "stop",
-                "model_provider": "openai",
-                "model_name": "gpt-4o-mini-2024-07-18",
-                "usage": {
-                  "prompt_tokens": 171,
-                  "completion_tokens": 18,
-                  "total_tokens": 189,
-                  "prompt_tokens_details": {
-                    "cached_tokens": 0,
-                    "audio_tokens": 0
-                  },
-                  "completion_tokens_details": {
-                    "reasoning_tokens": 0,
-                    "audio_tokens": 0,
-                    "accepted_prediction_tokens": 0,
-                    "rejected_prediction_tokens": 0
-                  }
-                },
-                "system_fingerprint": "fp_3fb44b05a1"
-              },
-              "type": "ai",
-              "tool_calls": [],
-              "invalid_tool_calls": [],
-              "usage_metadata": {
-                "output_tokens": 18,
-                "input_tokens": 171,
-                "total_tokens": 189,
-                "input_token_details": {
-                  "audio": 0,
-                  "cache_read": 0
-                },
-                "output_token_details": {
-                  "audio": 0,
-                  "reasoning": 0
-                }
+            "role": "tool",
+            "parts": [
+              {
+                "type": "text",
+                "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Foggy, 58F\",\"tool_call_id\":\"call_9dFBS3hej1GHFKIsKsU9he25\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
               }
-            }
+            ]
+          },
+          {
+            "role": "assistant",
+            "parts": [
+              {
+                "type": "text",
+                "content": "The current weather in San Francisco is foggy with a temperature of 58°F."
+              }
+            ]
           }
         ]
       },
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "output": "Foggy, 58F",
+          "inputParameters": {
+            "city": "San Francisco"
+          }
+        }
+      ],
       "availableTools": [],
       "agentHandoffs": []
     }
   ],
   "llmSpans": [
     {
-      "uuid": "019ed9d8-9b51-717c-b2a9-99b20465c2f3",
-      "name": "Langchain LLM Run",
+      "uuid": "c9a26a368769ada9",
+      "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "e06544e1-8fa5-4652-b6a5-8e2f1429b91b",
-      "parentUuid": "019ed9d8-9b50-74be-91db-a029a4236990",
-      "startTime": "2026-06-18T08:28:31.953Z",
-      "endTime": "2026-06-18T08:28:33.394Z",
+      "traceUuid": "58ded691540f75b348d02e889a24290d",
+      "parentUuid": "c52f09edd570c619",
+      "startTime": "2026-10-23T08:54:52.875Z",
+      "endTime": "2026-10-23T08:54:53.704Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "Use the get_weather tool to get weather for San Francisco."
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "",
-        "toolCalls": [
-          {
-            "id": "call_XnBlwNtuMNzIOr2Revk5HU1W",
+      "output": [
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
             "name": "get_weather",
-            "args": {
+            "id": "call_9dFBS3hej1GHFKIsKsU9he25",
+            "arguments": {
               "city": "San Francisco"
             }
           }
-        ]
-      },
+        }
+      ],
+      "toolsCalled": [
+        {
+          "name": "get_weather",
+          "inputParameters": {
+            "city": "San Francisco"
+          }
+        }
+      ],
       "model": "gpt-4o-mini-2024-07-18",
-      "costPerInputToken": 0,
-      "costPerOutputToken": 0,
       "inputTokenCount": 57,
       "outputTokenCount": 15
     },
     {
-      "uuid": "019ed9d8-a0f6-74ec-bc37-8d4be6a34819",
-      "name": "Langchain LLM Run",
+      "uuid": "97413f34adf35bb5",
+      "name": "ChatOpenAI",
       "status": "SUCCESS",
       "type": "llm",
-      "traceUuid": "e06544e1-8fa5-4652-b6a5-8e2f1429b91b",
-      "parentUuid": "019ed9d8-9b50-74be-91db-a029a4236990",
-      "startTime": "2026-06-18T08:28:33.398Z",
-      "endTime": "2026-06-18T08:28:34.342Z",
+      "traceUuid": "58ded691540f75b348d02e889a24290d",
+      "parentUuid": "c52f09edd570c619",
+      "startTime": "2026-10-23T08:54:53.708Z",
+      "endTime": "2026-10-23T08:54:55.010Z",
       "input": [
         {
-          "role": "human",
+          "role": "user",
           "content": "Use the get_weather tool to get weather for San Francisco."
         },
         {
-          "role": "ai",
-          "content": "[{\"name\":\"get_weather\",\"args\":{\"city\":\"San Francisco\"},\"type\":\"tool_call\",\"id\":\"call_XnBlwNtuMNzIOr2Revk5HU1W\"}]"
+          "role": "assistant",
+          "content": ""
+        },
+        {
+          "role": "assistant",
+          "content": {
+            "type": "tool_call",
+            "name": "get_weather",
+            "id": "call_9dFBS3hej1GHFKIsKsU9he25",
+            "arguments": {
+              "city": "San Francisco"
+            }
+          }
         },
         {
           "role": "tool",
-          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Foggy, 58F\",\"tool_call_id\":\"call_XnBlwNtuMNzIOr2Revk5HU1W\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.1.31\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
+          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Foggy, 58F\",\"tool_call_id\":\"call_9dFBS3hej1GHFKIsKsU9he25\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
         }
       ],
-      "output": {
-        "role": "AI",
-        "content": "The current weather in San Francisco is foggy with a temperature of 58\u00b0F.",
-        "toolCalls": []
-      },
+      "output": "The current weather in San Francisco is foggy with a temperature of 58°F.",
       "model": "gpt-4o-mini-2024-07-18",
-      "costPerInputToken": 0,
-      "costPerOutputToken": 0,
-      "inputTokenCount": 171,
+      "inputTokenCount": 170,
       "outputTokenCount": 18
     }
   ],
   "retrieverSpans": [],
   "toolSpans": [
     {
-      "uuid": "019ed9d8-a0f4-7317-802b-6427a834ffbf",
+      "uuid": "ed5c1a7de05d36b3",
       "name": "get_weather",
       "status": "SUCCESS",
       "type": "tool",
-      "traceUuid": "e06544e1-8fa5-4652-b6a5-8e2f1429b91b",
-      "parentUuid": "019ed9d8-9b50-74be-91db-a029a4236990",
-      "startTime": "2026-06-18T08:28:33.396Z",
-      "endTime": "2026-06-18T08:28:33.397Z",
-      "input": "{\"city\":\"San Francisco\"}",
-      "output": {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain_core",
-          "messages",
-          "ToolMessage"
-        ],
-        "kwargs": {
-          "status": "success",
-          "content": "Foggy, 58F",
-          "tool_call_id": "call_XnBlwNtuMNzIOr2Revk5HU1W",
-          "name": "get_weather",
-          "metadata": {
-            "versions": {
-              "@langchain/core": "1.1.31"
-            }
-          },
-          "additional_kwargs": {},
-          "response_metadata": {}
-        }
-      }
+      "traceUuid": "58ded691540f75b348d02e889a24290d",
+      "parentUuid": "c52f09edd570c619",
+      "startTime": "2026-10-23T08:54:53.706Z",
+      "endTime": "2026-10-23T08:54:53.706Z",
+      "input": {
+        "city": "San Francisco"
+      },
+      "output": "Foggy, 58F"
     }
   ],
-  "startTime": "2026-06-18T08:28:31.952Z",
-  "endTime": "2026-06-18T08:28:34.342Z",
+  "startTime": "2026-10-23T08:54:52.875Z",
+  "endTime": "2026-10-23T08:54:55.012Z",
   "environment": "testing",
   "tags": [
     "langchain",
@@ -296,7 +195,12 @@
     "messages": [
       {
         "role": "user",
-        "content": "Use the get_weather tool to get weather for San Francisco."
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_weather tool to get weather for San Francisco."
+          }
+        ]
       }
     ]
   },
@@ -304,184 +208,56 @@
     "messages": [
       {
         "role": "user",
-        "content": "Use the get_weather tool to get weather for San Francisco."
+        "parts": [
+          {
+            "type": "text",
+            "content": "Use the get_weather tool to get weather for San Francisco."
+          }
+        ]
       },
       {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain_core",
-          "messages",
-          "AIMessage"
-        ],
-        "kwargs": {
-          "id": "chatcmpl-Ds2OuiRWdgnqz9EL9ehj7lOXZcC5P",
-          "content": "",
-          "additional_kwargs": {
-            "tool_calls": [
-              {
-                "id": "call_XnBlwNtuMNzIOr2Revk5HU1W",
-                "type": "function",
-                "function": {
-                  "name": "get_weather",
-                  "arguments": "{\"city\":\"San Francisco\"}"
-                }
-              }
-            ]
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": ""
           },
-          "response_metadata": {
-            "tokenUsage": {
-              "promptTokens": 57,
-              "completionTokens": 15,
-              "totalTokens": 72
-            },
-            "finish_reason": "tool_calls",
-            "model_provider": "openai",
-            "model_name": "gpt-4o-mini-2024-07-18",
-            "usage": {
-              "prompt_tokens": 57,
-              "completion_tokens": 15,
-              "total_tokens": 72,
-              "prompt_tokens_details": {
-                "cached_tokens": 0,
-                "audio_tokens": 0
-              },
-              "completion_tokens_details": {
-                "reasoning_tokens": 0,
-                "audio_tokens": 0,
-                "accepted_prediction_tokens": 0,
-                "rejected_prediction_tokens": 0
-              }
-            },
-            "system_fingerprint": "fp_3fb44b05a1"
-          },
-          "type": "ai",
-          "tool_calls": [
-            {
-              "name": "get_weather",
-              "args": {
-                "city": "San Francisco"
-              },
-              "type": "tool_call",
-              "id": "call_XnBlwNtuMNzIOr2Revk5HU1W"
-            }
-          ],
-          "invalid_tool_calls": [],
-          "usage_metadata": {
-            "output_tokens": 15,
-            "input_tokens": 57,
-            "total_tokens": 72,
-            "input_token_details": {
-              "audio": 0,
-              "cache_read": 0
-            },
-            "output_token_details": {
-              "audio": 0,
-              "reasoning": 0
+          {
+            "type": "tool_call",
+            "name": "get_weather",
+            "id": "call_9dFBS3hej1GHFKIsKsU9he25",
+            "arguments": {
+              "city": "San Francisco"
             }
           }
-        }
+        ]
       },
       {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain_core",
-          "messages",
-          "ToolMessage"
-        ],
-        "kwargs": {
-          "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Foggy, 58F\",\"tool_call_id\":\"call_XnBlwNtuMNzIOr2Revk5HU1W\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.1.31\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}",
-          "tool_call_id": "call_XnBlwNtuMNzIOr2Revk5HU1W",
-          "additional_kwargs": {},
-          "response_metadata": {}
-        }
-      },
-      {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain_core",
-          "messages",
-          "AIMessage"
-        ],
-        "kwargs": {
-          "id": "chatcmpl-Ds2OvhldhK2VJxGLRwhWm8ZpH19wX",
-          "content": "The current weather in San Francisco is foggy with a temperature of 58\u00b0F.",
-          "additional_kwargs": {},
-          "response_metadata": {
-            "tokenUsage": {
-              "promptTokens": 171,
-              "completionTokens": 18,
-              "totalTokens": 189
-            },
-            "finish_reason": "stop",
-            "model_provider": "openai",
-            "model_name": "gpt-4o-mini-2024-07-18",
-            "usage": {
-              "prompt_tokens": 171,
-              "completion_tokens": 18,
-              "total_tokens": 189,
-              "prompt_tokens_details": {
-                "cached_tokens": 0,
-                "audio_tokens": 0
-              },
-              "completion_tokens_details": {
-                "reasoning_tokens": 0,
-                "audio_tokens": 0,
-                "accepted_prediction_tokens": 0,
-                "rejected_prediction_tokens": 0
-              }
-            },
-            "system_fingerprint": "fp_3fb44b05a1"
-          },
-          "type": "ai",
-          "tool_calls": [],
-          "invalid_tool_calls": [],
-          "usage_metadata": {
-            "output_tokens": 18,
-            "input_tokens": 171,
-            "total_tokens": 189,
-            "input_token_details": {
-              "audio": 0,
-              "cache_read": 0
-            },
-            "output_token_details": {
-              "audio": 0,
-              "reasoning": 0
-            }
+        "role": "tool",
+        "parts": [
+          {
+            "type": "text",
+            "content": "{\"lc\":1,\"type\":\"constructor\",\"id\":[\"langchain_core\",\"messages\",\"ToolMessage\"],\"kwargs\":{\"status\":\"success\",\"content\":\"Foggy, 58F\",\"tool_call_id\":\"call_9dFBS3hej1GHFKIsKsU9he25\",\"name\":\"get_weather\",\"metadata\":{\"versions\":{\"@langchain/core\":\"1.2.20\"}},\"additional_kwargs\":{},\"response_metadata\":{}}}"
           }
-        }
+        ]
+      },
+      {
+        "role": "assistant",
+        "parts": [
+          {
+            "type": "text",
+            "content": "The current weather in San Francisco is foggy with a temperature of 58°F."
+          }
+        ]
       }
     ]
   },
   "toolsCalled": [
     {
       "name": "get_weather",
+      "output": "Foggy, 58F",
       "inputParameters": {
         "city": "San Francisco"
-      },
-      "output": {
-        "lc": 1,
-        "type": "constructor",
-        "id": [
-          "langchain_core",
-          "messages",
-          "ToolMessage"
-        ],
-        "kwargs": {
-          "status": "success",
-          "content": "Foggy, 58F",
-          "tool_call_id": "call_XnBlwNtuMNzIOr2Revk5HU1W",
-          "name": "get_weather",
-          "metadata": {
-            "versions": {
-              "@langchain/core": "1.1.31"
-            }
-          },
-          "additional_kwargs": {},
-          "response_metadata": {}
-        }
       }
     }
   ],

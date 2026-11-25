@@ -9,6 +9,14 @@ class DeepEvalError(Exception):
     """
 
 
+class LogProbsUnsupportedError(DeepEvalError, AttributeError):
+    """The model cannot return token log probabilities.
+
+    It is also an `AttributeError` so callers that already fall back when a
+    model has no `generate_raw_response` treat both cases the same way.
+    """
+
+
 class UserAppError(Exception):
     """Represents exceptions thrown by user LLM apps/tools.
     We record these on traces or spans and keep the overall evaluation run alive.
@@ -67,8 +75,7 @@ class NoMetricsError(DeepEvalError):
     Raised by the ``evals_iterator`` executor when, after iteration completes,
     we can prove that no metrics were declared via:
       - ``evals_iterator(metrics=[...])`` (top-level / trace-level metrics)
-      - ``@observe(metrics=[...])`` or ``@observe(metric_collection=...)``
-        on any span (span-level metrics)
+      - ``@observe(metrics=[...])`` on any span (span-level metrics)
       - ``update_current_trace(metrics=[...])`` inside the traced function
         (trace-level metrics, set at runtime)
 

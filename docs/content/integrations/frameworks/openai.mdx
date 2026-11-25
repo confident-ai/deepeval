@@ -448,7 +448,7 @@ await setTracingContext(
 
 </Switch>
 
-`LlmSpanContext` accepts `metrics`, <Term py="expected_output" ts="expectedOutput"/>, <Term py="expected_tools" ts="expectedTools"/>, `context`, <Term py="retrieval_context" ts="retrievalContext"/>, and `prompt`. Each one is read by the OpenAI patch when the next LLM span is created.
+`LlmSpanContext` accepts `metrics`, <Term py="expected_output" ts="expectedOutput"/>, <Term py="expected_tools" ts="expectedTools"/>, `context`, and <Term py="retrieval_context" ts="retrievalContext"/>. Each one is read by the OpenAI patch when the next LLM span is created.
 
 <Only id="typescript">
 
@@ -473,7 +473,7 @@ await nextLlmSpan({ metrics: [new AnswerRelevancyMetric()] }, () =>
 
 The patch captures input messages, output text, and <Term py="tools_called" ts="toolsCalled"/> automatically. For anything else, the right API depends on where your code runs.
 
-- Use <Term py="with trace(...)" ts="setTracingContext(...)"/> for trace-level fields (`name`, `tags`, `metadata`, <Term py="thread_id" ts="threadId"/>, <Term py="user_id" ts="userId"/>).
+- Use <Term py="with trace(...)" ts="setTracingContext(...)"/> for trace-level fields (`name`, `tags`, `metadata`, <Term py="thread_id" ts="threadId"/>).
 - Use `LlmSpanContext` for LLM-span-level fields the metric needs (<Term py="expected_output" ts="expectedOutput"/>, <Term py="retrieval_context" ts="retrievalContext"/>, etc.).
 - Use <Term py="@observe" ts="observe()"/> to wrap retrieval, post-processing, or any other step you want to see as its own span in the trace.
 
@@ -496,7 +496,6 @@ def respond_to_user(prompt: str) -> str:
     docs = retrieve_docs(prompt)
     with trace(
         llm_span_context=LlmSpanContext(retrieval_context=docs),
-        user_id="user-123",
         tags=["openai", "rag"],
     ):
         response = client.chat.completions.create(
@@ -530,7 +529,6 @@ const respondToUser = observe({
     const response = await setTracingContext(
       {
         llmSpanContext: { retrievalContext: docs },
-        userId: "user-123",
         tags: ["openai", "rag"],
       },
       () =>
@@ -798,13 +796,12 @@ await setTracingContext(
 | Field | Type | Description |
 | --- | --- | --- |
 | `metrics` | <Term py="list" ts="array"/> | Metrics applied to the LLM span. |
-| `prompt` | `Prompt` | Confident AI prompt object; captured on the LLM span for prompt-version analytics. |
 | <Term py="expected_output" ts="expectedOutput"/> | <Term py="str" ts="string"/> | Reference output for metrics that compare against ground truth. |
 | <Term py="expected_tools" ts="expectedTools"/> | <Term py="list" ts="array"/> | Reference tool calls for tool-aware metrics. |
 | `context` | <Term py="list[str]" ts="string[]"/> | Ideal context the model should use when answering. |
 | <Term py="retrieval_context" ts="retrievalContext"/> | <Term py="list[str]" ts="string[]"/> | Retrieved context the model actually used (Faithfulness, Contextual Relevancy, etc.). |
 
-<Term py="with trace(...)" ts="setTracingContext(...)"/> accepts trace-level fields (`name`, `tags`, `metadata`, <Term py="thread_id" ts="threadId"/>, <Term py="user_id" ts="userId"/>, `metrics`, `input`, `output`) — see the [tracing reference](/docs/evaluation-llm-tracing).
+<Term py="with trace(...)" ts="setTracingContext(...)"/> accepts trace-level fields (`name`, `tags`, `metadata`, <Term py="thread_id" ts="threadId"/>, `metrics`, `input`, `output`) — see the [tracing reference](/docs/evaluation-llm-tracing).
 
 ## FAQs
 

@@ -33,6 +33,7 @@ from deepeval.metrics.indicator import start_measure
 from deepeval.models.system_one.limits import (
     SystemOneContextLimitError,
     check_context_budget,
+    context_limits,
 )
 from deepeval.models.system_one.schema import (
     SystemOneAnswers,
@@ -91,7 +92,11 @@ class _Request:
             return False
         merged = _Request(self.entries + [entry], state)
         try:
-            check_context_budget(merged.state, merged.questions)
+            check_context_budget(
+                merged.state,
+                merged.questions,
+                **context_limits(self.model),
+            )
         except SystemOneContextLimitError:
             return False
         self.entries, self.state = merged.entries, merged.state
@@ -294,12 +299,16 @@ def _settle(request: _Request, result: Any, ignore_errors: bool) -> None:
 # builds, so it checks the budget itself rather than relying on the model to
 # (a custom `DeepEvalBaseSystemOneModel` may not).
 def _call(request: _Request) -> Any:
-    check_context_budget(request.state, request.questions)
+    check_context_budget(
+        request.state, request.questions, **context_limits(request.model)
+    )
     return request.model.decide(request.state, request.questions)
 
 
 async def _a_call(request: _Request) -> Any:
-    check_context_budget(request.state, request.questions)
+    check_context_budget(
+        request.state, request.questions, **context_limits(request.model)
+    )
     return await request.model.a_decide(request.state, request.questions)
 
 

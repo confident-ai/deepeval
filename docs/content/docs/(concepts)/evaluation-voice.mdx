@@ -118,7 +118,7 @@ Two separate things decide what happens on the line:
 - **The connector** decides whether audio can flow both ways at once. A full-duplex connector like `LiveKitConnector` lets the caller listen while it speaks; one that can't, like `CallbackVoiceConnector`, takes turns.
 - **The persona** decides whether the caller uses that to barge in. Enable interruptions and the caller can speak over the agent, with either side yielding when speech overlaps.
 
-Whether the simulated caller interrupts is configured on its [persona](/docs/conversation-simulator-voice-personas), because interruption frequency and overlap behavior are caller traits. See [Interruptions](/docs/conversation-simulator-voice-interruptions) for configuration and duplex connector requirements.
+Whether the simulated caller interrupts is configured on its [persona](/docs/conversation-simulator-voice-personas), because how often the caller interrupts and how it handles overlap are caller traits. See [Interruptions](/docs/conversation-simulator-voice-interruptions) for configuration and duplex connector requirements.
 
 ## Transports and Connectors
 
@@ -166,7 +166,7 @@ sequenceDiagram
     Connector->>Agent: end the call
 ```
 
-One live call per connector is also why voice simulations run sequentially — concurrent conversations would interleave audio on the same session. The simulator maps each exchange onto a normal [`Turn`](#voice-data-on-test-cases) on the `ConversationalTestCase` — you only construct the transport reply type yourself when wrapping an in-process agent; see [Callback](/docs/conversation-simulator-voice-connectors#callback). Connector-specific end-of-turn behavior is covered under [Turn Detection](/docs/conversation-simulator-voice-connectors#turn-detection).
+One live call per connector is also why every simulated conversation gets its own copy of the connector: up to `max_concurrent` calls run at the same time without sharing a session. The simulator maps each exchange onto a normal [`Turn`](#voice-data-on-test-cases) on the `ConversationalTestCase` — you only construct the transport reply type yourself when wrapping an in-process agent; see [Callback](/docs/conversation-simulator-voice-connectors#callback). Connector-specific end-of-turn behavior is covered under [Turn Detection](/docs/conversation-simulator-voice-connectors#turn-detection).
 
 ## Voice Data on Test Cases
 
@@ -308,10 +308,12 @@ See [Voice Mode](/docs/conversation-simulator-voice-mode) for configuration and 
       question: "Can one connector serve multiple conversations concurrently?",
       answer: (
         <>
-          No — a connector holds a single live call, so the simulator connects
-          before each conversation's first turn, disconnects when it ends, and
-          runs conversations sequentially. Concurrent conversations would
-          interleave audio on the same session.
+          A connector holds a single live call, so the simulator gives each
+          conversation its own copy, connects it before the first turn and
+          disconnects it when the conversation ends. Up to{" "}
+          <code>max_concurrent</code> of those calls run at the same time. A
+          connector tied to one room or call can't be copied; pass a function
+          that builds a new connector instead.
         </>
       ),
     },

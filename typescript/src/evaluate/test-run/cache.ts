@@ -5,11 +5,13 @@ import { expectationEvidence } from "@/evaluate/expectations";
 
 import * as fs from "fs";
 import * as path from "path";
+import type { ZodType } from "zod";
 import { CACHE_FILE, HIDDEN_DIR } from "@/constants";
 import { isReadOnlyFileSystem } from "@/config/utils";
 import { getLogger } from "@/logger";
 import { ConversationalTestCase, resolveRetrievalContext } from "@/test-case";
 import type { BaseMetricCore } from "@/metrics/base-metrics";
+import { toJsonSchema } from "@/models/utils";
 import type { AnyTestCase, MetricData } from "@/evaluate/types";
 
 const logger = getLogger("deepeval.cache");
@@ -22,6 +24,20 @@ interface MetricConfiguration {
   evaluationModel?: string;
   strictMode: boolean;
   includeReason: boolean;
+  criteria?: string | null;
+  evaluationSteps?: string[] | null;
+  evaluationParams?: string[] | null;
+  rubric?: unknown[] | null;
+  expectedSchema?: Record<string, unknown> | null;
+}
+
+/** Read off a metric without importing the metric classes into the cache. */
+interface MetricDefinition {
+  criteria?: string;
+  evaluationSteps?: string[];
+  evaluationParams?: string[];
+  rubric?: unknown[];
+  expectedSchema?: ZodType;
 }
 
 interface CachedMetric {
@@ -90,13 +106,27 @@ export function testCaseCacheKey(testCase: AnyTestCase): string {
 }
 
 function metricConfiguration(metric: BaseMetricCore): MetricConfiguration {
+  const definition = metric as BaseMetricCore & MetricDefinition;
   return {
     evalMode: metric.evalMode,
     threshold: metric.threshold,
     evaluationModel: metric.evaluationModel,
     strictMode: metric.strictMode,
     includeReason: metric.includeReason,
+    criteria: definition.criteria ?? null,
+    evaluationSteps:
+      definition.criteria == null ? (definition.evaluationSteps ?? null) : null,
+    evaluationParams: definition.evaluationParams ?? null,
+    rubric: definition.rubric ?? null,
+    expectedSchema: definition.expectedSchema
+      ? toJsonSchema(definition.expectedSchema)
+      : null,
   };
+}
+
+/** Compares JSON values, so a configuration read back from disk still matches. */
+function sameValue(a: unknown, b: unknown): boolean {
+  return JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
 }
 
 function sameConfiguration(
@@ -108,7 +138,12 @@ function sameConfiguration(
     a.threshold === b.threshold &&
     a.evaluationModel === b.evaluationModel &&
     a.strictMode === b.strictMode &&
-    a.includeReason === b.includeReason
+    a.includeReason === b.includeReason &&
+    sameValue(a.criteria, b.criteria) &&
+    sameValue(a.evaluationSteps, b.evaluationSteps) &&
+    sameValue(a.evaluationParams, b.evaluationParams) &&
+    sameValue(a.rubric, b.rubric) &&
+    sameValue(a.expectedSchema, b.expectedSchema)
   );
 }
 

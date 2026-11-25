@@ -44,6 +44,7 @@ class MultiTurnParams(Enum):
     RETRIEVAL_CONTEXT = "retrieval_context"
     CHATBOT_ROLE = "chatbot_role"
     TOOLS_CALLED = "tools_called"
+    EXPECTED_TOOLS = "expected_tools"
     MCP_TOOLS = "mcp_tools_called"
     MCP_RESOURCES = "mcp_resources_called"
     MCP_PROMPTS = "mcp_prompts_called"
@@ -244,6 +245,11 @@ class ConversationalTestCase(BaseModel):
         serialization_alias="chatbotRole",
         validation_alias=AliasChoices("chatbotRole", "chatbot_role"),
     )
+    expected_tools: Optional[List[ToolCall]] = Field(
+        default=None,
+        serialization_alias="expectedTools",
+        validation_alias=AliasChoices("expectedTools", "expected_tools"),
+    )
     # Metadata
     metadata: Optional[Dict] = Field(
         default=None,
@@ -255,9 +261,10 @@ class ConversationalTestCase(BaseModel):
     tags: Optional[List[str]] = Field(default=None)
     flaky: bool = Field(default=False)
     expectations: Optional[Expectations] = Field(default=None)
-    # Classifier name -> label this test case should receive. A classifier
-    # only produces a pass/fail verdict when its name is present here.
-    expected_labels: Optional[Dict[str, str]] = Field(
+    # Classifier name -> the label, or for a multi_label classifier the
+    # exact list of labels, this test case should receive. A classifier only
+    # produces a pass/fail verdict when its name is present here.
+    expected_labels: Optional[Dict[str, Union[str, List[str]]]] = Field(
         default=None,
         serialization_alias="expectedLabels",
         validation_alias=AliasChoices("expectedLabels", "expected_labels"),
@@ -322,6 +329,9 @@ class ConversationalTestCase(BaseModel):
             if re.search(pattern, self.user_description) is not None:
                 self.multimodal = True
                 return self
+        if self.context and any(re.search(pattern, c) for c in self.context):
+            self.multimodal = True
+            return self
         if self.turns:
             for turn in self.turns:
                 if re.search(pattern, turn.content) is not None:

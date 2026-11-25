@@ -14,6 +14,7 @@ from deepeval.metrics.conversational_g_eval.conversational_g_eval import (
 from deepeval.metrics.g_eval.utils import CONVERSATIONAL_G_EVAL_PARAMS
 from deepeval.metrics.utils import (
     copy_metrics,
+    initialize_model,
     a_generate_with_schema_and_extract,
     generate_with_schema_and_extract,
     generate_binary_judgement,
@@ -60,15 +61,25 @@ class ConversationalBaseNode(PromptMixin):
                 start, end = self.turn_window
             else:
                 start, end = 0, len(test_case.turns) - 1
+            turn_params = [
+                param
+                for param in self.evaluation_params
+                if param.value in Turn.model_fields
+            ]
             text += "Full Conversation: \n"
             for index in range(start, end + 1):
                 turn = test_case.turns[index]
-                for param in self.evaluation_params:
+                for param in turn_params:
                     value = getattr(turn, param.value)
                     if isinstance(value, ToolCall):
                         value = repr(value)
                     text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n"
                     text += "\n"
+            for param in self.evaluation_params:
+                if param in turn_params:
+                    continue
+                value = getattr(test_case, param.value)
+                text += f"{CONVERSATIONAL_G_EVAL_PARAMS[param]}:\n{value}\n\n"
         return text
 
 
@@ -132,21 +143,22 @@ class ConversationalVerdictNode(ConversationalBaseNode):
         )
 
     def _build_child_metric(self, metric: BaseConversationalMetric):
-        if isinstance(self.child, ConversationalGEval):
-            args = {
-                "name": self.child.name,
-                "model": metric.model,
-                "verbose_mode": False,
-            }
-            if self.child.criteria:
-                args["criteria"] = self.child.criteria
-            else:
-                args["evaluation_steps"] = self.child.evaluation_steps
-            if self.child.evaluation_params:
-                args["evaluation_params"] = self.child.evaluation_params
-            return ConversationalGEval(**args)
         copied = copy_metrics([self.child])[0]
         copied.verbose_mode = False
+        if isinstance(copied, ConversationalGEval):
+            # A ConversationalGEval leaf usually carries no 'model' of its
+            # own, so the DAG's judge drives it. Override the judge on the
+            # copy instead of rebuilding the metric from a subset of its
+            # arguments, which dropped 'rubric', 'strict_mode',
+            # 'top_logprobs', 'evaluation_template', 'async_mode', 'flaky'
+            # and '_include_g_eval_suffix'.
+            # TODO: a leaf that was given an explicit 'model' still has it
+            # overridden here. Only a leaf without one should fall back to
+            # the DAG's judge.
+            copied.model, copied.using_native_model = initialize_model(
+                metric.model
+            )
+            copied.evaluation_model = copied.model.get_model_name()
         return copied
 
     def _run_child_metric(

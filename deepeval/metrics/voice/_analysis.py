@@ -1,4 +1,4 @@
-"""Dependency-free acoustic measurements used by voice metrics."""
+"""Acoustic measurements used by voice metrics. They need numpy."""
 
 from __future__ import annotations
 
@@ -7,7 +7,7 @@ import math
 from array import array
 from dataclasses import dataclass
 from statistics import mean, median, pstdev
-from typing import List, Optional, Sequence, Tuple
+from typing import Any, List, Optional, Sequence, Tuple
 
 from deepeval.test_case import Audio
 from deepeval.voice.connectors import audio_utils
@@ -15,6 +15,28 @@ from deepeval.voice.connectors import audio_utils
 DROPOUT_MAX_FRAMES = 10
 DROPOUT_FLOOR_RATIO = 0.1
 MIN_PAUSE_FLOOR_RMS = 8.0
+CLIPPING_ABS_SAMPLE = 32760
+
+# Lazy import cache
+_numpy_mod = None
+_numpy_import_error = None
+
+
+def get_numpy() -> Any:
+    """Return the numpy module, or raise ImportError with root cause."""
+    global _numpy_mod, _numpy_import_error
+    if _numpy_mod is not None:
+        return _numpy_mod
+    try:
+        import numpy
+
+        _numpy_mod = numpy
+        return _numpy_mod
+    except Exception as e:
+        _numpy_import_error = e
+        raise ImportError(
+            f"numpy is required for audio analysis. Root cause: {e}"
+        )
 
 
 @dataclass
@@ -55,9 +77,16 @@ def decode_audio(audio: Audio) -> Tuple[array, int]:
 
 
 def rms(samples: Sequence[int]) -> float:
-    if not samples:
+    np = get_numpy()
+    values = np.asarray(samples)
+    if values.size == 0:
         return 0.0
-    return math.sqrt(sum(sample * sample for sample in samples) / len(samples))
+    if values.dtype.kind in "iub":
+        values = values.astype(np.int64)
+        return math.sqrt(int(values @ values) / values.size)
+    return math.sqrt(
+        sum(sample * sample for sample in values.tolist()) / values.size
+    )
 
 
 def dbfs(level: float) -> float:
@@ -87,24 +116,31 @@ def _pitch_hz(frame: Sequence[int], sample_rate: int) -> Optional[float]:
     max_lag = min(len(data) // 2, int(rate / 70))
     if max_lag <= min_lag:
         return None
-    centered_mean = sum(data) / len(data)
-    centered = [sample - centered_mean for sample in data]
-    energy = sum(sample * sample for sample in centered)
+    centered = _centered(data)
+    energy = float(centered @ centered)
     if energy <= 0:
         return None
-    best_lag = min_lag
-    best_correlation = float("-inf")
-    for lag in range(min_lag, max_lag + 1):
-        correlation = sum(
-            centered[index] * centered[index + lag]
-            for index in range(len(centered) - lag)
-        )
-        if correlation > best_correlation:
-            best_correlation = correlation
-            best_lag = lag
-    if best_correlation / energy < 0.15:
+    correlations = _autocorrelation(centered)[min_lag : max_lag + 1]
+    best = int(correlations.argmax())
+    if float(correlations[best]) / energy < 0.15:
         return None
-    return rate / best_lag
+    return rate / (min_lag + best)
+
+
+def _centered(data: Sequence[int]) -> Any:
+    np = get_numpy()
+    values = np.asarray(data)
+    if values.dtype.kind in "iub":
+        total = int(values.astype(np.int64).sum())
+    else:
+        total = sum(values.tolist())
+    return values - total / len(values)
+
+
+def _autocorrelation(centered: Any) -> Any:
+    """Sum of centered[i] * centered[i + lag], indexed by lag."""
+    np = get_numpy()
+    return np.correlate(centered, centered, "full")[len(centered) - 1 :]
 
 
 def pitch_and_periodicity(
@@ -130,13 +166,14 @@ def pitch_and_periodicity(
     max_lag = min(len(data) // 2, int(rate / min_hz))
     if max_lag <= min_lag:
         return None
-    centered_mean = sum(data) / len(data)
-    centered = [sample - centered_mean for sample in data]
-    cumulative = [0.0]
-    for sample in centered:
-        cumulative.append(cumulative[-1] + sample * sample)
+    np = get_numpy()
+    centered = _centered(data)
+    cumulative = np.concatenate(
+        ([0.0], np.cumsum(centered * centered))
+    ).tolist()
     if cumulative[-1] <= 0:
         return None
+    products = _autocorrelation(centered).tolist()
 
     def correlation(lag: int) -> float:
         overlap = len(centered) - lag
@@ -144,9 +181,7 @@ def pitch_and_periodicity(
         tail = cumulative[-1] - cumulative[lag]
         if head <= 0 or tail <= 0:
             return 0.0
-        return sum(
-            centered[index] * centered[index + lag] for index in range(overlap)
-        ) / math.sqrt(head * tail)
+        return products[lag] / math.sqrt(head * tail)
 
     coarse = {lag: correlation(lag) for lag in range(min_lag, max_lag + 1, 3)}
     best_coarse = max(coarse.values())
@@ -232,11 +267,10 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         else 0.0
     )
 
-    crossings = sum(
-        1
-        for previous, current in zip(samples, samples[1:])
-        if (previous < 0 <= current) or (previous >= 0 > current)
-    )
+    np = get_numpy()
+    values = np.asarray(samples).astype(np.int32)
+    negative = values < 0
+    crossings = int(np.count_nonzero(negative[:-1] != negative[1:]))
     pitches = [
         pitch
         for frame in frame_samples(samples, sample_rate, frame_ms=40)
@@ -260,7 +294,9 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
     return AudioMeasurements(
         duration=len(samples) / sample_rate,
         rms_dbfs=dbfs(rms(samples)),
-        clipping_fraction=sum(abs(sample) >= 32760 for sample in samples)
+        clipping_fraction=int(
+            np.count_nonzero(np.abs(values) >= CLIPPING_ABS_SAMPLE)
+        )
         / len(samples),
         silence_fraction=sum(silent) / len(silent) if silent else 1.0,
         longest_silence_ms=float(longest_silence * 20),

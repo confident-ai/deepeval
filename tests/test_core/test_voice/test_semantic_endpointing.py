@@ -87,7 +87,7 @@ def _run_exchange(connector, stt_model):
         connector=connector,
         tts_model=object(),
         stt_model=stt_model,
-        policy=None,
+        schedule=None,
         floor=FloorController(),
         golden=ConversationalGolden(scenario="Test"),
         language="English",
@@ -101,7 +101,6 @@ def _run_exchange(connector, stt_model):
                 exchange.run(
                     turns=[Turn(role="user", content="Hello")],
                     sent_at=time.perf_counter(),
-                    barges_this_conversation=0,
                 ),
                 timeout=3,
             )

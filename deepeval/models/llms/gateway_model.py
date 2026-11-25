@@ -34,12 +34,49 @@ from pydantic import BaseModel, SecretStr
 
 from deepeval.config.settings import get_settings
 from deepeval.constants import ProviderSlug
+from deepeval.errors import LogProbsUnsupportedError
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.models.llms.multimodal import to_openai_content
 from deepeval.models.llms.utils import safe_asyncio_run, trim_and_load_json
 from deepeval.models.retry_policy import create_retry_decorator, sdk_retries_for
 from deepeval.models.utils import EvaluationCost, require_secret_api_key
 from deepeval.test_case import Audio
+
+
+# The most alternatives per token any provider returns.
+MAX_TOP_LOGPROBS = 20
+
+_LOGPROBS_HINTS = ("logprobs", "log_probs", "log probabilities")
+_SCHEMA_HINTS = (
+    "response_format",
+    "json_schema",
+    "structured output",
+    "response schema",
+)
+
+
+def _is_bad_request(error: Exception) -> bool:
+    """True when the provider refused the request itself, as opposed to a
+    network, auth, rate-limit or server failure."""
+    if getattr(error, "status_code", None) in (400, 404, 422):
+        return True
+    names = {cls.__name__ for cls in type(error).__mro__}
+    return bool(
+        names
+        & {
+            "BadRequestError",
+            "UnsupportedParamsError",
+            "UnprocessableEntityError",
+        }
+    )
+
+
+def _is_rejected_param(error: Exception, hints: Tuple[str, ...]) -> bool:
+    """True when the provider refused a request parameter named by `hints`."""
+    if not _is_bad_request(error):
+        return False
+    message = str(error).lower()
+    return any(hint in message for hint in hints)
 
 
 def _request_timeout_seconds() -> float:
@@ -64,6 +101,8 @@ class DeepEvalBaseGatewayModel(DeepEvalBaseLLM):
     PROVIDER_LABEL: str = "Gateway"
     cost_per_input_token: Optional[float] = None
     cost_per_output_token: Optional[float] = None
+    # None means unknown: the request is attempted and the answer remembered.
+    _log_probs_supported: Optional[bool] = None
 
     def __init__(self, model: Optional[str] = None, *args, **kwargs):
         # Build the retry decorator once per instance from the provider slug.
@@ -121,6 +160,91 @@ class DeepEvalBaseGatewayModel(DeepEvalBaseLLM):
         raise NotImplementedError
 
     ###############################################
+    # Raw response (logprob-based metrics)
+    ###############################################
+
+    def generate_raw_response(
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
+    ) -> Tuple[Any, Optional[float]]:
+        self._require_log_probs()
+        try:
+            return self._run(
+                self._generate_raw_response,
+                prompt,
+                self._cap_top_logprobs(top_logprobs),
+                audio,
+            )
+        except Exception as e:
+            self._raise_if_log_probs_rejected(e)
+            raise
+
+    async def a_generate_raw_response(
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
+    ) -> Tuple[Any, Optional[float]]:
+        self._require_log_probs()
+        try:
+            return await self._arun(
+                self._a_generate_raw_response,
+                prompt,
+                self._cap_top_logprobs(top_logprobs),
+                audio,
+            )
+        except Exception as e:
+            self._raise_if_log_probs_rejected(e)
+            raise
+
+    def _generate_raw_response(
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
+    ) -> Tuple[Any, Optional[float]]:
+        raise LogProbsUnsupportedError(
+            f"{type(self).__name__} does not return log probabilities."
+        )
+
+    async def _a_generate_raw_response(
+        self,
+        prompt: str,
+        top_logprobs: int = 5,
+        audio: Optional[List[Audio]] = None,
+    ) -> Tuple[Any, Optional[float]]:
+        raise LogProbsUnsupportedError(
+            f"{type(self).__name__} does not return log probabilities."
+        )
+
+    def supports_log_probs(self) -> Optional[bool]:
+        return self._log_probs_supported
+
+    def _require_log_probs(self) -> None:
+        if self.supports_log_probs() is False:
+            raise LogProbsUnsupportedError(
+                f"Model `{self.name}` does not return log probabilities."
+            )
+
+    @staticmethod
+    def _cap_top_logprobs(top_logprobs: int) -> int:
+        return min(top_logprobs, MAX_TOP_LOGPROBS)
+
+    def _raise_if_log_probs_rejected(self, error: Exception) -> None:
+        """Turn an upstream "logprobs is not supported" rejection into
+        `LogProbsUnsupportedError` and remember it, so later calls skip the
+        request instead of paying for another rejection."""
+        if not _is_rejected_param(error, _LOGPROBS_HINTS):
+            return
+        self._log_probs_supported = False
+        raise LogProbsUnsupportedError(
+            f"Model `{self.name}` rejected the log probabilities request: "
+            f"{error}"
+        ) from error
+
+    ###############################################
     # Cost
     ###############################################
 
@@ -144,9 +268,15 @@ class DeepEvalBaseGatewayModel(DeepEvalBaseLLM):
             )
 
         reported = self._extract_response_cost(response)
+        if reported is None:
+            reported = self._estimate_response_cost(response)
         if reported is not None:
             return EvaluationCost(reported, input_tokens, output_tokens)
 
+        return None
+
+    def _estimate_response_cost(self, response) -> Optional[float]:
+        """Price a response the gateway did not price itself. Unknown here."""
         return None
 
     @staticmethod
@@ -263,26 +393,6 @@ class DeepEvalOpenAICompatibleModel(DeepEvalBaseGatewayModel):
     ###############################################
     # Raw response + samples (logprob-based metrics)
     ###############################################
-
-    def generate_raw_response(
-        self,
-        prompt: str,
-        top_logprobs: int = 5,
-        audio: Optional[List[Audio]] = None,
-    ) -> Tuple[object, Optional[float]]:
-        return self._run(
-            self._generate_raw_response, prompt, top_logprobs, audio
-        )
-
-    async def a_generate_raw_response(
-        self,
-        prompt: str,
-        top_logprobs: int = 5,
-        audio: Optional[List[Audio]] = None,
-    ) -> Tuple[object, Optional[float]]:
-        return await self._arun(
-            self._a_generate_raw_response, prompt, top_logprobs, audio
-        )
 
     def _generate_raw_response(
         self,

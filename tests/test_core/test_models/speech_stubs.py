@@ -90,11 +90,15 @@ def wav_audio(
     sample_rate: int = 24000,
     *,
     duration: Optional[float] = None,
+    streamed: bool = False,
 ) -> Audio:
     """A real (silent) WAV, so duration-based cost and routing are exercised."""
     pcm = b"\x00\x00" * int(sample_rate * seconds)
+    data = bytearray(audio_utils.pcm16_to_wav_bytes(pcm, sample_rate, 1))
+    if streamed:
+        data[4:8] = data[40:44] = b"\xff\xff\xff\xff"
     return Audio.from_bytes(
-        audio_utils.pcm16_to_wav_bytes(pcm, sample_rate, 1),
+        bytes(data),
         "audio/wav",
         sampleRate=sample_rate,
         encoding="wav",

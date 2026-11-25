@@ -18,6 +18,7 @@ import {
   MLLM_IMAGE_REGISTRY,
   MLLMImage,
 } from "@/test-case/mllm-image";
+import type { BaseSpan } from "@/tracing/tracing";
 
 export enum SingleTurnParams {
   INPUT = "input",
@@ -50,6 +51,7 @@ export class ToolCall {
   reasoning?: string;
   output?: any;
   inputParameters?: Record<string, any>;
+  turn?: number;
 
   constructor(params: {
     name: string;
@@ -58,6 +60,7 @@ export class ToolCall {
     reasoning?: string;
     output?: any;
     inputParameters?: Record<string, any>;
+    turn?: number;
   }) {
     this.name = params.name;
     this.description = params.description;
@@ -65,6 +68,7 @@ export class ToolCall {
     this.reasoning = params.reasoning;
     this.output = params.output;
     this.inputParameters = params.inputParameters;
+    this.turn = params.turn;
   }
 }
 
@@ -121,6 +125,8 @@ export class LLMTestCase {
   /** A flaky test case reports its failures without failing the run. */
   flaky: boolean = false;
   _traceDict?: Record<string, unknown>;
+  _traceRootSpans?: BaseSpan[];
+  _traceSpan?: BaseSpan;
   _datasetRank?: number;
   _datasetAlias?: string;
   _datasetId?: string;

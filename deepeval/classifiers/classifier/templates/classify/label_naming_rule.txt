@@ -1,0 +1,1 @@
+Write the name in Title Case, 2-5 words. Never use the classifier's own name or a bare category such as "Topics", "Intent" or "Sentiment". Never name the absence of a category, such as "No Topic", "No Sentiment", "Other" or "Unknown".

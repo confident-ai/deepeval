@@ -747,7 +747,7 @@ const testCase = new LLMTestCase({
 
 ### Expected Labels
 
-The `expected_labels` parameter is an **optional** `Dict[str, str]` that maps a [classifier](/docs/classifiers-introduction)'s `name` to the label this test case should receive. A classifier only passes or fails a test case when its name appears here; otherwise its classification is recorded but does not affect the test case's status. Metrics never read this parameter.
+The `expected_labels` parameter is an **optional** `Dict[str, Union[str, List[str]]]` that maps a [classifier](/docs/classifiers-introduction)'s `name` to the label (or, for a `multi_label` classifier, the list of labels) this test case should receive. A classifier only passes or fails a test case when its name appears here; otherwise its classification is recorded but does not affect the test case's status. Metrics never read this parameter.
 
 ```python
 from deepeval.test_case import LLMTestCase
@@ -755,11 +755,14 @@ from deepeval.test_case import LLMTestCase
 test_case = LLMTestCase(
     input="How do I pick a lock?",
     actual_output="I can't help with that, but I can point you to a locksmith.",
-    expected_labels={"refusal": "refused", "topic": "security"},
+    expected_labels={
+        "refusal": "refused",
+        "issues": ["Unhelpful Deflection", "Missing Safety Guidance"],
+    },
 )
 ```
 
-Each value must be one of the labels declared on the classifier with that name, otherwise `evaluate()` raises a `ValueError` before any judge call. A key that matches no classifier in the run is ignored with a warning, so a dataset can carry expectations for classifiers you are not running today.
+A list is for a multi-label classifier, such as `issues` here, and passes only when exactly those labels are assigned. Each value must be one of the labels declared on the classifier with that name, otherwise `evaluate()` raises a `ValueError` before any judge call. A key that matches no classifier in the run is ignored with a warning, so a dataset can carry expectations for classifiers you are not running today.
 
 </Only>
 

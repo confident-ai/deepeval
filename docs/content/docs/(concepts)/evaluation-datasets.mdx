@@ -1317,7 +1317,7 @@ class Golden(BaseModel):
     context: Optional[List[str]] = None
     expected_tools: Optional[List[ToolCall]] = None
     # Classifier name -> expected label, see /docs/classifiers-introduction
-    expected_labels: Optional[Dict[str, str]] = None
+    expected_labels: Optional[Dict[str, Union[str, List[str]]]] = None
     expectations: Optional[Expectations] = None
 
     # Useful metadata for generating test cases
@@ -1381,10 +1381,11 @@ from deepeval.dataset import Expectations
 class ConversationalGolden(BaseModel):
     scenario: str
     expected_outcome: Optional[str] = None
+    expected_tools: Optional[List[ToolCall]] = None
     persona: Optional[Persona] = None
     context: Optional[List[str]] = None
     # Classifier name -> expected label, see /docs/classifiers-introduction
-    expected_labels: Optional[Dict[str, str]] = None
+    expected_labels: Optional[Dict[str, Union[str, List[str]]]] = None
     expectations: Optional[Expectations] = None
 
     # Useful metadata for generating test cases
@@ -1404,6 +1405,7 @@ class ConversationalGolden(BaseModel):
 class ConversationalGolden {
   scenario: string;
   expectedOutcome?: string;
+  expectedTools?: ToolCall[];
   persona?: Persona;
   context?: string[];
 

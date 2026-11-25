@@ -234,8 +234,7 @@ export async function runCallbackMetrics(
 
   // Exactly one posted case per turn, carrying the trace
   if (primary) {
-    const { confidentApiKey: _omit, ...traceApi } =
-      traceManager.createTraceApi(primary);
+    const traceApi = traceManager.createTraceApi(primary);
     globalResultCollector.record({
       testCase: turnCase?.testCase ?? turnTestCase(primary, golden),
       metricsData: turnCase?.metricsData ?? [],
