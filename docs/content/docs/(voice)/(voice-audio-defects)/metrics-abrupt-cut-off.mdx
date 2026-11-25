@@ -230,6 +230,8 @@ The check on a stop is the same for call audio and turn audio. Only which stops 
 | Above the background | more than **10 dB** above the background noise |
 | Not just quiet residue | above a fixed floor of about **−30 dBFS** |
 
+If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped): no agent sound on the call audio, or no agent turn whose audio decodes.
+
 :::note
 Only cuts in the middle of a sound can be heard this way. An agent that stops between two words sounds like a normal ending and is not flagged.
 :::
@@ -290,10 +292,6 @@ Only cuts in the middle of a sound can be heard this way. An agent that stops be
 
 </Tab>
 </Tabs>
-
-### When the metric is skipped
-
-The metric is skipped, rather than scored, when nothing is counted: with call audio when the agent made no sound on it, and with turn audio when no agent turn's audio decodes.
 
 ## FAQs
 
