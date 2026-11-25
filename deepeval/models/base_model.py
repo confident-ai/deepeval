@@ -206,6 +206,10 @@ class DeepEvalBaseSystemOneModel(ABC):
     def load_model(self, *args, **kwargs) -> Any:
         pass
 
+    def supports_multimodal(self) -> bool:
+        """Whether images in the state reach the model as images."""
+        return False
+
     @abstractmethod
     def decide(
         self,

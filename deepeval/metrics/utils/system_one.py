@@ -44,6 +44,7 @@ from pydantic import Field, TypeAdapter, ValidationError
 from typing_extensions import Annotated
 
 from deepeval.errors import DeepEvalError
+from deepeval.metrics.utils.test_case import system_one_reads_images
 from deepeval.models.system_one.limits import (
     SystemOneContextLimitError,
     check_context_budget,
@@ -177,6 +178,9 @@ def _prepare(
     mode = effective_eval_mode(metric)
     if mode is not EvalMode.SYSTEM_ONE:
         return None
+    if test_case.multimodal and system_one_reads_images(metric):
+        # Specs decline images for Jev; this model reads them in place.
+        test_case = test_case.model_copy(update={"multimodal": False})
     spec = metric._system_one_eval_spec(test_case)
     if spec is None:
         if getattr(metric, "model", None) is None:
