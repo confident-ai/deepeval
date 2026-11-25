@@ -18,9 +18,18 @@ The abrupt cut-off metric checks whether your voice agent's replies **stop mid-s
 
 <AudioSample name="abrupt-cut-off" />
 
+## Required Arguments
+
+To use the `AbruptCutoffMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with audio on at least one of:
+
+- `audio` on the test case, a stereo recording of the whole call
+- `audio` on the agent's turns
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
+
 ## Usage
 
-Voice metrics evaluate calls produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). Start with one `ConversationalGolden`, simulate one call, then hand what it returns to `evaluate()`:
+The `AbruptCutoffMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
 
 ```python
 from deepeval import evaluate
@@ -46,19 +55,24 @@ metric = AbruptCutoffMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-Along with the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics), `AbruptCutoffMetric` takes:
+There are **THREE** optional parameters specific to the `AbruptCutoffMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `use_speech_detection`: only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so background noise doesn't excuse a cut-off. Only matters with call audio, since turn audio doesn't hear the caller. Defaults to `True`.
-- [Optional] `eval_mode` and `audio_decision_model`: have each cut-off [double-checked by a model](/docs/metrics-voice-introduction#second-check-with-an-audio-decision-model) that listens to it. Defaults to no second check.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection) on their channel, so background noise doesn't excuse a cut-off. Only used with call audio, since turn audio doesn't hear the caller. Defaulted to `True`.
+- [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each cut-off is [double-checked by an audio decision model](/docs/metrics-voice-introduction#second-check-with-an-audio-decision-model) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
+- [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
 
-`score_breakdown` lists the replies where the defect was found. See [Events](#events) for what it contains:
+### As a standalone
+
+You can also run the `AbruptCutoffMetric` on a single test case as a standalone, one-off execution:
 
 ```python
 metric.measure(test_cases[0])
 
-print(metric.score)  # e.g. 0.75
+print(metric.score, metric.reason)
 print(metric.score_breakdown)
 ```
+
+See [Events](#events) for what `score_breakdown` contains.
 
 ## Events
 
@@ -158,13 +172,11 @@ Every event also has the [fields all voice events share](/docs/metrics-voice-int
 
 ## How Is It Calculated?
 
-The score is the share of the agent's replies that end cleanly:
+The `AbruptCutoffMetric` score is calculated according to the following equation:
 
-<Equation formula="\text{Abrupt Cut-off} = \frac{\text{Agent Replies Without a Cut-off}}{\text{Agent Replies}}" />
+<Equation formula="\text{Abrupt Cut-off} = \frac{\text{Number of Agent Replies Without a Cut-off}}{\text{Total Number of Agent Replies}}" />
 
-A reply is flagged at most once, however many times its sound stops. What counts as one reply depends on whether call audio or turn audio is used.
-
-The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). The check on each stop is the same for both; what differs is which stops get checked.
+The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio), and the two count replies and check stops differently, as below. A reply counts as cut off at most once, however many times its sound stops.
 
 ### Counting agent replies
 
@@ -263,7 +275,7 @@ A stop between two words sounds like a normal ending, so it isn't flagged.
 
 ### Example call
 
-Two short calls where the agent sometimes stops mid-word, one scored from call audio and one from turn audio. Each row is one agent reply, how it ended, and whether that counts as a cut-off.
+Two short calls where the agent sometimes stops mid-word, one scored from call audio and one from turn audio. Each row is one agent reply, how it ended and whether that counts as a cut-off.
 
 <Tabs items={["Call audio", "Turn audio"]}>
 <Tab value="Call audio">
@@ -329,8 +341,10 @@ Two short calls where the agent sometimes stops mid-word, one scored from call a
         <>
           A successful{" "}
           <a href="/docs/conversation-simulator-voice-interruptions">barge-in</a>{" "}
-          stops the agent mid-word on purpose. Those turns carry{" "}
-          <code>interrupted=True</code> and count as clean replies.
+          stops the agent mid-word on purpose. With turn audio, those turns
+          carry <code>interrupted=True</code> and count as clean replies. With
+          call audio, the caller is heard speaking up, so the stop is excused
+          the same way.
         </>
       ),
     },
@@ -348,18 +362,21 @@ Two short calls where the agent sometimes stops mid-word, one scored from call a
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio
-          samples, so it has no model or token cost.
+          Not by default. Detection is deterministic and runs locally over the
+          audio, so it has no model or token cost. In the{" "}
+          <code>"hybrid"</code> eval mode, each cut-off is also checked by an
+          audio decision model, at one paid request per cut-off.
         </>
       ),
     },
     {
-      question: "Does it check the simulated user's audio too?",
+      question: "Does it check the caller's audio for cut-offs too?",
       answer: (
         <>
-          No. Only assistant turns are inspected. The caller's audio is produced
-          by your own TTS model, so defects there are a problem with the test
-          harness rather than with the agent under test.
+          No. Only the agent's replies are scored. The caller's audio comes from
+          your own TTS model, so a cut-off there is a problem with the test
+          harness, not the agent. With call audio, the caller's channel is only
+          used to tell whether the caller spoke up when the agent stopped.
         </>
       ),
     },
