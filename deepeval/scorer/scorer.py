@@ -22,14 +22,18 @@ def _is_cjk_char(ch: str) -> bool:
     )
 
 
+_JOINERS = "\u200c\u200d"  # zero width non-joiner, zero width joiner
+
+
 class _UnicodeRougeTokenizer:
     """Tokenizer for `rouge_score` that keeps words in every script.
 
     `rouge_score`'s default tokenizer replaces everything outside `[a-z0-9]` with spaces, so text in
     Devanagari, Arabic, Cyrillic, CJK, ... produces no tokens at all (identical texts score 0, and texts
-    that share only an embedded English word score 1). This tokenizer treats letters, combining marks and
-    digits of any script as word characters, splits CJK into single characters, and applies the Porter
-    stemmer only to ASCII words. For ASCII-only text the tokens are identical to the default tokenizer's.
+    that share only an embedded English word score 1). This tokenizer normalizes text to NFC, treats
+    letters, combining marks and digits of any script (plus ZWNJ/ZWJ inside a word) as word characters,
+    splits CJK into single characters, and applies the Porter stemmer only to ASCII words. For ASCII-only
+    text the tokens are identical to the default tokenizer's.
     """
 
     def __init__(self, use_stemmer: bool = True):
@@ -46,8 +50,13 @@ class _UnicodeRougeTokenizer:
                 tokens.append("".join(word))
                 word.clear()
 
-        for ch in text.lower():
-            if unicodedata.category(ch)[0] not in "LMN":
+        # NFC so that composed and decomposed spellings of the same text ("café", "cafe\u0301") match.
+        for ch in unicodedata.normalize("NFC", text.lower()):
+            if ch in _JOINERS:
+                # ZWNJ/ZWJ shape how letters join (Persian, Indic scripts) and do not end a word.
+                if word:
+                    word.append(ch)
+            elif unicodedata.category(ch)[0] not in "LMN":
                 flush()
             elif _is_cjk_char(ch):
                 flush()

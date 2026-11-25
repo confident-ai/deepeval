@@ -74,3 +74,28 @@ def test_cjk_is_split_into_characters():
 def test_combining_marks_stay_inside_words():
     # Devanagari vowel signs and virama are combining marks; they must not split words.
     assert _UnicodeRougeTokenizer().tokenize("मुझे क्या") == ["मुझे", "क्या"]
+
+
+@pytest.mark.parametrize("score_type", SCORE_TYPES)
+@pytest.mark.parametrize(
+    "composed, decomposed",
+    [
+        ("café au lait", "cafe\u0301 au lait"),
+        ("ഒരു കൊല്ലം", "ഒരു \u0d15\u0d46\u0d3e\u0d32\u0d4d\u0d32\u0d02"),
+        ("কোন দিন", "\u0995\u09c7\u09be\u09a8 দিন"),
+    ],
+)
+def test_composed_and_decomposed_text_match(composed, decomposed, score_type):
+    assert Scorer.rouge_score(composed, decomposed, score_type) == 1.0
+
+
+def test_zero_width_joiners_stay_inside_words():
+    tokenizer = _UnicodeRougeTokenizer()
+    # Persian uses ZWNJ inside words; older Malayalam text writes chillu letters with ZWJ.
+    assert tokenizer.tokenize("می\u200cخواهم بروم") == ["می\u200cخواهم", "بروم"]
+    assert tokenizer.tokenize("അവന്\u200d വന്നു") == [
+        "അവന്\u200d",
+        "വന്നു",
+    ]
+    # A joiner outside a word is not a token.
+    assert tokenizer.tokenize("\u200c a") == ["a"]
