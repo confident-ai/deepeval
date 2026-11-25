@@ -256,7 +256,7 @@ You can now run evaluations on the test cases using the red teaming metrics by f
 
 ## Evaluating Test Cases
 
-Since `deepeval` is a red teaming framework, it abstracts all metrics from the user, however, all vulnerabilities of type `BaseVulnerability` provide a method called `_get_metric` which returns the corresponding metric for that vulnerability which is of type `BaseRedTeamingMetric`.
+Red teaming in `deepeval` abstracts all metrics from the user, however, all vulnerabilities of type `BaseVulnerability` provide a method called `_get_metric` which returns the corresponding metric for that vulnerability which is of type `BaseRedTeamingMetric`.
 
 Here's how to fetch a metric from a vulnerability and run evaluations on your test cases:
 
