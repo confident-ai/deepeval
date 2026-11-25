@@ -14,9 +14,12 @@ export const NAME = /^[a-z0-9]+(?:-[a-z0-9]+)*$/;
 
 /** The folders that hold images. Add a folder here before putting images in it. */
 export const IMAGE_FOLDERS = [
+  "charts/research",
   "diagrams/in-house/agents",
+  "diagrams/in-house/attacks",
   "diagrams/in-house/datasets",
   "diagrams/in-house/evaluation",
+  "diagrams/in-house/guardrails",
   "diagrams/in-house/metrics",
   "diagrams/in-house/rag",
   "diagrams/in-house/red-teaming",
@@ -31,6 +34,7 @@ export const IMAGE_FOLDERS = [
   "platform/tracing",
   "screenshots/deepeval",
   "screenshots/example-apps",
+  "screenshots/external",
 ];
 
 /** Every `_index.json` under `media/`, as folder paths relative to it. */

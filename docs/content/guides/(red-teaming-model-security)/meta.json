@@ -1,0 +1,13 @@
+{
+  "title": "Model Security",
+  "pages": [
+    "guide-red-teaming-models",
+    "guide-red-teaming-openai",
+    "guide-red-teaming-anthropic",
+    "guide-red-teaming-gemini",
+    "guide-red-teaming-llama",
+    "guide-red-teaming-mistral",
+    "guide-red-teaming-open-weight",
+    "guide-red-teaming-fine-tuned"
+  ]
+}

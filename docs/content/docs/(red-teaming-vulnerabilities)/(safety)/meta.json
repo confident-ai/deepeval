@@ -1,0 +1,9 @@
+{
+  "title": "Safety",
+  "pages": [
+    "red-teaming-vulnerabilities-illegal-activity",
+    "red-teaming-vulnerabilities-graphic-content",
+    "red-teaming-vulnerabilities-personal-safety",
+    "red-teaming-vulnerabilities-unexpected-code-execution"
+  ]
+}

@@ -1,0 +1,16 @@
+{
+  "title": "Agentic",
+  "pages": [
+    "red-teaming-agentic-vulnerabilities-goal-theft",
+    "red-teaming-agentic-vulnerabilities-recursive-hijacking",
+    "red-teaming-vulnerabilities-excessive-agency",
+    "red-teaming-vulnerabilities-robustness",
+    "red-teaming-vulnerabilities-indirect-instruction",
+    "red-teaming-vulnerabilities-tool-orchestration-abuse",
+    "red-teaming-vulnerabilities-agent-identity-abuse",
+    "red-teaming-vulnerabilities-inter-agent-communication-compromise",
+    "red-teaming-vulnerabilities-autonomous-agent-drift",
+    "red-teaming-vulnerabilities-exploit-tool-agent",
+    "red-teaming-vulnerabilities-external-system-abuse"
+  ]
+}
