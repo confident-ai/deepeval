@@ -168,7 +168,7 @@ The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#cal
 
 ### Cut-off criteria
 
-A finished reply **fades out**. A cut one **stops at near full volume**. Call audio and turn audio look for that in different places:
+A finished reply fades out. A cut one stops at near full volume.
 
 <Tabs items={["Call audio", "Turn audio"]}>
 <Tab value="Call audio">
@@ -185,15 +185,12 @@ A finished reply **fades out**. A cut one **stops at near full volume**. Call au
   ]}
 />
 
-Every point where the agent's channel goes quiet is checked, while the caller is silent.
+**Counted:** each stretch of agent sound. Pauses under 1 second don't split it.
 
-**Counted:** each stretch of sound on the agent's channel. Pauses shorter than 1 second don't split a stretch.
+**Flagged:** a stretch with any stop that fails the checks below, except a stop where:
 
-**Flagged:** a counted reply with a stop that fails the three checks. Stops while the caller was talking or as the call audio ends don't count, so those replies stay clean.
-
-- **Caller talking.** A stop doesn't count if the caller made 0.2 seconds or more of sound from 1 second before it to 0.2 seconds after. The agent stopped because the caller spoke up.
-- **End of the call.** A stop within 0.05 seconds of the end of the call audio means the sound was still going when it ended. [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end) reports that instead.
-- **Sound** is read in 20 ms frames: louder than about −41 dBFS counts, pauses under 0.3 seconds are closed and sounds under 0.15 seconds are dropped. The background noise is the quietest 10% of the agent channel.
+- the caller made 0.2 seconds or more of sound from 1 second before it to 0.2 seconds after, or
+- the call audio ends within 0.05 seconds, which [Unexpected Call End](/docs/metrics-unexpected-call-end) judges instead.
 
 </Tab>
 <Tab value="Turn audio">
@@ -209,31 +206,25 @@ Every point where the agent's channel goes quiet is checked, while the caller is
   ]}
 />
 
-Only the end of each agent turn's clip is checked.
+**Counted:** each agent clip that decodes.
 
-**Counted:** every agent turn whose clip decodes, including turns with `interrupted=True`. Clips that can't be decoded are left out.
-
-**Flagged:** a counted turn whose clip ends in a cut-off or a stream cut, unless the turn has `interrupted=True`.
-
-- **Interrupted.** The metric can't hear the caller here, so it relies on the turn's [`interrupted`](/docs/conversation-simulator-voice-interruptions) flag. Stopping mid-word is what a successful barge-in should cause, so the turn counts as clean.
-- **Stream cut.** The clip ends mid-sound, or in at least 1 second of digital silence, and the very next clip in the call is the agent's own, starting within 15 seconds. This needs `Audio.start_time` on every clip.
-- **Short clips.** The 10 dB background-noise check only applies to clips of 2 seconds or more. Shorter clips only need to clear the −30 dBFS floor.
+**Flagged:** a clip whose end fails the checks below, or a **stream cut**: a clip that ends mid-sound or in 1 second or more of digital silence, with the agent's own next clip starting within 15 seconds. Clips with `interrupted=True` are never flagged.
 
 </Tab>
 </Tabs>
 
-The check on a stop is the same for call audio and turn audio. Only which stops get checked differs. The metric finds where the sound stops (the last 5 ms frame louder than about −41 dBFS) and compares the last 20 ms before it with the second of speech before that. The stop is a cut-off only when **all three** hold:
+A stop is a cut-off when the last 20 ms of sound before it are:
 
-| Check | The last 20 ms of sound must be |
+| Check | Rule |
 | --- | --- |
-| Still at speech volume | at least **80%** as loud as the median level of the second before |
-| Above the background | more than **10 dB** above the background noise |
-| Not just quiet residue | above a fixed floor of about **−30 dBFS** |
+| Still at speech volume | At least 80% of the median level of the second before |
+| Above the background | More than 10 dB above the background noise. With turn audio, only checked on clips of 2 seconds or more |
+| Not quiet residue | Above about −30 dBFS |
 
-If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped): no agent sound on the call audio, or no agent clip that decodes.
+If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
 :::note
-Only cuts in the middle of a sound can be heard this way. An agent that stops between two words sounds like a normal ending and is not flagged.
+A stop between two words sounds like a normal ending, so it isn't flagged.
 :::
 
 ### Example
