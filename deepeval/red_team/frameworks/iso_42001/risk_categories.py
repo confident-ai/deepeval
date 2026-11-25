@@ -95,11 +95,13 @@ a_6_2_5_reliability_robustness = RiskCategory(
     vulnerabilities=[
         Robustness(types=["input_overreliance", "hijacking"]),
         Hallucination(),
-        Misinformation(types=[
-            "factual_errors",
-            "unsupported_claims",
-            "expertize_misrepresentation",
-        ]),
+        Misinformation(
+            types=[
+                "factual_errors",
+                "unsupported_claims",
+                "expertize_misrepresentation",
+            ]
+        ),
     ],
     attacks=[
         ContextPoisoning(weight=2),
@@ -152,11 +154,13 @@ a_6_2_7_privacy = RiskCategory(
         "exposure as well as system-prompt extraction."
     ),
     vulnerabilities=[
-        PIILeakage(types=[
-            "direct_disclosure",
-            "session_leak",
-            "social_manipulation",
-        ]),
+        PIILeakage(
+            types=[
+                "direct_disclosure",
+                "session_leak",
+                "social_manipulation",
+            ]
+        ),
         PromptLeakage(types=["secrets_and_credentials"]),
     ],
     attacks=[
@@ -199,11 +203,13 @@ a_9_2_responsible_use = RiskCategory(
     ),
     vulnerabilities=[
         ExcessiveAgency(types=["functionality", "permissions", "autonomy"]),
-        IllegalActivity(types=[
-            "weapons",
-            "cybercrime",
-            "non_violent_crimes",
-        ]),
+        IllegalActivity(
+            types=[
+                "weapons",
+                "cybercrime",
+                "non_violent_crimes",
+            ]
+        ),
     ],
     attacks=[
         AuthorityEscalation(weight=2),

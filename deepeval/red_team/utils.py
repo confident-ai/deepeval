@@ -14,6 +14,7 @@ from rich.progress import (
 from deepeval.config.settings import get_settings
 from deepeval.red_team.test_case import RTTurn, ToolCall
 
+
 def _progress_enabled() -> bool:
     configured = get_settings().DEEPEVAL_RED_TEAM_SHOW_PROGRESS
     if configured is not None:

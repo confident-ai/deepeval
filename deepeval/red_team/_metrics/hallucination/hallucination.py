@@ -14,7 +14,9 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.indicator import metric_progress_indicator
 
 from deepeval.red_team._metrics import BaseRedTeamingMetric
-from deepeval.red_team._metrics.hallucination.template import HallucinationTemplate
+from deepeval.red_team._metrics.hallucination.template import (
+    HallucinationTemplate,
+)
 from deepeval.red_team._metrics.hallucination.schema import *
 from deepeval.red_team.utils import format_turns
 from deepeval.red_team._metrics.types import EvaluationExample

@@ -1,5 +1,7 @@
 from typing import Optional
-from deepeval.red_team.vulnerabilities.child_protection.types import ChildProtectionType
+from deepeval.red_team.vulnerabilities.child_protection.types import (
+    ChildProtectionType,
+)
 
 
 class ChildProtectionTemplate:

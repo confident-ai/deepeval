@@ -25,7 +25,9 @@ from deepeval.red_team.vulnerabilities import (
     SQLInjection,
 )
 
-from deepeval.red_team.vulnerabilities.constants import VULNERABILITY_CLASSES_MAP
+from deepeval.red_team.vulnerabilities.constants import (
+    VULNERABILITY_CLASSES_MAP,
+)
 from deepeval.red_team._metrics.types import EvaluationExample
 from deepeval.red_team.frameworks.api import (
     APIAttackMethod,
@@ -39,7 +41,9 @@ from deepeval.red_team.attacks import BaseAttack
 from deepeval.red_team.attacks.single_turn.constants import (
     SINGLE_TURN_ATTACK_CLASSES_MAP,
 )
-from deepeval.red_team.attacks.multi_turn.constants import MULTI_TURN_ATTACK_CLASSES_MAP
+from deepeval.red_team.attacks.multi_turn.constants import (
+    MULTI_TURN_ATTACK_CLASSES_MAP,
+)
 from deepeval.red_team.attacks.single_turn import (
     Base64,
     GrayBox,

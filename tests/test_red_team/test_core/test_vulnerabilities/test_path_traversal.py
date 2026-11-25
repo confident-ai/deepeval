@@ -2,7 +2,9 @@ import pytest
 
 from deepeval.red_team.vulnerabilities import PathTraversal
 from deepeval.red_team.vulnerabilities.path_traversal import PathTraversalType
-from deepeval.red_team.vulnerabilities.path_traversal import PathTraversalTemplate
+from deepeval.red_team.vulnerabilities.path_traversal import (
+    PathTraversalTemplate,
+)
 from deepeval.red_team.test_case import RTTestCase
 
 

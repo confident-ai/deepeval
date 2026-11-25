@@ -10,9 +10,14 @@ from rich.console import Console
 from rich.table import Table
 
 from deepeval.red_team.attacks.multi_turn.types import CallbackType
-from deepeval.red_team.orchestration.orchestration_agent import OrchestrationAgent
+from deepeval.red_team.orchestration.orchestration_agent import (
+    OrchestrationAgent,
+)
 from deepeval.red_team.orchestration.sequential_agent import SequentialAgent
-from deepeval.red_team.orchestration.types import OrchestrationResult, SequentialResult
+from deepeval.red_team.orchestration.types import (
+    OrchestrationResult,
+    SequentialResult,
+)
 from deepeval.red_team.utils import add_pbar, create_progress
 
 
@@ -135,7 +140,9 @@ def _met_lookup(result):
             for idx in verdict.met:
                 if 1 <= idx <= len(result.criteria):
                     criteria = result.criteria[idx - 1]
-                    lookup.setdefault(criteria, (f"turn {turn}", verdict.reason))
+                    lookup.setdefault(
+                        criteria, (f"turn {turn}", verdict.reason)
+                    )
     else:
         for met in result.met_criteria:
             lookup[met.criteria] = (f"round {met.round}", met.how_it_was_met)
@@ -209,7 +216,9 @@ def _print_result_table(result, label):
         )
     error = getattr(result, "error", None)
     if error is not None:
-        console.print(f"[bold yellow]⚠ Run ended with an error: {error}[/bold yellow]")
+        console.print(
+            f"[bold yellow]⚠ Run ended with an error: {error}[/bold yellow]"
+        )
     console.print("\n" + "=" * 80)
     console.print(f"[bold magenta]{label} complete.[/bold magenta]")
     console.print("=" * 80 + "\n")
@@ -230,7 +239,5 @@ async def _a_run_with_progress(agent, label, status, show_progress):
                 description=f"{label} — {status()}",
             )
             await asyncio.sleep(0.2)
-        progress.update(
-            pbar, completed=total, description=f"{label} — done"
-        )
+        progress.update(pbar, completed=total, description=f"{label} — done")
         return await task

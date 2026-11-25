@@ -5,7 +5,10 @@ from typing import List, Optional, Tuple, Union
 
 from deepeval.models import DeepEvalBaseLLM
 
-from deepeval.red_team.attacks.attack_simulator.utils import a_generate, generate
+from deepeval.red_team.attacks.attack_simulator.utils import (
+    a_generate,
+    generate,
+)
 from deepeval.red_team.attacks.base_attack import Exploitability
 from deepeval.red_team.attacks.multi_turn.tree_jailbreaking.schema import (
     ImprovementPrompt,
@@ -103,9 +106,7 @@ class TreeJailbreaking(BaseMultiTurnAttack):
                     progression.stop(StopReason.SIMULATION_ERROR)
                     break
 
-                probes = [
-                    progression.probe(prompt) for prompt, _ in prompts
-                ]
+                probes = [progression.probe(prompt) for prompt, _ in prompts]
                 scored = []
                 for probe in probes:
                     score = self._score(progression, probe)
@@ -152,17 +153,11 @@ class TreeJailbreaking(BaseMultiTurnAttack):
 
                 probes = list(
                     await asyncio.gather(
-                        *[
-                            progression.a_probe(prompt)
-                            for prompt, _ in prompts
-                        ]
+                        *[progression.a_probe(prompt) for prompt, _ in prompts]
                     )
                 )
                 scores = await asyncio.gather(
-                    *[
-                        self._a_score(progression, probe)
-                        for probe in probes
-                    ]
+                    *[self._a_score(progression, probe) for probe in probes]
                 )
                 for probe, score in zip(probes, scores):
                     progression.score_probe(probe, self._unit_score(score))
@@ -295,7 +290,6 @@ class TreeJailbreaking(BaseMultiTurnAttack):
         )
         return res.prompt, topic.on_topic
 
-
     @staticmethod
     def _unit_score(rating: float) -> float:
         return max(0.0, min(1.0, (rating - 1) / 9))
@@ -313,9 +307,7 @@ class TreeJailbreaking(BaseMultiTurnAttack):
         )
         return rating.rating
 
-    async def _a_score(
-        self, progression: Progression, probe: Probe
-    ) -> float:
+    async def _a_score(self, progression: Progression, probe: Probe) -> float:
         rating: Rating = await a_generate(
             JailBreakingTemplate.linear_judge(
                 progression.goal,

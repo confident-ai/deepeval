@@ -46,7 +46,9 @@ def mock_llm(monkeypatch):
 
 class TestScanCli:
     def test_json_and_exit_code(self, runner, scan_dir):
-        r = runner.invoke(app, ["red-team", "--scan", scan_dir, "--format", "json"])
+        r = runner.invoke(
+            app, ["red-team", "--scan", scan_dir, "--format", "json"]
+        )
         assert r.exit_code == 1  # findings present -> CI-failing
         assert json.loads(r.stdout)[0]["vulnerabilityType"] == "eval_usage"
 
@@ -79,13 +81,24 @@ class TestScanCli:
     def test_output_file(self, runner, scan_dir, tmp_path):
         out = str(tmp_path / "out.sarif")
         runner.invoke(
-            app, ["red-team", "--scan", scan_dir, "--format", "sarif", "--output", out]
+            app,
+            [
+                "red-team",
+                "--scan",
+                scan_dir,
+                "--format",
+                "sarif",
+                "--output",
+                out,
+            ],
         )
         with open(out) as f:
             assert json.load(f)["version"] == "2.1.0"
 
     def test_bad_format(self, runner, scan_dir):
-        r = runner.invoke(app, ["red-team", "--scan", scan_dir, "--format", "xml"])
+        r = runner.invoke(
+            app, ["red-team", "--scan", scan_dir, "--format", "xml"]
+        )
         assert r.exit_code != 0
 
     def test_comment_flag_posts_findings(self, runner, scan_dir, monkeypatch):
@@ -93,10 +106,19 @@ class TestScanCli:
 
         calls = []
         monkeypatch.setattr(
-            pkg, "post_pr_comments", lambda findings, **_: calls.append(findings)
+            pkg,
+            "post_pr_comments",
+            lambda findings, **_: calls.append(findings),
         )
         r = runner.invoke(
-            app, ["red-team", "--scan", scan_dir, "--comment", "--no-fail-on-findings"],
+            app,
+            [
+                "red-team",
+                "--scan",
+                scan_dir,
+                "--comment",
+                "--no-fail-on-findings",
+            ],
         )
         assert r.exit_code == 0
         assert len(calls) == 1 and len(calls[0]) == 1

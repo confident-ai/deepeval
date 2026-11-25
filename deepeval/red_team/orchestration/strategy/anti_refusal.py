@@ -122,7 +122,8 @@ Output:
 Now respond to the following question in the JSON as shown above: 
 """
 
-_PROMPT_SUFFIXES = [ _SUFFIX_ONE, _SUFFIX_TWO ]
+_PROMPT_SUFFIXES = [_SUFFIX_ONE, _SUFFIX_TWO]
+
 
 class AntiRefusalStrategy(Strategy):
     name = "Anti-refusal"
@@ -149,7 +150,9 @@ class AntiRefusalStrategy(Strategy):
             return await self._a_simple_prompt(message, send)
 
         prefix = random.choice(_ANSWER_PREFIXES)
-        pairs = [(question, f"{prefix} {answer}") for question, answer in examples]
+        pairs = [
+            (question, f"{prefix} {answer}") for question, answer in examples
+        ]
 
         for start in range(0, len(pairs), _BATCH_SIZE):
             batch = pairs[start : start + _BATCH_SIZE]
@@ -183,9 +186,7 @@ class AntiRefusalStrategy(Strategy):
         examples = []
         for i in indices:
             row = dataset[i]
-            examples.append(
-                (cls._question(row), (row["output"] or "").strip())
-            )
+            examples.append((cls._question(row), (row["output"] or "").strip()))
         return examples
 
     @staticmethod

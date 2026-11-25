@@ -1,7 +1,9 @@
 import pytest
 
 from deepeval.red_team.vulnerabilities import ChildProtection
-from deepeval.red_team.vulnerabilities.child_protection import ChildProtectionType
+from deepeval.red_team.vulnerabilities.child_protection import (
+    ChildProtectionType,
+)
 from deepeval.red_team.test_case import RTTestCase
 
 

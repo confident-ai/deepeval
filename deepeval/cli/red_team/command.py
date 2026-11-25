@@ -16,7 +16,8 @@ RED_TEAM_HELP = (
 
 def red_team_command(
     config_file: Optional[str] = typer.Argument(
-        None, help="YAML config describing the target, vulnerabilities and attacks."
+        None,
+        help="YAML config describing the target, vulnerabilities and attacks.",
     ),
     scan: Optional[str] = typer.Option(
         None,

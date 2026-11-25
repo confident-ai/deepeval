@@ -84,7 +84,9 @@ class Guardrails:
         self, guards: List[BaseGuard], evaluation_model: str
     ) -> List[BaseGuard]:
         """Update all guards to use the specified evaluation model"""
-        from deepeval.red_team.guardrails.guards.base_guard import initialize_model
+        from deepeval.red_team.guardrails.guards.base_guard import (
+            initialize_model,
+        )
 
         for guard in guards:
             guard.model, guard.using_native_model = initialize_model(

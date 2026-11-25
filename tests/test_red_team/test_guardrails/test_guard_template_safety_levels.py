@@ -81,9 +81,7 @@ RENDERED_PROMPTS = [
     (
         "topical",
         TopicalGuardTemplate.judge_input_prompt("hello", ["weather"]),
-        TopicalGuardTemplate.judge_output_prompt(
-            "hello", "world", ["weather"]
-        ),
+        TopicalGuardTemplate.judge_output_prompt("hello", "world", ["weather"]),
     ),
 ]
 

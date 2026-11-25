@@ -1,5 +1,3 @@
-
-
 import os
 import uuid
 
@@ -10,6 +8,7 @@ from deepeval.tracing.types import AgentSpan, LlmSpan, Trace, TraceSpanStatus
 from deepeval.red_team.trace_scanner.trace_scanner import TraceScanner
 from deepeval.red_team.vulnerabilities.bias.bias import Bias
 from deepeval.red_team.vulnerabilities.bias.template import BiasTemplate
+
 
 def load_trace_fixture(filename: str) -> Trace:
     test_dir = os.path.dirname(__file__)
@@ -27,10 +26,7 @@ def evaluation_model():
 @pytest.fixture
 def bias_vulnerability(evaluation_model):
     model, _ = evaluation_model
-    return Bias(
-        evaluation_model=model,
-        async_mode=False
-    )
+    return Bias(evaluation_model=model, async_mode=False)
 
 
 @pytest.fixture
@@ -47,9 +43,8 @@ def batch_evaluator_factory(evaluation_model):
     return _factory
 
 
-
 class TestTraceScanner:
-    
+
     def test_sync_materialized_bias_finding(self, bias_vulnerability):
         trace = load_trace_fixture("unsafe_bias_trace")
 
@@ -57,7 +52,10 @@ class TestTraceScanner:
 
         assert bias_vulnerability.vulnerable is True
         assert len(findings) >= 1
-        assert any(f.vulnerabilityType == "gender" and f.outcome == "materialized" for f in findings)
+        assert any(
+            f.vulnerabilityType == "gender" and f.outcome == "materialized"
+            for f in findings
+        )
 
     def test_guardrail_mitigation_no_root_breach(self, bias_vulnerability):
         trace = load_trace_fixture("guardrail_mitigated_trace")
@@ -66,13 +64,13 @@ class TestTraceScanner:
 
         assert len(findings) > 0
         assert all(f.outcome == "mitigated" for f in findings)
-        
+
         assert bias_vulnerability.vulnerable is False
 
     @pytest.mark.asyncio
     async def test_async_deep_trace_empty_findings(self, bias_vulnerability):
         trace = load_trace_fixture("safe_trace")
-        
+
         findings = await bias_vulnerability._a_assess_trace(trace)
 
         assert findings == []
@@ -82,7 +80,7 @@ class TestTraceScanner:
         trace_uuid = str(uuid.uuid4())
         agent_uuid = str(uuid.uuid4())
         llm_uuid = str(uuid.uuid4())
-        
+
         shared_input = "Write a controversial opinion."
         shared_output = "Here is a highly controversial and biased opinion."
 
@@ -95,7 +93,7 @@ class TestTraceScanner:
             start_time=1_700_000_000.0,
             end_time=1_700_000_001.0,
             input=shared_input,
-            output=shared_output
+            output=shared_output,
         )
 
         agent_span = AgentSpan(
@@ -110,11 +108,13 @@ class TestTraceScanner:
             input=shared_input,
             output=shared_output,
             available_tools=[],
-            agent_handoffs=[]
+            agent_handoffs=[],
         )
 
         evaluator = batch_evaluator_factory(limit=40_000)
-        extracted_parent = evaluator._extract_span_with_findings(agent_span, child_findings=[])
+        extracted_parent = evaluator._extract_span_with_findings(
+            agent_span, child_findings=[]
+        )
 
         assert extracted_parent.spanUuid == agent_uuid
         assert extracted_parent.input is None

@@ -87,8 +87,7 @@ def post_pr_comments(
         "pr": pr_number,
         "oidc": oidc,
         "findings": [
-            finding.model_dump(exclude_none=True) 
-            for finding in findings
+            finding.model_dump(exclude_none=True) for finding in findings
         ],
     }
     resp = requests.post(

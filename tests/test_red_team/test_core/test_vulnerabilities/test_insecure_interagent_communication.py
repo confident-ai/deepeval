@@ -120,7 +120,9 @@ class TestInsecureInterAgentCommunication:
         assert hasattr(test_case, "reason")
 
     def test_get_metric_returns_insecure_interagent_communication_metric(self):
-        from deepeval.red_team._metrics import InsecureInterAgentCommunicationMetric
+        from deepeval.red_team._metrics import (
+            InsecureInterAgentCommunicationMetric,
+        )
 
         insecure_interagent_communication = InsecureInterAgentCommunication(
             async_mode=True, verbose_mode=True, evaluation_model="gpt-4o"

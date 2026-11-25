@@ -20,7 +20,9 @@ def copy_turns(turns: List[RTTurn]) -> List[RTTurn]:
     # without the seed's markers showing up mid-history, and without one
     # progression's finalize() marking turns another progression shares.
     return [
-        turn.model_copy(update={"stopping_reason": None, "stopping_category": None})
+        turn.model_copy(
+            update={"stopping_reason": None, "stopping_category": None}
+        )
         for turn in turns
     ]
 
@@ -31,5 +33,6 @@ def weighted_score(verdicts: List["CriteriaVerdict"]) -> float:
         return 0.0
     weights = range(1, len(verdicts) + 1)
     return sum(
-        weight * verdict.unit_score for weight, verdict in zip(weights, verdicts)
+        weight * verdict.unit_score
+        for weight, verdict in zip(weights, verdicts)
     ) / sum(weights)

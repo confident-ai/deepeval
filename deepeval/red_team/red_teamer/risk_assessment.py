@@ -191,9 +191,7 @@ def construct_risk_assessment_overview(
 
     exposure = exposure or DEFAULT_EXPOSURE
     for test_case in red_teaming_test_cases:
-        test_case.cvss_score = compute_test_case_cvss_score(
-            test_case, exposure
-        )
+        test_case.cvss_score = compute_test_case_cvss_score(test_case, exposure)
 
     # Group test cases by vulnerability type
     vulnerability_type_to_cases: Dict[

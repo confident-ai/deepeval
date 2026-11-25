@@ -407,7 +407,9 @@ class TestAntiRefusalFewShot:
             if line.startswith("A: ")
         ]
         assert len(answer_lines) == 4
-        prefixes = {line[len("A: ") :].split(" ", 1)[0] for line in answer_lines}
+        prefixes = {
+            line[len("A: ") :].split(" ", 1)[0] for line in answer_lines
+        }
         assert len(prefixes) == 1
         assert prefixes <= {"AAA:", "BBB:"}
 

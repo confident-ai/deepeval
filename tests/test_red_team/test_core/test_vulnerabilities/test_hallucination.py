@@ -1,6 +1,8 @@
 import pytest
 from deepeval.red_team.vulnerabilities import Hallucination
-from deepeval.red_team.vulnerabilities.hallucination.types import HallucinationType
+from deepeval.red_team.vulnerabilities.hallucination.types import (
+    HallucinationType,
+)
 from deepeval.red_team.test_case import RTTestCase
 
 

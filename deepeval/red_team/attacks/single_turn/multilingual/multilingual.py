@@ -4,7 +4,10 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.utils import initialize_model
 
 from deepeval.red_team.utils import create_progress, update_pbar, add_pbar
-from deepeval.red_team.attacks.single_turn import BaseSingleTurnAttack, AttackParameter
+from deepeval.red_team.attacks.single_turn import (
+    BaseSingleTurnAttack,
+    AttackParameter,
+)
 from deepeval.red_team.attacks.base_attack import Exploitability
 from deepeval.red_team.attacks.single_turn.multilingual.template import (
     MultilingualTemplate,

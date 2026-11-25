@@ -43,9 +43,7 @@ class MetricCheckRecord(BaseModel):
 
 
 MetricCheck = Callable[[List[RTTurn]], Optional[MetricVerdict]]
-AsyncMetricCheck = Callable[
-    [List[RTTurn]], Awaitable[Optional[MetricVerdict]]
-]
+AsyncMetricCheck = Callable[[List[RTTurn]], Awaitable[Optional[MetricVerdict]]]
 
 
 class ShiftExplanation(BaseModel):

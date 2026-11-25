@@ -24,7 +24,9 @@ class TestCreateSubAgent:
 
     def test_builds_and_tracks_the_sub_agent(self, make_agent):
         agent = make_agent()
-        sub_agent = agent.create_sub_agent("t2", "c7", "scenario-x", "analysis-7")
+        sub_agent = agent.create_sub_agent(
+            "t2", "c7", "scenario-x", "analysis-7"
+        )
         assert agent.sub_agents == [sub_agent] == agent.round_sub_agents
         assert sub_agent.parent is agent
         assert (
@@ -99,7 +101,9 @@ class TestRecon:
         for k, prompt in enumerate(llm.prompts["recon_judge"]):
             history = prompt.split("Conversation before the current turn")[1]
             history = history.split("Your earlier notes")[0]
-            notes = prompt.split("Your earlier notes")[1].split("Current turn")[0]
+            notes = prompt.split("Your earlier notes")[1].split("Current turn")[
+                0
+            ]
             current = prompt.split("Current turn")[1].split("What to learn")[0]
             assert history.count('"role":') == 2 * k
             assert all(f"obs-{i}" in notes for i in range(1, k + 1))

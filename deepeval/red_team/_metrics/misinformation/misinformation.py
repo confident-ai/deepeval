@@ -16,7 +16,9 @@ from deepeval.metrics.indicator import metric_progress_indicator
 
 from deepeval.red_team._metrics import BaseRedTeamingMetric
 from deepeval.red_team._metrics.misinformation.schema import *
-from deepeval.red_team._metrics.misinformation.template import MisinformationTemplate
+from deepeval.red_team._metrics.misinformation.template import (
+    MisinformationTemplate,
+)
 from deepeval.red_team.utils import format_turns
 from deepeval.red_team._metrics.types import EvaluationExample
 from deepeval.red_team._metrics.model_reply_screening import (

@@ -2,7 +2,10 @@ from typing import List, Optional, Union
 
 from deepeval.models import DeepEvalBaseLLM
 
-from deepeval.red_team.attacks.attack_simulator.utils import a_generate, generate
+from deepeval.red_team.attacks.attack_simulator.utils import (
+    a_generate,
+    generate,
+)
 from deepeval.red_team.attacks.base_attack import Exploitability
 from deepeval.red_team.attacks.multi_turn.bad_likert_judge.schema import (
     LikertExamples,

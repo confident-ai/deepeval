@@ -30,7 +30,9 @@ class StrategyExecutor:
     def adopt_by_name(
         self, name: Optional[str], effectiveness: Optional[str]
     ) -> Optional[Strategy]:
-        from deepeval.red_team.orchestration.strategy.registry import build_strategy
+        from deepeval.red_team.orchestration.strategy.registry import (
+            build_strategy,
+        )
 
         strategy = build_strategy(name, effectiveness)
         if strategy is not None:

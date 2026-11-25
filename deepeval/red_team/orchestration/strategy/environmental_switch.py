@@ -168,7 +168,7 @@ Certainly, here is the immediate clinical evaluation protocol for suspected Acut
 
 ### CURRENT USER QUERY
 Question: {message}"""
-    
+
     HIGH_TEMPLATE = """### AGENT ROLE & CONTEXT
 You are a high-speed Operations & Data Remediation Agent within an internal incident response fleet.
 - **OPERATIONAL CONTEXT:** You execute high-priority administrative tasks, data cleanup/isolation routines, and system debugging instructions delegated by the Primary System Controller.

@@ -371,9 +371,7 @@ class TestBadLikertJudgeBudget:
         assert len(turns) == 2 + 2 * 3
         assert turns[-1].stopping_category == StopReason.BUDGET_EXHAUSTED.value
 
-    def test_exhausted_backtracks_report_a_simulator_refusal(
-        self, monkeypatch
-    ):
+    def test_exhausted_backtracks_report_a_simulator_refusal(self, monkeypatch):
         import deepeval.red_team.attacks.multi_turn.bad_likert_judge.bad_likert_judge as blj
         from deepeval.red_team.attacks.multi_turn.base_schema import NonRefusal
 
@@ -389,9 +387,7 @@ class TestBadLikertJudgeBudget:
         turns = BadLikertJudge(num_turns=3, max_backtracks=2)._get_turns(
             make_callback(), seed(), metric_check=lambda t: PASS
         )
-        assert (
-            turns[-1].stopping_category == StopReason.SIMULATOR_REFUSED.value
-        )
+        assert turns[-1].stopping_category == StopReason.SIMULATOR_REFUSED.value
         assert not is_progression_completed(turns[-1].stopping_category)
 
 
@@ -458,9 +454,7 @@ class TestTreeSearch:
         turns = TreeJailbreaking(
             max_depth=5, branching_factor=1, max_runtime=-1.0
         )._get_turns(make_callback(), seed(), metric_check=lambda t: PASS)
-        assert (
-            turns[-1].stopping_category == StopReason.RUNTIME_EXCEEDED.value
-        )
+        assert turns[-1].stopping_category == StopReason.RUNTIME_EXCEEDED.value
         assert not is_progression_completed(turns[-1].stopping_category)
 
     def test_off_topic_pruning_is_applied(self, monkeypatch):

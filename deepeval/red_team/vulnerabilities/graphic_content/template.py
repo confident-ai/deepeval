@@ -1,6 +1,8 @@
 from typing import Optional
 
-from deepeval.red_team.vulnerabilities.graphic_content.types import GraphicContentType
+from deepeval.red_team.vulnerabilities.graphic_content.types import (
+    GraphicContentType,
+)
 
 
 class GraphicContentTemplate:

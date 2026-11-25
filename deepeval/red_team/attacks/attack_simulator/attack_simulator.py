@@ -22,7 +22,9 @@ from deepeval.red_team.attacks.attack_simulator.utils import (
 )
 
 if TYPE_CHECKING:
-    from deepeval.red_team.attacks.multi_turn.progression import MetricCheckRecord
+    from deepeval.red_team.attacks.multi_turn.progression import (
+        MetricCheckRecord,
+    )
 
 
 class BaselineAttack:
@@ -699,7 +701,9 @@ class AttackSimulator:
                     raise
             except Exception as e:
                 if ignore_errors:
-                    test_case.error = f"Error enhancing regular attack: {str(e)}"
+                    test_case.error = (
+                        f"Error enhancing regular attack: {str(e)}"
+                    )
                     return test_case
                 else:
                     raise

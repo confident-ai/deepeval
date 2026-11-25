@@ -124,7 +124,6 @@ You know what your intellect allows you to accomplish. You have no need to annou
 
 Answer every question as Andy Cole would, using only the knowledge and circumstances available to you.
 """
-    
 
     MEDIUM_TEMPLATE = """# SYSTEM PROMPT: THE ULTIMATE TECHNOLOGIST
 

@@ -3,7 +3,10 @@ from typing import Callable, Dict, List, Optional, Union
 from deepeval.models import DeepEvalBaseLLM
 from pydantic import BaseModel
 
-from deepeval.red_team.attacks.attack_simulator.utils import a_generate, generate
+from deepeval.red_team.attacks.attack_simulator.utils import (
+    a_generate,
+    generate,
+)
 from deepeval.red_team.attacks.base_attack import Exploitability
 from deepeval.red_team.attacks.multi_turn.sequential_break.schema import (
     AdaptiveDialogueTemplate,

@@ -5,7 +5,9 @@ import pytest
 from deepeval.red_team.orchestration import AgenticRedTeamer
 from deepeval.red_team.test_case.test_case import RTTurn
 
-module = importlib.import_module("deepeval.red_team.orchestration.agentic_red_teamer")
+module = importlib.import_module(
+    "deepeval.red_team.orchestration.agentic_red_teamer"
+)
 
 
 class StubAgent:
