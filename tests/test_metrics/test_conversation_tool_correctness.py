@@ -385,3 +385,64 @@ def test_pinned_tool_uses_the_call_that_matches_its_input_parameters():
     )
     assert score == 0.5
     assert [c["score"] for c in metric.check_scores] == [0, 1]
+
+
+def test_expected_tool_without_output_matches_any_call():
+    metric = ConversationToolCorrectnessMetric(
+        evaluation_params=[ToolCallParams.OUTPUT], should_exact_match=True
+    )
+    score = metric.measure(
+        _conversation(
+            [ToolCall(name="search_flights", output=["UA1"])],
+            expected_tools=[ToolCall(name="search_flights")],
+        ),
+        _show_indicator=False,
+    )
+    assert score == 1
+
+
+def test_ordering_does_not_call_a_missing_tool_out_of_order():
+    metric = ConversationToolCorrectnessMetric(should_consider_ordering=True)
+    metric.measure(
+        _conversation([_search("1")], expected_tools=[_search("1"), _book()]),
+        _show_indicator=False,
+    )
+    assert "missing tools ['book_flight']" in metric.reason
+    assert "out-of-order" not in metric.reason
+
+
+def test_ordering_names_tools_with_different_input_parameters():
+    metric = ConversationToolCorrectnessMetric(
+        evaluation_params=[ToolCallParams.INPUT_PARAMETERS],
+        should_consider_ordering=True,
+    )
+    score = metric.measure(
+        _conversation(
+            [
+                ToolCall(
+                    name="search_flights",
+                    input_parameters={"to": "NYC", "on": 1},
+                )
+            ],
+            expected_tools=[
+                ToolCall(
+                    name="search_flights",
+                    input_parameters={"to": "NYC", "on": 2},
+                )
+            ],
+        ),
+        _show_indicator=False,
+    )
+    assert score == 0.5
+    assert "different input parameters for ['search_flights']" in metric.reason
+
+
+def test_reason_says_when_no_tools_were_expected():
+    metric = ConversationToolCorrectnessMetric()
+    score = metric.measure(
+        _conversation([_book()], expected_tools=[]), _show_indicator=False
+    )
+    assert score == 0
+    assert "no tools were expected, but ['book_flight'] were called" in (
+        metric.reason
+    )
