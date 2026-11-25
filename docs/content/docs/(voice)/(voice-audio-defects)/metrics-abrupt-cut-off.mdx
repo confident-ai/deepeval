@@ -166,6 +166,44 @@ A reply is flagged at most once, however many times its sound stops. What counts
 
 The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). The check on each stop is the same for both; what differs is which stops get checked.
 
+### Counting agent replies
+
+<Tabs items={["Call audio", "Turn audio"]}>
+<Tab value="Call audio">
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 1.8 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 2.4, end: 3.8 }, { start: 4.3, end: 5.6 }, { start: 7.0, end: 9.2 }] },
+  ]}
+  windows={[
+    { start: 2.3, end: 5.7, lanes: [1], tone: "info", label: "reply 1" },
+    { start: 6.9, end: 9.3, lanes: [1], tone: "info", label: "reply 2" },
+  ]}
+/>
+
+Each stretch of agent sound is one reply. A pause under 1 second doesn't end it, so reply 1 above is one reply even though the agent paused mid-way.
+
+</Tab>
+<Tab value="Turn audio">
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2.2, end: 5.8, label: "turn 1" }, { start: 6.8, end: 9.4, label: "turn 3" }], sounds: [{ start: 2.4, end: 3.8 }, { start: 4.3, end: 5.6 }, { start: 7.0, end: 9.2 }] },
+  ]}
+  windows={[
+    { start: 2.2, end: 5.8, lanes: [0], tone: "info", label: "reply 1" },
+    { start: 6.8, end: 9.4, lanes: [0], tone: "info", label: "reply 2" },
+  ]}
+/>
+
+Each agent clip that decodes is one reply, however many pauses it has. Clips with `interrupted=True` still count.
+
+</Tab>
+</Tabs>
+
 ### Cut-off criteria
 
 A finished reply fades out. A cut one stops at near full volume.
@@ -185,9 +223,7 @@ A finished reply fades out. A cut one stops at near full volume.
   ]}
 />
 
-**Counted:** each stretch of agent sound. Pauses under 1 second don't split it.
-
-**Flagged:** a stretch with any stop that fails the checks below, except a stop where:
+Every point where the agent's sound stops is checked. A reply is flagged if any stop is a cut-off, except a stop where:
 
 - the caller made 0.2 seconds or more of sound from 1 second before it to 0.2 seconds after, or
 - the call audio ends within 0.05 seconds, which [Unexpected Call End](/docs/metrics-unexpected-call-end) judges instead.
@@ -206,9 +242,7 @@ A finished reply fades out. A cut one stops at near full volume.
   ]}
 />
 
-**Counted:** each agent clip that decodes.
-
-**Flagged:** a clip whose end fails the checks below, or a **stream cut**: a clip that ends mid-sound or in 1 second or more of digital silence, with the agent's own next clip starting within 15 seconds. Clips with `interrupted=True` are never flagged.
+Only the end of each clip is checked. A clip is also flagged as a **stream cut** if it ends mid-sound or in 1 second or more of digital silence, and the agent's own next clip starts within 15 seconds. Clips with `interrupted=True` are never flagged.
 
 </Tab>
 </Tabs>
@@ -229,7 +263,12 @@ A stop between two words sounds like a normal ending, so it isn't flagged.
 
 ### Example
 
-Two short calls, one scored from call audio and one from turn audio. Each row of the table is one agent reply and whether it was cut off.
+Two short calls with an agent that sometimes stops mid-word, one scored from its call audio and one from turn audio.
+
+- **Call audio:** four replies end at full volume or fade out, but only one is a cut-off. The reply that stops because the caller spoke up, and the one still going when the call ends, aren't held against the agent.
+- **Turn audio:** five replies, two of them cut off. One drops into digital silence before the agent picks back up in its next clip, which is a stream cut. The other is cut at the end of the agent's last reply. The reply the caller barged into is marked `interrupted=True`, so it isn't flagged.
+
+Each row of the table is one agent reply, how it ended and whether that counts as a cut-off.
 
 <Tabs items={["Call audio", "Turn audio"]}>
 <Tab value="Call audio">
