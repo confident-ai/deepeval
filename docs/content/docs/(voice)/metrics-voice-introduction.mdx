@@ -1,0 +1,118 @@
+---
+id: metrics-voice-introduction
+title: Voice Metrics
+sidebar_label: Introduction
+languages: [python]
+beta: true
+---
+
+Voice metrics score the audio of a call between your voice agent and a caller. Each one checks for a single kind of problem, such as a reply cut off mid-word or a long wait before the agent answers, and returns the share of the call that was free of it, between 0 and 1.
+
+They work on any `ConversationalTestCase` with audio, most often one produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode). This page covers what every voice metric has in common. Each metric's own page covers only what's specific to it.
+
+| Group | What it checks |
+| --- | --- |
+| [Speech Quality](/docs/metrics-voice-naturalness) | How natural, clear and consistent the agent's voice is, and how accurate its transcripts are |
+| [Audio Defects](/docs/metrics-audio-dropout) | Glitches in the agent's audio: dropouts, clipping, loops, cut-offs, held tones, dead air and echo |
+| [Audio Level](/docs/metrics-background-noise) | Background noise and how loud the agent is |
+| [Prosody](/docs/metrics-pitch-variation) | Pitch, speaking rate and pauses |
+| [Timing](/docs/metrics-response-latency) | How quickly the agent replies, and who interrupts whom |
+| [Responsiveness](/docs/metrics-failed-response) | Whether the agent answers at all, and whether the caller had to repeat themselves |
+
+## Call audio vs. turn audio
+
+A voice metric can read audio from two places:
+
+- **Call audio** is `audio` on the test case: one recording of the whole call.
+- **Turn audio** is `audio` on each turn: just that turn.
+
+| | Stereo | Mono |
+| --- | --- | --- |
+| **Call audio** | Used | Ignored |
+| **Turn audio** | Used | Used |
+
+Stereo call audio wins when a test case has both. Otherwise the metric uses turn audio.
+
+Either way, the metric has to know whose voice it's hearing:
+
+- **Call audio** tells the speakers apart by channel: caller on the left, agent on the right, the way the simulator records. For a recording made the other way round, set `agent_channel="left"` on the test case. Mono call audio mixes both voices into one channel, which is why it's ignored.
+- **Turn audio** goes by each turn's `role`. Each turn's audio is placed on the call's clock with its `Audio.start_time`, and the metric listens inside it for where the speech starts and stops. Stereo turn audio has its two channels averaged first. If nothing is heard, or the audio can't be decoded, the whole clip counts as speech.
+
+Call audio is more reliable, because it doesn't depend on how the call was cut into turns or how accurate their timestamps are. Not every metric can use it; each metric's page says whether it does. `timing_source` in the results says which was used: `"call_recording"` for call audio, `"turn_timestamps"` for turn audio.
+
+```python
+from deepeval.test_case import Audio, ConversationalTestCase
+
+test_case = ConversationalTestCase(
+    turns=turns,
+    audio=Audio(url="call.wav"),
+    agent_channel="right",  # the default
+)
+```
+
+## Speech detection
+
+Metrics that need to know when someone is talking take `use_speech_detection`, on by default. A stretch of audio then only counts as speech when the [Silero VAD](https://github.com/snakers4/silero-vad) model hears speech in it, so background noise, bangs and hold music aren't mistaken for someone talking. It applies to both call audio and turn audio. Turn it off to go by loudness alone. It needs `pip install onnxruntime`.
+
+## Common parameters
+
+Every voice metric takes these optional parameters:
+
+- `threshold`: the minimum passing score. Set it to `None` for [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaults to `0.5`.
+- `include_reason`: whether to include a one-line summary of the score. Defaults to `True`.
+- `strict_mode`: requires a perfect score. Any score below 1 becomes 0, and the threshold becomes 1. Defaults to `False`.
+- `verbose_mode`: prints the score breakdown in verbose metric logs. Defaults to `False`.
+- `flaky`: [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaults to `False`.
+
+Some metrics also take `use_speech_detection` (see [above](#speech-detection)) and `eval_mode` with `audio_decision_model` (see [below](#second-check-with-an-audio-decision-model)). Each metric's page lists the ones it takes.
+
+## Score breakdown
+
+After `measure()`, `metric.score_breakdown` shows how the score was reached:
+
+| Field | What it means |
+| --- | --- |
+| `eligible_turns` | How many things were counted, usually agent replies |
+| `turns_with_events` | How many of them had the problem |
+| `events` | One entry per problem found |
+| `skipped` | Turns that couldn't be checked, such as audio that won't decode, with the reason |
+| `timing_source` | Whether call audio or turn audio was used |
+
+For most metrics the score is the share of counted items without the problem.
+
+## Events
+
+Each event describes one problem and where it happened. Every event has:
+
+| Field | What it means |
+| --- | --- |
+| `type` | What kind of problem it is |
+| `description` | A one-line summary, such as "Agent took 5.2s to reply" |
+| `start_time` | Where it starts, in seconds from the start of the call. Missing when it can't be placed on the call's clock |
+| `duration_seconds` | How long it lasts |
+| `mark` | What `start_time` and `duration_seconds` cover. Moment: the spot where it happened. Range: the stretch it lasted. Whole reply: the agent reply it was judged on |
+| `timing_source` | Where the timing came from: the call recording, or the turns' timestamps |
+
+Events found in turn audio also name the turn:
+
+| Field | What it means |
+| --- | --- |
+| `turn` | Which turn it's in, counting from 0 |
+| `role` | Whose turn it is |
+| `offset_seconds` | Where it starts, in seconds from the start of that turn's audio |
+
+For turn audio, the call-clock timing is only as accurate as the turns' `Audio.start_time`. Each metric's page lists the extra fields its own events carry.
+
+## Second check with an audio decision model
+
+Some metrics can have each problem they find double-checked by a model that listens to it. Turn this on with `eval_mode="hybrid"` on the metric, or for every voice metric with [`DEEPEVAL_VOICE_EVAL_MODE`](/docs/environment-variables#deepeval-voice-eval-mode). The default, `"deterministic"`, calls no model.
+
+- **Which model.** `HumeDecisionModel()` (reads `HUME_API_KEY`) is used unless you pass `audio_decision_model`. `OpenAIAudioDecisionModel()` with `gpt-audio` or `gpt-audio-mini` (reads `OPENAI_API_KEY`) also works. A missing key fails when the metric is created.
+- **What it hears.** About five seconds around the problem, from the test case's stereo `audio` when there is one, otherwise from the turn's own audio. It answers one yes/no question about it.
+- **What happens.** If the model judges the problem more likely not real than real, it's dismissed. A dismissed problem doesn't count against the score and is left out of `events`. `dismissed_events` in the breakdown and the reason say how many were dismissed.
+- **When it can't check.** If no clip can be cut or the model fails, the problem stays and a warning is logged.
+- **Cost.** Each check is one paid request, added to `evaluation_cost`.
+
+## When a metric is skipped
+
+A metric is skipped, rather than scored, when there's nothing to count: for example, no agent reply with audio that decodes, or no timing to place the turns on the call's clock. The reason says why.

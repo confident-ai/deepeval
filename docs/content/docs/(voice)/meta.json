@@ -1,6 +1,7 @@
 {
   "title": "Voice Agents",
   "pages": [
+    "metrics-voice-introduction",
     "(voice-speech-quality)",
     "(voice-audio-defects)",
     "(voice-audio-level)",

@@ -46,14 +46,10 @@ metric = AbruptCutoffMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **SEVEN** optional parameters when creating an `AbruptCutoffMetric`:
+Along with the [common voice metric parameters](/docs/metrics-voice-introduction#common-parameters), `AbruptCutoffMetric` takes:
 
-- [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
-- [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
-- [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies when the test case's `audio` is a stereo call recording. Defaulted to `True`.
-- [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+- [Optional] `use_speech_detection`: only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so a stop the caller didn't cause isn't excused by background noise. Defaults to `True`.
+- [Optional] `eval_mode` and `audio_decision_model`: have each cut-off [double-checked by a model](/docs/metrics-voice-introduction#second-check-with-an-audio-decision-model) that listens to it. Defaults to no second check.
 
 `score_breakdown` lists the replies where the defect was found. See [Events](#events) for what it contains:
 
@@ -68,8 +64,8 @@ print(metric.score_breakdown)
 
 Each reply that was cut off shows up in `score_breakdown`. Here is what the two example calls in [How Is It Calculated?](#how-is-it-calculated) return:
 
-<Tabs items={["Recording mode", "Per-turn mode"]}>
-<Tab value="Recording mode">
+<Tabs items={["Call audio", "Turn audio"]}>
+<Tab value="Call audio">
 
 ```python
 {
@@ -100,7 +96,7 @@ Each reply that was cut off shows up in `score_breakdown`. Here is what the two 
 | `duration_seconds` | Always 0.02: the 20 ms that were checked |
 
 </Tab>
-<Tab value="Per-turn mode">
+<Tab value="Turn audio">
 
 There's no recording to point into here, so each event names the turn that was cut and where in that turn's audio it happened.
 
@@ -156,14 +152,7 @@ Turns whose audio can't be decoded are listed under `skipped`.
 </Tab>
 </Tabs>
 
-Every event also has:
-
-| Field | What it means |
-| --- | --- |
-| `type` | Abrupt cut-off, or stream cut for a reply that was cut and then resumed |
-| `mark` | Always moment here: the event points at the spot the cut happened |
-| `timing_source` | Where the timing came from: the call recording, or the turns' timestamps |
-| `description` | A one-line summary |
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
 
 `eligible_turns` is how many agent replies were counted and `turns_with_events` how many were cut off. The score is the share that weren't.
 
@@ -173,27 +162,16 @@ The score is the share of the agent's replies that end cleanly:
 
 <Equation formula="\text{Abrupt Cut-off} = \frac{\text{Agent Replies Without a Cut-off}}{\text{Agent Replies}}" />
 
-A reply is flagged at most once, however many times its sound stops. What counts as **one reply** depends on which audio the test case has.
+A reply is flagged at most once, however many times its sound stops. What counts as one reply depends on whether call audio or turn audio is used.
 
-### Which audio is used
-
-Audio can be attached in two places, and each can be stereo or mono:
-
-| | Stereo (caller left, agent right) | Mono |
-| --- | --- | --- |
-| **`audio` on the test case** (the whole call) | **Recording mode.** Audio on the turns is ignored. | Not used. Falls back to **per-turn mode**. |
-| **`audio` on each turn** (that turn only) | **Per-turn mode.** The two channels are averaged first. | **Per-turn mode.** |
-
-Either way, the metric has to know whose voice it's hearing. With the test case's `audio` it's the channel: left is the caller, right is the agent. With each turn's `audio` it's the turn's `role`. A mono recording of the whole call mixes both voices into one channel, so there's no way to tell them apart, which is why it isn't used.
-
-Recording mode is used whenever the test case's `audio` is a 16-bit stereo WAV, even if the turns also carry audio. Everything else is per-turn mode. If neither the test case nor any agent turn has usable audio, the metric is skipped.
+The metric reads [call audio or turn audio](/docs/metrics-voice-introduction#call-audio-vs-turn-audio). The check on each stop is the same for both; what differs is which stops get checked.
 
 ### What counts as a cut-off
 
-A finished reply **fades out**. A cut one **stops at near full volume**. Each mode looks for that in a different place:
+A finished reply **fades out**. A cut one **stops at near full volume**. Call audio and turn audio look for that in different places:
 
-<Tabs items={["Recording mode", "Per-turn mode"]}>
-<Tab value="Recording mode">
+<Tabs items={["Call audio", "Turn audio"]}>
+<Tab value="Call audio">
 
 <VoiceDiagram
   duration={8}
@@ -210,7 +188,7 @@ A finished reply **fades out**. A cut one **stops at near full volume**. Each mo
 Every point where the agent's channel goes quiet is checked, while the caller is silent.
 
 </Tab>
-<Tab value="Per-turn mode">
+<Tab value="Turn audio">
 
 <VoiceDiagram
   duration={8}
@@ -228,7 +206,7 @@ Only the end of each agent turn's clip is checked.
 </Tab>
 </Tabs>
 
-The check on a stop is **the same in both modes**. Only which stops get checked differs. The metric finds where the sound stops (the last 5 ms frame louder than about −41 dBFS) and compares the last 20 ms before it with the second of speech before that. The stop is a cut-off only when **all three** hold:
+The check on a stop is the same for call audio and turn audio. Only which stops get checked differs. The metric finds where the sound stops (the last 5 ms frame louder than about −41 dBFS) and compares the last 20 ms before it with the second of speech before that. The stop is a cut-off only when **all three** hold:
 
 | Check | The last 20 ms of sound must be |
 | --- | --- |
@@ -242,8 +220,8 @@ Only cuts in the middle of a sound can be heard this way. An agent that stops be
 
 ### How replies are counted and flagged
 
-<Tabs items={["Recording mode", "Per-turn mode"]}>
-<Tab value="Recording mode">
+<Tabs items={["Call audio", "Turn audio"]}>
+<Tab value="Call audio">
 
 <VoiceDiagram
   duration={14}
@@ -275,10 +253,9 @@ Only cuts in the middle of a sound can be heard this way. An agent that stops be
 - **Recording ending.** A stop within 0.05 seconds of the end means the sound was still going when the recording ended. [`UnexpectedCallEndMetric`](/docs/metrics-unexpected-call-end) reports that instead.
 - **Sound** is read in 20 ms frames: louder than about −41 dBFS counts, pauses under 0.3 seconds are closed and sounds under 0.15 seconds are dropped. The background noise is the quietest 10% of the agent channel.
 
-<include cwd>snippets/voice/speech-detection.mdx</include>
 
 </Tab>
-<Tab value="Per-turn mode">
+<Tab value="Turn audio">
 
 <VoiceDiagram
   duration={20}
@@ -317,7 +294,7 @@ Only cuts in the middle of a sound can be heard this way. An agent that stops be
 
 ### When the metric is skipped
 
-The metric is skipped, rather than scored, when nothing is counted: in recording mode when the agent made no sound on the recording, and in per-turn mode when no agent clip decodes.
+The metric is skipped, rather than scored, when nothing is counted: with call audio when the agent made no sound on it, and with turn audio when no agent turn's audio decodes.
 
 ## FAQs
 
@@ -366,4 +343,3 @@ The metric is skipped, rather than scored, when nothing is counted: in recording
   ]}
 />
 
-<include cwd>snippets/voice/audio-decision-check.mdx</include>
