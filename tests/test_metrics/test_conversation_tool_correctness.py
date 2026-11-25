@@ -333,3 +333,55 @@ def test_reason_names_tools_called_with_a_different_output():
     assert score == 0
     assert "missing tools ['cancel_order']" in metric.reason
     assert "different output for ['search_flights']" in metric.reason
+
+
+def test_expected_tool_without_input_parameters_matches_any_call():
+    metric = ConversationToolCorrectnessMetric(
+        evaluation_params=[ToolCallParams.INPUT_PARAMETERS]
+    )
+    score = metric.measure(
+        _conversation(
+            [_search("NYC")], expected_tools=[ToolCall(name="search_flights")]
+        ),
+        _show_indicator=False,
+    )
+    assert score == 1
+
+
+def test_call_without_input_parameters_does_not_match_expected_ones():
+    metric = ConversationToolCorrectnessMetric(
+        evaluation_params=[ToolCallParams.INPUT_PARAMETERS]
+    )
+    score = metric.measure(
+        _conversation(
+            [ToolCall(name="search_flights")], expected_tools=[_search("NYC")]
+        ),
+        _show_indicator=False,
+    )
+    assert score == 0
+    assert "different input parameters for ['search_flights']" in metric.reason
+
+
+def test_repeated_identical_calls_each_count():
+    metric = ConversationToolCorrectnessMetric()
+    score = metric.measure(
+        _conversation([_book(), _book()], expected_tools=[_book(), _book()]),
+        _show_indicator=False,
+    )
+    assert score == 1
+
+
+def test_pinned_tool_uses_the_call_that_matches_its_input_parameters():
+    metric = ConversationToolCorrectnessMetric(
+        evaluation_params=[ToolCallParams.INPUT_PARAMETERS],
+        should_exact_match=True,
+    )
+    score = metric.measure(
+        _conversation(
+            [_search("LAX"), _search("NYC")],
+            expected_tools=[_search("LAX"), _pinned(_search("NYC"), 1)],
+        ),
+        _show_indicator=False,
+    )
+    assert score == 0.5
+    assert [c["score"] for c in metric.check_scores] == [0, 1]

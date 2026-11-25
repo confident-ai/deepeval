@@ -87,16 +87,16 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
                 (f"Turn {index}", turns[index].tools_called or [], tools)
                 for index, tools in sorted(pinned.items())
             ]
-            if unpinned or not pinned:
-                label = "Any turn" if pinned else "Conversation"
-                called = self._tools_left_for_any_turn(turns, pinned)
-                checks.append((label, called, unpinned))
-
             scorer = _ToolCallScorer(
                 self.evaluation_params,
                 self.should_exact_match,
                 self.should_consider_ordering,
             )
+            if unpinned or not pinned:
+                label = "Any turn" if pinned else "Conversation"
+                called = self._tools_left_for_any_turn(turns, pinned, scorer)
+                checks.append((label, called, unpinned))
+
             self.check_scores = []
             for label, called, expected in checks:
                 score, reason = scorer.score(called, expected)
@@ -146,7 +146,9 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
 
     @staticmethod
     def _tools_left_for_any_turn(
-        turns: List[Turn], pinned: Dict[int, List[ToolCall]]
+        turns: List[Turn],
+        pinned: Dict[int, List[ToolCall]],
+        scorer: _ToolCallScorer,
     ) -> List[ToolCall]:
         """Every assistant call, minus one call per tool pinned to its turn,
         so an unpinned tool can be met on any turn but a pinned call is not
@@ -157,17 +159,23 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
                 continue
             calls = list(turn.tools_called or [])
             for expected in pinned.get(index, []):
+                candidates = [
+                    call
+                    for call in calls
+                    if call.name == expected.name and call.type == expected.type
+                ]
+                if not candidates:
+                    continue
                 match = next(
                     (
                         call
-                        for call in calls
-                        if call.name == expected.name
-                        and call.type == expected.type
+                        for call in candidates
+                        if scorer._input_parameters_score(expected, call) == 1
+                        and scorer._output_matches(expected, call)
                     ),
-                    None,
+                    candidates[0],
                 )
-                if match is not None:
-                    calls.remove(match)
+                calls.pop(next(i for i, c in enumerate(calls) if c is match))
             left.extend(calls)
         return left
 
