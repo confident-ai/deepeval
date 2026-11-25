@@ -277,6 +277,16 @@ A stop between two words sounds like a normal ending, so it isn't flagged.
 
 In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), each cut-off is double-checked before it counts. The audio decision model hears about 5 seconds of the agent's audio around it and is asked:
 
+<VoiceDiagram
+  duration={8}
+  lanes={[
+    { label: "Agent", role: "agent", sounds: [{ start: 0.5, end: 4.2, ending: "cut" }, { start: 5.6, end: 7.6 }] },
+  ]}
+  windows={[{ start: 1.7, end: 6.7, lanes: [0], tone: "info" }]}
+  marks={[{ at: 4.2, lane: 0, tone: "bad", label: "cut-off" }]}
+  caption="The shaded 5 seconds around the cut-off is the clip the model hears."
+/>
+
 > Does the speaker's voice cut off abruptly, mid-word or mid-sentence?
 
 If the model judges "no" more likely than "yes", the cut-off is dismissed and doesn't count against the score.
