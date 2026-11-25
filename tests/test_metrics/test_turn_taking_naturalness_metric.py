@@ -4,6 +4,7 @@ from deepeval.metrics import TurnTakingNaturalnessMetric
 from deepeval.test_case import ConversationalTestCase
 from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 from tests.test_metrics.helpers import (
+    recording,
     CLEAN_GAPS,
     measure,
     speech_like,
@@ -46,7 +47,7 @@ def test_a_caller_cutting_in_counts_against_the_reply_cut_into(tmp_path):
     metric = TurnTakingNaturalnessMetric(use_speech_detection=False)
     metric.measure(
         ConversationalTestCase(
-            turns=timed_call(CLEAN_GAPS), call_recording_path=path
+            turns=timed_call(CLEAN_GAPS), audio=recording(path)
         ),
         _show_indicator=False,
     )
@@ -84,7 +85,7 @@ def test_the_decision_model_checks_the_interruption_parts(tmp_path):
     )
     metric.measure(
         ConversationalTestCase(
-            turns=timed_call(CLEAN_GAPS), call_recording_path=path
+            turns=timed_call(CLEAN_GAPS), audio=recording(path)
         ),
         _show_indicator=False,
     )

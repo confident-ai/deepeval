@@ -134,7 +134,7 @@ There are **TWO** mandatory and **EIGHT** optional parameters when creating a `C
 - `name`: a string representing the metric's name.
 - `dag`: the `DeepAcyclicGraph` to execute.
 - [Optional] `threshold`: the minimum passing score. Can also be set to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] `model`: an OpenAI model name or a [custom evaluation model](/docs/metrics-introduction#configure-llm-judges) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `model`: an OpenAI model name or a [custom evaluation model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `include_reason`: whether to generate a reason for the final score. Defaulted to `True`.
 - [Optional] `strict_mode`: when `True`, sets the threshold to `1`. Defaulted to `False`.
 - <Only id="python">
@@ -154,7 +154,7 @@ There are **TWO** mandatory and **EIGHT** optional parameters when creating a `C
 - `name`: a string representing the metric's name.
 - `dag`: the `DeepAcyclicGraph` to execute.
 - [Optional] `threshold`: the minimum passing score. Defaulted to `0.5`.
-- [Optional] `model`: an OpenAI model name or a [custom evaluation model](/docs/metrics-introduction#configure-llm-judges) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `model`: an OpenAI model name or a [custom evaluation model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `includeReason`: whether to generate a reason for the final score. Defaulted to `true`.
 - [Optional] `strictMode`: when `true`, sets the threshold to `1`. Defaulted to `false`.
 - [Optional] `verboseMode`: whether to print the nodes and outcomes used to calculate the score. Defaulted to `false`.

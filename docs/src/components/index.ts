@@ -1,6 +1,5 @@
 export { default as VideoDisplayer } from './VideoDisplayer';
 export { default as ImageDisplayer } from './ImageDisplayer';
-export { default as AudioSample } from './AudioSample';
 export { default as Callout } from './Callout';
 export { default as Equation } from './Equation';
 export { default as FeatureComparisonTable } from './FeatureComparisonTable';

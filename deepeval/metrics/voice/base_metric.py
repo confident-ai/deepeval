@@ -51,7 +51,6 @@ from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.models.system_one.hume_model import HumeDecisionModel
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 
-
 VoiceMetricResult = Tuple[Optional[float], str, Dict]
 
 
@@ -278,8 +277,8 @@ class BaseRollUpMetric(BaseVoiceMetric):
     ) -> ConversationalTestCase:
         # A recording's moments can only be placed on replies that carry
         # their start time; otherwise parts judge each reply's own audio.
-        if test_case.call_recording_path and untimed_call_reason(test_case):
-            return test_case.model_copy(update={"call_recording_path": None})
+        if test_case.audio is not None and untimed_call_reason(test_case):
+            return test_case.model_copy(update={"audio": None})
         return test_case
 
     def _roll_up_key(

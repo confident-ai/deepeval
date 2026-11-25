@@ -44,7 +44,7 @@ def confirm_defects(
 ) -> DefectShare:
     model = metric.audio_decision_model
     question = NoulQuestion(instructions=metric.event_question)
-    recording = read_call_recording(test_case.call_recording_path)
+    recording = read_call_recording(test_case.audio, test_case.agent_channel)
 
     def check(defect: VoiceEvent) -> Tuple[bool, float]:
         if model is None:

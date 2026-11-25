@@ -17,7 +17,6 @@ languages: [python, typescript]
 - Enabling/disabling debug
 - Opting into experimental features (<Term py="deepeval set-mode experimental" ts="npx deepeval set-mode experimental"/>)
 - Choosing who decides in LLM-as-a-judge metrics: the LLM, or a System One model (<Term py="deepeval set-eval-mode" ts="npx deepeval set-eval-mode"/>)
-- Choosing whether voice metrics double-check flagged events with an audio decision model (`deepeval set-voice-eval-mode`)
 - Selecting an LLM provider (OpenAI, Azure OpenAI, Gemini, Grok, DeepSeek, OpenRouter, local/Ollama)
 - Setting/unsetting provider-specific options (model, endpoint, deployment, etc.)
 - Listing and updating any deepeval setting (<Term py="deepeval settings -l" ts="npx deepeval settings -l"/>, <Term py="deepeval settings --set KEY=VALUE" ts="npx deepeval settings --set KEY=VALUE"/>)
@@ -595,25 +594,6 @@ npx deepeval set-eval-mode system_one --save=dotenv
 | `--quiet`, `-q` | Suppress printing to the terminal (useful for CI).                      |
 
 Every built-in LLM-as-a-judge metric<Only id="python"> and classifier</Only> follows the eval mode. `GEval`, `ConversationalGEval` and `ArenaGEval` are LLM-as-a-judge by definition and ignore it; use [`JevEval`](/docs/metrics-jev-eval) for a custom metric decided by Jev. The DAG metrics' task nodes need the LLM, so under `system_one` they run as `hybrid`.
-
-### `set-voice-eval-mode`
-
-Set how the voice metrics with an audio check (Echo, Abrupt Cut-off, Background Noise, Agent Interruption, User Interruption and Turn-Taking Naturalness) decide:
-
-- `deterministic` (the default): the metric's own detector decides. No model is called.
-- `hybrid`: an audio decision model hears a short clip of each flagged event and dismisses the ones it judges not real. `HumeDecisionModel` is used unless the metric is given another `audio_decision_model`, and a missing `HUME_API_KEY` fails when the metric is created.
-
-Under the hood this sets [`DEEPEVAL_VOICE_EVAL_MODE`](/docs/environment-variables#deepeval-voice-eval-mode). An `eval_mode` argument on a metric overrides it. It is separate from [`set-eval-mode`](#set-eval-mode), which the voice metrics above ignore.
-
-```bash
-deepeval set-voice-eval-mode hybrid --save=dotenv
-```
-
-| Option          | Description                                                                  |
-| --------------- | ---------------------------------------------------------------------------- |
-| `MODE`          | Positional argument. One of `deterministic` or `hybrid`.                     |
-| `--save`, `-s`  | Persist `DEEPEVAL_VOICE_EVAL_MODE` to a dotenv file. Usage: `dotenv[:path]`. |
-| `--quiet`, `-q` | Suppress printing to the terminal (useful for CI).                           |
 
 ### `gate`
 
