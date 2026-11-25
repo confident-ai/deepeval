@@ -298,3 +298,38 @@ def test_reason_only_lists_tools_that_were_not_called():
     )
     assert score == 0.5
     assert "missing tools ['cancel_order']" in metric.reason
+
+
+def test_reason_names_tools_called_with_different_input_parameters():
+    metric = ConversationToolCorrectnessMetric(
+        evaluation_params=[ToolCallParams.INPUT_PARAMETERS]
+    )
+    score = metric.measure(
+        _conversation(
+            [_search("LAX"), _book()],
+            expected_tools=[_search("NYC"), _book()],
+        ),
+        _show_indicator=False,
+    )
+    assert score == 0.5
+    assert "different input parameters for ['search_flights']" in metric.reason
+    assert "missing tools" not in metric.reason
+
+
+def test_reason_names_tools_called_with_a_different_output():
+    metric = ConversationToolCorrectnessMetric(
+        evaluation_params=[ToolCallParams.OUTPUT]
+    )
+    score = metric.measure(
+        _conversation(
+            [ToolCall(name="search_flights", output=["UA2"])],
+            expected_tools=[
+                ToolCall(name="search_flights", output=["UA1"]),
+                ToolCall(name="cancel_order"),
+            ],
+        ),
+        _show_indicator=False,
+    )
+    assert score == 0
+    assert "missing tools ['cancel_order']" in metric.reason
+    assert "different output for ['search_flights']" in metric.reason

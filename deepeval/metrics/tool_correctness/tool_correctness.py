@@ -324,38 +324,71 @@ class ToolCorrectnessMetric(BaseMetric):
                     issues.append(f"tool type mismatches {type_mismatches}")
                 return f"Incorrect tool usage: {' and '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
         else:
-            missing = self._missing_tool_names()
+            missing, wrong_inputs, wrong_outputs = self._tool_call_issues()
             if self._calculate_non_exact_match_score() == 1:
                 return f"All expected tools {expected_tools_names} were called (order not considered)."
             else:
                 issues = []
                 if missing:
                     issues.append(f"missing tools {missing}")
-                elif not type_mismatches:
+                if wrong_inputs:
                     issues.append(
-                        "tools called with different input parameters or output"
+                        f"different input parameters for {wrong_inputs}"
                     )
+                if wrong_outputs:
+                    issues.append(f"different output for {wrong_outputs}")
                 if type_mismatches:
                     issues.append(f"tool type mismatches {type_mismatches}")
+                if not issues:
+                    issues.append("tools did not fully match")
                 return f"Incomplete tool usage: {'; '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
 
-    def _missing_tool_names(self) -> List[str]:
+    def _tool_call_issues(self) -> Tuple[List[str], List[str], List[str]]:
+        """Names of expected tools that were never called, and of those
+        called with input parameters or output that differ, when those are
+        evaluated. Each call is matched to one expected tool at most."""
+        check_inputs = ToolCallParams.INPUT_PARAMETERS in self.evaluation_params
+        check_output = ToolCallParams.OUTPUT in self.evaluation_params
+
+        def inputs_match(expected: ToolCall, called: ToolCall) -> bool:
+            return (
+                not check_inputs
+                or self._compare_dicts(
+                    expected.input_parameters or {},
+                    called.input_parameters or {},
+                )
+                == 1
+            )
+
+        def output_matches(expected: ToolCall, called: ToolCall) -> bool:
+            return not check_output or expected.output == called.output
+
         unmatched = list(self.tools_called)
-        missing = []
+        missing, wrong_inputs, wrong_outputs = [], [], []
         for expected_tool in self.expected_tools:
+            same_name = [
+                called_tool
+                for called_tool in unmatched
+                if called_tool.name == expected_tool.name
+            ]
+            if not same_name:
+                missing.append(expected_tool.name)
+                continue
             match = next(
                 (
                     called_tool
-                    for called_tool in unmatched
-                    if called_tool.name == expected_tool.name
+                    for called_tool in same_name
+                    if inputs_match(expected_tool, called_tool)
+                    and output_matches(expected_tool, called_tool)
                 ),
-                None,
+                same_name[0],
             )
-            if match is None:
-                missing.append(expected_tool.name)
-            else:
-                unmatched.remove(match)
-        return missing
+            unmatched.remove(match)
+            if not inputs_match(expected_tool, match):
+                wrong_inputs.append(expected_tool.name)
+            if not output_matches(expected_tool, match):
+                wrong_outputs.append(expected_tool.name)
+        return missing, wrong_inputs, wrong_outputs
 
     def _get_type_mismatches(self) -> List[str]:
         mismatches = []
