@@ -216,7 +216,7 @@ In hybrid mode, the model hears the audio around each problem and answers one ye
 | [Agent Interruption](/docs/metrics-agent-interruption#second-check) | Caller | Is a person speaking in this clip, rather than only background noise, breathing or silence? |
 | [User Interruption](/docs/metrics-user-interruption#second-check) | Caller | Is a person speaking in this clip, rather than only background noise, breathing or silence? |
 
-[Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) passes the setting to its interruption parts. Other voice metrics ignore it.
+[Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) passes the setting to its interruption parts. Roll-ups that include Background Noise, such as [Voice Naturalness](/docs/metrics-voice-naturalness) and [Speech Intelligibility](/docs/metrics-speech-intelligibility), don't take `eval_mode` themselves, but follow `DEEPEVAL_VOICE_EVAL_MODE` for that part. Other voice metrics ignore it.
 
 - **Dismissed.** If the model judges the problem more likely not real than real, it doesn't count against the score and is left out of `events`. `dismissed_events` in the breakdown, and the reason, say how many were dismissed.
 - **Kept.** If no clip can be cut, or the model fails, the problem stays and a warning is logged.
@@ -244,7 +244,7 @@ Every voice metric takes these optional parameters:
 - `verbose_mode`: prints the score breakdown in verbose metric logs. Defaults to `False`.
 - `flaky`: [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaults to `False`.
 
-Some also take `use_speech_detection`, `eval_mode` and `audio_decision_model`. Each metric's page lists the ones it takes.
+Some also take `use_speech_detection`, `eval_mode` and `audio_decision_model`. [Transcription Accuracy](/docs/metrics-transcription-accuracy) is judged by an LLM or Jev, so it takes their parameters instead. Each metric's page lists the ones it takes.
 
 ## Score Breakdown
 
