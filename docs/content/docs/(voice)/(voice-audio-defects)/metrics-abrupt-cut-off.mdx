@@ -183,7 +183,7 @@ The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introdu
 <Tabs items={["Full call audio", "Per-turn audio"]}>
 <Tab value="Full call audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="call"
   duration={10}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 1.8 }] },
@@ -200,7 +200,7 @@ Each stretch of agent sound is one reply. A pause under 1 second doesn't end it,
 </Tab>
 <Tab value="Per-turn audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={10}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.2, end: 5.8, label: "turn 1" }, { start: 6.8, end: 9.4, label: "turn 3" }], sounds: [{ start: 2.4, end: 3.8 }, { start: 4.3, end: 5.6 }, { start: 7.0, end: 9.2 }] },
@@ -223,7 +223,7 @@ A finished reply fades out. A cut one stops at near full volume.
 <Tabs items={["Full call audio", "Per-turn audio"]}>
 <Tab value="Full call audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="call"
   duration={8}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 1.6 }] },
@@ -243,7 +243,7 @@ Every point where the agent's sound stops is checked. A reply is flagged if any 
 </Tab>
 <Tab value="Per-turn audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={8}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.3, end: 3.4, label: "turn 0" }, { start: 4.4, end: 7.4, label: "turn 2" }], sounds: [{ start: 0.4, end: 3.2, ending: "fade" }, { start: 4.5, end: 7.0, ending: "cut" }] },
@@ -298,7 +298,7 @@ Two short calls where the agent sometimes stops mid-word, one scored from full c
 <Tabs items={["Full call audio", "Per-turn audio"]}>
 <Tab value="Full call audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="call"
   duration={14}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 2.3 }, { start: 7.6, end: 9.4 }] },
@@ -323,7 +323,7 @@ Two short calls where the agent sometimes stops mid-word, one scored from full c
 </Tab>
 <Tab value="Per-turn audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={20}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0, end: 3.0, label: "turn 0" }, { start: 4.6, end: 7.4, label: "turn 2" }, { start: 9.6, end: 12.4, label: "turn 4" }, { start: 13.0, end: 15.2, label: "turn 5" }, { start: 17.0, end: 19.4, label: "turn 7" }], sounds: [{ start: 0.1, end: 2.9, ending: "fade" }, { start: 4.7, end: 7.4, ending: "cut" }, { start: 9.7, end: 11.2, ending: "cut" }, { start: 11.2, end: 12.4, silent: true }, { start: 13.1, end: 15.1, ending: "fade" }, { start: 17.1, end: 19.0, ending: "cut" }] },

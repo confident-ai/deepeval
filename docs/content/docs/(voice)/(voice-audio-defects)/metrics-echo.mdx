@@ -26,7 +26,7 @@ The metric only reads [full call audio](/docs/metrics-voice-introduction#full-ca
 
 ## Usage
 
-The `EchoMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode) with `record_call=True`:
+The `EchoMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode), which records the full call by default:
 
 ```python
 from deepeval import evaluate
@@ -44,7 +44,6 @@ golden = ConversationalGolden(
 simulator = ConversationSimulator(
     voice_config=VoiceConfig(
         connector=ElevenLabsConnector(agent_id="your-agent-id"),
-        record_call=True,
     )
 )
 test_cases = simulator.simulate([golden])
@@ -125,7 +124,7 @@ The `EchoMetric` score is calculated according to the following equation:
 
 ### Counting agent sound
 
-<VoiceDiagram
+<VoiceDiagram channels="call" monoNote="Echo needs the caller and agent on separate channels, so mono full call audio is skipped."
   duration={8}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 1.8 }] },
@@ -143,7 +142,7 @@ Each stretch of agent sound on the full call audio is checked on its own, not ea
 
 For each stretch, the metric looks for the same sound on the caller's channel, up to 1.5 seconds later. It compares only the timing of the two signals, so the phone line and the room changing the sound doesn't matter.
 
-<VoiceDiagram
+<VoiceDiagram channels="call" monoNote="Echo needs the caller and agent on separate channels, so mono full call audio is skipped."
   duration={6}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 2.45, end: 5.2, level: 0.3 }] },
@@ -180,7 +179,7 @@ If the model judges "no" more likely than "yes", the echo is dismissed and doesn
 
 A call where the agent's voice leaks back through the caller's speaker during one reply. Each row is one stretch of agent sound and whether it came back.
 
-<VoiceDiagram
+<VoiceDiagram channels="call" monoNote="Echo needs the caller and agent on separate channels, so mono full call audio is skipped."
   duration={17}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 0.0, end: 1.75 }, { start: 6.0, end: 7.25 }, { start: 10.45, end: 13.2, level: 0.3 }] },

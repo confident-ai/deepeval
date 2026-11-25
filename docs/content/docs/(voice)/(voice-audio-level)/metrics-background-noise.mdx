@@ -24,7 +24,7 @@ To use the `BackgroundNoiseMetric`, you'll have to provide a [`ConversationalTes
 
 - `audio` on the agent's turns
 
-The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). Full call audio on the test case is ignored.
+The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). If no turn has audio, it uses replies cut from stereo full call audio instead.
 
 ## Usage
 
@@ -121,7 +121,7 @@ The `BackgroundNoiseMetric` score is calculated according to the following equat
 
 ### Counting agent replies
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={10}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 3.2, label: "turn 1" }, { start: 4.0, end: 5.4, label: "turn 3" }, { start: 6.6, end: 9.8, label: "turn 5" }], sounds: [{ start: 0.3, end: 3.0 }, { start: 4.1, end: 5.2 }, { start: 6.7, end: 9.6 }] },
@@ -143,7 +143,7 @@ Each agent clip is one reply. A reply is skipped when it:
 
 Speech should sit far above the noise in its pauses. A noisy reply has a raised floor between words.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={6}
   hideAxis
   lanes={[
@@ -186,7 +186,7 @@ If the model judges "no" more likely than "yes", the reply is dismissed and does
 
 A call where one agent reply has a loud hiss behind it and one is too short to measure. Each row is one agent reply, its signal-to-noise ratio and whether that counts as noisy.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={22}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 5.5, label: "turn 1" }, { start: 8.5, end: 11.5, label: "turn 3" }, { start: 14.5, end: 16.0, label: "turn 5" }, { start: 19.0, end: 22.0, label: "turn 7" }], sounds: [{ start: 2.6, end: 5.3 }, { start: 8.5, end: 11.5, ending: "flat" }, { start: 14.6, end: 15.8 }, { start: 19.1, end: 21.8 }] },

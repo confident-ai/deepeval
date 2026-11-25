@@ -127,7 +127,7 @@ The `SpeechIntelligibilityMetric` score is calculated according to the following
 
 <Equation formula="\text{Speech Intelligibility} = \frac{\text{Number of Agent Replies No Part Flagged}}{\text{Total Number of Agent Replies Judged}}" />
 
-The metric only reads per-turn audio: each agent turn's own clip. Full call audio and the caller's turns are ignored.
+The metric reads each agent turn's own clip, or replies cut from stereo full call audio when no turn has audio. The caller's turns are ignored.
 
 ### Parts
 
@@ -154,7 +154,7 @@ If no part can judge any reply, the metric is [skipped](/docs/metrics-voice-intr
 
 A call with five agent replies: three clean, one over a noisy line, and one too quiet. Each row is one reply, the parts that judged it and the ones that flagged it.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={35}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 3.5, end: 6.5, label: "turn 1" }, { start: 10.5, end: 13.5, label: "turn 3" }, { start: 17.5, end: 20.5, label: "turn 5" }, { start: 24.5, end: 26.0 }, { start: 31.5, end: 34.5, label: "turn 9" }], sounds: [{ start: 3.6, end: 6.3 }, { start: 10.6, end: 13.3 }, { start: 17.6, end: 20.3, level: 0.25 }, { start: 24.6, end: 25.8 }, { start: 31.6, end: 34.3 }] },

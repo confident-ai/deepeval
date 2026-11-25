@@ -180,7 +180,7 @@ The metric runs four single-issue metrics on the call, each with its default lim
 
 A reply counts if any part counted it, and is flagged if any part flagged it. A reply flagged by two parts counts once. A part with nothing to judge is left out, and if no part has anything to judge, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={10}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.5, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 2.0 }, { start: 2.0, end: 3.4, level: 0.6, ending: "flat" }, { start: 3.4, end: 4.3 }, { start: 5.7, end: 8.6, level: 1, ending: "cut" }] },
@@ -198,13 +198,13 @@ Above, turn 1 is flagged once and turn 3 is flagged once, even though two parts 
 
 ### Full call audio
 
-Held Tone, Dead Stream and Audio Clipping only read per-turn audio. Abrupt Cut-off reads stereo full call audio when the test case has it. Each cut-off it finds there counts against the agent turn that started last before the stop, so every audio turn needs an `Audio.start_time`. Without one on every turn, Abrupt Cut-off reads per-turn audio too. A cut before the test case's first agent turn is dropped.
+Held Tone, Dead Stream and Audio Clipping read per-turn audio, or replies cut from stereo full call audio when no turn has audio. Abrupt Cut-off reads stereo full call audio when the test case has it. Each cut-off it finds there counts against the agent turn that started last before the stop, so every audio turn needs an `Audio.start_time`. Without one on every turn, Abrupt Cut-off reads per-turn audio too. A cut before the test case's first agent turn is dropped.
 
 ### Example call
 
 A call where three of five agent replies carry a glitch, and one of them has two. Each row is one agent reply and the parts that flagged it.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={27}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 11.5, label: "turn 3" }, { start: 14.5, end: 17.2, label: "turn 5" }, { start: 20.2, end: 21.82, label: "turn 7" }, { start: 24.82, end: 26.82, label: "turn 9" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 9.0 }, { start: 9.0, end: 10.5, level: 0.6, ending: "flat" }, { start: 10.5, end: 11.25 }, { start: 14.5, end: 15.5 }, { start: 15.5, end: 16.2, silent: true }, { start: 16.2, end: 17.2 }, { start: 20.2, end: 21.82, level: 1, ending: "cut" }, { start: 24.82, end: 26.57 }] },

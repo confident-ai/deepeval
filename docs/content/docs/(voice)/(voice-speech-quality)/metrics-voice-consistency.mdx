@@ -129,7 +129,7 @@ The `VoiceConsistencyMetric` score is calculated according to the following equa
 
 <Equation formula="\text{Voice Consistency} = \frac{\text{Number of Agent Replies No Part Flagged}}{\text{Total Number of Agent Replies Judged}}" />
 
-The metric only reads per-turn audio: each agent turn's own clip. Full call audio and the caller's turns are ignored.
+The metric reads each agent turn's own clip, or replies cut from stereo full call audio when no turn has audio. The caller's turns are ignored.
 
 ### Parts
 
@@ -157,7 +157,7 @@ A flagged reply usually means something changed mid-call: a fallback voice after
 
 A call with four agent replies, where one reply is much louder and another much higher in pitch. Each row is one reply, how it compares with the agent's typical reply and whether it was flagged.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={28}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 3.5, end: 6.5, label: "turn 1" }, { start: 10.5, end: 13.5, label: "turn 3" }, { start: 17.5, end: 20.5, label: "turn 5" }, { start: 24.5, end: 27.5, label: "turn 7" }], sounds: [{ start: 3.6, end: 6.3, level: 0.45 }, { start: 10.6, end: 13.3, level: 1 }, { start: 17.6, end: 20.3, level: 0.45 }, { start: 24.6, end: 27.3, level: 0.45 }] },

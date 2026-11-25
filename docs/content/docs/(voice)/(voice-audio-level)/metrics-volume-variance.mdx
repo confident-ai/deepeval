@@ -24,7 +24,7 @@ To use the `VolumeVarianceMetric`, you'll have to provide a [`ConversationalTest
 
 - `audio` on the agent's turns
 
-The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). Full call audio on the test case is ignored.
+The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). If no turn has audio, it uses replies cut from stereo full call audio instead.
 
 ## Usage
 
@@ -119,7 +119,7 @@ The `VolumeVarianceMetric` score is calculated according to the following equati
 
 ### Counting agent replies
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={6}
   lanes={[
     { label: "Agent", role: "agent", sounds: [{ start: 0.1, end: 0.9 }, { start: 1.1, end: 1.9 }, { start: 2.1, end: 2.25 }, { start: 3.1, end: 3.9 }, { start: 4.1, end: 4.9 }, { start: 5.1, end: 5.6 }] },
@@ -143,7 +143,7 @@ A reply is skipped when it:
 
 ### Drift criteria
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={5}
   lanes={[
     { label: "Steady", role: "agent", sounds: [{ start: 0.1, end: 4.9, level: 0.7 }] },
@@ -176,7 +176,7 @@ If no reply is long enough to follow, the metric is [skipped](/docs/metrics-voic
 
 A call where one agent reply fades steadily and one is too short to follow. Each row is one agent reply, its drift and whether that counts.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={26}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 6.5, label: "turn 1" }, { start: 9.5, end: 13.5, label: "turn 3" }, { start: 16.5, end: 18.5, label: "turn 5" }, { start: 21.5, end: 25.5, label: "turn 7" }], sounds: [{ start: 2.6, end: 6.3, level: 0.7 }, { start: 9.6, end: 10.9, level: 0.9 }, { start: 10.9, end: 12.2, level: 0.5 }, { start: 12.2, end: 13.3, level: 0.2 }, { start: 16.6, end: 18.3, level: 0.7 }, { start: 21.6, end: 25.3, level: 0.7 }] },

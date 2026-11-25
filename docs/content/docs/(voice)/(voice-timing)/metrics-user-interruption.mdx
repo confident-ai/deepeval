@@ -192,7 +192,7 @@ The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introdu
 <Tabs items={["Full call audio", "Per-turn audio"]}>
 <Tab value="Full call audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="call"
   duration={11}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 0.4, end: 2.0 }, { start: 2.5, end: 3.4 }, { start: 6.0, end: 6.5 }, { start: 8.4, end: 10.4 }] },
@@ -210,7 +210,7 @@ A caller line is each time the caller starts speaking after at least 1 second of
 </Tab>
 <Tab value="Per-turn audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={10}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 2.4, end: 5.2 }], sounds: [{ start: 3.2, end: 5.2 }] },
@@ -275,7 +275,7 @@ Two calls where the caller sometimes cuts into the agent, one scored from full c
 <Tabs items={["Full call audio", "Per-turn audio"]}>
 <Tab value="Full call audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="call"
   duration={22.5}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 3.6, end: 5.6 }, { start: 7.4, end: 7.8 }, { start: 9.0, end: 10.2 }, { start: 13.4, end: 16.4 }, { start: 17.6, end: 19.6 }] },
@@ -303,7 +303,7 @@ Two calls where the caller sometimes cuts into the agent, one scored from full c
 </Tab>
 <Tab value="Per-turn audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={22.5}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 2.4, end: 5.2, label: "turn 1" }, { start: 8.0, end: 9.2, label: "turn 3" }, { start: 13.5, end: 16.5, label: "turn 5" }, { start: 17.6, end: 19.6, label: "turn 6" }], sounds: [{ start: 3.2, end: 5.2 }, { start: 8.0, end: 9.2 }, { start: 13.5, end: 16.5 }, { start: 17.6, end: 19.6 }] },

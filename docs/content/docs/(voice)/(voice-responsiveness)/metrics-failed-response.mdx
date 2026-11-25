@@ -129,7 +129,7 @@ The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-aud
 
 ### Counting caller lines
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={10}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 0.2, end: 2.4, label: "turn 0" }, { start: 2.8, end: 4.0, label: "turn 1" }, { start: 7.4, end: 9.6 }], sounds: [{ start: 0.3, end: 2.2 }, { start: 2.9, end: 3.9 }, { start: 7.5, end: 9.4 }] },
@@ -145,7 +145,7 @@ A transcriber often splits one sentence into several turns. Caller turns in a ro
 
 ### Reply criteria
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={8}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 0.2, end: 2.4 }, { start: 5.6, end: 7.8 }], sounds: [{ start: 0.3, end: 2.2 }, { start: 5.7, end: 7.6 }] },
@@ -175,7 +175,7 @@ A reply only has to exist. Whether it could be heard is [Silent Reply](/docs/met
 
 A caller asks about an order, but the agent sends one empty reply and the call ends before its last answer. Each row is one caller line and whether the agent answered it.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={24}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 5.5, end: 6.5 }, { start: 10.5, end: 12.5, label: "turn 4" }, { start: 15.0, end: 17.0, label: "turn 6" }, { start: 21.0, end: 23.0, label: "turn 8" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 5.5, end: 6.25 }, { start: 10.5, end: 12.25 }, { start: 15.0, end: 16.75 }, { start: 21.0, end: 22.75 }] },

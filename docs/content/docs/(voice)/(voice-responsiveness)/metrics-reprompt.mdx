@@ -119,7 +119,7 @@ The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-aud
 
 ### Counting caller lines
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={10}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 0.2, end: 2.4, label: "turn 0" }, { start: 2.8, end: 4.0, label: "turn 1" }, { start: 7.4, end: 9.6 }], sounds: [{ start: 0.3, end: 2.2 }, { start: 2.9, end: 3.9 }, { start: 7.5, end: 9.4 }] },
@@ -135,7 +135,7 @@ Caller turns in a row are one line when the next one's speech starts less than 1
 
 ### Reprompt criteria
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={14}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 0.2, end: 2.4, label: "line" }, { start: 7.4, end: 8.8, label: "next line" }], sounds: [{ start: 0.3, end: 2.2 }, { start: 7.5, end: 8.6 }] },
@@ -173,7 +173,7 @@ All the likely repeats in a call go to the model in one request. If it returns n
 
 The caller speaks again three times before the agent replies, but only once because they were kept waiting. Each row is one caller line and whether the caller had to repeat it.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={40}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "1" }, { start: 11.0, end: 12.5, label: "2" }, { start: 16.5, end: 18.5, label: "4" }, { start: 20.0, end: 21.0, label: "5" }, { start: 25.0, end: 27.0, label: "7" }, { start: 32.0, end: 34.0, label: "8" }, { start: 38.0, end: 39.0 }], sounds: [{ start: 3.0, end: 4.75 }, { start: 11.0, end: 12.25 }, { start: 16.5, end: 18.25 }, { start: 20.0, end: 20.75 }, { start: 25.0, end: 26.75 }, { start: 32.0, end: 33.75 }, { start: 38.0, end: 38.75 }] },

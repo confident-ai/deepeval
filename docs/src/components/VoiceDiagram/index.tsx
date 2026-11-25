@@ -1,4 +1,6 @@
-import React from "react";
+"use client";
+
+import React, { useState } from "react";
 import styles from "./VoiceDiagram.module.scss";
 
 type Tone = "bad" | "ok" | "skip" | "info";
@@ -76,10 +78,16 @@ interface VoiceDiagramProps {
   hideAxis?: boolean;
   unit?: string;
   caption?: React.ReactNode;
+  /** Adds a Stereo / Mono switch. "call" shows what mono full call audio
+   * would mean (ignored); "turn" notes stereo clips are averaged first. */
+  channels?: "call" | "turn";
+  /** What the Mono view of full call audio says; defaults to the fallback. */
+  monoNote?: React.ReactNode;
 }
 
 const WIDTH = 600;
-const LABEL_WIDTH = 58;
+const MIN_LABEL_WIDTH = 58;
+const LANE_LABEL_CHAR_WIDTH = 6.3;
 const RIGHT_PAD = 6;
 const LANE_HEIGHT = 52;
 // Space above a lane: room for point labels only where a lane has them.
@@ -93,13 +101,20 @@ const PLAIN_GAP = 8;
 const AXIS_HEIGHT = 22;
 const BAR_STEP = 3;
 
-// Deterministic "noise" so every render draws the same waveform.
+// Deterministic "noise" so every render, on the server and in the browser,
+// draws the same waveform: integer math only, so no float drift.
 const wobble = (x: number) => {
-  const value = Math.sin(x * 12.9898 + 78.233) * 43758.5453;
-  return 0.45 + 0.55 * Math.abs(value - Math.floor(value) - 0.5) * 2;
+  let h = Math.round(x * 10) | 0;
+  h = Math.imul(h ^ (h >>> 15), 0x2c1b3c6d);
+  h = Math.imul(h ^ (h >>> 12), 0x297a2d39);
+  h ^= h >>> 15;
+  return 0.45 + 0.55 * ((h >>> 0) % 1000) / 1000;
 };
 
-const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
+// Rounded so server and browser write identical attribute values.
+const r2 = (n: number) => Math.round(n * 100) / 100;
+
+const DiagramBody: React.FC<VoiceDiagramProps> = ({
   title,
   duration,
   lanes,
@@ -111,6 +126,11 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
   unit = "s",
   caption,
 }) => {
+  // Room for the longest lane name, so a label like "Whole reply" fits.
+  const LABEL_WIDTH = Math.max(
+    MIN_LABEL_WIDTH,
+    ...lanes.map((lane) => lane.label.length * LANE_LABEL_CHAR_WIDTH + 16),
+  );
   const plotWidth = WIDTH - LABEL_WIDTH - RIGHT_PAD;
   const x = (seconds: number) =>
     LABEL_WIDTH + (Math.max(0, Math.min(duration, seconds)) / duration) * plotWidth;
@@ -294,10 +314,10 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
                   bars.push(
                     <line
                       key={bx}
-                      x1={bx}
-                      x2={bx}
-                      y1={mid - amp}
-                      y2={mid + amp}
+                      x1={r2(bx)}
+                      x2={r2(bx)}
+                      y1={r2(mid - amp)}
+                      y2={r2(mid + amp)}
                       className={
                         lit
                           ? `${styles.litBar} ${styles[lit.tone ?? "bad"]}`
@@ -431,6 +451,57 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
       </svg>
       {caption && <figcaption className={styles.caption}>{caption}</figcaption>}
     </figure>
+  );
+};
+
+const MONO_CALL_NOTE =
+  "Mono full call audio can't tell the caller from the agent, so it isn't used: the metric reads per-turn audio instead.";
+const STEREO_TURN_NOTE =
+  "Each stereo clip's two channels are averaged into one first, so it's scored exactly like mono.";
+
+const VoiceDiagram: React.FC<VoiceDiagramProps> = (props) => {
+  const { channels, monoNote, ...rest } = props;
+  const [mode, setMode] = useState<"Stereo" | "Mono">("Stereo");
+  if (!channels) return <DiagramBody {...rest} />;
+
+  let shown: VoiceDiagramProps = rest;
+  if (channels === "call" && mode === "Mono") {
+    // Every voice on one channel: nothing says whose sound is whose.
+    const sounds = rest.lanes
+      .flatMap((lane) => lane.sounds ?? [])
+      .filter((sound) => !sound.silent)
+      .sort((a, b) => a.start - b.start);
+    shown = {
+      ...rest,
+      lanes: [{ label: "Mono", role: "neutral", sounds }],
+      marks: [],
+      windows: [],
+      brackets: [],
+      highlights: [],
+      caption: monoNote ?? MONO_CALL_NOTE,
+    };
+  } else if (channels === "turn" && mode === "Stereo") {
+    shown = { ...rest, caption: rest.caption ?? STEREO_TURN_NOTE };
+  }
+
+  return (
+    <div className={styles.channelBlock}>
+      <div className={styles.channelSwitch} role="radiogroup" aria-label="Channels">
+        {(["Stereo", "Mono"] as const).map((option) => (
+          <button
+            key={option}
+            type="button"
+            role="radio"
+            aria-checked={mode === option}
+            className={mode === option ? styles.channelActive : styles.channelOption}
+            onClick={() => setMode(option)}
+          >
+            {option}
+          </button>
+        ))}
+      </div>
+      <DiagramBody {...shown} />
+    </div>
   );
 };
 

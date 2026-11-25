@@ -120,11 +120,11 @@ The `AbruptPitchJumpMetric` score is calculated according to the following equat
 
 <Equation formula="\text{Abrupt Pitch Jump} = \frac{\text{Number of Agent Replies Without a Pitch Jump}}{\text{Total Number of Agent Replies}}" />
 
-The metric only reads per-turn audio, one agent clip at a time. The caller's turns are never checked. A reply counts as having a jump at most once, however many it has.
+The metric reads per-turn audio, one agent clip at a time, or replies cut from stereo full call audio when no turn has audio. The caller's turns are never checked. A reply counts as having a jump at most once, however many it has.
 
 ### Counting agent replies
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={8}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.0, end: 7.5, label: "turn 3" }], sounds: [{ start: 0.6, end: 3.8 }, { start: 5.0, end: 7.5, silent: true }] },
@@ -139,7 +139,7 @@ Each agent clip that decodes is one reply, if any of it is voiced. The metric tr
 
 ### Pitch jump criteria
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={4}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 3.8, label: "turn 1" }], sounds: [{ start: 0.3, end: 3.7 }] },
@@ -175,7 +175,7 @@ If no agent reply has voiced speech, the metric is [skipped](/docs/metrics-voice
 
 A call with five agent replies: one cracks for 200 ms, one has a brief octave slip, and one is silent. Each row is one agent reply and whether it had a jump.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={24}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2, end: 5, label: "turn 1" }, { start: 7, end: 10, label: "turn 3" }, { start: 12, end: 15, label: "turn 5" }, { start: 17, end: 20, label: "turn 7" }, { start: 22, end: 24, label: "turn 9" }], sounds: [{ start: 2.1, end: 4.8 }, { start: 7.0, end: 10.0 }, { start: 12.0, end: 15.0 }, { start: 17.0, end: 20.0 }, { start: 22, end: 24, silent: true }] },

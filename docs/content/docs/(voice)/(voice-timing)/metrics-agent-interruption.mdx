@@ -193,7 +193,7 @@ The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introdu
 <Tabs items={["Full call audio", "Per-turn audio"]}>
 <Tab value="Full call audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="call"
   duration={12}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 2.6, end: 5.0 }] },
@@ -211,7 +211,7 @@ A start is each time the agent starts speaking after at least 1 second of its ow
 </Tab>
 <Tab value="Per-turn audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={10}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 0, end: 3.5 }], sounds: [{ start: 0.3, end: 2.3 }] },
@@ -283,7 +283,7 @@ Two calls where the agent sometimes starts over the caller, one scored from full
 <Tabs items={["Full call audio", "Per-turn audio"]}>
 <Tab value="Full call audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="call"
   duration={25}
   lanes={[
     { label: "Caller", role: "caller", sounds: [{ start: 2.6, end: 5.0 }, { start: 9.0, end: 12.0 }, { start: 16.6, end: 19.6 }] },
@@ -313,7 +313,7 @@ Two calls where the agent sometimes starts over the caller, one scored from full
 </Tab>
 <Tab value="Per-turn audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={17}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 0, end: 3.5 }, { start: 6.0, end: 9.0 }, { start: 13.0, end: 15.5 }], sounds: [{ start: 0.3, end: 2.3 }, { start: 6.0, end: 9.0 }, { start: 13.0, end: 15.5 }] },

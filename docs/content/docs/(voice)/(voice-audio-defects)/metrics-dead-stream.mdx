@@ -22,7 +22,7 @@ The dead stream metric checks whether your voice agent's audio **goes completely
 
 To use the `DeadStreamMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
 
-The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). Full call audio on the test case is ignored. Give every clip an `Audio.start_time` so a [stream cut](#dead-stream-criteria) can be told apart from a dead stream.
+The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). If no turn has audio, it uses replies cut from stereo full call audio instead. Give every clip an `Audio.start_time` so a [stream cut](#dead-stream-criteria) can be told apart from a dead stream.
 
 ## Usage
 
@@ -111,7 +111,7 @@ The `DeadStreamMetric` score is calculated according to the following equation:
 
 ### Counting agent replies
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={10}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
@@ -128,7 +128,7 @@ Each agent clip that decodes is one reply. The caller's clips are never checked.
 
 A pause in a recorded voice keeps some room noise. A stream that drops leaves exact zeros.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={10}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 4.4, label: "turn 1" }, { start: 5.0, end: 7.8, label: "turn 2" }, { start: 8.2, end: 9.8, label: "turn 3" }], sounds: [{ start: 0.3, end: 1.6 }, { start: 1.6, end: 2.4, silent: true }, { start: 2.4, end: 4.3 }, { start: 5.1, end: 6.4 }, { start: 6.4, end: 7.8, silent: true }, { start: 8.3, end: 9.7 }] },
@@ -160,7 +160,7 @@ If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introdu
 
 A call where the agent's stream goes dead mid-reply once, and drops at the end of another reply before picking back up. Each row is one agent reply and whether it counts as a dead stream.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={24}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.8, label: "turn 3" }, { start: 12.8, end: 15.5, label: "turn 5" }, { start: 18.5, end: 21.2, label: "turn 7" }, { start: 21.8, end: 23.3, label: "turn 8" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 8.5 }, { start: 8.5, end: 8.8, silent: true }, { start: 8.8, end: 9.8 }, { start: 12.8, end: 13.8 }, { start: 13.8, end: 14.5, silent: true }, { start: 14.5, end: 15.5 }, { start: 18.5, end: 20.0 }, { start: 20.0, end: 21.2, silent: true }, { start: 21.8, end: 23.3 }] },

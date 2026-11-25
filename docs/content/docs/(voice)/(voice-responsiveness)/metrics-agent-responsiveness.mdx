@@ -154,7 +154,7 @@ It runs these four metrics on the call, each with its default settings apart fro
 
 ### Counting exchanges
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={12}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 2.6, end: 4.6 }, { start: 7.8, end: 9.6 }], sounds: [{ start: 2.7, end: 4.4 }, { start: 7.9, end: 9.4 }] },
@@ -173,13 +173,13 @@ An exchange is one caller line and the agent turns after it, up to the next call
 
 Each part's flagged items are counted against an exchange, as in the table above. An exchange flagged by two parts counts once: an agent that hangs up on a question fails both Failed Response and Unexpected Call End, and costs one exchange.
 
-A part that can't judge the call is left out of the score. If no turn has audio, every part is skipped, and so is this metric, with the reason "The call has no audio to evaluate." There is no critical failure that zeroes the score: agent audio that won't decode is listed under `skipped`.
+A part that can't judge the call is left out of the score. If neither the turns nor the test case have usable audio, every part is skipped, and so is this metric, with the reason "The call has no audio to evaluate." With only stereo full call audio, replies are cut from it first. There is no critical failure that zeroes the score: agent audio that won't decode is listed under `skipped`.
 
 ### Example call
 
 The caller is kept waiting once, and the agent hangs up on their last question. Each row is one exchange and the parts that flagged it.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={26}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 11.0, end: 12.5, label: "turn 2" }, { start: 16.5, end: 18.5, label: "turn 4" }, { start: 22.5, end: 24.5, label: "turn 6" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 11.0, end: 12.25 }, { start: 16.5, end: 18.25 }, { start: 22.5, end: 24.25 }] },

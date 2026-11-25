@@ -22,7 +22,7 @@ The audio clipping metric checks whether your voice agent's audio is **distorted
 
 To use the `AudioClippingMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
 
-The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). Full call audio on the test case is ignored. An `Audio.start_time` on each clip is optional, and only used to place events on the call's clock.
+The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). If no turn has audio, it uses replies cut from stereo full call audio instead. An `Audio.start_time` on each clip is optional, and only used to place events on the call's clock.
 
 ## Usage
 
@@ -113,7 +113,7 @@ The `AudioClippingMetric` score is calculated according to the following equatio
 
 ### Counting agent replies
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={10}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
@@ -130,7 +130,7 @@ Each agent clip that decodes is one reply. The caller's clips are never checked.
 
 Audio that's too loud hits the top of what a 16-bit sample can hold, and gets flattened there.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={8}
   lanes={[
     { label: "Agent", role: "agent", sounds: [{ start: 0.3, end: 3.6, level: 0.8 }, { start: 4.4, end: 7.6, level: 1, ending: "flat" }] },
@@ -157,7 +157,7 @@ A few clipped samples on one loud syllable don't count. If there's nothing to co
 
 A call where one of four agent replies is pushed far past full volume. Each row is one agent reply and whether it was clipped.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={20}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.5, label: "turn 3" }, { start: 12.5, end: 14.5, label: "turn 5" }, { start: 17.5, end: 19.5, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25, level: 0.5 }, { start: 7.5, end: 9.25, level: 0.85 }, { start: 12.5, end: 14.25, level: 1, ending: "flat" }, { start: 17.5, end: 19.25, level: 0.5 }] },

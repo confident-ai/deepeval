@@ -87,7 +87,6 @@ from deepeval.voice import ElevenLabsConnector, VoiceConfig
 simulator = ConversationSimulator(
     voice_config=VoiceConfig(
         connector=ElevenLabsConnector(agent_id="your-agent-id"),
-        record_call=True,
     )
 )
 test_cases = simulator.simulate(
@@ -119,19 +118,18 @@ A voice metric can read audio from two places:
 | **Full call audio** | Used | Ignored |
 | **Per-turn audio** | Used | Used |
 
-Which one is used depends on the metric:
+Which one a metric uses depends on what it measures:
 
-| Metric | Audio it reads |
-| --- | --- |
-| [Abrupt Cut-off](/docs/metrics-abrupt-cut-off), [Response Latency](/docs/metrics-response-latency), [Response Delay Consistency](/docs/metrics-response-delay-consistency), [Time to First Response](/docs/metrics-time-to-first-response), [Agent Interruption](/docs/metrics-agent-interruption), [User Interruption](/docs/metrics-user-interruption), [Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) | Stereo full call audio when the test case has it, otherwise per-turn audio |
-| [Echo](/docs/metrics-echo) | Stereo full call audio only. Skipped without it |
-| Every other voice metric | Per-turn audio only |
+- **Who spoke when.** [Abrupt Cut-off](/docs/metrics-abrupt-cut-off), [Response Latency](/docs/metrics-response-latency), [Response Delay Consistency](/docs/metrics-response-delay-consistency), [Time to First Response](/docs/metrics-time-to-first-response), [Agent Interruption](/docs/metrics-agent-interruption), [User Interruption](/docs/metrics-user-interruption) and [Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) use stereo full call audio when the test case has it, and per-turn audio otherwise. [Echo](/docs/metrics-echo) needs stereo full call audio and is skipped without it.
+- **How each reply sounds.** Every other metric uses each turn's own clip. A clip marks where a reply starts and ends, which silence on a recording can't always tell: a long pause mid-reply would otherwise split it in two. Only when no turn has audio, such as a production call that comes as one recording, are the replies cut from stereo full call audio instead. [Transcription Accuracy](/docs/metrics-transcription-accuracy) always needs per-turn audio.
 
-When a metric can read both and the test case has both, stereo full call audio always wins and per-turn audio is ignored. It's the better source because it's one continuous recording with both speakers on the same clock:
+For who spoke when, stereo full call audio is the better source because it's one continuous recording with both speakers on the same clock:
 
 - **Exact timing.** Who spoke when comes from the sound itself, not from where each turn was cut or how accurate its `Audio.start_time` is.
 - **Overlaps are visible.** The metric hears both sides at once, so it can tell when the caller and agent talked over each other, or whether the caller spoke up just as the agent stopped.
 - **Nothing is lost between turns.** Sound that falls outside every turn's clip, such as a reply that starts late or runs on, is still there.
+
+When replies are cut from full call audio, each speaker's turns are matched in order to the replies heard on their channel, from 0.15 seconds before each reply's sound to 0.15 seconds after. If a channel has more replies than turns, the closest replies are joined until the counts match. Mono full call audio can't be used either way, and logs a warning saying so.
 
 Roll-up metrics, such as [Audio Integrity](/docs/metrics-audio-integrity), use whatever each of their parts uses.
 

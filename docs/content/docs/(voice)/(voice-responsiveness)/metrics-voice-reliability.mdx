@@ -198,7 +198,7 @@ It runs the parts of both roll-ups once each, Silent Reply being in both:
 
 Issues are counted per exchange, exactly as in [Agent Responsiveness](/docs/metrics-agent-responsiveness#counting-exchanges): a caller line and the agent turns after it. An issue in an agent reply counts against the exchange that reply is in. An exchange flagged by two parts counts once.
 
-Only Abrupt Cut-off can read [full call audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). With stereo full call audio, each cut counts against the agent turn that started last before it. A cut before the first agent turn, such as one in turns left out of the test case, isn't counted. This needs `Audio.start_time` on every turn with audio. Without it, the full call audio is ignored and every part reads per-turn audio.
+Abrupt Cut-off is the only part that prefers [full call audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). The others read per-turn audio, or replies cut from stereo full call audio when no turn has audio. With stereo full call audio, each cut counts against the agent turn that started last before it. A cut before the first agent turn, such as one in turns left out of the test case, isn't counted. This needs `Audio.start_time` on every turn with audio. Without it, the full call audio is ignored and every part reads per-turn audio.
 
 A part that can't judge the call is left out of the score. If no part can, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped), as for a call with no per-turn audio.
 
@@ -217,7 +217,7 @@ Nothing else zeroes the score.
 
 The same call as in [Agent Responsiveness](/docs/metrics-agent-responsiveness#example-call), but the agent's reply in turn 3 is clipped. Each row is one exchange and the parts that flagged it.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={26}
   lanes={[
     { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 11.0, end: 12.5, label: "turn 2" }, { start: 16.5, end: 18.5, label: "turn 4" }, { start: 22.5, end: 24.5, label: "turn 6" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 11.0, end: 12.25 }, { start: 16.5, end: 18.25 }, { start: 22.5, end: 24.25 }] },

@@ -150,7 +150,7 @@ The `VoiceNaturalnessMetric` score is calculated according to the following equa
 
 <Equation formula="\text{Voice Naturalness} = \frac{\text{Number of Agent Replies No Part Flagged}}{\text{Total Number of Agent Replies Judged}}" />
 
-The metric only reads per-turn audio: each agent turn's own clip. Full call audio and the caller's turns are ignored.
+The metric reads each agent turn's own clip, or replies cut from stereo full call audio when no turn has audio. The caller's turns are ignored.
 
 ### Parts
 
@@ -178,7 +178,7 @@ If no part can judge any reply, the metric is [skipped](/docs/metrics-voice-intr
 
 A call with four agent replies: one clean, one clipped and rushed, one with a long pause, and one too short for most parts. Each row is one reply, the parts that judged it and the ones that flagged it.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={27}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 3.5, end: 6.5, label: "turn 1" }, { start: 10.5, end: 13.5, label: "turn 3" }, { start: 17.5, end: 23.0, label: "turn 5" }, { start: 24.5, end: 26.0 }], sounds: [{ start: 3.6, end: 6.3 }, { start: 10.6, end: 13.3 }, { start: 17.6, end: 18.76 }, { start: 18.76, end: 21.5, silent: true }, { start: 21.5, end: 22.8 }, { start: 24.6, end: 25.8 }] },

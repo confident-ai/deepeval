@@ -22,7 +22,7 @@ The held tone metric checks whether your voice agent's audio contains a **stuck 
 
 To use the `HeldToneMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
 
-The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). Full call audio on the test case is ignored. An `Audio.start_time` on each clip is optional, and only used to place events on the call's clock.
+The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). If no turn has audio, it uses replies cut from stereo full call audio instead. An `Audio.start_time` on each clip is optional, and only used to place events on the call's clock.
 
 ## Usage
 
@@ -123,7 +123,7 @@ The `HeldToneMetric` score is calculated according to the following equation:
 
 ### Counting agent replies
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={10}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
@@ -140,7 +140,7 @@ Each agent clip that decodes is one reply. The caller's clips are never checked.
 
 A voice holding a vowel wobbles and drifts in pitch. A stuck tone doesn't.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={8}
   lanes={[
     { label: "Agent", role: "agent", sounds: [{ start: 0.3, end: 1.4 }, { start: 1.4, end: 2.4, level: 0.7 }, { start: 2.4, end: 3.6 }, { start: 4.4, end: 6.4, level: 0.6, ending: "flat" }, { start: 6.4, end: 7.6 }] },
@@ -180,7 +180,7 @@ If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introdu
 
 A call where the agent holds a vowel in one reply and plays a steady beep in another. Each row is one agent reply and whether it had a held tone.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={23}
   lanes={[
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 10.5, label: "turn 3" }, { start: 13.5, end: 17.5, label: "turn 5" }, { start: 20.5, end: 22.5, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 8.5 }, { start: 8.5, end: 9.5, level: 0.7 }, { start: 9.5, end: 10.25 }, { start: 13.5, end: 15.0 }, { start: 15.0, end: 16.5, level: 0.6, ending: "flat" }, { start: 16.5, end: 17.25 }, { start: 20.5, end: 22.25 }] },

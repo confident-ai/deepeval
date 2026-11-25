@@ -205,7 +205,7 @@ The `TranscriptionAccuracyMetric` score is calculated according to the following
 <Tabs items={["Content", "Audio"]}>
 <Tab value="Content">
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={14}
   hideAxis
   lanes={[
@@ -225,7 +225,7 @@ An agent turn without a `provider_transcript` can't be checked, so the caller sp
 </Tab>
 <Tab value="Audio">
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={14}
   hideAxis
   lanes={[
@@ -332,7 +332,7 @@ With the LLM judge, a verdict that isn't `"yes"` or `"no"` is dropped. If none a
 
 A recruiting call where the agent mishears a surname and loses a "not". Each row is one exchange, what the caller said, what the agent heard, and how each judge scores it.
 
-<VoiceDiagram
+<VoiceDiagram channels="turn"
   duration={20}
   hideAxis
   lanes={[
