@@ -43,6 +43,7 @@ from deepeval.models.stt import (
 )
 from deepeval.models.system_one import (
     HumeDecisionModel,
+    OpenAIAudioDecisionModel,
     OpenAIDecisionModel,
     TypeSafeModel,
 )
@@ -58,6 +59,7 @@ __all__ = [
     "TypeSafeModel",
     "OpenAIDecisionModel",
     "HumeDecisionModel",
+    "OpenAIAudioDecisionModel",
     "OpenAIModel",
     "AzureOpenAIModel",
     "LocalModel",

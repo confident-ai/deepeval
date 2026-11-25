@@ -6,7 +6,7 @@ languages: [python]
 beta: true
 ---
 <MetricTagsDisplayer
-  voice={true} multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
+  voice={true} multiTurn={true} chatbot={true} usesLLMs={false} jev={true} referenceless={true} />
 
 The agent responsiveness metric checks whether your voice agent **answered when it was spoken to**. It runs four single-issue voice metrics for replies that never came, replies the caller could not hear, calls that ended badly, and lines the caller had to repeat, and returns the share of exchanges none of them flagged, between 0 and 1.
 
@@ -42,12 +42,13 @@ metric = AgentResponsivenessMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **FIVE** optional parameters when creating an `AgentResponsivenessMetric`:
+There are **SIX** optional parameters when creating an `AgentResponsivenessMetric`:
 
 - [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
+- [Optional] `system_one_model`: the Jev model its Reprompt check uses to judge whether a caller who spoke again was repeating themselves, as a string or a `DeepEvalBaseSystemOneModel`. Defaulted to <DefaultSystemOneModel />.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
@@ -137,11 +138,13 @@ Two issues in the same exchange count once: an agent that hangs up right after a
       ),
     },
     {
-      question: "Does this metric call an LLM or an external speech model?",
+      question: "Does this metric call a model?",
       answer: (
         <>
-          No. Every part is deterministic and reads the ordered turns, their
-          audio and the call's metadata, so it has no model or token cost.
+          Only for Reprompt: when the caller spoke again before the agent
+          replied, one request to the decision model judges whether they were
+          repeating themselves. Every other part reads the ordered turns, their
+          audio and the call's metadata, with no model or token cost.
         </>
       ),
     },

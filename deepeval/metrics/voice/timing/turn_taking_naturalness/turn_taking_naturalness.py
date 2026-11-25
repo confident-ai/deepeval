@@ -55,9 +55,7 @@ class TurnTakingNaturalnessMetric(BaseRollUpMetric):
             flaky=flaky,
         )
         self.use_speech_detection = use_speech_detection
-        self.audio_decision_model = audio_decision_model
-        if audio_decision_model is not None:
-            self.evaluation_model = audio_decision_model.get_model_name()
+        self._use_audio_decision_model(audio_decision_model)
 
     def _parts(self) -> List[BaseDefectMetric]:
         return [

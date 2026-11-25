@@ -1,7 +1,9 @@
 import pytest
 
 from deepeval.metrics import AgentResponsivenessMetric
+from deepeval.models.system_one.schema import NoulAnswer, SystemOneAnswers
 from deepeval.test_case import Turn
+from tests.test_metrics.system_one_fakes import FakeSystemOneModel
 from tests.test_metrics.helpers import (
     AGENT_HUNG_UP,
     caller_turn,
@@ -54,3 +56,20 @@ def test_a_call_without_audio_is_skipped():
     )
     assert metric.score is None
     assert metric.reason == "The call has no audio to evaluate."
+
+
+def test_reprompt_decides_with_the_roll_up_s_decision_model():
+    model = FakeSystemOneModel(
+        answer_fn=lambda questions: SystemOneAnswers(
+            nouls={key: NoulAnswer(probability=0.9) for key in questions}
+        ),
+        cost=0.003,
+    )
+    turns = clean_turns()
+    turns.insert(3, caller_turn("Hello? Can you hear me?"))
+    metric = measure(AgentResponsivenessMetric(system_one_model=model), turns)
+    assert metric.score == pytest.approx(3 / 4)
+    (event,) = metric.score_breakdown["events"]
+    assert event["metric"] == "Reprompt"
+    assert metric.evaluation_model == "fake-jev"
+    assert metric.evaluation_cost == pytest.approx(0.003)

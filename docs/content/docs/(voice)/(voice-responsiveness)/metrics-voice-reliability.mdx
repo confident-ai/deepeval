@@ -6,7 +6,7 @@ languages: [python]
 beta: true
 ---
 <MetricTagsDisplayer
-  voice={true} multiTurn={true} chatbot={true} usesLLMs={false} referenceless={true} />
+  voice={true} multiTurn={true} chatbot={true} usesLLMs={false} jev={true} referenceless={true} />
 
 The voice reliability metric is the **operational summary** of a call: did the agent answer, and did its audio arrive intact? It runs every check of [agent responsiveness](/docs/metrics-agent-responsiveness) and [audio integrity](/docs/metrics-audio-integrity) together, and returns the share of exchanges none of them flagged, between 0 and 1.
 
@@ -42,13 +42,14 @@ metric = VoiceReliabilityMetric(threshold=0.9)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **SIX** optional parameters when creating a `VoiceReliabilityMetric`:
+There are **SEVEN** optional parameters when creating a `VoiceReliabilityMetric`:
 
 - [Optional] `threshold`: a number representing the minimum passing score. Set it to `None` to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
 - [Optional] `use_speech_detection`: a boolean which, when set to `True`, only counts the caller as talking when the sound on their channel is speech, so background noise is not mistaken for the caller. Only applies with a stereo `call_recording_path`, and is passed to the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) check. Defaulted to `True`.
+- [Optional] `system_one_model`: the Jev model its Reprompt check uses to judge whether a caller who spoke again was repeating themselves, as a string or a `DeepEvalBaseSystemOneModel`. Defaulted to <DefaultSystemOneModel />.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 Every voice metric records what it measured on `score_breakdown`. Read it after a standalone `measure()` call, or turn on `verbose_mode` to have it printed during an `evaluate()` run:
@@ -158,10 +159,11 @@ Run this alongside a quality metric — [`VoiceNaturalnessMetric`](/docs/metrics
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No LLM. Every part runs locally over the turns and audio samples.
-          With a call recording and <code>use_speech_detection</code> on, the
-          cut-off check runs the small Silero VAD model locally over the
-          caller's channel, so it has no token cost.
+          No LLM. When the caller spoke again before the agent replied, the
+          Reprompt part makes one request to the decision model. Every other
+          part runs locally over the turns and audio samples. With a call
+          recording and <code>use_speech_detection</code> on, the cut-off check
+          runs the small Silero VAD model locally over the caller's channel.
         </>
       ),
     },

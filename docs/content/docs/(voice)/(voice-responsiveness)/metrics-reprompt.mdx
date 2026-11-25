@@ -11,10 +11,11 @@ beta: true
   multiTurn={true}
   chatbot={true}
   usesLLMs={false}
+  jev={true}
   referenceless={true}
 />
 
-The reprompt metric checks whether the caller **had to speak again before your voice agent replied**, as in "Can you check my order?" followed by "Hello? Are you there?". It returns the share of caller lines the agent answered without being prompted again, between 0 and 1.
+The reprompt metric checks whether the caller **had to repeat themselves before your voice agent replied**, as in "Can you check my order?" followed by "Hello? Are you there?". A decision model reads each place the caller spoke again and judges whether they repeated or rephrased their line or checked the agent was there, rather than carrying on, saying something new or talking to someone else. It returns the share of caller lines the agent answered without being prompted again, between 0 and 1.
 
 ## Usage
 
@@ -50,7 +51,7 @@ There are **SIX** optional parameters when creating a `RepromptMetric`:
 - [Optional] `include_reason`: a boolean which, when set to `True`, includes a summary of the evaluation score. Defaulted to `True`.
 - [Optional] `strict_mode`: a boolean which, when set to `True`, requires a perfect score. Any score below 1 becomes 0, and the threshold is set to 1. Defaulted to `False`.
 - [Optional] `verbose_mode`: a boolean which, when set to `True`, includes the score breakdown in verbose metric logs. Defaulted to `False`.
-- [Optional] `audio_decision_model`: an audio decision model, such as `HumeDecisionModel`, that hears a short clip of each flagged event and dismisses the ones it judges not real. See [Second check with an audio decision model](#second-check-with-an-audio-decision-model). Defaulted to `None`.
+- [Optional] `system_one_model`: the Jev model that judges each place the caller spoke again, as a string or a `DeepEvalBaseSystemOneModel`. Defaulted to <DefaultSystemOneModel />.
 - [Optional] `flaky`: a boolean which, when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
 
 `score_breakdown` lists the caller lines that had to be repeated:
@@ -81,7 +82,7 @@ Like [`FailedResponseMetric`](/docs/metrics-failed-response), `turn` here is the
 
 <Equation formula="\text{Reprompt} = \frac{\text{Caller lines answered before the caller spoke again}}{\text{Caller lines that needed a reply}}" />
 
-Caller turns that start less than 1 second after the previous caller turn ends are one line: a transcriber often splits one sentence into several turns, and that is not the caller speaking again. Turns without an `Audio.start_time` can't be timed, so each is its own line. A caller line needs a reply unless it closes the call: once any trailing periods or exclamation marks are dropped, the text of its last turn ends in "bye", "goodbye", "thank you", "thanks", "that's all" or "that is all". A line counts as repeated when the very next turn is another caller line and the agent does reply later in the call. A line the agent never answers at all is left to [`FailedResponseMetric`](/docs/metrics-failed-response), so the two metrics never flag the same line. A conversation with no audio on any turn is not a voice call, so the metric is skipped, as it is when no caller line needed a reply.
+Caller turns that start less than 1 second after the previous caller turn ends are one line: a transcriber often splits one sentence into several turns, and that is not the caller speaking again. Turns without an `Audio.start_time` can't be timed, so each is its own line. A caller line needs a reply unless it closes the call: once any trailing periods or exclamation marks are dropped, the text of its last turn ends in "bye", "goodbye", "thank you", "thanks", "that's all" or "that is all". When the very next turn is another caller line and the agent does reply later in the call, the decision model is asked whether that next line repeats or rephrases the first, or checks someone is still there. It sees the agent's line before, both caller lines and the silence between them, and the line counts as repeated when it answers yes with a probability of at least 0.5. Every such place in a call goes to the model in one request. A line the agent never answers at all is left to [`FailedResponseMetric`](/docs/metrics-failed-response), so the two metrics never flag the same line. A conversation with no audio on any turn is not a voice call, so the metric is skipped, as it is when no caller line needed a reply.
 
 ## FAQs
 
@@ -109,15 +110,15 @@ Caller turns that start less than 1 second after the previous caller turn ends a
       ),
     },
     {
-      question: "Does this metric call an LLM or an external speech model?",
+      question: "Does this metric call a model?",
       answer: (
         <>
-          No. It only reads the order and timing of the turns and the text of
-          the caller's lines, so it has no model or token cost.
+          Only when the caller spoke again before the agent replied: then it
+          makes one request to the decision model for the whole call, reported
+          in <code>evaluation_cost</code>. A call where the agent always
+          answered first has no model cost.
         </>
       ),
     },
   ]}
 />
-
-<include cwd>snippets/voice/audio-decision-check.mdx</include>

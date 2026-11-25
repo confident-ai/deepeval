@@ -1,3 +1,4 @@
+import asyncio
 import json
 from abc import abstractmethod
 from dataclasses import replace
@@ -23,6 +24,7 @@ from deepeval.metrics.voice.utils.defects import (
     untimed_call_reason,
 )
 from deepeval.metrics.voice.utils.decision_check import (
+    EventSpeaker,
     confirm_defects,
     event_clip,
 )
@@ -101,6 +103,7 @@ def _place_reply_events(breakdown: Dict, test_case: ConversationalTestCase):
 
 class BaseVoiceMetric(BaseConversationalMetric):
     _required_test_case_params: List[MultiTurnParams] = []
+    audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None
 
     def __init__(
         self,
@@ -144,10 +147,23 @@ class BaseVoiceMetric(BaseConversationalMetric):
             _show_indicator=_show_indicator,
             _in_component=_in_component,
         ):
+            if self._calls_a_model():
+                return await asyncio.to_thread(self._run, test_case)
             return self._run(test_case)
+
+    def _calls_a_model(self) -> bool:
+        return self.audio_decision_model is not None
+
+    def _use_audio_decision_model(
+        self, model: Optional[DeepEvalBaseAudioDecisionModel]
+    ) -> None:
+        self.audio_decision_model = model
+        if model is not None:
+            self.evaluation_model = model.get_model_name()
 
     def _run(self, test_case: ConversationalTestCase) -> Optional[float]:
         self.error = None
+        self.evaluation_cost = None
         score, reason, breakdown = self._evaluate(test_case)
         _place_reply_events(breakdown, test_case)
         if (
@@ -181,15 +197,7 @@ class BaseDefectMetric(BaseVoiceMetric):
     # With an audio decision model, a clip of each flagged event is asked
     # this; a "no" dismisses the event.
     event_question: Optional[str] = None
-    event_speaker: str = "assistant"
-    audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None
-
-    def _use_audio_decision_model(
-        self, model: Optional[DeepEvalBaseAudioDecisionModel]
-    ) -> None:
-        self.audio_decision_model = model
-        if model is not None:
-            self.evaluation_model = model.get_model_name()
+    event_speaker: EventSpeaker = "assistant"
 
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
         return self.confirmed_defect_share(test_case).result()
@@ -207,9 +215,12 @@ class BaseDefectMetric(BaseVoiceMetric):
         return confirm_defects(self, test_case, share)
 
     def _event_clip(
-        self, test_case: ConversationalTestCase, event: VoiceEvent
+        self,
+        test_case: ConversationalTestCase,
+        event: VoiceEvent,
+        recording: Optional[Tuple[Any, Any, int]],
     ) -> Optional[bytes]:
-        return event_clip(test_case, event, self.event_speaker)
+        return event_clip(test_case, event, self.event_speaker, recording)
 
     @abstractmethod
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
@@ -226,6 +237,9 @@ class BaseRollUpMetric(BaseVoiceMetric):
     @abstractmethod
     def _parts(self) -> List[BaseDefectMetric]:
         raise NotImplementedError
+
+    def _calls_a_model(self) -> bool:
+        return any(part._calls_a_model() for part in self._parts())
 
     def _critical_events(
         self, test_case: ConversationalTestCase
@@ -294,6 +308,9 @@ class BaseRollUpMetric(BaseVoiceMetric):
                 self.evaluation_cost = (
                     self.evaluation_cost or 0.0
                 ) + part.evaluation_cost
+            self.evaluation_model = (
+                self.evaluation_model or part.evaluation_model
+            )
             for entry in share.skipped:
                 if entry not in skipped:
                     skipped.append(entry)

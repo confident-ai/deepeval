@@ -167,3 +167,11 @@ def test_an_interruption_the_decision_model_confirms_or_cannot_judge_stays(
     metric = _talk_over(tmp_path, model)
     assert metric.score == 0.0
     assert "dismissed_events" not in metric.score_breakdown
+
+
+def test_a_failed_decision_check_is_logged(tmp_path, caplog):
+    _talk_over(tmp_path, FakeAudioDecisionModel(error=RuntimeError("down")))
+    assert (
+        "Agent Interruption kept a flagged event its audio decision check "
+        "failed on: down"
+    ) in caplog.text

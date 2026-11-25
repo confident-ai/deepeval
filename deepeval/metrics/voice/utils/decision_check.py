@@ -3,9 +3,10 @@ model hears a short clip around each event, and events it judges not real
 are dropped before scoring. A clip that can't be cut, or a check that fails,
 keeps the event."""
 
+import logging
 from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
-from typing import TYPE_CHECKING, Optional, Tuple
+from typing import TYPE_CHECKING, Any, Literal, Optional, Tuple
 
 from deepeval.metrics.voice.utils.analysis import decode_audio
 from deepeval.metrics.voice.utils.call_activity import read_call_recording
@@ -25,10 +26,15 @@ EVENT_CLIP_SECONDS = 5.0
 MIN_CLIP_SECONDS = 1.0
 MAX_CLIP_SECONDS = 300.0
 MAX_PARALLEL_CHECKS = 4
+PCM16_SAMPLE_WIDTH = 2
 EVENT_CLIP_CONTEXT = (
     "A short clip from a phone call between an AI voice agent and a caller."
 )
 EVENT_QUESTION_KEY = "event"
+
+EventSpeaker = Literal["user", "assistant"]
+
+logger = logging.getLogger(__name__)
 
 
 def confirm_defects(
@@ -38,16 +44,24 @@ def confirm_defects(
 ) -> DefectShare:
     model = metric.audio_decision_model
     question = NoulQuestion(instructions=metric.event_question)
+    recording = read_call_recording(test_case.call_recording_path)
 
     def check(defect: VoiceEvent) -> Tuple[bool, float]:
-        clip = metric._event_clip(test_case, defect)
-        if clip is None or model is None:
+        if model is None:
             return True, 0.0
         try:
+            clip = metric._event_clip(test_case, defect, recording)
+            if clip is None:
+                return True, 0.0
             answers, cost = model.decide(
                 clip, {EVENT_QUESTION_KEY: question}, EVENT_CLIP_CONTEXT
             )
-        except Exception:
+        except Exception as error:
+            logger.warning(
+                "%s kept a flagged event its audio decision check failed on: %s",
+                metric.__name__,
+                error,
+            )
             return True, 0.0
         answer = answers.nouls.get(EVENT_QUESTION_KEY)
         real = answer is None or answer.probability >= EVENT_DISMISS_BELOW
@@ -67,14 +81,16 @@ def confirm_defects(
 
 
 def event_clip(
-    test_case: ConversationalTestCase, event: VoiceEvent, speaker: str
+    test_case: ConversationalTestCase,
+    event: VoiceEvent,
+    speaker: EventSpeaker,
+    recording: Optional[Tuple[Any, Any, int]],
 ) -> Optional[bytes]:
     """The speaker's audio around the event: from the stereo call recording
     when there is one, else from the speaker's own turn."""
     if event.start_time is not None:
         start = event.start_time
         end = start + (event.duration_seconds or 0.0)
-        recording = read_call_recording(test_case.call_recording_path)
         if recording is not None:
             caller, agent, sample_rate = recording
             channel = caller if speaker == "user" else agent
@@ -141,7 +157,7 @@ def _decoded(audio: Audio) -> Optional[Tuple[bytes, int]]:
 
 
 def _seconds(pcm: bytes, sample_rate: int) -> float:
-    return len(pcm) / 2 / sample_rate
+    return len(pcm) / PCM16_SAMPLE_WIDTH / sample_rate
 
 
 def _clip(
@@ -154,8 +170,9 @@ def _clip(
     grow = max(0.0, EVENT_CLIP_SECONDS - (end - start)) / 2
     start, end = max(0.0, start - grow), min(length, end + grow)
     end = min(end, start + MAX_CLIP_SECONDS)
-    window = pcm[int(start * sample_rate) * 2 : int(end * sample_rate) * 2]
-    floor = int(MIN_CLIP_SECONDS * sample_rate) * 2
+    first = int(start * sample_rate) * PCM16_SAMPLE_WIDTH
+    window = pcm[first : int(end * sample_rate) * PCM16_SAMPLE_WIDTH]
+    floor = int(MIN_CLIP_SECONDS * sample_rate) * PCM16_SAMPLE_WIDTH
     if len(window) < floor:
         window += b"\x00" * (floor - len(window))
     return pcm16_to_wav_bytes(window, sample_rate)
