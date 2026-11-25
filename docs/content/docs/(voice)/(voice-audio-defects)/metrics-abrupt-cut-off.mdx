@@ -273,6 +273,14 @@ If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introdu
 A stop between two words sounds like a normal ending, so it isn't flagged.
 :::
 
+### Second check
+
+In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), each cut-off is double-checked before it counts. The audio decision model hears about 5 seconds of the agent's audio around it and is asked:
+
+> Does the speaker's voice cut off abruptly, mid-word or mid-sentence?
+
+If the model judges "no" more likely than "yes", the cut-off is dismissed and doesn't count against the score.
+
 ### Example call
 
 Two short calls where the agent sometimes stops mid-word, one scored from call audio and one from turn audio. Each row is one agent reply, how it ended and whether that counts as a cut-off.

@@ -206,7 +206,17 @@ Set it with `eval_mode` on a metric that supports it, or for every voice metric 
 
 ### Second Check With an Audio Decision Model
 
-In hybrid mode, the model hears about five seconds around each problem, from the stereo call audio when there is one, otherwise from the turn's own audio, and answers one yes/no question: is this real?
+In hybrid mode, the model hears about 5 seconds around each problem, from the stereo call audio when there is one, otherwise from the turn's own audio, and answers one yes/no question. Only these metrics support it, and each asks its own question:
+
+| Metric | Whose audio it hears | What it's asked |
+| --- | --- | --- |
+| [Abrupt Cut-off](/docs/metrics-abrupt-cut-off#second-check) | Agent | Does the speaker's voice cut off abruptly, mid-word or mid-sentence? |
+| [Echo](/docs/metrics-echo#second-check) | Caller | Can the AI agent's own voice be heard echoed back on this caller's line? |
+| [Background Noise](/docs/metrics-background-noise#second-check) | Agent | Is there distracting background noise behind the speaker? |
+| [Agent Interruption](/docs/metrics-agent-interruption#second-check) | Caller | Is a person speaking in this clip, rather than only background noise, breathing or silence? |
+| [User Interruption](/docs/metrics-user-interruption#second-check) | Caller | Is a person speaking in this clip, rather than only background noise, breathing or silence? |
+
+[Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) passes the setting to its interruption parts. Other voice metrics ignore it.
 
 - **Dismissed.** If the model judges the problem more likely not real than real, it doesn't count against the score and is left out of `events`. `dismissed_events` in the breakdown, and the reason, say how many were dismissed.
 - **Kept.** If no clip can be cut, or the model fails, the problem stays and a warning is logged.
