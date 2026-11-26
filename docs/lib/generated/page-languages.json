@@ -748,6 +748,9 @@
   "/integrations/vector-databases/pgvector": [
     "python"
   ],
+  "/integrations/vector-databases/pixeltable": [
+    "python"
+  ],
   "/integrations/vector-databases/qdrant": [
     "python"
   ],

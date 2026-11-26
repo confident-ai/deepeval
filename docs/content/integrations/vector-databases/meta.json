@@ -6,6 +6,7 @@
     "chroma",
     "weaviate",
     "qdrant",
-    "pgvector"
+    "pgvector",
+    "pixeltable"
   ]
 }
