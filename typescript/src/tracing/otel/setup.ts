@@ -137,6 +137,8 @@ export function ensureConfidentTrace(
     const span = otelHooks.collectedSpan?.();
     return span ? traceManager.getTraceByUuid(span.traceUuid) : undefined;
   };
+  otelHooks.clearDerivedTraceField = (traceUuid, field) =>
+    bridge.clearDerivedTraceField(traceUuid, field);
   otelHooks.updateExported = (scope, values) => {
     if (bridge.isExported(otelTrace.getActiveSpan()))
       sendExported(module, scope, values);
