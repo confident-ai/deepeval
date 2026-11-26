@@ -208,6 +208,8 @@ class Prompt:
             data = json.loads(content)
         except (TypeError, json.JSONDecodeError):
             self.text_template = content
+            self.type = PromptType.TEXT
+            self.messages_template = None
             return content
 
         text_template = None
@@ -229,6 +231,11 @@ class Prompt:
 
         self.text_template = text_template
         self.messages_template = messages_template
+        self.type = (
+            PromptType.LIST
+            if messages_template is not None
+            else PromptType.TEXT
+        )
         return text_template or messages_template
 
     def interpolate(self, **kwargs):
