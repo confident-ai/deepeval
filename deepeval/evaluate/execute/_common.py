@@ -246,6 +246,7 @@ def _execute_metric(
     in_component: bool,
     error_config: ErrorConfig,
 ) -> Optional[str]:
+    metric.skipped = False
     try:
         metric.measure(
             test_case,
@@ -257,7 +258,6 @@ def _execute_metric(
             metric.skipped = True
             metric.error = None
             metric.success = None
-            return "skip"
         else:
             if error_config.ignore_errors:
                 metric.error = format_error_text(e)
@@ -272,7 +272,6 @@ def _execute_metric(
                 metric.skipped = True
                 metric.error = None
                 metric.success = None
-                return "skip"
             else:
                 if error_config.ignore_errors:
                     metric.error = format_error_text(e)
@@ -291,6 +290,7 @@ def _execute_metric(
             metric.success = False
         else:
             raise
+    return "skip" if metric.skipped else None
 
 
 def _execute_classifier(
