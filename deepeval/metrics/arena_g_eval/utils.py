@@ -48,7 +48,7 @@ class FormattedLLMTestCase:
                 repr(tool) for tool in self.expected_tools
             ]
 
-        return json.dumps(data, indent=2)
+        return json.dumps(data, indent=2, ensure_ascii=False)
 
 
 @dataclass
@@ -83,7 +83,7 @@ class FormattedArenaTestCase:
             data["arena_test_cases"] = {
                 name: repr(contestant) for name, contestant in contestant_items
             }
-        return json.dumps(data, indent=2)
+        return json.dumps(data, indent=2, ensure_ascii=False)
 
 
 def format_arena_test_case(
