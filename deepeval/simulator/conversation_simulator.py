@@ -1042,6 +1042,7 @@ class ConversationSimulator:
             conversational_test_case.audio = Audio(
                 url=call_recording_path, mimeType="audio/wav"
             )
+            conversational_test_case.voice = True
         if voice is not None and voice.config.output_dir is not None:
             save_started = time.perf_counter()
             logger.debug("Saving voice audio to %s", voice.config.output_dir)
