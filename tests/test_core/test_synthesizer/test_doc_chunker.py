@@ -325,3 +325,74 @@ def test_persistent_path_and_collection_name(monkeypatch, tmp_path):
 
     assert captured["path"].endswith(".vector_db/notes.v1")
     assert "processed_chunks_123_7" in fake_client.collections
+
+
+@pytest.mark.parametrize(
+    "file_name",
+    [
+        "My Report.md",
+        "informe técnico.md",
+        "notes (1).md",
+        "-draft.md",
+        "日本語.md",
+        "v1..final.md",
+    ],
+)
+def test_chunk_doc_shared_client_accepts_any_file_name(tmp_path, file_name):
+    """Chroma only accepts [a-zA-Z0-9._-] in collection names, so a document
+    whose file name has spaces, accents or brackets must still get a valid
+    collection on a shared client instead of being dropped.
+    """
+    chromadb = pytest.importorskip("chromadb")
+    p = tmp_path / file_name
+    p.write_text("hello world " * 50, encoding="utf-8")
+    dc = DocumentChunker(StubEmbedder())
+    dc.load_doc(str(p), encoding="utf-8")
+
+    client = chromadb.PersistentClient(path=str(tmp_path / "chroma"))
+    collection = dc.chunk_doc(chunk_size=16, chunk_overlap=0, client=client)
+
+    assert collection.count() > 0
+
+
+def test_chunk_doc_shared_client_separates_same_file_names(tmp_path):
+    """Two documents with the same file name in different folders must not
+    share a collection on a shared client.
+    """
+    chromadb = pytest.importorskip("chromadb")
+    client = chromadb.PersistentClient(path=str(tmp_path / "chroma"))
+
+    collections = {}
+    for folder, text in [("a", "apples are red"), ("b", "bananas are yellow")]:
+        (tmp_path / folder).mkdir()
+        p = tmp_path / folder / "faq.md"
+        p.write_text(text, encoding="utf-8")
+        dc = DocumentChunker(StubEmbedder())
+        dc.load_doc(str(p), encoding="utf-8")
+        collections[folder] = dc.chunk_doc(client=client)
+
+    assert collections["a"].name != collections["b"].name
+    assert collections["a"].get()["documents"] == ["apples are red"]
+    assert collections["b"].get()["documents"] == ["bananas are yellow"]
+
+
+@pytest.mark.asyncio
+async def test_a_chunk_doc_shared_client_separates_same_file_names(tmp_path):
+    """Same as above for a_chunk_doc, which runs concurrently in
+    a_generate_contexts.
+    """
+    chromadb = pytest.importorskip("chromadb")
+    client = chromadb.PersistentClient(path=str(tmp_path / "chroma"))
+
+    collections = {}
+    for folder, text in [("a", "apples are red"), ("b", "bananas are yellow")]:
+        (tmp_path / folder).mkdir()
+        p = tmp_path / folder / "My FAQ.md"
+        p.write_text(text, encoding="utf-8")
+        dc = DocumentChunker(StubAsyncEmbedder())
+        dc.load_doc(str(p), encoding="utf-8")
+        collections[folder] = await dc.a_chunk_doc(client=client)
+
+    assert collections["a"].name != collections["b"].name
+    assert collections["a"].get()["documents"] == ["apples are red"]
+    assert collections["b"].get()["documents"] == ["bananas are yellow"]
