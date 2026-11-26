@@ -1008,6 +1008,9 @@ class Prompt:
         elif version:
             CACHE_KEY = VERSION_CACHE_KEY
             cache_value = version
+        elif branch:
+            CACHE_KEY = BRANCH_CACHE_KEY
+            cache_value = branch
         else:
             CACHE_KEY = HASH_CACHE_KEY
             cache_value = hash or "latest"
