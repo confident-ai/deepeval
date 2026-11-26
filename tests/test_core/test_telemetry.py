@@ -16,6 +16,7 @@ from deepeval.telemetry import (
     TelemetryKey,
     UserStatus,
 )
+from deepeval.telemetry import client as client_mod
 from deepeval.telemetry import context as context_mod
 from deepeval.telemetry import identity as identity_mod
 
@@ -43,6 +44,9 @@ def backend(tmp_path, monkeypatch):
     monkeypatch.setenv("DEEPEVAL_HOME", str(tmp_path / "home"))
     identity_mod.reset_cache_for_testing()
     context_mod.reset_for_testing()
+    # Integrations are reported once per process; an earlier test that built a
+    # handler would otherwise make this one see no event.
+    client_mod._installed_integrations.clear()
 
     fake = FakeBackend()
     telemetry.set_backend(fake)
@@ -50,6 +54,7 @@ def backend(tmp_path, monkeypatch):
 
     identity_mod.reset_cache_for_testing()
     context_mod.reset_for_testing()
+    client_mod._installed_integrations.clear()
 
 
 class TestIdentity:
