@@ -1,6 +1,8 @@
+import time as _time
+import uuid as _uuid
 import pytest
 from types import SimpleNamespace
-from unittest.mock import patch
+from unittest.mock import Mock, patch
 
 from deepeval.errors import DeepEvalError
 from deepeval.models.llms.anthropic_model import (
@@ -10,6 +12,9 @@ from deepeval.models.llms.anthropic_model import (
     MIN_THINKING_BUDGET_TOKENS,
 )
 from deepeval.config.settings import reset_settings, get_settings
+from deepeval.models.llms.constants import ANTHROPIC_MODELS_DATA
+from deepeval.tracing.patchers import patch_anthropic_client
+from deepeval.tracing.types import LlmSpan, TraceSpanStatus
 from pydantic import BaseModel, SecretStr
 
 from tests.test_core.stubs import _RecordingClient
@@ -673,3 +678,70 @@ async def test_anthropic_thinking_applies_to_a_generate(
 
     await model.a_generate("prompt", schema=_Verdict)
     assert client.create_kwargs["thinking"]["type"] == "enabled"
+
+
+########################################################
+# patch_anthropic_client cost population               #
+########################################################
+
+
+def _make_llm_span() -> LlmSpan:
+    return LlmSpan(
+        uuid=str(_uuid.uuid4()),
+        status=TraceSpanStatus.IN_PROGRESS,
+        trace_uuid=str(_uuid.uuid4()),
+        start_time=_time.time(),
+    )
+
+
+class TestPatchAnthropicClientCost:
+    def _make_fake_client(self, input_tokens=7, output_tokens=11):
+        response = SimpleNamespace(
+            content=[SimpleNamespace(text="hello")],
+            usage=SimpleNamespace(
+                input_tokens=input_tokens, output_tokens=output_tokens
+            ),
+        )
+        return SimpleNamespace(
+            messages=SimpleNamespace(create=Mock(return_value=response))
+        )
+
+    def _call(self, model):
+        client = self._make_fake_client()
+        patch_anthropic_client(client)
+        client.messages.create(
+            model=model,
+            max_tokens=16,
+            messages=[{"role": "user", "content": "hi"}],
+        )
+
+    @patch("deepeval.tracing.patchers.update_llm_span")
+    @patch("deepeval.tracing.patchers.update_current_span")
+    @patch("deepeval.tracing.patchers.current_span_context")
+    def test_cost_populated_for_known_model(
+        self, mock_ctx, _mock_span, mock_llm
+    ):
+        mock_ctx.get.return_value = _make_llm_span()
+        self._call("claude-sonnet-4-5")
+        kw = mock_llm.call_args.kwargs
+        assert kw["input_token_count"] == 7
+        assert kw["output_token_count"] == 11
+        expected = ANTHROPIC_MODELS_DATA.get("claude-sonnet-4-5")
+        assert kw["cost_per_input_token"] == expected.input_price
+        assert kw["cost_per_output_token"] == expected.output_price
+        assert kw["cost_per_input_token"] == pytest.approx(3e-6)
+        assert kw["cost_per_output_token"] == pytest.approx(15e-6)
+
+    @patch("deepeval.tracing.patchers.update_llm_span")
+    @patch("deepeval.tracing.patchers.update_current_span")
+    @patch("deepeval.tracing.patchers.current_span_context")
+    def test_unknown_model_has_no_cost_and_does_not_crash(
+        self, mock_ctx, _mock_span, mock_llm
+    ):
+        mock_ctx.get.return_value = _make_llm_span()
+        self._call("my-custom-claude")
+        kw = mock_llm.call_args.kwargs
+        assert kw["input_token_count"] == 7
+        assert kw["output_token_count"] == 11
+        assert kw["cost_per_input_token"] is None
+        assert kw["cost_per_output_token"] is None
