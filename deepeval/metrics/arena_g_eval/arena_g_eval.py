@@ -4,7 +4,10 @@ from typing import Dict, Optional, List, Tuple, Union, Type
 from rich.progress import Progress
 
 from deepeval.metrics import BaseArenaMetric
-from deepeval.metrics.arena_g_eval.utils import format_arena_test_case
+from deepeval.metrics.arena_g_eval.utils import (
+    format_arena_test_case,
+    resolve_masked_winner,
+)
 from deepeval.test_case import (
     SingleTurnParams,
     ArenaTestCase,
@@ -103,7 +106,9 @@ class ArenaGEval(BaseArenaMetric):
                 )
                 if _progress:
                     update_pbar(_progress, _pbar_id)
-                self.winner = dummy_to_real_names[masked_winner]
+                self.winner = resolve_masked_winner(
+                    masked_winner, dummy_to_real_names
+                )
                 self.reason = self._generate_rewritten_reason(
                     masked_reason, dummy_to_real_names
                 )
@@ -155,7 +160,9 @@ class ArenaGEval(BaseArenaMetric):
             )
             if _progress:
                 update_pbar(_progress, _pbar_id)
-            self.winner = dummy_to_real_names[masked_winner]
+            self.winner = resolve_masked_winner(
+                masked_winner, dummy_to_real_names
+            )
             self.reason = await self._a_generate_rewritten_reason(
                 masked_reason, dummy_to_real_names
             )
