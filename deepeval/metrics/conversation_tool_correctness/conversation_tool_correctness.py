@@ -92,9 +92,11 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
                 self.should_exact_match,
                 self.should_consider_ordering,
             )
-            if unpinned or not pinned:
+            called = self._tools_left_for_any_turn(turns, pinned, scorer)
+            # With exact matching, a call on no pinned tool's behalf is an
+            # extra call even when every expected tool is pinned.
+            if unpinned or not pinned or (self.should_exact_match and called):
                 label = "Any turn" if pinned else "Conversation"
-                called = self._tools_left_for_any_turn(turns, pinned, scorer)
                 checks.append((label, called, unpinned))
 
             self.check_scores = []

@@ -229,6 +229,36 @@ def test_a_pinned_call_is_not_counted_again_for_any_turn():
     assert score == 1
 
 
+def test_exact_match_rejects_extra_calls_when_every_tool_is_pinned():
+    metric = ConversationToolCorrectnessMetric(should_exact_match=True)
+    score = metric.measure(
+        _conversation(
+            [_search("1")],
+            [_book()],
+            expected_tools=[_pinned(_search("1"), 1)],
+        ),
+        _show_indicator=False,
+    )
+    assert score == 0.5
+    assert [c["check"] for c in metric.check_scores] == [
+        "Turn 1",
+        "Any turn",
+    ]
+
+
+def test_extra_calls_outside_pinned_turns_are_ignored_without_exact_match():
+    metric = ConversationToolCorrectnessMetric()
+    score = metric.measure(
+        _conversation(
+            [_search("1")],
+            [_book()],
+            expected_tools=[_pinned(_search("1"), 1)],
+        ),
+        _show_indicator=False,
+    )
+    assert score == 1
+
+
 def test_turn_must_point_at_an_assistant_turn():
     metric = ConversationToolCorrectnessMetric()
     with pytest.raises(
