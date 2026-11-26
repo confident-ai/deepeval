@@ -1,0 +1,87 @@
+---
+id: openai-decisions
+title: OpenAI Decisions
+sidebar_label: OpenAI
+languages: [python]
+---
+
+`deepeval` supports using OpenAI's [Decisions API](https://developers.openai.com/api/docs/guides/decisions) as the decision model for its metrics under the `hybrid` and `system_one` [eval modes](/docs/evaluation-eval-modes), and for [`JevEval`](/docs/metrics-jev-eval). A decision model doesn't generate text: it answers bounded questions (yes/no, a rating on a scale, one option from a set) with calibrated probabilities. To get started, you'll need to set up your OpenAI API key.
+
+### Setting Up Your API Key
+
+DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+OPENAI_API_KEY=<your-openai-api-key>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export OPENAI_API_KEY=<your-openai-api-key>
+```
+
+**Alternative (notebook):**
+
+If you're working in a notebook environment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
+
+```bash
+%env OPENAI_API_KEY=<your-openai-api-key>
+```
+
+### In Code
+
+To use the Decisions API for `deepeval` metrics, define an `OpenAIDecisionModel` and pass it as the metric's `system_one_model`. By default, the `model` is set to `gpt-6-luna`.
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import OpenAIDecisionModel
+
+model = OpenAIDecisionModel(model="gpt-6-luna")
+answer_relevancy = AnswerRelevancyMetric(
+    system_one_model=model,
+    eval_mode="system_one",
+)
+```
+
+There are **ZERO** mandatory and **FOUR** optional parameters when creating an `OpenAIDecisionModel`:
+
+- [Optional] `model`: A string specifying which decision model to use. Defaulted to `gpt-6-luna`, currently the only model the Decisions API supports.
+- [Optional] `api_key`: A string specifying your OpenAI API key. Defaults to `OPENAI_API_KEY` if not passed; raises an error at runtime if neither is set.
+- [Optional] `base_url`: A string specifying a custom endpoint to reach the OpenAI API through.
+- [Optional] `cost_per_input_token`: A float specifying the cost for each input token. Defaults to `deepeval`'s pricing for `gpt-6-luna`. The Decisions API does not charge for output tokens.
+
+A question the model refuses to answer raises an error, so under `hybrid` that decision falls back to the LLM.
+
+</Tab>
+<Tab value="ENV">
+
+With `OPENAI_API_KEY` set, you can choose the eval mode once instead of passing `eval_mode` to every metric:
+
+```bash
+deepeval set-eval-mode system_one
+```
+
+This sets `DEEPEVAL_EVAL_MODE=system_one`. Metrics still need the `OpenAIDecisionModel` passed in code, since a model name on its own (or no `system_one_model` at all) selects [TypeSafe AI's Jev](/integrations/decision-models/typesafe-ai):
+
+```python
+from deepeval.metrics import AnswerRelevancyMetric
+from deepeval.models import OpenAIDecisionModel
+
+answer_relevancy = AnswerRelevancyMetric(system_one_model=OpenAIDecisionModel())
+```
+
+</Tab>
+</Tabs>
+
+### Available OpenAI Decision Models
+
+- `gpt-6-luna` (default)
+
+The Decisions API currently supports only `gpt-6-luna`.

@@ -662,7 +662,7 @@ In some cases, where your LLM model is doing most of the heavy lifting, it is no
 
 <Only id="python">
 
-Every built-in LLM-as-a-judge metric can be judged by an LLM alone, by an LLM and [Jev](/integrations/models/typesafe-ai) together, or by Jev alone. Jev is a System One model that answers bounded questions with calibrated probabilities instead of generating text, and the [**eval mode**](/docs/evaluation-eval-modes) picks which of the three you get:
+Every built-in LLM-as-a-judge metric can be judged by an LLM alone, by an LLM and [Jev](/integrations/decision-models/typesafe-ai) together, or by Jev alone. Jev is a System One model that answers bounded questions with calibrated probabilities instead of generating text, and the [**eval mode**](/docs/evaluation-eval-modes) picks which of the three you get:
 
 | Eval mode       | Who does what                                                                                                                                         |
 | --------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -702,7 +702,7 @@ Or save it with the CLI, which also lets you pick the Jev model:
 deepeval set-typesafe --prompt-api-key --save=dotenv
 ```
 
-See the [TypeSafe AI integration](/integrations/models/typesafe-ai) for the available Jev models.
+See the [TypeSafe AI integration](/integrations/decision-models/typesafe-ai) for the available Jev models.
 
 </Only>
 

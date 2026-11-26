@@ -236,6 +236,17 @@ Evaluation model integrations configure the LLM provider DeepEval uses for LLM-a
   </Switch>
 </Cards>
 
+## Decision Models
+
+A decision model answers bounded questions (yes/no, a rating on a scale, one option from a set) with calibrated probabilities instead of generating text. DeepEval uses one to make the decisions inside metrics running under the `hybrid` and `system_one` [eval modes](/docs/evaluation-eval-modes), and for [`JevEval`](/docs/metrics-jev-eval).
+
+<Cards className="md:grid-cols-3">
+  <Card title="TypeSafe AI (Jev)" href="/integrations/decision-models/typesafe-ai" />
+  <Only id="python">
+    <Card title="OpenAI" href="/integrations/decision-models/openai" />
+  </Only>
+</Cards>
+
 <Only id="python">
 
 ## Speech Models
