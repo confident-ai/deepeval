@@ -78,7 +78,7 @@ class VoiceConfig:
     # time anything reads it the answer is a plain path or `None`.
     output_dir: Optional[str] = field(default=UNSET)
     combine_audio_files: bool = True
-    record_call: bool = True
+    record_call: bool = False
     interruption_settings: Optional[InterruptionBehavior] = None
     keypad_input: bool = False
 

@@ -323,22 +323,6 @@ class ConversationalTestCase(BaseModel):
         )
         self.metadata = value
 
-    def model_copy(self, *, update=None, deep: bool = False):
-        # `model_copy(update=...)` skips validation, so translate the
-        # deprecated name here too; otherwise the recording would be lost.
-        if update and "call_recording_path" in update:
-            warnings.warn(
-                _CALL_RECORDING_PATH_DEPRECATION,
-                DeprecationWarning,
-                stacklevel=2,
-            )
-            update = dict(update)
-            path = update.pop("call_recording_path")
-            update.setdefault("audio", _recording_audio(path))
-            if update["audio"] is not None:
-                update.setdefault("voice", True)
-        return super().model_copy(update=update, deep=deep)
-
     @property
     def call_recording_path(self) -> Optional[str]:
         warnings.warn(

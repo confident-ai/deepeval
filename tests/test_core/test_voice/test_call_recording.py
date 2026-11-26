@@ -74,8 +74,8 @@ def test_voice_simulation_records_the_call():
     os.unlink(path)
 
 
-def _simulate(**config):
-    return ConversationSimulator(
+def test_recording_off_by_default():
+    cases = ConversationSimulator(
         simulator_model=StaticSimulatorModel(),
         voice_config=VoiceConfig(
             connector=CallbackVoiceConnector(EchoAgent()),
@@ -83,22 +83,13 @@ def _simulate(**config):
             stt_model=StubSTT(),
             output_dir=None,
             combine_audio_files=False,
-            **config,
         ),
     ).simulate(
         [ConversationalGolden(scenario="Refund", expected_outcome="Done.")],
         max_user_simulations=1,
     )
 
-
-def test_recording_on_by_default():
-    cases = _simulate()
-    assert cases[0].audio is not None
-    os.unlink(cases[0].audio.url)
-
-
-def test_recording_can_be_turned_off():
-    assert _simulate(record_call=False)[0].audio is None
+    assert cases[0].audio is None
 
 
 def test_recorder_starts_the_tape_when_the_call_connects():

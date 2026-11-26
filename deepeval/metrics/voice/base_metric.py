@@ -17,10 +17,7 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
 )
 from deepeval.metrics.voice.utils.analysis import decode_audio
-from deepeval.metrics.voice.utils.call_activity import (
-    EVENT_KEYS,
-    with_turn_audio_from_call,
-)
+from deepeval.metrics.voice.utils.call_activity import EVENT_KEYS
 from deepeval.metrics.voice.utils.defects import (
     AGENT_REPLIES,
     CALL_RECORDING,
@@ -190,7 +187,6 @@ class BaseVoiceMetric(BaseConversationalMetric):
     def _run(self, test_case: ConversationalTestCase) -> Optional[float]:
         self.error = None
         self.evaluation_cost = None
-        test_case = with_turn_audio_from_call(test_case)
         score, reason, breakdown = self._evaluate(test_case)
         _place_reply_events(breakdown, test_case)
         if (
