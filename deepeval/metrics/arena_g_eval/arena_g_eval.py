@@ -1,8 +1,10 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
-from typing import Dict, Optional, List, Tuple, Union, Type
+import re
+from typing import Any, Dict, Optional, List, Tuple, Union, Type
 from rich.progress import Progress
 
+from deepeval.errors import DeepEvalError
 from deepeval.metrics import BaseArenaMetric
 from deepeval.metrics.arena_g_eval.utils import format_arena_test_case
 from deepeval.test_case import (
@@ -34,6 +36,38 @@ from deepeval.templates import make_template_class
 
 
 ArenaGEvalTemplate = make_template_class("ArenaGEval")
+
+
+def _resolve_masked_winner(
+    raw_winner: Any,
+    dummy_to_real_names: Dict[str, str],
+) -> Optional[str]:
+    """Resolve a judge's winner value to a canonical masked contestant key."""
+    if isinstance(raw_winner, str) and raw_winner in dummy_to_real_names:
+        return raw_winner
+
+    candidate = "" if raw_winner is None else str(raw_winner).strip()
+    if not candidate:
+        return None
+
+    cleaned = re.sub(r'^[\s"\'$]+|[\s"\'$.!?,;:]+$', "", candidate)
+    if cleaned:
+        for dummy in dummy_to_real_names:
+            if dummy.strip().lower() == cleaned.lower():
+                return dummy
+
+    matches = [
+        dummy
+        for dummy in dummy_to_real_names
+        if re.search(
+            rf"(?<![A-Za-z0-9_]){re.escape(dummy)}(?![A-Za-z0-9_])",
+            candidate,
+            re.IGNORECASE,
+        )
+    ]
+    if len(matches) == 1:
+        return matches[0]
+    return None
 
 
 class ArenaGEval(BaseArenaMetric):
@@ -237,14 +271,12 @@ class ArenaGEval(BaseArenaMetric):
             self,
             prompt,
             Winner,
-            extract_schema=lambda s: (
-                s.winner,
-                s.reason,
-                dummy_to_real_names,
+            extract_schema=lambda s: self._extract_compare_result(
+                s.winner, s.reason, dummy_to_real_names
             ),
-            extract_json=lambda data: (
-                data["winner"],
-                data["reason"],
+            extract_json=lambda data: self._extract_compare_result(
+                data.get("winner"),
+                data.get("reason", ""),
                 dummy_to_real_names,
             ),
         )
@@ -269,16 +301,36 @@ class ArenaGEval(BaseArenaMetric):
             self,
             prompt,
             Winner,
-            extract_schema=lambda s: (
-                s.winner,
-                s.reason,
+            extract_schema=lambda s: self._extract_compare_result(
+                s.winner, s.reason, dummy_to_real_names
+            ),
+            extract_json=lambda data: self._extract_compare_result(
+                data.get("winner"),
+                data.get("reason", ""),
                 dummy_to_real_names,
             ),
-            extract_json=lambda data: (
-                data["winner"],
-                data["reason"],
-                dummy_to_real_names,
-            ),
+        )
+
+    def _extract_compare_result(
+        self,
+        raw_winner: Any,
+        reason: Any,
+        dummy_to_real_names: Dict[str, str],
+    ) -> Tuple[str, str, Dict[str, str]]:
+        canonical = _resolve_masked_winner(raw_winner, dummy_to_real_names)
+        if canonical is None:
+            expected = ", ".join(sorted(dummy_to_real_names))
+            error_msg = (
+                f"Evaluation LLM returned invalid winner {raw_winner!r}; "
+                f"expected one of: {expected}."
+            )
+            self.error = error_msg
+            self.success = False
+            raise DeepEvalError(error_msg)
+        return (
+            canonical,
+            "" if reason is None else str(reason),
+            dummy_to_real_names,
         )
 
     async def _a_generate_rewritten_reason(
