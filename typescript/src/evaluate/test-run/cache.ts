@@ -29,6 +29,8 @@ interface MetricConfiguration {
   evaluationParams?: string[] | null;
   rubric?: unknown[] | null;
   expectedSchema?: Record<string, unknown> | null;
+  topLogprobs?: number | null;
+  evaluationTemplate?: Record<string, string> | null;
 }
 
 /** Read off a metric without importing the metric classes into the cache. */
@@ -38,6 +40,8 @@ interface MetricDefinition {
   evaluationParams?: string[];
   rubric?: unknown[];
   expectedSchema?: ZodType;
+  topLogprobs?: number;
+  evaluationTemplate?: Record<string, (...args: unknown[]) => string>;
 }
 
 interface CachedMetric {
@@ -105,6 +109,21 @@ export function testCaseCacheKey(testCase: AnyTestCase): string {
   });
 }
 
+/**
+ * Template overrides are function values that cannot be JSON-serialized.
+ * Fingerprint each by its source text so that different overrides produce
+ * different cache keys while remaining JSON-safe for on-disk storage.
+ */
+function fingerprintTemplate(
+  template: Record<string, (...args: unknown[]) => string>,
+): Record<string, string> {
+  const result: Record<string, string> = {};
+  for (const [key, fn] of Object.entries(template)) {
+    result[key] = typeof fn === "function" ? fn.toString() : String(fn);
+  }
+  return result;
+}
+
 function metricConfiguration(metric: BaseMetricCore): MetricConfiguration {
   const definition = metric as BaseMetricCore & MetricDefinition;
   return {
@@ -120,6 +139,10 @@ function metricConfiguration(metric: BaseMetricCore): MetricConfiguration {
     rubric: definition.rubric ?? null,
     expectedSchema: definition.expectedSchema
       ? toJsonSchema(definition.expectedSchema)
+      : null,
+    topLogprobs: definition.topLogprobs ?? null,
+    evaluationTemplate: definition.evaluationTemplate
+      ? fingerprintTemplate(definition.evaluationTemplate)
       : null,
   };
 }
@@ -143,7 +166,9 @@ function sameConfiguration(
     sameValue(a.evaluationSteps, b.evaluationSteps) &&
     sameValue(a.evaluationParams, b.evaluationParams) &&
     sameValue(a.rubric, b.rubric) &&
-    sameValue(a.expectedSchema, b.expectedSchema)
+    sameValue(a.expectedSchema, b.expectedSchema) &&
+    a.topLogprobs === b.topLogprobs &&
+    sameValue(a.evaluationTemplate, b.evaluationTemplate)
   );
 }
 
