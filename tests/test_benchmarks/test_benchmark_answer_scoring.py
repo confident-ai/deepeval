@@ -14,6 +14,8 @@ from deepeval.benchmarks.drop.template import DROPTemplate
 from deepeval.benchmarks.drop.drop import DELIMITER
 from deepeval.benchmarks.big_bench_hard.big_bench_hard import BigBenchHard
 from deepeval.benchmarks.tasks import BigBenchHardTask
+from deepeval.benchmarks.human_eval.human_eval import HumanEval
+from deepeval.benchmarks.human_eval.task import HumanEvalTask
 from deepeval.dataset import Golden
 
 # --------------------------------------------------------------------------- #
@@ -101,3 +103,47 @@ def test_bbh_batch_predict_scores_schema_answer_correctly(enable_cot):
     # schema answer, turning "(A)" into "(A)" -> "(A" and scoring it 0.
     assert result[0]["prediction"] == "(A)"
     assert result[0]["score"] == 1
+
+
+# --------------------------------------------------------------------------- #
+# HumanEval: generate_samples may return (samples, cost) instead of a list
+# --------------------------------------------------------------------------- #
+
+_CORRECT_SAMPLE = "def add(a,b):\n    return a+b"
+
+
+class _FakeSamplesModel:
+    def __init__(self, as_tuple: bool):
+        self.as_tuple = as_tuple
+
+    def generate_samples(self, prompt, n, temperature):
+        samples = [_CORRECT_SAMPLE] * n
+        return (samples, None) if self.as_tuple else samples
+
+
+def _human_eval() -> HumanEval:
+    bench = HumanEval.__new__(HumanEval)
+    bench.n = 2
+    bench.temperature = 0
+    bench.c = {}
+    bench.functions = {}
+    bench.scorer = Scorer()
+    return bench
+
+
+@pytest.mark.parametrize("as_tuple", [True, False])
+def test_humaneval_predict_scores_correct_samples_for_tuple_or_list(as_tuple):
+    bench = _human_eval()
+    golden = Golden(
+        input="add two numbers", expected_output="assert add(1,2)==3"
+    )
+
+    result = bench.predict(
+        _FakeSamplesModel(as_tuple),
+        HumanEvalTask.HAS_CLOSE_ELEMENTS,
+        golden,
+        k=1,
+    )
+
+    assert result["score"] == 1.0
+    assert result["prediction"] == [_CORRECT_SAMPLE] * 2

@@ -199,6 +199,8 @@ class HumanEval(DeepEvalBaseBenchmark):
             functions = model.generate_samples(
                 prompt=prompt, n=self.n, temperature=self.temperature
             )
+            if isinstance(functions, tuple):
+                functions = functions[0]
             c = 0
             for function in functions:
                 try:
