@@ -298,12 +298,28 @@ class ToolCorrectnessMetric(BaseMetric):
                     # Every expected tool name was called, but a repeated tool
                     # was called in the wrong order, so the weighted LCS dropped
                     # an occurrence and the score fell below 1. The set-based
-                    # `missing`/`out_of_order` checks cannot see this, so fall
-                    # back to a generic ordering message instead of emitting an
-                    # empty "Incorrect tool usage: ;" reason.
-                    issues.append(
-                        "tools were called in a different order than expected"
-                    )
+                    # `missing`/`out_of_order` checks compare names, not counts,
+                    # so they cannot see this and the reason would otherwise
+                    # render as an empty "Incorrect tool usage: ;". Name the
+                    # tools whose repeated calls the LCS could not line up.
+                    matched_names = [tool.name for tool in lcs]
+                    repeated = [
+                        name
+                        for name in dict.fromkeys(expected_tools_names)
+                        if matched_names.count(name)
+                        < expected_tools_names.count(name)
+                    ]
+                    if repeated:
+                        issues.append(
+                            f"repeated tools {repeated} called in the wrong order"
+                        )
+                    else:
+                        # Every occurrence lined up, so the score is below 1
+                        # because a matched call only partially satisfied the
+                        # evaluation params (e.g. input parameters).
+                        issues.append(
+                            "called tools did not fully match the expected tools"
+                        )
                 return f"Incorrect tool usage: {' and '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
         else:
             used_expected = set(self.tools_called).intersection(
