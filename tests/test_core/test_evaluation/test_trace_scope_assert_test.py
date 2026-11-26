@@ -1,4 +1,7 @@
 from time import perf_counter
+from typing import Optional
+
+import pytest
 
 from deepeval.dataset import Golden
 from deepeval.constants import PYTEST_TRACE_TEST_WRAPPER_SPAN_NAME
@@ -14,7 +17,7 @@ from tests.test_core.stubs import make_span_api_like
 
 
 class CapturingMetric(BaseMetric):
-    def __init__(self, expected_input: str, expected_output: str):
+    def __init__(self, expected_input: str, expected_output: Optional[str]):
         self.expected_input = expected_input
         self.expected_output = expected_output
         self.threshold = 1.0
@@ -69,8 +72,18 @@ def _make_pytest_wrapped_trace(app_span: BaseSpan) -> Trace:
     )
 
 
+@pytest.mark.parametrize(
+    ("trace_fields", "expected_output"),
+    [
+        ({}, "trace answer"),
+        ({"output": None}, None),
+        ({"output": ""}, ""),
+        ({"output": "explicit answer"}, "explicit answer"),
+    ],
+    ids=["missing", "explicit-null", "explicit-empty", "explicit-answer"],
+)
 def test_assert_test_metrics_run_at_trace_level_with_golden_input(
-    monkeypatch,
+    monkeypatch, trace_fields, expected_output
 ):
     app_span = BaseSpan(
         uuid="app",
@@ -84,7 +97,11 @@ def test_assert_test_metrics_run_at_trace_level_with_golden_input(
         input={"query": "ignored for trace metrics"},
         output="trace answer",
     )
-    trace = _make_pytest_wrapped_trace(app_span)
+    trace = _make_pytest_wrapped_trace(app_span).model_copy(update=trace_fields)
+    captured = {}
+
+    def capture_test_run(api_test_case, *_args, **_kwargs):
+        captured["api_test_case"] = api_test_case
 
     monkeypatch.setattr(
         trace_scope_mod.trace_manager,
@@ -95,7 +112,7 @@ def test_assert_test_metrics_run_at_trace_level_with_golden_input(
     monkeypatch.setattr(
         trace_scope_mod.global_test_run_manager,
         "update_test_run",
-        lambda *_a, **_k: None,
+        capture_test_run,
         raising=True,
     )
     monkeypatch.setattr(
@@ -109,7 +126,7 @@ def test_assert_test_metrics_run_at_trace_level_with_golden_input(
     try:
         result = _assert_test_from_current_trace(
             golden=Golden(input="golden question"),
-            metrics=[CapturingMetric("golden question", "trace answer")],
+            metrics=[CapturingMetric("golden question", expected_output)],
             error_config=ErrorConfig(ignore_errors=False),
             display_config=DisplayConfig(
                 show_indicator=False, verbose_mode=False
@@ -119,7 +136,8 @@ def test_assert_test_metrics_run_at_trace_level_with_golden_input(
         current_trace_context.reset(token)
 
     assert result.input == "golden question"
-    assert result.actual_output == "trace answer"
+    assert result.actual_output == expected_output
+    assert captured["api_test_case"].trace.output == expected_output
     assert result.metrics_data[0].success is True
 
 

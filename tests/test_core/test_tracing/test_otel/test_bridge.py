@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+from contextlib import nullcontext
 
 import pytest
 from opentelemetry.trace import set_span_in_context
@@ -11,7 +12,7 @@ from deepeval.contextvars import set_current_golden
 from deepeval.dataset import EvaluationDataset, Golden
 from deepeval.evaluate.configs import AsyncConfig, CacheConfig, DisplayConfig
 from deepeval.models import DeepEvalBaseLLM
-from deepeval.test_case import ToolCall
+from deepeval.test_case import LLMTestCase, ToolCall
 from deepeval.tracing import (
     next_llm_span,
     observe,
@@ -297,8 +298,8 @@ def test_trace_shape_tests_capture_bare_spans(exporter, monkeypatch):
 ################ Traces from framework-native spans ################
 
 
-def native_agent_run(tracer, conversation="thread"):
-    """An agent that calls a model and a tool, with no ``confident.trace.*``."""
+def native_agent_run(tracer, conversation="thread", *, trace_attributes=None):
+    """An agent that calls a model and a tool."""
     messages = [{"role": "user", "parts": [{"type": "text", "content": "q"}]}]
     answer = [
         {
@@ -313,6 +314,7 @@ def native_agent_run(tracer, conversation="thread"):
             "gen_ai.operation.name": "invoke_agent",
             "gen_ai.agent.name": "planner",
             "gen_ai.conversation.id": conversation,
+            **(trace_attributes or {}),
         },
     ):
         with tracer.start_as_current_span("step"):
@@ -367,6 +369,95 @@ def test_a_deepeval_trace_fills_only_what_its_code_left_unset(tracer, ended):
     assert (collected.input, collected.output) == ("q", "mine")
     assert collected.thread_id == "thread"
     assert [call.name for call in collected.tools_called] == ["lookup"]
+
+
+@pytest.mark.parametrize("owned", [True, False], ids=["otel-owned", "joined"])
+@pytest.mark.parametrize(
+    "declared, expected",
+    [(None, ("q", "a")), ("null", (None, None)), ('""', ("", ""))],
+    ids=["absent", "null", "empty-string"],
+)
+def test_declared_trace_io_precedes_model_content(
+    tracer, async_evaluation, owned, declared, expected
+):
+    trace_attributes = (
+        {}
+        if declared is None
+        else {
+            "confident.trace.input": declared,
+            "confident.trace.output": declared,
+        }
+    )
+    with nullcontext() if owned else trace():
+        native_agent_run(tracer, trace_attributes=trace_attributes)
+
+    (collected,) = async_evaluation.traces_to_evaluate
+    assert (collected.input, collected.output) == expected
+    (agent,) = collected.root_spans
+    assert (agent.input, agent.output) == ("q", "a")
+
+
+def test_declared_null_survives_later_spans_in_a_deepeval_trace(
+    tracer, async_evaluation
+):
+    with trace():
+        tracer.start_span(
+            "clear",
+            attributes={"confident.trace.output": "null"},
+        ).end()
+        native_agent_run(tracer)
+
+    (collected,) = async_evaluation.traces_to_evaluate
+    assert (collected.input, collected.output) == ("q", None)
+
+
+def test_observe_return_does_not_replace_a_declared_null_output(
+    tracer, async_evaluation
+):
+    @observe()
+    def app():
+        tracer.start_span(
+            "clear",
+            attributes={"confident.trace.output": "null"},
+        ).end()
+        return "function output"
+
+    assert app() == "function output"
+    (collected,) = async_evaluation.traces_to_evaluate
+    assert collected.output is None
+
+
+@pytest.mark.parametrize("case_fields", [{}, {"actual_output": None}])
+def test_observe_uses_its_return_when_test_case_has_no_actual_output(
+    tracer, async_evaluation, case_fields
+):
+    @observe()
+    def app():
+        update_current_trace(test_case=LLMTestCase(input="q", **case_fields))
+        return "function output"
+
+    assert app() == "function output"
+    (collected,) = async_evaluation.traces_to_evaluate
+    assert (collected.input, collected.output) == ("q", "function output")
+
+
+def test_trace_update_can_adopt_previously_inferred_io(
+    tracer, async_evaluation
+):
+    with trace() as current:
+        native_agent_run(tracer)
+        inferred_input, inferred_output = current.input, current.output
+        update_current_trace(input=inferred_input, output=inferred_output)
+        assert current.input is inferred_input
+        assert current.output is inferred_output
+        with tracer.start_as_current_span(
+            "another agent",
+            attributes={"gen_ai.operation.name": "invoke_agent"},
+        ):
+            ct.update_trace(input=None, output="another output")
+
+    (collected,) = async_evaluation.traces_to_evaluate
+    assert (collected.input, collected.output) == ("q", "a")
 
 
 ################ deepeval code inside collected spans ################
