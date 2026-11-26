@@ -1,0 +1,234 @@
+---
+id: metrics-held-tone
+title: Held Tone
+sidebar_label: Held Tone
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The held tone metric checks whether your voice agent's audio contains a **stuck tone or drone**, such as a steady beep or a sound frozen on one pitch. It returns the share of agent replies with no held tone, between 0 and 1.
+
+<AudioSample name="held-tone" />
+
+## Required Arguments
+
+To use the `HeldToneMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
+
+With [per-turn audio](/docs/metrics-voice-introduction#per-turn-audio), an `Audio.start_time` on each clip is optional, and only used to place events on the call's clock.
+
+## Usage
+
+The `HeldToneMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import HeldToneMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = HeldToneMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+The `HeldToneMetric` has no optional parameters of its own. It takes only the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics).
+
+### As a standalone
+
+You can also run the `HeldToneMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each held tone shows up in `score_breakdown` as its own event. Here is what the [example call](#example-call) returns:
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 1,
+    "events": [
+        {
+            "type": "held_tone",
+            "turn": 5,
+            "role": "assistant",
+            "offset_seconds": 1.48,
+            "duration_seconds": 1.52,
+            "start_time": 14.98,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "A tone was held for 1.5s",
+            "position": "middle",
+            "pitch_hz": 388.0,
+            "periodicity": 0.993,
+            "level_dbfs": -18.0,
+            "jitter": 0.0,
+            "glide": 0.0,
+            "hold_ratio": 7.6,
+            "pitch_ratio": 1.7,
+        }
+    ],
+    "skipped": [],
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `pitch_hz` | The tone's pitch |
+| `periodicity` | How regular the sound is, from 0 to 1. A pure tone is close to 1 |
+| `level_dbfs` | How loud the tone is |
+| `jitter` | How much the pitch wobbles from one 40 ms frame to the next, as a share of the pitch |
+| `glide` | How far the pitch drifts from the start of the tone to its end, as a share of the pitch |
+| `hold_ratio` | How many times longer the tone is than the agent's typical held sound |
+| `pitch_ratio` | How many times higher the tone is than the agent's usual pitch |
+| `position` | Whether the tone is near the start, middle or end of the clip |
+
+Clips that can't be decoded are listed under `skipped`. Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many agent replies were counted and `turns_with_events` how many had a held tone. The score is the share that had none.
+
+## How Is It Calculated?
+
+The `HeldToneMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Held Tone} = \frac{\text{Number of Agent Replies Without a Held Tone}}{\text{Total Number of Agent Replies}}" />
+
+### Held tone criteria
+
+A voice holding a vowel wobbles and drifts in pitch. A stuck tone doesn't.
+
+<VoiceDiagram
+  duration={8}
+  lanes={[
+    { label: "Agent", role: "agent", sounds: [{ start: 0.3, end: 1.4 }, { start: 1.4, end: 2.4, level: 0.7 }, { start: 2.4, end: 3.6 }, { start: 4.4, end: 6.4, level: 0.6, ending: "flat" }, { start: 6.4, end: 7.6 }] },
+  ]}
+  highlights={[
+    { start: 4.4, end: 6.4, lane: 0 },
+  ]}
+  marks={[
+    { at: 1.9, lane: 0, tone: "ok", label: "held vowel" },
+    { at: 5.4, lane: 0, tone: "bad", label: "held tone" },
+  ]}
+/>
+
+A stretch is a held tone when it is one steady pitch:
+
+| Check | Rule |
+| --- | --- |
+| Length | At least 0.8 seconds |
+| Pitch | Between 60 and 1000 Hz |
+| Regular | Periodicity at least 0.85 |
+| No wobble | Jitter at most 0.2% of the pitch |
+| No drift | Glide at most 1% of the pitch |
+
+and it stands out from the agent's own voice in at least one way:
+
+| Check | Rule |
+| --- | --- |
+| Held too long | At least 3 times the agent's typical held sound |
+| Too high | At least 1.3 times the agent's usual pitch |
+| Long outright | At least 2.5 seconds |
+
+The agent's typical held sound and usual pitch are learned from all of its clips in the call, so a slow speaker sets their own baseline.
+
+If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Example call
+
+A call where the agent holds a vowel in one reply and plays a steady beep in another. Each row is one agent reply and whether it had a held tone.
+
+<VoiceDiagram
+  duration={23}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 10.5, label: "turn 3" }, { start: 13.5, end: 17.5, label: "turn 5" }, { start: 20.5, end: 22.5, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 8.5 }, { start: 8.5, end: 9.5, level: 0.7 }, { start: 9.5, end: 10.25 }, { start: 13.5, end: 15.0 }, { start: 15.0, end: 16.5, level: 0.6, ending: "flat" }, { start: 16.5, end: 17.25 }, { start: 20.5, end: 22.25 }] },
+  ]}
+  highlights={[
+    { start: 15.0, end: 16.5, lane: 0 },
+  ]}
+  marks={[
+    { at: 9.0, lane: 0, tone: "ok", label: "clean: vowel" },
+  ]}
+/>
+
+| Agent turn | What happens | Held tone? |
+| --- | --- | --- |
+| 1 | Normal speech | No |
+| 3 | A 1 s vowel whose pitch drifts down | No |
+| 5 | A 1.5 s beep at 388 Hz, far higher than the agent's voice | **Yes** |
+| 7 | Normal speech | No |
+| **4 replies** | | **1 held tone → 3/4 = 0.75** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Will a slow or sing-song voice be flagged?",
+      answer: (
+        <>
+          Unlikely. A tone must hold one pitch with almost no wobble or drift,
+          and it's compared with how long and how high this agent normally
+          holds a sound across the call.
+        </>
+      ),
+    },
+    {
+      question: "A tone I can hear wasn't flagged. Why?",
+      answer: (
+        <>
+          It may be too short, wobble or slide the way a voice does, or sit
+          close to the agent's own pitch. Also check that it's inside the
+          turn's clip: a sound the TTS plays after the last word can fall past
+          the end of the clip.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Detection is deterministic and runs locally over the audio, so it
+          has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the caller's audio for held tones too?",
+      answer: (
+        <>
+          No. Only the agent's replies are scored. The caller's audio comes from
+          your own TTS model, so a tone there is a problem with the test
+          harness, not the agent.
+        </>
+      ),
+    },
+  ]}
+/>

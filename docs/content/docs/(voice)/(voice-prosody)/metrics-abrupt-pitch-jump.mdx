@@ -1,0 +1,245 @@
+---
+id: metrics-abrupt-pitch-jump
+title: Abrupt Pitch Jump
+sidebar_label: Abrupt Pitch Jump
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The abrupt pitch jump metric checks whether your voice agent's voice **cracks or squeaks**: a sudden leap in pitch, faster than a human voice can move. It returns the share of agent replies without one, between 0 and 1.
+
+<AudioSample name="abrupt-pitch-jump" />
+
+## Required Arguments
+
+To use the `AbruptPitchJumpMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
+
+- `audio` on the agent's turns, one clip per reply
+
+## Usage
+
+The `AbruptPitchJumpMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import AbruptPitchJumpMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = AbruptPitchJumpMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+The `AbruptPitchJumpMetric` takes only the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics). The jump limit is fixed, since a crack is a defect rather than a matter of taste.
+
+### As a standalone
+
+You can also run the `AbruptPitchJumpMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each pitch jump shows up in `score_breakdown` as its own event. Here is what the [example call](#example-call) returns:
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 1,
+    "events": [
+        {
+            "type": "pitch_jump",
+            "turn": 3,
+            "offset_seconds": 0.96,
+            "duration_seconds": 0.08,
+            "start_time": 7.96,
+            "mark": "moment",
+            "timing_source": "turn_timestamps",
+            "description": "Pitch jumped abruptly",
+        },
+        {
+            "type": "pitch_jump",
+            "turn": 3,
+            "offset_seconds": 1.16,
+            "duration_seconds": 0.08,
+            "start_time": 8.16,
+            "mark": "moment",
+            "timing_source": "turn_timestamps",
+            "description": "Pitch jumped abruptly",
+        },
+    ],
+    "skipped": [{"turn": 9, "error": "Reply has no voiced speech."}],
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `offset_seconds` | Where the jump is, in seconds from the start of the turn's clip: the 40 ms just before the step |
+| `duration_seconds` | Always 0.08: the 40 ms either side of the step |
+
+A crack that goes up and comes back down is two events. Replies with no voiced speech, or audio that can't be decoded, are listed under `skipped`.
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many agent replies were counted and `turns_with_events` how many had at least one jump. The score is the share that had none.
+
+## How Is It Calculated?
+
+The `AbruptPitchJumpMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Abrupt Pitch Jump} = \frac{\text{Number of Agent Replies Without a Pitch Jump}}{\text{Total Number of Agent Replies}}" />
+
+The metric reads per-turn audio, one agent clip at a time, or replies cut from stereo full call audio when no turn has audio. The caller's turns are never checked. A reply counts as having a jump at most once, however many it has.
+
+### Which replies are scored
+
+<VoiceDiagram
+  duration={8}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.0, end: 7.5, label: "turn 3" }], sounds: [{ start: 0.6, end: 3.8 }, { start: 5.0, end: 7.5, silent: true }] },
+  ]}
+  brackets={[
+    { start: 0.5, end: 4.0, lane: 0, label: "reply 1" },
+    { start: 5.0, end: 7.5, lane: 0, tone: "skip", label: "no voice" },
+  ]}
+/>
+
+A reply is scored if any of it is voiced. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz. Stretches that are near silent, or have no clear pitch (such as "s" or "f" sounds), are left out.
+
+### Pitch jump criteria
+
+<VoiceDiagram
+  duration={4}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 3.8, label: "turn 1" }], sounds: [{ start: 0.3, end: 3.7 }] },
+  ]}
+  highlights={[
+    { start: 1.2, end: 1.9, lane: 0 },
+  ]}
+  marks={[
+    { at: 1.2, lane: 0, tone: "bad", label: "jump up" },
+    { at: 1.9, lane: 0, tone: "bad", label: "jump down" },
+  ]}
+/>
+
+A jump is a step in pitch from one 40 ms frame straight to the next:
+
+| Check | Rule |
+| --- | --- |
+| Step size | 6 semitones or more |
+| Steady before | At least 2 frames (80 ms), each within 3 semitones of the one before |
+| Steady after | At least 2 frames, the same way |
+| No gap | The two frames are back to back, with no unvoiced frame between |
+
+That is 150 semitones a second, about 2.5 times the fastest pitch change a speaker can make on purpose, so normal intonation never reaches it.
+
+Two tracking slips are not counted:
+
+- **Octave slips.** Up to 120 ms sitting about an octave off the pitch around it is folded back first, since pitch trackers often lock onto the octave for a moment.
+- **Lone frames.** A step next to a single isolated frame is ignored, since a frame at the edge of a sound is often misread.
+
+If no agent reply has voiced speech, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Example call
+
+A call with five agent replies: one cracks for 200 ms, one has a brief octave slip, and one is silent. Each row is one agent reply and whether it had a jump.
+
+<VoiceDiagram
+  duration={24}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2, end: 5, label: "turn 1" }, { start: 7, end: 10, label: "turn 3" }, { start: 12, end: 15, label: "turn 5" }, { start: 17, end: 20, label: "turn 7" }, { start: 22, end: 24, label: "turn 9" }], sounds: [{ start: 2.1, end: 4.8 }, { start: 7.0, end: 10.0 }, { start: 12.0, end: 15.0 }, { start: 17.0, end: 20.0 }, { start: 22, end: 24, silent: true }] },
+  ]}
+  highlights={[
+    { start: 8.0, end: 8.2, lane: 0 },
+  ]}
+  marks={[
+    { at: 8.0, lane: 0, tone: "bad", label: "2 jumps" },
+    { at: 13.0, lane: 0, tone: "ok", label: "clean: octave slip" },
+    { at: 23, lane: 0, tone: "skip", label: "skipped" },
+  ]}
+/>
+
+| Agent turn | What happens | Jump? |
+| --- | --- | --- |
+| 1 | Normal speech | No |
+| 3 | Pitch leaps 8 semitones at 1.0 s, back down at 1.2 s | **Yes** (2 events) |
+| 5 | Pitch slips up an octave for 100 ms | No |
+| 7 | Steady held vowel | No |
+| 9 | Silence, no voiced speech | Skipped |
+| **4 replies** | | **1 with a jump → 3/4 = 0.75** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from pitch variation?",
+      answer: (
+        <>
+          <a href="/docs/metrics-pitch-variation">PitchVariationMetric</a> looks
+          at how widely pitch moves across the whole reply and ignores single
+          spikes. This metric looks for the spikes themselves, so one cracked
+          word fails this metric only.
+        </>
+      ),
+    },
+    {
+      question: "Can it miss a crack of exactly one octave?",
+      answer: (
+        <>
+          Yes. A crack of about an octave that lasts 120 ms or less looks like
+          a tracking slip and is not counted. Longer ones, and jumps of any
+          other size, are.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Detection is deterministic and runs locally over the audio, so it
+          has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the caller's audio too?",
+      answer: (
+        <>
+          No. Only the agent's replies are scored. The caller's audio comes
+          from your own TTS model, so a problem there is with the test harness,
+          not the agent.
+        </>
+      ),
+    },
+  ]}
+/>

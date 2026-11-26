@@ -1,14 +1,12 @@
 {
   "title": "Voice Agents",
   "pages": [
-    "metrics-voice-naturalness",
-    "metrics-speech-intelligibility",
-    "metrics-voice-consistency",
-    "metrics-turn-taking-naturalness",
-    "metrics-agent-responsiveness",
-    "metrics-audio-integrity",
-    "metrics-audio-glitch",
-    "metrics-voice-reliability",
-    "metrics-transcription-accuracy"
+    "metrics-voice-introduction",
+    "(voice-speech-quality)",
+    "(voice-audio-defects)",
+    "(voice-audio-level)",
+    "(voice-prosody)",
+    "(voice-timing)",
+    "(voice-responsiveness)"
   ]
 }

@@ -1,0 +1,284 @@
+---
+id: metrics-turn-taking-naturalness
+title: Turn-Taking Naturalness
+sidebar_label: Turn-Taking Naturalness
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The turn-taking naturalness metric measures the **rhythm of the call**: how long the agent made the caller wait, whether it waited about as long each time, and whether either side talked over the other. It runs four single-issue timing metrics and returns the share of agent replies none of them flagged, between 0 and 1.
+
+## Required Arguments
+
+To use the `TurnTakingNaturalnessMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with audio on at least one of:
+
+- `audio` on the test case, a stereo recording of the whole call\*
+- `audio` on the caller's and agent's turns, each with a `start_time`
+
+Agent turns can also carry `latency_ms`, used with per-turn audio as in [Response Latency](/docs/metrics-response-latency).
+
+\* Full call audio has to be stereo, with the caller and agent on separate channels. Mono full call audio is ignored, because the two voices can't be told apart.
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
+
+## Usage
+
+The `TurnTakingNaturalnessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import TurnTakingNaturalnessMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = TurnTakingNaturalnessMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **THREE** optional parameters specific to the `TurnTakingNaturalnessMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts someone as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection). Passed to all four parts. Defaulted to `True`.
+- [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. Passed to the two interruption parts, which in `"hybrid"` [double-check each interruption](/docs/metrics-agent-interruption#second-check) with an audio decision model before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
+- [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode, passed to the two interruption parts. Defaulted to `HumeDecisionModel()`.
+
+### As a standalone
+
+You can also run the `TurnTakingNaturalnessMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Every event the four parts raise shows up in `score_breakdown`, tagged with the part that raised it. Here is what the two calls in the [example call](#example-call) return:
+
+```python
+{
+    "eligible_turns": 5,
+    "turns_with_events": 3,
+    "events": [
+        {
+            "type": "slow_response",
+            "duration_seconds": 4.8,
+            "start_time": 8.0,
+            "mark": "range",
+            "timing_source": "call_recording",
+            "description": "Agent took 4.8s to reply",
+            "reply_start": 12.8,
+            "response_delay_seconds": 4.8,
+            "metric": "Response Latency",
+        },
+        {
+            "type": "false_start",
+            "duration_seconds": 1.0,
+            "start_time": 25.0,
+            "mark": "range",
+            "timing_source": "call_recording",
+            "description": "Agent started over the caller, then stopped",
+            "reply_start": 25.0,
+            "agent_seconds": 1.0,
+            "overlap_seconds": 1.0,
+            "metric": "Agent Interruption",
+        },
+        {
+            "type": "talk_over",
+            "duration_seconds": 2.0,
+            "start_time": 20.0,
+            "mark": "range",
+            "timing_source": "call_recording",
+            "description": "Caller talked over the agent for 2.0s",
+            "caller_start": 20.0,
+            "caller_seconds": 2.0,
+            "overlap_seconds": 2.0,
+            "metric": "User Interruption",
+        },
+        {
+            "type": "delay_shift",
+            "duration_seconds": 4.8,
+            "start_time": 8.0,
+            "mark": "range",
+            "timing_source": "call_recording",
+            "description": "Reply came 3.8s slower than usual",
+            "reply_start": 12.8,
+            "response_delay_seconds": 4.8,
+            "shift_seconds": 3.8,
+            "metric": "Response Delay Consistency",
+        },
+    ],
+    "skipped": [
+        {"reply_start": 25.0, "error": "Agent started before the caller finished."}
+    ],
+    "metrics": {
+        "Response Latency": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
+        "Agent Interruption": {"score": 0.8, "eligible_turns": 5, "turns_with_events": 1},
+        "User Interruption": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
+        "Response Delay Consistency": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
+    },
+    "timing_source": "call_recording",
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `metric` | Which part raised the event. The part's own page explains its other fields |
+| `metrics` | Each part's own score and counts, counted the part's own way |
+| `skipped` | Everything any part couldn't time, without repeats |
+
+A part that couldn't judge the call shows `{"score": None, "reason": ...}` under `metrics`. Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events).
+
+`eligible_turns` is how many agent replies were judged and `turns_with_events` how many had at least one issue. The score is the share that had none.
+
+## How Is It Calculated?
+
+The `TurnTakingNaturalnessMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Turn-Taking Naturalness} = \frac{\text{Number of Agent Replies No Part Flagged}}{\text{Total Number of Agent Replies Judged}}" />
+
+With per-turn audio instead of a call recording, the waits and overlaps are measured the same way, from the speech heard inside each clip, placed on the call's clock by its `Audio.start_time`. Events name turns instead of times in the call, and an agent turn that follows another agent turn isn't timed as a reply.
+
+### The four parts
+
+The metric runs these metrics on the call, each with its default limits, reading the call the same way they do on their own:
+
+| Part | Flags an agent reply when |
+| --- | --- |
+| [Response Latency](/docs/metrics-response-latency) | The caller waited more than 4 seconds for it |
+| [Agent Interruption](/docs/metrics-agent-interruption) | It started into the caller, as a false start or a talk-over |
+| [User Interruption](/docs/metrics-user-interruption) | The caller cut into it, with a false start or a talk-over |
+| [Response Delay Consistency](/docs/metrics-response-delay-consistency) | Its wait was more than 2 seconds off the agent's typical wait |
+
+In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), `eval_mode` and `audio_decision_model` are passed to the two interruption parts, which [double-check](/docs/metrics-agent-interruption#second-check) each interruption before it counts.
+
+### Combining the parts
+
+<VoiceDiagram
+  duration={11}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.4, end: 2.0 }, { start: 7.0, end: 9.0 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 2.8, end: 4.2 }, { start: 4.8, end: 10.4 }] },
+  ]}
+  brackets={[
+    { start: 2.8, end: 10.4, lane: 1, label: "one reply" },
+  ]}
+  marks={[
+    { at: 7.0, lane: 0, tone: "bad", label: "cuts in" },
+  ]}
+  highlights={[
+    { start: 7.0, end: 9.0, lane: 0 },
+  ]}
+/>
+
+Every part's result is mapped onto the agent's replies:
+
+- An agent reply is agent speech with no pause of 1 second or more. Above, the agent's two stretches, 0.6 seconds apart, are one reply.
+- Response Latency, Agent Interruption and Response Delay Consistency already judge agent replies, so each result counts on its reply.
+- A User Interruption counts against the reply the caller cut into: the one playing when the caller started, or else the latest one that started before.
+- A reply flagged by two parts counts once.
+- The replies judged are every reply any part judged. A part that can't judge the call, such as Response Delay Consistency with fewer than 3 timed replies, is left out.
+
+If no part had anything to judge, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+:::caution
+Timings depend on the connector and its end-of-turn detection, so keep the connector fixed when tracking this score over time.
+:::
+
+### Example call
+
+A call where the agent is slow once, talked over once and false-starts once. Each row is one agent reply and which parts flagged it.
+
+<VoiceDiagram
+  duration={31}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.4, end: 2.4 }, { start: 6.0, end: 8.0 }, { start: 15.6, end: 17.6 }, { start: 20.0, end: 22.0 }, { start: 24.0, end: 27.0 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 3.2, end: 5.4 }, { start: 12.8, end: 15.0 }, { start: 18.6, end: 23.0 }, { start: 25.0, end: 26.0 }, { start: 28.0, end: 30.0 }] },
+  ]}
+  marks={[
+    { at: 12.8, lane: 1, tone: "bad", label: "slow" },
+    { at: 20.0, lane: 0, tone: "bad", label: "cuts in" },
+    { at: 25.0, lane: 1, tone: "bad", label: "false start" },
+  ]}
+  highlights={[
+    { start: 8.0, end: 12.8, lane: 1 },
+    { start: 20.0, end: 22.0, lane: 0 },
+    { start: 25.0, end: 26.0, lane: 1 },
+  ]}
+/>
+
+| Agent reply | Flagged by | Has an issue? |
+| --- | --- | --- |
+| 3.2 s | None | No |
+| 12.8 s | Response Latency (4.8 s wait), Response Delay Consistency (+3.8 s) | **Yes** |
+| 18.6 s | User Interruption (caller talked over it at 20.0 s) | **Yes** |
+| 25.0 s | Agent Interruption (false start) | **Yes** |
+| 28.0 s | None | No |
+| **5 replies** | | **3 with an issue → 2/5 = 0.4** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from response latency?",
+      answer: (
+        <>
+          <a href="/docs/metrics-response-latency">ResponseLatencyMetric</a>{" "}
+          only checks whether the caller waited too long, and lets you change
+          that limit. This metric adds interruptions on both sides and uneven
+          waits, at their default limits, and counts each reply once.
+        </>
+      ),
+    },
+    {
+      question: "Does it look at how the call opens?",
+      answer: (
+        <>
+          No. The wait before the agent's first word is judged by{" "}
+          <a href="/docs/metrics-time-to-first-response">
+            TimeToFirstResponseMetric
+          </a>
+          , which isn't one of the parts.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          Not by default. It only reads when each speaker is talking, so it has
+          no model or token cost. With <code>use_speech_detection</code> on, it
+          runs the small Silero VAD model locally. In the{" "}
+          <code>"hybrid"</code> eval mode, each interruption is also checked by
+          an audio decision model, at one paid request per interruption.
+        </>
+      ),
+    },
+  ]}
+/>

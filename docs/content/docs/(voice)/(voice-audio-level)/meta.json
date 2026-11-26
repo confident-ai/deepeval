@@ -1,0 +1,9 @@
+{
+  "title": "Audio Level",
+  "pages": [
+    "metrics-background-noise",
+    "metrics-loudness",
+    "metrics-loudness-consistency",
+    "metrics-volume-variance"
+  ]
+}

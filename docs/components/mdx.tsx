@@ -14,6 +14,8 @@ import { ListItem } from "@/components/lang/list-item";
 
 import VideoDisplayer from "@site/src/components/VideoDisplayer";
 import ImageDisplayer from "@site/src/components/ImageDisplayer";
+import AudioSample from "@site/src/components/AudioSample";
+import VoiceDiagram from "@site/src/components/VoiceDiagram";
 import Callout from "@site/src/components/Callout";
 import Equation from "@site/src/components/Equation";
 import Mermaid from "@site/src/components/Mermaid";
@@ -51,6 +53,8 @@ export const getMDXComponents = (components?: MDXComponents) =>
     Step,
     VideoDisplayer,
     ImageDisplayer,
+    AudioSample,
+    VoiceDiagram,
     Callout,
     Equation,
     Mermaid,

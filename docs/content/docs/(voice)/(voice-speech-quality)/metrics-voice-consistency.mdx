@@ -1,0 +1,230 @@
+---
+id: metrics-voice-consistency
+title: Voice Consistency
+sidebar_label: Voice Consistency
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The voice consistency metric checks whether your voice agent **sounds like the same speaker all call**. It compares the agent's replies with each other for pitch and loudness, and returns the share of replies that stay close to the agent's typical voice, between 0 and 1.
+
+## Required Arguments
+
+To use the `VoiceConsistencyMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on at least three of the agent's turns.
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how it's used.
+
+## Usage
+
+The `VoiceConsistencyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import VoiceConsistencyMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user books a table, then changes the party size twice.",
+    expected_outcome="The agent confirms the final party size.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = VoiceConsistencyMetric(threshold=0.7)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+The `VoiceConsistencyMetric` takes only the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics). Its parts always run with their default limits. To change a limit, run that part on its own.
+
+### As a standalone
+
+You can also run the `VoiceConsistencyMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Every reply that stood out shows up in `score_breakdown`, tagged with the part that flagged it. Here is what the [example call](#example-call) returns:
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 2,
+    "events": [
+        {
+            "type": "pitch_shift",
+            "turn": 5,
+            "timing_source": "turn_timestamps",
+            "description": "Reply was 5 semitones higher than usual",
+            "pitch_median_hz": 308.7,
+            "shift_semitones": 5.2,
+            "metric": "Pitch Consistency",
+            "offset_seconds": 0.0,
+            "duration_seconds": 3.0,
+            "start_time": 17.5,
+            "mark": "whole_reply",
+        },
+        {
+            "type": "loudness_shift",
+            "turn": 3,
+            "timing_source": "turn_timestamps",
+            "description": "Reply was 8 dB louder than usual",
+            "speech_dbfs": -11.2,
+            "shift_db": 7.9,
+            "metric": "Loudness Consistency",
+            "offset_seconds": 0.0,
+            "duration_seconds": 3.0,
+            "start_time": 10.5,
+            "mark": "whole_reply",
+        },
+    ],
+    "skipped": [],
+    "metrics": {
+        "Pitch Consistency": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
+        "Loudness Consistency": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
+    },
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `metric` | The part that raised the event |
+| `pitch_median_hz` | Pitch shifts only. The reply's typical pitch, in Hz |
+| `shift_semitones` | Pitch shifts only. How far that is from the agent's typical reply. Positive is higher |
+| `speech_dbfs` | Loudness shifts only. How loud the reply's speech was |
+| `shift_db` | Loudness shifts only. How far that is from the agent's typical reply. Positive is louder |
+| `skipped` | Replies a part couldn't judge, one entry per part |
+| `metrics` | Each part's own score and counts. A part that couldn't judge the call shows a `score` of `None` and a `reason` instead |
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`. There's no top-level `timing_source`, as only per-turn audio is read.
+
+`eligible_turns` is how many agent replies at least one part judged and `turns_with_events` how many at least one part flagged. The score is the share that weren't flagged.
+
+## How Is It Calculated?
+
+The `VoiceConsistencyMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Voice Consistency} = \frac{\text{Number of Agent Replies No Part Flagged}}{\text{Total Number of Agent Replies Judged}}" />
+
+The metric reads each agent turn's own clip, or replies cut from stereo full call audio when no turn has audio. The caller's turns are ignored.
+
+### Parts
+
+Each agent turn with audio is one reply. Each part works out the agent's typical reply, the median over the replies it can measure, and flags a reply that is too far from it:
+
+| Part | Flags a reply that is | Judges a reply with |
+| --- | --- | --- |
+| [Pitch Consistency](/docs/metrics-pitch-consistency) | over 4 semitones higher or lower than typical | 1 second of voiced speech or more |
+| [Loudness Consistency](/docs/metrics-loudness-consistency) | over 5 dB louder or quieter than typical | a clip that isn't silent |
+
+A part needs at least 3 replies it can measure to tell which one is off. With fewer, it's left out.
+
+### Combining parts
+
+- A reply counts if at least one part judged it.
+- A reply is flagged if at least one part flagged it. Both parts flagging the same reply count once.
+
+If neither part has 3 replies to compare, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+:::note
+A flagged reply usually means something changed mid-call: a fallback voice after a TTS error, a different model handling one turn, or a hand-off to another agent. The event's `turn` points to where it happened.
+:::
+
+### Example call
+
+A call with four agent replies, where one reply is much louder and another much higher in pitch. Each row is one reply, how it compares with the agent's typical reply and whether it was flagged.
+
+<VoiceDiagram
+  duration={28}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 3.5, end: 6.5, label: "turn 1" }, { start: 10.5, end: 13.5, label: "turn 3" }, { start: 17.5, end: 20.5, label: "turn 5" }, { start: 24.5, end: 27.5, label: "turn 7" }], sounds: [{ start: 3.6, end: 6.3, level: 0.45 }, { start: 10.6, end: 13.3, level: 1 }, { start: 17.6, end: 20.3, level: 0.45 }, { start: 24.6, end: 27.3, level: 0.45 }] },
+  ]}
+  marks={[
+    { at: 5.0, lane: 0, tone: "ok", label: "clean" },
+    { at: 12.0, lane: 0, tone: "bad", label: "louder" },
+    { at: 19.0, lane: 0, tone: "bad", label: "higher pitch" },
+    { at: 26.0, lane: 0, tone: "ok", label: "clean" },
+  ]}
+  highlights={[
+    { start: 10.6, end: 13.3, lane: 0 },
+    { start: 17.6, end: 20.3, lane: 0 },
+  ]}
+/>
+
+| Agent turn | Compared with typical | Flagged? |
+| --- | --- | --- |
+| 1 | Close on both | No |
+| 3 | 7.9 dB louder | **Yes** (Loudness Consistency) |
+| 5 | 5.2 semitones higher | **Yes** (Pitch Consistency) |
+| 7 | Close on both | No |
+| **4 replies** | | **2 flagged → 2/4 = 0.5** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why was my test case skipped?",
+      answer: (
+        <>
+          Each part needs at least three agent replies it can measure to
+          compare. Short calls, and calls where fewer than three replies carry
+          usable audio, are skipped rather than scored.
+        </>
+      ),
+    },
+    {
+      question: "Does an expressive agent get penalized for varying its voice?",
+      answer: (
+        <>
+          It can be. The metric can't tell intended expressiveness from an
+          unstable voice. If your agent is meant to shift tone, treat this as a
+          regression signal against its own baseline rather than expecting a
+          perfect score.
+        </>
+      ),
+    },
+    {
+      question: "Does it compare against a reference voice?",
+      answer: (
+        <>
+          No. Replies are compared with each other, not with a target voice, so
+          an agent that uses the wrong voice for the whole call still scores
+          well.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Both parts run locally over the audio, so it has no model or
+          token cost.
+        </>
+      ),
+    },
+  ]}
+/>

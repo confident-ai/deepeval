@@ -1,0 +1,277 @@
+---
+id: metrics-user-interruption
+title: User Interruption
+sidebar_label: User Interruption
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The user interruption metric checks whether **the caller starts speaking into your voice agent**: either a false start, where the caller starts as the agent speaks and backs off, or talking over the agent. It is [Agent Interruption](/docs/metrics-agent-interruption) from the other side. It returns the share of the caller's lines that interrupted no one, between 0 and 1.
+
+Callers cutting in often is a sign that the agent's replies run long or miss what the caller wants.
+
+## Required Arguments
+
+To use the `UserInterruptionMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with audio on at least one of:
+
+- `audio` on the test case, a stereo recording of the whole call\*
+- `audio` on the caller's and agent's turns, each with a `start_time`
+
+\* Full call audio has to be stereo, with the caller and agent on separate channels. Mono full call audio is ignored, because the two voices can't be told apart.
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
+
+## Usage
+
+The `UserInterruptionMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import UserInterruptionMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = UserInterruptionMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **THREE** optional parameters specific to the `UserInterruptionMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so background noise isn't mistaken for the caller cutting in. With per-turn audio it's also used to find the agent's speech. Defaulted to `True`.
+- [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each interruption is [double-checked by an audio decision model](#second-check) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
+- [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
+
+### As a standalone
+
+You can also run the `UserInterruptionMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each caller line that cut into the agent shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 2,
+    "events": [
+        {
+            "type": "false_start",
+            "duration_seconds": 1.2,
+            "start_time": 9.0,
+            "mark": "range",
+            "timing_source": "call_recording",
+            "description": "Caller started over the agent, then stopped",
+            "caller_start": 9.0,
+            "caller_seconds": 1.2,
+            "overlap_seconds": 1.2,
+        },
+        {
+            "type": "talk_over",
+            "duration_seconds": 2.6,
+            "start_time": 13.4,
+            "mark": "range",
+            "timing_source": "call_recording",
+            "description": "Caller talked over the agent for 2.6s",
+            "caller_start": 13.4,
+            "caller_seconds": 3.0,
+            "overlap_seconds": 2.6,
+        },
+    ],
+    "skipped": [],
+    "timing_source": "call_recording",
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `type` | False start or talk-over. False start when both apply |
+| `caller_start` | When the caller started, in seconds into the call |
+| `caller_seconds` | How long the caller kept speaking |
+| `overlap_seconds` | How much of that the agent was also talking |
+| `start_time` | Where both started talking at once |
+| `duration_seconds` | How long both talked at once |
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many caller lines were checked and `turns_with_events` how many cut into the agent. The score is the share that didn't.
+
+## How Is It Calculated?
+
+The `UserInterruptionMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{User Interruption} = \frac{\text{Number of Caller Lines Without an Interruption}}{\text{Total Number of Caller Lines}}" />
+
+With per-turn audio instead of a call recording, the metric finds the speech inside each clip and places it on the call's clock by the clip's `Audio.start_time`, then finds overlaps the same way. Events name the caller turn instead of a time in the call.
+
+### Counting caller lines
+
+<VoiceDiagram
+  duration={11}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.4, end: 2.0 }, { start: 2.5, end: 3.4 }, { start: 6.0, end: 6.5 }, { start: 8.4, end: 10.4 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 4.0, end: 7.8 }] },
+  ]}
+  marks={[
+    { at: 0.4, lane: 0, tone: "info", label: "line 1" },
+    { at: 6.25, lane: 0, tone: "skip", label: "mm-hm" },
+    { at: 8.4, lane: 0, tone: "info", label: "line 2" },
+  ]}
+/>
+
+A caller line is each time the caller starts speaking after at least 1 second of their own silence and keeps going for 1 second or more. A pause under 1 second doesn't make a new line. Shorter sounds, like an "mm-hm" while listening, aren't counted.
+
+### Interruption criteria
+
+<VoiceDiagram
+  duration={12}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 2.4, end: 3.6 }, { start: 7.4, end: 10.8 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 0.4, end: 4.4 }, { start: 5.6, end: 10.0 }] },
+  ]}
+  marks={[
+    { at: 2.4, lane: 0, tone: "bad", label: "false start" },
+    { at: 7.4, lane: 0, tone: "bad", label: "talk-over" },
+  ]}
+  highlights={[
+    { start: 2.4, end: 3.6, lane: 0 },
+    { start: 7.4, end: 10.0, lane: 0 },
+  ]}
+/>
+
+Only a caller who starts while **the agent has the floor** can interrupt. Then a caller line is an interruption when it's a **false start** or a **talk-over**:
+
+- **False start:** the caller stops within 1.5 seconds.
+- **Talk-over:** the agent makes 1 second or more of sound while the caller keeps speaking.
+
+| Check | Rule |
+| --- | --- |
+| Agent talking | Agent sound in at least 0.2 of the 0.3 seconds before the caller starts |
+| Agent has the floor | The agent is talking and started more than 0.5 seconds before the caller |
+| Backs off | The caller stops within 1.5 seconds |
+| Talks over | 1 second or more of agent sound during the caller's line |
+
+When the two start within 0.5 seconds of each other, the moment is a collision and is judged by [Agent Interruption](/docs/metrics-agent-interruption) instead, so the two never flag the same moment.
+
+If the agent made no sound, or the caller never spoke for 1 second or more, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Second check
+
+In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), each interruption is double-checked before it counts. The audio decision model hears about 5 seconds of the **caller's** audio around it, to confirm it was really the caller speaking and not noise on their line, and is asked:
+
+> Is a person speaking in this clip, rather than only background noise, breathing or silence?
+
+If the model judges "no" more likely than "yes", the interruption is dismissed and doesn't count against the score.
+
+### Example call
+
+A call where the caller sometimes cuts into the agent. Each row is one caller line and whether it interrupted the agent.
+
+<VoiceDiagram
+  duration={22.5}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 3.6, end: 5.6 }, { start: 7.4, end: 7.8 }, { start: 9.0, end: 10.2 }, { start: 13.4, end: 16.4 }, { start: 17.6, end: 19.6 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 0.2, end: 3.0 }, { start: 6.4, end: 11.0 }, { start: 11.8, end: 16.0 }, { start: 20.4, end: 22.0 }] },
+  ]}
+  marks={[
+    { at: 9.0, lane: 0, tone: "bad", label: "false start" },
+    { at: 13.4, lane: 0, tone: "bad", label: "talk-over" },
+  ]}
+  highlights={[
+    { start: 9.0, end: 10.2, lane: 0 },
+    { start: 13.4, end: 16.0, lane: 0 },
+  ]}
+/>
+
+| Caller line | What the agent was doing | Interruption? |
+| --- | --- | --- |
+| 3.6 s | Finished at 3.0 s | No |
+| 7.4 s | 0.4 s "mm-hm" | Not counted |
+| 9.0 s | Talking since 6.4 s; the caller stopped after 1.2 s | **Yes** (false start) |
+| 13.4 s | Talking; both talked for 2.6 s | **Yes** (talk-over) |
+| 17.6 s | Finished at 16.0 s | No |
+| **4 lines** | | **2 interruptions → 2/4 = 0.5** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from agent interruption?",
+      answer: (
+        <>
+          <a href="/docs/metrics-agent-interruption">AgentInterruptionMetric</a>{" "}
+          checks the agent starting over the caller, and owns the moments when
+          both start at once. This metric checks the caller starting over an
+          agent that already had the floor, so a moment is only ever one or the
+          other.
+        </>
+      ),
+    },
+    {
+      question: "Is a caller interrupting the agent's fault?",
+      answer: (
+        <>
+          Not always. Callers cut in when they already know the answer, when
+          they are in a hurry, or when the agent rambles. Listen to the flagged
+          moments to see which it is.
+        </>
+      ),
+    },
+    {
+      question: "How is this different from turn-taking naturalness?",
+      answer: (
+        <>
+          <a href="/docs/metrics-turn-taking-naturalness">
+            TurnTakingNaturalnessMetric
+          </a>{" "}
+          runs this metric together with response latency, agent interruption
+          and response delay consistency, and counts each caller interruption
+          against the agent reply it cut into.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          Not by default. It only reads when each speaker is talking, so it has
+          no model or token cost. With <code>use_speech_detection</code> on, it
+          runs the small Silero VAD model locally. In the{" "}
+          <code>"hybrid"</code> eval mode, each interruption is also checked by
+          an audio decision model, at one paid request per interruption.
+        </>
+      ),
+    },
+  ]}
+/>

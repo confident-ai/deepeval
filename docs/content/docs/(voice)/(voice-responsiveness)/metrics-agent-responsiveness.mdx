@@ -1,0 +1,267 @@
+---
+id: metrics-agent-responsiveness
+title: Agent Responsiveness
+sidebar_label: Agent Responsiveness
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  jev={true}
+  referenceless={true}
+/>
+
+The agent responsiveness metric checks whether your voice agent **answered when it was spoken to**. It runs four single-issue voice metrics, for replies that never came, replies the caller couldn't hear, calls that ended badly and lines the caller had to repeat, and returns the share of exchanges none of them flagged, between 0 and 1.
+
+## Required Arguments
+
+To use the `AgentResponsivenessMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
+
+- `content` on each turn
+- `audio` on the turns, with `Audio.start_time` set so caller turns can be timed
+- `metadata` saying how the call ended, for [Unexpected Call End](/docs/metrics-unexpected-call-end#required-arguments)
+
+The metric judges each agent reply [on its own](/docs/metrics-voice-introduction#call-audio). The caller's side of the call is only used by the [Silent Reply](/docs/metrics-silent-reply) part, to tell whether the caller was talking and for its `stt_model` check.
+
+## Usage
+
+The `AgentResponsivenessMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import AgentResponsivenessMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks a question that requires the agent to look up an account.",
+    expected_outcome="The agent answers without the user having to repeat themselves.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = AgentResponsivenessMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **THREE** optional parameters specific to the `AgentResponsivenessMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, finds where the speech is inside each turn's clip with [speech detection](/docs/metrics-voice-introduction#speech-detection). It is passed to [Failed Response](/docs/metrics-failed-response), [Silent Reply](/docs/metrics-silent-reply) and [Reprompt](/docs/metrics-reprompt), and also decides which caller turns join into one exchange. Defaulted to `True`.
+- [Optional] `system_one_model`: the Jev model [Reprompt](/docs/metrics-reprompt#reprompt-criteria) uses to decide whether each likely repeat is real, as a string or a `DeepEvalBaseSystemOneModel`. Defaulted to <DefaultSystemOneModel />.
+- [Optional] `stt_model`: the speech-to-text model that listens around each silent reply for its words, as a string or a `DeepEvalBaseSTT`. Passed to the [Silent Reply](/docs/metrics-silent-reply) part, where a silent reply whose words are heard nearby then isn't counted. Defaulted to `None`, which skips that check.
+
+### As a standalone
+
+You can also run the `AgentResponsivenessMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Every part's events show up in `score_breakdown`, along with each part's own result. Here is what the [example call](#example-call) returns:
+
+```python
+{
+    "eligible_turns": 5,
+    "turns_with_events": 2,
+    "events": [
+        {
+            "type": "call_ended_without_reply",
+            "turn": 6,
+            "duration_seconds": 0.24,
+            "start_time": 24.26,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Call ended without a reply",
+            "metric": "Failed Response",
+        },
+        {
+            "type": "unexpected_end",
+            "turn": 6,
+            "duration_seconds": 0.0,
+            "start_time": 24.5,
+            "mark": "moment",
+            "timing_source": "turn_timestamps",
+            "description": "Call ended unexpectedly (agent_ended_call)",
+            "end_reason": "agent_ended_call",
+            "metric": "Unexpected Call End",
+        },
+        {
+            "type": "user_reprompted",
+            "turn": 1,
+            "duration_seconds": 6.24,
+            "start_time": 4.76,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Caller repeated themselves after 6.2s",
+            "reprompt_turn": 2,
+            "metric": "Reprompt",
+        },
+    ],
+    "skipped": [],
+    "metrics": {
+        "Failed Response": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
+        "Silent Reply": {"score": 1.0, "eligible_turns": 3, "turns_with_events": 0},
+        "Unexpected Call End": {"score": 0.0, "eligible_turns": 1, "turns_with_events": 1},
+        "Reprompt": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
+    },
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `eligible_turns` | How many exchanges were judged |
+| `turns_with_events` | How many exchanges had at least one issue |
+| `metric` | On each event. The part that raised it. The part's own page explains its other fields |
+| `skipped` | The turns any part couldn't judge, such as agent audio that won't decode |
+| `metrics` | Each part's own score and counts, counted the part's own way. A part that couldn't judge the call shows a score of `None` and its reason |
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+The score is the share of exchanges with no issue. The reason names the parts, as in "2 of 5 exchanges had an issue: Failed Response (1), Unexpected Call End (1), Reprompt (1)."
+
+## How Is It Calculated?
+
+The `AgentResponsivenessMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Agent Responsiveness} = \frac{\text{Number of Exchanges Without an Issue}}{\text{Total Number of Exchanges}}" />
+
+It runs these four metrics on the call, each with its default settings apart from the two parameters above:
+
+| Part | Flags | Counted against |
+| --- | --- | --- |
+| [Failed Response](/docs/metrics-failed-response) | A caller line never answered | That line's exchange |
+| [Silent Reply](/docs/metrics-silent-reply) | An agent reply the caller couldn't hear | The exchange it replies in |
+| [Unexpected Call End](/docs/metrics-unexpected-call-end) | A call that ended badly | The exchange holding the call's last turn |
+| [Reprompt](/docs/metrics-reprompt) | A caller line the caller had to repeat | That line's exchange |
+
+### Counting exchanges
+
+<VoiceDiagram
+  duration={12}
+  lanes={[
+    { label: "Caller", role: "caller", clips: [{ start: 2.6, end: 4.6 }, { start: 7.8, end: 9.6 }], sounds: [{ start: 2.7, end: 4.4 }, { start: 7.9, end: 9.4 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 2.0 }, { start: 5.2, end: 7.2 }, { start: 10.0, end: 11.8 }], sounds: [{ start: 0.3, end: 1.8 }, { start: 5.3, end: 7.0 }, { start: 10.1, end: 11.6 }] },
+  ]}
+  brackets={[
+    { start: 0.2, end: 2.0, lane: 0, label: "exchange 1" },
+    { start: 2.6, end: 7.2, lane: 0, label: "exchange 2" },
+    { start: 7.8, end: 11.8, lane: 0, label: "exchange 3" },
+  ]}
+/>
+
+An exchange is one caller line and the agent turns after it, up to the next caller line. Caller turns join into one line as in [Failed Response](/docs/metrics-failed-response#counting-caller-lines), when the next one's speech starts less than 1 second after the previous one's ends. An agent turn before the caller's first line, such as a greeting, is an exchange of its own.
+
+### Combining the parts
+
+Each part's flagged items are counted against an exchange, as in the table above. An exchange flagged by two parts counts once: an agent that hangs up on a question fails both Failed Response and Unexpected Call End, and costs one exchange.
+
+A part that can't judge the call is left out of the score. If neither the turns nor the test case have usable audio, every part is skipped, and so is this metric, with the reason "The call has no audio to evaluate." With only stereo full call audio, replies are cut from it first. There is no critical failure that zeroes the score: agent audio that won't decode is listed under `skipped`.
+
+### Example call
+
+The caller is kept waiting once, and the agent hangs up on their last question. Each row is one exchange and the parts that flagged it.
+
+<VoiceDiagram
+  duration={26}
+  lanes={[
+    { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 11.0, end: 12.5, label: "turn 2" }, { start: 16.5, end: 18.5, label: "turn 4" }, { start: 22.5, end: 24.5, label: "turn 6" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 11.0, end: 12.25 }, { start: 16.5, end: 18.25 }, { start: 22.5, end: 24.25 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0, end: 2.0, label: "turn 0" }, { start: 13.5, end: 15.5, label: "turn 3" }, { start: 19.5, end: 21.5, label: "turn 5" }], sounds: [{ start: 0, end: 1.75 }, { start: 13.5, end: 15.25 }, { start: 19.5, end: 21.25 }] },
+  ]}
+  brackets={[
+    { start: 0, end: 2.5, lane: 0, label: "1" },
+    { start: 3.0, end: 10.9, lane: 0, label: "2" },
+    { start: 11.0, end: 16.3, lane: 0, label: "3" },
+    { start: 16.5, end: 22.3, lane: 0, label: "4" },
+    { start: 22.5, end: 26, lane: 0, label: "5" },
+  ]}
+  highlights={[
+    { start: 5.0, end: 11.0, lane: 1 },
+    { start: 24.5, end: 26, lane: 1 },
+  ]}
+  marks={[
+    { at: 11.0, lane: 0, tone: "bad", label: "repeat" },
+    { at: 24.5, lane: 0, tone: "bad", label: "hung up" },
+  ]}
+/>
+
+| Exchange | Turns | Flagged by | Issue? |
+| --- | --- | --- | --- |
+| 1 | 0, the agent's greeting | None | No |
+| 2 | 1, "Can I pay my bill?" | Reprompt | **Yes** |
+| 3 | 2–3, "Hello? Are you there?" and the reply | None | No |
+| 4 | 4–5, "Which card is on file?" and the reply | None | No |
+| 5 | 6, "Can I use a different one?", then the agent hangs up | Failed Response, Unexpected Call End | **Yes**, once |
+| **5 exchanges** | | | **2 with an issue → 3/5 = 0.6** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why did my score change?",
+      answer: (
+        <>
+          This metric used to subtract 0.25 per reprompt and drop to 0 on a
+          missed reply, a reply with no audio or a bad call ending. It now rolls
+          up the single-issue metrics above and scores the share of exchanges
+          with no issue, so nothing zeroes the score on its own.
+        </>
+      ),
+    },
+    {
+      question: "How is this different from the single-issue metrics it runs?",
+      answer: (
+        <>
+          Each part, such as{" "}
+          <a href="/docs/metrics-failed-response">FailedResponseMetric</a>,
+          checks one issue and points to the turns where it happened. This
+          metric gives one number for all four, counted per exchange.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric measure response latency?",
+      answer: (
+        <>
+          No, it measures whether a response happened at all. Latency is
+          scored by{" "}
+          <a href="/docs/metrics-response-latency">ResponseLatencyMetric</a>.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external model?",
+      answer: (
+        <>
+          Through Reprompt, and through Silent Reply when you set an{" "}
+          <code>stt_model</code>. When the call has a likely repeat, Reprompt
+          asks a Jev decision model whether it's real, in one request per
+          call, so the score can differ between runs. A call with no likely
+          repeat makes no model call. With an <code>stt_model</code>, Silent
+          Reply transcribes the call around each silent reply. Otherwise the
+          other three parts are deterministic and run locally. Any cost is
+          added to <code>evaluation_cost</code>.
+        </>
+      ),
+    },
+  ]}
+/>

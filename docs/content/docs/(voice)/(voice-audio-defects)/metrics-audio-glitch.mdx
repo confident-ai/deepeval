@@ -1,0 +1,286 @@
+---
+id: metrics-audio-glitch
+title: Audio Glitch
+sidebar_label: Audio Glitch
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The audio glitch metric checks whether your voice agent's audio **carried sounds nobody meant to make**: a stuck tone, a stream that goes dead, a reply cut off mid-sound, or clipping. It rolls four single-issue metrics into one score, the share of agent replies none of them flagged, between 0 and 1.
+
+:::note
+A transcript can't show these failures. A buzzing tone after a sentence, or a stream that drops to digital silence mid-answer, leaves nothing for speech-to-text to write down. This metric reads the audio itself.
+:::
+
+## Required Arguments
+
+To use the `AudioGlitchMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
+
+Stereo `audio` on the test case is also used, but only by the cut-off and dead stream parts. See [Full call audio](#call-audio) below.
+
+## Usage
+
+The `AudioGlitchMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import AudioGlitchMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to confirm their start date.",
+    expected_outcome="The agent reads back the date and asks a follow-up.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = AudioGlitchMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **TWO** optional parameters specific to the `AudioGlitchMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection). Passed to the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) and [Dead Stream](/docs/metrics-dead-stream) parts. Defaulted to `True`.
+- [Optional] `stt_model`: the speech-to-text model that transcribes the agent's audio around each dead stretch, as a string or a `DeepEvalBaseSTT`. Passed to the [Dead Stream](/docs/metrics-dead-stream) part, where a dead stretch after a finished sentence then isn't counted. Defaulted to `None`, which skips that check.
+
+`model`, `async_mode` and `evaluation_template` are still accepted so older code keeps working, but they're ignored. The metric doesn't take `eval_mode`. Its Abrupt Cut-off part follows the configured [voice eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes).
+
+### As a standalone
+
+You can also run the `AudioGlitchMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+`score_breakdown` lists every part's events, and each part's own result. Here is what the [example call](#example-call) returns:
+
+```python
+{
+    "eligible_turns": 5,
+    "turns_with_events": 3,
+    "events": [
+        {
+            "type": "held_tone",
+            "turn": 3,
+            "role": "assistant",
+            "offset_seconds": 1.48,
+            "duration_seconds": 1.52,
+            "start_time": 8.98,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "A tone was held for 1.5s",
+            "position": "middle",
+            "pitch_hz": 388.0,
+            "periodicity": 0.993,
+            "level_dbfs": -18.0,
+            "jitter": 0.0,
+            "glide": 0.0,
+            "hold_ratio": 9.5,
+            "pitch_ratio": 1.71,
+            "metric": "Held Tone",
+        },
+        {
+            "type": "dead_stream",
+            "turn": 5,
+            "role": "assistant",
+            "offset_seconds": 1.0,
+            "duration_seconds": 0.7,
+            "start_time": 15.5,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Agent's audio went dead for 0.7s",
+            "position": "middle",
+            "runs_to_end": False,
+            "metric": "Dead Stream",
+        },
+        {
+            "type": "abrupt_cutoff",
+            "turn": 7,
+            "offset_seconds": 1.605,
+            "duration_seconds": 0.02,
+            "start_time": 21.805,
+            "mark": "moment",
+            "timing_source": "turn_timestamps",
+            "description": "Agent's audio cut off abruptly",
+            "metric": "Abrupt Cut-off",
+        },
+        {
+            "type": "clipping",
+            "turn": 7,
+            "role": "assistant",
+            "offset_seconds": 0.048,
+            "duration_seconds": 1.577,
+            "start_time": 20.248,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Audio was clipped",
+            "position": "start",
+            "fraction": 0.0906,
+            "metric": "Audio Clipping",
+        },
+    ],
+    "skipped": [],
+    "metrics": {
+        "Held Tone": {"score": 0.8, "eligible_turns": 5, "turns_with_events": 1},
+        "Dead Stream": {"score": 0.8, "eligible_turns": 5, "turns_with_events": 1},
+        "Abrupt Cut-off": {"score": 0.8, "eligible_turns": 5, "turns_with_events": 1},
+        "Audio Clipping": {"score": 0.8, "eligible_turns": 5, "turns_with_events": 1},
+    },
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `metric` | Which part raised the event |
+| `metrics` | Each part's own score and counts, or a `score` of None and a `reason` when that part had nothing to judge |
+
+Each event is unchanged from the part that raised it, so its other fields are explained on that part's page. Clips a part couldn't decode are listed under `skipped`.
+
+`eligible_turns` is how many agent replies were counted and `turns_with_events` how many at least one part flagged. The score is the share no part flagged.
+
+## How Is It Calculated?
+
+The `AudioGlitchMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Audio Glitch} = \frac{\text{Number of Agent Replies No Part Flagged}}{\text{Total Number of Agent Replies}}" />
+
+### Counting agent replies
+
+The metric runs four single-issue metrics on the call, each with its default limits:
+
+| Part | Flags an agent reply that |
+| --- | --- |
+| [Held Tone](/docs/metrics-held-tone) | Has a stuck tone or drone |
+| [Dead Stream](/docs/metrics-dead-stream) | Goes dead partway through |
+| [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) | Stops mid-sound, including a stream cut the agent picked back up |
+| [Audio Clipping](/docs/metrics-audio-clipping) | Is distorted from being too loud |
+
+A reply counts if any part counted it, and is flagged if any part flagged it. A reply flagged by two parts counts once. A part with nothing to judge is left out, and if no part has anything to judge, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.5, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 2.0 }, { start: 2.0, end: 3.4, level: 0.6, ending: "flat" }, { start: 3.4, end: 4.3 }, { start: 5.7, end: 8.6, level: 1, ending: "cut" }] },
+  ]}
+  highlights={[
+    { start: 2.0, end: 3.4, lane: 0 },
+    { start: 5.7, end: 8.6, lane: 0 },
+  ]}
+  marks={[
+    { at: 8.6, lane: 0, tone: "bad", label: "cut off" },
+  ]}
+/>
+
+Above, turn 1 is flagged once and turn 3 is flagged once, even though two parts flagged it: 2 of 2 replies flagged.
+
+### Full call audio
+
+Held Tone, Dead Stream and Audio Clipping read per-turn audio, or replies cut from stereo full call audio when no turn has audio. Dead Stream also uses stereo full call audio, when the test case has it, to tell whether the caller was talking and for its `stt_model` check. Abrupt Cut-off reads stereo full call audio when the test case has it. Each cut-off it finds there counts against the agent turn that started last before the stop, so every audio turn needs an `Audio.start_time`. Without one on every turn, Abrupt Cut-off reads per-turn audio too. A cut before the test case's first agent turn is dropped.
+
+### Example call
+
+A call where three of five agent replies carry a glitch, and one of them has two. Each row is one agent reply and the parts that flagged it.
+
+<VoiceDiagram
+  duration={27}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 11.5, label: "turn 3" }, { start: 14.5, end: 17.2, label: "turn 5" }, { start: 20.2, end: 21.82, label: "turn 7" }, { start: 24.82, end: 26.82, label: "turn 9" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 9.0 }, { start: 9.0, end: 10.5, level: 0.6, ending: "flat" }, { start: 10.5, end: 11.25 }, { start: 14.5, end: 15.5 }, { start: 15.5, end: 16.2, silent: true }, { start: 16.2, end: 17.2 }, { start: 20.2, end: 21.82, level: 1, ending: "cut" }, { start: 24.82, end: 26.57 }] },
+  ]}
+  highlights={[
+    { start: 9.0, end: 10.5, lane: 0 },
+    { start: 15.5, end: 16.2, lane: 0 },
+    { start: 20.2, end: 21.82, lane: 0 },
+  ]}
+  marks={[
+    { at: 21.82, lane: 0, tone: "bad", label: "cut off" },
+  ]}
+/>
+
+| Agent turn | What happens | Flagged by |
+| --- | --- | --- |
+| 1 | Normal speech | – |
+| 3 | A 1.5 s beep at 388 Hz | Held Tone |
+| 5 | 0.7 s of exact silence mid-reply | Dead Stream |
+| 7 | Clipped throughout, and stops at full volume mid-sentence | Audio Clipping, Abrupt Cut-off |
+| 9 | Normal speech | – |
+| **5 replies** | | **3 flagged → 2/5 = 0.4** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why did my score change?",
+      answer: (
+        <>
+          This metric used to judge every turn with audio, caller and agent
+          alike, and had an LLM write its reason. It now rolls up the
+          single-issue metrics above, judges only the agent's replies, and
+          writes a fixed reason without an LLM.
+        </>
+      ),
+    },
+    {
+      question: "How is this different from Audio Integrity?",
+      answer: (
+        <>
+          Both run the cut-off and clipping checks.{" "}
+          <a href="/docs/metrics-audio-integrity">AudioIntegrityMetric</a>{" "}
+          adds loops, dropouts and silent replies, and scores 0 when agent
+          audio can't be decoded. This metric adds held tones and dead stream,
+          and skips undecodable audio instead.
+        </>
+      ),
+    },
+    {
+      question: "What about words the transcript got wrong?",
+      answer: (
+        <>
+          That's{" "}
+          <a href="/docs/metrics-transcription-accuracy">
+            TranscriptionAccuracyMetric
+          </a>
+          's job. Transcription accuracy covers "the words were wrong", this
+          metric covers "the sound was wrong".
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No LLM. Every part runs locally over the audio. With full call audio and{" "}
+          <code>use_speech_detection</code> on, the cut-off part runs the small
+          Silero VAD model locally over the caller's channel, so there's no
+          token cost. With an <code>stt_model</code>, the dead stream part
+          transcribes the agent's audio around each dead stretch, and the cost
+          is added to <code>evaluation_cost</code>.
+        </>
+      ),
+    },
+  ]}
+/>

@@ -1,0 +1,230 @@
+---
+id: metrics-pitch-variation
+title: Pitch Variation
+sidebar_label: Pitch Variation
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The pitch variation metric checks whether your voice agent's pitch **moves naturally within a reply**: not a flat, robotic reading with no rise or fall, and not a voice swinging wildly up and down. It returns the share of agent replies whose pitch varies within range, between 0 and 1.
+
+<AudioSample name="pitch-variation" />
+
+## Required Arguments
+
+To use the `PitchVariationMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
+
+- `audio` on the agent's turns, one clip per reply
+
+## Usage
+
+The `PitchVariationMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import PitchVariationMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = PitchVariationMetric(
+    threshold=0.8, min_spread_semitones=1, max_spread_semitones=6
+)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **TWO** optional parameters specific to the `PitchVariationMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `min_spread_semitones`: an integer for the least pitch spread, in semitones, a reply may have before it counts as monotone. Must be 0 or more. Defaulted to `1`.
+- [Optional] `max_spread_semitones`: an integer for the most pitch spread, in semitones, a reply may have before it counts as erratic. Must be greater than `min_spread_semitones`. Defaulted to `6`.
+
+A value outside these limits raises a `ValueError`.
+
+### As a standalone
+
+You can also run the `PitchVariationMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each reply with too little or too much pitch movement shows up in `score_breakdown`. Here is what the [example call](#example-call) returns:
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 2,
+    "events": [
+        {
+            "type": "monotone",
+            "turn": 3,
+            "timing_source": "turn_timestamps",
+            "description": "Reply sounded monotone",
+            "pitch_spread_semitones": 0.1,
+            "offset_seconds": 0.0,
+            "duration_seconds": 3.0,
+            "start_time": 7.0,
+            "mark": "whole_reply",
+        },
+        {
+            "type": "erratic",
+            "turn": 5,
+            "timing_source": "turn_timestamps",
+            "description": "Pitch varied erratically",
+            "pitch_spread_semitones": 9.6,
+            "offset_seconds": 0.0,
+            "duration_seconds": 3.0,
+            "start_time": 12.0,
+            "mark": "whole_reply",
+        },
+    ],
+    "skipped": [
+        {
+            "turn": 9,
+            "error": "Reply has under 1s of voiced speech to follow its pitch.",
+        }
+    ],
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `type` | Monotone if the pitch barely moved, erratic if it swung too widely |
+| `pitch_spread_semitones` | How widely the reply's pitch moved, in semitones |
+
+Each event covers the whole reply: `offset_seconds` is 0 and `duration_seconds` is the clip's length. Replies with under 1 second of voiced speech, or audio that can't be decoded, are listed under `skipped`.
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many agent replies were counted and `turns_with_events` how many were monotone or erratic. The score is the share that were neither.
+
+## How Is It Calculated?
+
+The `PitchVariationMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Pitch Variation} = \frac{\text{Number of Agent Replies With a Pitch Spread in Range}}{\text{Total Number of Agent Replies}}" />
+
+The metric reads per-turn audio, one agent clip at a time, or replies cut from stereo full call audio when no turn has audio. The caller's turns are never checked.
+
+### Which replies are scored
+
+<VoiceDiagram
+  duration={7}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 6.5, label: "turn 3" }], sounds: [{ start: 0.6, end: 3.8 }, { start: 5.6, end: 6.3 }] },
+  ]}
+  brackets={[
+    { start: 0.5, end: 4.0, lane: 0, label: "reply 1" },
+    { start: 5.5, end: 6.5, lane: 0, tone: "skip", label: "too short" },
+  ]}
+/>
+
+A reply is scored if it has at least 1 second of voiced speech. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz. Stretches that are near silent, or have no clear pitch (such as "s" or "f" sounds), are left out. What's left is the voiced speech.
+
+### Pitch spread criteria
+
+A reply's pitch spread is how far its 40 ms pitches typically sit from the reply's median pitch, in semitones. It is based on a median, so a single cracked word doesn't move it. Cracks are judged by [Abrupt Pitch Jump](/docs/metrics-abrupt-pitch-jump) instead.
+
+| Check | Rule |
+| --- | --- |
+| Monotone | Spread under `min_spread_semitones` (1 by default) |
+| Erratic | Spread over `max_spread_semitones` (6 by default) |
+
+A pitch tracker can briefly lock onto the octave above or below the real pitch. Up to 120 ms sitting about an octave off the pitch around it is folded back first, so it doesn't widen the spread.
+
+If no agent reply has enough voiced speech, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+:::note
+Adults reading aloud vary their pitch by about 2.2 semitones. The default of 1 is flatter than normal speech, and 6 is nearly three times the norm. Expressive TTS voices can run wider, so raise `max_spread_semitones` if a lively voice is flagged as erratic.
+:::
+
+### Example call
+
+A call with five agent replies: two sound natural, one is read flat, one swings wildly, and one is too short to judge. Each row is one agent reply and its pitch spread.
+
+<VoiceDiagram
+  duration={24}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2, end: 5, label: "turn 1" }, { start: 7, end: 10, label: "turn 3" }, { start: 12, end: 15, label: "turn 5" }, { start: 17, end: 20, label: "turn 7" }, { start: 22, end: 24, label: "turn 9" }], sounds: [{ start: 2.1, end: 4.8 }, { start: 7.0, end: 10.0, ending: "flat" }, { start: 12.1, end: 14.8 }, { start: 17.1, end: 19.8 }, { start: 22.05, end: 22.7 }] },
+  ]}
+  highlights={[
+    { start: 7.0, end: 10.0, lane: 0 },
+    { start: 12.1, end: 14.8, lane: 0 },
+  ]}
+  marks={[
+    { at: 22.4, lane: 0, tone: "skip", label: "skipped" },
+  ]}
+/>
+
+| Agent turn | Pitch spread | Flagged? |
+| --- | --- | --- |
+| 1 | 2.4 semitones | No |
+| 3 | 0.1 semitones | **Yes** (`monotone`) |
+| 5 | 9.6 semitones | **Yes** (`erratic`) |
+| 7 | 2.3 semitones | No |
+| 9 | Under 1 s of voiced speech | Skipped |
+| **4 replies** | | **2 flagged → 2/4 = 0.5** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why semitones rather than Hz?",
+      answer: (
+        <>
+          A 20 Hz swing is large for a deep voice and small for a high one.
+          Semitones measure pitch the way listeners hear it, so the same limit
+          works for any voice.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Detection is deterministic and runs locally over the audio, so it
+          has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the caller's audio too?",
+      answer: (
+        <>
+          No. Only the agent's replies are scored. The caller's audio comes
+          from your own TTS model, so a problem there is with the test harness,
+          not the agent.
+        </>
+      ),
+    },
+  ]}
+/>

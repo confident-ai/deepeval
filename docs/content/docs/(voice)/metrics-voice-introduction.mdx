@@ -1,0 +1,302 @@
+---
+id: metrics-voice-introduction
+title: Introduction to Voice Metrics
+sidebar_label: Introduction
+languages: [python]
+beta: true
+---
+
+`deepeval` offers 30+ metrics for voice agents. Where a test case is the call you want to judge, a voice metric is the ruler for one thing about how it sounded or flowed: a reply cut off mid-word, a long wait before the agent answered, the agent talking over the caller.
+
+## Quick Summary
+
+Voice metrics score the **audio** of a call, not just its transcript. Most are deterministic: they measure the sound directly, with no model calls, so they're fast, free and repeatable. The exceptions are [Transcription Accuracy](/docs/metrics-transcription-accuracy), judged by an LLM or Jev, and [Reprompt](/docs/metrics-reprompt), which asks Jev whether the caller really repeated themselves, along with the roll-ups that include it. [Dead Stream](/docs/metrics-dead-stream) and [Silent Reply](/docs/metrics-silent-reply), and the roll-ups that include them, also call a speech-to-text model when you give them an `stt_model`. Each one returns a **score between 0 and 1**, usually the share of the call that was free of the problem, along with a **reason**. A metric passes when its score is at or above `threshold`, `0.5` by default.
+
+<Tabs items={["Speech Quality", "Audio Defects", "Audio Level", "Prosody", "Timing", "Responsiveness"]}>
+<Tab value="Speech Quality">
+
+- [Voice Naturalness](/docs/metrics-voice-naturalness): how naturally the agent speaks
+- [Speech Intelligibility](/docs/metrics-speech-intelligibility): how easy the agent is to hear and understand
+- [Voice Consistency](/docs/metrics-voice-consistency): whether the agent sounds like the same speaker all call
+- [Transcription Accuracy](/docs/metrics-transcription-accuracy): whether the agent's own speech-to-text heard the caller correctly
+
+</Tab>
+<Tab value="Audio Defects">
+
+- [Audio Dropout](/docs/metrics-audio-dropout): audio that cuts out mid-speech
+- [Audio Clipping](/docs/metrics-audio-clipping): audio distorted from being too loud
+- [Audio Loop](/docs/metrics-audio-loop): audio stuck repeating the same chunk
+- [Abrupt Cut-off](/docs/metrics-abrupt-cut-off): replies that stop mid-sound
+- [Held Tone](/docs/metrics-held-tone): a stuck tone or drone
+- [Dead Stream](/docs/metrics-dead-stream): audio that goes completely dead partway through
+- [Echo](/docs/metrics-echo): the agent's voice coming back through the caller's side
+- [Audio Glitch](/docs/metrics-audio-glitch) and [Audio Integrity](/docs/metrics-audio-integrity): several of the above rolled into one score
+
+</Tab>
+<Tab value="Audio Level">
+
+- [Background Noise](/docs/metrics-background-noise): hiss, hum or room noise behind the agent's speech
+- [Loudness](/docs/metrics-loudness): an agent too quiet or too loud
+- [Loudness Consistency](/docs/metrics-loudness-consistency): volume changing from one reply to the next
+- [Volume Variance](/docs/metrics-volume-variance): volume drifting within a reply
+
+</Tab>
+<Tab value="Prosody">
+
+- [Pitch Variation](/docs/metrics-pitch-variation): a flat, robotic reading, or a voice swinging wildly
+- [Abrupt Pitch Jump](/docs/metrics-abrupt-pitch-jump): a voice that cracks or squeaks
+- [Pitch Consistency](/docs/metrics-pitch-consistency): a voice clearly deeper or higher in one reply
+- [Speaking Rate](/docs/metrics-speaking-rate): rushing or dragging
+- [Pauses](/docs/metrics-pauses): long gaps mid-sentence, or more silence than speech
+
+</Tab>
+<Tab value="Timing">
+
+- [Response Latency](/docs/metrics-response-latency): a long wait before the agent answers
+- [Response Delay Consistency](/docs/metrics-response-delay-consistency): a wait that changes a lot from reply to reply
+- [Time to First Response](/docs/metrics-time-to-first-response): a slow greeting once the call connects
+- [Agent Interruption](/docs/metrics-agent-interruption): the agent speaking into the caller
+- [User Interruption](/docs/metrics-user-interruption): the caller speaking into the agent
+- [Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness): the overall rhythm of the call
+
+</Tab>
+<Tab value="Responsiveness">
+
+- [Failed Response](/docs/metrics-failed-response): a caller line that never got an answer
+- [Silent Reply](/docs/metrics-silent-reply): a reply the caller couldn't hear
+- [Unexpected Call End](/docs/metrics-unexpected-call-end): a call that ended badly
+- [Reprompt](/docs/metrics-reprompt): a caller who had to speak again before the agent replied
+- [Agent Responsiveness](/docs/metrics-agent-responsiveness) and [Voice Reliability](/docs/metrics-voice-reliability): several of the above rolled into one score
+
+</Tab>
+</Tabs>
+
+:::info
+What the agent **said** is still judged by regular multi-turn metrics, such as [Turn Relevancy](/docs/metrics-turn-relevancy), on the call's transcript. Voice metrics cover how it **sounded** and **when** it happened.
+:::
+
+Simulate a call with the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode), then evaluate it:
+
+```python title="main.py"
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import AbruptCutoffMetric, ResponseLatencyMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate(
+    [ConversationalGolden(scenario="The caller asks to check an order.")]
+)
+
+evaluate(
+    test_cases=test_cases,
+    metrics=[AbruptCutoffMetric(), ResponseLatencyMetric()],
+)
+```
+
+## Why `deepeval` Voice Metrics?
+
+- **One problem per metric.** Each metric checks one thing, so a failing score points straight at what to fix. Roll-up metrics combine them when you want one number.
+- **Measured from the audio.** Most metrics read the sound itself, so they catch what a transcript can't: dead air, clipping, a cut-off, a slow reply.
+- **Deterministic by default.** No model calls, no token cost, and the same audio always gives the same score. You can add a [second check by a listening model](#second-check-with-an-audio-decision-model) when you want one.
+- **Every problem is placed on the call.** [Events](#events) say what went wrong and when, so you can jump straight to it in the recording.
+
+## Call Audio
+
+Voice metrics read the call from `audio` on the test case: one stereo recording of the whole call, with the caller and the agent on separate channels. It's what the [conversation simulator](/docs/conversation-simulator-voice-mode) records, and what most voice platforms give you for a production call.
+
+```python
+from deepeval.test_case import Audio, ConversationalTestCase
+
+test_case = ConversationalTestCase(
+    turns=turns,
+    audio=Audio(url="call.wav"),
+    agent_channel="right",  # the default
+)
+```
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Caller (left)", role: "caller", clips: [{ start: 0.15, end: 2.55, label: "turn 1" }, { start: 5.85, end: 7.95, label: "turn 3" }], sounds: [{ start: 0.3, end: 2.4 }, { start: 6.0, end: 7.8 }] },
+    { label: "Agent (right)", role: "agent", clips: [{ start: 2.85, end: 5.55, label: "turn 2" }, { start: 8.15, end: 9.95, label: "turn 4" }], sounds: [{ start: 3.0, end: 5.4 }, { start: 8.3, end: 9.8 }] },
+  ]}
+/>
+
+Both channels share one clock, so metrics that time the call, such as [Response Latency](/docs/metrics-response-latency) and the interruption metrics, see exactly when each side spoke and when they talked over each other. Metrics that judge how a reply sounds, such as pitch and loudness, score each reply on its own: each speaker's turns are matched in order to the replies heard on their channel, and each reply is cut out from 0.15 seconds before its sound to 0.15 seconds after, as the boxes above show. If a channel has more replies than turns, the closest replies are joined until the counts match.
+
+For a recording with the agent on the left channel, set `agent_channel="left"`. A mono recording can't be used, since there's no way to tell the two voices apart, and logs a warning saying so.
+
+### What Counts as a Reply
+
+How a metric counts the agent's replies depends on what it measures:
+
+- **Metrics that judge how a reply sounds**, such as pitch, loudness and clipping, score each agent turn's audio as one reply, whether it was cut from the recording or came as the turn's own clip. Audio that can't be decoded is skipped.
+- **Metrics that time the call**, such as [Response Latency](/docs/metrics-response-latency), the interruption metrics and [Abrupt Cut-off](/docs/metrics-abrupt-cut-off), count a reply each time the agent starts speaking after at least 1 second of its own silence. A pause under 1 second doesn't start a new one. They count from the sound rather than the transcript, since a transcriber can split one reply across several turns.
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
+  ]}
+  brackets={[
+    { start: 0.5, end: 4.0, lane: 0, label: "reply 1" },
+    { start: 5.5, end: 9.5, lane: 0, label: "reply 2" },
+  ]}
+/>
+
+Only the agent's replies are scored, unless a metric's page says otherwise. Some metrics also skip replies they can't measure, such as one too short to judge its pitch from. Each metric's page lists these under **Which replies are scored**.
+
+### Per-Turn Audio
+
+If your platform gives each turn its own clip, put it in `audio` on the `Turn`, placed on the call's clock by `Audio.start_time`. Metrics that judge how a reply sounds then use those clips instead of cutting the recording, which skips the turn matching above. Without a call recording, the timing metrics use them too, by listening for the speech inside each clip. [Echo](/docs/metrics-echo) needs the stereo recording, and [Transcription Accuracy](/docs/metrics-transcription-accuracy) needs per-turn audio. `timing_source` in the results says which was used: `"call_recording"` or `"turn_timestamps"`.
+
+## Speech Detection
+
+Metrics that need to know when someone is talking take `use_speech_detection`, on by default. Without it, any sound counts as talking. With it, a stretch only counts when the [Silero VAD](https://github.com/snakers4/silero-vad) model hears speech in it:
+
+<VoiceDiagram
+  duration={7}
+  lanes={[
+    { label: "Loudness", role: "caller", sounds: [{ start: 0.3, end: 2.6 }, { start: 3.4, end: 3.7, level: 0.5 }, { start: 4.6, end: 6.4, level: 0.35, ending: "flat" }] },
+    { label: "Speech", role: "caller", sounds: [{ start: 0.3, end: 2.6 }] },
+  ]}
+  marks={[
+    { at: 1.4, lane: 0, tone: "info", label: "speech" },
+    { at: 3.55, lane: 0, tone: "skip", label: "bang" },
+    { at: 5.5, lane: 0, tone: "skip", label: "hold music" },
+  ]}
+/>
+
+So background noise, bangs and hold music aren't mistaken for someone talking. It applies to both full call audio and per-turn audio, on the metrics that take it. Background voices, such as a TV, are still speech and still count. It needs `pip install onnxruntime`.
+
+## Choose Who Judges With Eval Modes
+
+Voice metrics run in one of two eval modes:
+
+| Mode | What happens | Cost |
+| --- | --- | --- |
+| `"deterministic"` (default) | The metric measures the audio and decides on its own | Free |
+| `"hybrid"` | The same, then each problem found is [double-checked by a model that listens to it](#second-check-with-an-audio-decision-model) | One paid request per problem |
+
+Set it with `eval_mode` on a metric that supports it, or for every voice metric with [`DEEPEVAL_VOICE_EVAL_MODE`](/docs/environment-variables#deepeval-voice-eval-mode).
+
+### Second Check With an Audio Decision Model
+
+In hybrid mode, the model hears the audio around each problem and answers one yes/no question. That's at least 5 seconds around the spot or stretch where it happened, or the whole reply for a problem judged on a whole reply, from the stereo full call audio when there is one, otherwise from the turn's own clip. Only these metrics support it, and each asks its own question:
+
+- [Abrupt Cut-off](/docs/metrics-abrupt-cut-off#second-check), hearing the agent: "Does the speaker's voice cut off abruptly, mid-word or mid-sentence?"
+- [Echo](/docs/metrics-echo#second-check), hearing the caller: "Can the AI agent's own voice be heard echoed back on this caller's line?"
+- [Background Noise](/docs/metrics-background-noise#second-check), hearing the agent: "Is there distracting background noise behind the speaker?"
+- [Agent Interruption](/docs/metrics-agent-interruption#second-check), hearing the caller: "Is a person speaking in this clip, rather than only background noise, breathing or silence?"
+- [User Interruption](/docs/metrics-user-interruption#second-check), hearing the caller: "Is a person speaking in this clip, rather than only background noise, breathing or silence?"
+
+[Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) passes the setting to its interruption parts. Roll-ups that include Background Noise, such as [Voice Naturalness](/docs/metrics-voice-naturalness) and [Speech Intelligibility](/docs/metrics-speech-intelligibility), don't take `eval_mode` themselves, but follow `DEEPEVAL_VOICE_EVAL_MODE` for that part. Other voice metrics ignore it.
+
+- **Dismissed.** If the model judges the problem more likely not real than real, it doesn't count against the score and is left out of `events`. `dismissed_events` in the breakdown, and the reason, say how many were dismissed.
+- **Kept.** If no clip can be cut, or the model fails, the problem stays and a warning is logged.
+- **Models.** `HumeDecisionModel()` (reads `HUME_API_KEY`) is used unless you pass `audio_decision_model`. `OpenAIAudioDecisionModel()` with `gpt-audio` or `gpt-audio-mini` (reads `OPENAI_API_KEY`) also works. A missing key fails when the metric is created.
+
+## Using Voice Metrics
+
+Pass voice metrics to `evaluate()` like any other metric, as in the [Quick Summary](#quick-summary), or measure one test case directly:
+
+```python
+from deepeval.metrics import AbruptCutoffMetric
+
+metric = AbruptCutoffMetric()
+metric.measure(test_case)
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+Every voice metric takes these optional parameters:
+
+- `threshold`: the minimum passing score. Set it to `None` for [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaults to `0.5`.
+- `include_reason`: whether to include a one-line summary of the score. Defaults to `True`.
+- `strict_mode`: requires a perfect score. Any score below 1 becomes 0, and the threshold becomes 1. Defaults to `False`.
+- `verbose_mode`: prints the score breakdown in verbose metric logs. Defaults to `False`.
+- `flaky`: [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaults to `False`.
+
+Some also take `use_speech_detection`, `eval_mode`, `audio_decision_model` and `stt_model`. [Transcription Accuracy](/docs/metrics-transcription-accuracy) is judged by an LLM or Jev, so it takes their parameters instead. Each metric's page lists the ones it takes.
+
+## Score Breakdown
+
+After `measure()`, `metric.score_breakdown` shows how the score was reached:
+
+| Field | What it means |
+| --- | --- |
+| `eligible_turns` | How many things were counted, usually agent replies |
+| `turns_with_events` | How many of them had the problem |
+| `events` | One entry per problem found |
+| `skipped` | Turns that couldn't be checked, such as audio that won't decode, with the reason |
+| `timing_source` | Whether full call audio or per-turn audio was used |
+
+For most metrics the score is the share of counted items without the problem: `(eligible_turns - turns_with_events) / eligible_turns`.
+
+## Events
+
+Each event is one problem, placed on the call. Read them from the metric after `measure()`:
+
+```python
+metric.measure(test_case)
+
+for event in metric.score_breakdown["events"]:
+    print(event["type"], event.get("start_time"), event["description"])
+```
+
+When you run metrics through `evaluate()`, the results don't include `score_breakdown`. The breakdown only appears as text in each metric's `verbose_logs`, so call `measure()` when you need the events as data.
+
+`mark` says what an event's place covers:
+
+<VoiceDiagram
+  duration={6}
+  hideAxis
+  lanes={[
+    { label: "Moment", role: "agent", sounds: [{ start: 0.4, end: 3.6, ending: "cut" }] },
+    { label: "Range", role: "agent", sounds: [{ start: 0.4, end: 2.2 }, { start: 2.2, end: 3.6, silent: true }, { start: 3.6, end: 5.6 }] },
+    { label: "Whole reply", role: "agent", sounds: [{ start: 0.4, end: 5.6 }] },
+  ]}
+  marks={[
+    { at: 3.6, lane: 0, tone: "bad", label: "cut off" },
+  ]}
+  highlights={[
+    { start: 2.2, end: 3.6, lane: 1 },
+    { start: 0.4, end: 5.6, lane: 2 },
+  ]}
+/>
+
+- **Moment:** the spot where the problem happened, such as where a reply was cut off.
+- **Range:** the stretch the problem lasted, such as a dead stretch of audio.
+- **Whole reply:** the agent reply the problem was judged on, such as a reply spoken too fast.
+
+Every event has:
+
+| Field | What it means |
+| --- | --- |
+| `type` | What kind of problem it is |
+| `description` | A one-line summary, such as "Agent took 5.2s to reply" |
+| `start_time` | Where it starts, in seconds from the start of the call. Missing when it can't be placed on the call's clock |
+| `duration_seconds` | How long it lasts |
+| `mark` | Moment, range or whole reply, as above |
+| `timing_source` | Where the timing came from: full call audio, or the turns' timestamps |
+
+Events found in per-turn audio also name the turn:
+
+| Field | What it means |
+| --- | --- |
+| `turn` | Which turn it's in, counting from 0 |
+| `role` | Whose turn it is, on metrics that report it |
+| `offset_seconds` | Where it starts, in seconds from the start of that turn's clip |
+
+For per-turn audio, the call-clock timing is only as accurate as the turns' `Audio.start_time`. Each metric's page lists the extra fields its own events carry.
+
+## When a Metric Is Skipped
+
+A metric is skipped, rather than scored, when there's nothing to count: for example, no agent reply with audio that decodes, or no timing to place the turns on the call's clock. The reason says why.

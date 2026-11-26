@@ -1,0 +1,238 @@
+---
+id: metrics-speech-intelligibility
+title: Speech Intelligibility
+sidebar_label: Speech Intelligibility
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The speech intelligibility metric checks whether your voice agent is **easy to hear and make out**. It runs four single-issue voice metrics on the agent's replies and returns the share of replies none of them flagged, between 0 and 1.
+
+## Required Arguments
+
+To use the `SpeechIntelligibilityMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how it's used.
+
+## Usage
+
+The `SpeechIntelligibilityMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import SpeechIntelligibilityMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks for the store's opening hours on a public holiday.",
+    expected_outcome="The agent states the holiday opening hours.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = SpeechIntelligibilityMetric(threshold=0.7)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+The `SpeechIntelligibilityMetric` takes only the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics). Its parts always run with their default limits. To change a limit, run that part on its own.
+
+### As a standalone
+
+You can also run the `SpeechIntelligibilityMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Every event a part raised shows up in `score_breakdown`, tagged with that part. Here is what the [example call](#example-call) returns:
+
+```python
+{
+    "eligible_turns": 5,
+    "turns_with_events": 2,
+    "events": [
+        {
+            "type": "background_noise",
+            "turn": 3,
+            "timing_source": "turn_timestamps",
+            "description": "Background noise was high (SNR 11 dB)",
+            "estimated_snr_db": 11.4,
+            "metric": "Background Noise",
+            "offset_seconds": 0.0,
+            "duration_seconds": 3.0,
+            "start_time": 10.5,
+            "mark": "whole_reply",
+        },
+        {
+            "type": "too_quiet",
+            "turn": 5,
+            "timing_source": "turn_timestamps",
+            "description": "Reply was too quiet (-36 dBFS)",
+            "speech_dbfs": -35.7,
+            "metric": "Loudness",
+            "offset_seconds": 0.0,
+            "duration_seconds": 3.0,
+            "start_time": 17.5,
+            "mark": "whole_reply",
+        },
+    ],
+    "skipped": [
+        {"turn": 7, "error": "Reply is under 2 seconds, too short to measure its noise."},
+    ],
+    "metrics": {
+        "Background Noise": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
+        "Loudness": {"score": 0.8, "eligible_turns": 5, "turns_with_events": 1},
+        "Audio Clipping": {"score": 1.0, "eligible_turns": 5, "turns_with_events": 0},
+        "Audio Dropout": {"score": 1.0, "eligible_turns": 5, "turns_with_events": 0},
+    },
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `metric` | The part that raised the event. That part's page explains the event's other fields |
+| `skipped` | Replies a part couldn't judge, one entry per part, so a reply can appear more than once |
+| `metrics` | Each part's own score and counts. A part that couldn't judge any reply shows a `score` of `None` and a `reason` instead |
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`. There's no top-level `timing_source`, as only per-turn audio is read.
+
+`eligible_turns` is how many agent replies at least one part judged and `turns_with_events` how many at least one part flagged. The score is the share that weren't flagged.
+
+## How Is It Calculated?
+
+The `SpeechIntelligibilityMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Speech Intelligibility} = \frac{\text{Number of Agent Replies No Part Flagged}}{\text{Total Number of Agent Replies Judged}}" />
+
+The metric reads each agent turn's own clip, or replies cut from stereo full call audio when no turn has audio. The caller's turns are ignored.
+
+### Parts
+
+Each agent turn with audio is one reply. These four parts judge it, each with its default limits:
+
+| Part | Flags a reply that | Judges a reply with |
+| --- | --- | --- |
+| [Background Noise](/docs/metrics-background-noise) | has speech under 20 dB above the noise | a clip of 2 seconds or more that isn't silent |
+| [Loudness](/docs/metrics-loudness) | has speech under −32 or over −6 dBFS | a clip that isn't silent |
+| [Audio Clipping](/docs/metrics-audio-clipping) | is distorted from being too loud | audio that decodes |
+| [Audio Dropout](/docs/metrics-audio-dropout) | cuts out for a moment mid-speech | audio that decodes |
+
+A reply with no audible sound at all isn't flagged here: Loudness and Background Noise skip it. [Silent Reply](/docs/metrics-silent-reply) catches it instead.
+
+### Combining parts
+
+- A reply counts if at least one part judged it.
+- A reply is flagged if at least one part flagged it. Two parts flagging the same reply count once.
+- A part that can't judge any reply, such as Background Noise when every reply is under 2 seconds, is left out.
+
+If no part can judge any reply, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Example call
+
+A call with five agent replies: three clean, one over a noisy line, and one too quiet. Each row is one reply, the parts that judged it and the ones that flagged it.
+
+<VoiceDiagram
+  duration={35}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 3.5, end: 6.5, label: "turn 1" }, { start: 10.5, end: 13.5, label: "turn 3" }, { start: 17.5, end: 20.5, label: "turn 5" }, { start: 24.5, end: 26.0 }, { start: 31.5, end: 34.5, label: "turn 9" }], sounds: [{ start: 3.6, end: 6.3 }, { start: 10.6, end: 13.3 }, { start: 17.6, end: 20.3, level: 0.25 }, { start: 24.6, end: 25.8 }, { start: 31.6, end: 34.3 }] },
+  ]}
+  marks={[
+    { at: 12.0, lane: 0, tone: "bad", label: "noisy" },
+    { at: 19.0, lane: 0, tone: "bad", label: "too quiet" },
+    { at: 25.2, lane: 0, tone: "skip", label: "turn 7: short" },
+  ]}
+  highlights={[
+    { start: 10.6, end: 13.3, lane: 0 },
+    { start: 17.6, end: 20.3, lane: 0 },
+  ]}
+/>
+
+| Agent turn | Judged by | Flagged by |
+| --- | --- | --- |
+| 1 | All 4 parts | None |
+| 3 | All 4 parts | Background Noise (11 dB above the noise) |
+| 5 | All 4 parts | Loudness (−36 dBFS) |
+| 7 | Loudness, Audio Clipping and Audio Dropout, as it's only 1.5 s long | None |
+| 9 | All 4 parts | None |
+| **5 replies** | | **2 flagged → 3/5 = 0.6** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from voice naturalness?",
+      answer: (
+        <>
+          Intelligibility asks whether the speech is <em>easy to hear</em>:
+          noise, loudness, clipping and dropouts.{" "}
+          <a href="/docs/metrics-voice-naturalness">Voice naturalness</a> asks
+          whether it sounds <em>human</em>: it shares the noise, clipping and
+          dropout checks, drops loudness, and adds pauses, speaking rate, pitch
+          variation and repeated audio. A robotic but perfectly clean voice
+          scores well here and poorly there.
+        </>
+      ),
+    },
+    {
+      question: "Does it check whether the agent said the right words?",
+      answer: (
+        <>
+          No. It scores the sound, not the words: "could a listener make this
+          out?", not "was the reply correct?". Pair it with a transcript metric
+          such as{" "}
+          <a href="/docs/metrics-turn-relevancy">TurnRelevancyMetric</a> for
+          the content.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Every part runs locally over the audio, so it has no model or
+          token cost. The one exception is the{" "}
+          <code>"hybrid"</code>{" "}
+          <a href="/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes">
+            voice eval mode
+          </a>
+          , set with <code>DEEPEVAL_VOICE_EVAL_MODE</code>: Background Noise
+          then has each noisy reply double-checked by an audio decision model.
+        </>
+      ),
+    },
+    {
+      question: "Does the metric evaluate the caller's audio?",
+      answer: (
+        <>
+          No. Only the agent's replies are judged. The simulated caller's audio
+          comes from your own TTS model, so scoring it would measure your test
+          harness rather than your agent.
+        </>
+      ),
+    },
+  ]}
+/>

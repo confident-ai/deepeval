@@ -1,0 +1,119 @@
+.sample {
+  --defect: #ef4444;
+  margin-block: 1.5em;
+}
+
+.player {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.play {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 999px;
+  border: none;
+  background: var(--color-fd-foreground);
+  color: var(--color-fd-background);
+  cursor: pointer;
+  transition: transform 0.12s ease;
+
+  &:hover {
+    transform: scale(1.06);
+  }
+
+  svg {
+    width: 14px;
+    height: 14px;
+    fill: currentColor;
+  }
+}
+
+.lanes {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  gap: 10px;
+}
+
+.laneLabels {
+  display: flex;
+  flex-direction: column;
+  justify-content: space-around;
+  font-size: 11px;
+  color: var(--color-fd-muted-foreground);
+}
+
+.wave {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  cursor: pointer;
+}
+
+.lane {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+  height: 36px;
+}
+
+.wave:has(.lane + .lane) .lane {
+  height: 28px;
+}
+
+.bar {
+  flex: 1;
+  min-width: 1px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--color-fd-muted-foreground) 35%, transparent);
+}
+
+.played {
+  background: var(--color-fd-foreground);
+}
+
+.flagged {
+  background: color-mix(in srgb, var(--defect) 45%, transparent);
+
+  &.played {
+    background: var(--defect);
+  }
+}
+
+.region {
+  position: absolute;
+  top: -4px;
+  bottom: -4px;
+  border-radius: 6px;
+  min-width: 3px;
+  background: color-mix(in srgb, var(--defect) 12%, transparent);
+  pointer-events: none;
+}
+
+.playhead {
+  position: absolute;
+  top: -6px;
+  bottom: -6px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 2px;
+  background: var(--color-fd-foreground);
+  pointer-events: none;
+}
+
+.time {
+  flex: none;
+  min-width: 78px;
+  text-align: right;
+  font-size: 12px;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-fd-muted-foreground);
+}

@@ -1,0 +1,260 @@
+---
+id: metrics-echo
+title: Echo
+sidebar_label: Echo
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The echo metric checks whether **the agent's own voice comes back through the caller's side of the call**, as when the caller's speaker is loud enough for their microphone to pick the agent up again. It returns the share of the agent's speech that wasn't heard back, between 0 and 1.
+
+<AudioSample name="echo" />
+
+## Required Arguments
+
+To use the `EchoMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the test case\*: a stereo recording of the whole call, with the caller on one channel and the agent on the other.
+
+The metric needs the stereo [call recording](/docs/metrics-voice-introduction#call-audio), since an echo is only heard on the caller's own channel. Without it the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped). Set `agent_channel="left"` on the test case if the agent is on the left.
+
+\* Full call audio has to be stereo, with the caller and agent on separate channels. Mono full call audio is ignored, because the two voices can't be told apart.
+
+## Usage
+
+The `EchoMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode), which records the full call by default:
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import EchoMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = EchoMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+A simulated caller never plays the agent's voice back, so simulated calls are expected to pass. For a real call, attach its stereo recording as the test case's `audio`:
+
+```python
+from deepeval.test_case import Audio, ConversationalTestCase
+
+test_case = ConversationalTestCase(turns=turns, audio=Audio(url="call.wav"))
+```
+
+There are **THREE** optional parameters specific to the `EchoMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts a stretch when [speech is detected](/docs/metrics-voice-introduction#speech-detection) in the agent's sound, so a chime or hold tone coming back isn't an echo. Defaulted to `True`.
+- [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each echo is [double-checked by an audio decision model](#second-check) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
+- [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
+
+### As a standalone
+
+You can also run the `EchoMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each stretch of agent speech that came back shows up in `score_breakdown`. Here is what the [example call](#example-call) returns:
+
+```python
+{
+    "eligible_turns": 3,
+    "turns_with_events": 1,
+    "events": [
+        {
+            "type": "echo",
+            "duration_seconds": 2.76,
+            "start_time": 10.45,
+            "mark": "whole_reply",
+            "timing_source": "call_recording",
+            "description": "Agent's voice echoed back from the caller's side",
+            "reply_start": 10.0,
+            "delay_seconds": 0.45,
+            "level_db": -14.0,
+        }
+    ],
+    "skipped": [],
+    "timing_source": "call_recording",
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `reply_start` | When the agent's echoed speech started, in seconds into the call |
+| `start_time` | Where the copy is heard on the caller's side: `reply_start` plus `delay_seconds` |
+| `duration_seconds` | How long that stretch of agent speech lasted |
+| `delay_seconds` | How long after the agent its voice came back on the caller's side |
+| `level_db` | How loud the copy was compared with the agent. 0 is as loud. Copies more than 17 dB down aren't counted |
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many stretches of agent speech were counted and `turns_with_events` how many came back. The score is the share that didn't.
+
+## How Is It Calculated?
+
+The `EchoMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Echo} = \frac{\text{Number of Agent Sound Stretches Not Heard Back}}{\text{Total Number of Agent Sound Stretches of 1 Second or More}}" />
+
+### Counting agent sound
+
+<VoiceDiagram
+  duration={8}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 1.8 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 2.2, end: 3.6 }, { start: 3.8, end: 5.4 }, { start: 6.6, end: 7.4 }] },
+  ]}
+  brackets={[
+    { start: 2.2, end: 5.4, lane: 1, label: "counted" },
+    { start: 6.6, end: 7.4, lane: 1, tone: "skip", label: "too short" },
+  ]}
+/>
+
+Each stretch of agent sound on the full call audio is checked on its own, not each reply. A gap under 0.3 seconds doesn't split a stretch, so a reply with longer pauses can be several stretches. Only stretches of 1 second or more are counted, since a shorter one is too little to match reliably.
+
+### Echo criteria
+
+For each stretch, the metric looks for the same sound on the caller's channel, up to 1.75 seconds later. It compares only the timing of the two signals, so the phone line and the room changing the sound doesn't matter.
+
+<VoiceDiagram
+  duration={6}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 2.45, end: 5.2, level: 0.3 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 2.0, end: 4.8 }] },
+  ]}
+  highlights={[
+    { start: 2.45, end: 5.2, lane: 0 },
+  ]}
+  marks={[
+    { at: 2.0, lane: 1, tone: "info", label: "agent speaks" },
+    { at: 2.45, lane: 0, tone: "bad", label: "comes back" },
+  ]}
+/>
+
+A stretch came back when all of these hold:
+
+| Check | Rule |
+| --- | --- |
+| Delay | The copy arrives 0.15 to 1.75 seconds after the agent, the round trip out of the caller's speaker and into their microphone |
+| Stands out | The match is at least 12 times stronger than the typical match, so noise that happens to line up doesn't count. A stretch under 2 seconds needs 30 times, since a short match is noisier |
+| Loud enough | The copy is no more than 17 dB below the agent, in the speech band |
+| Line loud enough | The caller's line, where the copy is heard, is no more than 8 dB quieter than the agent |
+| Not talked over | The caller's line is no more than 9 dB louder than the copy. Any louder, and the caller is talking, so the match is chance or buried under their voice |
+| Speech | With `use_speech_detection`, at least half of the agent's stretch is speech, so a chime or hold tone coming back doesn't count |
+
+These limits come from real phone calls labelled by human reviewers, where leaks came back 0.25 to 1.7 seconds after the agent. Reviewers heard copies down to about 16 dB below the agent, and called ones more than 8 dB quieter on the caller's line "barely there". If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Second check
+
+In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), each echo is double-checked before it counts. The audio decision model hears about 5 seconds of the **caller's** side of the call around it and is asked:
+
+> Can the AI agent's own voice be heard echoed back on this caller's line?
+
+If the model judges "no" more likely than "yes", the echo is dismissed and doesn't count against the score.
+
+### Example call
+
+A call where the agent's voice leaks back through the caller's speaker during one reply. Each row is one stretch of agent sound and whether it came back.
+
+<VoiceDiagram
+  duration={17}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.0, end: 1.75 }, { start: 6.0, end: 7.25 }, { start: 10.45, end: 13.2, level: 0.3 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 2.5, end: 5.26 }, { start: 8.0, end: 8.8 }, { start: 10.0, end: 12.76 }, { start: 14.0, end: 16.26 }] },
+  ]}
+  highlights={[
+    { start: 10.45, end: 13.2, lane: 0 },
+  ]}
+  marks={[
+    { at: 8.4, lane: 1, tone: "skip", label: "too short" },
+  ]}
+/>
+
+| Agent sound | What the caller's side hears | Echo? |
+| --- | --- | --- |
+| 2.5 – 5.3 s | Nothing | No |
+| 8.0 – 8.8 s | Under 1 second, not counted | – |
+| 10.0 – 12.8 s | A copy of the agent's speech 0.45 s later, 14 dB quieter, on a caller's line 7 dB quieter than the agent | **Yes** |
+| 14.0 – 16.3 s | Nothing | No |
+| **3 stretches** | | **1 echo → 2/3 = 0.67** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Is this the agent's fault?",
+      answer: (
+        <>
+          Not directly. The leak comes from the caller's speaker and
+          microphone, but it still harms the call: the caller hears a delayed
+          copy of the agent, and the agent's own speech detection can hear
+          itself and stop or reply to its own words.
+        </>
+      ),
+    },
+    {
+      question: "Will the caller talking over the agent be reported as an echo?",
+      answer: (
+        <>
+          Rarely. Sound on the caller's side only counts if it repeats the
+          agent's sound at a steady 0.15 to 1.75 second delay and stands out
+          clearly. The caller's own voice, or noise, lines up at random delays
+          and is ignored. When the caller's line is more than 9 dB louder than
+          the copy, the caller is talking, so the stretch isn't counted as an
+          echo either.
+        </>
+      ),
+    },
+    {
+      question: "How is this different from audio loop?",
+      answer: (
+        <>
+          <a href="/docs/metrics-audio-loop">AudioLoopMetric</a> catches the
+          same chunk of audio played again in the agent's own stream. Echo
+          looks for the agent's voice arriving on the caller's side.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          Not by default. Detection is deterministic and runs locally over the
+          full call audio, so it has no model or token cost. In the{" "}
+          <code>"hybrid"</code> eval mode, each echo is also checked by an
+          audio decision model, at one paid request per echo.
+        </>
+      ),
+    },
+  ]}
+/>

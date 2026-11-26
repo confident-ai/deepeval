@@ -1,0 +1,238 @@
+---
+id: metrics-speaking-rate
+title: Speaking Rate
+sidebar_label: Speaking Rate
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The speaking rate metric checks whether your voice agent **talks at a comfortable pace**, neither rushing through a reply nor dragging it out. It returns the share of agent replies spoken at a normal rate, between 0 and 1.
+
+<AudioSample name="speaking-rate" />
+
+## Required Arguments
+
+To use the `SpeakingRateMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with, on the agent's turns:
+
+- `audio`, one clip per reply
+- `content`, the text the agent spoke in that clip
+
+## Usage
+
+The `SpeakingRateMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import SpeakingRateMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = SpeakingRateMetric(threshold=0.8, min_wpm=110, max_wpm=200)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **TWO** optional parameters specific to the `SpeakingRateMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `min_wpm`: an integer for the slowest rate, in words per minute, a reply may be spoken at. Must be 0 or more. Defaulted to `110`.
+- [Optional] `max_wpm`: an integer for the fastest rate, in words per minute, a reply may be spoken at. Must be greater than `min_wpm`. Defaulted to `200`.
+
+A value outside these limits raises a `ValueError`.
+
+### As a standalone
+
+You can also run the `SpeakingRateMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each reply spoken too fast or too slowly shows up in `score_breakdown`. Here is what the [example call](#example-call) returns:
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 2,
+    "events": [
+        {
+            "type": "too_fast",
+            "turn": 3,
+            "timing_source": "turn_timestamps",
+            "description": "Agent spoke too fast (223 wpm)",
+            "speech_rate_wpm": 223,
+            "offset_seconds": 0.0,
+            "duration_seconds": 4.0,
+            "start_time": 8.0,
+            "mark": "whole_reply",
+        },
+        {
+            "type": "too_slow",
+            "turn": 7,
+            "timing_source": "turn_timestamps",
+            "description": "Agent spoke too slowly (64 wpm)",
+            "speech_rate_wpm": 64,
+            "offset_seconds": 0.0,
+            "duration_seconds": 4.0,
+            "start_time": 20.0,
+            "mark": "whole_reply",
+        },
+    ],
+    "skipped": [
+        {
+            "turn": 9,
+            "error": "Reply has no text or under 2 seconds of speech.",
+        }
+    ],
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `type` | Too fast if over `max_wpm`, too slow if under `min_wpm` |
+| `speech_rate_wpm` | The reply's rate, in words per minute |
+
+Each event covers the whole reply: `offset_seconds` is 0 and `duration_seconds` is the clip's length. Replies with no words in their text, under 2 seconds of speech, or audio that can't be decoded are listed under `skipped`.
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many agent replies were counted and `turns_with_events` how many were too fast or too slow. The score is the share that were neither.
+
+## How Is It Calculated?
+
+The `SpeakingRateMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Speaking Rate} = \frac{\text{Number of Agent Replies Spoken at a Normal Rate}}{\text{Total Number of Agent Replies}}" />
+
+The metric reads per-turn audio, one agent clip at a time, or replies cut from stereo full call audio when no turn has audio. The caller's turns are never checked.
+
+### Which replies are scored
+
+<VoiceDiagram
+  duration={8}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 4.6, label: "turn 1" }, { start: 5.6, end: 7.2, label: "turn 3" }], sounds: [{ start: 0.8, end: 2.2 }, { start: 2.5, end: 4.0 }, { start: 5.8, end: 7.0 }] },
+  ]}
+  brackets={[
+    { start: 0.8, end: 4.0, lane: 0, label: "speech span" },
+    { start: 5.8, end: 7.0, lane: 0, tone: "skip", label: "too short" },
+  ]}
+/>
+
+A reply is scored if:
+
+- its `content` has at least one word, and
+- its speech spans at least 2 seconds.
+
+The speech span runs from the first to the last 20 ms of the clip louder than silence (about −41 dBFS). On clips of 2 seconds or more, sound within 6 dB of the clip's background noise also counts as silence. Silence before the agent starts and after it stops is left out, but pauses inside the reply are kept.
+
+### Rate criteria
+
+The rate is the words in the reply's `content` divided by its speech span, in minutes.
+
+| Check | Rule |
+| --- | --- |
+| Too fast | Over `max_wpm` (200 by default) |
+| Too slow | Under `min_wpm` (110 by default) |
+
+Words are counted from the text, not the audio:
+
+- Each space-separated token with a letter in it is one word.
+- Every digit is a word of its own, so a phone number read out digit by digit counts in full: "555-1234" is seven words.
+- A token with neither, such as a lone dash, isn't counted.
+
+If no agent reply has both text and enough speech, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+:::note
+Conversation runs at about 120 to 190 words per minute, and each default leaves a 10 wpm margin. TTS voices often speak faster than people do, so set `max_wpm` to the pace you want from your agent. The rate is an average over the reply, so a rushed phone number inside an otherwise normal reply can be missed.
+:::
+
+### Example call
+
+A call with five agent replies, each 4 seconds of audio with 3.76 seconds of speech, except the last. Each row is one agent reply, its word count and its rate.
+
+<VoiceDiagram
+  duration={28}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2, end: 6, label: "turn 1" }, { start: 8, end: 12, label: "turn 3" }, { start: 14, end: 18, label: "turn 5" }, { start: 20, end: 24, label: "turn 7" }, { start: 26, end: 28, label: "turn 9" }], sounds: [{ start: 2.1, end: 5.8 }, { start: 8.1, end: 11.8 }, { start: 14.1, end: 17.8 }, { start: 20.1, end: 23.8 }, { start: 26.1, end: 27.3 }] },
+  ]}
+  highlights={[
+    { start: 8.1, end: 11.8, lane: 0 },
+    { start: 20.1, end: 23.8, lane: 0 },
+  ]}
+  marks={[
+    { at: 26.7, lane: 0, tone: "skip", label: "skipped" },
+  ]}
+/>
+
+| Agent turn | Text | Words | Rate | Flagged? |
+| --- | --- | --- | --- | --- |
+| 1 | "Sure, I can help you look up that order today." | 10 | 160 wpm | No |
+| 3 | "Your code is 555-1234, I'll text it now." | 14 | 223 wpm | **Yes** (`too_fast`) |
+| 5 | "Your order shipped on Monday and should arrive by Thursday." | 10 | 160 wpm | No |
+| 7 | "Is there anything else?" | 4 | 64 wpm | **Yes** (`too_slow`) |
+| 9 | "Okay." | 1 | Under 2 s of speech | Skipped |
+| **4 replies** | | | | **2 flagged → 2/4 = 0.5** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why does it need the reply's text?",
+      answer: (
+        <>
+          Counting words from audio alone needs a speech recognizer. The text
+          the agent spoke is already on each turn, so the metric uses it and
+          stays free and deterministic.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Detection is deterministic and runs locally over the audio and
+          the turn text, so it has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the caller's audio too?",
+      answer: (
+        <>
+          No. Only the agent's replies are scored. The caller's audio comes
+          from your own TTS model, so a problem there is with the test harness,
+          not the agent.
+        </>
+      ),
+    },
+  ]}
+/>

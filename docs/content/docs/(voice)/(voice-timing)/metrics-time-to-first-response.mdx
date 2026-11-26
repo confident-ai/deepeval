@@ -1,0 +1,223 @@
+---
+id: metrics-time-to-first-response
+title: Time to First Response
+sidebar_label: Time to First Response
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The time to first response metric checks whether your voice agent **greets the caller promptly** once the call connects, rather than leaving the line silent. It returns 1 when the first response came in time and 0 when it didn't.
+
+<AudioSample name="time-to-first-response" />
+
+## Required Arguments
+
+To use the `TimeToFirstResponseMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with audio on at least one of:
+
+- `audio` on the test case, a stereo recording of the whole call\*
+- `audio` on the turns, each with a `start_time`
+
+\* Full call audio has to be stereo, with the caller and agent on separate channels. Mono full call audio is ignored, because the two voices can't be told apart.
+
+Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
+
+## Usage
+
+The `TimeToFirstResponseMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import TimeToFirstResponseMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = TimeToFirstResponseMetric(max_wait_seconds=3)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **TWO** optional parameters specific to the `TimeToFirstResponseMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `max_wait_seconds`: an integer for the longest wait, in seconds, before the agent's first response. Must be greater than 0. Defaulted to `3`.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts someone as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so background noise isn't mistaken for the caller's first words. It's never used on the agent's side, where any sound counts as the first response. Defaulted to `True`.
+
+### As a standalone
+
+You can also run the `TimeToFirstResponseMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+A slow first response shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
+
+```python
+{
+    "eligible_turns": 1,
+    "turns_with_events": 1,
+    "events": [
+        {
+            "type": "slow_first_response",
+            "duration_seconds": 3.4,
+            "start_time": 1.6,
+            "mark": "range",
+            "timing_source": "call_recording",
+            "description": "Agent took 3.4s to first respond",
+            "reply_start": 5.0,
+            "first_response_seconds": 3.4,
+        }
+    ],
+    "skipped": [],
+    "timing_source": "call_recording",
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `reply_start` | When the agent first made sound, in seconds into the call |
+| `first_response_seconds` | How long the wait was |
+| `start_time` | Where the wait begins: the start of the call, or the end of the caller's first words |
+| `duration_seconds` | How long the wait lasted, the same as `first_response_seconds` |
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is 1, the agent's first response, and `turns_with_events` is 1 when it was slow. The score is 0 when it was and 1 when it wasn't.
+
+## How Is It Calculated?
+
+The `TimeToFirstResponseMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Time to First Response} = \begin{cases} 1 & \text{if the first response starts within the wait limit} \\ 0 & \text{otherwise} \end{cases}" />
+
+With per-turn audio instead of a call recording, the first response is the agent's first sound in any of its clips, placed on the call's clock by its `Audio.start_time`. The event names the greeting's turn instead of a time in the call.
+
+### Finding the first response
+
+<VoiceDiagram
+  duration={6.5}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.5, end: 1.0 }, { start: 1.3, end: 1.8 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 3.0, end: 6.0 }] },
+  ]}
+  brackets={[
+    { start: 1.8, end: 3.0, lane: 1, label: "wait" },
+  ]}
+  marks={[
+    { at: 3.0, lane: 1, tone: "info", label: "first sound" },
+  ]}
+/>
+
+The first response is the agent's first sound on its channel. The wait depends on who spoke first:
+
+- **The agent speaks first:** from the start of the full call audio to the agent's first sound.
+- **The caller speaks first, within `max_wait_seconds`:** from the end of the caller's first words to the agent's first sound, or 0 if the agent starts before those words end. Pauses under 0.5 seconds stay inside the first words, as above.
+- **The caller speaks first, but only after more than `max_wait_seconds`:** the caller sat in silence waiting for a greeting that never came. The wait runs from the start of the full call audio to the caller's first words, so it's always too long.
+
+### Wait criteria
+
+| Check | Rule |
+| --- | --- |
+| Wait | More than `max_wait_seconds`, 3 seconds by default |
+
+The metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped) when the agent makes no sound in the full call audio, or, with per-turn audio, when the call has no timed audio or an audio turn has no `start_time`.
+
+:::note
+The default of 3 seconds is a practical allowance for how long a line can stay silent after it connects, not a published norm. It is separate from [Response Latency](/docs/metrics-response-latency)'s 4-second limit, so tune it to your telephony setup.
+:::
+
+### Example call
+
+A call with a slow start, where the caller says hello first.
+
+<VoiceDiagram
+  duration={14}
+  lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.6, end: 1.6 }, { start: 8.0, end: 10.0 }] },
+    { label: "Agent", role: "agent", sounds: [{ start: 5.0, end: 7.4 }, { start: 11.0, end: 13.0 }] },
+  ]}
+  brackets={[
+    { start: 1.6, end: 5.0, lane: 1, tone: "bad", label: "3.4 s" },
+  ]}
+  marks={[
+    { at: 1.1, lane: 0, tone: "info", label: "hello" },
+    { at: 5.0, lane: 1, tone: "bad", label: "slow" },
+  ]}
+  highlights={[
+    { start: 1.6, end: 5.0, lane: 1 },
+  ]}
+/>
+
+| First response | Wait | Slow? |
+| --- | --- | --- |
+| 5.0 s, after the caller's hello ended at 1.6 s | 3.4 s | **Yes** |
+| **1 response** | | **slow → 0** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Why is my call skipped when the caller speaks first?",
+      answer: (
+        <>
+          With per-turn audio, a caller who speaks first means the agent wasn't
+          expected to greet, so there's nothing to time.{" "}
+          <a href="/docs/metrics-response-latency">ResponseLatencyMetric</a>{" "}
+          times the agent's answer. With full call audio, the wait is timed from the
+          end of the caller's first words instead, as long as they spoke within{" "}
+          <code>max_wait_seconds</code> of the call connecting.
+        </>
+      ),
+    },
+    {
+      question: "How is this different from turn-taking naturalness?",
+      answer: (
+        <>
+          <a href="/docs/metrics-turn-taking-naturalness">
+            TurnTakingNaturalnessMetric
+          </a>{" "}
+          doesn't look at how the call opens. This metric only checks the
+          silence before the agent's first word.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. It only reads when each speaker is talking, so it has no model or
+          token cost. With <code>use_speech_detection</code> on, it runs the
+          small Silero VAD model locally.
+        </>
+      ),
+    },
+  ]}
+/>

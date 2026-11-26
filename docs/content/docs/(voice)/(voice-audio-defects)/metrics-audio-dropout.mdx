@@ -1,0 +1,210 @@
+---
+id: metrics-audio-dropout
+title: Audio Dropout
+sidebar_label: Audio Dropout
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The audio dropout metric checks whether your voice agent's audio **cuts out mid-speech**: a fraction of a second goes missing, as in "Your appoint… is confirmed". It returns the share of agent replies with no dropout, between 0 and 1.
+
+<AudioSample name="audio-dropout" />
+
+## Required Arguments
+
+To use the `AudioDropoutMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
+
+With [per-turn audio](/docs/metrics-voice-introduction#per-turn-audio), an `Audio.start_time` on each clip is optional, and only used to place events on the call's clock.
+
+## Usage
+
+The `AudioDropoutMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import AudioDropoutMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = AudioDropoutMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+The `AudioDropoutMetric` has no optional parameters of its own. It takes only the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics).
+
+### As a standalone
+
+You can also run the `AudioDropoutMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each dropout shows up in `score_breakdown` as its own event. Here is what the [example call](#example-call) returns:
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 1,
+    "events": [
+        {
+            "type": "audio_dropout",
+            "turn": 5,
+            "offset_seconds": 1.1,
+            "duration_seconds": 0.24,
+            "start_time": 13.75,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Audio dropped out for 240 ms",
+        }
+    ],
+    "skipped": [],
+}
+```
+
+Dropout events carry only the [fields all voice events share](/docs/metrics-voice-introduction#events). `offset_seconds` and `duration_seconds` cover the gap inside the turn's clip. Clips that can't be decoded are listed under `skipped`.
+
+`eligible_turns` is how many agent replies were counted and `turns_with_events` how many had a dropout. A reply with several dropouts counts once. The score is the share that had none.
+
+## How Is It Calculated?
+
+The `AudioDropoutMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Audio Dropout} = \frac{\text{Number of Agent Replies Without a Dropout}}{\text{Total Number of Agent Replies}}" />
+
+### Dropout criteria
+
+A dropout is a short gap where the sound falls away in the middle of speech. A pause between words keeps the room's background noise, or fades in and out. A dropout doesn't.
+
+<VoiceDiagram
+  duration={6}
+  lanes={[
+    { label: "Agent", role: "agent", sounds: [{ start: 0.3, end: 1.6 }, { start: 1.6, end: 1.85, level: 0.08, ending: "flat" }, { start: 1.85, end: 3.4 }, { start: 3.4, end: 3.5, silent: true }, { start: 3.5, end: 5.6 }] },
+  ]}
+  highlights={[
+    { start: 3.4, end: 3.5, lane: 0 },
+  ]}
+  marks={[
+    { at: 1.72, lane: 0, tone: "ok", label: "pause" },
+    { at: 3.45, lane: 0, tone: "bad", label: "dropout" },
+  ]}
+/>
+
+How a gap is judged depends on the clip's pauses:
+
+| Clip | A gap is a dropout when |
+| --- | --- |
+| Pauses have background noise | Its quietest moment falls to 10% or less of the clip's typical pause noise, and it also holds a near-zero gap with sharp edges. The closure before a "p", "t" or "k" and the hiss of an "s" dip under the pause noise too, but they fade in and out |
+| Pauses are near-silent, as with clean TTS | It is near-zero for at least 150 ms, and the sound on both sides stops and starts sharply |
+
+In both cases:
+
+| Check | Rule |
+| --- | --- |
+| Length | 150 to 480 ms, just under Dead Stream's 0.5 seconds. Listeners didn't hear shorter gaps mid-word, or didn't mind them |
+| Place | Sound on both sides, not at the clip's start or end |
+| Sharp edges | The 5 ms at each edge are at least 25% of the level of the 60 ms beside them |
+
+If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Example call
+
+A call where the agent's audio drops out in one of four replies. Each row is one agent reply and whether it had a dropout.
+
+<VoiceDiagram
+  duration={21}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.65, label: "turn 3" }, { start: 12.65, end: 15.15, label: "turn 5" }, { start: 18.15, end: 20.15, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 8.5 }, { start: 8.5, end: 8.65, level: 0.08, ending: "flat" }, { start: 8.65, end: 9.4 }, { start: 12.65, end: 13.75 }, { start: 13.75, end: 13.99, silent: true }, { start: 13.99, end: 14.9 }, { start: 18.15, end: 19.9 }] },
+  ]}
+  highlights={[
+    { start: 13.75, end: 13.99, lane: 0 },
+  ]}
+  marks={[
+    { at: 8.57, lane: 0, tone: "ok", label: "clean: pause" },
+    { at: 13.87, lane: 0, tone: "bad", label: "dropout" },
+  ]}
+/>
+
+| Agent turn | What happens | Dropout? |
+| --- | --- | --- |
+| 1 | Steady speech | No |
+| 3 | A 150 ms pause that keeps the room noise | No |
+| 5 | 240 ms of sound missing, 1.1 s into the clip | **Yes** |
+| 7 | Steady speech | No |
+| **4 replies** | | **1 dropout → 3/4 = 0.75** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How does this differ from audio integrity?",
+      answer: (
+        <>
+          Dropouts are one of the problems{" "}
+          <a href="/docs/metrics-audio-integrity">AudioIntegrityMetric</a>{" "}
+          rolls into one score. This metric reports only dropouts, so you can
+          track them on their own.
+        </>
+      ),
+    },
+    {
+      question: "How is a dropout different from a dead stream?",
+      answer: (
+        <>
+          A dropout is a gap of 150 to 480 ms.{" "}
+          <a href="/docs/metrics-dead-stream">DeadStreamMetric</a> reports
+          stretches of exact digital silence of 0.5 seconds or more.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Detection is deterministic and runs locally over the audio, so it
+          has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the caller's audio for dropouts too?",
+      answer: (
+        <>
+          No. Only the agent's replies are scored. The caller's audio comes from
+          your own TTS model, so a dropout there is a problem with the test
+          harness, not the agent.
+        </>
+      ),
+    },
+  ]}
+/>

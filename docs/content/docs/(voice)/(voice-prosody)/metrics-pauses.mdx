@@ -1,0 +1,244 @@
+---
+id: metrics-pauses
+title: Pauses
+sidebar_label: Pauses
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The pauses metric checks whether your voice agent **pauses naturally while it speaks**: no long gap in the middle of a sentence, and not more silence than speech. It returns the share of agent replies with natural pauses, between 0 and 1.
+
+<AudioSample name="pauses" />
+
+## Required Arguments
+
+To use the `PausesMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
+
+- `audio` on the agent's turns, one clip per reply
+
+## Usage
+
+The `PausesMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import PausesMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = PausesMetric(threshold=0.8, max_pause_ms=2000, max_pause_percent=50)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **TWO** optional parameters specific to the `PausesMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `max_pause_ms`: an integer for the longest pause, in milliseconds, allowed inside a reply. Must be greater than 0. Defaulted to `2000`.
+- [Optional] `max_pause_percent`: an integer for the largest share of a reply's speech span, in percent, that may be pauses. Must be from 1 to 100. Defaulted to `50`.
+
+A value outside these limits raises a `ValueError`.
+
+### As a standalone
+
+You can also run the `PausesMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each reply with a long pause or too much silence shows up in `score_breakdown`. Here is what the [example call](#example-call) returns:
+
+```python
+{
+    "eligible_turns": 4,
+    "turns_with_events": 2,
+    "events": [
+        {
+            "type": "long_pause",
+            "turn": 3,
+            "offset_seconds": 1.26,
+            "duration_seconds": 2.74,
+            "start_time": 9.26,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Agent paused for 2.7s mid-reply",
+            "longest_pause_ms": 2740,
+        },
+        {
+            "type": "too_much_silence",
+            "turn": 5,
+            "timing_source": "turn_timestamps",
+            "description": "Reply was 66% silence",
+            "pause_fraction": 0.66,
+            "offset_seconds": 0.0,
+            "duration_seconds": 6.8,
+            "start_time": 16.0,
+            "mark": "whole_reply",
+        },
+    ],
+    "skipped": [{"turn": 9, "error": "Reply has under 2 seconds of speech."}],
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `type` | Long pause if one pause ran too long, too much silence if pauses filled too much of the reply |
+| `longest_pause_ms` | Long pauses only. How long the pause lasted, in milliseconds |
+| `pause_fraction` | Too much silence only. The share of the speech span that was pauses, from 0 to 1 |
+
+A long pause event covers the pause itself: `offset_seconds` is where it starts in the clip. A too much silence event covers the whole reply. Replies with under 2 seconds of speech, or audio that can't be decoded, are listed under `skipped`.
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many agent replies were counted and `turns_with_events` how many were flagged. The score is the share that weren't.
+
+## How Is It Calculated?
+
+The `PausesMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Pauses} = \frac{\text{Number of Agent Replies With Natural Pauses}}{\text{Total Number of Agent Replies}}" />
+
+The metric reads per-turn audio, one agent clip at a time, or replies cut from stereo full call audio when no turn has audio. The caller's turns are never checked.
+
+### Which replies are scored
+
+<VoiceDiagram
+  duration={8}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 4.6, label: "turn 1" }, { start: 5.6, end: 7.2, label: "turn 3" }], sounds: [{ start: 0.8, end: 2.2 }, { start: 2.5, end: 4.0 }, { start: 5.8, end: 7.0 }] },
+  ]}
+  brackets={[
+    { start: 0.8, end: 4.0, lane: 0, label: "speech span" },
+    { start: 5.8, end: 7.0, lane: 0, tone: "skip", label: "too short" },
+  ]}
+/>
+
+A reply is scored if its speech spans at least 2 seconds. The speech span runs from the first to the last 20 ms of the clip louder than silence (about −41 dBFS). On clips of 2 seconds or more, sound within 6 dB of the clip's background noise also counts as silence, so a pause is still found when the line is never truly quiet.
+
+Only the speech span is checked. Silence before the agent starts is response time, not a pause.
+
+### Pause criteria
+
+<VoiceDiagram
+  duration={8}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 7.8, label: "turn 1" }], sounds: [{ start: 0.4, end: 1.6 }, { start: 1.75, end: 2.6 }, { start: 2.6, end: 5.2, silent: true }, { start: 5.2, end: 7.4 }] },
+  ]}
+  highlights={[
+    { start: 2.6, end: 5.2, lane: 0 },
+  ]}
+  marks={[
+    { at: 1.68, lane: 0, tone: "ok", label: "too brief" },
+    { at: 3.9, lane: 0, tone: "bad", label: "long pause" },
+  ]}
+/>
+
+A pause is a silent stretch of at least 200 ms inside the speech span. Shorter gaps are part of saying words. A reply is flagged if:
+
+| Check | Rule |
+| --- | --- |
+| Long pause | Its longest pause is over `max_pause_ms` (2000 by default) |
+| Too much silence | Its pauses add up to over `max_pause_percent` (50 by default) of the speech span |
+
+A reply with both is flagged once, as a long pause.
+
+If no agent reply has enough speech, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+:::note
+Long pauses in spontaneous speech cluster around 1.5 seconds (Campione & Véronis, 2002), and conversation tends to treat about one second of silence as the standard maximum (Jefferson, 1989). The default of 2 seconds sits above both. The default of 50% flags a reply with more silence than speech.
+:::
+
+### Example call
+
+A call with five agent replies: one stops for almost 3 seconds mid-reply, one is broken up by many shorter pauses, and one is too short to judge. Each row is one agent reply, its longest pause and how much of it was pauses.
+
+<VoiceDiagram
+  duration={32}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2, end: 6, label: "turn 1" }, { start: 8, end: 13.5, label: "turn 3" }, { start: 16, end: 22.8, label: "turn 5" }, { start: 25, end: 28, label: "turn 7" }, { start: 30, end: 32, label: "turn 9" }], sounds: [{ start: 2.1, end: 5.8 }, { start: 8.1, end: 9.26 }, { start: 9.26, end: 12.0, silent: true }, { start: 12.0, end: 13.3 }, { start: 16.0, end: 16.25 }, { start: 16.85, end: 17.1 }, { start: 17.7, end: 17.95 }, { start: 18.55, end: 18.8 }, { start: 19.4, end: 19.65 }, { start: 20.25, end: 20.5 }, { start: 21.1, end: 21.35 }, { start: 21.95, end: 22.2 }, { start: 25.1, end: 27.8 }, { start: 30.1, end: 31.3 }] },
+  ]}
+  highlights={[
+    { start: 9.26, end: 12.0, lane: 0 },
+    { start: 16.0, end: 22.2, lane: 0 },
+  ]}
+  marks={[
+    { at: 30.7, lane: 0, tone: "skip", label: "skipped" },
+  ]}
+/>
+
+| Agent turn | Longest pause | Share of pauses | Flagged? |
+| --- | --- | --- | --- |
+| 1 | 240 ms | 45% | No |
+| 3 | 2740 ms | 70% | **Yes** (`long_pause`) |
+| 5 | 600 ms | 66% | **Yes** (`too_much_silence`) |
+| 7 | 240 ms | 43% | No |
+| 9 | Under 2 s of speech | | Skipped |
+| **4 replies** | | | **2 flagged → 2/4 = 0.5** |
+
+Turn 3 is over both limits, but it is flagged once, as a long pause.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from turn-taking naturalness?",
+      answer: (
+        <>
+          <a href="/docs/metrics-turn-taking-naturalness">
+            TurnTakingNaturalnessMetric
+          </a>{" "}
+          looks at the gaps between the caller and the agent. This metric looks
+          at the gaps inside the agent's own replies.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Detection is deterministic and runs locally over the audio, so it
+          has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the caller's audio too?",
+      answer: (
+        <>
+          No. Only the agent's replies are scored. The caller's audio comes
+          from your own TTS model, so a problem there is with the test harness,
+          not the agent.
+        </>
+      ),
+    },
+  ]}
+/>

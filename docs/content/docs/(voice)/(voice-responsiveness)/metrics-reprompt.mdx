@@ -1,0 +1,252 @@
+---
+id: metrics-reprompt
+title: Reprompt
+sidebar_label: Reprompt
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  jev={true}
+  referenceless={true}
+/>
+
+The reprompt metric checks whether the caller **had to speak again before your voice agent replied**, as in "Can you check my order?" followed by "Hello? Are you there?". It finds likely repeats from the call's timing, then asks a decision model whether each one really is a repeat. It returns the share of caller lines the agent answered without being prompted again, between 0 and 1.
+
+## Required Arguments
+
+To use the `RepromptMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
+
+- `content` on each turn, which the decision model reads
+- `audio` on the turns, with `Audio.start_time` set so the wait before a repeat can be measured. A line whose wait can't be measured is never flagged
+
+## Usage
+
+The `RepromptMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import RepromptMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks a question that requires the agent to look up an account.",
+    expected_outcome="The agent answers without the user having to repeat themselves.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = RepromptMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There are **TWO** optional parameters specific to the `RepromptMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `system_one_model`: the Jev model that decides whether each likely repeat is real, as a string or a `DeepEvalBaseSystemOneModel`. It is used whatever the [eval mode](/docs/evaluation-eval-modes), but only when the call has a likely repeat. It is built the first time it's needed, so creating the metric needs no TypeSafe AI key. Defaulted to <DefaultSystemOneModel />.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, finds where the speech is inside each turn's clip with [speech detection](/docs/metrics-voice-introduction#speech-detection), so silence or noise at a clip's edges isn't counted as speaking. It decides which caller turns join into one line, and how long the caller waited. Defaulted to `True`.
+
+### As a standalone
+
+You can also run the `RepromptMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each caller line the caller had to repeat shows up in `score_breakdown`. Here is what the [example call](#example-call) returns:
+
+```python
+{
+    "eligible_turns": 6,
+    "turns_with_events": 1,
+    "events": [
+        {
+            "type": "user_reprompted",
+            "turn": 1,
+            "duration_seconds": 6.24,
+            "start_time": 4.76,
+            "mark": "range",
+            "timing_source": "turn_timestamps",
+            "description": "Caller repeated themselves after 6.2s",
+            "reprompt_turn": 2,
+        }
+    ],
+    "skipped": [],
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `turn` | The first turn of the caller line that wasn't answered in time, counting from 0. Unlike most voice metrics, this is a caller turn |
+| `reprompt_turn` | The caller turn that came straight after, where they spoke again |
+| `start_time` | Where the caller line's speech ends, in seconds into the call |
+| `duration_seconds` | How long the caller waited in silence before speaking again |
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many caller lines needed a reply and `turns_with_events` how many had to be repeated. The score is the share that didn't.
+
+## How Is It Calculated?
+
+The `RepromptMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Reprompt} = \frac{\text{Number of Caller Lines Answered Without a Repeat}}{\text{Total Number of Caller Lines That Needed a Reply}}" />
+
+The metric only uses the audio to time the caller's turns. It never judges how they sound.
+
+### Counting caller lines
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Caller", role: "caller", clips: [{ start: 0.2, end: 2.4, label: "turn 0" }, { start: 2.8, end: 4.0, label: "turn 1" }, { start: 7.4, end: 9.6 }], sounds: [{ start: 0.3, end: 2.2 }, { start: 2.9, end: 3.9 }, { start: 7.5, end: 9.4 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 4.6, end: 6.8 }], sounds: [{ start: 4.7, end: 6.6 }] },
+  ]}
+  brackets={[
+    { start: 0.2, end: 4.0, lane: 0, label: "line 1" },
+    { start: 7.4, end: 9.6, lane: 0, label: "line 2" },
+  ]}
+/>
+
+Caller turns in a row are one line when the next one's speech starts less than 1 second after the previous one's speech ends, as with turns 0 and 1 above. A transcriber splitting a sentence isn't the caller speaking again. The metric listens inside each clip for where the speech starts and stops. A turn without an `Audio.start_time` can't be timed, so it is always a line of its own. Lines that close the call, ending in "bye", "goodbye", "thank you", "thanks", "that's all" or "that is all", aren't counted.
+
+### Reprompt criteria
+
+<VoiceDiagram
+  duration={14}
+  lanes={[
+    { label: "Caller", role: "caller", clips: [{ start: 0.2, end: 2.4, label: "line" }, { start: 7.4, end: 8.8, label: "next line" }], sounds: [{ start: 0.3, end: 2.2 }, { start: 7.5, end: 8.6 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 9.8, end: 13.0, label: "reply" }], sounds: [{ start: 9.9, end: 12.8 }] },
+  ]}
+  brackets={[
+    { start: 2.2, end: 7.5, lane: 1, tone: "bad", label: "no reply" },
+  ]}
+  highlights={[
+    { start: 2.2, end: 7.5, lane: 1 },
+  ]}
+  marks={[
+    { at: 7.5, lane: 0, tone: "bad", label: "spoke again" },
+  ]}
+/>
+
+A caller line is a likely repeat when the caller's very next turn starts a new line, and the agent replies later in the call. Each likely repeat then goes to a decision model, which reads:
+
+- the agent's line before it,
+- the caller's line,
+- how long the caller waited, and
+- what the caller said next.
+
+It answers one question: does the next line only say the line again, or check that someone is still there, without adding anything new? If yes, the line counts as repeated. A caller who adds something new isn't repeating, even when they start by saying the line again: more detail, the rest of an unfinished sentence, a different answer, thanks or a goodbye. Nor is a caller who says something unrelated or talks to someone else.
+
+| Check | Rule |
+| --- | --- |
+| Waited | At least 2.5 seconds of silence from the end of the line's speech to the start of the next line's. A shorter pause is the caller still talking. Both turns need an `Audio.start_time`, or the wait isn't known and the line isn't flagged |
+| Not just a greeting | When the next line is only a greeting, such as "hi", "hello", "hey" or "hello there", the wait must be at least 4 seconds |
+| Not an echo | Neither the line nor the next line is mostly the agent's own words. When a line has 3 or more words and at least 80% of them are in the agent's line before it, it is the agent's voice echoing on the caller's line |
+| Answered later | An agent turn comes later in the call. A line never answered at all is left to [Failed Response](/docs/metrics-failed-response) |
+| Really a repeat | The decision model says yes, with a probability of 0.5 or more |
+
+All the likely repeats in a call go to the model in one request. If it returns no answer for one of them, the metric raises an error rather than guess. If no turn has audio, or no caller line needed a reply, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+### Example call
+
+The caller speaks again three times before the agent replies, but only once because they were kept waiting. Each row is one caller line and whether the caller had to repeat it.
+
+<VoiceDiagram
+  duration={40}
+  lanes={[
+    { label: "Caller", role: "caller", clips: [{ start: 3.0, end: 5.0, label: "1" }, { start: 11.0, end: 12.5, label: "2" }, { start: 16.5, end: 18.5, label: "4" }, { start: 20.0, end: 21.0, label: "5" }, { start: 25.0, end: 27.0, label: "7" }, { start: 32.0, end: 34.0, label: "8" }, { start: 38.0, end: 39.0 }], sounds: [{ start: 3.0, end: 4.75 }, { start: 11.0, end: 12.25 }, { start: 16.5, end: 18.25 }, { start: 20.0, end: 20.75 }, { start: 25.0, end: 26.75 }, { start: 32.0, end: 33.75 }, { start: 38.0, end: 38.75 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0, end: 2.0 }, { start: 13.5, end: 15.5 }, { start: 22.0, end: 24.0 }, { start: 35.0, end: 37.0 }], sounds: [{ start: 0, end: 1.75 }, { start: 13.5, end: 15.25 }, { start: 22.0, end: 23.75 }, { start: 35.0, end: 36.75 }] },
+  ]}
+  marks={[
+    { at: 11.0, lane: 0, tone: "bad", label: "repeat" },
+    { at: 20.0, lane: 0, tone: "ok", label: "short pause" },
+    { at: 32.0, lane: 0, tone: "ok", label: "not a repeat" },
+  ]}
+  highlights={[
+    { start: 4.75, end: 11.0, lane: 1 },
+  ]}
+/>
+
+| Caller line | What came next | Repeated? |
+| --- | --- | --- |
+| Turn 1, "Can I pay my bill?" | "Hello? Are you there?" after 6.2 s. The model says it's a repeat | **Yes** |
+| Turn 2, "Hello? Are you there?" | Agent reply | No |
+| Turn 4, "Which card is on file?" | "The Visa, I mean." after under 2 s | No |
+| Turn 5, "The Visa, I mean." | Agent reply | No |
+| Turn 7, "And my rewards balance?" | "Oh, and my savings too." after 5.2 s. The model says it's something new | No |
+| Turn 8, "Oh, and my savings too." | Agent reply | No |
+| Turn 10, "Thanks, bye." | Closes the call, so not counted | |
+| **6 caller lines** | | **1 repeated → 5/6 = 0.83** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from failed response?",
+      answer: (
+        <>
+          <a href="/docs/metrics-failed-response">FailedResponseMetric</a>{" "}
+          flags caller lines the agent never answered. This metric flags lines
+          the agent did answer, but only after the caller had to speak again,
+          so the two never flag the same line.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external model?",
+      answer: (
+        <>
+          Yes, a Jev decision model, but only when the call has a likely
+          repeat: one request per call, covering all of them. A call with none
+          costs nothing. Because a model makes the final call, the score can
+          differ between runs on the same audio. The cost is added to{" "}
+          <code>evaluation_cost</code>, and the model's name is on{" "}
+          <code>evaluation_model</code>.
+        </>
+      ),
+    },
+    {
+      question: "Why does a caller who just keeps talking not count?",
+      answer: (
+        <>
+          Speaking again isn't a repeat on its own. A pause under 2.5 seconds is
+          the caller still talking, and after a longer one the decision model
+          still has to hear the same request, a rewording or a "hello?", with
+          nothing new added, before the line counts.
+        </>
+      ),
+    },
+    {
+      question: "My agent pauses to call a tool and the caller gets marked as repeating themselves.",
+      answer: (
+        <>
+          That is end-of-turn detection taking the floor during the agent's
+          pause, not the metric misreading it. Use{" "}
+          <code>turn_detection="patient"</code> on your connector so the
+          simulator waits through mid-reply pauses instead of prompting again.
+        </>
+      ),
+    },
+  ]}
+/>

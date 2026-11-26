@@ -1,0 +1,244 @@
+---
+id: metrics-volume-variance
+title: Volume Variance
+sidebar_label: Volume Variance
+languages: [python]
+beta: true
+---
+
+<MetricTagsDisplayer
+  voice={true}
+  multiTurn={true}
+  chatbot={true}
+  usesLLMs={false}
+  referenceless={true}
+/>
+
+The volume variance metric checks whether your voice agent's volume **drifts within a reply**, like a sentence that starts loud and fades to a mumble, or one that swells as it goes. It returns the share of agent replies that hold a steady volume, between 0 and 1.
+
+<AudioSample name="volume-variance" />
+
+## Required Arguments
+
+To use the `VolumeVarianceMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
+
+- `audio` on the agent's turns
+
+## Usage
+
+The `VolumeVarianceMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
+
+```python
+from deepeval import evaluate
+from deepeval.dataset import ConversationalGolden
+from deepeval.metrics import VolumeVarianceMetric
+from deepeval.simulator import ConversationSimulator
+from deepeval.voice import ElevenLabsConnector, VoiceConfig
+
+
+golden = ConversationalGolden(
+    scenario="The user asks the agent to look up an order by its number.",
+    expected_outcome="The agent reads back the order status.",
+)
+
+simulator = ConversationSimulator(
+    voice_config=VoiceConfig(
+        connector=ElevenLabsConnector(agent_id="your-agent-id"),
+    )
+)
+test_cases = simulator.simulate([golden])
+
+metric = VolumeVarianceMetric(threshold=0.8)
+evaluate(test_cases=test_cases, metrics=[metric])
+```
+
+There is **ONE** optional parameter specific to the `VolumeVarianceMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `max_drift_db`: an integer for how far, in dB, a reply's volume may rise or fall from its start to its end. Must be greater than `0`. Defaulted to `10`.
+
+### As a standalone
+
+You can also run the `VolumeVarianceMetric` on a single test case as a standalone, one-off execution:
+
+```python
+metric.measure(test_cases[0])
+
+print(metric.score, metric.reason)
+print(metric.score_breakdown)
+```
+
+See [Events](#events) for what `score_breakdown` contains.
+
+## Events
+
+Each reply whose volume drifted shows up in `score_breakdown`. Here is what the [example call](#example-call) returns:
+
+```python
+{
+    "eligible_turns": 3,
+    "turns_with_events": 1,
+    "events": [
+        {
+            "type": "volume_drift",
+            "turn": 3,
+            "timing_source": "turn_timestamps",
+            "description": "Volume drifted 14 dB during the reply",
+            "drift_db": -13.5,
+            "offset_seconds": 0.0,
+            "duration_seconds": 4.0,
+            "start_time": 9.5,
+            "mark": "whole_reply",
+        }
+    ],
+    "skipped": [
+        {
+            "turn": 5,
+            "error": "Reply has under 3 seconds of speech to follow.",
+        }
+    ],
+}
+```
+
+| Field | What it means |
+| --- | --- |
+| `drift_db` | How much the volume changed across the reply, in dB. Negative for a fade, positive for a swell |
+
+Each event covers the whole reply, so `offset_seconds` is 0 and `duration_seconds` is the clip's length. Replies that are too short, silent or can't be decoded are listed under `skipped`.
+
+Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
+
+`eligible_turns` is how many agent replies were counted and `turns_with_events` how many drifted. The score is the share that didn't.
+
+## How Is It Calculated?
+
+The `VolumeVarianceMetric` score is calculated according to the following equation:
+
+<Equation formula="\text{Volume Variance} = \frac{\text{Number of Agent Replies Without a Volume Drift}}{\text{Total Number of Agent Replies}}" />
+
+### Which replies are scored
+
+<VoiceDiagram
+  duration={6}
+  lanes={[
+    { label: "Agent", role: "agent", sounds: [{ start: 0.1, end: 0.9 }, { start: 1.1, end: 1.9 }, { start: 2.1, end: 2.25 }, { start: 3.1, end: 3.9 }, { start: 4.1, end: 4.9 }, { start: 5.1, end: 5.6 }] },
+  ]}
+  brackets={[
+    { start: 0, end: 1, lane: 0, label: "w1" },
+    { start: 1, end: 2, lane: 0, label: "w2" },
+    { start: 2, end: 3, lane: 0, tone: "skip", label: "little speech" },
+    { start: 3, end: 4, lane: 0, label: "w3" },
+    { start: 4, end: 5, lane: 0, label: "w4" },
+  ]}
+/>
+
+Each reply is cut into 1-second windows. A window is kept when it holds at least 0.3 seconds of speech (15 frames of 20 ms at about −41 dBFS or louder). A window with less, such as the tail of a word, and a last window under 1 second, are left out.
+
+A reply is skipped when it:
+
+- has fewer than 3 windows kept, since a drift needs a few seconds to show, or
+- has no audible sound at all, which [Silent Reply](/docs/metrics-silent-reply) reports instead.
+
+### Drift criteria
+
+<VoiceDiagram
+  duration={5}
+  lanes={[
+    { label: "Steady", role: "agent", sounds: [{ start: 0.1, end: 4.9, level: 0.7 }] },
+    { label: "Fading", role: "agent", sounds: [{ start: 0.1, end: 1.0, level: 0.9 }, { start: 1.0, end: 2.0, level: 0.6 }, { start: 2.0, end: 3.0, level: 0.4 }, { start: 3.0, end: 4.0, level: 0.25 }, { start: 4.0, end: 4.9, level: 0.15 }] },
+  ]}
+  highlights={[
+    { start: 0.1, end: 4.9, lane: 1 },
+  ]}
+  marks={[
+    { at: 2.5, lane: 0, tone: "ok", label: "steady" },
+    { at: 2.5, lane: 1, tone: "bad", label: "fades" },
+  ]}
+/>
+
+| Check | Rule |
+| --- | --- |
+| Window level | The median of the window's 5 loudest 20 ms frames, so pauses don't pull it down |
+| Drift | The trend from the first kept window to the last, using the median slope between every pair of windows |
+| Drifted | The drift is more than `max_drift_db` (10 dB) either way |
+
+The median slope ignores one odd window, so only a steady fade or swell is flagged. Quick ups and downs within a sentence are normal speech and don't count.
+
+If no reply is long enough to follow, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+
+:::note
+10 dB is roughly the step at which a voice sounds half, or twice, as loud.
+:::
+
+### Example call
+
+A call where one agent reply fades steadily and one is too short to follow. Each row is one agent reply, its drift and whether that counts.
+
+<VoiceDiagram
+  duration={26}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 6.5, label: "turn 1" }, { start: 9.5, end: 13.5, label: "turn 3" }, { start: 16.5, end: 18.5, label: "turn 5" }, { start: 21.5, end: 25.5, label: "turn 7" }], sounds: [{ start: 2.6, end: 6.3, level: 0.7 }, { start: 9.6, end: 10.9, level: 0.9 }, { start: 10.9, end: 12.2, level: 0.5 }, { start: 12.2, end: 13.3, level: 0.2 }, { start: 16.6, end: 18.3, level: 0.7 }, { start: 21.6, end: 25.3, level: 0.7 }] },
+  ]}
+  highlights={[
+    { start: 9.6, end: 13.3, lane: 0 },
+  ]}
+  marks={[
+    { at: 17.5, lane: 0, tone: "skip", label: "too short" },
+  ]}
+/>
+
+| Agent turn | Drift | Drifted? |
+| --- | --- | --- |
+| 1 | 0.0 dB | No |
+| 3 | −13.5 dB | **Yes** |
+| 5 | Under 3 windows | Skipped |
+| 7 | 0.0 dB | No |
+| **3 replies** | | **1 drifted → 2/3 = 0.67** |
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "How is this different from loudness?",
+      answer: (
+        <>
+          <a href="/docs/metrics-loudness">LoudnessMetric</a> checks whether a
+          reply's overall level is in range. This metric checks whether the
+          level holds steady within the reply, so a reply can pass one and fail
+          the other.
+        </>
+      ),
+    },
+    {
+      question: "How is this different from loudness consistency?",
+      answer: (
+        <>
+          <a href="/docs/metrics-loudness-consistency">
+            LoudnessConsistencyMetric
+          </a>{" "}
+          compares whole replies with each other. This metric looks inside one
+          reply at a time.
+        </>
+      ),
+    },
+    {
+      question: "Does this metric call an LLM or an external speech model?",
+      answer: (
+        <>
+          No. Detection is deterministic and runs locally over the audio, so it
+          has no model or token cost.
+        </>
+      ),
+    },
+    {
+      question: "Does it check the caller's audio too?",
+      answer: (
+        <>
+          No. Only the agent's replies are scored. The caller's audio comes from
+          your own TTS model, so a problem there is with the test harness, not
+          the agent.
+        </>
+      ),
+    },
+  ]}
+/>
