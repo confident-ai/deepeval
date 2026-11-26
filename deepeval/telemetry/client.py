@@ -1,13 +1,20 @@
-"""The analytics backend seam and the one function that emits events.
+"""The telemetry backend seam and the one function that emits events.
 
-What we send -- an anonymous id, an event name, and a flat property dict -- is
-the shape every product-analytics vendor takes. `PostHogBackend` is the only
-module in the repo that may import `posthog`, so swapping vendors is one new
-class rather than a search-and-replace.
+What we send -- an anonymous id, an event name, and a flat property dict -- goes
+as plain JSON to deepeval's own telemetry host. Where it is analysed is decided
+on that server, so changing analytics vendor needs no SDK release. `HttpBackend`
+is the only place in the repo that knows the host.
 """
 
+import json
 import logging
-from typing import Dict, List, Optional, Protocol, Set
+import threading
+import time
+from collections import deque
+from datetime import datetime, timezone
+from typing import Deque, Dict, List, Optional, Protocol, Set
+
+import requests
 
 from deepeval._version import __version__ as DEEPEVAL_VERSION
 from deepeval.config.settings import get_settings
@@ -22,34 +29,15 @@ from deepeval.telemetry.runtime import detect_runtime
 
 logger = logging.getLogger(__name__)
 
-_POSTHOG_PROJECT_API_KEY = "phc_IXvGRcscJJoIb049PtjIZ65JnXQguOUZ5B5MncunFdB"
-_POSTHOG_HOST = "https://us.i.posthog.com"
+_TELEMETRY_URL = "https://telemetry.deepeval.com/v1/sdk"
 
-
-# Our PostHog client's SDK log lines go here instead of the SDK's own logger.
-# Only errors pass; the SDK's warnings (e.g. "flush ran out of budget" when a
-# short CLI command exits before the upload finishes) are noise to a user.
-_SDK_LOGGER_NAME = "deepeval.telemetry.posthog"
-
-
-def _quiet_sdk_logging(client: object) -> None:
-    """Route one client's SDK log lines to our own logger.
-
-    The `posthog` SDK logs through a single ``logging.getLogger("posthog")``
-    shared by every client in the process, so muting that logger would also
-    mute a user's own PostHog client running alongside deepeval. Instead,
-    shadow the class-level ``log`` attribute on *our* instance and its lanes,
-    which is all the SDK consults when it logs. Best effort: if the SDK's
-    internals change, the SDK just keeps logging as before.
-    """
-    quiet = logging.getLogger(_SDK_LOGGER_NAME)
-    quiet.setLevel(logging.ERROR)
-    try:
-        setattr(client, "log", quiet)
-        for lane in getattr(client, "_lanes", None) or ():
-            setattr(lane, "log", quiet)
-    except Exception:
-        pass
+# The server accepts at most 100 events per request.
+_MAX_BATCH_SIZE = 100
+# Events beyond this are dropped rather than growing without bound offline.
+_MAX_QUEUE_SIZE = 1000
+_REQUEST_TIMEOUT_SECONDS = 3.0
+# How long `flush` may hold up a process that is trying to exit.
+_FLUSH_BUDGET_SECONDS = 3.0
 
 
 def telemetry_opt_out() -> bool:
@@ -82,20 +70,21 @@ class NoopBackend:
         return None
 
 
-class PostHogBackend:
-    """The only place `posthog` is imported.
+class HttpBackend:
+    """Posts events to deepeval's telemetry host, off the caller's thread.
 
-    Maps our vendor-neutral `anonymous_id` onto PostHog's `distinct_id`.
+    `capture` only queues and a daemon thread sends the queue in batches.
+    `flush` waits for that thread, or sends from the calling thread when one
+    can no longer be started (interpreter shutdown). Nothing here raises or
+    logs above debug level: a user never sees a telemetry failure.
     """
 
-    def __init__(self) -> None:
-        from posthog import Posthog
-
-        self._client = Posthog(
-            project_api_key=_POSTHOG_PROJECT_API_KEY,
-            host=_POSTHOG_HOST,
-        )
-        _quiet_sdk_logging(self._client)
+    def __init__(self, url: str = _TELEMETRY_URL) -> None:
+        self._url = url
+        self._pending: Deque[Dict[str, object]] = deque()
+        self._in_flight = 0
+        self._changed = threading.Condition()
+        self._worker: Optional[threading.Thread] = None
 
     def capture(
         self,
@@ -103,14 +92,83 @@ class PostHogBackend:
         event: Event,
         properties: Dict[str, PropValue],
     ) -> None:
-        self._client.capture(
-            distinct_id=anonymous_id,
-            event=event.value,
-            properties=properties,
-        )
+        with self._changed:
+            if len(self._pending) >= _MAX_QUEUE_SIZE:
+                return
+            self._pending.append(
+                {
+                    "event": event.value,
+                    "anonymousId": anonymous_id,
+                    "properties": properties,
+                    "timestamp": datetime.now(timezone.utc).isoformat(),
+                }
+            )
+            self._changed.notify_all()
+        self._ensure_worker()
 
     def flush(self) -> None:
-        self._client.flush()  # type: ignore[no-untyped-call]
+        deadline = time.monotonic() + _FLUSH_BUDGET_SECONDS
+        if self._ensure_worker():
+            # Wait on the worker rather than sending here, so a host that
+            # hangs can never hold the caller past the budget.
+            with self._changed:
+                self._changed.wait_for(
+                    lambda: not self._pending and self._in_flight == 0,
+                    timeout=_FLUSH_BUDGET_SECONDS,
+                )
+            return
+        while time.monotonic() < deadline:
+            batch = self._take_batch()
+            if not batch:
+                return
+            self._send(batch, timeout=max(deadline - time.monotonic(), 0.1))
+
+    def _ensure_worker(self) -> bool:
+        """Start the sending thread if needed. False when it cannot run."""
+        # Also restarts after a fork, which does not carry threads over.
+        if self._worker is not None and self._worker.is_alive():
+            return True
+        worker = threading.Thread(
+            target=self._run, name="deepeval-telemetry", daemon=True
+        )
+        try:
+            worker.start()
+        except RuntimeError:
+            # Interpreter is shutting down; `flush` sends what is queued.
+            return False
+        self._worker = worker
+        return True
+
+    def _run(self) -> None:
+        while True:
+            with self._changed:
+                self._changed.wait_for(lambda: bool(self._pending))
+            batch = self._take_batch()
+            if batch:
+                self._send(batch, timeout=_REQUEST_TIMEOUT_SECONDS)
+
+    def _take_batch(self) -> List[Dict[str, object]]:
+        with self._changed:
+            size = min(len(self._pending), _MAX_BATCH_SIZE)
+            batch = [self._pending.popleft() for _ in range(size)]
+            self._in_flight += len(batch)
+            return batch
+
+    def _send(self, batch: List[Dict[str, object]], timeout: float) -> None:
+        try:
+            requests.post(
+                self._url,
+                data=json.dumps({"events": batch}, default=str),
+                headers={"Content-Type": "application/json"},
+                timeout=timeout,
+            )
+        except Exception:
+            # Telemetry is best effort: a failed batch is dropped, not retried.
+            logger.debug("Failed to send telemetry", exc_info=True)
+        finally:
+            with self._changed:
+                self._in_flight -= len(batch)
+                self._changed.notify_all()
 
 
 _backend: Optional[TelemetryBackend] = None
@@ -123,7 +181,7 @@ def get_backend() -> TelemetryBackend:
             _backend = NoopBackend()
         else:
             try:
-                _backend = PostHogBackend()
+                _backend = HttpBackend()
             except Exception:
                 logger.debug("Telemetry backend unavailable", exc_info=True)
                 _backend = NoopBackend()
@@ -131,7 +189,7 @@ def get_backend() -> TelemetryBackend:
 
 
 def set_backend(backend: TelemetryBackend) -> None:
-    """Swap the backend. Used by tests and by any future vendor migration."""
+    """Swap the backend. Used by tests."""
     global _backend
     _backend = backend
 

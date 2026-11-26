@@ -13,14 +13,13 @@ If at any point you think you might have accidentally sent us sensitive data, **
 
 ## Your Privacy Using `deepeval`
 
-By default, `deepeval` uses **PostHog** to track only very basic telemetry data. Specifically, the following is collected:
+By default, `deepeval` sends only very basic telemetry data to `telemetry.deepeval.com`, a server run by Confident AI. Specifically, the following is collected:
 
 - Event names (e.g. evaluation started/completed)
 - Metric names used
 - Whether the evaluation is running in a Jupyter notebook
 - Which [local storage backend](/docs/evaluation-local-backend-storage) is configured (`json` or `sqlite`) — never the stored results
 - A randomly generated anonymous UUID (no user or company identity)
-- Public IP address (used only for coarse regional analytics)
 
 Personally identifiable information is explicitly excluded. You can opt out of all telemetry at any time:
 
@@ -28,7 +27,7 @@ Personally identifiable information is explicitly excluded. You can opt out of a
 export DEEPEVAL_TELEMETRY_OPT_OUT=1
 ```
 
-PostHog is the only place this data goes. `deepeval` does not report crashes or exceptions anywhere.
+The server forwards these events to **PostHog** for analysis, and that is the only place they go. Your IP address is used only to rate limit requests: it is not stored, not forwarded, and not used to work out your location. `deepeval` does not report crashes or exceptions anywhere, and a telemetry request that fails is dropped silently.
 
 ## Your Privacy Using Confident AI
 

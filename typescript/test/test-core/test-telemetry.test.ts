@@ -1,6 +1,6 @@
 // Port of `tests/test_core/test_telemetry.py`, plus two guards Python has no
 // need for: that every property key matches the artifact generated from
-// Python's enums, and that `posthog-node` stays confined to one file.
+// Python's enums, and that only one file knows where telemetry is sent.
 
 import * as fs from "fs";
 import * as os from "os";
@@ -9,6 +9,7 @@ import * as path from "path";
 import { resetSettings } from "@/config/settings";
 import { OpenAIModel } from "@/models";
 import * as telemetry from "@/telemetry";
+import { MAX_BATCH_SIZE, MAX_QUEUE_SIZE } from "@/telemetry/client";
 import * as context from "@/telemetry/context";
 import * as identity from "@/telemetry/identity";
 import * as runtime from "@/telemetry/runtime";
@@ -34,7 +35,7 @@ interface Captured {
   properties: Record<string, PropValue>;
 }
 
-/** Stands in for PostHog so tests assert on the payload, not the wire. */
+/** Stands in for the HTTP backend so tests assert on the payload, not the wire. */
 class FakeBackend implements telemetry.TelemetryBackend {
   readonly events: Captured[] = [];
 
@@ -698,26 +699,26 @@ describe("vendor containment", () => {
     return found;
   }
 
-  it("imports and calls posthog in exactly one place", () => {
-    // Keeps the vendor swappable and stops capture sites sprawling.
-    const imports =
+  it("keeps the telemetry destination in exactly one place", () => {
+    // The SDK talks to deepeval's own host and nothing else: no analytics
+    // vendor's package is imported, and one module holds the host.
+    const vendor =
       /(from\s+["']posthog-node["']|require\(["']posthog-node["']\))/;
-    const calls = /\.capture\(\{\s*distinctId/;
 
-    const importers: string[] = [];
-    const callers: string[] = [];
+    const vendorImporters: string[] = [];
+    const hostUsers: string[] = [];
     for (const file of sourceFiles()) {
       const source = fs.readFileSync(file, "utf-8");
       const relative = path
         .relative(path.join(REPO_ROOT, "typescript", "src"), file)
         .split(path.sep)
         .join("/");
-      if (imports.test(source)) importers.push(relative);
-      if (calls.test(source)) callers.push(relative);
+      if (vendor.test(source)) vendorImporters.push(relative);
+      if (source.includes("telemetry.deepeval.com")) hostUsers.push(relative);
     }
 
-    expect(importers).toEqual(["telemetry/client.ts"]);
-    expect(callers).toEqual(["telemetry/client.ts"]);
+    expect(vendorImporters).toEqual([]);
+    expect(hostUsers).toEqual(["telemetry/client.ts"]);
   });
 });
 
@@ -732,5 +733,124 @@ describe("the payload type", () => {
       "eval.entrypoint": "evaluate",
       "eval.test_case_count": 0,
     });
+  });
+});
+
+describe("HttpBackend", () => {
+  const URL = "http://telemetry.test/v1/sdk";
+  let fetchMock: jest.SpiedFunction<typeof fetch>;
+
+  const sentBodies = (): { events: Record<string, unknown>[] }[] =>
+    fetchMock.mock.calls.map(([, init]) => JSON.parse(String(init?.body)));
+
+  beforeEach(() => {
+    jest.useFakeTimers();
+    fetchMock = jest
+      .spyOn(globalThis, "fetch")
+      .mockResolvedValue(new Response(null, { status: 202 }));
+  });
+
+  afterEach(() => {
+    jest.useRealTimers();
+    fetchMock.mockRestore();
+  });
+
+  it("posts the event as plain JSON", () => {
+    const http = new telemetry.HttpBackend(URL);
+    http.capture("anon-1", Event.EVALUATION, { "eval.metric_runs": 2 });
+    http.flush();
+
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+    const [url, init] = fetchMock.mock.calls[0];
+    expect(url).toBe(URL);
+    expect(init?.method).toBe("POST");
+    expect(init?.headers).toEqual({ "Content-Type": "application/json" });
+    const [event] = sentBodies()[0].events;
+    expect(event.event).toBe(Event.EVALUATION);
+    expect(event.anonymousId).toBe("anon-1");
+    expect(event.properties).toEqual({ "eval.metric_runs": 2 });
+    expect(new Date(String(event.timestamp)).toISOString()).toBe(
+      event.timestamp,
+    );
+  });
+
+  it("sends queued events together shortly after capture", () => {
+    const http = new telemetry.HttpBackend(URL);
+    http.capture("anon-1", Event.EVALUATION, {});
+    http.capture("anon-1", Event.EVALUATION, {});
+    expect(fetchMock).not.toHaveBeenCalled();
+
+    jest.runOnlyPendingTimers();
+
+    expect(sentBodies().map((body) => body.events.length)).toEqual([2]);
+  });
+
+  it("never sends more than the server accepts per request", () => {
+    const http = new telemetry.HttpBackend(URL);
+    for (let i = 0; i < MAX_BATCH_SIZE + 5; i += 1) {
+      http.capture("anon-1", Event.EVALUATION, {});
+    }
+    http.flush();
+
+    expect(sentBodies().map((body) => body.events.length)).toEqual([
+      MAX_BATCH_SIZE,
+      5,
+    ]);
+  });
+
+  it("drops events past the queue limit", () => {
+    const http = new telemetry.HttpBackend(URL);
+    for (let i = 0; i < MAX_QUEUE_SIZE + 10; i += 1) {
+      http.capture("anon-1", Event.EVALUATION, {});
+    }
+    http.flush();
+
+    const sent = sentBodies().reduce((n, body) => n + body.events.length, 0);
+    expect(sent).toBe(MAX_QUEUE_SIZE);
+  });
+
+  it.each([400, 429, 500, 503])(
+    "keeps a %i response invisible to the user",
+    async (status) => {
+      fetchMock.mockResolvedValue(new Response(null, { status }));
+      const noise = [
+        jest.spyOn(console, "error").mockImplementation(() => {}),
+        jest.spyOn(console, "warn").mockImplementation(() => {}),
+        jest.spyOn(console, "log").mockImplementation(() => {}),
+      ];
+      const http = new telemetry.HttpBackend(URL);
+
+      http.capture("anon-1", Event.EVALUATION, {});
+      expect(() => http.flush()).not.toThrow();
+      await jest.runAllTimersAsync();
+
+      for (const spy of noise) {
+        expect(spy).not.toHaveBeenCalled();
+        spy.mockRestore();
+      }
+    },
+  );
+
+  it("keeps an unreachable host invisible to the user", async () => {
+    fetchMock.mockRejectedValue(new TypeError("fetch failed"));
+    const noise = [
+      jest.spyOn(console, "error").mockImplementation(() => {}),
+      jest.spyOn(console, "warn").mockImplementation(() => {}),
+      jest.spyOn(console, "log").mockImplementation(() => {}),
+    ];
+    const unhandled = jest.fn();
+    process.on("unhandledRejection", unhandled);
+    const http = new telemetry.HttpBackend(URL);
+
+    http.capture("anon-1", Event.EVALUATION, {});
+    expect(() => http.flush()).not.toThrow();
+    await jest.runAllTimersAsync();
+    process.off("unhandledRejection", unhandled);
+
+    expect(unhandled).not.toHaveBeenCalled();
+    for (const spy of noise) {
+      expect(spy).not.toHaveBeenCalled();
+      spy.mockRestore();
+    }
   });
 });

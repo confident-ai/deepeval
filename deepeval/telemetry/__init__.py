@@ -28,8 +28,8 @@ from deepeval.telemetry.api import (
     record_tracing_integration,
 )
 from deepeval.telemetry.client import (
+    HttpBackend,
     NoopBackend,
-    PostHogBackend,
     TelemetryBackend,
     base_properties,
     capture,
@@ -123,6 +123,7 @@ __all__ = [
     "EventProperties",
     "Feature",
     "FlushReason",
+    "HttpBackend",
     "Identity",
     "Language",
     "LoginMethod",
@@ -131,7 +132,6 @@ __all__ = [
     "LoginSpan",
     "NoopBackend",
     "Outcome",
-    "PostHogBackend",
     "Prop",
     "Runtime",
     "RunAccumulator",
