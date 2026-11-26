@@ -270,6 +270,46 @@ describe("ConversationalDAGMetric", () => {
     expect(await metric.measure(conversation)).toBe(1);
   });
 
+  test("renders conversation-level params once, not per turn", async () => {
+    const gate = new ConversationalBinaryJudgementNode({
+      criteria: "Was the expected outcome met?",
+      evaluationParams: [
+        MultiTurnParams.CONTENT,
+        MultiTurnParams.EXPECTED_OUTCOME,
+        MultiTurnParams.SCENARIO,
+      ],
+    });
+    gate.addVerdict(true, { score: 10 });
+    gate.addVerdict(false, { score: 0 });
+
+    const model = new StubModel([
+      ["Was the expected outcome met?", { verdict: true, reason: "Refunded." }],
+    ]);
+    const metric = new ConversationalDAGMetric({
+      name: "Outcome",
+      dag: new DeepAcyclicGraph({ rootNodes: [gate] }),
+      model,
+      includeReason: false,
+      showIndicator: false,
+    });
+
+    await metric.measure(
+      new ConversationalTestCase({
+        turns: conversation.turns,
+        expectedOutcome: "refund issued",
+        scenario: "Customer whose order never arrived",
+      }),
+    );
+
+    const [prompt] = model.prompts;
+    const count = (needle: string) => prompt.split(needle).length - 1;
+    expect(count("Content:\n")).toBe(2);
+    expect(count("Expected Outcome:\nrefund issued")).toBe(1);
+    expect(count("Scenario:\nCustomer whose order never arrived")).toBe(1);
+    expect(prompt).not.toContain("Expected Outcome:\nNone");
+    expect(prompt).not.toContain("Scenario:\nNone");
+  });
+
   test("rejects an out-of-range turn window", () => {
     expect(() => isValidTurnWindow([0, 2], conversation.turns)).toThrow(
       /'turnWindow' passed is invalid/,

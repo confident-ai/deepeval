@@ -34,7 +34,7 @@ const TURN_LEVEL = new Set<MultiTurnParams>([
   MultiTurnParams.ROLE,
 ]);
 
-function conversationLevelValue(
+export function conversationLevelValue(
   testCase: ConversationalTestCase,
   param: MultiTurnParams,
 ): unknown {
