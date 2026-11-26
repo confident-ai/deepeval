@@ -59,6 +59,7 @@ import { restoreTerminalFocus } from "./focus.js";
 import { describeGitStatus, inspectGit, runCommand } from "./git.js";
 import {
   detectJudge,
+  isUsableSecretValue,
   judgeEnvValues,
   judgeMissing,
   judgeProviders,
@@ -740,7 +741,7 @@ const discoverReadyAgents = async (
  * beside `CONFIDENT_API_KEY`. The secret is only ever passed to the dotenv
  * writer: it is never logged, echoed, or handed to an agent as an argument.
  */
-const configureJudgeModel = async (
+export const configureJudgeModel = async (
   projectDirectory: string,
 ): Promise<JudgeSelection> => {
   const detecting = spinner();
@@ -750,7 +751,7 @@ const configureJudgeModel = async (
   const detected = detectJudge(env);
   if (detected && detected.missing.length === 0) {
     const found = detected.provider.secrets
-      .filter((secret) => env[secret.envVar]?.trim())
+      .filter((secret) => isUsableSecretValue(secret, env[secret.envVar]))
       .map((secret) => secret.envVar);
     detecting.stop(
       `Judge model ready: ${accent(detected.provider.label)}${
@@ -818,19 +819,19 @@ const configureJudgeModel = async (
   const needed = judgeMissing(choice, env);
   const secrets: Record<string, string> = {};
   for (const secret of choice.secrets) {
-    if ((env[secret.envVar] ?? "").trim()) continue;
+    if (isUsableSecretValue(secret, env[secret.envVar])) continue;
     const required = needed.includes(secret.envVar);
     const answer = requiredPrompt(
       await password({
         message: required
           ? `Paste your ${secret.label} (saved to .env.local, never displayed)`
           : `Paste your ${secret.label}, or leave it empty to skip`,
-        ...(required
-          ? {
-              validate: (value: string | undefined) =>
-                value?.trim() ? undefined : "A value is required",
-            }
-          : {}),
+        validate: (value: string | undefined) =>
+          secret.reservedValues?.includes(value?.trim() ?? "")
+            ? `"${value?.trim()}" is reserved; enter a different value`
+            : required && !value?.trim()
+              ? "A value is required"
+              : undefined,
       }),
     ).trim();
     if (answer) secrets[secret.envVar] = answer;
@@ -848,11 +849,15 @@ const configureJudgeModel = async (
     ).trim();
   }
 
-  const values = judgeEnvValues(choice, { secrets, settings });
+  const values = judgeEnvValues(choice, { secrets, settings }, env);
   if (Object.keys(values).length)
     await writeEnvValues(projectDirectory, values);
   const reused = choice.secrets
-    .filter((secret) => !secrets[secret.envVar] && env[secret.envVar]?.trim())
+    .filter(
+      (secret) =>
+        !secrets[secret.envVar] &&
+        isUsableSecretValue(secret, env[secret.envVar]),
+    )
     .map((secret) => secret.envVar);
   log.success(
     reused.length

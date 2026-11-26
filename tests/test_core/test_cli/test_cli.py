@@ -337,7 +337,7 @@ LLM_PROVIDER_CASES: List[_ProviderCase] = [
     _ProviderCase(
         set_cmd="set-ollama",
         unset_cmd="unset-ollama",
-        use_key="USE_LOCAL_MODEL",
+        use_key="USE_OLLAMA_MODEL",
         set_flags=(
             "--model",
             "llama3",
@@ -573,7 +573,7 @@ EMBED_PROVIDER_CASES: List[_ProviderCase] = [
     _ProviderCase(
         set_cmd="set-ollama-embeddings",
         unset_cmd="unset-ollama-embeddings",
-        use_key="USE_LOCAL_EMBEDDINGS",
+        use_key="USE_OLLAMA_EMBEDDINGS",
         set_flags=(
             "--model",
             "nomic-embed-text",

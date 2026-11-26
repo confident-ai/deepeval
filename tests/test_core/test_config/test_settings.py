@@ -5,6 +5,7 @@ from pathlib import Path
 
 from deepeval.config.utils import parse_bool
 from deepeval.config.settings import (
+    Settings,
     _family_of_use_flag,
     autoload_dotenv,
     get_settings,
@@ -307,6 +308,18 @@ def test_sample_rate_invalid_raises(monkeypatch, val):
     monkeypatch.setenv("CONFIDENT_TRACE_SAMPLE_RATE", val)
     with pytest.raises(ValueError):
         get_settings()
+
+
+@pytest.mark.parametrize(
+    "field",
+    sorted(f for f in Settings.model_fields if f.startswith("USE_")),
+)
+@pytest.mark.parametrize("raw, expected", [("enabled", True), ("bogus", False)])
+def test_every_use_flag_parses_like_parse_bool(
+    monkeypatch, field, raw, expected
+):
+    monkeypatch.setenv(field, raw)
+    assert getattr(reset_settings(reload_dotenv=False), field) is expected
 
 
 def test_switch_model_provider_flips_use_flags_within_family_only(settings):

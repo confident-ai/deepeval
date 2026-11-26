@@ -12,7 +12,7 @@ import { envBool } from "@/env-flags";
 let loadedFromFiles = new Set<string>();
 let loadedPaths: string[] = [];
 
-function readDotenvFile(filePath: string): Record<string, string> {
+export function readDotenvFile(filePath: string): Record<string, string> {
   if (!fs.existsSync(filePath)) return {};
   try {
     // eslint-disable-next-line @typescript-eslint/no-require-imports

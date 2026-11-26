@@ -50,6 +50,15 @@ describe("environment merge", () => {
     );
   });
 
+  it("removes every assignment of a key whose value is null", () => {
+    expect(
+      mergeEnvContent(
+        "OTHER=1\nUSE_OLLAMA_MODEL=true\nexport USE_OLLAMA_MODEL=yes\n",
+        { USE_OLLAMA_MODEL: null, MISSING: null },
+      ),
+    ).toBe("OTHER=1\n");
+  });
+
   it("atomically writes a mode-0600 file", async () => {
     const directory = await temporaryDirectory();
     await writeFile(join(directory, ".env.local"), "OTHER=1\n");

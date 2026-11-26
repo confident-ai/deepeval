@@ -5,6 +5,7 @@ import { z } from "zod";
 import {
   BOOL_TOKENS_MESSAGE,
   normalizeFileSystemMode,
+  isTruthyLikePython,
   parseBool,
 } from "@/config/utils";
 import { isValidLogLevel } from "@/logger";
@@ -45,6 +46,11 @@ const optionalBool = () =>
     })
     .optional();
 const optionalNumber = () => z.coerce.number().optional();
+const presentBool = () =>
+  z
+    .string()
+    .transform((value) => isTruthyLikePython(value))
+    .optional();
 
 const logLevel = () =>
   z
@@ -271,6 +277,10 @@ export const settingsSchema = z.object({
   USE_LOCAL_MODEL: optionalBool().describe(
     "Use a local OpenAI-compatible model (including Ollama) as the LLM provider.",
   ),
+  USE_OLLAMA_MODEL: presentBool().describe(
+    "Use a local Ollama model as the LLM provider. When unset, " +
+      "LOCAL_MODEL_API_KEY=ollama selects Ollama instead.",
+  ),
   USE_GROK_MODEL: optionalBool().describe("Use Grok as the LLM provider."),
   USE_MOONSHOT_MODEL: optionalBool().describe(
     "Use Moonshot (Kimi) as the LLM provider.",
@@ -449,6 +459,10 @@ export type Settings = z.infer<typeof settingsSchema>;
 export type SettingName = keyof Settings & string;
 
 const shape = settingsSchema.shape as Record<string, z.ZodType>;
+
+export const EMPTY_IS_SET: ReadonlySet<SettingName> = new Set<SettingName>([
+  "USE_OLLAMA_MODEL",
+]);
 
 export const SETTING_NAMES: SettingName[] = Object.keys(
   shape,

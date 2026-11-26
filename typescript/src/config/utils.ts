@@ -34,6 +34,15 @@ function normalizeToken(value: string): string {
   return unquoted.trim().toLowerCase();
 }
 
+export function isTruthyLikePython(value: string): boolean {
+  const token = value
+    .trim()
+    .replace(/^"+|"+$/g, "")
+    .replace(/^'+|'+$/g, "")
+    .toLowerCase();
+  return TRUTHY.has(token);
+}
+
 /**
  * `undefined` for an unset, empty, or unrecognized value, so callers can pick
  * between warning and silently falling back.
