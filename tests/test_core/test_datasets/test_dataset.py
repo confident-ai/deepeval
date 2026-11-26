@@ -646,6 +646,57 @@ class TestSaveAndLoad:
                     item["scenario"] == "test case scenario" for item in data
                 )
 
+    @pytest.mark.parametrize("file_type", ["json", "csv", "jsonl"])
+    def test_save_as_included_test_cases_keep_name_and_comments(
+        self, file_type
+    ):
+        dataset = EvaluationDataset()
+        dataset.add_test_case(
+            LLMTestCase(
+                input="input case",
+                actual_output="actual",
+                name="Name",
+                comments="Comment",
+            )
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = dataset.save_as(
+                file_type, directory=tmpdir, include_test_cases=True
+            )
+            reloaded = EvaluationDataset()
+            if file_type == "json":
+                reloaded.add_goldens_from_json_file(path)
+            elif file_type == "csv":
+                reloaded.add_goldens_from_csv_file(path)
+            else:
+                reloaded.add_goldens_from_jsonl_file(path)
+
+        assert reloaded.goldens[0].name == "Name"
+        assert reloaded.goldens[0].comments == "Comment"
+
+    def test_save_as_included_convo_test_cases_keep_name_and_comments(self):
+        dataset = EvaluationDataset()
+        dataset._multi_turn = True
+        dataset.add_test_case(
+            ConversationalTestCase(
+                scenario="test case scenario",
+                turns=[Turn(role="user", content="user content")],
+                name="Name",
+                comments="Comment",
+            )
+        )
+
+        with tempfile.TemporaryDirectory() as tmpdir:
+            path = dataset.save_as(
+                "json", directory=tmpdir, include_test_cases=True
+            )
+            with open(path, "r", encoding="utf-8") as f:
+                data = json.load(f)
+
+        assert data[0]["name"] == "Name"
+        assert data[0]["comments"] == "Comment"
+
     def test_convert_convo_goldens_to_test_cases_preserves_expected_outcome(
         self,
     ):
