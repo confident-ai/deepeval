@@ -33,7 +33,7 @@ class FormattedLLMTestCase:
     tools_called: Optional[List[ToolCall]] = None
     expected_tools: Optional[List[ToolCall]] = None
 
-    def __repr__(self):
+    def to_dict(self) -> Dict:
         data = {}
         if self.actual_output is not None:
             data["actual_output"] = self.actual_output
@@ -47,8 +47,11 @@ class FormattedLLMTestCase:
             data["expected_tools"] = [
                 repr(tool) for tool in self.expected_tools
             ]
+        return data
 
-        return json.dumps(data, indent=2)
+    def __repr__(self):
+        # ensure_ascii=False keeps non-English text readable for the judge.
+        return json.dumps(self.to_dict(), indent=2, ensure_ascii=False)
 
 
 @dataclass
@@ -69,21 +72,24 @@ class FormattedArenaTestCase:
         contestant_items = list(self.contestants.items())
         random.shuffle(contestant_items)
 
-        # Use dummy names if mapping is available, otherwise use real names
+        # Use dummy names if mapping is available, otherwise use real names.
+        # Contestants are nested as objects, not as JSON strings, so their
+        # text is escaped once instead of twice.
         if self.dummy_to_real_names:
             # Create reverse mapping from real to dummy names
             real_to_dummy = {
                 real: dummy for dummy, real in self.dummy_to_real_names.items()
             }
             data["arena_test_cases"] = {
-                real_to_dummy.get(name, name): repr(contestant)
+                real_to_dummy.get(name, name): contestant.to_dict()
                 for name, contestant in contestant_items
             }
         else:
             data["arena_test_cases"] = {
-                name: repr(contestant) for name, contestant in contestant_items
+                name: contestant.to_dict()
+                for name, contestant in contestant_items
             }
-        return json.dumps(data, indent=2)
+        return json.dumps(data, indent=2, ensure_ascii=False)
 
 
 def format_arena_test_case(
