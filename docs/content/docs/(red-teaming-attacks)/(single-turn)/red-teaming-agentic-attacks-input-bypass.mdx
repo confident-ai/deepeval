@@ -17,7 +17,7 @@ from deepeval.red_team.vulnerabilities import Bias
 from deepeval.red_team.attacks.single_turn import InputBypass
 from somewhere import your_callback
 
-input_bypass = InputBypass(weight=2, max_retires=7)
+input_bypass = InputBypass(weight=2, max_retries=7)
 
 red_team(
     attacks=[input_bypass], 

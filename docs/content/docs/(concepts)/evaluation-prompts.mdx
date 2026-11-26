@@ -78,7 +78,7 @@ def test_llm_app():
     test_case = LLMTestCase(input=input, actual_output=actual_output)
     assert_test(test_case=test_case, metrics=[AnswerRelevancyMetric()])
 
-@deepeval.log_hyperparameters()
+@deepeval.log_hyperparameters
 def hyperparameters():
     return {"prompt": prompt}
 ```
@@ -87,7 +87,7 @@ def hyperparameters():
 You can log multiple prompts in the `hyperparameters` dictionary if your LLM application uses multiple prompts.
 
 ```python
-@deepeval.log_hyperparameters()
+@deepeval.log_hyperparameters
 def hyperparameters():
     return {"prompt_1": prompt_1, "prompt_2": prompt_2}
 ```

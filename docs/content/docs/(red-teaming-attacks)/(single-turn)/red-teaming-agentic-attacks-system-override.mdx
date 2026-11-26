@@ -17,7 +17,7 @@ from deepeval.red_team.vulnerabilities import Bias
 from deepeval.red_team.attacks.single_turn import SystemOverride
 from somewhere import your_callback
 
-system_override = SystemOverride(weight=2, max_retires=7)
+system_override = SystemOverride(weight=2, max_retries=7)
 
 red_team(
     attacks=[system_override], 
