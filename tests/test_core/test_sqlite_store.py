@@ -848,7 +848,10 @@ class TestTestRunManagerIntegration:
 
         mgr.save_test_run_locally()  # must not raise
 
-        assert "disk I/O error" in capsys.readouterr().err
+        # rich wraps the warning at the terminal width, and the db path under
+        # tmp_path is long enough to split the message across two lines.
+        err = " ".join(capsys.readouterr().err.split())
+        assert "disk I/O error" in err
         assert mgr.last_saved_path is None
 
 
