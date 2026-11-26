@@ -21,7 +21,7 @@ from deepeval.telemetry import identity as identity_mod
 
 
 class FakeBackend:
-    """Stands in for PostHog so tests assert on the payload, not the wire."""
+    """Stands in for the HTTP backend so tests assert on the payload, not the wire."""
 
     def __init__(self):
         self.events = []
@@ -249,44 +249,176 @@ class TestRunId:
         assert backend.events == []
 
 
-class TestSdkLogging:
-    """Our PostHog client must be quiet without touching a user's own client."""
+class _TelemetryHost:
+    """A local stand-in for telemetry.deepeval.com that records what it gets."""
 
-    class _Lane:
-        pass
+    def __init__(self, status=202):
+        import json
+        import threading
+        from http.server import BaseHTTPRequestHandler, HTTPServer
 
-    class _FakeClient:
-        def __init__(self):
-            self._lanes = [TestSdkLogging._Lane(), TestSdkLogging._Lane()]
+        self.requests = []
+        host = self
 
-    def test_redirects_only_our_clients_log_lines(self):
+        class Handler(BaseHTTPRequestHandler):
+            def do_POST(self):
+                length = int(self.headers.get("Content-Length", 0))
+                host.requests.append(
+                    (
+                        self.path,
+                        self.headers.get("Content-Type"),
+                        json.loads(self.rfile.read(length)),
+                    )
+                )
+                self.send_response(status)
+                self.end_headers()
+
+            def log_message(self, *args):
+                pass
+
+        self._server = HTTPServer(("127.0.0.1", 0), Handler)
+        self.url = f"http://127.0.0.1:{self._server.server_port}/v1/sdk"
+        threading.Thread(target=self._server.serve_forever, daemon=True).start()
+
+    def events(self):
+        return [
+            event for _, _, body in self.requests for event in body["events"]
+        ]
+
+    def close(self):
+        self._server.shutdown()
+        self._server.server_close()
+
+
+@pytest.fixture
+def telemetry_host():
+    host = _TelemetryHost()
+    yield host
+    host.close()
+
+
+class TestHttpBackend:
+    def test_posts_the_event_as_plain_json(self, telemetry_host):
+        from datetime import datetime
+
+        from deepeval.telemetry.client import HttpBackend
+
+        http_backend = HttpBackend(url=telemetry_host.url)
+        http_backend.capture(
+            "anon-1", Event.EVALUATION, {"eval.metric_runs": 2, "tags": ["a"]}
+        )
+        http_backend.flush()
+
+        path, content_type, _ = telemetry_host.requests[0]
+        assert path == "/v1/sdk"
+        assert content_type == "application/json"
+        (event,) = telemetry_host.events()
+        assert event["event"] == Event.EVALUATION.value
+        assert event["anonymousId"] == "anon-1"
+        assert event["properties"] == {"eval.metric_runs": 2, "tags": ["a"]}
+        assert datetime.fromisoformat(event["timestamp"]).tzinfo is not None
+
+    def test_capture_does_not_wait_for_the_network(self):
+        import time
+
+        from deepeval.telemetry.client import HttpBackend
+
+        # A non-routable address: a blocking send would hang here.
+        http_backend = HttpBackend(url="http://10.255.255.1:9/v1/sdk")
+        started = time.monotonic()
+        http_backend.capture("anon-1", Event.EVALUATION, {})
+        assert time.monotonic() - started < 0.5
+
+    def test_never_sends_more_than_the_server_accepts_per_request(
+        self, telemetry_host, monkeypatch
+    ):
+        from deepeval.telemetry import client as client_mod
+
+        http_backend = client_mod.HttpBackend(url=telemetry_host.url)
+        # Keep the worker out of it so the batching is deterministic.
+        monkeypatch.setattr(http_backend, "_ensure_worker", lambda: False)
+        for _ in range(client_mod._MAX_BATCH_SIZE + 5):
+            http_backend.capture("anon-1", Event.EVALUATION, {})
+        http_backend.flush()
+
+        sizes = [len(body["events"]) for _, _, body in telemetry_host.requests]
+        assert sizes == [client_mod._MAX_BATCH_SIZE, 5]
+
+    def test_drops_events_past_the_queue_limit(self, monkeypatch):
+        from deepeval.telemetry import client as client_mod
+
+        http_backend = client_mod.HttpBackend(url="http://127.0.0.1:9/v1/sdk")
+        monkeypatch.setattr(http_backend, "_ensure_worker", lambda: False)
+        for _ in range(client_mod._MAX_QUEUE_SIZE + 10):
+            http_backend.capture("anon-1", Event.EVALUATION, {})
+
+        assert len(http_backend._pending) == client_mod._MAX_QUEUE_SIZE
+
+    def test_an_unreachable_host_is_invisible_to_the_user(self, caplog):
         import logging
 
+        from deepeval.telemetry.client import HttpBackend
+
+        http_backend = HttpBackend(url="http://127.0.0.1:9/v1/sdk")
+        with caplog.at_level(logging.INFO):
+            http_backend.capture("anon-1", Event.EVALUATION, {})
+            http_backend.flush()
+
+        assert not http_backend._pending
+        assert caplog.records == []
+
+    @pytest.mark.parametrize("status", [400, 429, 500, 503])
+    def test_an_error_response_is_invisible_to_the_user(self, status, caplog):
+        import logging
+
+        from deepeval.telemetry.client import HttpBackend
+
+        host = _TelemetryHost(status=status)
+        try:
+            http_backend = HttpBackend(url=host.url)
+            with caplog.at_level(logging.INFO):
+                http_backend.capture("anon-1", Event.EVALUATION, {})
+                http_backend.flush()
+        finally:
+            host.close()
+
+        assert len(host.requests) == 1
+        assert caplog.records == []
+
+    def test_flush_gives_up_on_a_host_that_hangs(self, monkeypatch):
+        import socket
+        import time
+
         from deepeval.telemetry import client as client_mod
 
-        shared = logging.getLogger("posthog")
-        before = (shared.level, list(shared.handlers), list(shared.filters))
+        monkeypatch.setattr(client_mod, "_FLUSH_BUDGET_SECONDS", 0.3)
+        # Accepts the connection and never answers.
+        listener = socket.socket()
+        listener.bind(("127.0.0.1", 0))
+        listener.listen(1)
+        try:
+            port = listener.getsockname()[1]
+            http_backend = client_mod.HttpBackend(
+                url=f"http://127.0.0.1:{port}/v1/sdk"
+            )
+            http_backend.capture("anon-1", Event.EVALUATION, {})
+            started = time.monotonic()
+            http_backend.flush()
+            assert time.monotonic() - started < 1.5
+        finally:
+            listener.close()
 
-        fake = self._FakeClient()
-        client_mod._quiet_sdk_logging(fake)
+    def test_sends_from_the_caller_when_no_thread_can_start(
+        self, telemetry_host, monkeypatch
+    ):
+        from deepeval.telemetry.client import HttpBackend
 
-        ours = logging.getLogger(client_mod._SDK_LOGGER_NAME)
-        assert fake.log is ours
-        assert all(lane.log is ours for lane in fake._lanes)
-        # The SDK's budget message is a WARNING; ours drops it.
-        assert not ours.isEnabledFor(logging.WARNING)
-        assert ours.isEnabledFor(logging.ERROR)
-        # The logger every other PostHog client uses is exactly as it was.
-        assert (
-            shared.level,
-            list(shared.handlers),
-            list(shared.filters),
-        ) == before
+        http_backend = HttpBackend(url=telemetry_host.url)
+        monkeypatch.setattr(http_backend, "_ensure_worker", lambda: False)
+        http_backend.capture("anon-1", Event.EVALUATION, {})
+        http_backend.flush()
 
-    def test_tolerates_unknown_sdk_internals(self):
-        from deepeval.telemetry import client as client_mod
-
-        client_mod._quiet_sdk_logging(object())  # no attributes to set
+        assert len(telemetry_host.events()) == 1
 
 
 class TestOutcome:
@@ -639,26 +771,25 @@ class TestOptOut:
 
 
 class TestTypeSafety:
-    def test_posthog_is_imported_and_called_in_exactly_one_place(self):
-        """The guard that keeps the vendor swappable and stops capture sprawl.
+    def test_only_the_client_knows_where_telemetry_goes(self):
+        """The guard that keeps the destination swappable.
 
-        A new contributor adding a capture elsewhere is how the old sprawl
-        happened, and this is also what keeps a vendor swap to one class.
+        The SDK talks to deepeval's own host and nothing else: no analytics
+        vendor's package is imported, and one module holds the host.
         """
         root = Path(__file__).resolve().parents[2] / "deepeval"
-        imports = re.compile(r"^\s*(from posthog import|import posthog)", re.M)
-        calls = re.compile(r"\.capture\(\s*\n?\s*distinct_id=")
+        vendor = re.compile(r"^\s*(from posthog import|import posthog)", re.M)
 
-        importers, callers = [], []
+        vendor_importers, host_users = [], []
         for path in root.rglob("*.py"):
             source = path.read_text()
-            if imports.search(source):
-                importers.append(path.relative_to(root).as_posix())
-            if calls.search(source):
-                callers.append(path.relative_to(root).as_posix())
+            if vendor.search(source):
+                vendor_importers.append(path.relative_to(root).as_posix())
+            if "telemetry.deepeval.com" in source:
+                host_users.append(path.relative_to(root).as_posix())
 
-        assert importers == ["telemetry/client.py"], importers
-        assert callers == ["telemetry/client.py"], callers
+        assert vendor_importers == [], vendor_importers
+        assert host_users == ["telemetry/client.py"], host_users
 
     def test_every_property_key_is_namespaced(self):
         from deepeval.telemetry.properties import Prop

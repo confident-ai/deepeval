@@ -1,5 +1,5 @@
-// Port of `deepeval/telemetry/client.py`. `PostHogBackend` is the only module
-// allowed to import `posthog-node`, so swapping vendors is one new class.
+// Port of `deepeval/telemetry/client.py`. Events go as plain JSON to deepeval's
+// own telemetry host, and `HttpBackend` is the only place that knows the host.
 
 import { getVersion } from "@/cli/version";
 import { getSettings } from "@/config/settings";
@@ -14,9 +14,15 @@ import {
 } from "@/telemetry/properties";
 import { detectRuntime } from "@/telemetry/runtime";
 
-const POSTHOG_PROJECT_API_KEY =
-  "phc_IXvGRcscJJoIb049PtjIZ65JnXQguOUZ5B5MncunFdB";
-const POSTHOG_HOST = "https://us.i.posthog.com";
+const TELEMETRY_URL = "https://telemetry.deepeval.com/v1/sdk";
+
+// The server accepts at most 100 events per request.
+export const MAX_BATCH_SIZE = 100;
+// Events beyond this are dropped rather than growing without bound offline.
+export const MAX_QUEUE_SIZE = 1000;
+const REQUEST_TIMEOUT_MS = 3000;
+// Long enough for the events of one run to leave in a single request.
+const SEND_DELAY_MS = 500;
 
 const logger = getLogger("telemetry");
 
@@ -39,39 +45,65 @@ export class NoopBackend implements TelemetryBackend {
   flush(): void {}
 }
 
-/**
- * The import is deferred to construction so an opted-out process never loads
- * the client at all.
- */
-export class PostHogBackend implements TelemetryBackend {
-  private readonly client: {
-    capture(payload: {
-      distinctId: string;
-      event: string;
-      properties: Record<string, PropValue>;
-    }): void;
-    flush(): Promise<void> | void;
-  };
+interface QueuedEvent {
+  event: string;
+  anonymousId: string;
+  properties: Record<string, PropValue>;
+  timestamp: string;
+}
 
-  constructor() {
-    // eslint-disable-next-line @typescript-eslint/no-require-imports
-    const posthog = require("posthog-node") as typeof import("posthog-node");
-    const { PostHog } = posthog;
-    this.client = new PostHog(POSTHOG_PROJECT_API_KEY, { host: POSTHOG_HOST });
-  }
+/**
+ * Posts events to deepeval's telemetry host. `capture` only queues; the queue
+ * leaves shortly after, or at once on `flush`. Nothing here throws, rejects or
+ * logs above debug level: a user never sees a telemetry failure.
+ */
+export class HttpBackend implements TelemetryBackend {
+  private pending: QueuedEvent[] = [];
+  private timer: ReturnType<typeof setTimeout> | null = null;
+
+  constructor(private readonly url: string = TELEMETRY_URL) {}
 
   capture(
     anonymousId: string,
     event: Event,
     properties: Record<string, PropValue>,
   ): void {
-    this.client.capture({ distinctId: anonymousId, event, properties });
+    if (this.pending.length >= MAX_QUEUE_SIZE) return;
+    this.pending.push({
+      event,
+      anonymousId,
+      properties,
+      timestamp: new Date().toISOString(),
+    });
+    if (this.timer === null) {
+      this.timer = setTimeout(() => this.flush(), SEND_DELAY_MS);
+      // A queued event must not keep the user's process alive.
+      this.timer.unref?.();
+    }
   }
 
   flush(): void {
-    // A flush that fails or outlives the process must not surface as an
-    // unhandled rejection in the user's application.
-    void Promise.resolve(this.client.flush()).catch(() => {});
+    if (this.timer !== null) {
+      clearTimeout(this.timer);
+      this.timer = null;
+    }
+    while (this.pending.length > 0) {
+      void this.send(this.pending.splice(0, MAX_BATCH_SIZE));
+    }
+  }
+
+  private async send(events: QueuedEvent[]): Promise<void> {
+    try {
+      await fetch(this.url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ events }),
+        signal: AbortSignal.timeout(REQUEST_TIMEOUT_MS),
+      });
+    } catch (error) {
+      // Telemetry is best effort: a failed batch is dropped, not retried.
+      logger.debug("Failed to send telemetry", error);
+    }
   }
 }
 
@@ -83,7 +115,7 @@ export function getBackend(): TelemetryBackend {
       backend = new NoopBackend();
     } else {
       try {
-        backend = new PostHogBackend();
+        backend = new HttpBackend();
       } catch (error) {
         logger.debug("Telemetry backend unavailable", error);
         backend = new NoopBackend();

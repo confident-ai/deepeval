@@ -22,8 +22,8 @@ export {
 } from "@/telemetry/api";
 
 export {
+  HttpBackend,
   NoopBackend,
-  PostHogBackend,
   baseProperties,
   capture,
   flush,
