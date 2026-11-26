@@ -264,8 +264,8 @@ def prepare_measure(
     multimodal: Optional[bool] = None,
 ) -> None:
     """What every measure does before judging: validate the test case
-    against the metric's required params and zero its cost and token
-    counters. Shared with the batched System One path in `evaluate()`, which
+    against the metric's required params and zero its cost, token and QAG
+    verdict-parse counters. Shared with the batched System One path in `evaluate()`, which
     judges the metric without calling its `measure`. `multimodal` defaults
     to the test case's own flag."""
     if multimodal is None:
@@ -294,6 +294,8 @@ def prepare_measure(
     metric.evaluation_cost = 0 if native else None
     metric.input_tokens = 0 if native else None
     metric.output_tokens = 0 if native else None
+    metric.qag_verdicts_received_count = 0
+    metric.qag_verdicts_dropped_count = 0
 
 
 def check_arena_test_case_params(

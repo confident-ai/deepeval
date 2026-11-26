@@ -18,7 +18,7 @@ from deepeval.metrics.base_metric import (
     BaseConversationalMetric,
     Verdict,
     YES_NO,
-    LEGACY_VERDICT_ALIASES,
+    QAG_VERDICT_ALIASES,
 )
 from deepeval.models.system_one.schema import NoulQuestion
 
@@ -62,17 +62,26 @@ def normalize_qag_verdict(
 
     Judges don't always honor a strict instruction — a non-native model may
     reply "No, it's off-topic". This strips, lowercases and keeps only the
-    leading word, maps legacy aliases (``idk`` -> ``Verdict.BORDERLINE``), and
-    returns ``None`` for anything still outside ``allowed`` so the caller can
-    drop it from scoring rather than miscount it.
+    leading word, maps it through ``QAG_VERDICT_ALIASES`` (conventional
+    shorthand plus legacy ``idk``), and returns ``None`` for anything still
+    outside ``allowed`` so the caller can drop it from scoring rather than
+    miscount it.
+
+    A single-letter shorthand must be a standalone token: "n/a" and "y-axis"
+    stay unrecognized instead of becoming NO/YES from their first letter.
     """
     if isinstance(raw, Verdict):
         return raw if raw in allowed else None
-    match = re.match(
-        r"[a-z]+", str(raw if raw is not None else "").strip().lower()
-    )
+    text = str(raw if raw is not None else "").strip().lower()
+    match = re.match(r"[a-z]+", text)
     leading = match.group(0) if match else ""
-    verdict = LEGACY_VERDICT_ALIASES.get(leading)
+    if len(leading) == 1:
+        # The leading "word" is one letter; only accept it when it stands
+        # alone — "n/a", "y-axis" or "n2" are longer tokens, not shorthands.
+        rest = text[match.end() :]
+        if rest and (rest[0].isalnum() or rest[0] in "/-_"):
+            return None
+    verdict = QAG_VERDICT_ALIASES.get(leading)
     if verdict is None:
         try:
             verdict = Verdict(leading)
@@ -108,6 +117,57 @@ def _verdicts_from_json(
         if verdict is not None:
             verdicts.append(verdict)
     return verdicts
+
+
+def _record_qag_verdict_parse(
+    metric: Union[BaseMetric, BaseConversationalMetric],
+    received: int,
+    dropped: int,
+) -> None:
+    """Accumulate loose-JSON QAG parse diagnostics on the metric.
+
+    Counters aggregate across every QAG batch in one measurement and are
+    reset by ``prepare_measure()``. ``dropped`` counts entries excluded
+    because normalization returned ``None`` — unrecognized replies as well
+    as recognized ones outside the metric's allowed vocabulary.
+    """
+    metric.qag_verdicts_received_count = (
+        getattr(metric, "qag_verdicts_received_count", 0) + received
+    )
+    metric.qag_verdicts_dropped_count = (
+        getattr(metric, "qag_verdicts_dropped_count", 0) + dropped
+    )
+
+
+def _extract_qag_verdicts(
+    metric: Union[BaseMetric, BaseConversationalMetric],
+    data: Dict,
+    verdict_cls: Type[SchemaType],
+    allowed: Tuple[Verdict, ...],
+) -> List[SchemaType]:
+    """Loose-JSON list extractor for the QAG generation functions.
+
+    Keeps ``_verdicts_from_json`` a pure parser and records how many of the
+    returned entries were excluded, so a systematically unparseable judge
+    is visible instead of silently scoring the empty branch.
+    """
+    items = data.get("verdicts", []) or []
+    verdicts = _verdicts_from_json(data, verdict_cls, allowed)
+    _record_qag_verdict_parse(metric, len(items), len(items) - len(verdicts))
+    return verdicts
+
+
+def _extract_qag_verdict(
+    metric: Union[BaseMetric, BaseConversationalMetric],
+    data: Dict,
+    verdict_cls: Type[SchemaType],
+    allowed: Tuple[Verdict, ...],
+) -> Optional[SchemaType]:
+    """Loose-JSON single-verdict extractor; records the one entry as
+    received, and as dropped when it does not parse."""
+    verdict = verdict_from_json(data, verdict_cls, allowed)
+    _record_qag_verdict_parse(metric, 1, 0 if verdict is not None else 1)
+    return verdict
 
 
 def score_qag_verdicts(
@@ -266,8 +326,8 @@ def generate_qag_verdicts(
         prompt=prompt,
         schema_cls=verdicts_cls,
         extract_schema=lambda s: list(s.verdicts),
-        extract_json=lambda data: _verdicts_from_json(
-            data, verdict_cls, allowed
+        extract_json=lambda data: _extract_qag_verdicts(
+            metric, data, verdict_cls, allowed
         ),
     )
 
@@ -302,8 +362,8 @@ async def a_generate_qag_verdicts(
         prompt=prompt,
         schema_cls=verdicts_cls,
         extract_schema=lambda s: list(s.verdicts),
-        extract_json=lambda data: _verdicts_from_json(
-            data, verdict_cls, allowed
+        extract_json=lambda data: _extract_qag_verdicts(
+            metric, data, verdict_cls, allowed
         ),
     )
 
@@ -341,7 +401,9 @@ def generate_qag_verdict(
         prompt=prompt,
         schema_cls=verdict_cls,
         extract_schema=lambda s: s,
-        extract_json=lambda data: verdict_from_json(data, verdict_cls, allowed),
+        extract_json=lambda data: _extract_qag_verdict(
+            metric, data, verdict_cls, allowed
+        ),
     )
 
 
@@ -362,5 +424,7 @@ async def a_generate_qag_verdict(
         prompt=prompt,
         schema_cls=verdict_cls,
         extract_schema=lambda s: s,
-        extract_json=lambda data: verdict_from_json(data, verdict_cls, allowed),
+        extract_json=lambda data: _extract_qag_verdict(
+            metric, data, verdict_cls, allowed
+        ),
     )

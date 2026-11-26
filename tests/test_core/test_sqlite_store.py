@@ -848,7 +848,12 @@ class TestTestRunManagerIntegration:
 
         mgr.save_test_run_locally()  # must not raise
 
-        assert "disk I/O error" in capsys.readouterr().err
+        # The warning is printed via `rich.print` (see `test_run.py`), which
+        # word-wraps long lines — the error text may be split across lines
+        # depending on the tmp-path length. Collapse whitespace so the
+        # assertion is wrap-insensitive without weakening what it proves.
+        err = " ".join(capsys.readouterr().err.split())
+        assert "disk I/O error" in err
         assert mgr.last_saved_path is None
 
 

@@ -64,9 +64,19 @@ YES_NO_BORDERLINE: Tuple[Verdict, ...] = (
     Verdict.BORDERLINE,
 )
 
-# Older prompts used ``idk`` for the borderline bucket. Judges that saw a cached
-# or third-party copy of those prompts may still reply with it.
-LEGACY_VERDICT_ALIASES: Dict[str, Verdict] = {"idk": Verdict.BORDERLINE}
+# Aliases accepted when parsing loose-JSON judge replies. ``idk`` comes from
+# older prompts that used it for the borderline bucket; the rest are
+# conventional judge shorthand (``y``/``n`` and the uncertain words). The
+# allowed vocabulary still decides whether the resolved verdict is kept.
+QAG_VERDICT_ALIASES: Dict[str, Verdict] = {
+    "y": Verdict.YES,
+    "n": Verdict.NO,
+    "maybe": Verdict.BORDERLINE,
+    "unsure": Verdict.BORDERLINE,
+    "unknown": Verdict.BORDERLINE,
+    "partial": Verdict.BORDERLINE,
+    "idk": Verdict.BORDERLINE,
+}
 
 
 class PromptMixin:
@@ -139,6 +149,12 @@ class BaseMetric(PromptMixin):
     system_one_model: Optional[DeepEvalBaseSystemOneModel] = None
     confidence: Optional[float] = None
     system_one_fallback_reason: Optional[str] = None
+    # QAG verdict-parse diagnostics (see `deepeval.metrics.utils.qag`):
+    # how many loose-JSON verdict entries the judge returned in this
+    # measurement, and how many were excluded as unrecognized or outside the
+    # metric's allowed vocabulary. Reset by `prepare_measure()`.
+    qag_verdicts_received_count: int = 0
+    qag_verdicts_dropped_count: int = 0
     # Per-measure System One bookkeeping; reset by `reset_system_one_state`.
     _system_one_outcomes: Optional[list] = None
     _system_one_disabled: bool = False
@@ -230,6 +246,9 @@ class BaseConversationalMetric(PromptMixin):
     system_one_model: Optional[DeepEvalBaseSystemOneModel] = None
     confidence: Optional[float] = None
     system_one_fallback_reason: Optional[str] = None
+    # QAG verdict-parse diagnostics; see `BaseMetric`.
+    qag_verdicts_received_count: int = 0
+    qag_verdicts_dropped_count: int = 0
     _system_one_outcomes: Optional[list] = None
     _system_one_disabled: bool = False
 
