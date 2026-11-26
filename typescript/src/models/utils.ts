@@ -23,8 +23,15 @@ export function extractJson(text: string): unknown {
       "The evaluation model did not return valid JSON. Please use a more capable evaluation model.",
     );
   }
-  const candidate = text.slice(start, end + 1).replace(/,\s*([}\]])/g, "$1");
-  return JSON.parse(candidate);
+  const candidate = text.slice(start, end + 1);
+  try {
+    return JSON.parse(candidate);
+  } catch {
+    // Some models emit a trailing comma before a closing ] or }. Strip it and
+    // retry, but only after a direct parse fails, so valid JSON string values
+    // containing ", ]" or ", }" are never corrupted.
+    return JSON.parse(candidate.replace(/,\s*([}\]])/g, "$1"));
+  }
 }
 
 export function toJsonSchema(schema: ZodType): Record<string, unknown> {
