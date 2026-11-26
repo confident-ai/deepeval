@@ -160,18 +160,17 @@ A call with four agent replies, where one reply is much louder and another much 
 <VoiceDiagram
   duration={28}
   lanes={[
-    { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 3.0 }, { start: 7.1, end: 10.0 }, { start: 14.1, end: 17.0 }, { start: 21.1, end: 24.0 }] },
     { label: "Agent", role: "agent", clips: [{ start: 3.5, end: 6.5, label: "turn 1" }, { start: 10.5, end: 13.5, label: "turn 3" }, { start: 17.5, end: 20.5, label: "turn 5" }, { start: 24.5, end: 27.5, label: "turn 7" }], sounds: [{ start: 3.6, end: 6.3, level: 0.45 }, { start: 10.6, end: 13.3, level: 1 }, { start: 17.6, end: 20.3, level: 0.45 }, { start: 24.6, end: 27.3, level: 0.45 }] },
   ]}
   marks={[
-    { at: 5.0, lane: 1, tone: "ok", label: "clean" },
-    { at: 12.0, lane: 1, tone: "bad", label: "louder" },
-    { at: 19.0, lane: 1, tone: "bad", label: "higher pitch" },
-    { at: 26.0, lane: 1, tone: "ok", label: "clean" },
+    { at: 5.0, lane: 0, tone: "ok", label: "clean" },
+    { at: 12.0, lane: 0, tone: "bad", label: "louder" },
+    { at: 19.0, lane: 0, tone: "bad", label: "higher pitch" },
+    { at: 26.0, lane: 0, tone: "ok", label: "clean" },
   ]}
   highlights={[
-    { start: 10.6, end: 13.3, lane: 1 },
-    { start: 17.6, end: 20.3, lane: 1 },
+    { start: 10.6, end: 13.3, lane: 0 },
+    { start: 17.6, end: 20.3, lane: 0 },
   ]}
 />
 

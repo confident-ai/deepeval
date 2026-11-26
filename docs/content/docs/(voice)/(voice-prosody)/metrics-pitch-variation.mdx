@@ -139,12 +139,11 @@ The metric reads per-turn audio, one agent clip at a time, or replies cut from s
 <VoiceDiagram
   duration={7}
   lanes={[
-    { label: "Caller", role: "caller" },
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 6.5, label: "turn 3" }], sounds: [{ start: 0.6, end: 3.8 }, { start: 5.6, end: 6.3 }] },
   ]}
   brackets={[
-    { start: 0.5, end: 4.0, lane: 1, label: "reply 1" },
-    { start: 5.5, end: 6.5, lane: 1, tone: "skip", label: "too short" },
+    { start: 0.5, end: 4.0, lane: 0, label: "reply 1" },
+    { start: 5.5, end: 6.5, lane: 0, tone: "skip", label: "too short" },
   ]}
 />
 
@@ -174,15 +173,14 @@ A call with five agent replies: two sound natural, one is read flat, one swings 
 <VoiceDiagram
   duration={24}
   lanes={[
-    { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 1.5 }, { start: 5.6, end: 6.5 }, { start: 10.6, end: 11.5 }, { start: 15.6, end: 16.5 }] },
     { label: "Agent", role: "agent", clips: [{ start: 2, end: 5, label: "turn 1" }, { start: 7, end: 10, label: "turn 3" }, { start: 12, end: 15, label: "turn 5" }, { start: 17, end: 20, label: "turn 7" }, { start: 22, end: 24, label: "turn 9" }], sounds: [{ start: 2.1, end: 4.8 }, { start: 7.0, end: 10.0, ending: "flat" }, { start: 12.1, end: 14.8 }, { start: 17.1, end: 19.8 }, { start: 22.05, end: 22.7 }] },
   ]}
   highlights={[
-    { start: 7.0, end: 10.0, lane: 1 },
-    { start: 12.1, end: 14.8, lane: 1 },
+    { start: 7.0, end: 10.0, lane: 0 },
+    { start: 12.1, end: 14.8, lane: 0 },
   ]}
   marks={[
-    { at: 22.4, lane: 1, tone: "skip", label: "skipped" },
+    { at: 22.4, lane: 0, tone: "skip", label: "skipped" },
   ]}
 />
 
