@@ -342,7 +342,7 @@ The built-in metrics cover common failure modes, but your application likely has
 
 ```python
 from deepeval import evaluate
-from deepeval.test_case import Turn, ConversationalTestCase
+from deepeval.test_case import Turn, ConversationalTestCase, MultiTurnParams
 from deepeval.metrics import ConversationalGEval
 
 convo_test_case = ConversationalTestCase(
@@ -356,11 +356,13 @@ convo_test_case = ConversationalTestCase(
 
 empathy = ConversationalGEval(
     name="Empathy",
+    evaluation_params=[MultiTurnParams.CONTENT],
     criteria="Evaluate whether the assistant shows genuine empathy when the user expresses frustration or dissatisfaction."
 )
 
 de_escalation = ConversationalGEval(
     name="De-escalation",
+    evaluation_params=[MultiTurnParams.CONTENT],
     criteria="Evaluate whether the assistant effectively de-escalates tense situations by acknowledging concerns and offering concrete solutions."
 )
 
