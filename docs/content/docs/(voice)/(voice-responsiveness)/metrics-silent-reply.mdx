@@ -129,12 +129,13 @@ The metric scores each agent reply on its own. The caller's audio is only used t
 <VoiceDiagram
   duration={10}
   lanes={[
+    { label: "Caller", role: "caller" },
     { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 2.8 }, { start: 6.6, end: 9.2 }], sounds: [{ start: 0.5, end: 2.6 }, { start: 6.7, end: 9.0 }] },
   ]}
   marks={[
-    { at: 1.6, lane: 0, tone: "info", label: "counted" },
-    { at: 4.5, lane: 0, tone: "info", label: "text only: counted" },
-    { at: 7.8, lane: 0, tone: "info", label: "counted" },
+    { at: 1.6, lane: 1, tone: "info", label: "counted" },
+    { at: 4.5, lane: 1, tone: "info", label: "text only: counted" },
+    { at: 7.8, lane: 1, tone: "info", label: "counted" },
   ]}
 />
 
@@ -150,15 +151,16 @@ A silent clip is also not counted when it was stamped in the wrong place, so its
 <VoiceDiagram
   duration={10}
   lanes={[
+    { label: "Caller", role: "caller" },
     { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 2.8 }, { start: 6.6, end: 9.2 }], sounds: [{ start: 0.5, end: 2.6 }, { start: 6.7, end: 9.0, silent: true }] },
   ]}
   marks={[
-    { at: 2.6, lane: 0, tone: "ok", label: "heard" },
-    { at: 4.5, lane: 0, tone: "bad", label: "no audio" },
-    { at: 9.0, lane: 0, tone: "bad", label: "no speech" },
+    { at: 2.6, lane: 1, tone: "ok", label: "heard" },
+    { at: 4.5, lane: 1, tone: "bad", label: "no audio" },
+    { at: 9.0, lane: 1, tone: "bad", label: "no speech" },
   ]}
   highlights={[
-    { start: 6.7, end: 9.0, lane: 0 },
+    { start: 6.7, end: 9.0, lane: 1 },
   ]}
 />
 
@@ -179,16 +181,17 @@ A short call where one reply was never played and another was played as silence.
 <VoiceDiagram
   duration={20}
   lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 2.5 }, { start: 5.6, end: 7.0 }, { start: 10.1, end: 11.5 }, { start: 14.6, end: 17.5 }] },
     { label: "Agent", role: "agent", clips: [{ start: 3.0, end: 5.0, label: "turn 1" }, { start: 12.0, end: 14.0, label: "turn 5" }, { start: 18.0, end: 20.0, label: "turn 7" }], sounds: [{ start: 3.0, end: 4.75 }, { start: 12.0, end: 14.0, silent: true }, { start: 18.0, end: 19.75 }] },
   ]}
   marks={[
-    { at: 4.0, lane: 0, tone: "ok", label: "heard" },
-    { at: 8.5, lane: 0, tone: "bad", label: "no audio" },
-    { at: 13.0, lane: 0, tone: "bad", label: "no speech" },
-    { at: 19.0, lane: 0, tone: "ok", label: "heard" },
+    { at: 4.0, lane: 1, tone: "ok", label: "heard" },
+    { at: 8.5, lane: 1, tone: "bad", label: "no audio" },
+    { at: 13.0, lane: 1, tone: "bad", label: "no speech" },
+    { at: 19.0, lane: 1, tone: "ok", label: "heard" },
   ]}
   highlights={[
-    { start: 12.0, end: 14.0, lane: 0 },
+    { start: 12.0, end: 14.0, lane: 1 },
   ]}
 />
 

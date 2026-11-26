@@ -196,14 +196,15 @@ A reply counts if any part counted it, and is flagged if any part flagged it. So
 <VoiceDiagram
   duration={10}
   lanes={[
+    { label: "Caller", role: "caller" },
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.5, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 4.3 }, { start: 5.7, end: 7.0 }, { start: 7.0, end: 7.24, silent: true }, { start: 7.24, end: 8.6, ending: "cut" }] },
   ]}
   highlights={[
-    { start: 7.0, end: 7.24, lane: 0 },
+    { start: 7.0, end: 7.24, lane: 1 },
   ]}
   marks={[
-    { at: 7.12, lane: 0, tone: "bad", label: "dropout" },
-    { at: 8.6, lane: 0, tone: "bad", label: "cut off" },
+    { at: 7.12, lane: 1, tone: "bad", label: "dropout" },
+    { at: 8.6, lane: 1, tone: "bad", label: "cut off" },
   ]}
 />
 
@@ -231,17 +232,18 @@ A call where four of five agent replies have a problem, and one has two. Each ro
 <VoiceDiagram
   duration={24}
   lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 2.0 }, { start: 5.1, end: 7.0 }, { start: 10.72, end: 11.62 }, { start: 15.72, end: 17.62 }, { start: 20.94, end: 21.8 }] },
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.12, label: "turn 3" }, { start: 12.12, end: 15.12, label: "turn 5" }, { start: 18.12, end: 20.24, label: "turn 7" }, { start: 22.3, end: 24, label: "turn 9" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 9.12, ending: "cut" }, { start: 12.12, end: 13.37 }, { start: 13.37, end: 14.13 }, { start: 14.13, end: 14.87 }, { start: 18.12, end: 19.22 }, { start: 19.22, end: 19.46, silent: true }, { start: 19.46, end: 20.24, ending: "cut" }] },
   ]}
   highlights={[
-    { start: 13.37, end: 14.13, lane: 0 },
-    { start: 19.22, end: 19.46, lane: 0 },
-    { start: 22.3, end: 24, lane: 0 },
+    { start: 13.37, end: 14.13, lane: 1 },
+    { start: 19.22, end: 19.46, lane: 1 },
+    { start: 22.3, end: 24, lane: 1 },
   ]}
   marks={[
-    { at: 9.12, lane: 0, tone: "bad", label: "cut off" },
-    { at: 19.34, lane: 0, tone: "bad", label: "dropout, cut" },
-    { at: 23.6, lane: 0, tone: "bad", label: "no audio" },
+    { at: 9.12, lane: 1, tone: "bad", label: "cut off" },
+    { at: 19.34, lane: 1, tone: "bad", label: "dropout, cut" },
+    { at: 23.6, lane: 1, tone: "bad", label: "no audio" },
   ]}
 />
 

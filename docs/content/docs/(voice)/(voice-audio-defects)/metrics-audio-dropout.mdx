@@ -106,11 +106,12 @@ The `AudioDropoutMetric` score is calculated according to the following equation
 <VoiceDiagram
   duration={10}
   lanes={[
+    { label: "Caller", role: "caller" },
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
   ]}
   brackets={[
-    { start: 0.5, end: 4.0, lane: 0, label: "reply 1" },
-    { start: 5.5, end: 9.5, lane: 0, label: "reply 2" },
+    { start: 0.5, end: 4.0, lane: 1, label: "reply 1" },
+    { start: 5.5, end: 9.5, lane: 1, label: "reply 2" },
   ]}
 />
 
@@ -123,14 +124,15 @@ A dropout is a short gap where the sound falls away in the middle of speech. A p
 <VoiceDiagram
   duration={6}
   lanes={[
+    { label: "Caller", role: "caller" },
     { label: "Agent", role: "agent", sounds: [{ start: 0.3, end: 1.6 }, { start: 1.6, end: 1.85, level: 0.08, ending: "flat" }, { start: 1.85, end: 3.4 }, { start: 3.4, end: 3.5, silent: true }, { start: 3.5, end: 5.6 }] },
   ]}
   highlights={[
-    { start: 3.4, end: 3.5, lane: 0 },
+    { start: 3.4, end: 3.5, lane: 1 },
   ]}
   marks={[
-    { at: 1.72, lane: 0, tone: "ok", label: "pause" },
-    { at: 3.45, lane: 0, tone: "bad", label: "dropout" },
+    { at: 1.72, lane: 1, tone: "ok", label: "pause" },
+    { at: 3.45, lane: 1, tone: "bad", label: "dropout" },
   ]}
 />
 
@@ -158,14 +160,15 @@ A call where the agent's audio drops out in one of four replies. Each row is one
 <VoiceDiagram
   duration={21}
   lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 2.0 }, { start: 5.1, end: 7.0 }, { start: 10.25, end: 12.15 }, { start: 15.75, end: 17.65 }] },
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.65, label: "turn 3" }, { start: 12.65, end: 15.15, label: "turn 5" }, { start: 18.15, end: 20.15, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 8.5 }, { start: 8.5, end: 8.65, level: 0.08, ending: "flat" }, { start: 8.65, end: 9.4 }, { start: 12.65, end: 13.75 }, { start: 13.75, end: 13.99, silent: true }, { start: 13.99, end: 14.9 }, { start: 18.15, end: 19.9 }] },
   ]}
   highlights={[
-    { start: 13.75, end: 13.99, lane: 0 },
+    { start: 13.75, end: 13.99, lane: 1 },
   ]}
   marks={[
-    { at: 8.57, lane: 0, tone: "ok", label: "clean: pause" },
-    { at: 13.87, lane: 0, tone: "bad", label: "dropout" },
+    { at: 8.57, lane: 1, tone: "ok", label: "clean: pause" },
+    { at: 13.87, lane: 1, tone: "bad", label: "dropout" },
   ]}
 />
 

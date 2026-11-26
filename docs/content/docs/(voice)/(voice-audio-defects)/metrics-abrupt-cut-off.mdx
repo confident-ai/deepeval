@@ -183,10 +183,11 @@ In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-wit
 <VoiceDiagram
   duration={8}
   lanes={[
+    { label: "Caller", role: "caller" },
     { label: "Agent", role: "agent", sounds: [{ start: 0.5, end: 4.2, ending: "cut" }, { start: 5.6, end: 7.6 }] },
   ]}
-  windows={[{ start: 1.7, end: 6.7, lanes: [0], tone: "info" }]}
-  marks={[{ at: 4.2, lane: 0, tone: "bad", label: "cut-off" }]}
+  windows={[{ start: 1.7, end: 6.7, lanes: [1], tone: "info" }]}
+  marks={[{ at: 4.2, lane: 1, tone: "bad", label: "cut-off" }]}
   caption="The shaded 5 seconds around the cut-off is the clip the model hears."
 />
 

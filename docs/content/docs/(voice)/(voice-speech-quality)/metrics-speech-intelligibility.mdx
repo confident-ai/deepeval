@@ -157,16 +157,17 @@ A call with five agent replies: three clean, one over a noisy line, and one too 
 <VoiceDiagram
   duration={35}
   lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 3.0 }, { start: 7.1, end: 10.0 }, { start: 14.1, end: 17.0 }, { start: 21.1, end: 23.7 }, { start: 26.8, end: 31.0 }] },
     { label: "Agent", role: "agent", clips: [{ start: 3.5, end: 6.5, label: "turn 1" }, { start: 10.5, end: 13.5, label: "turn 3" }, { start: 17.5, end: 20.5, label: "turn 5" }, { start: 24.5, end: 26.0 }, { start: 31.5, end: 34.5, label: "turn 9" }], sounds: [{ start: 3.6, end: 6.3 }, { start: 10.6, end: 13.3 }, { start: 17.6, end: 20.3, level: 0.25 }, { start: 24.6, end: 25.8 }, { start: 31.6, end: 34.3 }] },
   ]}
   marks={[
-    { at: 12.0, lane: 0, tone: "bad", label: "noisy" },
-    { at: 19.0, lane: 0, tone: "bad", label: "too quiet" },
-    { at: 25.2, lane: 0, tone: "skip", label: "turn 7: short" },
+    { at: 12.0, lane: 1, tone: "bad", label: "noisy" },
+    { at: 19.0, lane: 1, tone: "bad", label: "too quiet" },
+    { at: 25.2, lane: 1, tone: "skip", label: "turn 7: short" },
   ]}
   highlights={[
-    { start: 10.6, end: 13.3, lane: 0 },
-    { start: 17.6, end: 20.3, lane: 0 },
+    { start: 10.6, end: 13.3, lane: 1 },
+    { start: 17.6, end: 20.3, lane: 1 },
   ]}
 />
 

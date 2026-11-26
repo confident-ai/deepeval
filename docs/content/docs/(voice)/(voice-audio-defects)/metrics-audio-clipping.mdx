@@ -116,11 +116,12 @@ The `AudioClippingMetric` score is calculated according to the following equatio
 <VoiceDiagram
   duration={10}
   lanes={[
+    { label: "Caller", role: "caller" },
     { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
   ]}
   brackets={[
-    { start: 0.5, end: 4.0, lane: 0, label: "reply 1" },
-    { start: 5.5, end: 9.5, lane: 0, label: "reply 2" },
+    { start: 0.5, end: 4.0, lane: 1, label: "reply 1" },
+    { start: 5.5, end: 9.5, lane: 1, label: "reply 2" },
   ]}
 />
 
@@ -133,14 +134,15 @@ Audio that's too loud hits the top of what a 16-bit sample can hold, and gets fl
 <VoiceDiagram
   duration={8}
   lanes={[
+    { label: "Caller", role: "caller" },
     { label: "Agent", role: "agent", sounds: [{ start: 0.3, end: 3.6, level: 0.8 }, { start: 4.4, end: 7.6, level: 1, ending: "flat" }] },
   ]}
   highlights={[
-    { start: 4.4, end: 7.6, lane: 0 },
+    { start: 4.4, end: 7.6, lane: 1 },
   ]}
   marks={[
-    { at: 2.0, lane: 0, tone: "ok", label: "loud" },
-    { at: 6.0, lane: 0, tone: "bad", label: "clipped" },
+    { at: 2.0, lane: 1, tone: "ok", label: "loud" },
+    { at: 6.0, lane: 1, tone: "bad", label: "clipped" },
   ]}
 />
 
@@ -160,13 +162,14 @@ A call where one of four agent replies is pushed far past full volume. Each row 
 <VoiceDiagram
   duration={20}
   lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 2.0 }, { start: 5.1, end: 7.0 }, { start: 10.1, end: 12.0 }, { start: 15.1, end: 17.0 }] },
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.5, label: "turn 3" }, { start: 12.5, end: 14.5, label: "turn 5" }, { start: 17.5, end: 19.5, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25, level: 0.5 }, { start: 7.5, end: 9.25, level: 0.85 }, { start: 12.5, end: 14.25, level: 1, ending: "flat" }, { start: 17.5, end: 19.25, level: 0.5 }] },
   ]}
   highlights={[
-    { start: 12.5, end: 14.25, lane: 0 },
+    { start: 12.5, end: 14.25, lane: 1 },
   ]}
   marks={[
-    { at: 8.5, lane: 0, tone: "ok", label: "clean: loud" },
+    { at: 8.5, lane: 1, tone: "ok", label: "clean: loud" },
   ]}
 />
 

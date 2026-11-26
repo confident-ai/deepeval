@@ -122,12 +122,13 @@ The `BackgroundNoiseMetric` score is calculated according to the following equat
 <VoiceDiagram
   duration={10}
   lanes={[
+    { label: "Caller", role: "caller" },
     { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 3.2, label: "turn 1" }, { start: 4.0, end: 5.4, label: "turn 3" }, { start: 6.6, end: 9.8, label: "turn 5" }], sounds: [{ start: 0.3, end: 3.0 }, { start: 4.1, end: 5.2 }, { start: 6.7, end: 9.6 }] },
   ]}
   brackets={[
-    { start: 0.2, end: 3.2, lane: 0, label: "reply 1" },
-    { start: 4.0, end: 5.4, lane: 0, tone: "skip", label: "too short" },
-    { start: 6.6, end: 9.8, lane: 0, label: "reply 2" },
+    { start: 0.2, end: 3.2, lane: 1, label: "reply 1" },
+    { start: 4.0, end: 5.4, lane: 1, tone: "skip", label: "too short" },
+    { start: 6.6, end: 9.8, lane: 1, label: "reply 2" },
   ]}
 />
 
@@ -187,13 +188,14 @@ A call where one agent reply has a loud hiss behind it and one is too short to m
 <VoiceDiagram
   duration={22}
   lanes={[
+    { label: "Caller", role: "caller", sounds: [{ start: 0.2, end: 2.0 }, { start: 6.1, end: 8.0 }, { start: 12.1, end: 13.75 }, { start: 16.85, end: 18.5 }] },
     { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 5.5, label: "turn 1" }, { start: 8.5, end: 11.5, label: "turn 3" }, { start: 14.5, end: 16.0, label: "turn 5" }, { start: 19.0, end: 22.0, label: "turn 7" }], sounds: [{ start: 2.6, end: 5.3 }, { start: 8.5, end: 11.5, ending: "flat" }, { start: 14.6, end: 15.8 }, { start: 19.1, end: 21.8 }] },
   ]}
   highlights={[
-    { start: 8.5, end: 11.5, lane: 0 },
+    { start: 8.5, end: 11.5, lane: 1 },
   ]}
   marks={[
-    { at: 15.25, lane: 0, tone: "skip", label: "too short" },
+    { at: 15.25, lane: 1, tone: "skip", label: "too short" },
   ]}
 />
 
