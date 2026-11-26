@@ -62,6 +62,13 @@ jobs:
         run: poetry install --no-interaction --only main
 
       #----------------------------------------------
+      #    install dev dependencies (the metric tests import
+      #    anthropic and google-genai, which are dev-only)
+      #----------------------------------------------
+      - name: Install dev dependencies
+        run: poetry install --no-interaction --with dev
+
+      #----------------------------------------------
       #    Install Pillow for PIL, mcp[cli], numpy and onnxruntime
       #----------------------------------------------
       - name: Install metric dependencies
