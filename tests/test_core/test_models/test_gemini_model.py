@@ -1,9 +1,11 @@
+import asyncio
 from types import SimpleNamespace
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from pydantic import SecretStr
+from pydantic import BaseModel, SecretStr
 
+from deepeval.errors import DeepEvalError
 from deepeval.models.llms.constants import GEMINI_MODELS_DATA
 from deepeval.models.llms.gemini_model import GeminiModel
 from deepeval.models.utils import EvaluationCost
@@ -570,3 +572,75 @@ def test_gemini_custom_cost_used_in_generate(mock_require_dep, settings):
     assert abs(float(cost) - expected) < 1e-12
     assert cost.input_tokens == 100
     assert cost.output_tokens == 50
+
+
+class _Schema(BaseModel):
+    field: int
+
+
+_USAGE = SimpleNamespace(prompt_token_count=1, candidates_token_count=1)
+
+
+def _structured_model(mock_require_dep, settings, response):
+    model = _build_gemini_model_with_fake_client(
+        mock_require_dep, settings, response
+    )
+    client = model.load_model()
+    client.aio.models.generate_content = AsyncMock(return_value=response)
+    return model
+
+
+def _run_sync(model, schema):
+    return model.generate("p", schema=schema)
+
+
+def _run_async(model, schema):
+    return asyncio.run(model.a_generate("p", schema=schema))
+
+
+@pytest.mark.parametrize("run", [_run_sync, _run_async])
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_structured_output_returns_parsed_as_is(
+    mock_require_dep, settings, run
+):
+    parsed = _Schema(field=7)
+    response = SimpleNamespace(
+        parsed=parsed, text='{"field": 1}', usage_metadata=_USAGE
+    )
+    model = _structured_model(mock_require_dep, settings, response)
+
+    output, _ = run(model, _Schema)
+
+    assert output is parsed
+
+
+@pytest.mark.parametrize("run", [_run_sync, _run_async])
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_structured_output_falls_back_to_text_when_parsed_is_none(
+    mock_require_dep, settings, run
+):
+    response = SimpleNamespace(
+        parsed=None,
+        text='```json\n{"field": 1}\n```',
+        usage_metadata=_USAGE,
+    )
+    model = _structured_model(mock_require_dep, settings, response)
+
+    output, _ = run(model, _Schema)
+
+    assert isinstance(output, _Schema)
+    assert output.field == 1
+
+
+@pytest.mark.parametrize("run", [_run_sync, _run_async])
+@patch("deepeval.models.llms.gemini_model.require_dependency")
+def test_gemini_structured_output_raises_on_invalid_json_text(
+    mock_require_dep, settings, run
+):
+    response = SimpleNamespace(
+        parsed=None, text="not json at all", usage_metadata=_USAGE
+    )
+    model = _structured_model(mock_require_dep, settings, response)
+
+    with pytest.raises(DeepEvalError):
+        run(model, _Schema)

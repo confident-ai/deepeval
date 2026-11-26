@@ -15,6 +15,7 @@ from deepeval.models.retry_policy import (
 )
 from deepeval.utils import require_dependency
 from deepeval.models.base_model import DeepEvalBaseLLM
+from deepeval.models.llms.utils import trim_and_load_json
 from deepeval.models.llms.multimodal import (
     audio_format,
     decode_image,
@@ -276,7 +277,10 @@ class GeminiModel(DeepEvalBaseLLM):
                     **self.generation_kwargs,
                 ),
             )
-            return response.parsed, self._token_cost(response)
+            return (
+                self._structured_output(response, schema),
+                self._token_cost(response),
+            )
         else:
             response = client.models.generate_content(
                 model=self.name,
@@ -322,7 +326,10 @@ class GeminiModel(DeepEvalBaseLLM):
                     **self.generation_kwargs,
                 ),
             )
-            return response.parsed, self._token_cost(response)
+            return (
+                self._structured_output(response, schema),
+                self._token_cost(response),
+            )
         else:
             response = await client.aio.models.generate_content(
                 model=self.name,
@@ -338,6 +345,12 @@ class GeminiModel(DeepEvalBaseLLM):
     ###############################################
     # Utilities
     ###############################################
+
+    def _structured_output(self, response, schema):
+        parsed = response.parsed
+        if parsed is not None:
+            return parsed
+        return schema.model_validate(trim_and_load_json(response.text))
 
     def _temperature_kwargs(self) -> Dict:
         # Google warns that temperatures below the default 1.0 make Gemini 3
