@@ -158,8 +158,6 @@ class AgentLoopDetectionMetric(BaseMetric):
             None,
             None,
             self,
-            self.model,
-            test_case.multimodal,
         )
 
         self.evaluation_cost = 0
@@ -193,8 +191,6 @@ class AgentLoopDetectionMetric(BaseMetric):
             None,
             None,
             self,
-            self.model,
-            test_case.multimodal,
         )
 
         self.evaluation_cost = 0
