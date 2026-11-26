@@ -25,6 +25,27 @@ FAKE_NAMES = [
 ]
 
 
+def _tool_call_to_dict(tool: ToolCall) -> Dict:
+    # The same fields as ToolCall.__repr__, nested as an object so the outer
+    # json.dumps escapes the tool's text once instead of twice.
+    data = {"name": tool.name}
+    if tool.type:
+        data["type"] = tool.type.value
+    if tool.description:
+        data["description"] = tool.description
+    if tool.reasoning:
+        data["reasoning"] = tool.reasoning
+    if tool.turn is not None:
+        data["turn"] = tool.turn
+    if tool.input_parameters:
+        data["input_parameters"] = tool.input_parameters
+    if isinstance(tool.output, (dict, str)):
+        data["output"] = tool.output
+    elif tool.output is not None:
+        data["output"] = repr(tool.output)
+    return data
+
+
 @dataclass
 class FormattedLLMTestCase:
     actual_output: Optional[str] = None
@@ -42,10 +63,12 @@ class FormattedLLMTestCase:
         if self.retrieval_context is not None:
             data["retrieval_context"] = self.retrieval_context
         if self.tools_called is not None:
-            data["tools_called"] = [repr(tool) for tool in self.tools_called]
+            data["tools_called"] = [
+                _tool_call_to_dict(tool) for tool in self.tools_called
+            ]
         if self.expected_tools is not None:
             data["expected_tools"] = [
-                repr(tool) for tool in self.expected_tools
+                _tool_call_to_dict(tool) for tool in self.expected_tools
             ]
         return data
 

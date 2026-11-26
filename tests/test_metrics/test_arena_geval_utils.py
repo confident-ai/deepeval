@@ -6,6 +6,7 @@ from deepeval.test_case import (
     Contestant,
     LLMTestCase,
     SingleTurnParams,
+    ToolCall,
 )
 
 KOREAN_INPUT = "서울의 날씨는 어때요?"
@@ -80,3 +81,44 @@ def test_single_test_case_repr_is_readable_json():
 
     assert "\\u" not in text
     assert json.loads(text)["actual_output"] in (KOREAN_OUTPUT, OTHER_OUTPUT)
+
+
+def test_tool_calls_are_nested_as_objects_and_escaped_once():
+    tool = ToolCall(
+        name="검색",
+        input_parameters={"q": '서울 "날씨"\n오늘'},
+        output='결과\n"맑음"',
+    )
+    test_case = ArenaTestCase(
+        contestants=[
+            Contestant(
+                name="Version 1",
+                test_case=LLMTestCase(
+                    input=KOREAN_INPUT,
+                    actual_output=OTHER_OUTPUT,
+                    tools_called=[tool],
+                    expected_tools=[tool],
+                ),
+            ),
+        ]
+    )
+    formatted, _ = format_arena_test_case(
+        [SingleTurnParams.TOOLS_CALLED, SingleTurnParams.EXPECTED_TOOLS],
+        test_case,
+    )
+
+    prompt = repr(formatted)
+    contestant = next(iter(json.loads(prompt)["arena_test_cases"].values()))
+
+    for field in ("tools_called", "expected_tools"):
+        assert contestant[field] == [
+            {
+                "name": "검색",
+                "type": "FUNCTION",
+                "input_parameters": {"q": '서울 "날씨"\n오늘'},
+                "output": '결과\n"맑음"',
+            }
+        ]
+    assert '\\\\"' not in prompt
+    assert "\\\\n" not in prompt
+    assert "\\u" not in prompt
