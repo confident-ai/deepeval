@@ -14,6 +14,9 @@ from deepeval.test_case import (
     ConversationalTestCase,
     ToolCall,
     RetrievedContextData,
+    MCPPromptCall,
+    MCPResourceCall,
+    MCPToolCall,
 )
 
 
@@ -352,6 +355,47 @@ class TestSaveAndLoad:
             assert len(rc) == 1
             assert isinstance(rc[0], RetrievedContextData)
             assert rc[0].source == "s" and rc[0].context == "c"
+
+    @pytest.mark.parametrize("file_type", ["json", "jsonl", "csv"])
+    def test_save_as_round_trips_mcp_calls(self, tmp_path, file_type):
+        mcp = pytest.importorskip("mcp.types")
+        turn = Turn(
+            role="assistant",
+            content="Rain is expected.",
+            mcp_tools_called=[
+                MCPToolCall(
+                    name="get_weather",
+                    args={"city": "Chicago"},
+                    result=mcp.CallToolResult(
+                        content=[mcp.TextContent(type="text", text="Rain")],
+                        structuredContent={"forecast": "rain"},
+                    ),
+                )
+            ],
+            mcp_resources_called=[
+                MCPResourceCall(
+                    uri="weather://forecast",
+                    result=mcp.ReadResourceResult(contents=[]),
+                )
+            ],
+            mcp_prompts_called=[
+                MCPPromptCall(
+                    name="summarize_weather",
+                    result=mcp.GetPromptResult(messages=[]),
+                )
+            ],
+        )
+        dataset = EvaluationDataset(
+            goldens=[
+                ConversationalGolden(scenario="Weather forecast", turns=[turn])
+            ]
+        )
+        path = dataset.save_as(file_type, directory=str(tmp_path))
+
+        imported = EvaluationDataset()
+        getattr(imported, f"add_goldens_from_{file_type}_file")(path)
+
+        assert imported.goldens[0].turns == [turn]
 
     def test_save_as_includes_turn_fields_in_multi_turn_json_and_jsonl(self):
         """Multi-turn JSON/JSONL include full turn fields (user_id, tools)."""

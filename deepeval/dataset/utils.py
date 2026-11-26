@@ -10,6 +10,9 @@ from deepeval.dataset.golden import ConversationalGolden, Persona
 from deepeval.test_case import (
     LLMTestCase,
     ConversationalTestCase,
+    MCPPromptCall,
+    MCPResourceCall,
+    MCPToolCall,
     Turn,
     RetrievedContextData,
 )
@@ -285,6 +288,37 @@ def format_turns(turns: List[Turn]) -> str:
         raise ValueError(f"Error serializing turns: {e}")
 
 
+def _restore_mcp_calls(turn: Dict[str, Any]) -> None:
+    if not any(
+        turn.get(field)
+        for field in (
+            "mcp_tools_called",
+            "mcp_resources_called",
+            "mcp_prompts_called",
+        )
+    ):
+        return
+
+    # The MCP SDK is optional for datasets without recorded calls.
+    from mcp.types import CallToolResult, GetPromptResult, ReadResourceResult
+
+    for field, call_type, result_type in (
+        ("mcp_tools_called", MCPToolCall, CallToolResult),
+        ("mcp_resources_called", MCPResourceCall, ReadResourceResult),
+        ("mcp_prompts_called", MCPPromptCall, GetPromptResult),
+    ):
+        calls = turn.get(field)
+        if not isinstance(calls, list):
+            continue
+        restored = []
+        for call in calls:
+            if isinstance(call, dict):
+                result = result_type.model_validate(call.get("result"))
+                call = call_type.model_validate({**call, "result": result})
+            restored.append(call)
+        turn[field] = restored
+
+
 def parse_turns(turns_str: Any) -> List[Turn]:
     # Accept either a JSON string or a Python list
     if isinstance(turns_str, str):
@@ -311,10 +345,12 @@ def parse_turns(turns_str: Any) -> List[Turn]:
         if "content" not in turn or not isinstance(turn["content"], str):
             raise ValueError(f"Turn at index {i} is missing a valid 'content'.")
 
+        turn = turn.copy()
         if "retrieval_context" in turn:
             turn["retrieval_context"] = reconstruct_retrieval_context(
                 turn["retrieval_context"]
             )
+        _restore_mcp_calls(turn)
 
         try:
             # Pydantic v2
