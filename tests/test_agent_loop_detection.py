@@ -370,3 +370,75 @@ def test_reordered_stagnation_detected():
 
     # SequenceMatcher should push the similarity above 0.75
     assert metric.score_breakdown["reasoning_stagnation"] < 1.0
+
+
+# ---------------------------------------------------------------------------
+# Test 11: Documented standalone example scores 0.60 (issue #3744)
+# ---------------------------------------------------------------------------
+
+
+def test_documented_standalone_example_scores_060():
+    """Six identical tool calls score 0.60, as the docs now state.
+
+    The breakdown is {tool_repetition: 0.0, reasoning_stagnation: 1.0,
+    call_graph_cycles: 1.0}, so the weighted mean is
+    0.0 x 0.40 + 1.0 x 0.35 + 1.0 x 0.25 = 0.60. The docs previously
+    printed 0.25 for this example. At the default threshold of 0.5 the
+    trace still passes; whether a single 0.0 sub-signal should fail is
+    a design question left open in #3744.
+    """
+    trace = _make_agent_span(
+        "a",
+        [_make_tool_span("search_web", {"q": "weather"}) for _ in range(6)],
+    )
+    metric = AgentLoopDetectionMetric(async_mode=False)
+    tc = _make_test_case(trace)
+    metric._calculate_metric(tc)
+
+    assert metric.score_breakdown == {
+        "tool_repetition": 0.0,
+        "reasoning_stagnation": 1.0,
+        "call_graph_cycles": 1.0,
+    }
+    assert metric.score == pytest.approx(0.60)
+    assert metric.success is True
+
+
+# ---------------------------------------------------------------------------
+# Test 12: Documented recursive cycle scores 0.75 (issue #3744)
+# ---------------------------------------------------------------------------
+
+
+def test_documented_recursive_cycle_scores_075():
+    """A recursive agent cycle scores 0.75, as the docs now state.
+
+    The breakdown is {tool_repetition: 1.0, reasoning_stagnation: 1.0,
+    call_graph_cycles: 0.0}, so the weighted mean is
+    1.0 x 0.40 + 1.0 x 0.35 + 0.0 x 0.25 = 0.75.
+    """
+    trace = _make_agent_span(
+        "a",
+        [
+            {
+                "type": "agent",
+                "name": "a",
+                "input": "go",
+                "output": "go",
+                "children": [],
+            }
+        ],
+    )
+    # The root agent span itself carries input "user query" from the
+    # helper, so rebuild it with the issue's input to match the cycle.
+    trace["input"] = "go"
+    metric = AgentLoopDetectionMetric(async_mode=False)
+    tc = _make_test_case(trace)
+    metric._calculate_metric(tc)
+
+    assert metric.score_breakdown == {
+        "tool_repetition": 1.0,
+        "reasoning_stagnation": 1.0,
+        "call_graph_cycles": 0.0,
+    }
+    assert metric.score == pytest.approx(0.75)
+    assert metric.success is True
