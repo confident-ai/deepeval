@@ -59,6 +59,19 @@ def test_absence_uses_the_classifier_name():
     assert _is_absence_label("No Topic", "topics")
 
 
+@pytest.mark.parametrize(
+    "name, classifier_name",
+    [
+        ("No Access", "Access"),
+        ("No Progress", "Progress"),
+        ("No Helpfulness Issues", "Helpfulness"),
+        ("No Instruction Completeness", "Instruction Completeness"),
+    ],
+)
+def test_absence_for_classifier_names_ending_in_double_s(name, classifier_name):
+    assert _is_absence_label(name, classifier_name)
+
+
 def test_marker_in_reason_alone_is_not_a_truncation_claim():
     reason = "Agent said 7 days; the tool output, cut at …[truncated], says 30."
     assert not blames_truncation_marker("policy_misquote", None, reason, [])

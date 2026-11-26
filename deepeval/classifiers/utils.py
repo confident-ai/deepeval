@@ -264,7 +264,13 @@ def _is_absence_label(name: str, classifier_name: str) -> bool:
     normalized = " ".join(name.lower().split())
     if normalized in _ABSENCE_LABEL_NAMES:
         return True
-    singular = re.escape(" ".join(classifier_name.lower().split()).rstrip("s"))
+    classifier_words = " ".join(classifier_name.lower().split())
+    # Drop one plural "s" only; rstrip("s") would turn "access" into "acce".
+    singular = re.escape(
+        classifier_words[:-1]
+        if classifier_words.endswith("s")
+        else classifier_words
+    )
     return bool(
         singular
         and re.fullmatch(
