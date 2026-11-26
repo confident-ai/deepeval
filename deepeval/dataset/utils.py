@@ -2,8 +2,11 @@ import asyncio
 import inspect
 import json
 import re
+import shutil
+import tempfile
+from contextlib import contextmanager
 
-from typing import Dict, List, Optional, Any
+from typing import Dict, List, Optional, Any, Iterator, TextIO
 
 from deepeval.dataset.api import Golden
 from deepeval.dataset.golden import ConversationalGolden, Persona
@@ -22,6 +25,27 @@ TOOLS_DELIMITER = ";"
 
 
 _LOCAL_ONLY_EXPECTATION_FIELDS = ("model", "eval_mode")
+
+
+@contextmanager
+def _open_export_file(
+    file_path: str, newline: Optional[str] = None
+) -> Iterator[TextIO]:
+    """Serialize completely before opening the destination for replacement.
+
+    A disk-backed temporary stream avoids buffering a whole export in memory.
+    Serialization failures leave the destination untouched; copying failures
+    are still ordinary file I/O errors.
+    """
+    with tempfile.TemporaryFile(
+        mode="w+", encoding="utf-8", newline=newline
+    ) as buffer:
+        yield buffer
+        buffer.seek(0)
+        with open(
+            file_path, "w", encoding="utf-8", newline=newline
+        ) as destination:
+            shutil.copyfileobj(buffer, destination)
 
 
 def strip_local_expectation_fields(golden_bodies: List[Dict[str, Any]]):

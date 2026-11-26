@@ -13,6 +13,7 @@ import ast
 from deepeval.confident.api import Api, Endpoints, HttpMethods
 from deepeval.dataset.utils import (
     DELIMITER,
+    _open_export_file,
     TOOLS_DELIMITER,
     coerce_to_task,
     convert_test_cases_to_goldens,
@@ -1380,7 +1381,7 @@ class EvaluationDataset:
         full_file_path = os.path.join(directory, new_filename)
 
         if file_type == "json":
-            with open(full_file_path, "w", encoding="utf-8") as file:
+            with _open_export_file(full_file_path) as file:
                 if self._multi_turn:
                     json_data = []
                     for golden in goldens:
@@ -1465,9 +1466,7 @@ class EvaluationDataset:
                         )
                 json.dump(json_data, file, indent=4, ensure_ascii=False)
         elif file_type == "csv":
-            with open(
-                full_file_path, "w", newline="", encoding="utf-8"
-            ) as file:
+            with _open_export_file(full_file_path, newline="") as file:
                 writer = csv.writer(file)
                 if self._multi_turn:
                     writer.writerow(
@@ -1613,7 +1612,7 @@ class EvaluationDataset:
                             ]
                         )
         elif file_type == "jsonl":
-            with open(full_file_path, "w", encoding="utf-8") as file:
+            with _open_export_file(full_file_path) as file:
                 for golden in goldens:
                     if self._multi_turn:
                         turns = (
