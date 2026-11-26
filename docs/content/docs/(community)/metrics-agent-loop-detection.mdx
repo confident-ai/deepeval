@@ -107,7 +107,7 @@ from deepeval.metrics.community import AgentLoopDetectionMetric
 metric = AgentLoopDetectionMetric(threshold=0.5)
 metric.measure(test_case)
 
-print(metric.score)         # e.g. 0.25
+print(metric.score)         # e.g. 0.60
 print(metric.reason)        # e.g. "Tool 'search_web' called 6 times with identical arguments."
 print(metric.score_breakdown)
 # {
@@ -208,7 +208,7 @@ print(metric.score_breakdown)
 #     "call_graph_cycles": 1.0,
 # }
 
-print(metric.score)   # 0.4 (weighted: 0.0×0.40 + 1.0×0.35 + 1.0×0.25 = 0.60, but tool weight 0.40 dominates)
+print(metric.score)   # 0.60 (weighted: 0.0×0.40 + 1.0×0.35 + 1.0×0.25 = 0.60)
 print(metric.reason)  # "Tool 'search_web' called 6 times with identical arguments."
 ```
 
