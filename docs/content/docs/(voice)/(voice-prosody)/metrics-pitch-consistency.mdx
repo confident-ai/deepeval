@@ -131,7 +131,7 @@ The `PitchConsistencyMetric` score is calculated according to the following equa
 
 The metric reads per-turn audio, one agent clip at a time, or replies cut from stereo full call audio when no turn has audio. The caller's turns are never checked.
 
-### Counting agent replies
+### Which replies are scored
 
 <VoiceDiagram
   duration={14}
@@ -146,7 +146,7 @@ The metric reads per-turn audio, one agent clip at a time, or replies cut from s
   ]}
 />
 
-Each agent clip that decodes is one reply, if it has at least 1 second of voiced speech. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz, and leaves out stretches that are near silent or have no clear pitch. A reply's pitch is the median of what's left.
+A reply is scored if it has at least 1 second of voiced speech. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz, and leaves out stretches that are near silent or have no clear pitch. A reply's pitch is the median of what's left.
 
 It takes at least **3** replies to tell which one is off. With fewer, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 

@@ -120,7 +120,7 @@ The `AbruptPitchJumpMetric` score is calculated according to the following equat
 
 The metric reads per-turn audio, one agent clip at a time, or replies cut from stereo full call audio when no turn has audio. The caller's turns are never checked. A reply counts as having a jump at most once, however many it has.
 
-### Counting agent replies
+### Which replies are scored
 
 <VoiceDiagram
   duration={8}
@@ -133,7 +133,7 @@ The metric reads per-turn audio, one agent clip at a time, or replies cut from s
   ]}
 />
 
-Each agent clip that decodes is one reply, if any of it is voiced. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz. Stretches that are near silent, or have no clear pitch (such as "s" or "f" sounds), are left out.
+A reply is scored if any of it is voiced. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz. Stretches that are near silent, or have no clear pitch (such as "s" or "f" sounds), are left out.
 
 ### Pitch jump criteria
 

@@ -117,7 +117,7 @@ The `BackgroundNoiseMetric` score is calculated according to the following equat
 
 <Equation formula="\text{Background Noise} = \frac{\text{Number of Agent Replies Without Background Noise}}{\text{Total Number of Agent Replies}}" />
 
-### Counting agent replies
+### Which replies are scored
 
 <VoiceDiagram
   duration={10}
@@ -131,11 +131,10 @@ The `BackgroundNoiseMetric` score is calculated according to the following equat
   ]}
 />
 
-Each agent clip is one reply. A reply is skipped when it:
+A reply is skipped when it:
 
-- is under 2 seconds long, since noise is measured in the pauses between words and a short reply rarely has one,
-- has no audible sound at all, which [Silent Reply](/docs/metrics-silent-reply) reports instead, or
-- can't be decoded.
+- is under 2 seconds long, since noise is measured in the pauses between words and a short reply rarely has one, or
+- has no audible sound at all, which [Silent Reply](/docs/metrics-silent-reply) reports instead.
 
 ### Noise criteria
 

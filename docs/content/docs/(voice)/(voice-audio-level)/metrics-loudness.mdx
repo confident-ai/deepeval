@@ -123,7 +123,7 @@ The `LoudnessMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Loudness} = \frac{\text{Number of Agent Replies Within the Loudness Range}}{\text{Total Number of Agent Replies}}" />
 
-### Counting agent replies
+### Which replies are scored
 
 <VoiceDiagram
   duration={10}
@@ -137,7 +137,7 @@ The `LoudnessMetric` score is calculated according to the following equation:
   ]}
 />
 
-Each agent clip is one reply, however long. A reply is skipped when it has no audible sound at all, which [Silent Reply](/docs/metrics-silent-reply) reports instead, or can't be decoded.
+Every reply is scored, however long, except one with no audible sound at all, which [Silent Reply](/docs/metrics-silent-reply) reports instead.
 
 ### Loudness criteria
 

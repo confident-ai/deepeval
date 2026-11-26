@@ -125,7 +125,7 @@ With per-turn audio instead of a call recording, the waits are measured the same
 
 ### Counting agent replies
 
-Replies are found and their waits measured exactly as in [Response Latency](/docs/metrics-response-latency#how-is-it-calculated), in both full call audio and per-turn audio. With per-turn audio, that means the metric listens inside each clip for the speech, so silence at the start of an agent clip counts as waiting, and a turn's `latency_ms` wins over the silence heard. The same replies are left out and listed under `skipped`.
+Replies are found and their waits measured exactly as in [Response Latency](/docs/metrics-response-latency#counting-agent-replies), and the same replies are left out and listed under `skipped`.
 
 ### Consistency criteria
 

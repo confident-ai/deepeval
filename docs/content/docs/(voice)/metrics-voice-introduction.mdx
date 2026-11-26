@@ -132,6 +132,26 @@ Both channels share one clock, so metrics that time the call, such as [Response 
 
 For a recording with the agent on the left channel, set `agent_channel="left"`. A mono recording can't be used, since there's no way to tell the two voices apart, and logs a warning saying so.
 
+### What Counts as a Reply
+
+How a metric counts the agent's replies depends on what it measures:
+
+- **Metrics that judge how a reply sounds**, such as pitch, loudness and clipping, score each agent turn's audio as one reply, whether it was cut from the recording or came as the turn's own clip. Audio that can't be decoded is skipped.
+- **Metrics that time the call**, such as [Response Latency](/docs/metrics-response-latency), the interruption metrics and [Abrupt Cut-off](/docs/metrics-abrupt-cut-off), count a reply each time the agent starts speaking after at least 1 second of its own silence. A pause under 1 second doesn't start a new one. They count from the sound rather than the transcript, since a transcriber can split one reply across several turns.
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
+  ]}
+  brackets={[
+    { start: 0.5, end: 4.0, lane: 0, label: "reply 1" },
+    { start: 5.5, end: 9.5, lane: 0, label: "reply 2" },
+  ]}
+/>
+
+Only the agent's replies are scored, unless a metric's page says otherwise. Some metrics also skip replies they can't measure, such as one too short to judge its pitch from. Each metric's page lists these under **Which replies are scored**.
+
 ### Per-Turn Audio
 
 If your platform gives each turn its own clip, put it in `audio` on the `Turn`, placed on the call's clock by `Audio.start_time`. Metrics that judge how a reply sounds then use those clips instead of cutting the recording, which skips the turn matching above. Without a call recording, the timing metrics use them too, by listening for the speech inside each clip. [Echo](/docs/metrics-echo) needs the stereo recording, and [Transcription Accuracy](/docs/metrics-transcription-accuracy) needs per-turn audio. `timing_source` in the results says which was used: `"call_recording"` or `"turn_timestamps"`.

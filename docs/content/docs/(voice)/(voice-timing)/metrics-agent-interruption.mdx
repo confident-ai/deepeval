@@ -150,7 +150,7 @@ With per-turn audio instead of a call recording, the metric finds the speech ins
   ]}
 />
 
-A start is each time the agent starts speaking after at least 1 second of its own silence. A pause under 1 second doesn't make a new start. The agent's opening line, spoken before the caller made any sound, isn't counted. When the caller opens the call, the agent's first start is checked like any other.
+A start is a [timed reply](/docs/metrics-voice-introduction#what-counts-as-a-reply): the agent starting to speak after at least 1 second of its own silence. The agent's opening line, spoken before the caller made any sound, isn't counted. When the caller opens the call, the agent's first start is checked like any other.
 
 ### Interruption criteria
 

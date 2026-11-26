@@ -115,7 +115,7 @@ The `VolumeVarianceMetric` score is calculated according to the following equati
 
 <Equation formula="\text{Volume Variance} = \frac{\text{Number of Agent Replies Without a Volume Drift}}{\text{Total Number of Agent Replies}}" />
 
-### Counting agent replies
+### Which replies are scored
 
 <VoiceDiagram
   duration={6}
@@ -131,13 +131,12 @@ The `VolumeVarianceMetric` score is calculated according to the following equati
   ]}
 />
 
-Each agent clip is one reply, cut into 1-second windows. A window is kept when it holds at least 0.3 seconds of speech (15 frames of 20 ms at about −41 dBFS or louder). A window with less, such as the tail of a word, and a last window under 1 second, are left out.
+Each reply is cut into 1-second windows. A window is kept when it holds at least 0.3 seconds of speech (15 frames of 20 ms at about −41 dBFS or louder). A window with less, such as the tail of a word, and a last window under 1 second, are left out.
 
 A reply is skipped when it:
 
-- has fewer than 3 windows kept, since a drift needs a few seconds to show,
-- has no audible sound at all, which [Silent Reply](/docs/metrics-silent-reply) reports instead, or
-- can't be decoded.
+- has fewer than 3 windows kept, since a drift needs a few seconds to show, or
+- has no audible sound at all, which [Silent Reply](/docs/metrics-silent-reply) reports instead.
 
 ### Drift criteria
 

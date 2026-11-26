@@ -138,7 +138,7 @@ With per-turn audio instead of a call recording, each agent clip that directly f
   ]}
 />
 
-A reply is each time the agent starts speaking after at least 1 second of its own silence, when the caller spoke last. A pause under 1 second doesn't start a new reply. An opening line the agent speaks before the caller makes any sound answers no one, so it isn't counted. [Time to First Response](/docs/metrics-time-to-first-response) times it instead.
+A reply is a [timed reply](/docs/metrics-voice-introduction#what-counts-as-a-reply) that comes after the caller spoke. An opening line the agent speaks before the caller makes any sound answers no one, so it isn't counted. [Time to First Response](/docs/metrics-time-to-first-response) times it instead.
 
 ### Latency criteria
 

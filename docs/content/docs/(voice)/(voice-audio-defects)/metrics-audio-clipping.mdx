@@ -111,21 +111,6 @@ The `AudioClippingMetric` score is calculated according to the following equatio
 
 <Equation formula="\text{Audio Clipping} = \frac{\text{Number of Agent Replies Without Clipping}}{\text{Total Number of Agent Replies}}" />
 
-### Counting agent replies
-
-<VoiceDiagram
-  duration={10}
-  lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
-  ]}
-  brackets={[
-    { start: 0.5, end: 4.0, lane: 0, label: "reply 1" },
-    { start: 5.5, end: 9.5, lane: 0, label: "reply 2" },
-  ]}
-/>
-
-Each agent clip that decodes is one reply. The caller's clips are never checked.
-
 ### Clipping criteria
 
 Audio that's too loud hits the top of what a 16-bit sample can hold, and gets flattened there.

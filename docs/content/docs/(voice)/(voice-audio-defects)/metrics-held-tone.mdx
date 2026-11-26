@@ -121,21 +121,6 @@ The `HeldToneMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Held Tone} = \frac{\text{Number of Agent Replies Without a Held Tone}}{\text{Total Number of Agent Replies}}" />
 
-### Counting agent replies
-
-<VoiceDiagram
-  duration={10}
-  lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
-  ]}
-  brackets={[
-    { start: 0.5, end: 4.0, lane: 0, label: "reply 1" },
-    { start: 5.5, end: 9.5, lane: 0, label: "reply 2" },
-  ]}
-/>
-
-Each agent clip that decodes is one reply. The caller's clips are never checked.
-
 ### Held tone criteria
 
 A voice holding a vowel wobbles and drifts in pitch. A stuck tone doesn't.

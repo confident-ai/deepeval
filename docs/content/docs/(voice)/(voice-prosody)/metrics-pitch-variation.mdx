@@ -134,7 +134,7 @@ The `PitchVariationMetric` score is calculated according to the following equati
 
 The metric reads per-turn audio, one agent clip at a time, or replies cut from stereo full call audio when no turn has audio. The caller's turns are never checked.
 
-### Counting agent replies
+### Which replies are scored
 
 <VoiceDiagram
   duration={7}
@@ -147,7 +147,7 @@ The metric reads per-turn audio, one agent clip at a time, or replies cut from s
   ]}
 />
 
-Each agent clip that decodes is one reply, if it has at least 1 second of voiced speech. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz. Stretches that are near silent, or have no clear pitch (such as "s" or "f" sounds), are left out. What's left is the voiced speech.
+A reply is scored if it has at least 1 second of voiced speech. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz. Stretches that are near silent, or have no clear pitch (such as "s" or "f" sounds), are left out. What's left is the voiced speech.
 
 ### Pitch spread criteria
 

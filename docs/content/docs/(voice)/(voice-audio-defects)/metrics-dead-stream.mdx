@@ -112,22 +112,6 @@ The `DeadStreamMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Dead Stream} = \frac{\text{Number of Agent Replies Without a Dead Stream}}{\text{Total Number of Agent Replies}}" />
 
-### Counting agent replies
-
-<VoiceDiagram
-  duration={10}
-  lanes={[
-    { label: "Caller", role: "caller" },
-    { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 4.0, label: "turn 1" }, { start: 5.5, end: 9.5, label: "turn 3" }], sounds: [{ start: 0.7, end: 3.8 }, { start: 5.7, end: 9.3 }] },
-  ]}
-  brackets={[
-    { start: 0.5, end: 4.0, lane: 1, label: "reply 1" },
-    { start: 5.5, end: 9.5, lane: 1, label: "reply 2" },
-  ]}
-/>
-
-Each agent clip that decodes is one reply. The caller's clips are never checked.
-
 ### Dead stream criteria
 
 A pause in a recorded voice keeps some room noise. A stream that drops leaves exact zeros.

@@ -128,7 +128,7 @@ The `PausesMetric` score is calculated according to the following equation:
 
 The metric reads per-turn audio, one agent clip at a time, or replies cut from stereo full call audio when no turn has audio. The caller's turns are never checked.
 
-### Counting agent replies
+### Which replies are scored
 
 <VoiceDiagram
   duration={8}
@@ -141,7 +141,7 @@ The metric reads per-turn audio, one agent clip at a time, or replies cut from s
   ]}
 />
 
-Each agent clip that decodes is one reply, if its speech spans at least 2 seconds. The speech span runs from the first to the last 20 ms of the clip louder than silence (about −41 dBFS). On clips of 2 seconds or more, sound within 6 dB of the clip's background noise also counts as silence, so a pause is still found when the line is never truly quiet.
+A reply is scored if its speech spans at least 2 seconds. The speech span runs from the first to the last 20 ms of the clip louder than silence (about −41 dBFS). On clips of 2 seconds or more, sound within 6 dB of the clip's background noise also counts as silence, so a pause is still found when the line is never truly quiet.
 
 Only the speech span is checked. Silence before the agent starts is response time, not a pause.
 
