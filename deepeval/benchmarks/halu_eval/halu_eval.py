@@ -164,9 +164,7 @@ class HaluEval(DeepEvalBaseBenchmark):
     def predict(
         self, model: DeepEvalBaseLLM, golden: Golden, task: HaluEvalTask
     ) -> Dict:
-        prompt = HaluEvalTemplate.generate_output(
-            input=golden.input, task=task
-        )
+        prompt = HaluEvalTemplate.generate_output(input=golden.input, task=task)
 
         # Enforced model generation
         try:
