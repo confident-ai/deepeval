@@ -249,6 +249,15 @@ A decision model answers bounded questions (yes/no, a rating on a scale, one opt
 
 <Only id="python">
 
+## Audio Decision Models
+
+An audio decision model is a decision model that listens to a recording instead of reading text. DeepEval uses one to double-check voice metrics: in the `hybrid` voice eval mode, it hears a clip around each event a metric flags and drops the ones it judges not real.
+
+<Cards className="md:grid-cols-3">
+  <Card title="Hume" href="/integrations/audio-decision-models/hume" />
+  <Card title="OpenAI" href="/integrations/audio-decision-models/openai" />
+</Cards>
+
 ## Speech Models
 
 Speech model integrations configure the text-to-speech and speech-to-text providers DeepEval uses for [voice simulation](/docs/conversation-simulator-voice-mode). Every provider apart from OpenAI is reached over plain HTTP, so none of them need a package beyond `deepeval` itself.

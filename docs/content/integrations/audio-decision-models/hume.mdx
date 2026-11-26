@@ -1,0 +1,133 @@
+---
+id: hume-audio-decisions
+title: Hume Audio Decisions
+sidebar_label: Hume
+languages: [python]
+---
+
+`deepeval` supports using Hume's Audio Decisions API as the audio decision model for its voice metrics under the `hybrid` voice eval mode, and uses it by default there. An audio decision model is a decision model that listens instead of reads: it hears a recording and answers bounded questions about it (yes/no, or one option from a set) with a probability. To get started, you'll need to set up your Hume API key.
+
+Voice metrics such as Echo or Abrupt Cut-off detect events in a call recording with signal processing, which is fast but can flag things a person wouldn't call a problem. In `hybrid` mode, the audio decision model hears a short clip around each flagged event and dismisses the ones it judges not real before the metric is scored.
+
+:::info
+Hume is reached over plain HTTP rather than through a vendor SDK, so `pip install deepeval` is all you need — there is no extra package to install or version to pin.
+:::
+
+### Setting Up Your API Key
+
+DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+HUME_API_KEY=<your-hume-api-key>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export HUME_API_KEY=<your-hume-api-key>
+```
+
+**Alternative (notebook):**
+
+If you're working in a notebook environment (Jupyter or Colab), set your `HUME_API_KEY` in a cell:
+
+```bash
+%env HUME_API_KEY=<your-hume-api-key>
+```
+
+### Command Line
+
+Voice metrics run in the `deterministic` voice eval mode by default, which calls no model. To double-check flagged events with Hume in every voice metric, run:
+
+```bash
+deepeval set-voice-eval-mode hybrid
+```
+
+:::info
+The command above sets `hybrid` as the voice eval mode for all voice metrics, unless overridden in Python code. Hume is the default audio decision model in `hybrid`, so `HUME_API_KEY` is all you need. To drop back to the default, run:
+
+```bash
+deepeval set-voice-eval-mode deterministic
+```
+
+:::
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### In Code
+
+To use Hume for the check, define a `HumeDecisionModel` and pass it as the voice metric's `audio_decision_model`. By default, the `model` is set to `audio-decisions`.
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.metrics import EchoMetric
+from deepeval.models import HumeDecisionModel
+
+model = HumeDecisionModel(model="audio-decisions")
+echo = EchoMetric(
+    audio_decision_model=model,
+    eval_mode="hybrid",
+)
+```
+
+There are **ZERO** mandatory and **FOUR** optional parameters when creating a `HumeDecisionModel`:
+
+- [Optional] `model`: A string specifying the name of the Hume model to use. Defaulted to `audio-decisions`.
+- [Optional] `api_key`: A string specifying your Hume API key. Defaults to `HUME_API_KEY` if not passed; raises an error if neither is set.
+- [Optional] `cost_per_input_token`: A float overriding the per-token price used for cost accounting. Defaults to the built-in price for the model ($0.47 per million input tokens).
+- [Optional] `timeout`: A float number of seconds to wait on a request before giving up. Defaulted to `60.0`.
+
+:::note
+Hume accepts WAV or MP3 audio between 1 second and 5 minutes long, and up to 20 questions per request.
+:::
+
+</Tab>
+<Tab value="ENV">
+
+First set your API key and the voice eval mode:
+
+```bash
+# .env.local
+HUME_API_KEY=<your-hume-api-key>
+DEEPEVAL_VOICE_EVAL_MODE=hybrid
+```
+
+`deepeval set-voice-eval-mode hybrid` writes `DEEPEVAL_VOICE_EVAL_MODE` for you. Voice metrics then check flagged events with Hume without any arguments:
+
+```python
+from deepeval.metrics import EchoMetric
+
+echo = EchoMetric()
+```
+
+An `eval_mode` passed to the metric wins over `DEEPEVAL_VOICE_EVAL_MODE`. In `deterministic` mode, an `audio_decision_model` you pass is not used.
+
+</Tab>
+</Tabs>
+
+### Supported Metrics
+
+These voice metrics accept an `audio_decision_model` and an `eval_mode`:
+
+| Metric | Class | Question asked about each flagged clip |
+| --- | --- | --- |
+| Abrupt Cut-off | `AbruptCutoffMetric` | Does the speaker's voice cut off abruptly, mid-word or mid-sentence? |
+| Echo | `EchoMetric` | Can the AI agent's own voice be heard echoed back on this caller's line? |
+| Background Noise | `BackgroundNoiseMetric` | Is there distracting background noise behind the speaker? |
+| Agent Interruption | `AgentInterruptionMetric` | Is a person speaking in this clip, rather than only background noise, breathing or silence? |
+| User Interruption | `UserInterruptionMetric` | Is a person speaking in this clip, rather than only background noise, breathing or silence? |
+| [Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) | `TurnTakingNaturalnessMetric` | Passes the model to its Agent Interruption and User Interruption checks |
+
+For each flagged event, `deepeval` cuts a 5-second clip around it and asks the question above. Events the model gives less than a 50% yes are dropped before scoring. A clip that can't be cut, or a check that fails, keeps the event, so an API error never makes a metric more lenient.
+
+### Available Hume Models
+
+- `audio-decisions` (default)

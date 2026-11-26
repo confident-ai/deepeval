@@ -5,6 +5,7 @@
     "frameworks",
     "models",
     "decision-models",
+    "audio-decision-models",
     "stt",
     "tts",
     "voice-agent-connectors",

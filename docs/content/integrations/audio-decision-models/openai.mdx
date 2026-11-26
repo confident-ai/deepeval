@@ -1,0 +1,132 @@
+---
+id: openai-audio-decisions
+title: OpenAI Audio Decisions
+sidebar_label: OpenAI
+languages: [python]
+---
+
+`deepeval` supports using OpenAI's audio models as the audio decision model for its voice metrics under the `hybrid` voice eval mode. An audio decision model is a decision model that listens instead of reads: it hears a recording and answers a yes/no question about it, along with how sure it is. To get started, you'll need to set up your OpenAI API key.
+
+Voice metrics such as Echo or Abrupt Cut-off detect events in a call recording with signal processing, which is fast but can flag things a person wouldn't call a problem. In `hybrid` mode, the audio decision model hears a short clip around each flagged event and dismisses the ones it judges not real before the metric is scored.
+
+### Setting Up Your API Key
+
+DeepEval autoloads `.env.local` then `.env` at import time (process env -> `.env.local` -> `.env`).
+
+**Recommended (local dev):**
+
+```bash
+# .env.local
+OPENAI_API_KEY=<your-openai-api-key>
+```
+
+**Alternative (Shell/CI):**
+
+```bash
+export OPENAI_API_KEY=<your-openai-api-key>
+```
+
+**Alternative (notebook):**
+
+If you're working in a notebook environment (Jupyter or Colab), set your `OPENAI_API_KEY` in a cell:
+
+```bash
+%env OPENAI_API_KEY=<your-openai-api-key>
+```
+
+### Command Line
+
+Voice metrics run in the `deterministic` voice eval mode by default, which calls no model. To double-check flagged events in every voice metric, run:
+
+```bash
+deepeval set-voice-eval-mode hybrid
+```
+
+:::info
+The command above sets `hybrid` as the voice eval mode for all voice metrics, unless overridden in Python code. To drop back to the default, run:
+
+```bash
+deepeval set-voice-eval-mode deterministic
+```
+
+:::
+
+:::tip[Persisting settings]
+You can persist CLI settings with the optional `--save` flag.
+See [Flags and Configs -> Persisting CLI settings](/docs/evaluation-flags-and-configs#persisting-cli-settings-with---save).
+:::
+
+### In Code
+
+To use an OpenAI audio model for the check, define an `OpenAIAudioDecisionModel` and pass it as the voice metric's `audio_decision_model`. By default, the `model` is set to `gpt-audio`.
+
+<Tabs items={["Python", "ENV"]}>
+<Tab value="Python">
+
+```python
+from deepeval.metrics import EchoMetric
+from deepeval.models import OpenAIAudioDecisionModel
+
+model = OpenAIAudioDecisionModel(model="gpt-audio")
+echo = EchoMetric(
+    audio_decision_model=model,
+    eval_mode="hybrid",
+)
+```
+
+There are **ZERO** mandatory and **THREE** optional parameters when creating an `OpenAIAudioDecisionModel`:
+
+- [Optional] `model`: A string specifying the name of the OpenAI audio model to use. Defaulted to `gpt-audio`.
+- [Optional] `api_key`: A string specifying your OpenAI API key. Defaults to `OPENAI_API_KEY` if not passed; raises an error at runtime if neither is set.
+- [Optional] `base_url`: A string specifying a custom endpoint to reach the OpenAI API through.
+
+:::note
+`OpenAIAudioDecisionModel` answers yes/no questions only. Every voice metric that runs this check asks a yes/no question, so it works with all of them.
+:::
+
+</Tab>
+<Tab value="ENV">
+
+First set your API key and the voice eval mode:
+
+```bash
+# .env.local
+OPENAI_API_KEY=<your-openai-api-key>
+DEEPEVAL_VOICE_EVAL_MODE=hybrid
+```
+
+`deepeval set-voice-eval-mode hybrid` writes `DEEPEVAL_VOICE_EVAL_MODE` for you. Voice metrics then run the check without `eval_mode`, but still need the `OpenAIAudioDecisionModel` passed in code, since a `hybrid` metric with no `audio_decision_model` uses [Hume's audio decision model](/integrations/audio-decision-models/hume) and needs `HUME_API_KEY`:
+
+```python
+from deepeval.metrics import EchoMetric
+from deepeval.models import OpenAIAudioDecisionModel
+
+echo = EchoMetric(audio_decision_model=OpenAIAudioDecisionModel())
+```
+
+An `eval_mode` passed to the metric wins over `DEEPEVAL_VOICE_EVAL_MODE`. In `deterministic` mode, an `audio_decision_model` you pass is not used.
+
+</Tab>
+</Tabs>
+
+### Supported Metrics
+
+These voice metrics accept an `audio_decision_model` and an `eval_mode`:
+
+| Metric | Class | Question asked about each flagged clip |
+| --- | --- | --- |
+| Abrupt Cut-off | `AbruptCutoffMetric` | Does the speaker's voice cut off abruptly, mid-word or mid-sentence? |
+| Echo | `EchoMetric` | Can the AI agent's own voice be heard echoed back on this caller's line? |
+| Background Noise | `BackgroundNoiseMetric` | Is there distracting background noise behind the speaker? |
+| Agent Interruption | `AgentInterruptionMetric` | Is a person speaking in this clip, rather than only background noise, breathing or silence? |
+| User Interruption | `UserInterruptionMetric` | Is a person speaking in this clip, rather than only background noise, breathing or silence? |
+| [Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) | `TurnTakingNaturalnessMetric` | Passes the model to its Agent Interruption and User Interruption checks |
+
+For each flagged event, `deepeval` cuts a 5-second clip around it and asks the question above. Events the model gives less than a 50% yes are dropped before scoring. A clip that can't be cut, or a check that fails, keeps the event, so an API error never makes a metric more lenient.
+
+### Available OpenAI Audio Models
+
+- `gpt-audio` (default)
+- `gpt-audio-1.5`
+- `gpt-audio-2025-08-28`
+- `gpt-audio-mini`
