@@ -1770,11 +1770,15 @@ class EvaluationDataset:
 
             end_time = time.perf_counter()
             run_duration = end_time - start_time
-            if display_config.print_results:
+            if (
+                display_config.print_results
+                or display_config.file_output_dir is not None
+            ):
                 console_report = EvaluationConsoleReport(test_results)
-                console_report.render_to_terminal(
-                    truncate_passing_cases=display_config.truncate_passing_cases
-                )
+                if display_config.print_results:
+                    console_report.render_to_terminal(
+                        truncate_passing_cases=display_config.truncate_passing_cases
+                    )
 
                 # Handle full, un-truncated file exports
                 if display_config.file_output_dir is not None:
