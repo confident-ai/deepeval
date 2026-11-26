@@ -1907,11 +1907,11 @@ class Synthesizer:
             ValueError: If file_type is invalid, no synthetic goldens exist,
             or file_name contains periods.
         """
-        if str(file_type).lower() not in valid_file_types:
+        file_type = str(file_type).lower()
+        if file_type not in valid_file_types:
             raise ValueError(
-                "Invalid file type. Available file types to save as: , ".join(
-                    type for type in valid_file_types
-                )
+                "Invalid file type. Available file types to save as: "
+                + ", ".join(valid_file_types)
             )
 
         if file_name and "." in file_name:
