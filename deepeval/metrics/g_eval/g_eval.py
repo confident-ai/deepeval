@@ -30,6 +30,7 @@ from deepeval.metrics.g_eval import schema as gschema
 from deepeval.metrics.g_eval.utils import (
     MetricPullResponse,
     Rubric,
+    clamp_g_eval_score,
     construct_g_eval_params_string,
     construct_test_case_string,
     format_rubrics,
@@ -142,24 +143,26 @@ class GEval(BaseMetric):
                     _additional_context=_additional_context,
                     multimodal=multimodal,
                 )
-                self.score = (
-                    (float(g_score) - self.score_range[0])
-                    / self.score_range_span
-                    if not self.strict_mode
-                    else int(g_score)
+                self.score, norm_note = clamp_g_eval_score(
+                    g_score,
+                    score_range=self.score_range,
+                    strict_mode=self.strict_mode,
                 )
                 self.success = self.is_successful()
 
                 self.reason = reason
+                steps = [
+                    f"Criteria:\n{self.criteria}",
+                    f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
+                    f"Rubric:\n{format_rubrics(self.rubric)}",
+                    f"Score: {self.score}",
+                ]
+                if norm_note is not None:
+                    steps.append(norm_note)
+                steps.append(f"Reason: {self.reason}")
                 self.verbose_logs = construct_verbose_logs(
                     self,
-                    steps=[
-                        f"Criteria:\n{self.criteria}",
-                        f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
-                        f"Rubric:\n{format_rubrics(self.rubric)}",
-                        f"Score: {self.score}",
-                        f"Reason: {self.reason}",
-                    ],
+                    steps=steps,
                 )
 
             return self.score
@@ -191,23 +194,26 @@ class GEval(BaseMetric):
                 _additional_context=_additional_context,
                 multimodal=multimodal,
             )
-            self.score = (
-                (float(g_score) - self.score_range[0]) / self.score_range_span
-                if not self.strict_mode
-                else int(g_score)
+            self.score, norm_note = clamp_g_eval_score(
+                g_score,
+                score_range=self.score_range,
+                strict_mode=self.strict_mode,
             )
             self.success = self.is_successful()
 
             self.reason = reason
+            steps = [
+                f"Criteria:\n{self.criteria}",
+                f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
+                f"Rubric:\n{format_rubrics(self.rubric)}",
+                f"Score: {self.score}",
+            ]
+            if norm_note is not None:
+                steps.append(norm_note)
+            steps.append(f"Reason: {self.reason}")
             self.verbose_logs = construct_verbose_logs(
                 self,
-                steps=[
-                    f"Criteria:\n{self.criteria}",
-                    f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
-                    f"Rubric:\n{format_rubrics(self.rubric)}",
-                    (f"Score: {self.score}"),
-                    f"Reason: {self.reason}",
-                ],
+                steps=steps,
             )
             return self.score
 

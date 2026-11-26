@@ -7,6 +7,7 @@ from deepeval.metrics.g_eval.utils import (
     MetricPullResponse,
     Rubric,
     calculate_weighted_summed_score,
+    clamp_g_eval_score,
     construct_conversational_g_eval_turn_params_string,
     construct_non_turns_test_case_string,
     format_rubrics,
@@ -159,21 +160,28 @@ class ConversationalGEval(BaseConversationalMetric):
                 )
                 g_score, reason = self.evaluate(test_case)
                 self.reason = reason
-                self.score = float(g_score) / 10
+                self.score, norm_note = clamp_g_eval_score(
+                    g_score,
+                    score_range=(0, 10),
+                    strict_mode=False,
+                )
                 self.score = (
                     0
                     if self.strict_mode and self.score < self.threshold
                     else self.score
                 )
                 self.success = self.is_successful()
+                steps = [
+                    f"Criteria:\n{self.criteria}",
+                    f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
+                    f"Rubric:\n{format_rubrics(self.rubric)}",
+                ]
+                if norm_note is not None:
+                    steps.append(norm_note)
+                steps.append(f"Score: {self.score}\nReason: {self.reason}")
                 self.verbose_logs = construct_verbose_logs(
                     self,
-                    steps=[
-                        f"Criteria:\n{self.criteria}",
-                        f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
-                        f"Rubric:\n{format_rubrics(self.rubric)}",
-                        f"Score: {self.score}\nReason: {self.reason}",
-                    ],
+                    steps=steps,
                 )
 
             return self.score
@@ -212,21 +220,28 @@ class ConversationalGEval(BaseConversationalMetric):
             )
             g_score, reason = await self._a_evaluate(test_case)
             self.reason = reason
-            self.score = float(g_score) / 10
+            self.score, norm_note = clamp_g_eval_score(
+                g_score,
+                score_range=(0, 10),
+                strict_mode=False,
+            )
             self.score = (
                 0
                 if self.strict_mode and self.score < self.threshold
                 else self.score
             )
             self.success = self.is_successful()
+            steps = [
+                f"Criteria:\n{self.criteria}",
+                f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
+                f"Rubric:\n{format_rubrics(self.rubric)}",
+            ]
+            if norm_note is not None:
+                steps.append(norm_note)
+            steps.append(f"Score: {self.score}\nReason: {self.reason}")
             self.verbose_logs = construct_verbose_logs(
                 self,
-                steps=[
-                    f"Criteria:\n{self.criteria}",
-                    f"Evaluation Steps:\n{prettify_list(self.evaluation_steps)}",
-                    f"Rubric:\n{format_rubrics(self.rubric)}",
-                    f"Score: {self.score}\nReason: {self.reason}",
-                ],
+                steps=steps,
             )
 
             return self.score
