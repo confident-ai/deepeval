@@ -315,6 +315,7 @@ export async function measureTestCase(
 /** Fresh state per (metric, test case). */
 function resetResult(metric: AnyMetric): void {
   metric.score = undefined;
+  metric.scoreBreakdown = undefined;
   metric.success = undefined;
   metric.reason = undefined;
   metric.error = undefined;
@@ -389,6 +390,7 @@ function buildMetricData(metric: BaseMetricCore): MetricData {
     evaluationModel: metric.evaluationModel,
     evaluationCost: metric.evaluationCost,
     verboseLogs: metric.verboseLogs,
+    scoreBreakdown: metric.scoreBreakdown,
     error: metric.error,
     skipped: metric.skipped,
   };

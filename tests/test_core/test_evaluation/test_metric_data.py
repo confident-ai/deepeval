@@ -105,6 +105,21 @@ def test_flaky_is_reflected_in_metric_data(metric_class, error):
     assert metric_data.model_dump(by_alias=True)["flaky"] is True
 
 
+@pytest.mark.parametrize("metric_class", [StubMetric, StubConversationalMetric])
+@pytest.mark.parametrize("error", [None, "Metric failed"])
+def test_score_breakdown_is_kept_in_memory_only(metric_class, error):
+    metric = metric_class()
+    metric.score_breakdown = {"alignment": 0.5}
+    metric.error = error
+
+    metric_data = create_metric_data(metric)
+
+    assert metric_data.score_breakdown == (
+        None if error else {"alignment": 0.5}
+    )
+    assert "scoreBreakdown" not in metric_data.model_dump(by_alias=True)
+
+
 def test_check_at_least_one_metric_has_threshold():
     # Passes as long as one non-flaky metric has a threshold
     check_at_least_one_metric_has_threshold(
