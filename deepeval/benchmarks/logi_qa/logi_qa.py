@@ -247,7 +247,11 @@ class LogiQA(DeepEvalBaseBenchmark):
         goldens: List[Golden] = []
         for data in dataset:
             types: Dict = data["type"]
-            if types.get(task.value) is True:
+            # The upstream test split misspells the necessary reasoning label.
+            if types.get(task.value) is True or (
+                task == LogiQATask.NECESSARY_CONDITIONAL_REASONING
+                and types.get("Necessry Condtional Reasoning") is True
+            ):
                 input = LogiQATemplate.format_question(data)
                 expected_output = LogiQATemplate.format_output(data)
                 golden = Golden(input=input, expected_output=expected_output)
