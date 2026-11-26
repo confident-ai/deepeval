@@ -4,7 +4,7 @@ import asyncio
 from functools import partial
 from rich.console import Console
 from typing import Dict, Optional, List, Tuple, Union, Type
-from deepeval.errors import MissingTestCaseParamsError
+from deepeval.errors import DeepEvalError, MissingTestCaseParamsError
 from deepeval.metrics import BaseMetric
 from deepeval.test_case import (
     LLMTestCase,
@@ -49,6 +49,30 @@ from deepeval.templates import make_template_class
 
 
 GEvalTemplate = make_template_class("GEval")
+
+
+def _strict_score(score) -> int:
+    """Return the strict-mode score, which the judge is asked to give as 0 or 1.
+
+    ``int()`` alone would let an off-scale reply such as 5 or 10 through as a
+    passing score, since strict mode sets the threshold to 1. The value is
+    compared exactly, without rounding, so 0.9 or "0.99999999999999999" is
+    rejected rather than turned into 0 or 1.
+    """
+    if isinstance(score, str):
+        text = score.strip()
+        if text in ("0", "1", "0.0", "1.0"):
+            return int(float(text))
+    else:
+        try:
+            if score in (0, 1):
+                return int(score)
+        except (TypeError, ValueError):
+            pass
+    raise DeepEvalError(
+        f"Judge returned score {score!r} in strict mode, which only allows 0 "
+        "or 1. Use a stronger evaluation model or turn off strict_mode."
+    )
 
 
 class GEval(BaseMetric):
@@ -146,7 +170,7 @@ class GEval(BaseMetric):
                     (float(g_score) - self.score_range[0])
                     / self.score_range_span
                     if not self.strict_mode
-                    else int(g_score)
+                    else _strict_score(g_score)
                 )
                 self.success = self.is_successful()
 
@@ -194,7 +218,7 @@ class GEval(BaseMetric):
             self.score = (
                 (float(g_score) - self.score_range[0]) / self.score_range_span
                 if not self.strict_mode
-                else int(g_score)
+                else _strict_score(g_score)
             )
             self.success = self.is_successful()
 
