@@ -694,8 +694,19 @@ function endOwnedTrace(traceUuid: string, state: TraceState): void {
   const recorded: Partial<Trace> = {};
   for (const span of spans)
     Object.assign(recorded, state.traceFields.get(span.uuid) ?? {});
+  const inferred = traceContent(spans, state);
+  for (const field of ["input", "output"] as const) {
+    // Explicit null and empty strings are trace I/O, even though fillUnset
+    // treats them as empty for other fields.
+    if (trace[field] === null || trace[field] === "") {
+      delete recorded[field];
+      delete inferred[field];
+    } else if (recorded[field] === null || recorded[field] === "") {
+      delete inferred[field];
+    }
+  }
   fillUnset(trace, recorded);
-  fillUnset(trace, traceContent(spans, state));
+  fillUnset(trace, inferred);
   if (trace.rootSpans.some((span) => span.status === TraceSpanStatus.ERRORED))
     trace.status = TraceSpanStatus.ERRORED;
   trace.startTime = new Date(
