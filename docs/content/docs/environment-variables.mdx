@@ -213,7 +213,7 @@ The value is case-insensitive. Anything other than `stable` or `experimental` fa
 
 #### DeepEval eval mode
 
-`DEEPEVAL_EVAL_MODE` sets the [eval mode](/docs/evaluation-eval-modes), which picks who decides in `deepeval`'s LLM-as-a-judge metrics<Only id="python"> and classifiers</Only>, and is how [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, takes part in an eval:
+`DEEPEVAL_EVAL_MODE` sets the [eval mode](/docs/evaluation-eval-modes), which picks who decides in `deepeval`'s LLM-as-a-judge metrics<Only id="python"> and classifiers</Only>, and is how [Jev](/integrations/decision-models/typesafe-ai), TypeSafe AI's System One model, takes part in an eval:
 
 - `llm` (the default): the LLM runs the whole metric.
 - `hybrid`: the LLM extracts and writes the reason; Jev answers the decision points. If a Jev call fails mid-run, the LLM makes that decision instead.

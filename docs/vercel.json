@@ -65,6 +65,11 @@
       "source": "/docs/what-is-llm-red-teaming",
       "destination": "/blog/what-is-llm-red-teaming",
       "statusCode": 301
+    },
+    {
+      "source": "/integrations/models/typesafe-ai",
+      "destination": "/integrations/decision-models/typesafe-ai",
+      "statusCode": 301
     }
   ]
 }

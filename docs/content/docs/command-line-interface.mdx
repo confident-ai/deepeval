@@ -559,7 +559,7 @@ To opt out, run <Term py="deepeval set-mode stable" ts="npx deepeval set-mode st
 
 ### `set-eval-mode`
 
-Set the [eval mode](/docs/evaluation-eval-modes), which chooses who decides in `deepeval`'s LLM-as-a-judge metrics<Only id="python"> and classifiers</Only>. This is how you bring [Jev](/integrations/models/typesafe-ai), TypeSafe AI's System One model, into an eval:
+Set the [eval mode](/docs/evaluation-eval-modes), which chooses who decides in `deepeval`'s LLM-as-a-judge metrics<Only id="python"> and classifiers</Only>. This is how you bring [Jev](/integrations/decision-models/typesafe-ai), TypeSafe AI's System One model, into an eval:
 
 - `llm` (the default): the LLM runs the whole metric, end to end.
 - `hybrid`: the LLM extracts and writes the reason; Jev answers the decision points. If a Jev call fails mid-run, the LLM makes that one decision instead. A missing `TYPESAFE_API_KEY`<Only id="python"> or SDK</Only> still fails when the metric is created.
