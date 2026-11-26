@@ -25,6 +25,27 @@ FAKE_NAMES = [
 ]
 
 
+def _tool_call_to_dict(tool: ToolCall) -> Dict:
+    # The same fields as ToolCall.__repr__, nested as an object so the outer
+    # json.dumps escapes the tool's text once instead of twice.
+    data = {"name": tool.name}
+    if tool.type:
+        data["type"] = tool.type.value
+    if tool.description:
+        data["description"] = tool.description
+    if tool.reasoning:
+        data["reasoning"] = tool.reasoning
+    if tool.turn is not None:
+        data["turn"] = tool.turn
+    if tool.input_parameters:
+        data["input_parameters"] = tool.input_parameters
+    if isinstance(tool.output, (dict, str)):
+        data["output"] = tool.output
+    elif tool.output is not None:
+        data["output"] = repr(tool.output)
+    return data
+
+
 @dataclass
 class FormattedLLMTestCase:
     actual_output: Optional[str] = None
@@ -33,7 +54,7 @@ class FormattedLLMTestCase:
     tools_called: Optional[List[ToolCall]] = None
     expected_tools: Optional[List[ToolCall]] = None
 
-    def __repr__(self):
+    def to_dict(self) -> Dict:
         data = {}
         if self.actual_output is not None:
             data["actual_output"] = self.actual_output
@@ -42,13 +63,18 @@ class FormattedLLMTestCase:
         if self.retrieval_context is not None:
             data["retrieval_context"] = self.retrieval_context
         if self.tools_called is not None:
-            data["tools_called"] = [repr(tool) for tool in self.tools_called]
+            data["tools_called"] = [
+                _tool_call_to_dict(tool) for tool in self.tools_called
+            ]
         if self.expected_tools is not None:
             data["expected_tools"] = [
-                repr(tool) for tool in self.expected_tools
+                _tool_call_to_dict(tool) for tool in self.expected_tools
             ]
+        return data
 
-        return json.dumps(data, indent=2)
+    def __repr__(self):
+        # ensure_ascii=False keeps non-English text readable for the judge.
+        return json.dumps(self.to_dict(), indent=2, ensure_ascii=False)
 
 
 @dataclass
@@ -69,21 +95,24 @@ class FormattedArenaTestCase:
         contestant_items = list(self.contestants.items())
         random.shuffle(contestant_items)
 
-        # Use dummy names if mapping is available, otherwise use real names
+        # Use dummy names if mapping is available, otherwise use real names.
+        # Contestants are nested as objects, not as JSON strings, so their
+        # text is escaped once instead of twice.
         if self.dummy_to_real_names:
             # Create reverse mapping from real to dummy names
             real_to_dummy = {
                 real: dummy for dummy, real in self.dummy_to_real_names.items()
             }
             data["arena_test_cases"] = {
-                real_to_dummy.get(name, name): repr(contestant)
+                real_to_dummy.get(name, name): contestant.to_dict()
                 for name, contestant in contestant_items
             }
         else:
             data["arena_test_cases"] = {
-                name: repr(contestant) for name, contestant in contestant_items
+                name: contestant.to_dict()
+                for name, contestant in contestant_items
             }
-        return json.dumps(data, indent=2)
+        return json.dumps(data, indent=2, ensure_ascii=False)
 
 
 def format_arena_test_case(
