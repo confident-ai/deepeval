@@ -163,8 +163,8 @@ OPENAI_MODELS_DATA = ModelDataRegistry(
             supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
-            input_price=2.50 / 1e6,
-            output_price=10.00 / 1e6,
+            input_price=5.00 / 1e6,
+            output_price=15.00 / 1e6,
         ),
         "gpt-4o-2024-08-06": make_model_data(
             supports_log_probs=True,
@@ -2354,8 +2354,8 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
             supports_audio=False,
             supports_structured_outputs=True,  # We support `schema` by parsing JSON from text (not toolConfig).
             supports_json=False,  # No cross-model JSON-mode supported by AmazonBedrockModel yet
-            input_price=None,
-            output_price=None,
+            input_price=15.00 / 1e6,
+            output_price=75.00 / 1e6,
         ),
         "anthropic.claude-3-sonnet-20240229-v1:0": make_model_data(
             supports_log_probs=False,
@@ -2363,8 +2363,8 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
             supports_audio=False,
             supports_structured_outputs=True,
             supports_json=False,
-            input_price=None,
-            output_price=None,
+            input_price=3.00 / 1e6,
+            output_price=15.00 / 1e6,
         ),
         ################################
         # anthropic (claude 4 / 4.5)   #
@@ -2375,8 +2375,8 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
             supports_audio=False,
             supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
             supports_json=False,
-            input_price=None,
-            output_price=None,
+            input_price=15.00 / 1e6,
+            output_price=75.00 / 1e6,
         ),
         "anthropic.claude-opus-4-1-20250805-v1:0": make_model_data(
             supports_log_probs=False,
@@ -2384,8 +2384,8 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
             supports_audio=False,
             supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
             supports_json=False,
-            input_price=None,
-            output_price=None,
+            input_price=15.00 / 1e6,
+            output_price=75.00 / 1e6,
         ),
         "anthropic.claude-sonnet-4-20250514-v1:0": make_model_data(
             supports_log_probs=False,
@@ -2393,8 +2393,8 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
             supports_audio=False,
             supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
             supports_json=False,
-            input_price=None,
-            output_price=None,
+            input_price=3.00 / 1e6,
+            output_price=15.00 / 1e6,
         ),
         "anthropic.claude-sonnet-4-5-20250929-v1:0": make_model_data(
             supports_log_probs=False,
@@ -2402,8 +2402,8 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
             supports_audio=False,
             supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
             supports_json=False,
-            input_price=None,
-            output_price=None,
+            input_price=3.00 / 1e6,
+            output_price=15.00 / 1e6,
         ),
         "anthropic.claude-haiku-4-5-20251001-v1:0": make_model_data(
             supports_log_probs=False,
@@ -2411,8 +2411,45 @@ BEDROCK_MODELS_DATA = ModelDataRegistry(
             supports_audio=False,
             supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
             supports_json=False,
-            input_price=None,
-            output_price=None,
+            input_price=1.00 / 1e6,
+            output_price=5.00 / 1e6,
+        ),
+        # US and EU regional inference profiles are priced 10% above the global rows.
+        "us.anthropic.claude-sonnet-4-5-20250929-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
+            supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
+            supports_json=False,
+            input_price=3.30 / 1e6,
+            output_price=16.50 / 1e6,
+        ),
+        "us.anthropic.claude-haiku-4-5-20251001-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
+            supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
+            supports_json=False,
+            input_price=1.10 / 1e6,
+            output_price=5.50 / 1e6,
+        ),
+        "eu.anthropic.claude-sonnet-4-5-20250929-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
+            supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
+            supports_json=False,
+            input_price=3.30 / 1e6,
+            output_price=16.50 / 1e6,
+        ),
+        "eu.anthropic.claude-haiku-4-5-20251001-v1:0": make_model_data(
+            supports_log_probs=False,
+            supports_multimodal=False,  # SDK/model supports image input; DeepEval AmazonBedrockModel is text-only today.  # noqa: E501
+            supports_audio=False,
+            supports_structured_outputs=True,  # SDK supports tool use for some Converse models.  # noqa: E501
+            supports_json=False,
+            input_price=1.10 / 1e6,
+            output_price=5.50 / 1e6,
         ),
         ################
         # amazon titan #

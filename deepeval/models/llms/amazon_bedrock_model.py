@@ -140,7 +140,11 @@ class AmazonBedrockModel(DeepEvalBaseLLM):
             param_hint="region",
         )
 
-        self.model_data = BEDROCK_MODELS_DATA.get(model)
+        # Inference profile IDs (us./eu./global. ...) reuse the base model row
+        # unless the profile has its own row (regional profiles can be priced higher).
+        self.model_data = BEDROCK_MODELS_DATA.get(
+            model, BEDROCK_MODELS_DATA.get(model.split(".", 1)[-1])
+        )
         cost_per_input_token, cost_per_output_token = require_costs(
             self.model_data,
             model,
