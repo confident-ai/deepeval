@@ -491,7 +491,7 @@ class EvaluationDataset:
             tools_called = [ToolCall(**tool) for tool in tools_called_data]
             expected_tools_data = json_obj.get(expected_tools_key_name) or []
             expected_tools = [ToolCall(**tool) for tool in expected_tools_data]
-            # additional_metadata = json_obj.get(addtional_metadata_key_name)
+            metadata = json_obj.get(addtional_metadata_key_name)
 
             self.add_test_case(
                 LLMTestCase(
@@ -503,7 +503,7 @@ class EvaluationDataset:
                     retrieval_context=retrieval_context,
                     tools_called=tools_called,
                     expected_tools=expected_tools,
-                    # additional_metadata=additional_metadata,
+                    metadata=metadata,
                 )
             )
 
