@@ -263,6 +263,10 @@ class ToolCall(BaseModel):
     def serialize_type(self, value: ToolCallType) -> str:
         return value.value
 
+    @field_serializer("type")
+    def serialize_type(self, value: ToolCallType) -> str:
+        return value.value
+
     def __eq__(self, other):
         if not isinstance(other, ToolCall):
             return False
