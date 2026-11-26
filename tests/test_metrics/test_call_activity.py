@@ -321,3 +321,17 @@ def test_mono_call_audio_warns_and_is_not_used(tmp_path, caplog):
         assert recording_activity(recording(mono), False) is None
     assert "mono" in caplog.text
     assert with_turn_audio_from_call(test_case).turns[0].audio is None
+
+
+def test_model_copy_still_accepts_call_recording_path(tmp_path):
+    path = stereo_recording(
+        tmp_path / "copy.wav", agent=[(0.5, speech_like(1.1))]
+    )
+    test_case = ConversationalTestCase(turns=timed_call([0.5]))
+    with pytest.warns(DeprecationWarning):
+        copied = test_case.model_copy(update={"call_recording_path": path})
+    assert copied.audio is not None and copied.audio.url == path
+    assert copied.voice is True
+    assert call_activity(copied, use_speech_detection=False).source == (
+        "call_recording"
+    )
