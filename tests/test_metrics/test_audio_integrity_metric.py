@@ -1,6 +1,7 @@
 import pytest
 
 from deepeval.metrics import AudioIntegrityMetric
+from deepeval.models.base_model import DeepEvalBaseSTT
 from deepeval.test_case import ConversationalTestCase, Turn
 from tests.test_metrics.helpers import (
     recording,
@@ -13,6 +14,7 @@ from tests.test_metrics.helpers import (
     to_audio,
     undecodable,
     without_place,
+    zeros,
 )
 
 
@@ -102,3 +104,49 @@ def test_without_reply_start_times_cut_offs_come_from_each_reply(tmp_path):
     metric = AudioIntegrityMetric(use_speech_detection=False)
     metric.measure(test_case, _show_indicator=False)
     assert metric.score == 1.0
+
+
+class StubSTT(DeepEvalBaseSTT):
+    """Hears the same scripted text in every clip."""
+
+    def __init__(self, heard):
+        self.heard = heard
+        super().__init__(model="stub-stt")
+
+    def load_model(self):
+        return self
+
+    def transcribe(self, audio, **kwargs):
+        return self.heard, None
+
+    async def a_transcribe(self, audio, **kwargs):
+        return self.transcribe(audio, **kwargs)
+
+    def get_model_name(self):
+        return "stub-stt"
+
+
+def _silent_reply_events(tmp_path, stt_model):
+    turns = clean_turns()
+    turns[3] = Turn(
+        role="assistant",
+        content="Your order ships to the store on Friday.",
+        audio=to_audio(zeros(2.0), start_time=turns[3].audio.start_time),
+    )
+    path = stereo_recording(tmp_path / "call.wav", seconds=20.0)
+    metric = AudioIntegrityMetric(stt_model=stt_model)
+    metric.measure(
+        ConversationalTestCase(turns=turns, audio=recording(path)),
+        _show_indicator=False,
+    )
+    return [
+        event
+        for event in metric.score_breakdown["events"]
+        if event["metric"] == "Silent Reply"
+    ]
+
+
+def test_silent_reply_inside_the_roll_up_uses_its_stt_model(tmp_path):
+    assert _silent_reply_events(tmp_path, None)
+    heard = StubSTT("okay so your order ships to the store on friday")
+    assert _silent_reply_events(tmp_path, heard) == []

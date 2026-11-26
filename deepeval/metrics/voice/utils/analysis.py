@@ -11,17 +11,19 @@ from typing import Any, List, Optional, Sequence, Tuple
 from deepeval.test_case import Audio
 from deepeval.voice.connectors import audio_utils
 
-DROPOUT_MAX_FRAMES = 10
+# Gaps from 150 ms to just under Dead Stream's 0.5 s: listeners did not hear
+# shorter gaps mid-word, or did not mind them.
+DROPOUT_MAX_FRAMES = 24
 DROPOUT_FLOOR_RATIO = 0.1
 MIN_PAUSE_FLOOR_RMS = 8.0
 # With no pause noise to compare against, a dropout is a near-zero run whose
 # edges stay near speech level; on real TTS, natural pauses fade to <= 0.012.
 DROPOUT_NEAR_ZERO_SAMPLE = 8
-# A lost packet is 20 ms; consonants like "p" and "t" leave 10-15 ms gaps.
-DROPOUT_MIN_MS = 20
+DROPOUT_MIN_MS = 150
 DROPOUT_EDGE_MS = 5
 DROPOUT_CONTEXT_MS = 60
 DROPOUT_EDGE_RATIO = 0.25
+DROPOUT_FRAME_SECONDS = 0.02
 CLIPPING_ABS_SAMPLE = 32760
 SPEECH_LEVEL_PERCENTILE = 0.9
 NOISE_LEVEL_PERCENTILE = 0.1
@@ -666,8 +668,21 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
             and min(frame_rms[start:index]) <= DROPOUT_FLOOR_RATIO * pause_floor
         ):
             dropout_spans.append((start * 0.02, length * 0.02))
+    hard_edged_gaps = _hard_edged_gaps(samples, sample_rate)
     if pause_floor < MIN_PAUSE_FLOOR_RMS:
-        dropout_spans = _hard_edged_gaps(samples, sample_rate)
+        dropout_spans = hard_edged_gaps
+    else:
+        # The closure before "p", "t" or "k" and the hiss of an "s" also dip
+        # under the pause noise, but they fade in and out; lost audio doesn't.
+        dropout_spans = [
+            (offset, duration)
+            for offset, duration in dropout_spans
+            if any(
+                gap_offset < offset + duration + DROPOUT_FRAME_SECONDS
+                and offset - DROPOUT_FRAME_SECONDS < gap_offset + gap_duration
+                for gap_offset, gap_duration in hard_edged_gaps
+            )
+        ]
 
     speech_level, noise_level = speech_and_noise_levels(frame_rms)
     if len(samples) / sample_rate >= NOISE_MIN_SECONDS:

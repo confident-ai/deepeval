@@ -1,3 +1,4 @@
+import re
 from typing import Any, Dict, List, Optional, Union
 
 from deepeval.config.eval_mode import EvalMode
@@ -21,26 +22,35 @@ from deepeval.models.system_one.schema import NoulQuestion
 from deepeval.test_case import ConversationalTestCase, Turn
 from deepeval.metrics.voice.utils.events import RANGE, VoiceEvent
 
-# A caller speaking again sooner is pausing mid-thought, not kept waiting:
-# it is the wait Response Latency's default counts as slow.
-REPROMPT_MIN_WAIT_SECONDS = 4.0
-
+# A reprompt is the caller saying it again after waiting in silence; said
+# sooner, they are still talking.
+REPROMPT_MIN_WAIT_SECONDS = 2.5
+# A bare greeting only checks that someone is there after a long silence:
+# the wait Response Latency's default counts as slow.
+GREETING_MIN_WAIT_SECONDS = 4.0
+GREETINGS = {"hi", "hello", "hey", "hi there", "hello there", "hey there"}
+# The agent's own words on the caller's line are an echo, not the caller.
+ECHOED_LINE_MIN_WORDS = 3
+ECHOED_LINE_MIN_WORD_SHARE = 0.8
 REPROMPT_CALL = (
     "A phone call between an AI voice agent and a caller. Each candidate is a "
     "caller line, the silence after it with no reply from the agent, and the "
     "caller's next line."
 )
 REPROMPT_QUESTION = (
-    "Is the caller's next line a repeat or rephrasing of their line, or a "
-    "check that someone is still there?"
+    "Does the caller's next line only say their line again, or check that "
+    "someone is still there, without adding anything new?"
 )
 REPROMPT_YES = (
-    "The caller says the same thing again, rephrases it, or checks the agent "
-    'is still there, such as "hello?" or "are you there?".'
+    "The next line adds no new information: it repeats the line, rewords the "
+    "same request or answer, or asks whether anyone is there, such as "
+    '"hello?" or "are you there?".'
 )
 REPROMPT_NO = (
-    "The caller carries on or finishes the same thought, says something "
-    "new, or is talking to someone else."
+    "The next line adds something new, even when it starts by repeating the "
+    "line: more detail, the rest of an unfinished sentence, a different "
+    "answer, thanks or a goodbye. Or it is unrelated, or talks to someone "
+    "else."
 )
 
 
@@ -56,6 +66,23 @@ def _agent_line_before(turns: List[Turn], index: int) -> Optional[str]:
             if turn.role == "assistant"
         ),
         None,
+    )
+
+
+def _words(text: str) -> List[str]:
+    return re.sub(r"[^\w']+", " ", text.lower()).split()
+
+
+def _is_greeting(text: str) -> bool:
+    return " ".join(_words(text)) in GREETINGS
+
+
+def _is_echo_of(line: str, agent_line: Optional[str]) -> bool:
+    words, agent_words = _words(line), set(_words(agent_line or ""))
+    return (
+        len(words) >= ECHOED_LINE_MIN_WORDS
+        and sum(word in agent_words for word in words) / len(words)
+        >= ECHOED_LINE_MIN_WORD_SHARE
     )
 
 
@@ -123,14 +150,21 @@ class RepromptMetric(BaseDefectMetric):
                 continue
             silence = silence_after_line(turns, last, self.use_speech_detection)
             wait = silence.get("duration_seconds")
-            repeat = turns[last + 1].audio
-            repeat_is_timed = (
-                repeat is not None and repeat.start_time is not None
-            )
+            # The wait is only known when the repeat itself is timed.
+            next_turn = turns[next_line[0]]
             if (
-                repeat_is_timed
-                and wait is not None
-                and wait < REPROMPT_MIN_WAIT_SECONDS
+                wait is None
+                or next_turn.audio is None
+                or next_turn.audio.start_time is None
+                or wait < REPROMPT_MIN_WAIT_SECONDS
+            ):
+                continue
+            repeat = _line_text(turns, *next_line)
+            if _is_greeting(repeat) and wait < GREETING_MIN_WAIT_SECONDS:
+                continue
+            agent_line = _agent_line_before(turns, next_line[0])
+            if _is_echo_of(repeat, agent_line) or _is_echo_of(
+                _line_text(turns, first, last), agent_line
             ):
                 continue
             candidates.append(
@@ -139,11 +173,7 @@ class RepromptMetric(BaseDefectMetric):
                     turn=first,
                     reprompt_turn=last + 1,
                     mark=RANGE,
-                    description=(
-                        "Caller repeated themselves"
-                        if wait is None
-                        else f"Caller repeated themselves after {wait:.1f}s"
-                    ),
+                    description=f"Caller repeated themselves after {wait:.1f}s",
                     **silence,
                 )
             )
@@ -151,9 +181,7 @@ class RepromptMetric(BaseDefectMetric):
                 {
                     "agent_line_before": _agent_line_before(turns, first),
                     "caller_line": _line_text(turns, first, last),
-                    "silence_seconds": (
-                        None if wait is None else round(wait, 1)
-                    ),
+                    "silence_seconds": round(wait, 1),
                     "caller_next_line": _line_text(turns, *next_line),
                 }
             )

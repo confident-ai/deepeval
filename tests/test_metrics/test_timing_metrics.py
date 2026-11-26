@@ -9,6 +9,7 @@ from deepeval.metrics import (
 )
 from deepeval.test_case import Turn
 from tests.test_metrics.helpers import (
+    other_voice,
     CLEAN_GAPS,
     STAMPS_NOTE,
     agent_backs_off_call,
@@ -213,13 +214,13 @@ def test_starting_within_half_a_second_of_the_agent_is_a_collision(
         UserInterruptionMetric(use_speech_detection=False),
         tmp_path,
         agent=[(0.0, speech_like(1.5)), (3.0, speech_like(1.0))],
-        caller=[(caller_at, speech_like(2.0))],
+        caller=[(caller_at, other_voice(2.0))],
     )
     assert metric.score == 1.0
     agent = measure_recording(
         AgentInterruptionMetric(use_speech_detection=False),
         tmp_path,
         agent=[(0.0, speech_like(1.5)), (3.0, speech_like(1.0))],
-        caller=[(caller_at, speech_like(2.0))],
+        caller=[(caller_at, other_voice(2.0))],
     )
     assert agent.score == 0.0

@@ -8,6 +8,7 @@ from tests.test_metrics.helpers import (
     caller_turn,
     clean_turns,
     measure,
+    reprompted_turns,
     timed_turn,
     without_place,
 )
@@ -34,8 +35,7 @@ def _silence_then_caller_again():
 
 
 def test_a_repeat_the_decision_model_confirms_fails_that_line():
-    turns = clean_turns()
-    turns.insert(3, caller_turn("Hello? Can you hear me?"))
+    turns = reprompted_turns()
     model = _judge(0.9)
     metric = measure(
         RepromptMetric(use_speech_detection=False, system_one_model=model),
@@ -124,16 +124,32 @@ def test_one_sentence_split_into_turns_is_one_line():
     assert model.calls == []
 
 
-def test_a_pause_mid_thought_is_not_a_reprompt():
+@pytest.mark.parametrize("wait", [1.0, 2.0])
+def test_speaking_again_too_soon_is_not_a_reprompt(wait):
+    model = _judge(0.9)
+    metric = measure(
+        RepromptMetric(use_speech_detection=False, system_one_model=model),
+        reprompted_turns(repeat="Front desk.", wait=wait),
+    )
+    assert metric.score_breakdown["events"] == []
+    assert model.calls == []
+
+
+def test_the_model_decides_a_pause_mid_thought_is_not_a_reprompt():
     turns = [
         timed_turn("assistant", 2.0, 0.0),
         timed_turn("user", 2.0, 3.0),
-        timed_turn("user", 1.0, 7.0, seed=1),
-        timed_turn("assistant", 2.0, 9.0, seed=2),
+        timed_turn("user", 1.0, 8.0, seed=1),
+        timed_turn("assistant", 2.0, 10.0, seed=2),
     ]
-    metric = measure(RepromptMetric(use_speech_detection=False), turns)
+    model = _judge(0.1)
+    metric = measure(
+        RepromptMetric(use_speech_detection=False, system_one_model=model),
+        turns,
+    )
     assert metric.score == 1.0
     assert metric.score_breakdown["eligible_turns"] == 2
+    assert len(model.calls) == 1
 
 
 def test_speaking_again_after_a_silence_is_a_reprompt():
@@ -169,3 +185,56 @@ def test_building_the_metric_needs_no_decision_model_key():
     metric = RepromptMetric()
     assert metric.system_one_model is None
     assert metric.evaluation_model is None
+
+
+def test_a_repeat_with_no_timestamp_is_not_flagged():
+    model = _judge(0.9)
+    turns = clean_turns()
+    turns.insert(3, caller_turn("Hello? Can you hear me?"))
+    metric = measure(
+        RepromptMetric(use_speech_detection=False, system_one_model=model),
+        turns,
+    )
+    assert metric.score == 1.0
+    assert model.calls == []
+
+
+def test_a_bare_greeting_with_no_timestamp_is_not_flagged():
+    model = _judge(0.9)
+    turns = clean_turns()
+    turns.insert(3, caller_turn("Hello?"))
+    metric = measure(
+        RepromptMetric(use_speech_detection=False, system_one_model=model),
+        turns,
+    )
+    assert metric.score == 1.0
+    assert model.calls == []
+
+
+@pytest.mark.parametrize("wait,flagged", [(3.2, False), (4.5, True)])
+def test_a_bare_greeting_counts_only_after_a_long_wait(wait, flagged):
+    metric = measure(
+        RepromptMetric(
+            use_speech_detection=False, system_one_model=_judge(0.9)
+        ),
+        reprompted_turns(repeat="Hello?", wait=wait),
+    )
+    assert bool(metric.score_breakdown["events"]) is flagged
+
+
+def test_the_agents_own_words_on_the_callers_line_are_not_a_reprompt():
+    model = _judge(0.9)
+    turns = reprompted_turns()
+    turns[3] = turns[3].model_copy(update={"content": turns[1].content})
+    turns[1] = turns[1].model_copy(
+        update={"content": "Please hold while I check that."}
+    )
+    turns[3] = turns[3].model_copy(
+        update={"content": "Please hold while I check that."}
+    )
+    metric = measure(
+        RepromptMetric(use_speech_detection=False, system_one_model=model),
+        turns,
+    )
+    assert metric.score == 1.0
+    assert model.calls == []

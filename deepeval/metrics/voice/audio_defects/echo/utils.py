@@ -3,17 +3,28 @@ from typing import Any, Optional, Tuple
 from deepeval.metrics.voice.utils.analysis import get_numpy, resample
 
 # The agent's voice leaking from the caller's speaker into their microphone
-# returns after the round trip; on real phone calls it came back 0.37-0.51 s
+# returns after the round trip; on real phone calls it came back 0.25-1.7 s
 # later, while background noise lined up at random delays.
 ECHO_RATE = 16000
-ECHO_SEARCH_SECONDS = 1.5
-ECHO_MIN_DELAY_SECONDS = 0.3
-ECHO_MAX_DELAY_SECONDS = 0.6
+ECHO_SEARCH_SECONDS = 2.25
+ECHO_MIN_DELAY_SECONDS = 0.15
+ECHO_MAX_DELAY_SECONDS = 1.75
 # How far the delay's correlation peak stands above the typical correlation.
 ECHO_MIN_PEAK_RATIO = 12.0
-# Copies more than 40 dB below the agent were inaudible to human reviewers.
-ECHO_MIN_LEVEL_DB = -40.0
-ECHO_MIN_REPLY_SECONDS = 2.0
+# Under 2 s of speech the match is noisier: real echoes of short replies
+# peaked at 36 or more, chance matches under 20.
+ECHO_SHORT_REPLY_SECONDS = 2.0
+ECHO_SHORT_REPLY_MIN_PEAK_RATIO = 30.0
+# Reviewers of real calls heard copies down to about 16 dB below the agent;
+# quieter ones were "barely there" or inaudible.
+ECHO_MIN_LEVEL_DB = -17.0
+ECHO_MIN_REPLY_SECONDS = 1.0
+# A clear echo plays back about as loud as the agent; reviewers called the
+# ones more than 8 dB quieter on the caller's line "barely there".
+ECHO_MIN_CALLER_LEVEL_DB = -8.0
+# When the caller's line is this much louder than the copy, the caller is
+# talking and the match is chance or buried under their voice.
+ECHO_MAX_OTHER_SOUND_DB = 9.0
 ECHO_BAND_HZ = (300.0, 3400.0)
 ECHO_SEGMENT_SAMPLES = 512
 
@@ -62,6 +73,12 @@ def _copy_level_db(agent: Any, caller: Any) -> float:
     return 10 * float(np.log10(copy_power / total))
 
 
+def _level_db(samples: Any) -> float:
+    np = get_numpy()
+    power = float(np.mean(samples**2)) if len(samples) else 0.0
+    return 10 * float(np.log10(max(power, 1e-9)))
+
+
 def speaker_leak(
     agent: Any, caller: Any, sample_rate: int, start: float, end: float
 ) -> Optional[Tuple[float, float]]:
@@ -81,11 +98,26 @@ def speaker_leak(
     delay, ratio = _delay_and_peak_ratio(
         np.pad(spoken, (0, len(heard) - len(spoken))), heard
     )
+    min_ratio = (
+        ECHO_SHORT_REPLY_MIN_PEAK_RATIO
+        if end - start < ECHO_SHORT_REPLY_SECONDS
+        else ECHO_MIN_PEAK_RATIO
+    )
     if not (
         ECHO_MIN_DELAY_SECONDS <= delay <= ECHO_MAX_DELAY_SECONDS
-        and ratio >= ECHO_MIN_PEAK_RATIO
+        and ratio >= min_ratio
     ):
         return None
     shift = int(delay * ECHO_RATE)
-    level = _copy_level_db(spoken, heard[shift : shift + len(spoken)])
-    return (delay, level) if level >= ECHO_MIN_LEVEL_DB else None
+    if len(heard) - shift < len(spoken):
+        return None
+    copy = heard[shift : shift + len(spoken)]
+    level = _copy_level_db(spoken, copy)
+    caller_level = _level_db(copy) - _level_db(spoken)
+    if (
+        level < ECHO_MIN_LEVEL_DB
+        or caller_level < ECHO_MIN_CALLER_LEVEL_DB
+        or caller_level - level > ECHO_MAX_OTHER_SOUND_DB
+    ):
+        return None
+    return delay, level

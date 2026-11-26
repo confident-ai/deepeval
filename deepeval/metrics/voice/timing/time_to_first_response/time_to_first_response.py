@@ -54,7 +54,10 @@ class TimeToFirstResponseMetric(BaseDefectMetric):
             "the call connected"
         )
         activity = turn_activity(test_case, self.use_speech_detection)
-        heard = [(span.start, span.turn) for span in activity.agent]
+        # Any sound from the agent's side starts the call, a chime included;
+        # the caller still has to be speaking.
+        agent = turn_activity(test_case, False).agent
+        heard = [(span.start, span.turn) for span in agent]
         heard += [(span.start, span.turn) for span in activity.caller]
         timed = {turn for _, turn in heard}
         # Audio that can't be decoded still has a start to time it by.
@@ -123,14 +126,26 @@ class TimeToFirstResponseMetric(BaseDefectMetric):
         caller_first = next(
             iter(stretches(recording.caller, SPEAKER_PAUSE_SECONDS)), None
         )
-        if caller_first is not None and caller_first.start < agent_at:
+        if (
+            caller_first is not None
+            and caller_first.start < agent_at
+            and caller_first.start <= self.max_wait_seconds
+        ):
             wait = max(0.0, agent_at - caller_first.end)
+            waited_from = agent_at - wait
             defect_label = (
                 f"a first response over {self.max_wait_seconds} seconds after "
                 "the caller's first words"
             )
         else:
-            wait = agent_at
+            # A caller who spoke first only after sitting in silence was
+            # left waiting for a greeting that never came.
+            wait = (
+                agent_at
+                if caller_first is None or caller_first.start >= agent_at
+                else caller_first.start
+            )
+            waited_from = 0.0
             defect_label = (
                 f"a first response over {self.max_wait_seconds} seconds after "
                 "the call connected"
@@ -144,7 +159,7 @@ class TimeToFirstResponseMetric(BaseDefectMetric):
                     reply_start=at,
                     first_response_seconds=round(wait, 2),
                     description=f"Agent took {wait:.1f}s to first respond",
-                    **on_call(agent_at - wait, wait),
+                    **on_call(waited_from, wait),
                 )
             )
         return DefectShare(

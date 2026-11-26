@@ -4,6 +4,10 @@ from deepeval.metrics.voice.audio_defects.echo.utils import (
     ECHO_MIN_REPLY_SECONDS,
     speaker_leak,
 )
+from deepeval.metrics.voice.utils.speech_detection import (
+    SPEECH_MIN_PROBABILITY,
+    speech_probabilities,
+)
 from deepeval.metrics.voice.utils.call_activity import (
     read_call_recording,
     recording_activity,
@@ -23,6 +27,14 @@ from deepeval.metrics.voice.utils.events import (
 )
 
 DEFECT_LABEL = "an echo"
+# A chime or hold tone coming back is not the agent's voice echoing.
+ECHO_MIN_SPEECH_SHARE = 0.5
+
+
+def _is_speech(samples, sample_rate: int) -> bool:
+    probabilities = speech_probabilities(samples, sample_rate)
+    heard = [value >= SPEECH_MIN_PROBABILITY for value in probabilities]
+    return bool(heard) and sum(heard) / len(heard) >= ECHO_MIN_SPEECH_SHARE
 
 
 class EchoMetric(BaseDefectMetric):
@@ -36,6 +48,7 @@ class EchoMetric(BaseDefectMetric):
         include_reason: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
+        use_speech_detection: bool = True,
         audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None,
         eval_mode: Optional[VoiceEvalModeName] = None,
         flaky: bool = False,
@@ -48,6 +61,7 @@ class EchoMetric(BaseDefectMetric):
             flaky=flaky,
         )
         self._use_audio_decision_model(audio_decision_model, eval_mode)
+        self.use_speech_detection = use_speech_detection
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         agent_channel = test_case.agent_channel
@@ -76,6 +90,11 @@ class EchoMetric(BaseDefectMetric):
             leak = speaker_leak(
                 agent, caller, sample_rate, span.start, span.end
             )
+            if leak is not None and self.use_speech_detection:
+                first = int(span.start * sample_rate)
+                last = int(span.end * sample_rate)
+                if not _is_speech(agent[first:last], sample_rate):
+                    leak = None
             if leak is not None:
                 delay, level = leak
                 defects.append(
@@ -87,7 +106,8 @@ class EchoMetric(BaseDefectMetric):
                         mark=WHOLE_REPLY,
                         description="Agent's voice echoed back from the "
                         "caller's side",
-                        **on_call(span.start, span.end - span.start),
+                        # Where the copy is heard, not where the agent said it.
+                        **on_call(span.start + delay, span.end - span.start),
                     )
                 )
         return DefectShare(

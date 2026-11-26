@@ -17,6 +17,7 @@ from deepeval.metrics.voice.audio_defects.audio_glitch.utils import (
     detect_audio_glitches,
 )
 from deepeval.metrics.voice.utils.events import events_to_dicts
+from deepeval.models.base_model import DeepEvalBaseSTT
 from deepeval.test_case import ConversationalTestCase, Turn
 from tests.test_metrics.helpers import (
     RATE,
@@ -33,6 +34,9 @@ from tests.test_metrics.helpers import (
     vowel,
     with_noise,
     zeros,
+    recording,
+    stereo_recording,
+    with_defect,
 )
 
 
@@ -101,16 +105,22 @@ def test_pauses_between_words_are_not_dropouts():
     assert analyze_audio(to_audio(spoken_words())).dropout_events == 0
 
 
-def test_a_short_break_inside_a_word_is_a_dropout():
-    clip = spoken_words()
-    clip[int(1.1 * RATE) : int(1.2 * RATE)] = zeros(0.1)
+def test_a_break_inside_a_word_is_a_dropout():
+    clip = spoken_words(word=0.5, rhythm=0.5)
+    clip[int(1.35 * RATE) : int(1.55 * RATE)] = zeros(0.2)
     assert analyze_audio(to_audio(clip)).dropout_events == 1
 
 
-def test_a_break_inside_a_word_is_a_dropout_when_pauses_are_digital():
-    clip = spoken_words(noise=0)
+def test_a_break_too_short_to_hear_is_not_a_dropout():
+    clip = spoken_words(word=0.5, rhythm=0.5)
+    clip[int(1.4 * RATE) : int(1.5 * RATE)] = zeros(0.1)
     assert analyze_audio(to_audio(clip)).dropout_events == 0
-    clip[int(1.1 * RATE) : int(1.2 * RATE)] = zeros(0.1)
+
+
+def test_a_break_inside_a_word_is_a_dropout_when_pauses_are_digital():
+    clip = spoken_words(word=0.5, rhythm=0.5, noise=0)
+    assert analyze_audio(to_audio(clip)).dropout_events == 0
+    clip[int(1.35 * RATE) : int(1.55 * RATE)] = zeros(0.2)
     assert analyze_audio(to_audio(clip)).dropout_events == 1
 
 
@@ -325,6 +335,18 @@ def test_clipping_is_flagged_with_its_span():
     assert event["offset_seconds"] == pytest.approx(1.0, abs=0.1)
 
 
+def test_light_clipping_is_flagged():
+    turns = clean_turns()
+    turns[1].audio = to_audio(
+        speech_like(1.5, base_hz=230.0)
+        + clipped(0.25)[int(0.11 * RATE) : int(0.135 * RATE)]
+        + speech_like(1.5),
+        start_time=3.5,
+    )
+    (event,) = _events(_detect(turns), "clipping")
+    assert 0.001 < event["fraction"] < 0.01
+
+
 def test_detect_reports_both_roles():
     report = _detect(clean_turns())
     assert set(report.baselines) == {"user", "assistant"}
@@ -385,3 +407,47 @@ def test_the_old_reason_model_options_are_accepted_and_ignored():
     measure(metric, _held_tone_call())
     assert metric.evaluation_model is None
     assert metric.reason.startswith("1 of 3 agent replies")
+
+
+class StubSTT(DeepEvalBaseSTT):
+    """Hears the same scripted text in every clip."""
+
+    def __init__(self, heard):
+        self.heard = heard
+        super().__init__(model="stub-stt")
+
+    def load_model(self):
+        return self
+
+    def transcribe(self, audio, **kwargs):
+        return self.heard, None
+
+    async def a_transcribe(self, audio, **kwargs):
+        return self.transcribe(audio, **kwargs)
+
+    def get_model_name(self):
+        return "stub-stt"
+
+
+def _dead_stretch_events(tmp_path, stt_model):
+    reply = speech_like(1.0) + zeros(0.7) + speech_like(1.0, seed=5)
+    turns = with_defect(1, lambda: reply)
+    path = stereo_recording(
+        tmp_path / "call.wav", agent=[(turns[1].audio.start_time, reply)]
+    )
+    metric = AudioGlitchMetric(stt_model=stt_model)
+    metric.measure(
+        ConversationalTestCase(turns=turns, audio=recording(path)),
+        _show_indicator=False,
+    )
+    return [
+        event
+        for event in metric.score_breakdown["events"]
+        if event["metric"] == "Dead Stream"
+    ]
+
+
+def test_dead_stream_inside_the_roll_up_uses_its_stt_model(tmp_path):
+    assert _dead_stretch_events(tmp_path, None)
+    finished = StubSTT("Let me check on that for you. Your order shipped.")
+    assert _dead_stretch_events(tmp_path, finished) == []
