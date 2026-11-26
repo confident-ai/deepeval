@@ -1,7 +1,6 @@
-from typing import List
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 
 class ReasonScore(BaseModel):
     reasoning: str
-    score: float
+    score: float = Field(ge=0, le=10)
