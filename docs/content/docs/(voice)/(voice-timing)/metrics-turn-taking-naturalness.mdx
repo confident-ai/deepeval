@@ -80,9 +80,6 @@ See [Events](#events) for what `score_breakdown` contains.
 
 Every event the four parts raise shows up in `score_breakdown`, tagged with the part that raised it. Here is what the two calls in the [example call](#example-call) return:
 
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
-
 ```python
 {
     "eligible_turns": 5,
@@ -149,78 +146,6 @@ Every event the four parts raise shows up in `score_breakdown`, tagged with the 
 }
 ```
 
-</Tab>
-<Tab value="Per-turn audio">
-
-Events name turns instead of times in the full call audio. Response Latency and Response Delay Consistency time one reply fewer here, since turn 9 follows another agent turn.
-
-```python
-{
-    "eligible_turns": 5,
-    "turns_with_events": 3,
-    "events": [
-        {
-            "type": "slow_response",
-            "turn": 3,
-            "duration_seconds": 4.8,
-            "start_time": 8.0,
-            "mark": "range",
-            "timing_source": "turn_timestamps",
-            "description": "Agent took 4.8s to reply",
-            "response_delay_seconds": 4.8,
-            "metric": "Response Latency",
-        },
-        {
-            "type": "false_start",
-            "turn": 8,
-            "duration_seconds": 1.0,
-            "start_time": 25.0,
-            "mark": "range",
-            "timing_source": "turn_timestamps",
-            "description": "Agent started over the caller, then stopped",
-            "agent_seconds": 1.0,
-            "overlap_seconds": 1.0,
-            "metric": "Agent Interruption",
-        },
-        {
-            "type": "talk_over",
-            "turn": 6,
-            "duration_seconds": 2.0,
-            "start_time": 20.0,
-            "mark": "range",
-            "timing_source": "turn_timestamps",
-            "description": "Caller talked over the agent for 2.0s",
-            "caller_seconds": 2.0,
-            "overlap_seconds": 2.0,
-            "metric": "User Interruption",
-        },
-        {
-            "type": "delay_shift",
-            "turn": 3,
-            "duration_seconds": 4.8,
-            "start_time": 8.0,
-            "mark": "range",
-            "timing_source": "turn_timestamps",
-            "description": "Reply came 3.8s slower than usual",
-            "response_delay_seconds": 4.8,
-            "shift_seconds": 3.8,
-            "metric": "Response Delay Consistency",
-        },
-    ],
-    "skipped": [{"turn": 8, "error": "Agent started before the caller finished."}],
-    "metrics": {
-        "Response Latency": {"score": 0.6666666666666667, "eligible_turns": 3, "turns_with_events": 1},
-        "Agent Interruption": {"score": 0.8, "eligible_turns": 5, "turns_with_events": 1},
-        "User Interruption": {"score": 0.75, "eligible_turns": 4, "turns_with_events": 1},
-        "Response Delay Consistency": {"score": 0.6666666666666667, "eligible_turns": 3, "turns_with_events": 1},
-    },
-    "timing_source": "turn_timestamps",
-}
-```
-
-</Tab>
-</Tabs>
-
 | Field | What it means |
 | --- | --- |
 | `metric` | Which part raised the event. The part's own page explains its other fields |
@@ -237,9 +162,11 @@ The `TurnTakingNaturalnessMetric` score is calculated according to the following
 
 <Equation formula="\text{Turn-Taking Naturalness} = \frac{\text{Number of Agent Replies No Part Flagged}}{\text{Total Number of Agent Replies Judged}}" />
 
+With per-turn audio instead of a call recording, the waits and overlaps are measured the same way, from the speech heard inside each clip, placed on the call's clock by its `Audio.start_time`. Events name turns instead of times in the call, and an agent turn that follows another agent turn isn't timed as a reply.
+
 ### The four parts
 
-The metric runs these metrics on the call, each with its default limits, reading [full call audio or per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio) the same way they do on their own:
+The metric runs these metrics on the call, each with its default limits, reading the call the same way they do on their own:
 
 | Part | Flags an agent reply when |
 | --- | --- |
@@ -285,10 +212,7 @@ Timings depend on the connector and its end-of-turn detection, so keep the conne
 
 ### Example call
 
-Two versions of one call, one scored from full call audio and one from per-turn audio. Each row is one agent reply and which parts flagged it.
-
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
+A call where the agent is slow once, talked over once and false-starts once. Each row is one agent reply and which parts flagged it.
 
 <VoiceDiagram
   duration={31}
@@ -316,41 +240,6 @@ Two versions of one call, one scored from full call audio and one from per-turn 
 | 25.0 s | Agent Interruption (false start) | **Yes** |
 | 28.0 s | None | No |
 | **5 replies** | | **3 with an issue → 2/5 = 0.4** |
-
-</Tab>
-<Tab value="Per-turn audio">
-
-<VoiceDiagram
-  duration={31}
-  lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0.4, end: 2.4 }, { start: 6.0, end: 8.0 }, { start: 15.6, end: 17.6 }, { start: 20.0, end: 22.0, label: "6" }, { start: 24.0, end: 27.0 }], sounds: [{ start: 0.4, end: 2.4 }, { start: 6.0, end: 8.0 }, { start: 15.6, end: 17.6 }, { start: 20.0, end: 22.0 }, { start: 24.0, end: 27.0 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 3.2, end: 5.4, label: "1" }, { start: 8.2, end: 15.0, label: "3" }, { start: 18.6, end: 23.0, label: "5" }, { start: 25.0, end: 26.0, label: "8" }, { start: 28.0, end: 30.0, label: "9" }], sounds: [{ start: 3.2, end: 5.4 }, { start: 12.8, end: 15.0 }, { start: 18.6, end: 23.0 }, { start: 25.0, end: 26.0 }, { start: 28.0, end: 30.0 }] },
-  ]}
-  marks={[
-    { at: 12.8, lane: 1, tone: "bad", label: "slow" },
-    { at: 20.0, lane: 0, tone: "bad", label: "cuts in" },
-    { at: 25.0, lane: 1, tone: "bad", label: "false start" },
-  ]}
-  highlights={[
-    { start: 8.0, end: 12.8, lane: 1 },
-    { start: 20.0, end: 22.0, lane: 0 },
-    { start: 25.0, end: 26.0, lane: 1 },
-  ]}
-/>
-
-Turn 3's clip starts 0.2 seconds after the caller's, but its speech only starts at 12.8 seconds, so the wait is still 4.8 seconds.
-
-| Agent turn | Flagged by | Has an issue? |
-| --- | --- | --- |
-| 1 | None | No |
-| 3 | Response Latency (4.8 s wait), Response Delay Consistency (+3.8 s) | **Yes** |
-| 5 | User Interruption (caller turn 6 talked over it) | **Yes** |
-| 8 | Agent Interruption (false start) | **Yes** |
-| 9 | None | No |
-| **5 replies** | | **3 with an issue → 2/5 = 0.4** |
-
-</Tab>
-</Tabs>
 
 ## FAQs
 

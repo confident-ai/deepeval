@@ -80,9 +80,6 @@ See [Events](#events) for what `score_breakdown` contains.
 
 Each reply that was cut off shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
 
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
-
 ```python
 {
     "eligible_turns": 4,
@@ -111,63 +108,6 @@ Each reply that was cut off shows up in `score_breakdown`. Here is what the two 
 | `start_time` | Where the 20 ms checked before the stop begins |
 | `duration_seconds` | Always 0.02: the 20 ms that were checked |
 
-</Tab>
-<Tab value="Per-turn audio">
-
-There's no full call audio to point into here, so each event names the turn that was cut and where in that turn's clip it happened.
-
-```python
-{
-    "eligible_turns": 5,
-    "turns_with_events": 2,
-    "events": [
-        {
-            "type": "stream_cut",
-            "turn": 4,
-            "role": "assistant",
-            "offset_seconds": 1.6,
-            "duration_seconds": 0.0,
-            "start_time": 11.2,
-            "mark": "moment",
-            "timing_source": "turn_timestamps",
-            "description": "Agent's audio cut off abruptly",
-            "position": "middle",
-            "evidence": "trailing_dead_run",
-            "gap_seconds": 0.6,
-            "resumed_turn": 5,
-        },
-        {
-            "type": "abrupt_cutoff",
-            "turn": 7,
-            "offset_seconds": 1.98,
-            "duration_seconds": 0.02,
-            "start_time": 18.98,
-            "mark": "moment",
-            "timing_source": "turn_timestamps",
-            "description": "Agent's audio cut off abruptly",
-        },
-    ],
-    "skipped": [],
-    "timing_source": "turn_timestamps",
-}
-```
-
-| Field | What it means |
-| --- | --- |
-| `turn` | Which turn was cut, counting from 0 |
-| `offset_seconds` | Where the cut is, in seconds from the start of that turn's clip |
-| `duration_seconds` | 0.02 for a cut-off (the 20 ms checked), 0 for a stream cut |
-| `start_time` | The same spot, in seconds from the start of the call. Missing when the clip has no `Audio.start_time` |
-| `evidence` | Stream cuts only. Abrupt end if the sound stopped at full volume, trailing dead run if it ended in digital silence |
-| `position` | Stream cuts only. Whether the cut is near the start, middle or end of the clip |
-| `gap_seconds` | Stream cuts only. How long the agent was silent before speaking again |
-| `resumed_turn` | Stream cuts only. The turn where the agent picked back up |
-
-Clips that can't be decoded are listed under `skipped`.
-
-</Tab>
-</Tabs>
-
 Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
 
 `eligible_turns` is how many agent replies were counted and `turns_with_events` how many were cut off. The score is the share that weren't.
@@ -178,12 +118,9 @@ The `AbruptCutoffMetric` score is calculated according to the following equation
 
 <Equation formula="\text{Abrupt Cut-off} = \frac{\text{Number of Agent Replies Without a Cut-off}}{\text{Total Number of Agent Replies}}" />
 
-The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio), and the two count replies and check stops differently, as below. A reply counts as cut off at most once, however many times its sound stops.
+With per-turn audio instead of a call recording, each agent clip that decodes is one reply, and only its end is checked. A clip is also flagged as a **stream cut** if it ends mid-sound or in 1 second or more of digital silence and the agent's next clip starts within 15 seconds. Clips with `interrupted=True` are never flagged. Events name the turn and where in its clip the cut happened, instead of a time in the call. A reply counts as cut off at most once, however many times its sound stops.
 
 ### Counting agent replies
-
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={10}
@@ -199,31 +136,9 @@ The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introdu
 
 Each stretch of agent sound is one reply. A pause under 1 second doesn't end it, so reply 1 above is one reply even though the agent paused mid-way.
 
-</Tab>
-<Tab value="Per-turn audio">
-
-<VoiceDiagram
-  duration={10}
-  lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 2.2, end: 5.8, label: "turn 1" }, { start: 6.8, end: 9.4, label: "turn 3" }], sounds: [{ start: 2.4, end: 3.8 }, { start: 4.3, end: 5.6 }, { start: 7.0, end: 9.2 }] },
-  ]}
-  brackets={[
-    { start: 2.2, end: 5.8, lane: 0, label: "reply 1" },
-    { start: 6.8, end: 9.4, lane: 0, label: "reply 2" },
-  ]}
-/>
-
-Each agent clip that decodes is one reply, however many pauses it has. Clips with `interrupted=True` still count.
-
-</Tab>
-</Tabs>
-
 ### Cut-off criteria
 
 A finished reply fades out. A cut one stops at near full volume.
-
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={8}
@@ -241,25 +156,6 @@ Only the stop at the very end of each reply, within 0.05 seconds of it, is check
 
 - the caller made 0.2 seconds or more of sound from 1 second before it to 0.2 seconds after, or
 - the full call audio ends within 0.05 seconds, which [Unexpected Call End](/docs/metrics-unexpected-call-end) judges instead.
-
-</Tab>
-<Tab value="Per-turn audio">
-
-<VoiceDiagram
-  duration={8}
-  lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 0.3, end: 3.4, label: "turn 0" }, { start: 4.4, end: 7.4, label: "turn 2" }], sounds: [{ start: 0.4, end: 3.2, ending: "fade" }, { start: 4.5, end: 7.0, ending: "cut" }] },
-  ]}
-  marks={[
-    { at: 3.2, lane: 0, tone: "ok", label: "fades out" },
-    { at: 7.0, lane: 0, tone: "bad", label: "stops at full volume" },
-  ]}
-/>
-
-Only the end of each clip is checked. A clip is also flagged as a **stream cut** if it ends mid-sound or in 1 second or more of digital silence, and the agent's own next clip starts within 15 seconds. Clips with `interrupted=True` are never flagged.
-
-</Tab>
-</Tabs>
 
 A stop is a cut-off when the last 20 ms of sound before it are:
 
@@ -300,10 +196,7 @@ If the model judges "no" more likely than "yes", the cut-off is dismissed and do
 
 ### Example call
 
-Two short calls where the agent sometimes stops mid-word, one scored from full call audio and one from per-turn audio. Each row is one agent reply, how it ended and whether that counts as a cut-off.
-
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
+A short call where the agent sometimes stops mid-word. Each row is one agent reply, how it ended and whether that counts as a cut-off.
 
 <VoiceDiagram
   duration={14}
@@ -326,35 +219,6 @@ Two short calls where the agent sometimes stops mid-word, one scored from full c
 | 10.0 – 11.6 s | Full volume, caller silent, and the reply's text stops mid-sentence | **Yes** |
 | 13.2 – 14.0 s | Still going when the full call audio ends | No |
 | **4 replies** | | **1 cut off → 3/4 = 0.75** |
-
-</Tab>
-<Tab value="Per-turn audio">
-
-<VoiceDiagram
-  duration={20}
-  lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 0, end: 3.0, label: "turn 0" }, { start: 4.6, end: 7.4, label: "turn 2" }, { start: 9.6, end: 12.4, label: "turn 4" }, { start: 13.0, end: 15.2, label: "turn 5" }, { start: 17.0, end: 19.4, label: "turn 7" }], sounds: [{ start: 0.1, end: 2.9, ending: "fade" }, { start: 4.7, end: 7.4, ending: "cut" }, { start: 9.7, end: 11.2, ending: "cut" }, { start: 11.2, end: 12.4, silent: true }, { start: 13.1, end: 15.1, ending: "fade" }, { start: 17.1, end: 19.0, ending: "cut" }] },
-  ]}
-  marks={[
-    { at: 2.9, lane: 0, tone: "ok", label: "clean" },
-    { at: 7.4, lane: 0, tone: "ok", label: "clean: interrupted" },
-    { at: 11.2, lane: 0, tone: "bad", label: "stream cut" },
-    { at: 15.1, lane: 0, tone: "ok", label: "clean" },
-    { at: 19.0, lane: 0, tone: "bad", label: "cut off" },
-  ]}
-/>
-
-| Agent turn | How it ends | Cut off? |
-| --- | --- | --- |
-| 0 | Fades out | No |
-| 2 | Full volume, but `interrupted=True` | No |
-| 4 | Digital silence, then the agent resumes in turn 5. The reply's text stops mid-sentence | **Yes** (`stream_cut`) |
-| 5 | Fades out | No |
-| 7 | Full volume, and the reply's text stops mid-sentence | **Yes** |
-| **5 replies** | | **2 cut off → 3/5 = 0.6** |
-
-</Tab>
-</Tabs>
 
 ## FAQs
 

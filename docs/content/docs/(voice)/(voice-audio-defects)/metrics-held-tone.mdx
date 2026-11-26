@@ -22,7 +22,7 @@ The held tone metric checks whether your voice agent's audio contains a **stuck 
 
 To use the `HeldToneMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
 
-The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). If no turn has audio, it uses replies cut from stereo full call audio instead. An `Audio.start_time` on each clip is optional, and only used to place events on the call's clock.
+With [per-turn audio](/docs/metrics-voice-introduction#per-turn-audio), an `Audio.start_time` on each clip is optional, and only used to place events on the call's clock.
 
 ## Usage
 

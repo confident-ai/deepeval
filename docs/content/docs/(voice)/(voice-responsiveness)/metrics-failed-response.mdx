@@ -25,8 +25,6 @@ To use the `FailedResponseMetric`, you'll have to provide a [`ConversationalTest
 - `content` on each turn, to tell which caller lines needed a reply
 - `audio` on the turns, with `Audio.start_time` set so caller turns can be placed on the call's clock
 
-The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). The test case's own `audio` is not used.
-
 ## Usage
 
 The `FailedResponseMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
@@ -125,7 +123,7 @@ The `FailedResponseMetric` score is calculated according to the following equati
 
 <Equation formula="\text{Failed Response} = \frac{\text{Number of Caller Lines Answered}}{\text{Total Number of Caller Lines That Needed a Reply}}" />
 
-The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio) only, to time the caller's turns. It never judges how they sound.
+The metric only uses the audio to time the caller's turns. It never judges how they sound.
 
 ### Counting caller lines
 

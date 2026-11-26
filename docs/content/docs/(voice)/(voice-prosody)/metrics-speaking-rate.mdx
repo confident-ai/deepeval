@@ -25,8 +25,6 @@ To use the `SpeakingRateMetric`, you'll have to provide a [`ConversationalTestCa
 - `audio`, one clip per reply
 - `content`, the text the agent spoke in that clip
 
-The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). `audio` on the test case is not used.
-
 ## Usage
 
 The `SpeakingRateMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):

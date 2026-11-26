@@ -22,7 +22,7 @@ The dead stream metric checks whether your voice agent's audio **goes completely
 
 To use the `DeadStreamMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
 
-The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). If no turn has audio, it uses replies cut from stereo full call audio instead. Give every clip an `Audio.start_time` so a [stream cut](#dead-stream-criteria) can be told apart from a dead stream.
+With [per-turn audio](/docs/metrics-voice-introduction#per-turn-audio), give every clip an `Audio.start_time` so a [stream cut](#dead-stream-criteria) can be told apart from a dead stream.
 
 ## Usage
 

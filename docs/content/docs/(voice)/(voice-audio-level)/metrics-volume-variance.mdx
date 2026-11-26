@@ -24,8 +24,6 @@ To use the `VolumeVarianceMetric`, you'll have to provide a [`ConversationalTest
 
 - `audio` on the agent's turns
 
-The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). If no turn has audio, it uses replies cut from stereo full call audio instead.
-
 ## Usage
 
 The `VolumeVarianceMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):

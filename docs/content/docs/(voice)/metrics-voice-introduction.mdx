@@ -106,64 +106,9 @@ evaluate(
 - **Deterministic by default.** No model calls, no token cost, and the same audio always gives the same score. You can add a [second check by a listening model](#second-check-with-an-audio-decision-model) when you want one.
 - **Every problem is placed on the call.** [Events](#events) say what went wrong and when, so you can jump straight to it in the recording.
 
-## Full Call Audio vs. Per-Turn Audio
+## Call Audio
 
-A voice metric can read audio from two places:
-
-- **Full call audio\*** is `audio` on the test case: one recording of the whole call.
-- **Per-turn audio** is `audio` on each turn: one clip per turn.
-
-\* Full call audio has to be stereo, with the caller and agent on separate channels. Mono full call audio is ignored, because there's no way to tell the two voices apart.
-
-Which one a metric uses depends on what it measures:
-
-- **Who spoke when.** [Abrupt Cut-off](/docs/metrics-abrupt-cut-off), [Response Latency](/docs/metrics-response-latency), [Response Delay Consistency](/docs/metrics-response-delay-consistency), [Time to First Response](/docs/metrics-time-to-first-response), [Agent Interruption](/docs/metrics-agent-interruption), [User Interruption](/docs/metrics-user-interruption) and [Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) use stereo full call audio when the test case has it, and per-turn audio otherwise. [Echo](/docs/metrics-echo) needs stereo full call audio and is skipped without it.
-- **How each reply sounds.** Every other metric uses each turn's own clip. A clip marks where a reply starts and ends, which silence on a recording can't always tell: a long pause mid-reply would otherwise split it in two. Only when no turn has audio, such as a production call that comes as one recording, are the replies cut from stereo full call audio instead. [Transcription Accuracy](/docs/metrics-transcription-accuracy) always needs per-turn audio.
-
-For who spoke when, stereo full call audio is the better source because it's one continuous recording with both speakers on the same clock:
-
-- **Exact timing.** Who spoke when comes from the sound itself, not from where each turn was cut or how accurate its `Audio.start_time` is.
-- **Overlaps are visible.** The metric hears both sides at once, so it can tell when the caller and agent talked over each other, or whether the caller spoke up just as the agent stopped.
-- **Nothing is lost between turns.** Sound that falls outside every turn's clip, such as a reply that starts late or runs on, is still there.
-
-When replies are cut from full call audio, each speaker's turns are matched in order to the replies heard on their channel, from 0.15 seconds before each reply's sound to 0.15 seconds after. If a channel has more replies than turns, the closest replies are joined until the counts match. Mono full call audio can't be used either way, and logs a warning saying so.
-
-Roll-up metrics, such as [Audio Integrity](/docs/metrics-audio-integrity), use whatever each of their parts uses.
-
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
-
-<VoiceDiagram
-  duration={10}
-  lanes={[
-    { label: "Left", role: "caller", sounds: [{ start: 0.3, end: 2.4 }, { start: 6.0, end: 7.8 }] },
-    { label: "Right", role: "agent", sounds: [{ start: 3.0, end: 5.4 }, { start: 8.3, end: 9.8 }] },
-  ]}
-  marks={[
-    { at: 1.4, lane: 0, tone: "info", label: "caller" },
-    { at: 4.2, lane: 1, tone: "info", label: "agent" },
-  ]}
-/>
-
-One recording, with each speaker on their own channel: caller on the left, agent on the right, the way the simulator records. Both are on one clock, so a metric can see exactly when each side spoke and overlapped. For a recording made the other way round, set `agent_channel="left"` on the test case.
-
-</Tab>
-<Tab value="Per-turn audio">
-
-<VoiceDiagram
-  duration={10}
-  lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0.0, end: 2.8 }, { start: 5.7, end: 8.2 }], sounds: [{ start: 0.3, end: 2.4 }, { start: 6.0, end: 7.8 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 2.8, end: 5.7 }, { start: 8.2, end: 10 }], sounds: [{ start: 3.0, end: 5.4 }, { start: 8.3, end: 9.8 }] },
-  ]}
-/>
-
-Separate clips, one per turn, each placed on the call's clock by its `Audio.start_time`. The speaker comes from the turn's `role`. A clip often has silence around the speech. Metrics that time the call, such as the timing and interruption metrics, listen inside each clip for where the speech actually starts and stops; if nothing is heard, or the clip can't be decoded, the whole clip counts as speech. Metrics that judge how a reply sounds, such as pitch and loudness, analyse each clip on its own. If a turn's clip is stereo, its two channels are averaged into one first.
-
-</Tab>
-</Tabs>
-
-`timing_source` in the results says which was used: `"call_recording"` for full call audio, `"turn_timestamps"` for per-turn audio.
+Voice metrics read the call from `audio` on the test case: one stereo recording of the whole call, with the caller and the agent on separate channels. It's what the [conversation simulator](/docs/conversation-simulator-voice-mode) records, and what most voice platforms give you for a production call.
 
 ```python
 from deepeval.test_case import Audio, ConversationalTestCase
@@ -174,6 +119,22 @@ test_case = ConversationalTestCase(
     agent_channel="right",  # the default
 )
 ```
+
+<VoiceDiagram
+  duration={10}
+  lanes={[
+    { label: "Caller (left)", role: "caller", clips: [{ start: 0.15, end: 2.55, label: "turn 1" }, { start: 5.85, end: 7.95, label: "turn 3" }], sounds: [{ start: 0.3, end: 2.4 }, { start: 6.0, end: 7.8 }] },
+    { label: "Agent (right)", role: "agent", clips: [{ start: 2.85, end: 5.55, label: "turn 2" }, { start: 8.15, end: 9.95, label: "turn 4" }], sounds: [{ start: 3.0, end: 5.4 }, { start: 8.3, end: 9.8 }] },
+  ]}
+/>
+
+Both channels share one clock, so metrics that time the call, such as [Response Latency](/docs/metrics-response-latency) and the interruption metrics, see exactly when each side spoke and when they talked over each other. Metrics that judge how a reply sounds, such as pitch and loudness, score each reply on its own: each speaker's turns are matched in order to the replies heard on their channel, and each reply is cut out from 0.15 seconds before its sound to 0.15 seconds after, as the boxes above show. If a channel has more replies than turns, the closest replies are joined until the counts match.
+
+For a recording with the agent on the left channel, set `agent_channel="left"`. A mono recording can't be used, since there's no way to tell the two voices apart, and logs a warning saying so.
+
+### Per-Turn Audio
+
+If your platform gives each turn its own clip, put it in `audio` on the `Turn`, placed on the call's clock by `Audio.start_time`. Metrics that judge how a reply sounds then use those clips instead of cutting the recording, which skips the turn matching above. Without a call recording, the timing metrics use them too, by listening for the speech inside each clip. [Echo](/docs/metrics-echo) needs the stereo recording, and [Transcription Accuracy](/docs/metrics-transcription-accuracy) needs per-turn audio. `timing_source` in the results says which was used: `"call_recording"` or `"turn_timestamps"`.
 
 ## Speech Detection
 

@@ -79,9 +79,6 @@ See [Events](#events) for what `score_breakdown` contains.
 
 A slow first response shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
 
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
-
 ```python
 {
     "eligible_turns": 1,
@@ -110,42 +107,6 @@ A slow first response shows up in `score_breakdown`. Here is what the two calls 
 | `start_time` | Where the wait begins: the start of the call, or the end of the caller's first words |
 | `duration_seconds` | How long the wait lasted, the same as `first_response_seconds` |
 
-</Tab>
-<Tab value="Per-turn audio">
-
-The event names the greeting's turn instead of a time in the full call audio.
-
-```python
-{
-    "eligible_turns": 1,
-    "turns_with_events": 1,
-    "events": [
-        {
-            "type": "slow_first_response",
-            "turn": 0,
-            "duration_seconds": 3.6,
-            "start_time": 0.0,
-            "mark": "range",
-            "timing_source": "turn_timestamps",
-            "description": "Agent took 3.6s to first respond",
-            "first_response_seconds": 3.6,
-        }
-    ],
-    "skipped": [],
-    "timing_source": "turn_timestamps",
-}
-```
-
-| Field | What it means |
-| --- | --- |
-| `turn` | Which turn holds the greeting, counting from 0 |
-| `first_response_seconds` | How long after the call connected the agent's first sound started |
-| `start_time` | Always 0: the wait starts when the call connects |
-| `duration_seconds` | How long the wait lasted, the same as `first_response_seconds` |
-
-</Tab>
-</Tabs>
-
 Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
 
 `eligible_turns` is 1, the agent's first response, and `turns_with_events` is 1 when it was slow. The score is 0 when it was and 1 when it wasn't.
@@ -156,12 +117,9 @@ The `TimeToFirstResponseMetric` score is calculated according to the following e
 
 <Equation formula="\text{Time to First Response} = \begin{cases} 1 & \text{if the first response starts within the wait limit} \\ 0 & \text{otherwise} \end{cases}" />
 
-The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio), and the two handle a caller who speaks first differently, as below.
+With per-turn audio instead of a call recording, the first response is the agent's first sound in any of its clips, placed on the call's clock by its `Audio.start_time`. The event names the greeting's turn instead of a time in the call.
 
 ### Finding the first response
-
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={6.5}
@@ -183,30 +141,6 @@ The first response is the agent's first sound on its channel. The wait depends o
 - **The caller speaks first, within `max_wait_seconds`:** from the end of the caller's first words to the agent's first sound, or 0 if the agent starts before those words end. Pauses under 0.5 seconds stay inside the first words, as above.
 - **The caller speaks first, but only after more than `max_wait_seconds`:** the caller sat in silence waiting for a greeting that never came. The wait runs from the start of the full call audio to the caller's first words, so it's always too long.
 
-</Tab>
-<Tab value="Per-turn audio">
-
-<VoiceDiagram
-  duration={8}
-  lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 5.6, end: 8 }], sounds: [{ start: 5.8, end: 7.8 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 5.2 }], sounds: [{ start: 2.6, end: 5.0 }] },
-  ]}
-  brackets={[
-    { start: 0, end: 2.6, lane: 1, label: "wait" },
-  ]}
-  marks={[
-    { at: 0.4, lane: 1, tone: "skip", label: "clip starts" },
-  ]}
-/>
-
-The first response is the agent's first sound in any of its clips, a chime included, placed on the call's clock by its `start_time`. For the caller, only speech counts. The metric listens inside the clip, so silence at the start of the greeting clip counts as waiting. A clip that can't be decoded is placed by its `start_time`.
-
-The wait runs from when the call connected to that first sound. If the caller's speech comes first, the agent wasn't expected to greet, so the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped). [Response Latency](/docs/metrics-response-latency) times the agent's reply instead.
-
-</Tab>
-</Tabs>
-
 ### Wait criteria
 
 | Check | Rule |
@@ -221,10 +155,7 @@ The default of 3 seconds is a practical allowance for how long a line can stay s
 
 ### Example call
 
-Two calls with a slow start, one scored from full call audio and one from per-turn audio. In the first the caller says hello first; in the second the agent's greeting clip starts on time but its sound doesn't.
-
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
+A call with a slow start, where the caller says hello first.
 
 <VoiceDiagram
   duration={14}
@@ -248,34 +179,6 @@ Two calls with a slow start, one scored from full call audio and one from per-tu
 | --- | --- | --- |
 | 5.0 s, after the caller's hello ended at 1.6 s | 3.4 s | **Yes** |
 | **1 response** | | **slow → 0** |
-
-</Tab>
-<Tab value="Per-turn audio">
-
-<VoiceDiagram
-  duration={12}
-  lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 6.4, end: 8.6 }], sounds: [{ start: 6.6, end: 8.6 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 0.4, end: 6.0, label: "turn 0" }, { start: 9.0, end: 11.2 }], sounds: [{ start: 3.6, end: 6.0 }, { start: 9.2, end: 11.2 }] },
-  ]}
-  brackets={[
-    { start: 0, end: 3.6, lane: 1, tone: "bad", label: "3.6 s" },
-  ]}
-  marks={[
-    { at: 3.6, lane: 1, tone: "bad", label: "slow" },
-  ]}
-  highlights={[
-    { start: 0, end: 3.6, lane: 1 },
-  ]}
-/>
-
-| First response | Wait | Slow? |
-| --- | --- | --- |
-| Turn 0: clip at 0.4 s, first sound at 3.6 s | 3.6 s | **Yes** |
-| **1 response** | | **slow → 0** |
-
-</Tab>
-</Tabs>
 
 ## FAQs
 

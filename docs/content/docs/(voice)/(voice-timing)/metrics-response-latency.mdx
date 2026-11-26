@@ -81,9 +81,6 @@ See [Events](#events) for what `score_breakdown` contains.
 
 Each slow reply shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
 
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
-
 ```python
 {
     "eligible_turns": 3,
@@ -114,52 +111,6 @@ Each slow reply shows up in `score_breakdown`. Here is what the two calls in the
 | `start_time` | Where the wait begins: when the caller stopped talking |
 | `duration_seconds` | How long the wait lasted, the same as `response_delay_seconds` |
 
-</Tab>
-<Tab value="Per-turn audio">
-
-Events name the agent turn instead of a time in the full call audio.
-
-```python
-{
-    "eligible_turns": 4,
-    "turns_with_events": 2,
-    "events": [
-        {
-            "type": "slow_response",
-            "turn": 3,
-            "duration_seconds": 4.6,
-            "start_time": 7.8,
-            "mark": "range",
-            "timing_source": "turn_timestamps",
-            "description": "Agent took 4.6s to reply",
-            "response_delay_seconds": 4.6,
-        },
-        {
-            "type": "slow_response",
-            "turn": 5,
-            "duration_seconds": 4.5,
-            "start_time": 13.7,
-            "mark": "range",
-            "timing_source": "turn_timestamps",
-            "description": "Agent took 4.5s to reply",
-            "response_delay_seconds": 4.5,
-        },
-    ],
-    "skipped": [],
-    "timing_source": "turn_timestamps",
-}
-```
-
-| Field | What it means |
-| --- | --- |
-| `turn` | Which agent turn was slow, counting from 0 |
-| `response_delay_seconds` | How long the caller waited: the turn's `latency_ms` when it has one, otherwise the silence heard |
-| `start_time` | Where the wait begins, counted back from where the reply's speech starts |
-| `duration_seconds` | How long the wait lasted, the same as `response_delay_seconds` |
-
-</Tab>
-</Tabs>
-
 Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`. Replies that couldn't be timed are listed under `skipped` with the reason.
 
 `eligible_turns` is how many agent replies were timed and `turns_with_events` how many were slow. The score is the share that weren't.
@@ -170,12 +121,9 @@ The `ResponseLatencyMetric` score is calculated according to the following equat
 
 <Equation formula="\text{Response Latency} = \frac{\text{Number of Agent Replies Within the Wait Limit}}{\text{Total Number of Timed Agent Replies}}" />
 
-The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio), and the two find replies and measure waits differently, as below.
+With per-turn audio instead of a call recording, each agent clip that directly follows a caller clip is one reply, and the wait is measured from the speech heard inside each clip, placed on the call's clock by its `Audio.start_time`. When an agent turn has `latency_ms`, that is the wait instead. Events name the agent turn instead of a time in the call.
 
 ### Counting agent replies
-
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={12}
@@ -192,32 +140,9 @@ The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introdu
 
 A reply is each time the agent starts speaking after at least 1 second of its own silence, when the caller spoke last. A pause under 1 second doesn't start a new reply. An opening line the agent speaks before the caller makes any sound answers no one, so it isn't counted. [Time to First Response](/docs/metrics-time-to-first-response) times it instead.
 
-</Tab>
-<Tab value="Per-turn audio">
-
-<VoiceDiagram
-  duration={12}
-  lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.6 }, { start: 6.4, end: 8.8 }], sounds: [{ start: 0.3, end: 2.3 }, { start: 6.6, end: 8.6 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 2.9, end: 5.6 }, { start: 9.0, end: 11.6 }], sounds: [{ start: 3.5, end: 5.4 }, { start: 9.4, end: 11.4 }] },
-  ]}
-  marks={[
-    { at: 3.5, lane: 1, tone: "info", label: "reply 1" },
-    { at: 9.4, lane: 1, tone: "info", label: "reply 2" },
-  ]}
-/>
-
-Each agent clip that directly follows a caller clip on the call's clock is one reply. A second agent clip in a row, or an agent clip that opens the call, isn't counted. Every audio turn needs a `start_time` to place it.
-
-</Tab>
-</Tabs>
-
 ### Latency criteria
 
 The wait runs from where the caller's speech ends to where the agent's speech starts.
-
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={12}
@@ -235,33 +160,6 @@ The wait runs from where the caller's speech ends to where the agent's speech st
 />
 
 The wait is the silence between the two channels, from the caller's last sound to the agent's first sound. `latency_ms` on the turns is ignored.
-
-</Tab>
-<Tab value="Per-turn audio">
-
-<VoiceDiagram
-  duration={10}
-  lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.6 }], sounds: [{ start: 0.3, end: 2.3 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 2.8, end: 9.6 }], sounds: [{ start: 7.4, end: 9.4 }] },
-  ]}
-  brackets={[
-    { start: 2.3, end: 7.4, lane: 1, tone: "bad", label: "5.1 s wait" },
-  ]}
-  marks={[
-    { at: 2.8, lane: 1, tone: "skip", label: "clip starts" },
-  ]}
-  highlights={[
-    { start: 2.3, end: 7.4, lane: 1 },
-  ]}
-/>
-
-The metric listens inside each clip for where the speech starts and stops, so silence at the start of the agent's clip still counts as waiting. Above, the clips are only 0.2 seconds apart, but the caller waited 5.1 seconds.
-
-When the agent turn has `latency_ms`, that is the wait instead, and the silence heard isn't used.
-
-</Tab>
-</Tabs>
 
 A reply is slow when:
 
@@ -284,10 +182,7 @@ People answer each other in about 0.2 seconds, and about 1 second of silence is 
 
 ### Example call
 
-Two calls where the agent is sometimes slow to answer, one scored from full call audio and one from per-turn audio. Each row is one agent reply and how long the caller waited for it.
-
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
+A call where the agent is sometimes slow to answer. Each row is one agent reply and how long the caller waited for it.
 
 <VoiceDiagram
   duration={28}
@@ -314,37 +209,6 @@ Two calls where the agent is sometimes slow to answer, one scored from full call
 | 20.6 s | 1.2 s | No |
 | 25.0 s | Started 1.2 s before the caller finished | Skipped |
 | **3 replies** | | **1 slow → 2/3 = 0.67** |
-
-</Tab>
-<Tab value="Per-turn audio">
-
-<VoiceDiagram
-  duration={27}
-  lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.3 }, { start: 5.6, end: 7.8 }, { start: 15.0, end: 17.2 }, { start: 21.0, end: 23.2 }], sounds: [{ start: 0.3, end: 2.3 }, { start: 5.8, end: 7.8 }, { start: 15.2, end: 17.2 }, { start: 21.2, end: 23.2 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 5.1, label: "turn 1" }, { start: 8.0, end: 14.4, label: "turn 3" }, { start: 18.0, end: 20.2, label: "turn 5" }, { start: 23.6, end: 26.2, label: "turn 7" }], sounds: [{ start: 3.1, end: 5.1 }, { start: 12.4, end: 14.4 }, { start: 18.2, end: 20.2 }, { start: 24.2, end: 26.2 }] },
-  ]}
-  marks={[
-    { at: 3.1, lane: 1, tone: "ok", label: "0.8 s" },
-    { at: 12.4, lane: 1, tone: "bad", label: "4.6 s" },
-    { at: 18.2, lane: 1, tone: "bad", label: "latency_ms" },
-    { at: 24.2, lane: 1, tone: "ok", label: "1.0 s" },
-  ]}
-  highlights={[
-    { start: 7.8, end: 12.4, lane: 1 },
-  ]}
-/>
-
-| Agent turn | Wait | Slow? |
-| --- | --- | --- |
-| 1 | 0.8 s | No |
-| 3 | 4.6 s, mostly silence at the start of its clip | **Yes** |
-| 5 | 4.5 s from `latency_ms=4500`, though only 1.0 s of silence is heard | **Yes** |
-| 7 | 1.0 s | No |
-| **4 replies** | | **2 slow → 2/4 = 0.5** |
-
-</Tab>
-</Tabs>
 
 ## FAQs
 

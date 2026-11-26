@@ -25,7 +25,7 @@ To use the `SilentReplyMetric`, you'll have to provide a [`ConversationalTestCas
 - `audio` on the agent's turns
 - `content` on the agent's turns, so a reply with text but no audio can be caught
 
-The metric judges each reply from [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). Stereo full call audio, when the test case has it, is only used to tell whether the caller was talking, and by the `stt_model` check.
+The metric judges each agent reply [on its own](/docs/metrics-voice-introduction#call-audio). The caller's side of the call is only used to tell whether the caller was talking, and by the `stt_model` check.
 
 ## Usage
 
@@ -122,7 +122,7 @@ The `SilentReplyMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Silent Reply} = \frac{\text{Number of Agent Replies With Audible Sound}}{\text{Total Number of Agent Replies}}" />
 
-The metric scores the agent's turns from their [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). The caller's audio is only used to tell whether they were talking.
+The metric scores each agent reply on its own. The caller's audio is only used to tell whether they were talking.
 
 ### Counting agent replies
 

@@ -80,9 +80,6 @@ See [Events](#events) for what `score_breakdown` contains.
 
 Each caller line that cut into the agent shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
 
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
-
 ```python
 {
     "eligible_turns": 4,
@@ -125,58 +122,6 @@ Each caller line that cut into the agent shows up in `score_breakdown`. Here is 
 | `start_time` | Where both started talking at once |
 | `duration_seconds` | How long both talked at once |
 
-</Tab>
-<Tab value="Per-turn audio">
-
-Events name the caller turn instead of a time in the full call audio.
-
-```python
-{
-    "eligible_turns": 4,
-    "turns_with_events": 2,
-    "events": [
-        {
-            "type": "false_start",
-            "turn": 3,
-            "duration_seconds": 1.2,
-            "start_time": 8.0,
-            "mark": "range",
-            "timing_source": "turn_timestamps",
-            "description": "Caller started over the agent, then stopped",
-            "caller_seconds": 1.2,
-            "overlap_seconds": 1.2,
-        },
-        {
-            "type": "talk_over",
-            "turn": 5,
-            "duration_seconds": 2.5,
-            "start_time": 13.5,
-            "mark": "range",
-            "timing_source": "turn_timestamps",
-            "description": "Caller talked over the agent for 2.5s",
-            "caller_seconds": 3.0,
-            "overlap_seconds": 2.5,
-        },
-    ],
-    "skipped": [],
-    "timing_source": "turn_timestamps",
-}
-```
-
-| Field | What it means |
-| --- | --- |
-| `type` | False start or talk-over. False start when both apply |
-| `turn` | The caller turn where the line started, counting from 0 |
-| `caller_seconds` | How long the caller kept speaking |
-| `overlap_seconds` | How much of that the agent was also talking |
-| `start_time` | Where both started talking at once |
-| `duration_seconds` | How long both talked at once |
-
-Agent clips that can't be decoded are listed under `skipped`.
-
-</Tab>
-</Tabs>
-
 Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
 
 `eligible_turns` is how many caller lines were checked and `turns_with_events` how many cut into the agent. The score is the share that didn't.
@@ -187,12 +132,9 @@ The `UserInterruptionMetric` score is calculated according to the following equa
 
 <Equation formula="\text{User Interruption} = \frac{\text{Number of Caller Lines Without an Interruption}}{\text{Total Number of Caller Lines}}" />
 
-The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). Both use the same rules; they differ in how they hear who is talking, as below.
+With per-turn audio instead of a call recording, the metric finds the speech inside each clip and places it on the call's clock by the clip's `Audio.start_time`, then finds overlaps the same way. Events name the caller turn instead of a time in the call.
 
 ### Counting caller lines
-
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
 
 <VoiceDiagram
   duration={11}
@@ -208,25 +150,6 @@ The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introdu
 />
 
 A caller line is each time the caller starts speaking after at least 1 second of their own silence and keeps going for 1 second or more. A pause under 1 second doesn't make a new line. Shorter sounds, like an "mm-hm" while listening, aren't counted.
-
-</Tab>
-<Tab value="Per-turn audio">
-
-<VoiceDiagram
-  duration={10}
-  lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 2.4, end: 5.2 }], sounds: [{ start: 3.2, end: 5.2 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 0, end: 3.0 }, { start: 6.0, end: 9.0 }], sounds: [{ start: 0.2, end: 3.0 }, { start: 6.0, end: 9.0 }] },
-  ]}
-  marks={[
-    { at: 3.2, lane: 0, tone: "info", label: "line 1" },
-  ]}
-/>
-
-The metric listens inside each clip for the speech and places it on the call's clock by the clip's `start_time`. Lines are then found the same way as with full call audio. Above, the caller's clip starts while the agent's is playing, but the caller's speech only starts after the agent's ends, so there's no overlap.
-
-</Tab>
-</Tabs>
 
 ### Interruption criteria
 
@@ -272,10 +195,7 @@ If the model judges "no" more likely than "yes", the interruption is dismissed a
 
 ### Example call
 
-Two calls where the caller sometimes cuts into the agent, one scored from full call audio and one from per-turn audio. Each row is one caller line and whether it interrupted the agent.
-
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
+A call where the caller sometimes cuts into the agent. Each row is one caller line and whether it interrupted the agent.
 
 <VoiceDiagram
   duration={22.5}
@@ -301,36 +221,6 @@ Two calls where the caller sometimes cuts into the agent, one scored from full c
 | 13.4 s | Talking; both talked for 2.6 s | **Yes** (talk-over) |
 | 17.6 s | Finished at 16.0 s | No |
 | **4 lines** | | **2 interruptions → 2/4 = 0.5** |
-
-</Tab>
-<Tab value="Per-turn audio">
-
-<VoiceDiagram
-  duration={22.5}
-  lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 2.4, end: 5.2, label: "turn 1" }, { start: 8.0, end: 9.2, label: "turn 3" }, { start: 13.5, end: 16.5, label: "turn 5" }, { start: 17.6, end: 19.6, label: "turn 6" }], sounds: [{ start: 3.2, end: 5.2 }, { start: 8.0, end: 9.2 }, { start: 13.5, end: 16.5 }, { start: 17.6, end: 19.6 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 0, end: 3.0 }, { start: 6.0, end: 11.0 }, { start: 12.0, end: 16.0 }, { start: 20.4, end: 22.0 }], sounds: [{ start: 0.2, end: 3.0 }, { start: 6.0, end: 11.0 }, { start: 12.0, end: 16.0 }, { start: 20.4, end: 22.0 }] },
-  ]}
-  marks={[
-    { at: 8.0, lane: 0, tone: "bad", label: "false start" },
-    { at: 13.5, lane: 0, tone: "bad", label: "talk-over" },
-  ]}
-  highlights={[
-    { start: 8.0, end: 9.2, lane: 0 },
-    { start: 13.5, end: 16.0, lane: 0 },
-  ]}
-/>
-
-| Caller turn | What the agent was doing | Interruption? |
-| --- | --- | --- |
-| 1 | Clips overlap, but the agent's speech ended at 3.0 s | No |
-| 3 | Talking since 6.0 s; the caller stopped after 1.2 s | **Yes** (false start) |
-| 5 | Talking; both talked for 2.5 s | **Yes** (talk-over) |
-| 6 | Finished at 16.0 s | No |
-| **4 lines** | | **2 interruptions → 2/4 = 0.5** |
-
-</Tab>
-</Tabs>
 
 ## FAQs
 

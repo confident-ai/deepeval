@@ -22,7 +22,7 @@ The echo metric checks whether **the agent's own voice comes back through the ca
 
 To use the `EchoMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the test case\*: a stereo recording of the whole call, with the caller on one channel and the agent on the other.
 
-The metric only reads [full call audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio), since an echo is only heard on the caller's own channel. Without stereo full call audio it is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped). Per-turn audio is ignored. Set `agent_channel="left"` on the test case if the agent is on the left.
+The metric needs the stereo [call recording](/docs/metrics-voice-introduction#call-audio), since an echo is only heard on the caller's own channel. Without it the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped). Set `agent_channel="left"` on the test case if the agent is on the left.
 
 \* Full call audio has to be stereo, with the caller and agent on separate channels. Mono full call audio is ignored, because the two voices can't be told apart.
 

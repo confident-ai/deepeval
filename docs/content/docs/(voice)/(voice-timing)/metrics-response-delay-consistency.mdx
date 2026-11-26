@@ -81,9 +81,6 @@ See [Events](#events) for what `score_breakdown` contains.
 
 Each reply whose wait broke from the usual shows up in `score_breakdown`. Here is what the two calls in the [example call](#example-call) return:
 
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
-
 ```python
 {
     "eligible_turns": 4,
@@ -114,44 +111,6 @@ Each reply whose wait broke from the usual shows up in `score_breakdown`. Here i
 | `start_time` | Where the wait begins: when the caller stopped talking |
 | `duration_seconds` | How long the wait lasted, the same as `response_delay_seconds` |
 
-</Tab>
-<Tab value="Per-turn audio">
-
-Events name the agent turn instead of a time in the full call audio.
-
-```python
-{
-    "eligible_turns": 4,
-    "turns_with_events": 1,
-    "events": [
-        {
-            "type": "delay_shift",
-            "turn": 5,
-            "duration_seconds": 3.8,
-            "start_time": 12.6,
-            "mark": "range",
-            "timing_source": "turn_timestamps",
-            "description": "Reply came 2.8s slower than usual",
-            "response_delay_seconds": 3.8,
-            "shift_seconds": 2.8,
-        }
-    ],
-    "skipped": [],
-    "timing_source": "turn_timestamps",
-}
-```
-
-| Field | What it means |
-| --- | --- |
-| `turn` | Which agent turn it was, counting from 0 |
-| `response_delay_seconds` | How long the caller waited: the turn's `latency_ms` when it has one, otherwise the silence heard |
-| `shift_seconds` | How far that wait is from the typical wait. Negative when faster |
-| `start_time` | Where the wait begins, counted back from where the reply's speech starts |
-| `duration_seconds` | How long the wait lasted, the same as `response_delay_seconds` |
-
-</Tab>
-</Tabs>
-
 Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`. Replies that couldn't be timed are listed under `skipped` with the reason.
 
 `eligible_turns` is how many agent replies were timed and `turns_with_events` how many broke from the usual wait. The score is the share that didn't.
@@ -162,7 +121,7 @@ The `ResponseDelayConsistencyMetric` score is calculated according to the follow
 
 <Equation formula="\text{Response Delay Consistency} = \frac{\text{Number of Agent Replies Close to the Typical Wait}}{\text{Total Number of Timed Agent Replies}}" />
 
-The metric reads [full call audio or per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio).
+With per-turn audio instead of a call recording, the waits are measured the same way, from the speech heard inside each clip, placed on the call's clock by its `Audio.start_time`. Events name the agent turn instead of a time in the call.
 
 ### Counting agent replies
 
@@ -203,10 +162,7 @@ A reply can pass [Response Latency](/docs/metrics-response-latency) and still be
 
 ### Example call
 
-Two calls where the agent answers in about a second, except once, one scored from full call audio and one from per-turn audio. Each row is one agent reply, its wait, and how far that is from the typical wait.
-
-<Tabs items={["Full call audio", "Per-turn audio"]}>
-<Tab value="Full call audio">
+A call where the agent answers in about a second, except once. Each row is one agent reply, its wait, and how far that is from the typical wait.
 
 <VoiceDiagram
   duration={24}
@@ -232,39 +188,6 @@ Two calls where the agent answers in about a second, except once, one scored fro
 | 16.6 s | 4.0 s | +2.9 s | **Yes** |
 | 22.0 s | 1.2 s | +0.1 s | No |
 | **4 replies** | | | **1 flagged → 3/4 = 0.75** |
-
-</Tab>
-<Tab value="Per-turn audio">
-
-<VoiceDiagram
-  duration={24}
-  lanes={[
-    { label: "Caller", role: "caller", clips: [{ start: 0, end: 2.3 }, { start: 5.2, end: 7.4 }, { start: 10.4, end: 12.6 }, { start: 18.4, end: 20.6 }], sounds: [{ start: 0.3, end: 2.3 }, { start: 5.4, end: 7.4 }, { start: 10.6, end: 12.6 }, { start: 18.6, end: 20.6 }] },
-    { label: "Agent", role: "agent", clips: [{ start: 2.6, end: 4.9, label: "turn 1" }, { start: 7.6, end: 10.0, label: "turn 3" }, { start: 12.8, end: 18.0, label: "turn 5" }, { start: 20.8, end: 22.8, label: "turn 7" }], sounds: [{ start: 3.3, end: 4.9 }, { start: 8.4, end: 10.0 }, { start: 16.4, end: 18.0 }, { start: 21.2, end: 22.8 }] },
-  ]}
-  marks={[
-    { at: 3.3, lane: 1, tone: "ok", label: "1.0 s" },
-    { at: 8.4, lane: 1, tone: "ok", label: "1.0 s" },
-    { at: 16.4, lane: 1, tone: "bad", label: "3.8 s" },
-    { at: 21.2, lane: 1, tone: "ok", label: "0.6 s" },
-  ]}
-  highlights={[
-    { start: 12.6, end: 16.4, lane: 1 },
-  ]}
-/>
-
-Turn 5's clip starts 0.2 seconds after the caller's, but its speech starts 3.8 seconds after the caller's speech ends.
-
-| Agent turn | Wait | Shift from 1.0 s | Flagged? |
-| --- | --- | --- | --- |
-| 1 | 1.0 s | 0 s | No |
-| 3 | 1.0 s | 0 s | No |
-| 5 | 3.8 s | +2.8 s | **Yes** |
-| 7 | 0.6 s | −0.4 s | No |
-| **4 replies** | | | **1 flagged → 3/4 = 0.75** |
-
-</Tab>
-</Tabs>
 
 ## FAQs
 
