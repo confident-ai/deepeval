@@ -6,6 +6,7 @@ stretches inside it where the speaker is heard count, judged the same way for
 both speakers."""
 
 import hashlib
+import logging
 import threading
 import wave
 from collections import OrderedDict
@@ -44,6 +45,7 @@ from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.timeline import AudioTimelineEntry, build_audio_timeline
 
+logger = logging.getLogger(__name__)
 T = TypeVar("T")
 
 EVENT_KEYS = {CALL_RECORDING: "reply_start", TURN_TIMESTAMPS: "turn"}
@@ -402,11 +404,27 @@ def read_call_recording(
     return None if wav is None else _read_channels(wav, agent_channel)
 
 
+def _warn_if_mono(wav: bytes) -> None:
+    try:
+        _, _, channels = audio_utils.wav_bytes_to_pcm16(wav)
+    except (EOFError, ValueError, wave.Error):
+        return
+    if channels == 1:
+        logger.warning(
+            "The test case's audio is mono, so voice metrics can't tell the "
+            "caller from the agent and use each turn's audio instead. Attach "
+            "a stereo recording with the caller and agent on separate "
+            "channels to use the full call audio."
+        )
+
+
 def _recording_activity(
     wav: bytes, use_speech_detection: bool, agent_channel: str
 ) -> Optional[CallActivity]:
     channels = _read_channels(wav, agent_channel)
     if channels is None:
+        # Read once per recording thanks to the cache, so this warns once.
+        _warn_if_mono(wav)
         return None
     caller_samples, agent_samples, sample_rate = channels
     agent_levels = _frame_levels(agent_samples, sample_rate)
@@ -757,3 +775,63 @@ def wait_span(
     if reply_start is None:
         return {}
     return on_call(reply_start - wait, wait)
+
+
+# Sound kept around each reply cut from the full call audio, so the checks
+# that look at how a reply starts and ends see its edges.
+TURN_AUDIO_PADDING_SECONDS = 0.15
+
+
+def _fit(replies: List[Span], count: int) -> List[Span]:
+    """Join the replies closest together until there are no more than
+    `count`, so a reply split by a long pause still lines up with its turn."""
+    replies = list(replies)
+    while len(replies) > count > 0:
+        gaps = [b.start - a.end for a, b in zip(replies, replies[1:])]
+        i = gaps.index(min(gaps))
+        replies[i : i + 2] = [Span(replies[i].start, replies[i + 1].end)]
+    return replies
+
+
+def with_turn_audio_from_call(
+    test_case: ConversationalTestCase,
+) -> ConversationalTestCase:
+    """A call recorded only as stereo full call audio, with each turn given
+    the stretch of its speaker's channel it most likely is, so the metrics
+    that judge how each reply sounds can run. Turns are matched to replies
+    heard on their speaker's channel in order. A test case whose turns
+    already carry audio is returned as is: their own clips mark where each
+    reply starts and ends better than silence can."""
+    if test_case.audio is None or any(
+        turn.audio is not None for turn in test_case.turns
+    ):
+        return test_case
+    channels = read_call_recording(test_case.audio, test_case.agent_channel)
+    activity = recording_activity(
+        test_case.audio, False, test_case.agent_channel
+    )
+    if channels is None or activity is None:
+        return test_case
+    caller, agent, sample_rate = channels
+    length = len(agent) / sample_rate
+    turns = list(test_case.turns)
+    for role, spans, samples, pause in (
+        ("assistant", activity.agent, agent, AGENT_PAUSE_SECONDS),
+        ("user", activity.caller, caller, CALLER_PAUSE_SECONDS),
+    ):
+        indexes = [i for i, turn in enumerate(turns) if turn.role == role]
+        replies = _fit(stretches(spans, pause), len(indexes))
+        for index, reply in zip(indexes, replies):
+            start = max(0.0, reply.start - TURN_AUDIO_PADDING_SECONDS)
+            end = min(length, reply.end + TURN_AUDIO_PADDING_SECONDS)
+            pcm = samples[int(start * sample_rate) : int(end * sample_rate)]
+            audio = Audio.from_bytes(
+                audio_utils.pcm16_to_wav_bytes(
+                    pcm.astype("<i2").tobytes(), sample_rate, 1
+                ),
+                "audio/wav",
+                duration=round(end - start, 3),
+                start_time=round(start, 3),
+            )
+            turns[index] = turns[index].model_copy(update={"audio": audio})
+    return test_case.model_copy(update={"turns": turns})
