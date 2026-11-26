@@ -10,7 +10,9 @@ from deepeval.metrics.voice.utils.call_activity import (
     recording_activity,
     silence_after_line,
     turn_activity,
+    with_turn_audio_from_call,
 )
+from deepeval.metrics import LoudnessMetric
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from deepeval.voice.connectors import audio_utils
 from tests.test_metrics.helpers import (
@@ -250,6 +252,75 @@ def test_agent_channel_says_which_side_is_the_agent(tmp_path):
     )
     activity = call_activity(test_case, use_speech_detection=False)
     assert activity.agent[0].start == pytest.approx(0.5, abs=0.03)
+
+
+def _recording_only_call(tmp_path):
+    path = stereo_recording(
+        tmp_path / "call.wav",
+        caller=[(0.0, speech_like(2.0)), (6.0, speech_like(2.0))],
+        agent=[(2.6, speech_like(2.5)), (8.6, speech_like(3.0))],
+    )
+    turns = [
+        Turn(role="user", content="Hi, can you check my order?"),
+        Turn(role="assistant", content="Sure, what's the order number?"),
+        Turn(role="user", content="It's 4512."),
+        Turn(role="assistant", content="It shipped yesterday."),
+    ]
+    return ConversationalTestCase(turns=turns, audio=recording(path))
+
+
+def test_turns_without_audio_get_their_replies_from_the_call_audio(tmp_path):
+    test_case = _recording_only_call(tmp_path)
+    filled = with_turn_audio_from_call(test_case)
+    starts = [turn.audio.start_time for turn in filled.turns]
+    assert starts[0] == pytest.approx(0.0, abs=0.05)
+    assert starts[1] == pytest.approx(2.45, abs=0.05)
+    assert starts[2] == pytest.approx(5.85, abs=0.05)
+    assert starts[3] == pytest.approx(8.45, abs=0.05)
+    assert all(turn.audio is None for turn in test_case.turns)
+    metric = LoudnessMetric()
+    metric.measure(test_case, _show_indicator=False)
+    assert metric.score_breakdown["eligible_turns"] == 2
+
+
+def test_turns_with_their_own_audio_are_left_alone(tmp_path):
+    path = stereo_recording(
+        tmp_path / "call.wav", agent=[(0.5, speech_like(1.0))]
+    )
+    test_case = ConversationalTestCase(
+        turns=timed_call([0.5]), audio=recording(path)
+    )
+    assert with_turn_audio_from_call(test_case) is test_case
+
+
+def test_a_reply_split_by_a_long_pause_still_matches_one_turn(tmp_path):
+    path = stereo_recording(
+        tmp_path / "call.wav",
+        agent=[(0.5, speech_like(1.5)), (4.0, speech_like(1.5))],
+    )
+    test_case = ConversationalTestCase(
+        turns=[Turn(role="assistant", content="One reply with a long pause.")],
+        audio=recording(path),
+    )
+    [turn] = with_turn_audio_from_call(test_case).turns
+    assert turn.audio.start_time == pytest.approx(0.35, abs=0.05)
+    # From 0.15 s before the first sound to 0.15 s after the last.
+    assert turn.audio.duration == pytest.approx(5.05, abs=0.1)
+
+
+def test_mono_call_audio_warns_and_is_not_used(tmp_path, caplog):
+    mono = tmp_path / "mono.wav"
+    mono.write_bytes(
+        # A length no other test uses, so the reading isn't already cached.
+        audio_utils.pcm16_to_wav_bytes(speech_like(1.37).tobytes(), RATE, 1)
+    )
+    test_case = ConversationalTestCase(
+        turns=[Turn(role="assistant", content="Hi.")], audio=recording(mono)
+    )
+    with caplog.at_level("WARNING"):
+        assert recording_activity(recording(mono), False) is None
+    assert "mono" in caplog.text
+    assert with_turn_audio_from_call(test_case).turns[0].audio is None
 
 
 def test_model_copy_still_accepts_call_recording_path(tmp_path):
