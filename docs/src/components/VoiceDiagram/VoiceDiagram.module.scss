@@ -145,6 +145,12 @@
   font-weight: 400;
 }
 
+.guide {
+  stroke: var(--vd-tone);
+  stroke-width: 1.5;
+  stroke-dasharray: 2 2;
+}
+
 .bracket {
   fill: none;
   stroke: var(--vd-tone);

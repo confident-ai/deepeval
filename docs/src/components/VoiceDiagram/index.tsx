@@ -93,6 +93,7 @@ const CLIP_CHAR_WIDTH = 5.2;
 const PLAIN_GAP = 8;
 const AXIS_HEIGHT = 22;
 const BAR_STEP = 3;
+const EDGE_MATCH = 0.05;
 
 // Deterministic "noise" so every render, on the server and in the browser,
 // draws the same waveform: integer math only, so no float drift.
@@ -410,8 +411,41 @@ const VoiceDiagram: React.FC<VoiceDiagramProps> = ({
             `L${x2 - h},${y}`,
             `Q${x2},${y} ${x2},${y + h}`,
           ].join(" ");
+          const guides = [bracket.start, bracket.end].flatMap((at) => {
+            const linked = lanes
+              .map((lane, laneIndex) => ({ lane, laneIndex }))
+              .filter(
+                ({ lane, laneIndex }) =>
+                  laneIndex !== bracket.lane &&
+                  (lane.sounds ?? []).some(
+                    (sound) =>
+                      Math.abs(sound.start - at) <= EDGE_MATCH ||
+                      Math.abs(sound.end - at) <= EDGE_MATCH,
+                  ),
+              )
+              .map(({ laneIndex }) => laneIndex);
+            if (linked.length === 0) return [];
+            const covered = [...linked, bracket.lane];
+            return [
+              {
+                at,
+                top: laneTop(Math.min(...covered)) + 3,
+                bottom: laneTop(Math.max(...covered)) + LANE_HEIGHT - 3,
+              },
+            ];
+          });
           return (
             <g key={`bracket-${index}`} className={styles[bracket.tone ?? "info"]}>
+              {guides.map((guide) => (
+                <line
+                  key={`guide-${guide.at}`}
+                  x1={x(guide.at)}
+                  x2={x(guide.at)}
+                  y1={guide.top}
+                  y2={guide.bottom}
+                  className={styles.guide}
+                />
+              ))}
               <path d={d} className={styles.bracket} />
               {bracket.label && (
                 <text x={mid} y={y - h - 4} className={styles.bracketLabel}>
