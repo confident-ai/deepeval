@@ -40,7 +40,11 @@ class RecordingJudge(DeepEvalBaseLLM):
         self.prompts.append(prompt)
         if schema is Steps:
             return Steps(steps=["Check the tool call.", "Check the output."])
-        return ReasonScore(reason="order_lookup was used correctly.", score=8)
+        # The strict prompt asks for 0 or 1; the regular one for 0-10.
+        score = 1 if "STRICTLY EITHER 1" in str(prompt) else 8
+        return ReasonScore(
+            reason="order_lookup was used correctly.", score=score
+        )
 
     async def a_generate(self, prompt, schema=None, **kwargs):
         return self.generate(prompt, schema=schema, **kwargs)
