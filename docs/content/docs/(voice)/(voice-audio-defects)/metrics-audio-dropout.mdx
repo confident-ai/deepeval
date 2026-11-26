@@ -80,11 +80,11 @@ Each dropout shows up in `score_breakdown` as its own event. Here is what the [e
             "type": "audio_dropout",
             "turn": 5,
             "offset_seconds": 1.1,
-            "duration_seconds": 0.08,
+            "duration_seconds": 0.24,
             "start_time": 13.75,
             "mark": "range",
             "timing_source": "turn_timestamps",
-            "description": "Audio dropped out for 80 ms",
+            "description": "Audio dropped out for 240 ms",
         }
     ],
     "skipped": [],
@@ -138,16 +138,16 @@ How a gap is judged depends on the clip's pauses:
 
 | Clip | A gap is a dropout when |
 | --- | --- |
-| Pauses have background noise | Its quietest moment falls to 10% or less of the clip's typical pause noise |
-| Pauses are near-silent, as with clean TTS | It is near-zero for at least 20 ms, and the sound on both sides stops and starts sharply |
+| Pauses have background noise | Its quietest moment falls to 10% or less of the clip's typical pause noise, and it also holds a near-zero gap with sharp edges. The closure before a "p", "t" or "k" and the hiss of an "s" dip under the pause noise too, but they fade in and out |
+| Pauses are near-silent, as with clean TTS | It is near-zero for at least 150 ms, and the sound on both sides stops and starts sharply |
 
 In both cases:
 
 | Check | Rule |
 | --- | --- |
-| Length | 200 ms or less |
+| Length | 150 to 480 ms, just under Dead Stream's 0.5 seconds. Listeners didn't hear shorter gaps mid-word, or didn't mind them |
 | Place | Sound on both sides, not at the clip's start or end |
-| Sharp edges (near-silent clips only) | The 5 ms at each edge are at least 25% of the level of the 60 ms beside them |
+| Sharp edges | The 5 ms at each edge are at least 25% of the level of the 60 ms beside them |
 
 If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
@@ -158,14 +158,14 @@ A call where the agent's audio drops out in one of four replies. Each row is one
 <VoiceDiagram
   duration={21}
   lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.65, label: "turn 3" }, { start: 12.65, end: 15.15, label: "turn 5" }, { start: 18.15, end: 20.15, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 8.5 }, { start: 8.5, end: 8.65, level: 0.08, ending: "flat" }, { start: 8.65, end: 9.4 }, { start: 12.65, end: 13.75 }, { start: 13.75, end: 13.83, silent: true }, { start: 13.83, end: 14.9 }, { start: 18.15, end: 19.9 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 2.5, end: 4.5, label: "turn 1" }, { start: 7.5, end: 9.65, label: "turn 3" }, { start: 12.65, end: 15.15, label: "turn 5" }, { start: 18.15, end: 20.15, label: "turn 7" }], sounds: [{ start: 2.5, end: 4.25 }, { start: 7.5, end: 8.5 }, { start: 8.5, end: 8.65, level: 0.08, ending: "flat" }, { start: 8.65, end: 9.4 }, { start: 12.65, end: 13.75 }, { start: 13.75, end: 13.99, silent: true }, { start: 13.99, end: 14.9 }, { start: 18.15, end: 19.9 }] },
   ]}
   highlights={[
-    { start: 13.75, end: 13.83, lane: 0 },
+    { start: 13.75, end: 13.99, lane: 0 },
   ]}
   marks={[
     { at: 8.57, lane: 0, tone: "ok", label: "clean: pause" },
-    { at: 13.79, lane: 0, tone: "bad", label: "dropout" },
+    { at: 13.87, lane: 0, tone: "bad", label: "dropout" },
   ]}
 />
 
@@ -173,7 +173,7 @@ A call where the agent's audio drops out in one of four replies. Each row is one
 | --- | --- | --- |
 | 1 | Steady speech | No |
 | 3 | A 150 ms pause that keeps the room noise | No |
-| 5 | 80 ms of sound missing, 1.1 s into the clip | **Yes** |
+| 5 | 240 ms of sound missing, 1.1 s into the clip | **Yes** |
 | 7 | Steady speech | No |
 | **4 replies** | | **1 dropout → 3/4 = 0.75** |
 
@@ -196,7 +196,7 @@ A call where the agent's audio drops out in one of four replies. Each row is one
       question: "How is a dropout different from a dead stream?",
       answer: (
         <>
-          A dropout is a gap of 200 ms or less.{" "}
+          A dropout is a gap of 150 to 480 ms.{" "}
           <a href="/docs/metrics-dead-stream">DeadStreamMetric</a> reports
           stretches of exact digital silence of 0.5 seconds or more.
         </>

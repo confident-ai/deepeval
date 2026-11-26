@@ -25,7 +25,7 @@ To use the `AgentResponsivenessMetric`, you'll have to provide a [`Conversationa
 - `audio` on the turns, with `Audio.start_time` set so caller turns can be timed
 - `metadata` saying how the call ended, for [Unexpected Call End](/docs/metrics-unexpected-call-end#required-arguments)
 
-The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). The test case's own `audio` is not used.
+The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). Stereo full call audio on the test case is only used by the [Silent Reply](/docs/metrics-silent-reply) part, to tell whether the caller was talking and for its `stt_model` check.
 
 ## Usage
 
@@ -55,10 +55,11 @@ metric = AgentResponsivenessMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **TWO** optional parameters specific to the `AgentResponsivenessMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+There are **THREE** optional parameters specific to the `AgentResponsivenessMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `use_speech_detection`: a boolean which when set to `True`, finds where the speech is inside each turn's clip with [speech detection](/docs/metrics-voice-introduction#speech-detection). It is passed to [Failed Response](/docs/metrics-failed-response) and [Reprompt](/docs/metrics-reprompt), and also decides which caller turns join into one exchange. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, finds where the speech is inside each turn's clip with [speech detection](/docs/metrics-voice-introduction#speech-detection). It is passed to [Failed Response](/docs/metrics-failed-response), [Silent Reply](/docs/metrics-silent-reply) and [Reprompt](/docs/metrics-reprompt), and also decides which caller turns join into one exchange. Defaulted to `True`.
 - [Optional] `system_one_model`: the Jev model [Reprompt](/docs/metrics-reprompt#reprompt-criteria) uses to decide whether each likely repeat is real, as a string or a `DeepEvalBaseSystemOneModel`. Defaulted to <DefaultSystemOneModel />.
+- [Optional] `stt_model`: the speech-to-text model that listens around each silent reply for its words, as a string or a `DeepEvalBaseSTT`. Passed to the [Silent Reply](/docs/metrics-silent-reply) part, where a silent reply whose words are heard nearby then isn't counted. Defaulted to `None`, which skips that check.
 
 ### As a standalone
 
@@ -251,11 +252,14 @@ The caller is kept waiting once, and the agent hangs up on their last question. 
       question: "Does this metric call an LLM or an external model?",
       answer: (
         <>
-          Only through Reprompt. When the call has a likely repeat, Reprompt
+          Through Reprompt, and through Silent Reply when you set an{" "}
+          <code>stt_model</code>. When the call has a likely repeat, Reprompt
           asks a Jev decision model whether it's real, in one request per
           call, so the score can differ between runs. A call with no likely
-          repeat makes no model call. The other three parts are deterministic
-          and run locally.
+          repeat makes no model call. With an <code>stt_model</code>, Silent
+          Reply transcribes the call around each silent reply. Otherwise the
+          other three parts are deterministic and run locally. Any cost is
+          added to <code>evaluation_cost</code>.
         </>
       ),
     },

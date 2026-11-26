@@ -64,7 +64,7 @@ evaluate(test_cases=test_cases, metrics=[metric])
 
 There are **TWO** optional parameters specific to the `VoiceReliabilityMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `use_speech_detection`: a boolean which when set to `True`, uses [speech detection](/docs/metrics-voice-introduction#speech-detection) to tell when someone is talking. It is passed to [Failed Response](/docs/metrics-failed-response), [Reprompt](/docs/metrics-reprompt) and [Abrupt Cut-off](/docs/metrics-abrupt-cut-off), and also decides which caller turns join into one exchange. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, uses [speech detection](/docs/metrics-voice-introduction#speech-detection) to tell when someone is talking. It is passed to [Failed Response](/docs/metrics-failed-response), [Reprompt](/docs/metrics-reprompt), [Silent Reply](/docs/metrics-silent-reply) and [Abrupt Cut-off](/docs/metrics-abrupt-cut-off), and also decides which caller turns join into one exchange. Defaulted to `True`.
 - [Optional] `system_one_model`: the Jev model [Reprompt](/docs/metrics-reprompt#reprompt-criteria) uses to decide whether each likely repeat is real, as a string or a `DeepEvalBaseSystemOneModel`. Defaulted to <DefaultSystemOneModel />.
 
 ### As a standalone

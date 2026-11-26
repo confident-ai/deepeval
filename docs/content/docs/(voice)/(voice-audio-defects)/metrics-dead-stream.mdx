@@ -52,7 +52,10 @@ metric = DeadStreamMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-The `DeadStreamMetric` has no optional parameters of its own. It takes only the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics).
+There are **TWO** optional parameters specific to the `DeadStreamMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so background noise isn't mistaken for the caller speaking during a dead stretch. Defaulted to `True`.
+- [Optional] `stt_model`: the speech-to-text model that transcribes the agent's audio around each dead stretch, as a string or a `DeepEvalBaseSTT`. When set, a dead stretch after a finished sentence isn't counted, as in [Dead stream criteria](#dead-stream-criteria). Only used with stereo full call audio and clips that have an `Audio.start_time`. Defaulted to `None`, which skips that check.
 
 ### As a standalone
 
@@ -96,7 +99,7 @@ Each dead stretch shows up in `score_breakdown` as its own event. Here is what t
 
 | Field | What it means |
 | --- | --- |
-| `runs_to_end` | True when the silence runs to the end of the clip and the agent never came back in it |
+| `runs_to_end` | Always `False` here, since silence that runs to the end of the clip isn't counted |
 | `position` | Whether the dead stretch is near the start, middle or end of the clip |
 
 Clips that can't be decoded are listed under `skipped`. Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
@@ -147,12 +150,15 @@ A stretch of 20 ms frames where every sample is within 2 of zero is dead when it
 | Check | Rule |
 | --- | --- |
 | Mid-reply | At least 0.5 seconds, with sound after it in the clip |
-| At the end of the clip | At least 1 second. TTS often pads a clip's end with a little silence, so shorter runs don't count |
+| Caller not talking | The caller made less than 0.2 seconds of sound during it. An agent going quiet while the caller talks is listening, even when all the caller says is "yes". Only checked when the clip has an `Audio.start_time` |
+
+Silence that runs to the end of a clip isn't counted here.
 
 Exceptions:
 
 - If the agent's typical pause, across all its clips in the call, is at least 20% exact zeros, its voice writes pauses as silence. Nothing is reported for it.
-- A dead end of clip is a **stream cut** instead when the agent's own clip is next on the call, within 15 seconds. It isn't counted here. When [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) reads per-turn audio, it reports it as a `stream_cut`. This needs `Audio.start_time` on every clip.
+- A dead end of clip is a **stream cut** when the agent's own clip is next on the call, within 15 seconds. When [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) reads per-turn audio, it reports it as a `stream_cut`. This needs `Audio.start_time` on every clip.
+- With an `stt_model`, a dead stretch isn't counted when the agent's last word before it ends a sentence, with `.`, `?` or `!`. The agent paused after a finished sentence, such as to look something up or wait for an answer, rather than its audio dying. The metric transcribes about 4 seconds of the agent's audio before the stretch, and the span from there to 3 seconds after it, to read that word's punctuation. Speech that trails off, ending in `...` or `…`, still counts as unfinished.
 
 If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
@@ -212,8 +218,11 @@ A call where the agent's stream goes dead mid-reply once, and drops at the end o
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio, so it
-          has no model or token cost.
+          Not by default. Detection is deterministic and runs locally over the
+          audio, so it has no model or token cost. With an{" "}
+          <code>stt_model</code>, the agent's audio around each dead stretch is
+          transcribed, at up to two requests per stretch. The cost is added to{" "}
+          <code>evaluation_cost</code>.
         </>
       ),
     },

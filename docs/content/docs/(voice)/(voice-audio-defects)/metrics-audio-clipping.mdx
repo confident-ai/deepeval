@@ -148,10 +148,10 @@ A reply is clipped when:
 
 | Check | Rule |
 | --- | --- |
-| Clipped sample | 32,760 or more, either way from zero |
-| Share of the clip | More than 1% of its samples are clipped |
+| Clipped sample | 32,000 or more, either way from zero, near the 32,767 a 16-bit sample can hold |
+| Share of the clip | More than 0.1% of its samples are clipped |
 
-A few clipped samples on one loud syllable don't count. If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+Reviewers heard clipping when as little as 0.1% of a reply's samples sat near full scale, so light clipping counts. A few clipped samples on one loud syllable don't. If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
 ### Example call
 
@@ -173,8 +173,8 @@ A call where one of four agent replies is pushed far past full volume. Each row 
 | Agent turn | What happens | Clipped? |
 | --- | --- | --- |
 | 1 | Normal volume | No |
-| 3 | Three times louder, but under full scale | No |
-| 5 | 8.4% of samples at full scale | **Yes** |
+| 3 | Three times louder, but every sample stays under 32,000 | No |
+| 5 | 8.4% of samples at or near full scale | **Yes** |
 | 7 | Normal volume | No |
 | **4 replies** | | **1 clipped → 3/4 = 0.75** |
 

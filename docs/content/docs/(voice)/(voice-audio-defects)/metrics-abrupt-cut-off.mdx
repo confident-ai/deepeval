@@ -59,7 +59,7 @@ evaluate(test_cases=test_cases, metrics=[metric])
 
 There are **THREE** optional parameters specific to the `AbruptCutoffMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection) on their channel, so background noise doesn't excuse a cut-off. Only used with full call audio, since per-turn audio doesn't hear the caller. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection) on their channel, so background noise doesn't excuse a cut-off. It's also used to find the [dead streams](#cut-off-criteria) that excuse a stop. Defaulted to `True`.
 - [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each cut-off is [double-checked by an audio decision model](/docs/metrics-voice-introduction#second-check-with-an-audio-decision-model) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
 - [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
 
@@ -237,7 +237,7 @@ A finished reply fades out. A cut one stops at near full volume.
   ]}
 />
 
-Every point where the agent's sound stops is checked. A reply is flagged if any stop is a cut-off, except a stop where:
+Only the stop at the very end of each reply, within 0.05 seconds of it, is checked. A stop mid-reply is not. The reply is flagged if that stop is a cut-off, except when:
 
 - the caller made 0.2 seconds or more of sound from 1 second before it to 0.2 seconds after, or
 - the full call audio ends within 0.05 seconds, which [Unexpected Call End](/docs/metrics-unexpected-call-end) judges instead.
@@ -268,6 +268,11 @@ A stop is a cut-off when the last 20 ms of sound before it are:
 | Still at speech volume | At least 80% of the median level of the second before |
 | Above the background | More than 10 dB above the background noise. With per-turn audio, only checked on clips of 2 seconds or more |
 | Not quiet residue | Above about −30 dBFS |
+
+Even then, a stop isn't a cut-off when:
+
+- the text of the agent's reply ends a sentence, with `.`, `?`, `!` or `…`. The reply was said in full, however sharply its last sound stops.
+- a [dead stream](/docs/metrics-dead-stream) starts within 0.3 seconds of the stop. The agent's audio went dead and then carried on, so it's a hole in the reply that Dead Stream judges, not a cut-off.
 
 If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
@@ -318,7 +323,7 @@ Two short calls where the agent sometimes stops mid-word, one scored from full c
 | --- | --- | --- |
 | 2.8 – 5.0 s | Fades out | No |
 | 6.3 – 7.9 s | Full volume, but the caller was talking | No |
-| 10.0 – 11.6 s | Full volume, caller silent | **Yes** |
+| 10.0 – 11.6 s | Full volume, caller silent, and the reply's text stops mid-sentence | **Yes** |
 | 13.2 – 14.0 s | Still going when the full call audio ends | No |
 | **4 replies** | | **1 cut off → 3/4 = 0.75** |
 
@@ -343,9 +348,9 @@ Two short calls where the agent sometimes stops mid-word, one scored from full c
 | --- | --- | --- |
 | 0 | Fades out | No |
 | 2 | Full volume, but `interrupted=True` | No |
-| 4 | Digital silence, then the agent resumes in turn 5 | **Yes** (`stream_cut`) |
+| 4 | Digital silence, then the agent resumes in turn 5. The reply's text stops mid-sentence | **Yes** (`stream_cut`) |
 | 5 | Fades out | No |
-| 7 | Full volume | **Yes** |
+| 7 | Full volume, and the reply's text stops mid-sentence | **Yes** |
 | **5 replies** | | **2 cut off → 3/5 = 0.6** |
 
 </Tab>
@@ -374,7 +379,9 @@ Two short calls where the agent sometimes stops mid-word, one scored from full c
         <>
           The listener hears a reply that stops, so it is reported here once.{" "}
           <a href="/docs/metrics-dead-stream">DeadStreamMetric</a> only reports
-          stretches of true silence inside a reply.
+          stretches of true silence inside a reply. When the audio goes dead
+          and carries on inside the same clip, it's the other way round: Dead
+          Stream reports it, and this metric doesn't.
         </>
       ),
     },

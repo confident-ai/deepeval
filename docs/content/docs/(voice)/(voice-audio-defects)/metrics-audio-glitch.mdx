@@ -24,7 +24,7 @@ A transcript can't show these failures. A buzzing tone after a sentence, or a st
 
 To use the `AudioGlitchMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns.
 
-Stereo `audio` on the test case is also used, but only by the cut-off part. See [Full call audio](#call-audio) below.
+Stereo `audio` on the test case is also used, but only by the cut-off and dead stream parts. See [Full call audio](#call-audio) below.
 
 ## Usage
 
@@ -54,9 +54,10 @@ metric = AudioGlitchMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There is **ONE** optional parameter specific to the `AudioGlitchMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+There are **TWO** optional parameters specific to the `AudioGlitchMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection) on their channel. Passed to the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) part, and only used with full call audio. Defaulted to `True`.
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection). Passed to the [Abrupt Cut-off](/docs/metrics-abrupt-cut-off) and [Dead Stream](/docs/metrics-dead-stream) parts. Defaulted to `True`.
+- [Optional] `stt_model`: the speech-to-text model that transcribes the agent's audio around each dead stretch, as a string or a `DeepEvalBaseSTT`. Passed to the [Dead Stream](/docs/metrics-dead-stream) part, where a dead stretch after a finished sentence then isn't counted. Defaulted to `None`, which skips that check.
 
 `model`, `async_mode` and `evaluation_template` are still accepted so older code keeps working, but they're ignored. The metric doesn't take `eval_mode`. Its Abrupt Cut-off part follows the configured [voice eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes).
 
@@ -198,7 +199,7 @@ Above, turn 1 is flagged once and turn 3 is flagged once, even though two parts 
 
 ### Full call audio
 
-Held Tone, Dead Stream and Audio Clipping read per-turn audio, or replies cut from stereo full call audio when no turn has audio. Abrupt Cut-off reads stereo full call audio when the test case has it. Each cut-off it finds there counts against the agent turn that started last before the stop, so every audio turn needs an `Audio.start_time`. Without one on every turn, Abrupt Cut-off reads per-turn audio too. A cut before the test case's first agent turn is dropped.
+Held Tone, Dead Stream and Audio Clipping read per-turn audio, or replies cut from stereo full call audio when no turn has audio. Dead Stream also uses stereo full call audio, when the test case has it, to tell whether the caller was talking and for its `stt_model` check. Abrupt Cut-off reads stereo full call audio when the test case has it. Each cut-off it finds there counts against the agent turn that started last before the stop, so every audio turn needs an `Audio.start_time`. Without one on every turn, Abrupt Cut-off reads per-turn audio too. A cut before the test case's first agent turn is dropped.
 
 ### Example call
 
@@ -224,7 +225,7 @@ A call where three of five agent replies carry a glitch, and one of them has two
 | 1 | Normal speech | – |
 | 3 | A 1.5 s beep at 388 Hz | Held Tone |
 | 5 | 0.7 s of exact silence mid-reply | Dead Stream |
-| 7 | Clipped throughout, and stops at full volume | Audio Clipping, Abrupt Cut-off |
+| 7 | Clipped throughout, and stops at full volume mid-sentence | Audio Clipping, Abrupt Cut-off |
 | 9 | Normal speech | – |
 | **5 replies** | | **3 flagged → 2/5 = 0.4** |
 
@@ -275,7 +276,9 @@ A call where three of five agent replies carry a glitch, and one of them has two
           No LLM. Every part runs locally over the audio. With full call audio and{" "}
           <code>use_speech_detection</code> on, the cut-off part runs the small
           Silero VAD model locally over the caller's channel, so there's no
-          token cost.
+          token cost. With an <code>stt_model</code>, the dead stream part
+          transcribes the agent's audio around each dead stretch, and the cost
+          is added to <code>evaluation_cost</code>.
         </>
       ),
     },

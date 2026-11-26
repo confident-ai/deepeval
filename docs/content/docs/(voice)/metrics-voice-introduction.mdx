@@ -10,7 +10,7 @@ beta: true
 
 ## Quick Summary
 
-Voice metrics score the **audio** of a call, not just its transcript. Most are deterministic: they measure the sound directly, with no model calls, so they're fast, free and repeatable. The exceptions are [Transcription Accuracy](/docs/metrics-transcription-accuracy), judged by an LLM or Jev, and [Reprompt](/docs/metrics-reprompt), which asks Jev whether the caller really repeated themselves, along with the roll-ups that include it. Each one returns a **score between 0 and 1**, usually the share of the call that was free of the problem, along with a **reason**. A metric passes when its score is at or above `threshold`, `0.5` by default.
+Voice metrics score the **audio** of a call, not just its transcript. Most are deterministic: they measure the sound directly, with no model calls, so they're fast, free and repeatable. The exceptions are [Transcription Accuracy](/docs/metrics-transcription-accuracy), judged by an LLM or Jev, and [Reprompt](/docs/metrics-reprompt), which asks Jev whether the caller really repeated themselves, along with the roll-ups that include it. [Dead Stream](/docs/metrics-dead-stream) and [Silent Reply](/docs/metrics-silent-reply), and the roll-ups that include them, also call a speech-to-text model when you give them an `stt_model`. Each one returns a **score between 0 and 1**, usually the share of the call that was free of the problem, along with a **reason**. A metric passes when its score is at or above `threshold`, `0.5` by default.
 
 <Tabs items={["Speech Quality", "Audio Defects", "Audio Level", "Prosody", "Timing", "Responsiveness"]}>
 <Tab value="Speech Quality">
@@ -243,7 +243,7 @@ Every voice metric takes these optional parameters:
 - `verbose_mode`: prints the score breakdown in verbose metric logs. Defaults to `False`.
 - `flaky`: [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaults to `False`.
 
-Some also take `use_speech_detection`, `eval_mode` and `audio_decision_model`. [Transcription Accuracy](/docs/metrics-transcription-accuracy) is judged by an LLM or Jev, so it takes their parameters instead. Each metric's page lists the ones it takes.
+Some also take `use_speech_detection`, `eval_mode`, `audio_decision_model` and `stt_model`. [Transcription Accuracy](/docs/metrics-transcription-accuracy) is judged by an LLM or Jev, so it takes their parameters instead. Each metric's page lists the ones it takes.
 
 ## Score Breakdown
 

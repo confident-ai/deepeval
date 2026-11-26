@@ -25,7 +25,7 @@ To use the `SilentReplyMetric`, you'll have to provide a [`ConversationalTestCas
 - `audio` on the agent's turns
 - `content` on the agent's turns, so a reply with text but no audio can be caught
 
-The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). The test case's own `audio` is not used.
+The metric judges each reply from [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). Stereo full call audio, when the test case has it, is only used to tell whether the caller was talking, and by the `stt_model` check.
 
 ## Usage
 
@@ -55,7 +55,10 @@ metric = SilentReplyMetric(threshold=1.0)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-The `SilentReplyMetric` takes only the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics).
+There are **TWO** optional parameters specific to the `SilentReplyMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so background noise isn't mistaken for the caller speaking over a silent reply. Defaulted to `True`.
+- [Optional] `stt_model`: the speech-to-text model that listens around each silent reply for its words, as a string or a `DeepEvalBaseSTT`. When set, a silent reply whose words are heard nearby isn't counted, as in [Silence criteria](#silence-criteria). Only used with stereo full call audio and clips that have an `Audio.start_time`. Defaulted to `None`, which skips that check.
 
 ### As a standalone
 
@@ -119,7 +122,7 @@ The `SilentReplyMetric` score is calculated according to the following equation:
 
 <Equation formula="\text{Silent Reply} = \frac{\text{Number of Agent Replies With Audible Sound}}{\text{Total Number of Agent Replies}}" />
 
-The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio) only, and only the agent's turns.
+The metric scores the agent's turns from their [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). The caller's audio is only used to tell whether they were talking.
 
 ### Counting agent replies
 
@@ -135,7 +138,12 @@ The metric reads [per-turn audio](/docs/metrics-voice-introduction#full-call-aud
   ]}
 />
 
-Every agent turn with text or audio is one reply, including a turn with text but no clip, and a clip with no text. An agent turn with neither isn't a silent reply but no reply at all, so it is left to [Failed Response](/docs/metrics-failed-response). Clips that can't be decoded are skipped.
+Every agent turn with text is one reply, including a turn with text but no clip. A turn with no text had nothing to say, heard or not, so it isn't counted, whatever its audio. Clips that can't be decoded are skipped.
+
+A silent clip is also not counted when it was stamped in the wrong place, so its silence says nothing about the reply:
+
+- the clip is shorter than 1 second, or too short to say its own text at 6 words per second, or
+- the caller made 0.5 seconds or more of sound during it, so the agent was listening. This needs an `Audio.start_time` on the clip.
 
 ### Silence criteria
 
@@ -160,8 +168,9 @@ A reply is silent when:
 | --- | --- |
 | No audio | The turn has text but no `audio` |
 | No audible sound | Every 20 ms of the clip is below an RMS level of 300, about −41 dBFS |
+| Not heard nearby | Only with an `stt_model`. The call's audio, both channels, from 15 seconds before the clip to 15 seconds after it is transcribed. If at least 60% of the reply's words are heard there, in order, the reply was spoken, just not where it was stamped, so it isn't silent. In order, so common words like "you" and "the" heard around it don't pass for the reply |
 
-A reply that goes quiet only partway through is [Dead Stream](/docs/metrics-dead-stream)'s to report. The level metrics, such as [Loudness](/docs/metrics-loudness), skip inaudible replies and leave them to this metric. If no turn has audio, or no agent turn has text or audio, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+A reply that goes quiet only partway through is [Dead Stream](/docs/metrics-dead-stream)'s to report. The level metrics, such as [Loudness](/docs/metrics-loudness), skip inaudible replies and leave them to this metric. If no turn has audio, or no agent turn has text, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
 ### Example call
 
@@ -187,7 +196,7 @@ A short call where one reply was never played and another was played as silence.
 | --- | --- | --- |
 | 1, "Sure, what's the number?" | Speech | No |
 | 3, "One moment." | None | **Yes** (`no_audio`) |
-| 5, "It ships tomorrow." | A clip of digital silence | **Yes** (`no_speech`) |
+| 5, "It ships tomorrow." | A 2-second clip of digital silence, with the caller quiet | **Yes** (`no_speech`) |
 | 7, "Tomorrow." | Speech | No |
 | **4 replies** | | **2 silent → 2/4 = 0.5** |
 
@@ -213,8 +222,11 @@ A short call where one reply was never played and another was played as silence.
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio, so
-          it has no model or token cost.
+          Not by default. Detection is deterministic and runs locally over the
+          audio, so it has no model or token cost. With an{" "}
+          <code>stt_model</code>, the call around each silent reply is
+          transcribed, at one request per silent reply. The cost is added to{" "}
+          <code>evaluation_cost</code>.
         </>
       ),
     },

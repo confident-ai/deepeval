@@ -22,7 +22,7 @@ The reprompt metric checks whether the caller **had to speak again before your v
 To use the `RepromptMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
 
 - `content` on each turn, which the decision model reads
-- `audio` on the turns, with `Audio.start_time` set so the wait before a repeat can be measured
+- `audio` on the turns, with `Audio.start_time` set so the wait before a repeat can be measured. A line whose wait can't be measured is never flagged
 
 The metric only reads [per-turn audio](/docs/metrics-voice-introduction#full-call-audio-vs-per-turn-audio). The test case's own `audio` is not used.
 
@@ -103,8 +103,6 @@ Each caller line the caller had to repeat shows up in `score_breakdown`. Here is
 | `start_time` | Where the caller line's speech ends, in seconds into the call |
 | `duration_seconds` | How long the caller waited in silence before speaking again |
 
-`start_time` and `duration_seconds` are missing when the line has no `Audio.start_time`.
-
 Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
 
 `eligible_turns` is how many caller lines needed a reply and `turns_with_events` how many had to be repeated. The score is the share that didn't.
@@ -159,11 +157,13 @@ A caller line is a likely repeat when the caller's very next turn starts a new l
 - how long the caller waited, and
 - what the caller said next.
 
-It answers one question: is the next line a repeat or rephrasing, or a check that someone is still there? If yes, the line counts as repeated. A caller who carries on the same thought, says something new, or talks to someone else isn't repeating.
+It answers one question: does the next line only say the line again, or check that someone is still there, without adding anything new? If yes, the line counts as repeated. A caller who adds something new isn't repeating, even when they start by saying the line again: more detail, the rest of an unfinished sentence, a different answer, thanks or a goodbye. Nor is a caller who says something unrelated or talks to someone else.
 
 | Check | Rule |
 | --- | --- |
-| Waited | At least 4 seconds of silence from the end of the line's speech to the start of the next line's. A shorter pause is the caller stopping mid-thought. Only checked when both turns have an `Audio.start_time` |
+| Waited | At least 2.5 seconds of silence from the end of the line's speech to the start of the next line's. A shorter pause is the caller still talking. Both turns need an `Audio.start_time`, or the wait isn't known and the line isn't flagged |
+| Not just a greeting | When the next line is only a greeting, such as "hi", "hello", "hey" or "hello there", the wait must be at least 4 seconds |
+| Not an echo | Neither the line nor the next line is mostly the agent's own words. When a line has 3 or more words and at least 80% of them are in the agent's line before it, it is the agent's voice echoing on the caller's line |
 | Answered later | An agent turn comes later in the call. A line never answered at all is left to [Failed Response](/docs/metrics-failed-response) |
 | Really a repeat | The decision model says yes, with a probability of 0.5 or more |
 
@@ -232,10 +232,10 @@ The caller speaks again three times before the agent replies, but only once beca
       question: "Why does a caller who just keeps talking not count?",
       answer: (
         <>
-          Speaking again isn't a repeat on its own. A pause under 4 seconds is
-          the caller stopping mid-thought, and after a longer one the decision
-          model still has to hear the same request, a rephrasing or a "hello?"
-          before the line counts.
+          Speaking again isn't a repeat on its own. A pause under 2.5 seconds is
+          the caller still talking, and after a longer one the decision model
+          still has to hear the same request, a rewording or a "hello?", with
+          nothing new added, before the line counts.
         </>
       ),
     },
