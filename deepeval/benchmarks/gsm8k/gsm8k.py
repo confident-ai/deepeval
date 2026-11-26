@@ -149,6 +149,7 @@ class GSM8K(DeepEvalBaseBenchmark):
         first_elem = res[0]
         if hasattr(first_elem, "answer"):
             return str(first_elem.answer)
+        return str(first_elem)
 
     def load_benchmark_dataset(self) -> List[Golden]:
         from datasets import load_dataset
