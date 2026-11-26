@@ -40,8 +40,13 @@ class RecordingJudge(DeepEvalBaseLLM):
     def generate(self, prompt, schema=None, **kwargs):
         if schema is Verdicts:
             self.verdict_prompts.append(prompt)
+            # One verdict per judged tool call, like a real judge; the
+            # score denominators count missing verdicts against the metric.
             return Verdicts(
-                verdicts=[ArgumentCorrectnessVerdict(verdict="yes")]
+                verdicts=[
+                    ArgumentCorrectnessVerdict(verdict="yes")
+                    for _ in _judged_tools(prompt)
+                ]
             )
         return ArgumentCorrectnessScoreReason(reason="Arguments fit the input.")
 
