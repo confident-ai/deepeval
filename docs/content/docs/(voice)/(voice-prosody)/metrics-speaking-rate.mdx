@@ -20,10 +20,11 @@ The speaking rate metric checks whether your voice agent **talks at a comfortabl
 
 ## Required Arguments
 
-To use the `SpeakingRateMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with, on the agent's turns:
+To use the `SpeakingRateMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
 
-- `audio`, one clip per reply
-- `content`, the text the agent spoke in that clip
+- `audio` on the agent's turns, one clip per reply
+
+The `content` on the agent's turns is optional. When it's there, it's only used to [skip replies that spell something out](#which-replies-are-scored).
 
 ## Usage
 
@@ -49,14 +50,18 @@ simulator = ConversationSimulator(
 )
 test_cases = simulator.simulate([golden])
 
-metric = SpeakingRateMetric(threshold=0.8, min_wpm=110, max_wpm=200)
+metric = SpeakingRateMetric(
+    threshold=0.8, min_syllables_per_second=3.5, max_syllables_per_second=10
+)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **TWO** optional parameters specific to the `SpeakingRateMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+There are **FOUR** optional parameters specific to the `SpeakingRateMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `min_wpm`: an integer for the slowest rate, in words per minute, a reply may be spoken at. Must be 0 or more. Defaulted to `110`.
-- [Optional] `max_wpm`: an integer for the fastest rate, in words per minute, a reply may be spoken at. Must be greater than `min_wpm`. Defaulted to `200`.
+- [Optional] `min_syllables_per_second`: a float for the slowest rate, in syllables per second, a reply may be spoken at. Must be 0 or more. Defaulted to `3.5`.
+- [Optional] `max_syllables_per_second`: a float for the fastest rate, in syllables per second, a reply may be spoken at. Must be greater than `min_syllables_per_second`. Defaulted to `10.0`.
+- [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, the metric also flags replies close to a limit, and each flagged reply is [double-checked by an audio decision model](/docs/metrics-voice-introduction#second-check-with-an-audio-decision-model) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
+- [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
 
 A value outside these limits raises a `ValueError`.
 
@@ -86,8 +91,8 @@ Each reply spoken too fast or too slowly shows up in `score_breakdown`. Here is 
             "type": "too_fast",
             "turn": 3,
             "timing_source": "turn_timestamps",
-            "description": "Agent spoke too fast (223 wpm)",
-            "speech_rate_wpm": 223,
+            "description": "Agent spoke too fast (12.1 syllables a second)",
+            "syllables_per_second": 12.1,
             "offset_seconds": 0.0,
             "duration_seconds": 4.0,
             "start_time": 8.0,
@@ -97,8 +102,8 @@ Each reply spoken too fast or too slowly shows up in `score_breakdown`. Here is 
             "type": "too_slow",
             "turn": 7,
             "timing_source": "turn_timestamps",
-            "description": "Agent spoke too slowly (64 wpm)",
-            "speech_rate_wpm": 64,
+            "description": "Agent spoke too slowly (3.1 syllables a second)",
+            "syllables_per_second": 3.1,
             "offset_seconds": 0.0,
             "duration_seconds": 4.0,
             "start_time": 20.0,
@@ -106,20 +111,18 @@ Each reply spoken too fast or too slowly shows up in `score_breakdown`. Here is 
         },
     ],
     "skipped": [
-        {
-            "turn": 9,
-            "error": "Reply has no text or under 2 seconds of speech.",
-        }
+        {"turn": 5, "error": "Reply spells something out."},
+        {"turn": 9, "error": "Reply has under 2 seconds of speech."},
     ],
 }
 ```
 
 | Field | What it means |
 | --- | --- |
-| `type` | Too fast if over `max_wpm`, too slow if under `min_wpm` |
-| `speech_rate_wpm` | The reply's rate, in words per minute |
+| `type` | Too fast if over `max_syllables_per_second`, too slow if under `min_syllables_per_second` |
+| `syllables_per_second` | The reply's rate, in syllables per second of speaking time |
 
-Each event covers the whole reply: `offset_seconds` is 0 and `duration_seconds` is the clip's length. Replies with no words in their text, under 2 seconds of speech, or audio that can't be decoded are listed under `skipped`.
+Each event covers the whole reply: `offset_seconds` is 0 and `duration_seconds` is the clip's length. Replies with under 2 seconds of speaking time, replies that spell something out, or audio that can't be decoded are listed under `skipped`.
 
 Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
 
@@ -141,42 +144,56 @@ The metric reads per-turn audio, one agent clip at a time, or replies cut from s
     { label: "Agent", role: "agent", clips: [{ start: 0.2, end: 4.6, label: "turn 1" }, { start: 5.6, end: 7.2, label: "turn 3" }], sounds: [{ start: 0.8, end: 2.2 }, { start: 2.5, end: 4.0 }, { start: 5.8, end: 7.0 }] },
   ]}
   brackets={[
-    { start: 0.8, end: 4.0, lane: 0, label: "speech span" },
+    { start: 0.8, end: 4.0, lane: 0, label: "speaking time" },
     { start: 5.8, end: 7.0, lane: 0, tone: "skip", label: "too short" },
   ]}
 />
 
 A reply is scored if:
 
-- its `content` has at least one word, and
-- its speech spans at least 2 seconds.
+- it has at least 2 seconds of speaking time, and
+- its `content` doesn't spell something out.
 
-The speech span runs from the first to the last 20 ms of the clip louder than silence (about −41 dBFS). On clips of 2 seconds or more, sound within 6 dB of the clip's background noise also counts as silence. Silence before the agent starts and after it stops is left out, but pauses inside the reply are kept.
+Speaking time runs from the first to the last moment of the clip louder than silence (about −41 dBFS), minus every pause of 200 ms or more. Silence before the agent starts and after it stops is left out, and so are pauses inside the reply: an agent that stops to look something up is not talking slowly.
+
+A reply spells something out when its `content` has:
+
+- three letters or digits in a row, each said on its own, such as "B, Y, R",
+- a letter given by a word, such as "B as in Boy", or
+- a code of 6 or more characters with a digit in it, such as "SH5216742".
+
+Reading out a name or an email letter by letter is slow on purpose, so these replies are skipped. A reply with no `content` is never skipped for this.
 
 ### Rate criteria
 
-The rate is the words in the reply's `content` divided by its speech span, in minutes.
+The rate is the number of syllables in the reply's audio divided by its speaking time, in seconds. Syllables are counted from the audio alone: the reply's loudness is read every 5 ms and smoothed over 35 ms, and each rise that stands at least 3 dB above the dips on both sides is one syllable (de Jong & Wempe, 2009).
 
 | Check | Rule |
 | --- | --- |
-| Too fast | Over `max_wpm` (200 by default) |
-| Too slow | Under `min_wpm` (110 by default) |
+| Too fast | Over `max_syllables_per_second` (10 by default) |
+| Too slow | Under `min_syllables_per_second` (3.5 by default) |
 
-Words are counted from the text, not the audio:
-
-- Each space-separated token with a letter in it is one word.
-- Every digit is a word of its own, so a phone number read out digit by digit counts in full: "555-1234" is seven words.
-- A token with neither, such as a lone dash, isn't counted.
-
-If no agent reply has both text and enough speech, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+If no agent reply has enough speech, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
 :::note
-Conversation runs at about 120 to 190 words per minute, and each default leaves a 10 wpm margin. TTS voices often speak faster than people do, so set `max_wpm` to the pace you want from your agent. The rate is an average over the reply, so a rushed phone number inside an otherwise normal reply can be missed.
+Agents on real calls speak at 5.1 to 7.7 syllables a second (the middle 90% of replies). The defaults sit beyond the slowest and fastest 1 in 1,000. The rate is an average over the reply, so a rushed phone number inside an otherwise normal reply can be missed.
 :::
+
+### Second check
+
+In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), each flagged reply is double-checked before it counts. The syllable count alone can't tell a reply close to a limit from normal speech, so in this mode the metric also flags replies within 1.5 syllables a second of a limit: under 5 or over 8.5 with the defaults. The audio decision model hears the **agent's** whole reply, from that turn's own clip, and is asked:
+
+> Is the speaker talking unnaturally slowly?
+
+for a reply flagged as too slow, or:
+
+> Is the speaker talking unnaturally fast?
+
+for a reply flagged as too fast. If the model judges "no" more likely than "yes", the reply is dismissed and doesn't count against the score.
 
 ### Example call
 
-A call with five agent replies, each 4 seconds of audio with 3.76 seconds of speech, except the last. Each row is one agent reply, its word count and its rate.
+A call with five agent replies, each 4 seconds of audio except the last. One rushes, one drags, and one spells out a code. Each row is one agent reply and its rate.
 
 <VoiceDiagram
   duration={28}
@@ -188,30 +205,31 @@ A call with five agent replies, each 4 seconds of audio with 3.76 seconds of spe
     { start: 20.1, end: 23.8, lane: 0 },
   ]}
   marks={[
+    { at: 16.0, lane: 0, tone: "skip", label: "spelled out" },
     { at: 26.7, lane: 0, tone: "skip", label: "skipped" },
   ]}
 />
 
-| Agent turn | Text | Words | Rate | Flagged? |
-| --- | --- | --- | --- | --- |
-| 1 | "Sure, I can help you look up that order today." | 10 | 160 wpm | No |
-| 3 | "Your code is 555-1234, I'll text it now." | 14 | 223 wpm | **Yes** (`too_fast`) |
-| 5 | "Your order shipped on Monday and should arrive by Thursday." | 10 | 160 wpm | No |
-| 7 | "Is there anything else?" | 4 | 64 wpm | **Yes** (`too_slow`) |
-| 9 | "Okay." | 1 | Under 2 s of speech | Skipped |
-| **4 replies** | | | | **2 flagged → 2/4 = 0.5** |
+| Agent turn | Text | Rate | Flagged? |
+| --- | --- | --- | --- |
+| 1 | "Sure, I can help you look up that order today." | 6.1 syllables a second | No |
+| 3 | "Your order shipped on Monday and should arrive by Thursday afternoon." | 12.1 syllables a second | **Yes** (`too_fast`) |
+| 5 | "That's S, H, 5, 2, 1, 6." | Spells something out | Skipped |
+| 7 | "Is there anything else?" | 3.1 syllables a second | **Yes** (`too_slow`) |
+| 9 | "Okay." | Under 2 s of speech | Skipped |
+| **3 replies** | | | **2 flagged → 1/3 = 0.33** |
 
 ## FAQs
 
 <FAQs
   qas={[
     {
-      question: "Why does it need the reply's text?",
+      question: "Does it need the reply's text?",
       answer: (
         <>
-          Counting words from audio alone needs a speech recognizer. The text
-          the agent spoke is already on each turn, so the metric uses it and
-          stays free and deterministic.
+          No. Syllables are counted from the audio, so the rate doesn't depend
+          on the text. The text is only used to skip replies that spell
+          something out. Without it, those replies are scored like any other.
         </>
       ),
     },
@@ -219,8 +237,10 @@ A call with five agent replies, each 4 seconds of audio with 3.76 seconds of spe
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio and
-          the turn text, so it has no model or token cost.
+          Not by default. Detection is deterministic and runs locally over the
+          audio and the turn text, so it has no model or token cost. In the{" "}
+          <code>"hybrid"</code> eval mode, each flagged reply is also checked by
+          an audio decision model, at one paid request per flagged reply.
         </>
       ),
     },

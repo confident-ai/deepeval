@@ -21,7 +21,8 @@ The voice naturalness metric checks whether your voice agent **sounds like a per
 To use the `VoiceNaturalnessMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
 
 - `audio` on the agent's turns
-- `content` on the agent's turns, to measure the speaking rate
+
+The `content` on the agent's turns is optional. Speaking Rate only uses it to skip replies that spell something out.
 
 Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how each is used.
 
@@ -95,20 +96,20 @@ Every event a part raised shows up in `score_breakdown`, tagged with that part. 
             "type": "long_pause",
             "turn": 5,
             "offset_seconds": 1.26,
-            "duration_seconds": 2.74,
+            "duration_seconds": 4.74,
             "start_time": 18.76,
             "mark": "range",
             "timing_source": "turn_timestamps",
-            "description": "Agent paused for 2.7s mid-reply",
-            "longest_pause_ms": 2740,
+            "description": "Agent paused for 4.7s mid-reply",
+            "longest_pause_ms": 4740,
             "metric": "Pauses",
         },
         {
             "type": "too_fast",
             "turn": 3,
             "timing_source": "turn_timestamps",
-            "description": "Agent spoke too fast (239 wpm)",
-            "speech_rate_wpm": 239,
+            "description": "Agent spoke too fast (12.1 syllables a second)",
+            "syllables_per_second": 12.1,
             "metric": "Speaking Rate",
             "offset_seconds": 0.0,
             "duration_seconds": 3.0,
@@ -119,7 +120,7 @@ Every event a part raised shows up in `score_breakdown`, tagged with that part. 
     "skipped": [
         {"turn": 7, "error": "Reply has under 2 seconds of speech."},
         {"turn": 7, "error": "Reply is under 2 seconds, too short to measure its noise."},
-        {"turn": 7, "error": "Reply has no text or under 2 seconds of speech."},
+        {"turn": 7, "error": "Reply has under 2 seconds of speech."},
         {"turn": 7, "error": "Reply has under 1s of voiced speech to follow its pitch."},
     ],
     "metrics": {
@@ -161,10 +162,10 @@ Each agent turn with audio is one reply. These seven parts judge it, each with i
 | [Audio Clipping](/docs/metrics-audio-clipping) | is distorted from being too loud | audio that decodes |
 | [Audio Dropout](/docs/metrics-audio-dropout) | cuts out for a moment mid-speech | audio that decodes |
 | [Audio Loop](/docs/metrics-audio-loop) | repeats the same chunk of audio | audio that decodes |
-| [Pauses](/docs/metrics-pauses) | pauses over 2 seconds, or is over 50% silence | 2 seconds of speech or more |
-| [Background Noise](/docs/metrics-background-noise) | has speech under 20 dB above the noise | a clip of 2 seconds or more that isn't silent |
-| [Speaking Rate](/docs/metrics-speaking-rate) | is under 110 or over 200 words per minute | text and 2 seconds of speech or more |
-| [Pitch Variation](/docs/metrics-pitch-variation) | moves its pitch under 1 or over 6 semitones | 1 second of voiced speech or more |
+| [Pauses](/docs/metrics-pauses) | pauses over 4 seconds, or is over 50% silence | 2 seconds of speech or more |
+| [Background Noise](/docs/metrics-background-noise) | has speech under 18 dB above the noise | a clip of 2 seconds or more that isn't silent |
+| [Speaking Rate](/docs/metrics-speaking-rate) | is under 3.5 or over 10 syllables a second | 2 seconds of speaking time or more, and text that doesn't spell something out |
+| [Pitch Variation](/docs/metrics-pitch-variation) | moves its pitch under 1 semitone over a clip of 4 seconds or more | 1 second of voiced speech or more |
 
 ### Combining parts
 
@@ -179,27 +180,27 @@ If no part can judge any reply, the metric is [skipped](/docs/metrics-voice-intr
 A call with four agent replies: one clean, one clipped and rushed, one with a long pause, and one too short for most parts. Each row is one reply, the parts that judged it and the ones that flagged it.
 
 <VoiceDiagram
-  duration={27}
+  duration={29}
   lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 3.5, end: 6.5, label: "turn 1" }, { start: 10.5, end: 13.5, label: "turn 3" }, { start: 17.5, end: 23.0, label: "turn 5" }, { start: 24.5, end: 26.0 }], sounds: [{ start: 3.6, end: 6.3 }, { start: 10.6, end: 13.3 }, { start: 17.6, end: 18.76 }, { start: 18.76, end: 21.5, silent: true }, { start: 21.5, end: 22.8 }, { start: 24.6, end: 25.8 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 3.5, end: 6.5, label: "turn 1" }, { start: 10.5, end: 13.5, label: "turn 3" }, { start: 17.5, end: 25.0, label: "turn 5" }, { start: 26.5, end: 28.0 }], sounds: [{ start: 3.6, end: 6.3 }, { start: 10.6, end: 13.3 }, { start: 17.6, end: 18.76 }, { start: 18.76, end: 23.5, silent: true }, { start: 23.5, end: 24.8 }, { start: 26.6, end: 27.8 }] },
   ]}
   marks={[
     { at: 5.0, lane: 0, tone: "ok", label: "clean" },
     { at: 11.6, lane: 0, tone: "bad", label: "clipped, rushed" },
-    { at: 20.1, lane: 0, tone: "bad", label: "long pause" },
-    { at: 25.2, lane: 0, tone: "skip", label: "too short" },
+    { at: 21.1, lane: 0, tone: "bad", label: "long pause" },
+    { at: 27.2, lane: 0, tone: "skip", label: "too short" },
   ]}
   highlights={[
     { start: 10.6, end: 13.3, lane: 0 },
-    { start: 18.76, end: 21.5, lane: 0 },
+    { start: 18.76, end: 23.5, lane: 0 },
   ]}
 />
 
 | Agent turn | Judged by | Flagged by |
 | --- | --- | --- |
 | 1 | All 7 parts | None |
-| 3 | All 7 parts | Audio Clipping, Speaking Rate (239 wpm) |
-| 5 | All 7 parts | Pauses (2.7 s pause) |
+| 3 | All 7 parts | Audio Clipping, Speaking Rate (12.1 syllables a second) |
+| 5 | All 7 parts | Pauses (4.7 s pause) |
 | 7 | Audio Clipping, Audio Dropout and Audio Loop, as it's only 1.5 s long | None |
 | **4 replies** | | **2 flagged → 2/4 = 0.5** |
 
@@ -225,8 +226,7 @@ A call with four agent replies: one clean, one clipped and rushed, one with a lo
         <>
           No. It's a set of acoustic checks, not a human rating. It's best for
           catching regressions such as clipping, dropouts, repeated audio, long
-          pauses, background noise, rushed or dragging speech, or a flat or
-          swinging pitch.
+          pauses, background noise, rushed or dragging speech, or a flat pitch.
         </>
       ),
     },
@@ -240,8 +240,9 @@ A call with four agent replies: one clean, one clipped and rushed, one with a lo
           <a href="/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes">
             voice eval mode
           </a>
-          , set with <code>DEEPEVAL_VOICE_EVAL_MODE</code>: Background Noise
-          then has each noisy reply double-checked by an audio decision model.
+          , set with <code>DEEPEVAL_VOICE_EVAL_MODE</code>: Background Noise,
+          Speaking Rate and Pitch Variation then have each reply they flag
+          double-checked by an audio decision model.
         </>
       ),
     },

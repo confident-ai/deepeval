@@ -54,7 +54,7 @@ evaluate(test_cases=test_cases, metrics=[metric])
 
 There are **THREE** optional parameters specific to the `BackgroundNoiseMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `min_snr_db`: an integer for the lowest signal-to-noise ratio, in dB, a reply may have before it counts as noisy. Must be `0` or more. Defaulted to `20`.
+- [Optional] `min_snr_db`: an integer for the lowest signal-to-noise ratio, in dB, a reply may have before it counts as noisy. Must be `0` or more. Defaulted to `18`.
 - [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each noisy reply is [double-checked by an audio decision model](/docs/metrics-voice-introduction#second-check-with-an-audio-decision-model) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
 - [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
 
@@ -163,12 +163,12 @@ Each reply is cut into 20 ms frames, and a reply is noisy when:
 | --- | --- |
 | Speech level | The 90th percentile of frames at speech volume (about −41 dBFS or louder) |
 | Noise level | The 10th percentile of all frames, leaving out digital silence |
-| Noisy | Speech level is less than `min_snr_db` (20 dB) above the noise level |
+| Noisy | Speech level is less than `min_snr_db` (18 dB) above the noise level |
 
 If no reply is long enough, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
 :::note
-The default of 20 dB is 5 dB above the +15 dB speech-to-noise ratio that intelligibility guidance treats as the minimum for clear speech. Clean synthetic speech usually measures above 40 dB.
+The default of 18 dB is 3 dB above the +15 dB speech-to-noise ratio that intelligibility guidance treats as the minimum for clear speech. Clean phone lines measure 19 dB and up, and clean synthetic speech usually above 40 dB.
 :::
 
 ### Second check
@@ -226,7 +226,7 @@ A call where one agent reply has a loud hiss behind it and one is too short to m
       question: "What should I set min_snr_db to?",
       answer: (
         <>
-          Keep the default of 20 dB for most agents. Raise it to 25 or 30 dB if
+          Keep the default of 18 dB for most agents. Raise it to 25 or 30 dB if
           your agent should sound studio-clean. Lower it if your agent
           deliberately plays ambient sound, like a busy call center.
         </>

@@ -55,7 +55,7 @@ evaluate(test_cases=test_cases, metrics=[metric])
 There are **TWO** optional parameters specific to the `LoudnessMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
 - [Optional] `min_dbfs`: an integer for the quietest speech level, in dBFS, a reply may have. Must be lower than `max_dbfs`. Defaulted to `-32`.
-- [Optional] `max_dbfs`: an integer for the loudest speech level, in dBFS, a reply may have. Must be `0` or lower. Defaulted to `-6`.
+- [Optional] `max_dbfs`: an integer for the loudest speech level, in dBFS, a reply may have. Must be `0` or lower. Defaulted to `-10`.
 
 ### As a standalone
 
@@ -111,7 +111,7 @@ Each reply that was too quiet or too loud shows up in `score_breakdown`. Here is
 | `type` | Too quiet or too loud |
 | `speech_dbfs` | The reply's speech level, in dBFS |
 
-Each event covers the whole reply, so `offset_seconds` is 0 and `duration_seconds` is the clip's length. Replies that are silent or can't be decoded are listed under `skipped`.
+Each event covers the whole reply, so `offset_seconds` is 0 and `duration_seconds` is the clip's length. Replies with under 1 second of speech, or that can't be decoded, are listed under `skipped`.
 
 Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
 
@@ -137,7 +137,10 @@ The `LoudnessMetric` score is calculated according to the following equation:
   ]}
 />
 
-Every reply is scored, however long, except one with no audible sound at all, which [Silent Reply](/docs/metrics-silent-reply) reports instead.
+A reply is skipped when it:
+
+- has under 1 second from its first to its last speech, since a level read off a word or two isn't worth judging, or
+- has no audible sound at all, which [Silent Reply](/docs/metrics-silent-reply) reports instead.
 
 ### Loudness criteria
 
@@ -163,12 +166,12 @@ Each reply is cut into 20 ms frames. Its speech level is the 90th percentile of 
 | Check | Rule |
 | --- | --- |
 | Too quiet | Speech level below `min_dbfs` (−32 dBFS) |
-| Too loud | Speech level above `max_dbfs` (−6 dBFS) |
+| Too loud | Speech level above `max_dbfs` (−10 dBFS) |
 
-If no reply has audible, decodable audio, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
+If no reply has at least 1 second of speech, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
 :::note
-Phone test speech sits near −22 dBFS on this scale (ITU-T P.56). −32 dBFS is 10 dB below that, about half as loud. −6 dBFS leaves under 6 dB before the loudest syllables clip.
+Phone test speech sits near −22 dBFS on this scale (ITU-T P.56). −32 dBFS is 10 dB below that, about half as loud. Listeners called replies above −10 dBFS too loud.
 :::
 
 ### Example call
@@ -227,7 +230,7 @@ A call where one agent reply is far too quiet and one is far too loud. Each row 
       answer: (
         <>
           If your agent's audio is normalized to a known level, narrow the
-          range around it, for example <code>min_dbfs=-26, max_dbfs=-10</code>,
+          range around it, for example <code>min_dbfs=-26, max_dbfs=-16</code>,
           to catch smaller drifts from your target.
         </>
       ),
