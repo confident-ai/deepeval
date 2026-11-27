@@ -1,0 +1,104 @@
+---
+id: metrics-self-consistency
+title: Output Self-Consistency
+sidebar_label: Self-Consistency
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} usesLLMs={false} referenceless={true} rag={false} />
+
+The Self-Consistency metric checks whether sampled answers to the same input agree with each other: the mean pairwise token agreement across `actual_output` plus extra samples. Unstable answers on the same prompt mean the model is guessing — route those to review, retrieval, or a stronger model.
+
+:::note
+The `SelfConsistencyMetric` does **not** rely on an LLM for evaluation: agreement is lexical (unigram Jaccard), so it is deterministic, requires no API key, and has zero token cost. For semantic agreement, use `GEval` with a consistency criterion. Each `LLMTestCase` holds a single output, so pass the extra samples explicitly (see below).
+:::
+
+## Required Arguments
+
+To use the `SelfConsistencyMetric`, you'll have to provide the following arguments when creating an [`LLMTestCase`](/docs/evaluation-test-cases#llm-test-case):
+
+- `input`
+- `actual_output`
+
+Plus at least one extra sample: via `samples` on `measure`, or via `test_case.metadata` under `samples`, `completions`, or `sampled_outputs`. Read the [How Is It Calculated](#how-is-it-calculated) section below to learn how test case parameters are used for metric calculation.
+
+## Usage
+
+```python
+from deepeval import evaluate
+from deepeval.metrics.community import SelfConsistencyMetric
+from deepeval.test_case import LLMTestCase
+
+metric = SelfConsistencyMetric(threshold=0.5)
+
+test_case = LLMTestCase(
+    input="What is the capital of France?",
+    actual_output="Paris is the capital of France.",
+)
+
+# Pass the extra samples explicitly (each test case holds one output)
+# metric.measure(
+#     test_case,
+#     samples=["Paris is France's capital.", "The capital is Paris."],
+# )
+# print(metric.score, metric.reason)
+
+evaluate(test_cases=[test_case], metrics=[metric])
+```
+
+There are **FIVE** optional parameters when creating a `SelfConsistencyMetric`:
+
+- [Optional] `threshold`: a float representing the minimum passing threshold. Defaulted to `0.5`.
+- [Optional] `include_reason`: a boolean which when set to `True`, includes a reason with the mean agreement. Defaulted to `True`.
+- [Optional] `strict_mode`: a boolean which enforces a binary metric score, defaulted to `False`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the intermediate steps used to calculate the metric. Defaulted to `False`.
+- [Optional] `flaky`: a boolean which when set to `True`, [marks the metric as flaky](/docs/metrics-introduction#flaky-metrics). Defaulted to `False`.
+
+### As a Standalone
+
+You can also run the `SelfConsistencyMetric` on a single test case as a standalone, one-off execution.
+
+```python
+...
+
+metric.measure(test_case, samples=["Paris is France's capital."])
+print(metric.score, metric.reason)
+```
+
+## How Is It Calculated?
+
+The `SelfConsistencyMetric` score is the mean pairwise unigram-Jaccard agreement over all samples:
+
+<Equation
+  formula="\text{Self-Consistency} = \frac{1}{\binom{n}{2}} \sum_{i<j} \frac{|tokens_i \cap tokens_j|}{|tokens_i \cup tokens_j|}"
+/>
+
+`score_breakdown` also reports `mean_pairwise`, `min_pairwise` (the worst pair — useful for spotting one odd sample), and `n_samples`.
+
+## FAQs
+
+<FAQs
+  qas={[
+    {
+      question: "Lexical agreement misses paraphrases. Is that a problem?",
+      answer: (
+        <>
+          Partly: paraphrased-but-correct answers score below{" "}
+          <code>1.0</code> yet well above random pairs. Set the threshold
+          around <code>0.5</code> for lexical mode, or switch to a
+          GEval consistency criterion for semantic agreement.
+        </>
+      ),
+    },
+    {
+      question: "How does this relate to judge consistency work?",
+      answer: (
+        <>
+          It measures answer stability, not judge stability. Check the
+          judge-consistency discussion in PR #3104 before building
+          judge-agreement dashboards, so the two don't overlap.
+        </>
+      ),
+    },
+  ]}
+/>
