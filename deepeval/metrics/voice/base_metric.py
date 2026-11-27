@@ -17,7 +17,10 @@ from deepeval.metrics.utils import (
     construct_verbose_logs,
 )
 from deepeval.metrics.voice.utils.analysis import decode_audio
-from deepeval.metrics.voice.utils.call_activity import EVENT_KEYS
+from deepeval.metrics.voice.utils.call_activity import (
+    EVENT_KEYS,
+    agent_replies,
+)
 from deepeval.metrics.voice.utils.defects import (
     AGENT_REPLIES,
     CALL_RECORDING,
@@ -25,6 +28,7 @@ from deepeval.metrics.voice.utils.defects import (
     TURN_TIMESTAMPS,
     TURN_TIMESTAMPS_NOTE,
     DefectShare,
+    call_has_audio,
     dismissed_note,
     shared_analysis,
     untimed_call_reason,
@@ -46,10 +50,11 @@ from deepeval.metrics.voice.utils.roll_up import (
     agent_turn_at,
     caller_line_start_of_turn,
     exchange_of,
+    recording_reply_at,
 )
 from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.models.system_one.hume_model import HumeDecisionModel
-from deepeval.test_case import ConversationalTestCase, MultiTurnParams
+from deepeval.test_case import Audio, ConversationalTestCase, MultiTurnParams
 
 VoiceMetricResult = Tuple[Optional[float], str, Dict]
 
@@ -71,24 +76,41 @@ def _format_breakdown(breakdown: Dict) -> str:
         return str(breakdown)
 
 
-def _place_reply_events(breakdown: Dict, test_case: ConversationalTestCase):
+def _reply_audio(
+    event: Dict, test_case: ConversationalTestCase, use_speech_detection: bool
+) -> Optional[Audio]:
+    turn = event.get("turn")
+    if turn is not None:
+        if (
+            0 <= turn < len(test_case.turns)
+            and test_case.turns[turn].role == "assistant"
+        ):
+            return test_case.turns[turn].audio
+        return None
+    reply_start = event.get(EVENT_KEYS[CALL_RECORDING])
+    if reply_start is None:
+        return None
+    replies = agent_replies(test_case, use_speech_detection)
+    return None if replies.by_turn else replies.audio.get(reply_start)
+
+
+def _place_reply_events(
+    breakdown: Dict,
+    test_case: ConversationalTestCase,
+    use_speech_detection: bool,
+):
     """An event about a whole reply, such as its loudness or pitch, spans
     that reply's audio; give it the reply's place when the metric gave none."""
     events = breakdown.get("events") if isinstance(breakdown, dict) else None
     for event in events or []:
-        turn = event.get("turn") if isinstance(event, dict) else None
         if (
-            turn is None
+            not isinstance(event, dict)
             or "mark" in event
             or "offset_seconds" in event
             or "start_time" in event
         ):
             continue
-        if not 0 <= turn < len(test_case.turns):
-            continue
-        if test_case.turns[turn].role != "assistant":
-            continue
-        audio = test_case.turns[turn].audio
+        audio = _reply_audio(event, test_case, use_speech_detection)
         if audio is None:
             continue
         try:
@@ -122,6 +144,7 @@ def _default_audio_decision_model() -> DeepEvalBaseAudioDecisionModel:
 class BaseVoiceMetric(BaseConversationalMetric):
     _required_test_case_params: List[MultiTurnParams] = []
     audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None
+    use_speech_detection: bool = True
 
     def __init__(
         self,
@@ -188,7 +211,7 @@ class BaseVoiceMetric(BaseConversationalMetric):
         self.error = None
         self.evaluation_cost = None
         score, reason, breakdown = self._evaluate(test_case)
-        _place_reply_events(breakdown, test_case)
+        _place_reply_events(breakdown, test_case, self.use_speech_detection)
         if (
             score is not None
             and self.strict_mode
@@ -295,9 +318,14 @@ class BaseRollUpMetric(BaseVoiceMetric):
         if share.event_key != EVENT_KEYS[CALL_RECORDING]:
             return key
         stopped_at = None if defect is None else defect.get(STOPPED_AT_SECONDS)
-        return agent_turn_at(
-            test_case, key if stopped_at is None else stopped_at
-        )
+        moment = key if stopped_at is None else stopped_at
+        if not call_has_audio(test_case):
+            return recording_reply_at(
+                test_case,
+                moment,
+                self.use_speech_detection,
+            )
+        return agent_turn_at(test_case, moment)
 
     def _evaluate(self, test_case: ConversationalTestCase) -> VoiceMetricResult:
         with shared_analysis():
@@ -327,6 +355,7 @@ class BaseRollUpMetric(BaseVoiceMetric):
         timing_source = None
         dismissed = 0
         for part in self._parts():
+            part.use_speech_detection = self.use_speech_detection
             name = part.__name__
             share = part.confirmed_defect_share(part_test_case)
             dismissed += share.dismissed
@@ -420,7 +449,6 @@ class BaseExchangeRollUpMetric(BaseRollUpMetric):
     """Rolls up per exchange: a caller line and the agent's reply to it."""
 
     counted = EXCHANGES
-    use_speech_detection: bool
     _line_start_of_turn: Dict[int, int]
 
     def _prepare(self, test_case: ConversationalTestCase) -> None:
@@ -435,8 +463,8 @@ class BaseExchangeRollUpMetric(BaseRollUpMetric):
         share: DefectShare,
         key: float,
         defect: Optional[VoiceEvent] = None,
-    ) -> Optional[int]:
+    ) -> Optional[float]:
         turn = super()._roll_up_key(test_case, part, share, key, defect)
-        if turn is None:
-            return None
+        if turn is None or not call_has_audio(test_case):
+            return turn
         return exchange_of(test_case, int(turn), self._line_start_of_turn)

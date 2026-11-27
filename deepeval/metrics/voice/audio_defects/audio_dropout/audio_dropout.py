@@ -3,25 +3,32 @@ from deepeval.metrics.voice.utils.defects import (
     DefectShare,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.metrics.voice.utils.call_activity import agent_replies
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent, placed
 
 
 class AudioDropoutMetric(BaseDefectMetric):
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        measurements, skipped = agent_reply_measurements(test_case)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        measurements, skipped = agent_reply_measurements(
+            test_case, self.use_speech_detection
+        )
         defects = [
             VoiceEvent(
                 type="audio_dropout",
-                turn=turn,
+                **replies.key(turn),
                 description=f"Audio dropped out for {duration * 1000:.0f} ms",
-                **placed(test_case.turns[turn].audio, offset, duration),
+                **placed(replies.audio[turn], offset, duration),
             )
             for turn, reply in measurements.items()
             for offset, duration in reply.dropout_spans
         ]
-        return DefectShare(
-            list(measurements), defects, skipped, "audio dropouts"
+        return replies.share(
+            list(measurements),
+            defects,
+            skipped,
+            "audio dropouts",
         )
 
     @property

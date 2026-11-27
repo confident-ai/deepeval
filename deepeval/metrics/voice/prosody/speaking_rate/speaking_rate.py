@@ -7,6 +7,7 @@ from deepeval.metrics.voice.utils.defects import (
     DefectShare,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.metrics.voice.utils.call_activity import agent_replies
 from deepeval.config.voice_eval_mode import VoiceEvalModeName
 from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.test_case import ConversationalTestCase
@@ -73,7 +74,10 @@ class SpeakingRateMetric(BaseDefectMetric):
         self.max_syllables_per_second = max_syllables_per_second
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        measurements, skipped = agent_reply_measurements(test_case)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        measurements, skipped = agent_reply_measurements(
+            test_case, self.use_speech_detection
+        )
         margin = (
             SECOND_CHECK_MARGIN if self.audio_decision_model is not None else 0
         )
@@ -84,7 +88,7 @@ class SpeakingRateMetric(BaseDefectMetric):
             if rate is None:
                 skipped.append(
                     {
-                        "turn": turn,
+                        **replies.key(turn),
                         "error": "Reply has under "
                         f"{SPEECH_SPAN_MIN_SECONDS:g} seconds of speech.",
                     }
@@ -92,9 +96,14 @@ class SpeakingRateMetric(BaseDefectMetric):
                 continue
             # A name or an email read out letter by letter is slow on
             # purpose.
-            if spells_something_out(test_case.turns[turn].content):
+            if replies.by_turn and spells_something_out(
+                test_case.turns[turn].content
+            ):
                 skipped.append(
-                    {"turn": turn, "error": "Reply spells something out."}
+                    {
+                        **replies.key(turn),
+                        "error": "Reply spells something out.",
+                    }
                 )
                 continue
             eligible_turns.append(turn)
@@ -107,13 +116,13 @@ class SpeakingRateMetric(BaseDefectMetric):
             defects.append(
                 VoiceEvent(
                     type=event_type,
-                    turn=turn,
+                    **replies.key(turn),
                     syllables_per_second=round(rate, 1),
                     description=f"Agent spoke {SPEED_WORDS[event_type]} "
                     f"({rate:.1f} syllables a second)",
                 )
             )
-        return DefectShare(
+        return replies.share(
             eligible_turns,
             defects,
             skipped,

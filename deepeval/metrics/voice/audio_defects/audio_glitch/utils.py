@@ -8,7 +8,7 @@ their call-relative timing. No model listens to the audio.
 from array import array
 from dataclasses import asdict, dataclass
 from statistics import mean, median
-from typing import Dict, List, Optional, Sequence, Tuple
+from typing import TYPE_CHECKING, Dict, List, Optional, Sequence, Tuple
 
 from deepeval.metrics.voice.utils.analysis import (
     AudioMeasurements,
@@ -24,6 +24,9 @@ from deepeval.test_case import Audio, ConversationalTestCase
 from deepeval.voice.connectors import audio_utils
 from deepeval.voice.timeline import build_audio_timeline
 from deepeval.metrics.voice.utils.events import VoiceEvent
+
+if TYPE_CHECKING:
+    from deepeval.metrics.voice.utils.call_activity import AgentReplies
 
 # Tones are tracked on audio downsampled to this rate: the artifacts of
 # interest sit far below its Nyquist frequency.
@@ -468,34 +471,34 @@ def held_tone_events(
     return events
 
 
-def detect_audio_glitches(test_case: ConversationalTestCase) -> GlitchReport:
-    turns = test_case.turns
+def _clip_glitches(
+    clips: Sequence[Tuple[int, str, Audio]],
+) -> Tuple[
+    Dict[int, ClipAnalysis], List[VoiceEvent], Dict[str, SpeakerBaseline]
+]:
     analyses: Dict[int, ClipAnalysis] = {}
     events: List[VoiceEvent] = []
-    turns_with_audio: List[int] = []
-    for index, turn in enumerate(turns):
-        if turn.audio is None:
-            continue
-        turns_with_audio.append(index)
+    for index, role, audio in clips:
         try:
-            analyses[index] = analyze_clip(index, turn.role, turn.audio)
+            analyses[index] = analyze_clip(index, role, audio)
         except (TypeError, ValueError) as error:
             events.append(
                 VoiceEvent(
                     type="audio_undecodable",
                     turn=index,
-                    role=turn.role,
+                    role=role,
                     offset_seconds=0.0,
                     duration_seconds=0.0,
-                    start_time=turn.audio.start_time,
+                    start_time=audio.start_time,
                     position="start",
                     reason=str(error),
                 )
             )
 
+    clip_audio = {index: audio for index, _, audio in clips}
     baselines = speaker_baselines(list(analyses.values()))
     for index, analysis in analyses.items():
-        audio = turns[index].audio
+        audio = clip_audio[index]
         baseline = baselines[analysis.role]
         events.extend(held_tone_events(analysis, audio, baseline))
         for run in [] if baseline.digital_silence else analysis.dead_runs:
@@ -521,6 +524,20 @@ def detect_audio_glitches(test_case: ConversationalTestCase) -> GlitchReport:
                     fraction=round(analysis.clipped_fraction, 4),
                 )
             )
+    return analyses, events, baselines
+
+
+def detect_audio_glitches(test_case: ConversationalTestCase) -> GlitchReport:
+    turns = test_case.turns
+    turns_with_audio = [
+        index for index, turn in enumerate(turns) if turn.audio is not None
+    ]
+    analyses, events, baselines = _clip_glitches(
+        [
+            (index, turns[index].role, turns[index].audio)
+            for index in turns_with_audio
+        ]
+    )
 
     timeline_available = all(
         turns[index].audio.start_time is not None for index in turns_with_audio
@@ -572,4 +589,35 @@ def detect_audio_glitches(test_case: ConversationalTestCase) -> GlitchReport:
         turns_with_audio=turns_with_audio,
         baselines={role: asdict(item) for role, item in baselines.items()},
         timeline_available=timeline_available,
+    )
+
+
+def detect_recording_reply_glitches(
+    replies: "AgentReplies",
+) -> GlitchReport:
+    """The same detection on agent replies heard on a call recording, keyed
+    by where each reply starts. A stream cut between replies is left to
+    Abrupt Cut-off, which reads the recording itself."""
+    starts = list(replies.audio)
+    _, events, baselines = _clip_glitches(
+        [
+            (index, "assistant", replies.audio[start])
+            for index, start in enumerate(starts)
+        ]
+    )
+    events = [
+        VoiceEvent(
+            **event.model_dump(exclude={"turn"}),
+            **replies.key(starts[event.turn]),
+        )
+        for event in events
+    ]
+    events.sort(
+        key=lambda event: (event.get(replies.event_key), event.offset_seconds)
+    )
+    return GlitchReport(
+        events=events,
+        turns_with_audio=starts,
+        baselines={role: asdict(item) for role, item in baselines.items()},
+        timeline_available=False,
     )

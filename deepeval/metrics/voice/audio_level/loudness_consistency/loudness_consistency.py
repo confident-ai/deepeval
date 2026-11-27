@@ -8,6 +8,7 @@ from deepeval.metrics.voice.utils.defects import (
     spoken_replies,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.metrics.voice.utils.call_activity import agent_replies
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
@@ -37,15 +38,18 @@ class LoudnessConsistencyMetric(BaseDefectMetric):
         self.max_shift_db = max_shift_db
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        measurements, skipped = agent_reply_measurements(test_case)
-        measurements = spoken_replies(measurements, skipped)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        measurements, skipped = agent_reply_measurements(
+            test_case, self.use_speech_detection
+        )
+        measurements = spoken_replies(measurements, skipped, replies.event_key)
         levels = {
             turn: reply.speech_dbfs for turn, reply in measurements.items()
         }
         defects = [
             VoiceEvent(
                 type="loudness_shift",
-                turn=turn,
+                **replies.key(turn),
                 speech_dbfs=round(levels[turn], 1),
                 shift_db=round(shift, 1),
                 description=f"Reply was {abs(shift):.0f} dB "
@@ -54,7 +58,7 @@ class LoudnessConsistencyMetric(BaseDefectMetric):
             for turn, shift in shifts_from_typical(levels).items()
             if abs(shift) > self.max_shift_db
         ]
-        return DefectShare(
+        return replies.share(
             list(levels),
             defects,
             skipped,

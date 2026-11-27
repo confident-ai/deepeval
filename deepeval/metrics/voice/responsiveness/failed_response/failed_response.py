@@ -6,8 +6,8 @@ from deepeval.metrics.voice.utils.call_activity import (
 )
 from deepeval.metrics.voice.utils.defects import (
     CALLER_LINES,
-    NO_CALL_AUDIO_REASON,
     call_has_audio,
+    no_turn_audio_reason,
     DefectShare,
 )
 from deepeval.metrics.voice.utils.detectors import response_was_owed
@@ -44,7 +44,7 @@ class FailedResponseMetric(BaseDefectMetric):
                 [],
                 [],
                 defect_label,
-                no_eligible_reason=NO_CALL_AUDIO_REASON,
+                no_eligible_reason=no_turn_audio_reason(test_case),
                 counted=CALLER_LINES,
             )
         turns = test_case.turns

@@ -6,6 +6,7 @@ from deepeval.metrics.voice.utils.defects import (
     DefectShare,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.metrics.voice.utils.call_activity import agent_replies
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent, placed
 
@@ -39,14 +40,17 @@ class PausesMetric(BaseDefectMetric):
         self.max_pause_percent = max_pause_percent
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        measurements, skipped = agent_reply_measurements(test_case)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        measurements, skipped = agent_reply_measurements(
+            test_case, self.use_speech_detection
+        )
         eligible_turns = []
         defects = []
         for turn, reply in measurements.items():
             if reply.speech_span_seconds < SPEECH_SPAN_MIN_SECONDS:
                 skipped.append(
                     {
-                        "turn": turn,
+                        **replies.key(turn),
                         "error": "Reply has under "
                         f"{SPEECH_SPAN_MIN_SECONDS:g} seconds of speech.",
                     }
@@ -57,12 +61,12 @@ class PausesMetric(BaseDefectMetric):
                 defects.append(
                     VoiceEvent(
                         type="long_pause",
-                        turn=turn,
+                        **replies.key(turn),
                         longest_pause_ms=round(reply.longest_pause_ms),
                         description="Agent paused for "
                         f"{reply.longest_pause_ms / 1000:.1f}s mid-reply",
                         **placed(
-                            test_case.turns[turn].audio,
+                            replies.audio[turn],
                             *reply.longest_pause_span,
                         ),
                     )
@@ -71,13 +75,13 @@ class PausesMetric(BaseDefectMetric):
                 defects.append(
                     VoiceEvent(
                         type="too_much_silence",
-                        turn=turn,
+                        **replies.key(turn),
                         pause_fraction=round(reply.pause_fraction, 2),
                         description="Reply was "
                         f"{reply.pause_fraction * 100:.0f}% silence",
                     )
                 )
-        return DefectShare(
+        return replies.share(
             eligible_turns,
             defects,
             skipped,

@@ -6,6 +6,7 @@ from deepeval.metrics.voice.speech_quality.transcription_accuracy.utils import (
 )
 from deepeval.metrics.voice.utils.analysis import get_numpy
 from deepeval.metrics.voice.utils.call_activity import (
+    agent_replies,
     call_activity,
     read_call_recording,
     sound_between,
@@ -41,7 +42,7 @@ def dead_streams(
 ) -> List[VoiceEvent]:
     """The holes in the agent's replies: its audio goes dead and then carries
     on. Dead air to the end of a reply is left to Abrupt Cut-off."""
-    _, events, _ = agent_glitch_events(test_case)
+    _, events, _ = agent_glitch_events(test_case, use_speech_detection)
     holes = [
         event
         for event in events
@@ -151,7 +152,10 @@ class DeadStreamMetric(BaseDefectMetric):
         return _ends_a_sentence(across[last_block.a + last_block.size - 1])
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        eligible_turns, _, skipped = agent_glitch_events(test_case)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        eligible_turns, _, skipped = agent_glitch_events(
+            test_case, self.use_speech_detection
+        )
         defects = [
             event.model_copy(
                 update={
@@ -162,7 +166,12 @@ class DeadStreamMetric(BaseDefectMetric):
             for event in dead_streams(test_case, self.use_speech_detection)
             if not self._after_a_finished_sentence(test_case, event)
         ]
-        return DefectShare(eligible_turns, defects, skipped, "a dead stream")
+        return replies.share(
+            eligible_turns,
+            defects,
+            skipped,
+            "a dead stream",
+        )
 
     @property
     def __name__(self):

@@ -67,7 +67,7 @@ class AudioIntegrityMetric(BaseRollUpMetric):
     def _critical_events(
         self, test_case: ConversationalTestCase
     ) -> List[VoiceEvent]:
-        return agent_audio_critical_events(test_case)
+        return agent_audio_critical_events(test_case, self.use_speech_detection)
 
     @property
     def __name__(self):

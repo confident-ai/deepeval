@@ -1,7 +1,8 @@
 import re
-from typing import Optional
+from typing import Dict, List, Optional
 
 from deepeval.metrics.voice.utils.defects import (
+    CALL_RECORDING,
     NO_CALL_AUDIO_REASON,
     call_has_audio,
     DefectShare,
@@ -12,7 +13,11 @@ from deepeval.metrics.voice.utils.detectors import (
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
-from deepeval.metrics.voice.utils.call_activity import call_end
+from deepeval.metrics.voice.utils.call_activity import (
+    agent_replies,
+    call_end,
+    read_call_recording,
+)
 from deepeval.metrics.voice.utils.events import MOMENT, VoiceEvent, on_call
 
 # Written to the test case's metadata by ConversationSimulator.
@@ -61,11 +66,44 @@ def _unexpected_end_reason(test_case: ConversationalTestCase) -> Optional[str]:
     return None
 
 
+def _end_events(
+    end_reason: Optional[str], key: Dict[str, float], ended_at: Optional[float]
+) -> List[VoiceEvent]:
+    if not end_reason:
+        return []
+    return [
+        VoiceEvent(
+            type="unexpected_end",
+            **key,
+            end_reason=end_reason,
+            mark=MOMENT,
+            description=f"Call ended unexpectedly ({end_reason})",
+            **({} if ended_at is None else on_call(ended_at, 0.0)),
+        )
+    ]
+
+
 class UnexpectedCallEndMetric(BaseDefectMetric):
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         defect_label = "an unexpected end"
-        if not call_has_audio(test_case):
+        end_reason = _unexpected_end_reason(test_case)
+        if call_has_audio(test_case):
+            last_turn = len(test_case.turns) - 1
             return DefectShare(
+                [last_turn],
+                _end_events(
+                    end_reason, {"turn": last_turn}, call_end(test_case.turns)
+                ),
+                [],
+                defect_label,
+                counted=CALLS,
+            )
+        replies = agent_replies(test_case, self.use_speech_detection)
+        recording = read_call_recording(
+            test_case.audio, test_case.agent_channel
+        )
+        if replies.timing_source != CALL_RECORDING or recording is None:
+            return replies.share(
                 [],
                 [],
                 [],
@@ -73,25 +111,18 @@ class UnexpectedCallEndMetric(BaseDefectMetric):
                 no_eligible_reason=NO_CALL_AUDIO_REASON,
                 counted=CALLS,
             )
-        last_turn = len(test_case.turns) - 1
-        end_reason = _unexpected_end_reason(test_case)
-        ended_at = call_end(test_case.turns)
-        defects = (
-            [
-                VoiceEvent(
-                    type="unexpected_end",
-                    turn=last_turn,
-                    end_reason=end_reason,
-                    mark=MOMENT,
-                    description=f"Call ended unexpectedly ({end_reason})",
-                    **({} if ended_at is None else on_call(ended_at, 0.0)),
-                )
-            ]
-            if end_reason
-            else []
-        )
-        return DefectShare(
-            [last_turn], defects, [], defect_label, counted=CALLS
+        if not replies.audio:
+            return replies.share([], [], [], defect_label, counted=CALLS)
+        last_reply = max(replies.audio)
+        _, agent, sample_rate = recording
+        return replies.share(
+            [last_reply],
+            _end_events(
+                end_reason, replies.key(last_reply), len(agent) / sample_rate
+            ),
+            [],
+            defect_label,
+            counted=CALLS,
         )
 
     @property

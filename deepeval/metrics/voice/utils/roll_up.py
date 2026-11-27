@@ -3,7 +3,10 @@ single-defect metrics."""
 
 from typing import Dict, List, Optional
 
-from deepeval.metrics.voice.utils.call_activity import caller_lines
+from deepeval.metrics.voice.utils.call_activity import (
+    caller_lines,
+    recording_replies,
+)
 from deepeval.metrics.voice.utils.defects import agent_reply_measurements
 from deepeval.metrics.voice.utils.events import VoiceEvent
 from deepeval.test_case import ConversationalTestCase
@@ -38,6 +41,25 @@ def agent_turn_at(
     return None
 
 
+def recording_reply_at(
+    test_case: ConversationalTestCase,
+    seconds: float,
+    use_speech_detection: bool,
+) -> Optional[float]:
+    """The agent reply heard on the call recording that holds a moment, by
+    where it starts: the latest one that started by then."""
+    starts = [
+        start
+        for start, _ in recording_replies(test_case, use_speech_detection) or []
+    ]
+    started = [start for start in starts if start <= seconds]
+    if started:
+        return started[-1]
+    if starts and starts[0] - seconds <= TURN_START_TOLERANCE_SECONDS:
+        return starts[0]
+    return None
+
+
 def caller_line_start_of_turn(
     test_case: ConversationalTestCase, use_speech_detection: bool
 ) -> Dict[int, int]:
@@ -68,15 +90,17 @@ def exchange_of(
 
 
 def agent_audio_critical_events(
-    test_case: ConversationalTestCase,
+    test_case: ConversationalTestCase, use_speech_detection: bool
 ) -> List[VoiceEvent]:
     """A call with no agent turns, or agent audio that cannot be decoded."""
     if not any(turn.role == "assistant" for turn in test_case.turns):
         return [VoiceEvent(type="assistant_turn_missing")]
-    _, skipped = agent_reply_measurements(test_case)
+    _, skipped = agent_reply_measurements(test_case, use_speech_detection)
     return [
         VoiceEvent(
-            type="audio_undecodable", turn=entry["turn"], reason=entry["error"]
+            type="audio_undecodable",
+            reason=entry["error"],
+            **{key: value for key, value in entry.items() if key != "error"},
         )
         for entry in skipped
     ]

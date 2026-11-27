@@ -6,6 +6,7 @@ from deepeval.metrics.voice.utils.defects import (
     spoken_replies,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.metrics.voice.utils.call_activity import agent_replies
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
@@ -39,8 +40,11 @@ class LoudnessMetric(BaseDefectMetric):
         self.max_dbfs = max_dbfs
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        measurements, skipped = agent_reply_measurements(test_case)
-        measurements = spoken_replies(measurements, skipped)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        measurements, skipped = agent_reply_measurements(
+            test_case, self.use_speech_detection
+        )
+        measurements = spoken_replies(measurements, skipped, replies.event_key)
         defects = []
         for turn, reply in measurements.items():
             if reply.speech_dbfs < self.min_dbfs:
@@ -52,13 +56,13 @@ class LoudnessMetric(BaseDefectMetric):
             defects.append(
                 VoiceEvent(
                     type=event_type,
-                    turn=turn,
+                    **replies.key(turn),
                     speech_dbfs=round(reply.speech_dbfs, 1),
                     description=f"Reply was {event_type.replace('_', ' ')} "
                     f"({reply.speech_dbfs:.0f} dBFS)",
                 )
             )
-        return DefectShare(
+        return replies.share(
             list(measurements),
             defects,
             skipped,
