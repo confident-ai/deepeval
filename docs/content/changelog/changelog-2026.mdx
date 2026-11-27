@@ -19,12 +19,22 @@ First things first, DeepEval exists because of everyone who opened issues, revie
 <ChangelogContributors year={2026} limit={96} />
 
 {/* DeepEval release notes start */}
+{/* changelog-ignore:
+- 3669
+*/}
 
 ## November
 
-November's release focused on improving reliability, compatibility, and accuracy across the tool's evaluation, voice, and integration features. Key updates include robust handling of model parameters and prompt formats, enhanced support for new models and voice connectors, and more precise scoring and evaluation logic. Several critical bugs were fixed to prevent crashes and ensure consistent behavior across different environments and data formats. Documentation and test coverage were expanded to clarify usage and ensure correctness, while tracing and telemetry were unified under a new SDK for streamlined integration management.
+November's release focused on expanding voice simulation capabilities, introducing new connectors and more accurate turn-taking logic, as well as enhancing support for OpenAI and Anthropic models. The update brings improved classification workflows, robust error handling, and more flexible metadata and context management across APIs. Community engagement was strengthened with a new events page and improved contributor features, while documentation and testing saw significant clarity and reliability improvements. Numerous bug fixes addressed edge cases in voice, evaluation, and integration logic, resulting in a more stable and feature-rich experience for users.
 
 ### New Feature
+
+#### v4.3.5
+- Add support for OpenAI’s Decisions API with the new OpenAIDecisionModel, enabling users to leverage OpenAI models for decision tasks. Includes context limit handling, pricing information, and error management specific to OpenAI’s API. The integration supports batching and splits requests when exceeding the question cap, improving compatibility and robustness for OpenAI-based workflows. ([#3622](https://github.com/confident-ai/deepeval/pull/3622)) {/* pr:3622 */} ([Yekta Kocaoğullar](https://github.com/ykocaogullar))
+- Simulated voice callers can now press keypad (DTMF) digits during calls. Enable this with VoiceConfig(keypad_input=True), allowing scenarios to include digit input without extra model calls. Keypad presses are treated as user turns with appropriate metadata, and connectors can send DTMF signals or play tones as needed. This improves the realism and flexibility of voice call simulations. ([#3683](https://github.com/confident-ai/deepeval/pull/3683)) {/* pr:3683 */} ([Kritin Vongthongsri](https://github.com/kritinv))
+- Add a community page listing upcoming and past meetups organized by community members, including event details, submission and approval workflows, and a host kit. The page features a new navigation item, mascot-themed hero, and displays event images locally for faster loading. Includes a new code of conduct covering the repository, Discord, and meetups. Improves event bar rendering to avoid React script tag warnings. ([#3702](https://github.com/confident-ai/deepeval/pull/3702)) {/* pr:3702 */} ([Tony](https://github.com/tony-confidentai))
+- Add GatewayModel to handle provider and model strings, enabling clean fallback when log probabilities are unsupported and improved pricing via the LiteLLM price map. Provider arguments are now forwarded to every call, and only the relevant provider's API key is sent. LiteLLM can be used as an optional gateway extra. ([#3716](https://github.com/confident-ai/deepeval/pull/3716)) {/* pr:3716 */} ([Jeffrey Ip](https://github.com/penguine-ip))
+- Add support for evidence, review, label discovery, and agent profile configuration to classifiers, enabling more flexible and detailed classification workflows. ([#3719](https://github.com/confident-ai/deepeval/pull/3719)) {/* pr:3719 */} ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v4.3.4
 - Add support for including metadata in the turn API, allowing users to attach additional information to each turn. ([#3448](https://github.com/confident-ai/deepeval/pull/3448)) {/* pr:3448 */} ([Tanay](https://github.com/tanayvaswani))
@@ -35,6 +45,16 @@ November's release focused on improving reliability, compatibility, and accuracy
 
 
 ### Improvement
+
+#### v4.3.5
+- Updated changelogs to reflect recent features, improvements, and bug fixes, providing users with detailed release information and clearer documentation of changes. ([#3632](https://github.com/confident-ai/deepeval/pull/3632)) {/* pr:3632 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
+- Improve turn taking metric for voice conversations by considering response latency when audio clips are contiguous, leading to more accurate measurement of conversational naturalness. Transitions with no measurable gap and missing latency are now reported and skipped, with clearer feedback provided to users. ([#3633](https://github.com/confident-ai/deepeval/pull/3633)) {/* pr:3633 */} ([Tanay](https://github.com/tanayvaswani))
+- Improve performance and accuracy of voice and audio-glitch analysis by using numpy for core computations. Audio analysis now requires numpy as a dependency and will provide a clear error message if numpy is missing. This change results in faster processing and more reliable results for audio metrics. ([#3665](https://github.com/confident-ai/deepeval/pull/3665)) {/* pr:3665 */} ([Yekta Kocaoğullar](https://github.com/ykocaogullar))
+- Improve voice call handling by ensuring the caller's line is ended only after audio playout completes, preventing premature turn endings and allowing for slow agent replies. Introduce configurable response timeouts to end exchanges more reliably when no agent speech is detected, reducing unnecessary waiting. Enhance detection of interrupted turns and improve handling of barge-in scenarios for more accurate conversation flow. ([#3668](https://github.com/confident-ai/deepeval/pull/3668)) {/* pr:3668 */} ([Kritin Vongthongsri](https://github.com/kritinv))
+- Voice simulation now interrupts on a configurable turn schedule and only marks real cut-offs as interruptions, improving the accuracy of duplex conversation modeling and metrics. The interruption behavior can be set to occur every fixed or ranged number of agent turns, and only genuine barge-ins are recorded, avoiding false positives. Documentation and internal naming have been updated for clarity. ([#3677](https://github.com/confident-ai/deepeval/pull/3677)) {/* pr:3677 */} ([Yekta Kocaoğullar](https://github.com/ykocaogullar))
+- Add a temporary banner across documentation and homepage to announce the SF meetup, with automatic removal after the event. The banner uses existing styles, includes an RSVP link, and ensures no layout gaps when dismissed. No redeploy is needed for the banner to switch off after the event ends. ([#3692](https://github.com/confident-ai/deepeval/pull/3692)) {/* pr:3692 */} ([Tony](https://github.com/tony-confidentai))
+- Improve the community page with enhanced contributor strip interactions, updated globe flag card displaying GitHub stars and contributors, and revised hero copy and hosting steps for clarity. Remove the globe's drag hint while keeping drag functionality. Add an automated workflow to refresh community data weekly, ensuring up-to-date contributor and stargazer information. ([#3706](https://github.com/confident-ai/deepeval/pull/3706)) {/* pr:3706 */} ([Kritin Vongthongsri](https://github.com/kritinv))
+- Add documentation for new Insight and Failure classifier pages, including details on custom classifiers such as evidence, review, label discovery, agent profile, and expected labels. Update built-in classifier pages with revised parameter lists. ([#3722](https://github.com/confident-ai/deepeval/pull/3722)) {/* pr:3722 */} ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v4.3.4
 - Migrate all existing integrations to use the confident-trace SDK for tracing and telemetry. This change streamlines tracing setup and ensures consistent telemetry collection across integrations. Legacy Anthropic integration code has been removed in favor of confident-trace, reducing maintenance overhead and improving reliability. ([#3505](https://github.com/confident-ai/deepeval/pull/3505)) {/* pr:3505 */} ([Vamshi Adimalla](https://github.com/A-Vamshi))
@@ -47,6 +67,11 @@ November's release focused on improving reliability, compatibility, and accuracy
 
 
 ### Bug Fix
+
+#### v4.3.5
+- Fixes crashes in ConversationalGEval and ConversationalDAG when using context, user_description, or chatbot_role by properly accepting these parameters at the conversation level. Now raises a clear error if required parameters are missing from the test case. Improves reliability and error handling for multi-turn conversational evaluation. ([#3646](https://github.com/confident-ai/deepeval/pull/3646)) {/* pr:3646 */} ([Kritin Vongthongsri](https://github.com/kritinv))
+- Fixes an issue where agent speech that overlapped with the caller was incorrectly treated as the agent's reply, causing transcript errors. Now, when the agent starts speaking over the caller, the system correctly handles turn-taking and ensures that only uninterrupted agent responses are recorded as replies. This improves the accuracy of voice interaction transcripts and prevents premature turn finalization. ([#3667](https://github.com/confident-ai/deepeval/pull/3667)) {/* pr:3667 */} ([Kritin Vongthongsri](https://github.com/kritinv))
+- Fix production documentation build failures by updating the eval modes page to use a Switch/Case structure and replacing problematic term markup, ensuring new changes are deployed successfully. ([#3695](https://github.com/confident-ai/deepeval/pull/3695)) {/* pr:3695 */} ([Kritin Vongthongsri](https://github.com/kritinv))
 
 #### v4.3.4
 - Fixes an issue where GEval or ConversationalGEval leaf nodes in DAGs would silently lose important configuration parameters such as rubric and strict_mode, leading to incorrect evaluation behavior. All constructor arguments are now properly preserved when copying these metric nodes, ensuring consistent scoring and evaluation logic. ([#3255](https://github.com/confident-ai/deepeval/pull/3255)) {/* pr:3255 */} ([Christopher Krah](https://github.com/chrikrah))

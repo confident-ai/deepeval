@@ -22,6 +22,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
     LLMTestCase,
     SingleTurnParams,
+    ToolCall,
     Turn,
     MultiTurnParams,
 )
@@ -231,6 +232,40 @@ def test_conversational_geval_accepts_metadata_and_tags():
     assert "metadata" not in turn_dict
     assert "tags" not in turn_dict
     assert payload["evaluationParams"] == ["metadata", "tags"]
+
+
+def test_conversational_geval_reads_expected_tools():
+    test_case = ConversationalTestCase(
+        turns=[
+            Turn(role="user", content="Book me a flight to Tokyo."),
+            Turn(role="assistant", content="Booked."),
+        ],
+        expected_tools=[ToolCall(name="book_flight", turn=1)],
+    )
+
+    non_turn_text = construct_non_turns_test_case_string(
+        [MultiTurnParams.EXPECTED_TOOLS], test_case
+    )
+    turn_dict = convert_turn_to_dict(
+        test_case.turns[1],
+        [MultiTurnParams.CONTENT, MultiTurnParams.EXPECTED_TOOLS],
+    )
+    payload = construct_geval_upload_payload(
+        name="conversational-expected-tools-test",
+        evaluation_params=[MultiTurnParams.EXPECTED_TOOLS],
+        g_eval_api_params=CONVERSATIONAL_G_EVAL_API_PARAMS,
+        criteria="criteria",
+        multi_turn=True,
+    )
+
+    assert "Expected Tools" in non_turn_text
+    assert "book_flight" in non_turn_text
+    assert "turn=1" in non_turn_text
+    assert "expected_tools" not in turn_dict
+    assert payload["evaluationParams"] == ["expectedTools"]
+    assert construct_geval_pull_evaluation_params(
+        ["expectedTools"], multi_turn=True
+    ) == [MultiTurnParams.EXPECTED_TOOLS]
 
 
 def test_conversational_geval_uploads_and_pulls_audio():

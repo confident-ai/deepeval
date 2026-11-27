@@ -45,6 +45,7 @@ class MultiTurnParams(Enum):
     RETRIEVAL_CONTEXT = "retrieval_context"
     CHATBOT_ROLE = "chatbot_role"
     TOOLS_CALLED = "tools_called"
+    EXPECTED_TOOLS = "expected_tools"
     MCP_TOOLS = "mcp_tools_called"
     MCP_RESOURCES = "mcp_resources_called"
     MCP_PROMPTS = "mcp_prompts_called"
@@ -221,10 +222,34 @@ class Turn(BaseModel):
         return data
 
 
+_CALL_RECORDING_PATH_DEPRECATION = (
+    "'call_recording_path' is deprecated. Use 'audio' instead, e.g. "
+    'audio=Audio(url="call.wav").'
+)
+
+
+def _recording_audio(path: Optional[str]) -> Optional[Audio]:
+    """The call recording at `path` as `Audio`, or None when there is none.
+    A missing file reads as no recording, as `call_recording_path` did."""
+    if not path:
+        return None
+    try:
+        return Audio(url=path, mimeType="audio/wav")
+    except (FileNotFoundError, ValueError):
+        return None
+
+
 class ConversationalTestCase(BaseModel):
     # Core
     turns: List[Turn]
-    call_recording_path: Optional[str] = Field(default=None, exclude=True)
+    # A recording of the whole call. As a stereo WAV (caller on the left
+    # channel, agent on the right) voice metrics read who made sound when from
+    # it. Kept out of serialization, so it is never sent anywhere.
+    audio: Optional[Audio] = Field(default=None, exclude=True)
+    # Which channel of a stereo `audio` is the agent; the other is the caller.
+    agent_channel: Literal["left", "right"] = Field(
+        default="right", exclude=True
+    )
     scenario: Optional[str] = Field(default=None)
     context: Optional[List[str]] = Field(default=None)
     name: Optional[str] = Field(default=None)
@@ -245,6 +270,11 @@ class ConversationalTestCase(BaseModel):
         serialization_alias="chatbotRole",
         validation_alias=AliasChoices("chatbotRole", "chatbot_role"),
     )
+    expected_tools: Optional[List[ToolCall]] = Field(
+        default=None,
+        serialization_alias="expectedTools",
+        validation_alias=AliasChoices("expectedTools", "expected_tools"),
+    )
     # Metadata
     metadata: Optional[Dict] = Field(
         default=None,
@@ -256,9 +286,10 @@ class ConversationalTestCase(BaseModel):
     tags: Optional[List[str]] = Field(default=None)
     flaky: bool = Field(default=False)
     expectations: Optional[Expectations] = Field(default=None)
-    # Classifier name -> label this test case should receive. A classifier
-    # only produces a pass/fail verdict when its name is present here.
-    expected_labels: Optional[Dict[str, str]] = Field(
+    # Classifier name -> the label, or for a multi_label classifier the
+    # exact list of labels, this test case should receive. A classifier only
+    # produces a pass/fail verdict when its name is present here.
+    expected_labels: Optional[Dict[str, Union[str, List[str]]]] = Field(
         default=None,
         serialization_alias="expectedLabels",
         validation_alias=AliasChoices("expectedLabels", "expected_labels"),
@@ -292,9 +323,44 @@ class ConversationalTestCase(BaseModel):
         )
         self.metadata = value
 
+    def model_copy(self, *, update=None, deep: bool = False):
+        if update and "call_recording_path" in update:
+            warnings.warn(
+                _CALL_RECORDING_PATH_DEPRECATION,
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            update = dict(update)
+            path = update.pop("call_recording_path")
+            update.setdefault("audio", _recording_audio(path))
+            if update["audio"] is not None:
+                update.setdefault("voice", True)
+        return super().model_copy(update=update, deep=deep)
+
+    @property
+    def call_recording_path(self) -> Optional[str]:
+        warnings.warn(
+            _CALL_RECORDING_PATH_DEPRECATION, DeprecationWarning, stacklevel=2
+        )
+        if self.audio is None or not self.audio.local:
+            return None
+        return self.audio.url
+
+    @call_recording_path.setter
+    def call_recording_path(self, value: Optional[str]):
+        warnings.warn(
+            _CALL_RECORDING_PATH_DEPRECATION, DeprecationWarning, stacklevel=2
+        )
+        self.audio = _recording_audio(value)
+        if self.audio is not None:
+            self.voice = True
+
     @model_validator(mode="after")
     def set_is_voice(self):
         if self.voice is True:
+            return self
+        if self.audio is not None:
+            self.voice = True
             return self
         if self.turns:
             for turn in self.turns:
@@ -349,6 +415,15 @@ class ConversationalTestCase(BaseModel):
 
     @model_validator(mode="before")
     def validate_input(cls, data):
+        if "call_recording_path" in data:
+            warnings.warn(
+                _CALL_RECORDING_PATH_DEPRECATION,
+                DeprecationWarning,
+                stacklevel=2,
+            )
+            path = data.pop("call_recording_path")
+            if data.get("audio") is None:
+                data["audio"] = _recording_audio(path)
         turns = data.get("turns")
         context = data.get("context")
         mcp_servers = data.get("mcp_servers")

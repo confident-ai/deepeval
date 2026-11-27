@@ -1,0 +1,17 @@
+[
+  {
+    "id": "2026-11-20-san-francisco",
+    "title": "DeepEval SF Meetup",
+    "start": "2026-11-20T17:00:00-08:00",
+    "timezone": "America/Los_Angeles",
+    "city": "San Francisco",
+    "country": "United States",
+    "url": "https://luma.com/tzyy1h0e",
+    "talk": "What is new in DeepEval, live demos and hands-on onboarding",
+    "host": "Confident AI",
+    "image": "/community/2026-11-20-san-francisco.jpg",
+    "official": true,
+    "lat": 37.7749,
+    "lng": -122.4194
+  }
+]

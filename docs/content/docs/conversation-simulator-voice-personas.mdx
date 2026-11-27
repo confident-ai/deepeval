@@ -166,14 +166,14 @@ from deepeval.dataset import Persona, InterruptionBehavior
 
 persona = Persona(
     characteristics="You are impatient and finish other people's sentences.",
-    interruption_behavior=InterruptionBehavior(frequency="frequent", overlap="insist"),
+    interruption_behavior=InterruptionBehavior(every=(1, 2), overlap="insist"),
 )
 ```
 
-`frequency` controls how readily the caller barges in, and `overlap` controls what they do when both sides end up talking at once. Leaving `interruption_behavior` as `None` means the caller never cuts in — on a [full-duplex connector](/docs/conversation-simulator-voice-connectors#full-duplex-custom-connectors) it still hears everything the agent says while it talks.
+`every` sets how many agent replies pass between barge-ins (a number, or a `(fewest, most)` range), and `overlap` controls what they do when both sides end up talking at once. Leaving `interruption_behavior` as `None` means the caller never cuts in — on a [full-duplex connector](/docs/conversation-simulator-voice-connectors#full-duplex-custom-connectors) it still hears everything the agent says while it talks.
 
 ::::tip
-Barge-in is a whole simulation mode of its own — how the judge decides to interrupt, what happens during double-talk, and what gets recorded on each `Turn` are covered in [Interruptions](/docs/conversation-simulator-voice-interruptions).
+Barge-in is a whole simulation mode of its own — when the caller interrupts, what happens during double-talk, and what gets recorded on each `Turn` are covered in [Interruptions](/docs/conversation-simulator-voice-interruptions).
 ::::
 
 ## FAQs

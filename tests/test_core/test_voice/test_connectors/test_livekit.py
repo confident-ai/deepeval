@@ -342,13 +342,13 @@ async def test_a_reply_with_a_tool_call_pause_is_one_assistant_turn(
         connector=connector,
         tts_model=None,
         stt_model=_SilentSTT(),
-        policy=None,
+        schedule=None,
         floor=FloorController(),
         golden=ConversationalGolden(scenario="Book an appointment"),
         language="English",
         a_generate_schema=None,
         call_started_at=time.perf_counter(),
-    ).run(turns=turns, sent_at=time.perf_counter(), barges_this_conversation=0)
+    ).run(turns=turns, sent_at=time.perf_counter())
 
     assert [turn.role for turn in turns] == ["assistant"]
     assert turns[0].content == "Sure, let me check. You're booked for 5pm."

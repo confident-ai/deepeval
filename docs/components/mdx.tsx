@@ -18,6 +18,9 @@ import Callout from "@site/src/components/Callout";
 import Equation from "@site/src/components/Equation";
 import Mermaid from "@site/src/components/Mermaid";
 import MetricTagsDisplayer from "@site/src/components/MetricTagsDisplayer";
+import AttackTagsDisplayer from "@site/src/components/AttackTagsDisplayer";
+import GuardTagsDisplayer from "@site/src/components/GuardTagsDisplayer";
+import ColabButton from "@site/src/components/ColabButton";
 import ClassifierTagsDisplayer from "@site/src/components/ClassifierTagsDisplayer";
 import IntegrationTagsDisplayer from "@site/src/components/IntegrationTagsDisplayer";
 import AgentTraceTerminal from "@site/src/components/AgentTraceTerminal";
@@ -31,6 +34,8 @@ import SectionLabel from "@site/src/components/SectionLabel";
 import EnterpriseComparisonTable from "@site/src/sections/enterprise/EnterpriseComparisonTable";
 import EnterprisePlatformMockup from "@site/src/sections/enterprise/EnterprisePlatformMockup";
 import RepoContributors from "@site/src/sections/home/RepoContributors";
+import CommunityEvents from "@site/src/sections/community/CommunityEvents";
+import PastMeetupScene from "@site/src/sections/community/PastMeetupScene";
 
 export const getMDXComponents = (components?: MDXComponents) =>
   ({
@@ -50,6 +55,9 @@ export const getMDXComponents = (components?: MDXComponents) =>
     Equation,
     Mermaid,
     MetricTagsDisplayer,
+    AttackTagsDisplayer,
+    GuardTagsDisplayer,
+    ColabButton,
     ClassifierTagsDisplayer,
     IntegrationTagsDisplayer,
     AgentTraceTerminal,
@@ -62,6 +70,8 @@ export const getMDXComponents = (components?: MDXComponents) =>
     SectionLabel,
     EnterpriseComparisonTable,
     EnterprisePlatformMockup,
+    CommunityEvents,
+    PastMeetupScene,
     RepoContributors,
     DefaultLLMModel,
     DefaultSystemOneModel,

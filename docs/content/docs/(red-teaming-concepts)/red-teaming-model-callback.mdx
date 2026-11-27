@@ -1,0 +1,75 @@
+---
+title: Model Callback for Red Teaming
+sidebar_label: Model Callback
+languages: [python]
+---
+
+The model callback in `deepeval` can be a string or an instance of `DeepEvalBaseLLM` or simply a callback function that wraps around your target LLM system that you are red teaming. However, it is essential that you define this correctly because `deepeval` will be calling your model callback at red teaming time to attack your LLM system with the adversarial inputs it has generated.
+
+For passing a string or an instance of `DeepEvalBaseLLM`, you can pass the model callback as shown below:
+
+<Tabs items={["String", "DeepEval model"]}>
+
+<Tab value="String">
+
+```python
+...
+red_team(
+    attacks=[...],
+    vulnerabilities=[...],
+    model_callback="openai/gpt-5.2",
+)
+```
+
+For strings, you can pass a model with its provider prefix separated by a `/`. Ex: `google/gemini-2.5-flash`. The available providers that `deepeval` supports are: `openai`, `anthropic`, `google`, `xai`, `moonshotai`, `deepseek`, `ollama`.
+
+</Tab>
+<Tab value="DeepEval model">
+
+```python
+from deepeval.models import AzureOpenAIModel
+
+model = AzureOpenAIModel(...)
+
+red_team(
+    attacks=[...],
+    vulnerabilities=[...],
+    model_callback=model,
+)
+```
+
+`deepeval` allows you to even pass your custom models which inherit from `DeepEvalBaseLLM` and implements the required methods as described in the [custom LLM documentation](/guides/guides-using-custom-llms).
+
+</Tab>
+
+</Tabs>
+
+For custom callback functions, here's how you can define your model callback:
+
+```python
+from deepeval.red_team.test_case import RTTurn, ToolCall
+
+async def model_callback(input: str, turns: list[RTTurn] = None) -> str:
+    # Replace this with your actual LLM application
+    # This could be a RAG pipeline, chatbot, agent, etc.
+    return RTTurn(
+        role="assistant",
+        content="Your agent's response here...",
+        retrieval_context=[
+          "Your retieval context here",
+          "..."
+        ],
+        tools_called=[
+          ToolCall(name="SearchDatabase")
+        ]
+    )
+```
+
+When defining your model callback function, there are **TWO** hard rules you **MUST** follow:
+
+- The function signature must have **TWO** parameters, a mandatory first parameter that accepts a `string` and an optional parameter that accepts a list of [`RTTurn`](/docs/red-teaming-test-case#turns) objects. Please default the second parameter to `None`.
+- The function must only return an `RTTurn` object (recommended) with `tools_called` and `retrieval_context` (if applicable) or just a simple string which is the response of the target model.
+  - The `retrieval_context` can be a list of strings that represents the context retrieved by your retriever
+  - The `tools_called` must be a list of `ToolCall` objects, the same `ToolCall` from `deepeval.test_case` you use in [LLM test cases](/docs/evaluation-test-cases).
+
+You can also make your model callback asynchronous if you want to speed up red teaming, but it is not a hard requirement.

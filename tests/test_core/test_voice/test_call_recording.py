@@ -66,7 +66,7 @@ def test_voice_simulation_records_the_call():
         max_user_simulations=1,
     )
 
-    path = cases[0].call_recording_path
+    path = cases[0].audio.url
     assert path is not None and os.path.exists(path)
     frames, channels, rate = _read(path)
     assert channels == 2
@@ -89,4 +89,17 @@ def test_recording_off_by_default():
         max_user_simulations=1,
     )
 
-    assert cases[0].call_recording_path is None
+    assert cases[0].audio is None
+
+
+def test_recorder_starts_the_tape_when_the_call_connects():
+    recorder = CallRecorder(sample_rate=RATE)
+    recorder.start(10.0)
+    recorder.add("agent", b"\xf0\xd8" * RATE, RATE, 11.0)
+    recorder.start(10.5)
+    path = recorder.finish()
+
+    frames, _, _ = _read(path)
+    assert len(frames) // 4 == 2 * RATE
+    assert set(frames[2 : RATE * 4 : 4]) == {0}
+    os.unlink(path)

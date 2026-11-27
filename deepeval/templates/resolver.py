@@ -92,19 +92,29 @@ MetricTemplateMethod = Literal[
 
 # Keep in sync with the method keys in `templates/simulator/templates.json`.
 SimulatorTemplateMethod = Literal[
-    "decide_interrupt",
-    "interruption_bias_frequent",
-    "interruption_bias_normal",
-    "interruption_bias_rare",
     "interruption_frustration",
+    "write_interruption",
 ]
 
 # Keep in sync with the method keys in `templates/classifiers/templates.json`.
 ClassifierTemplateMethod = Literal[
     "classify_single_turn",
     "classify_multi_turn",
-    # System One eval modes (`DEEPEVAL_EVAL_MODE`); see EXPERIMENTAL.md.
-    "_experimental_system_one_classify",
+    "classify_traced_single_turn",
+    "suggest_labels",
+    "cite_evidence",
+    "merge_labels",
+    "review_label",
+    "label_naming_rule",
+    "guidance",
+    "agent_profile",
+    "review_app_note",
+    "reason_rules",
+    # Decision model eval mode (`DEEPEVAL_EVAL_MODE`); see EXPERIMENTAL.md.
+    "_experimental_decision_model_classify",
+    "_experimental_decision_model_label_applies",
+    "_experimental_decision_model_content_format",
+    "_experimental_decision_model_candidate_labels",
 ]
 
 TemplateMethod = (

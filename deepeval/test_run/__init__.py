@@ -12,7 +12,7 @@ from .test_run import (
 )
 
 from .hooks import on_test_run_end, invoke_test_run_end_hook
-from .api import MetricData, Classification, TurnApi
+from .api import MetricData, Classification, Evidence, TurnApi
 from .hyperparameters import log_hyperparameters
 
 __all__ = [
@@ -29,6 +29,7 @@ __all__ = [
     "invoke_test_run_end_hook",
     "MetricData",
     "Classification",
+    "Evidence",
     "TurnApi",
     "log_hyperparameters",
 ]

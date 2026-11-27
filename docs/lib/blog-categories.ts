@@ -14,7 +14,7 @@
  *     frontmatter at build time.
  */
 import type { LucideIcon } from "lucide-react";
-import { Megaphone, Users, Scale } from "lucide-react";
+import { FlaskConical, Megaphone, Users, Scale } from "lucide-react";
 
 export type BlogCategory = {
   readonly label: string;
@@ -25,6 +25,7 @@ export const blogCategories = {
   announcements: { label: "Announcements", icon: Megaphone },
   community: { label: "Community", icon: Users },
   comparisons: { label: "Comparisons", icon: Scale },
+  research: { label: "Research", icon: FlaskConical },
 } as const satisfies Record<string, BlogCategory>;
 
 export type BlogCategoryId = keyof typeof blogCategories;

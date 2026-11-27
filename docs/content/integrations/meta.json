@@ -4,6 +4,7 @@
     "index",
     "frameworks",
     "models",
+    "decision-models",
     "stt",
     "tts",
     "voice-agent-connectors",

@@ -99,6 +99,43 @@ def parse_model_name(model_name: Optional[str] = None) -> Optional[str]:
     return model_name
 
 
+# Model-name prefixes that identify a provider when no "<provider>/" is given.
+_PROVIDER_NAME_PREFIXES = (
+    ("claude", "anthropic"),
+    ("gemini", "gemini"),
+    ("grok", "xai"),
+    ("deepseek", "deepseek"),
+    ("moonshot", "moonshot"),
+    ("kimi", "moonshot"),
+    ("gpt-", "openai"),
+    ("chatgpt", "openai"),
+    ("o1", "openai"),
+    ("o3", "openai"),
+    ("o4", "openai"),
+)
+
+
+def infer_provider(model_name: Optional[str]) -> Optional[str]:
+    """The provider a model name points at: the "<provider>/" prefix when there
+    is one, otherwise a guess from well-known model-name prefixes, otherwise
+    `None`.
+
+    Examples:
+        infer_provider("anthropic/claude-opus-5") -> "anthropic"
+        infer_provider("claude-opus-5") -> "anthropic"
+        infer_provider("my-finetune") -> None
+    """
+    if not model_name:
+        return None
+    name = model_name.lower()
+    if "/" in name:
+        return name.split("/", 1)[0]
+    for prefix, provider in _PROVIDER_NAME_PREFIXES:
+        if name.startswith(prefix):
+            return provider
+    return None
+
+
 def require_secret_api_key(
     secret: Optional[SecretStr],
     *,

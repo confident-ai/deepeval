@@ -1,3 +1,4 @@
+import os
 from typing import Optional, Tuple, Union
 
 from pydantic import SecretStr
@@ -29,6 +30,7 @@ from deepeval.models import (
     GeminiModel,
     AmazonBedrockModel,
     LiteLLMModel,
+    GatewayModel,
     PortkeyModel,
     KimiModel,
     GrokModel,
@@ -40,6 +42,8 @@ from deepeval.models.base_model import (
     DeepEvalBaseEmbeddingModel,
     DeepEvalBaseSystemOneModel,
 )
+from deepeval.models.llms.gateway_model import DeepEvalBaseGatewayModel
+from deepeval.models.utils import infer_provider
 from deepeval.models.llms.constants import (
     OPENAI_MODELS_DATA,
     GEMINI_MODELS_DATA,
@@ -202,7 +206,7 @@ def _build_model(
     if isinstance(model, DeepEvalBaseLLM):
         return model, False
     if should_use_openai_model():
-        return OpenAIModel(model=model), True
+        return _build_from_string(model), True
     if should_use_gemini_model():
         return GeminiModel(model=model), True
     if should_use_litellm():
@@ -228,7 +232,7 @@ def _build_model(
     elif should_use_amazon_bedrock_model():
         return AmazonBedrockModel(model=model), True
     elif isinstance(model, str) or model is None:
-        return OpenAIModel(model=model), True
+        return _build_from_string(model or SETTINGS.DEEPEVAL_LLM), True
 
     # Otherwise (the model is a wrong type), we raise an error
     raise TypeError(
@@ -236,27 +240,55 @@ def _build_model(
     )
 
 
+def _build_from_string(model: Optional[str]) -> DeepEvalBaseLLM:
+    provider = _gateway_provider(model)
+    if provider == "openai":
+        return OpenAIModel(model=model.split("/", 1)[-1])
+    if provider is not None:
+        if "/" not in model:
+            model = f"{provider}/{model}"
+        return GatewayModel(model=model)
+    return OpenAIModel(model=model)
+
+
+def _gateway_provider(model: Optional[str]) -> Optional[str]:
+    """The provider a model string should be routed to, or `None` to keep the
+    default OpenAI path.
+
+    Only names that clearly belong to another provider are routed: a
+    "<provider>/<model>" string, or a bare name with a well-known prefix
+    (`claude-...`, `gemini-...`). Anything else, including new OpenAI models
+    and fine-tunes, stays on `OpenAIModel`. A custom OpenAI base URL also keeps
+    every name on `OpenAIModel`, since such endpoints define their own names.
+    """
+    if not model or os.environ.get("OPENAI_BASE_URL"):
+        return None
+    if model in OPENAI_MODELS_DATA:
+        return None
+    return infer_provider(model)
+
+
 def is_native_model(
     model: Optional[Union[str, DeepEvalBaseLLM]] = None,
 ) -> bool:
-    if (
-        isinstance(model, OpenAIModel)
-        or isinstance(model, AnthropicModel)
-        or isinstance(model, AzureOpenAIModel)
-        or isinstance(model, OllamaModel)
-        or isinstance(model, LocalModel)
-        or isinstance(model, GeminiModel)
-        or isinstance(model, AmazonBedrockModel)
-        or isinstance(model, LiteLLMModel)
-        or isinstance(model, KimiModel)
-        or isinstance(model, GrokModel)
-        or isinstance(model, DeepSeekModel)
-        or isinstance(model, OpenRouterModel)
-        or isinstance(model, PortkeyModel)
-    ):
-        return True
-    else:
-        return False
+    return isinstance(
+        model,
+        (
+            OpenAIModel,
+            AzureOpenAIModel,
+            # Every gateway (LiteLLM, OpenRouter, Portkey and subclasses of
+            # them) shares the `(output, cost)` return contract.
+            DeepEvalBaseGatewayModel,
+            AnthropicModel,
+            OllamaModel,
+            LocalModel,
+            GeminiModel,
+            AmazonBedrockModel,
+            KimiModel,
+            GrokModel,
+            DeepSeekModel,
+        ),
+    )
 
 
 ###############################################

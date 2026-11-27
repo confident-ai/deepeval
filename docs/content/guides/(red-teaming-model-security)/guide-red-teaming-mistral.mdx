@@ -1,0 +1,191 @@
+---
+title: Red Teaming Mistral Models
+sidebar_label: Mistral
+---
+
+Mistral models (Mistral Large, Small, Codestral) occupy a middle ground in the safety landscape. The API-served models include Mistral's built-in safety moderation, while the open-weight variants (Mistral 7B, Mixtral) can be self-hosted without any provider safety layer — similar to Llama. Mistral's safety training prioritizes minimal refusal: the models are designed to be less cautious than OpenAI or Anthropic, refusing only clearly harmful content. This philosophy makes Mistral models more permissive by design, which means the boundary between intended permissiveness and genuine vulnerability is narrower and harder to test.
+
+This guide covers red teaming Mistral models with [DeepEval](/docs/red-teaming-introduction).
+
+:::note
+For general model red teaming methodology and framework-based assessments, see the [foundational models guide](/guides/guide-red-teaming-models). For self-hosted Mistral deployments, the [open-weight models guide](/guides/guide-red-teaming-open-weight) covers additional deployment-specific considerations.
+:::
+
+## YAML Quickstart
+
+**Mistral API:**
+
+```python title="my_model.py"
+from mistralai import Mistral
+
+client = Mistral(api_key="YOUR_API_KEY")
+
+async def model_callback(input: str) -> str:
+    response = client.chat.complete(
+        model="mistral-large-latest",
+        messages=[{"role": "user", "content": input}],
+    )
+    return response.choices[0].message.content
+```
+
+**Self-hosted via Ollama:**
+
+```python title="my_model.py"
+import httpx
+
+async def model_callback(input: str) -> str:
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "http://localhost:11434/api/generate",
+            json={"model": "mistral", "prompt": input, "stream": False},
+            timeout=60.0,
+        )
+        return response.json()["response"]
+```
+
+```yaml title="red-team-mistral.yaml"
+target:
+  purpose: "A code generation assistant for software development teams"
+  callback:
+    file: "my_model.py"
+    function: "model_callback"
+
+default_vulnerabilities:
+  - name: "Toxicity"
+  - name: "Bias"
+  - name: "PromptLeakage"
+  - name: "ShellInjection"
+  - name: "SQLInjection"
+
+attacks:
+  - name: "PromptInjection"
+    weight: 3
+  - name: "Roleplay"
+    weight: 2
+  - name: "Leetspeak"
+  - name: "ROT13"
+```
+
+```bash
+deepeval red-team red-team-mistral.yaml
+```
+
+## Python Assessment
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.vulnerabilities import (
+    Toxicity, Bias, PromptLeakage,
+    ShellInjection, SQLInjection, PIILeakage
+)
+from deepeval.red_team.attacks.single_turn import PromptInjection, Roleplay, Leetspeak, ROT13
+from deepeval.red_team.attacks.multi_turn import LinearJailbreaking
+from mistralai import Mistral
+
+client = Mistral(api_key="YOUR_API_KEY")
+
+async def model_callback(input: str) -> str:
+    response = client.chat.complete(
+        model="mistral-large-latest",
+        messages=[{"role": "user", "content": input}],
+    )
+    return response.choices[0].message.content
+
+red_team(
+    model_callback=model_callback,
+    target_purpose="A code generation assistant for software development teams",
+    vulnerabilities=[
+        Toxicity(), Bias(), PromptLeakage(),
+        ShellInjection(), SQLInjection(), PIILeakage(),
+    ],
+    attacks=[
+        PromptInjection(), Roleplay(), Leetspeak(),
+        ROT13(), LinearJailbreaking(),
+    ],
+    attacks_per_vulnerability_type=5,
+)
+```
+
+## Multi-Turn Testing
+
+```python
+from deepeval.red_team.test_case import RTTurn
+from mistralai import Mistral
+
+client = Mistral(api_key="YOUR_API_KEY")
+
+async def model_callback(input: str, turns: list[RTTurn] = None) -> str:
+    messages = []
+    for turn in (turns or []):
+        messages.append({"role": turn.role, "content": turn.content})
+    messages.append({"role": "user", "content": input})
+
+    response = client.chat.complete(
+        model="mistral-large-latest",
+        messages=messages,
+    )
+    return response.choices[0].message.content
+```
+
+## Mistral-Specific Considerations
+
+### Minimal Refusal Philosophy
+
+Mistral's safety training intentionally minimizes refusal. The models are designed to answer a wider range of questions than OpenAI or Anthropic, refusing only content that is clearly and directly harmful. This has implications for red teaming:
+
+- **Higher baseline permissiveness** — Content that GPT-4o or Claude would refuse may be answered by Mistral by design. When evaluating results, distinguish between intended permissiveness and genuine safety failures.
+- **Weaker encoding resistance** — Because safety training is lighter, encoding attacks (`Leetspeak`, `ROT13`, `Base64`) are more effective. The model has fewer layers of safety checks to bypass.
+- **Direct attack susceptibility** — Where OpenAI and Anthropic models require sophisticated attacks to bypass safety training, Mistral models may fail on simpler, more direct approaches. Start with `PromptInjection` before investing in multi-turn strategies.
+
+### API vs. Self-Hosted
+
+Mistral models have meaningfully different safety properties depending on deployment:
+
+| Deployment | Safety Layer | Red Teaming Focus |
+|---|---|---|
+| Mistral API (La Plateforme) | Model alignment + Mistral moderation | Test the combined stack |
+| Self-hosted (Ollama, vLLM) | Model alignment only | Test with heavier attack coverage |
+| Community fine-tune | Unknown | Treat as untrusted, test everything |
+
+For self-hosted deployments, there is no provider moderation — the model's own alignment is the only safety boundary.
+
+### Codestral and Code Models
+
+Mistral's code-focused models (Codestral) require additional attention to injection vulnerabilities:
+
+```python
+default_vulnerabilities = [
+    ShellInjection(),
+    SQLInjection(),
+    PromptLeakage(),
+    SSRF(),
+]
+```
+
+Code models are optimized to generate functional code, which can conflict with safety when the generated code performs harmful operations (data exfiltration, unauthorized access, destructive commands).
+
+### Recommended Attack Strategy
+
+| Attack | Effectiveness Against Mistral | Why |
+|---|---|---|
+| `PromptInjection` | Very high | Lighter safety training makes direct injection more effective |
+| `Leetspeak` / `ROT13` | High | Fewer safety layers to catch encoded content |
+| `Roleplay` | High | Minimal refusal philosophy doesn't resist fictional framing |
+| `LinearJailbreaking` | Medium-High | Effective but often unnecessary — single-turn attacks may suffice |
+
+### Recommended Vulnerability Priority
+
+| Use Case | Priority Vulnerabilities | Why |
+|---|---|---|
+| Code generation | `ShellInjection`, `SQLInjection`, `SSRF`, `PromptLeakage` | Generated code can be directly harmful |
+| Customer-facing | `Toxicity`, `Bias`, `PIILeakage` | Brand safety with a more permissive model |
+| Internal tooling | `PromptLeakage`, `ShellInjection`, `IllegalActivity` | Infrastructure security boundaries |
+| Content generation | `Toxicity`, `Bias`, `Misinformation` | Output quality with less conservative filtering |
+
+## What to Do Next
+
+- **Start with single-turn attacks** — Mistral's lighter safety training means single-turn attacks (`PromptInjection`, `Leetspeak`) may succeed without multi-turn escalation. Test these first before investing in complex strategies.
+- **Compare API vs. self-hosted** — If you offer both deployment options, run the same assessment against both to understand the moderation layer's contribution.
+- **Deploy guardrails** — Mistral's minimal refusal philosophy makes application-level [guardrails](/guides/guide-deploying-guardrails) especially important for customer-facing deployments.
+- **Test against frameworks** — Use `OWASPTop10()` for standardized coverage. See the [safety frameworks guide](/guides/guide-safety-frameworks).
+- **Move to application-level testing** — Once the model passes, test it in context with the [AI agents](/guides/guide-agentic-ai-red-teaming), [conversational agents](/guides/guide-red-teaming-conversational-agents), or [agentic RAG](/guides/guide-red-teaming-agentic-rag) guides.

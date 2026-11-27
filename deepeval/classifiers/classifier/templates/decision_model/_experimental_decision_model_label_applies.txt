@@ -1,0 +1,1 @@
+Does the label "{{ label }}" of the "{{ name }}" classifier apply to {% if multi_turn %}the conversation in `turns`{% elif traced %}the AI application's run in `trace`{% else %}`test_case`{% endif %}? Its description defines when it applies.

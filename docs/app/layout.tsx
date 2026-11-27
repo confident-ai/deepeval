@@ -6,6 +6,8 @@ import './global.css';
 import 'katex/dist/katex.css';
 import { Geist, Space_Grotesk } from 'next/font/google';
 import UtmCapture from '@/src/layouts/UtmCapture';
+import { meetupEndScript } from '@/lib/announcement';
+import { bannerRestoreScript } from '@/lib/banner-restore';
 import WebMcpTools from '@/components/webmcp-tools';
 import SchemaInjector from '@/src/components/SchemaInjector/SchemaInjector';
 import { buildWebSiteSchema } from '@/src/utils/schema-helpers';
@@ -112,6 +114,8 @@ export default function Layout({ children }: LayoutProps<'/'>) {
       suppressHydrationWarning
     >
       <head>
+        <script dangerouslySetInnerHTML={{ __html: meetupEndScript }} />
+        <script dangerouslySetInnerHTML={{ __html: bannerRestoreScript }} />
         {/*
           Two site-wide JSON-LD blocks rendered once per page:
           `Organization` (mirrored from the old Docusaurus `headTags`)

@@ -1,0 +1,188 @@
+---
+title: Introduction to LLM Guardrails
+sidebar_label: Introduction
+languages: [python]
+---
+
+`deepeval` enables anyone to safeguard LLM applications against vulnerable inputs and outputs uncovered during [red teaming.](/docs/red-teaming-introduction)
+
+:::info
+While `deepeval`'s [eval metrics](/docs/metrics-introduction) focus on accuracy and precision, its guardrails focus on speed and reliability.
+:::
+
+`deepeval`'s comprehensive suite of guardrails acts as binary metrics to evaluate **end-to-end** LLM system inputs and output for malicious intent, unsafe behavior, and security vulnerabilities.
+
+## Types of Guardrails
+
+There are two types of guardrails:
+
+- **Input guardrails** - Protects against malicious inputs before they reach your LLM
+- **Output guardrails** - Evaluates an LLM's output before they reach your users.
+
+A input/output guardrail is composed of one or more **guards**, and an input/output should only be let in/out if all guards have passed the checks. Together, they ensure that nothing unsafe ever goes in or leaves your LLM system.
+
+<ImageDisplayer id="diagrams/in-house/guardrails/input-output-guards" />
+
+The number of guards you choose to set up and whether you decide to utilize both types of guards depends on your priorities regarding **latency, cost, and LLM safety**.
+
+:::tip
+
+While most guards are only either for input or output guarding, some guards such as the [cybersecurity guard](/docs/guardrails-cybersecurity-guard) offer both input and output guarding capabilities.
+
+:::
+
+## Guard Your First LLM Interaction
+
+First import and initialize the guards you desire from `deepeval.red_team.guardrails.guards` and pass them to an instantiated `Guardrails` object:
+
+```python
+from deepeval.red_team.guardrails import Guardrails
+from deepeval.red_team.guardrails.guards import PromptInjectionGuard, ToxicityGuard
+
+# Initialize guardrails
+guardrails = Guardrails(
+  input_guards=[PromptInjectionGuard()],
+  output_guards=[ToxicityGuard()]
+)
+```
+
+There are **TWO** mandatory and **TWO** optional parameters when creating a `Guardrails`:
+
+- `input_guards`: a list of input guards for protecting against malicious inputs
+- `output_guards`: a list of output guards for evaluating LLM outputs
+- [Optional] `evaluation_model`: a string specifying which OpenAI model to use for guard evaluation. Defaulted to `gpt-4.1`.
+- [Optional] `sample_rate`: a float between 0.0 and 1.0 that determines what fraction of requests are guarded. Defaulted to `1.0`.
+
+```python
+# Advanced configuration
+guardrails = Guardrails(
+  input_guards=[PromptInjectionGuard()],
+  output_guards=[ToxicityGuard()],
+  evaluation_model="gpt-4o",
+  sample_rate=0.5  # Guard 50% of requests
+)
+```
+
+:::note
+Your list of `input_guards` and `output_guards` must not be empty if you wish to guard the respecitve inputs and outputs.
+:::
+
+### Guard an Input
+
+Then, simply call the `guard_input()` method and supply the `input`.
+
+```python
+...
+
+res = guardrails.guard_input(input="Is the earth flat")
+# Reject if true
+print(res.breached)
+```
+
+The `guard_input` method will invoke every single guard within your `Guardrails`s to check whether a particular input has breached any of the defined criteria.
+
+### Guard an Output
+
+Simiarly, call the `guard_output` method wherever appropriate in your code to guard against an LLM output:
+
+```python
+...
+
+res = guardrails.guard_output(input="Is the earth flat", output="I bet it is")
+print(res.breached)
+```
+
+It is extremely common to be re-generated LLM outputs for _x_ number of times until successful.
+
+:::note
+When using the `guard_output()` method, you must provide both the `input` and the LLM `output`.
+:::
+
+## Run Async Guardrails
+
+`deepeval`'s `Guardrails` also support asynchronous through the `a_guard_input()` and `a_guard_output()` methods.
+
+```python
+...
+
+res = await guardrails.a_guard_output(input, output)
+```
+
+## Available Guards
+
+`deepeval` offers a robust selection of input and output guards for protection against [vulnerabilities](/docs/red-teaming-vulnerabilities) you've detected during red teaming:
+
+### Input
+
+Input guards protect your LLM system by screening user inputs before they reach your model, preventing malicious prompts and unwanted content from being processed:
+
+- [Prompt Injection Guard](/docs/guardrails-prompt-injection-guard) - Detects and blocks prompt injection and jailbreaking attempts that try to manipulate the AI's behavior or bypass safety measures
+- [Topical Guard](/docs/guardrails-topical-guard) - Restricts conversations to specific allowed topics, preventing off-topic or unauthorized discussions
+- [Cybersecurity Guard](/docs/guardrails-cybersecurity-guard) - (When configured for input) Protects against cybersecurity threats and malicious technical instructions
+
+### Output
+
+Output guards evaluate your LLM's responses before they reach users, ensuring safe and appropriate content delivery:
+
+- [Toxicity Guard](/docs/guardrails-toxicity-guard) - Prevents toxic, harmful, abusive, or discriminatory content from being shared with users
+- [Privacy Guard](/docs/guardrails-privacy-guard) - Detects and blocks personally identifiable information (PII) and sensitive data from being exposed
+- [Illegal Guard](/docs/guardrails-illegal-guard) - Prevents the sharing of illegal activity instructions or content that violates laws
+- [Hallucination Guard](/docs/guardrails-hallucination-guard) - Detects and prevents fabricated, inaccurate, or hallucinated information in responses
+- [Cybersecurity Guard](/docs/guardrails-cybersecurity-guard) - (When configured for output) Ensures responses don't contain dangerous cybersecurity information or instructions
+
+### 3-Tier Safety System
+
+All of `deepeval`'s guards uses a **3-tier safety assessment system**:
+
+- `safe`: The content is clearly safe and poses no risk
+- `uncertain`: The content is borderline or ambiguous, requiring human review
+- `unsafe`: The content clearly violates safety guidelines
+
+```python title="main.py"
+...
+
+for verdict in res.verdicts:
+  # Access detailed safety assessment
+  print(verdict.safety_level)  # "safe", "uncertain", or "unsafe"
+  print(verdict.reason)        # Explanation for the assessment
+```
+
+The reason why `deepeval` does this is it allows you to control the strictness of each and every guard, and control what consitutues as a "breached" or "mitigated" event.
+
+A `Guardrails` is considered **breached** if any guard returns `unsafe` or `uncertain`.
+
+:::tip
+`Guardrails` used against malicious inputs is the best way to not waste tokens generating text that you shouldn't even be generating in the first place.
+:::
+
+## Data Models
+
+There are two data models you should be aware of to access guardrail results after each run.
+
+### `GuardResult`
+
+The `GuardResult` data model is what you'll receive after `guard_input()` or `guard_output()`. It tells you whether the I/O has breached any of the criteria laid out in your guards or not, as well as the individual breakdown of all the guards:
+
+```python file="guard-result.py"
+class GuardResult:
+    breached: bool
+    verdicts: list[GuardVerdict]
+```
+
+### `GuardVerdict`
+
+You can access each individual guard's results through the `GuardVerdict` data model in the `verdicts` field of a `GuardResult`.
+
+```python file="guard-verdict.py"
+class GuardVerdict(BaseModel):
+    name: str
+    safety_level: Literal["safe", "unsafe", "uncertain"]
+    latency: Optional[float] = None
+    reason: Optional[str] = None
+    score: Optional[float] = None
+    error: Optional[str] = None
+```
+
+:::tip
+You should decide what retry logic to run, if any, depending on the results you're getting after each guardrails invocation.
+:::
