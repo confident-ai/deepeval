@@ -8,6 +8,7 @@ from deepeval.test_case import (
     ToolCall,
     ArenaTestCase,
     LLMTestCase,
+    RetrievedContextData,
 )
 
 # List of fake names to use for masking contestant names
@@ -144,7 +145,7 @@ def construct_formatted_llm_test_case(
             else None
         ),
         retrieval_context=(
-            test_case.retrieval_context
+            _resolve_retrieval_context(test_case.retrieval_context)
             if SingleTurnParams.RETRIEVAL_CONTEXT in evaluation_params
             else None
         ),
@@ -159,3 +160,21 @@ def construct_formatted_llm_test_case(
             else None
         ),
     )
+
+
+def _resolve_retrieval_context(
+    retrieval_context: Optional[List],
+) -> Optional[List[str]]:
+    # Items are strings or RetrievedContextData. RetrievedContextData
+    # serializes to "source: context", the same text the TypeScript
+    # ArenaGEval sends through resolveRetrievalContext.
+    if retrieval_context is None:
+        return None
+    return [
+        (
+            context.model_dump()
+            if isinstance(context, RetrievedContextData)
+            else context
+        )
+        for context in retrieval_context
+    ]
