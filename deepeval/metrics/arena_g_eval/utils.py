@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Union
 import json
 import random
 
@@ -8,6 +8,7 @@ from deepeval.test_case import (
     ToolCall,
     ArenaTestCase,
     LLMTestCase,
+    RetrievedContextData,
 )
 
 # List of fake names to use for masking contestant names
@@ -29,7 +30,7 @@ FAKE_NAMES = [
 class FormattedLLMTestCase:
     actual_output: Optional[str] = None
     context: Optional[List[str]] = None
-    retrieval_context: Optional[List[str]] = None
+    retrieval_context: Optional[List[Union[str, RetrievedContextData]]] = None
     tools_called: Optional[List[ToolCall]] = None
     expected_tools: Optional[List[ToolCall]] = None
 
@@ -40,7 +41,14 @@ class FormattedLLMTestCase:
         if self.context is not None:
             data["context"] = self.context
         if self.retrieval_context is not None:
-            data["retrieval_context"] = self.retrieval_context
+            data["retrieval_context"] = [
+                (
+                    item.model_dump()
+                    if isinstance(item, RetrievedContextData)
+                    else item
+                )
+                for item in self.retrieval_context
+            ]
         if self.tools_called is not None:
             data["tools_called"] = [repr(tool) for tool in self.tools_called]
         if self.expected_tools is not None:
