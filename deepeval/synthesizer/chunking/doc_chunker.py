@@ -1,4 +1,6 @@
+import hashlib
 import os
+import re
 
 from typing import Any, Dict, List, Optional, Type, TYPE_CHECKING
 from types import SimpleNamespace
@@ -69,6 +71,25 @@ def get_chromadb():
         )
 
 
+def _shared_collection_name(
+    source_file: str, chunk_size: int, chunk_overlap: int
+) -> str:
+    """Name of a document's collection on a client shared by many documents.
+
+    Chroma only accepts [a-zA-Z0-9._-] in collection names, starting and ending
+    with an alphanumeric character and without "..", so the file name is reduced
+    to [a-zA-Z0-9_-]. A short hash
+    of the full path keeps documents with the same file name (e.g. `a/faq.md`
+    and `b/faq.md`) from sharing a collection.
+    """
+    stem = os.path.splitext(os.path.basename(source_file))[0]
+    stem = re.sub(r"[^a-zA-Z0-9_-]+", "_", stem).strip("_-")[:24] or "doc"
+    path_hash = hashlib.sha256(
+        os.path.abspath(source_file).encode("utf-8")
+    ).hexdigest()[:8]
+    return f"{stem}_{path_hash}_processed_chunks_{chunk_size}_{chunk_overlap}"
+
+
 class DocumentChunker:
     def __init__(
         self,
@@ -118,8 +139,8 @@ class DocumentChunker:
             default_coll = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         else:
             # namespace by doc to support sharing a single client across many docs
-            default_coll = (
-                f"{document_name}_processed_chunks_{chunk_size}_{chunk_overlap}"
+            default_coll = _shared_collection_name(
+                self.source_file, chunk_size, chunk_overlap
             )
         collection_name = collection_name or default_coll
 
@@ -184,8 +205,8 @@ class DocumentChunker:
             default_coll = f"processed_chunks_{chunk_size}_{chunk_overlap}"
         else:
             # namespace by doc to support sharing a single client across many docs
-            default_coll = (
-                f"{document_name}_processed_chunks_{chunk_size}_{chunk_overlap}"
+            default_coll = _shared_collection_name(
+                self.source_file, chunk_size, chunk_overlap
             )
         collection_name = collection_name or default_coll
 
