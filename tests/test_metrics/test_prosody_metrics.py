@@ -17,7 +17,6 @@ from tests.test_metrics.helpers import (
     edit_reply,
     measure,
     set_audio,
-    set_content,
     speech_like,
     to_audio,
     with_gain,
@@ -25,12 +24,18 @@ from tests.test_metrics.helpers import (
 )
 
 
+def call(count=6):
+    """Replies that flow fast enough to read a speaking rate from, and long
+    enough to read a base pitch from."""
+    return clean_turns(count, seconds=6.0, rhythm=2.5)
+
+
 PROSODY_ISSUES = [
     (
         PitchVariationMetric,
-        "pitch varying outside 1 to 6 semitones",
+        "pitch varying under 1 semitones",
         "monotone",
-        lambda: set_audio(agent_speech(glide_hz=0)),
+        lambda: set_audio(agent_speech(5.0, glide_hz=0)),
     ),
     (
         AbruptPitchJumpMetric,
@@ -40,27 +45,29 @@ PROSODY_ISSUES = [
     ),
     (
         PitchConsistencyMetric,
-        "a pitch over 4 semitones off the agent's typical pitch",
+        "a pitch over 3 semitones off the agent's typical pitch",
         "pitch_shift",
-        lambda: set_audio(speech_like(3.0, base_hz=230.0 * 2**0.5, seed=1)),
+        lambda: set_audio(
+            speech_like(6.0, base_hz=230.0 * 2**0.5, seed=1, rhythm=2.5)
+        ),
     ),
     (
         LoudnessConsistencyMetric,
-        "a loudness over 5 dB off the agent's typical loudness",
+        "a loudness over 7 dB off the agent's typical loudness",
         "loudness_shift",
         lambda: set_audio(with_gain(agent_speech(), 2.5)),
     ),
     (
         SpeakingRateMetric,
-        "a speaking rate outside 110 to 200 words per minute",
+        "a speaking rate outside 3.5 to 10 syllables a second",
         "too_slow",
-        lambda: set_content("Hello."),
+        lambda: set_audio(agent_speech(rhythm=1.5)),
     ),
     (
         PausesMetric,
-        "a pause over 2000 ms or over 50% silence",
+        "a pause over 4000 ms or over 50% silence",
         "long_pause",
-        lambda: set_audio(with_pause(agent_speech(), 1.5, 3.0)),
+        lambda: set_audio(with_pause(agent_speech(), 1.5, 5.0)),
     ),
 ]
 
@@ -70,7 +77,7 @@ METRICS = [metric_class for metric_class, _, _, _ in PROSODY_ISSUES]
 
 @pytest.mark.parametrize("metric_class,label,_,__", PROSODY_ISSUES)
 def test_a_clean_call_scores_one(metric_class, label, _, __):
-    metric = measure(metric_class(), clean_turns())
+    metric = measure(metric_class(), call())
     assert metric.score == 1.0
     assert metric.reason == f"No agent reply had {label}."
     assert metric.score_breakdown["eligible_turns"] == 3
@@ -81,7 +88,7 @@ def test_a_clean_call_scores_one(metric_class, label, _, __):
 def test_score_is_the_share_of_agent_replies_without_the_issue(
     metric_class, label, event_type, build
 ):
-    metric = measure(metric_class(), edit_reply(1, build()))
+    metric = measure(metric_class(), edit_reply(1, build(), call()))
     assert metric.score == pytest.approx(2 / 3)
     assert metric.reason == f"1 of 3 agent replies had {label}."
     events = metric.score_breakdown["events"]
@@ -93,7 +100,7 @@ def test_score_is_the_share_of_agent_replies_without_the_issue(
 
 @pytest.mark.parametrize("metric_class,_,__,build", PROSODY_ISSUES)
 def test_the_callers_audio_is_ignored(metric_class, _, __, build):
-    metric = measure(metric_class(), edit_reply(0, build()))
+    metric = measure(metric_class(), edit_reply(0, build(), call()))
     assert metric.score == 1.0
 
 
@@ -110,7 +117,7 @@ def test_a_call_without_agent_audio_is_skipped(metric_class):
 
 @pytest.mark.parametrize("metric_class", METRICS)
 def test_undecodable_agent_audio_is_skipped_not_failed(metric_class):
-    turns = clean_turns(8)
+    turns = call(8)
     turns[1].audio = Audio.from_bytes(b"not-a-wav", "audio/wav", start_time=3.5)
     metric = measure(metric_class(), turns)
     assert metric.score == 1.0
@@ -131,8 +138,7 @@ def test_a_crack_fails_pitch_jump_but_not_pitch_variation():
     "metric_class", [PitchConsistencyMetric, LoudnessConsistencyMetric]
 )
 def test_two_replies_are_too_few_to_compare(metric_class):
-    turns = clean_turns(4)
-    metric = measure(metric_class(), turns)
+    metric = measure(metric_class(), call(4))
     assert metric.score is None
     assert metric.reason.startswith("At least 3 ")
     assert metric.score_breakdown["eligible_turns"] == 2

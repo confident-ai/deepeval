@@ -37,3 +37,30 @@ def test_an_inaudible_reply_is_not_a_loudness_shift():
     assert metric.score == 1.0
     assert metric.score_breakdown["eligible_turns"] == 3
     assert [entry["turn"] for entry in metric.score_breakdown["skipped"]] == [1]
+
+
+def test_a_reply_with_under_a_second_of_speech_is_not_a_loudness_shift():
+    loud = with_gain(agent_speech(1.0), 3)
+    turns = edit_reply(1, set_audio(loud), clean_turns(8))
+    metric = measure(LoudnessConsistencyMetric(), turns)
+    assert metric.score == 1.0
+    assert metric.score_breakdown["eligible_turns"] == 3
+    assert metric.score_breakdown["skipped"] == [
+        {"turn": 1, "error": "Reply has under 1 second of speech."}
+    ]
+
+
+def test_a_loud_reply_with_over_a_second_of_speech_is_a_loudness_shift():
+    loud = with_gain(agent_speech(1.5), 3)
+    turns = edit_reply(1, set_audio(loud), clean_turns(8))
+    metric = measure(LoudnessConsistencyMetric(), turns)
+    assert [event["turn"] for event in metric.score_breakdown["events"]] == [1]
+
+
+def test_a_shift_under_seven_decibels_is_not_flagged():
+    turns = edit_reply(1, set_audio(with_gain(agent_speech(), 2.0)))
+    assert measure(LoudnessConsistencyMetric(), turns).score == 1.0
+    [event] = measure(
+        LoudnessConsistencyMetric(max_shift_db=5), turns
+    ).score_breakdown["events"]
+    assert event["type"] == "loudness_shift"

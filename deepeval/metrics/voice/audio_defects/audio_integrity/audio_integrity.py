@@ -1,4 +1,4 @@
-from typing import List, Optional
+from typing import List, Optional, Union
 
 from deepeval.metrics.voice.audio_defects.abrupt_cutoff.abrupt_cutoff import (
     AbruptCutoffMetric,
@@ -21,6 +21,8 @@ from deepeval.metrics.voice.responsiveness.silent_reply.silent_reply import (
 )
 from deepeval.metrics.voice.utils.events import VoiceEvent
 from deepeval.metrics.voice.utils.roll_up import agent_audio_critical_events
+from deepeval.models.base_model import DeepEvalBaseSTT
+from deepeval.models.speech_selection import initialize_stt_model
 from deepeval.test_case import ConversationalTestCase
 
 
@@ -33,6 +35,7 @@ class AudioIntegrityMetric(BaseRollUpMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         use_speech_detection: bool = True,
+        stt_model: Optional[Union[str, DeepEvalBaseSTT]] = None,
         flaky: bool = False,
     ):
         super().__init__(
@@ -43,6 +46,11 @@ class AudioIntegrityMetric(BaseRollUpMetric):
             flaky=flaky,
         )
         self.use_speech_detection = use_speech_detection
+        self.stt_model = (
+            stt_model
+            if stt_model is None or isinstance(stt_model, DeepEvalBaseSTT)
+            else initialize_stt_model(stt_model)
+        )
 
     def _parts(self) -> List[BaseDefectMetric]:
         return [
@@ -50,7 +58,10 @@ class AudioIntegrityMetric(BaseRollUpMetric):
             AudioLoopMetric(),
             AudioDropoutMetric(),
             AudioClippingMetric(),
-            SilentReplyMetric(),
+            SilentReplyMetric(
+                use_speech_detection=self.use_speech_detection,
+                stt_model=self.stt_model,
+            ),
         ]
 
     def _critical_events(

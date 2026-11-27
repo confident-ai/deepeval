@@ -21,10 +21,19 @@ from deepeval.metrics.utils import (
     SystemOneEvalSpec,
     SystemOneVerdictSpec,
 )
-from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
-from deepeval.metrics.voice.speech_quality.transcription_accuracy.utils import (
-    word_errors,
+from deepeval.config.eval_mode import (
+    EvalMode,
+    EvalModeName,
+    resolve_eval_mode,
 )
+from deepeval.metrics.voice.speech_quality.transcription_accuracy.utils import (
+    WORD_ERROR_MIN_WORDS,
+    word_errors,
+    word_errors_within,
+)
+from deepeval.metrics.voice.utils.analysis import decode_audio
+from deepeval.metrics.voice.utils.call_activity import read_call_recording
+from deepeval.voice.connectors.audio_utils import pcm16_to_wav_bytes
 from deepeval.metrics.voice.speech_quality.transcription_accuracy.schema import (
     TranscriptionAccuracyScoreReason,
     TranscriptionAccuracyVerdict,
@@ -59,6 +68,11 @@ TranscriptionComparison = Literal["content", "audio"]
 # Microsoft's speech-to-text guidance rates a 20% word error rate acceptable,
 # 5-10% good and 30% or more poor.
 DEFAULT_MAX_WORD_ERROR_PERCENT = 20
+
+# Turn timestamps are often a few seconds off, so a line's words can sit
+# just outside its own clip. A line over the limit is checked again against
+# this much more of the speaker's side of the call on each side.
+NEARBY_SECONDS = 5.0
 
 # Without it, gpt-4o-transcribe cleans gibberish out of what it hears, so the
 # judge never sees the noise it is meant to catch. whisper-1 is left out: on
@@ -133,6 +147,10 @@ def get_audio_exchanges(
     for index, turn in enumerate(turns):
         if turn.audio is None:
             continue
+        # A line with no transcript at all is a missing transcript, not a
+        # wrong one; there are no words to compare.
+        if not (_text_the_system_used(turns, index) or "").strip():
+            continue
         pairs.append(
             (
                 turn.audio,
@@ -169,6 +187,55 @@ def _audio_exchange_detail(exchange: Dict[str, Any], verdict: Verdict) -> str:
     return (
         f"The transcript accounts for what the {who} was heard "
         f"saying{when}."
+    )
+
+
+def _nearby_clip(
+    test_case: ConversationalTestCase,
+    exchange: Dict[str, Any],
+    recording: Optional[Tuple[Any, Any, int]],
+) -> Optional[Audio]:
+    """The speaker's side of the call around the line, from the recording."""
+    start_time = exchange.get("start_time")
+    if recording is None or start_time is None:
+        return None
+    caller, agent, sample_rate = recording
+    try:
+        samples, turn_rate = decode_audio(
+            test_case.turns[exchange["turn"]].audio
+        )
+    except (TypeError, ValueError):
+        return None
+    end_time = start_time + len(samples) / turn_rate
+    channel = caller if exchange["role"] == "user" else agent
+    clip = channel[
+        max(0, int((start_time - NEARBY_SECONDS) * sample_rate)) : int(
+            (end_time + NEARBY_SECONDS) * sample_rate
+        )
+    ]
+    if len(clip) == 0:
+        return None
+    return Audio.from_bytes(
+        pcm16_to_wav_bytes(clip.tobytes(), sample_rate, num_channels=1),
+        "audio/wav",
+        sampleRate=sample_rate,
+        encoding="wav",
+        duration=len(clip) / sample_rate,
+    )
+
+
+def _spoken_by_neighbours(
+    exchanges: List[Dict[str, Any]], exchange: Dict[str, Any]
+) -> str:
+    """What the same speaker was heard saying in this turn and the ones
+    before and after it."""
+    same_speaker = [
+        other for other in exchanges if other["role"] == exchange["role"]
+    ]
+    index = same_speaker.index(exchange)
+    return " ".join(
+        other["spoken"] or ""
+        for other in same_speaker[max(0, index - 1) : index + 2]
     )
 
 
@@ -396,19 +463,69 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
         self, test_case: ConversationalTestCase
     ) -> List[Dict[str, Any]]:
         if self.compare_against == "audio":
-            return self._transcribe_exchanges(
+            exchanges = self._transcribe_exchanges(
                 get_audio_exchanges(test_case.turns)
             )
+            for clip, exchange in self._lines_to_hear_nearby(
+                test_case, exchanges
+            ):
+                nearby, cost = self.stt_model.transcribe(clip)
+                if cost is not None:
+                    self._accrue_cost(cost)
+                exchange["spoken_nearby"] = nearby
+            return exchanges
         return get_transcribed_exchanges(test_case.turns)
 
     async def _a_get_exchanges(
         self, test_case: ConversationalTestCase
     ) -> List[Dict[str, Any]]:
         if self.compare_against == "audio":
-            return await self._a_transcribe_exchanges(
+            exchanges = await self._a_transcribe_exchanges(
                 get_audio_exchanges(test_case.turns)
             )
+            pairs = self._lines_to_hear_nearby(test_case, exchanges)
+            results = await asyncio.gather(
+                *(self.stt_model.a_transcribe(clip) for clip, _ in pairs)
+            )
+            for (_, exchange), (nearby, cost) in zip(pairs, results):
+                if cost is not None:
+                    self._accrue_cost(cost)
+                exchange["spoken_nearby"] = nearby
+            return exchanges
         return get_transcribed_exchanges(test_case.turns)
+
+    def _over_the_limit(self, errors: int, words: int) -> bool:
+        return errors / words * 100 > self.max_word_error_percent
+
+    def _lines_to_hear_nearby(
+        self, test_case: ConversationalTestCase, exchanges: List[Dict[str, Any]]
+    ) -> List[Tuple[Audio, Dict[str, Any]]]:
+        """The lines over the word-error limit, each with a wider clip of
+        its speaker to transcribe. Without a call recording to cut one from,
+        the line takes what its speaker's neighbouring turns were heard
+        saying instead."""
+        if self.use_llm and self.eval_mode is not EvalMode.HYBRID:
+            return []
+        recording = read_call_recording(
+            test_case.audio, test_case.agent_channel
+        )
+        pairs = []
+        for exchange in exchanges:
+            errors, words = word_errors(
+                exchange["spoken"] or "", exchange["transcribed"] or ""
+            )
+            if words < WORD_ERROR_MIN_WORDS or not self._over_the_limit(
+                errors, words
+            ):
+                continue
+            clip = _nearby_clip(test_case, exchange, recording)
+            if clip is None:
+                exchange["spoken_nearby"] = _spoken_by_neighbours(
+                    exchanges, exchange
+                )
+            else:
+                pairs.append((clip, exchange))
+        return pairs
 
     def _transcribe_exchanges(
         self, pairs: List[Tuple[Audio, Dict[str, Any]]]
@@ -436,13 +553,46 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
             exchanges.append(exchange)
         return exchanges
 
-    def _verdicts_prompt(self) -> str:
+    def _verdicts_prompt(self, exchanges: List[Dict[str, Any]]) -> str:
         method = (
             "generate_audio_verdicts"
             if self.compare_against == "audio"
             else "generate_verdicts"
         )
-        return self._get_prompt(method, exchanges=self.exchanges)
+        return self._get_prompt(method, exchanges=exchanges)
+
+    def _lines_to_judge(
+        self,
+    ) -> Tuple[List[Optional[TranscriptionAccuracyVerdict]], List[int]]:
+        """Every line's starting verdict, and which lines a model judges.
+        Under hybrid, counting words is the first pass: only the lines it
+        finds over the limit are worth a model's opinion, and a line it
+        passes stays passed."""
+        if self.eval_mode is not EvalMode.HYBRID:
+            return [None] * len(self.exchanges), list(
+                range(len(self.exchanges))
+            )
+        counted = self._word_error_verdicts()
+        # The counts describe the first pass, not the verdicts.
+        self.score_breakdown = None
+        return counted, [
+            index
+            for index, verdict in enumerate(counted)
+            if verdict is not None and verdict.verdict == Verdict.NO
+        ]
+
+    def _with_judged(
+        self,
+        verdicts: List[Optional[TranscriptionAccuracyVerdict]],
+        judged: List[int],
+        answers: List[TranscriptionAccuracyVerdict],
+    ) -> List[Optional[TranscriptionAccuracyVerdict]]:
+        if len(answers) != len(judged):
+            # The judge lost count; its answers can't be matched to lines.
+            return answers if len(judged) == len(verdicts) else verdicts
+        for index, answer in zip(judged, answers):
+            verdicts[index] = answer
+        return verdicts
 
     async def _a_generate_verdicts(
         self,
@@ -451,44 +601,54 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
             return self._word_error_verdicts()
         if len(self.exchanges) == 0:
             return []
-
-        return await a_generate_qag_verdicts(
+        verdicts, judged = self._lines_to_judge()
+        if not judged:
+            return verdicts
+        exchanges = [self.exchanges[index] for index in judged]
+        answers = await a_generate_qag_verdicts(
             metric=self,
-            prompt=self._verdicts_prompt(),
+            prompt=self._verdicts_prompt(exchanges),
             verdict_cls=TranscriptionAccuracyVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO,
-            system_one=self._experimental_system_one_spec(),
+            system_one=self._experimental_system_one_spec(exchanges),
         )
+        return self._with_judged(verdicts, judged, answers)
 
     def _generate_verdicts(self) -> List[TranscriptionAccuracyVerdict]:
         if not self.use_llm:
             return self._word_error_verdicts()
         if len(self.exchanges) == 0:
             return []
-
-        return generate_qag_verdicts(
+        verdicts, judged = self._lines_to_judge()
+        if not judged:
+            return verdicts
+        exchanges = [self.exchanges[index] for index in judged]
+        answers = generate_qag_verdicts(
             metric=self,
-            prompt=self._verdicts_prompt(),
+            prompt=self._verdicts_prompt(exchanges),
             verdict_cls=TranscriptionAccuracyVerdict,
             verdicts_cls=Verdicts,
             allowed=YES_NO,
-            system_one=self._experimental_system_one_spec(),
+            system_one=self._experimental_system_one_spec(exchanges),
         )
+        return self._with_judged(verdicts, judged, answers)
 
-    def _experimental_system_one_spec(self) -> SystemOneVerdictSpec:
+    def _experimental_system_one_spec(
+        self, exchanges: List[Dict[str, Any]]
+    ) -> SystemOneVerdictSpec:
         if self.compare_against == "audio":
             return SystemOneVerdictSpec(
                 instructions=self._get_prompt(
                     "_experimental_system_one_audio_verdict"
                 ),
-                items=self.exchanges,
+                items=exchanges,
                 item_key="exchange",
                 build_verdict=_verdict_for_audio_exchange,
             )
         return SystemOneVerdictSpec(
             instructions=self._get_prompt("_experimental_system_one_verdict"),
-            items=self.exchanges,
+            items=exchanges,
             item_key="exchange",
             build_verdict=_verdict_for_exchange,
         )
@@ -570,15 +730,30 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
             errors, words = word_errors(
                 exchange["spoken"] or "", exchange["transcribed"] or ""
             )
-            if words == 0:
-                # Nothing was said, so there is no word to mishear.
+            if words < WORD_ERROR_MIN_WORDS:
                 verdicts.append(None)
                 continue
+            heard_nearby = False
+            if self._over_the_limit(errors, words) and exchange.get(
+                "spoken_nearby"
+            ):
+                nearby_errors, nearby_words = word_errors_within(
+                    exchange["transcribed"] or "", exchange["spoken_nearby"]
+                )
+                if (
+                    nearby_words >= WORD_ERROR_MIN_WORDS
+                    and not self._over_the_limit(nearby_errors, nearby_words)
+                ):
+                    errors, words, heard_nearby = (
+                        nearby_errors,
+                        nearby_words,
+                        True,
+                    )
             percent = errors / words * 100
             verdict = (
-                Verdict.YES
-                if percent <= self.max_word_error_percent
-                else Verdict.NO
+                Verdict.NO
+                if self._over_the_limit(errors, words)
+                else Verdict.YES
             )
             lines_over_limit += verdict == Verdict.NO
             total_errors += errors
@@ -586,8 +761,13 @@ class TranscriptionAccuracyMetric(BaseConversationalMetric):
             verdicts.append(
                 TranscriptionAccuracyVerdict(
                     verdict=verdict,
-                    reason=f"{detail(exchange, verdict)} ({errors} of "
-                    f"{words} words wrong, {percent:.0f}%)",
+                    reason=(
+                        "The transcript's words were heard just outside "
+                        "the turn's timestamps."
+                        if heard_nearby
+                        else detail(exchange, verdict)
+                    )
+                    + f" ({errors} of {words} words wrong, {percent:.0f}%)",
                 )
             )
         self.score_breakdown = {

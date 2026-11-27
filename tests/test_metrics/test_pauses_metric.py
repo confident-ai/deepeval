@@ -17,10 +17,26 @@ def test_silence_before_the_reply_is_not_a_pause():
 
 
 def test_a_pause_over_background_noise_is_still_a_pause():
-    noisy = with_noise(with_pause(agent_speech(), 1.5, 3.0), -40)
+    noisy = with_noise(with_pause(agent_speech(), 1.5, 5.0), -40)
     turns = edit_reply(1, set_audio(noisy))
     [event] = measure(PausesMetric(), turns).score_breakdown["events"]
     assert event["type"] == "long_pause"
+
+
+def test_a_pause_under_four_seconds_is_not_flagged():
+    flowing = agent_speech(6.0, rhythm=2.5)
+    turns = edit_reply(1, set_audio(with_pause(flowing, 1.5, 3.0)))
+    metric = measure(PausesMetric(), turns)
+    assert metric.score == 1.0
+    assert metric.score_breakdown["eligible_turns"] == 3
+
+
+def test_a_pause_over_four_seconds_is_a_long_pause():
+    flowing = agent_speech(6.0, rhythm=2.5)
+    turns = edit_reply(1, set_audio(with_pause(flowing, 1.5, 5.0)))
+    [event] = measure(PausesMetric(), turns).score_breakdown["events"]
+    assert event["type"] == "long_pause"
+    assert event["longest_pause_ms"] == pytest.approx(5000, abs=200)
 
 
 def test_too_much_silence_fails_pauses():
@@ -33,10 +49,10 @@ def test_too_much_silence_fails_pauses():
 
 
 def test_pause_limits_are_configurable():
-    turns = edit_reply(1, set_audio(with_pause(agent_speech(), 1.5, 3.0)))
+    turns = edit_reply(1, set_audio(with_pause(agent_speech(), 1.5, 5.0)))
     assert (
         measure(
-            PausesMetric(max_pause_ms=4000, max_pause_percent=90), turns
+            PausesMetric(max_pause_ms=6000, max_pause_percent=90), turns
         ).score
         == 1.0
     )

@@ -15,7 +15,10 @@ from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 class VolumeVarianceMetric(BaseDefectMetric):
-    # 10 dB is roughly half (or twice) as loud.
+    # 10 dB is roughly half (or twice) as loud. Speech moves that much on
+    # its own from one second to the next, so only a volume that keeps
+    # fading or swelling through the reply counts, and listeners only
+    # minded fades past 15 dB.
     def __init__(
         self,
         *,
@@ -23,7 +26,7 @@ class VolumeVarianceMetric(BaseDefectMetric):
         include_reason: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        max_drift_db: int = 10,
+        max_drift_db: int = 15,
         flaky: bool = False,
     ):
         if max_drift_db <= 0:
@@ -60,8 +63,9 @@ class VolumeVarianceMetric(BaseDefectMetric):
                         type="volume_drift",
                         turn=turn,
                         drift_db=round(drift, 1),
-                        description=f"Volume drifted {abs(drift):.0f} dB "
-                        "during the reply",
+                        description="Volume "
+                        f"{'faded' if drift < 0 else 'swelled'} "
+                        f"{abs(drift):.0f} dB during the reply",
                     )
                 )
         return DefectShare(

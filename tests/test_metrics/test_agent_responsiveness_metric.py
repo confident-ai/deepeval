@@ -2,14 +2,20 @@ import pytest
 
 from deepeval.metrics import AgentResponsivenessMetric
 from deepeval.models.system_one.schema import NoulAnswer, SystemOneAnswers
-from deepeval.test_case import Turn
+from deepeval.models.base_model import DeepEvalBaseSTT
+from deepeval.test_case import ConversationalTestCase, Turn
 from tests.test_metrics.system_one_fakes import FakeSystemOneModel
 from tests.test_metrics.helpers import (
+    reprompted_turns,
     AGENT_HUNG_UP,
     caller_turn,
     clean_turns,
     measure,
     timed_turn,
+    recording,
+    stereo_recording,
+    to_audio,
+    zeros,
 )
 
 
@@ -73,8 +79,7 @@ def test_reprompt_decides_with_the_roll_up_s_decision_model():
         ),
         cost=0.003,
     )
-    turns = clean_turns()
-    turns.insert(3, caller_turn("Hello? Can you hear me?"))
+    turns = reprompted_turns()
     metric = measure(
         AgentResponsivenessMetric(
             use_speech_detection=False, system_one_model=model
@@ -86,3 +91,51 @@ def test_reprompt_decides_with_the_roll_up_s_decision_model():
     assert event["metric"] == "Reprompt"
     assert metric.evaluation_model == "fake-jev"
     assert metric.evaluation_cost == pytest.approx(0.003)
+
+
+class StubSTT(DeepEvalBaseSTT):
+    """Hears the same scripted text in every clip."""
+
+    def __init__(self, heard):
+        self.heard = heard
+        super().__init__(model="stub-stt")
+
+    def load_model(self):
+        return self
+
+    def transcribe(self, audio, **kwargs):
+        return self.heard, None
+
+    async def a_transcribe(self, audio, **kwargs):
+        return self.transcribe(audio, **kwargs)
+
+    def get_model_name(self):
+        return "stub-stt"
+
+
+def _silent_reply_events(tmp_path, stt_model):
+    turns = clean_turns()
+    turns[3] = Turn(
+        role="assistant",
+        content="Your order ships to the store on Friday.",
+        audio=to_audio(zeros(2.0), start_time=turns[3].audio.start_time),
+    )
+    path = stereo_recording(tmp_path / "call.wav", seconds=20.0)
+    metric = AgentResponsivenessMetric(
+        use_speech_detection=False, stt_model=stt_model
+    )
+    metric.measure(
+        ConversationalTestCase(turns=turns, audio=recording(path)),
+        _show_indicator=False,
+    )
+    return [
+        event
+        for event in metric.score_breakdown["events"]
+        if event["metric"] == "Silent Reply"
+    ]
+
+
+def test_silent_reply_inside_the_roll_up_uses_its_stt_model(tmp_path):
+    assert _silent_reply_events(tmp_path, None)
+    heard = StubSTT("okay so your order ships to the store on friday")
+    assert _silent_reply_events(tmp_path, heard) == []

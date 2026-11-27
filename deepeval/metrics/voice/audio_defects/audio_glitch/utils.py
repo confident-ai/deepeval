@@ -61,8 +61,9 @@ DEAD_TRAILING_MIN_SECONDS = 1.0
 DIGITAL_SILENCE_SHARE = 0.2
 
 STREAM_CUT_MAX_GAP_SECONDS = 15.0
-CLIPPING_MIN_FRACTION = 0.01
-CLIPPING_SAMPLE = 32760
+# Reviewers heard clipping where 0.1% of a reply's samples sat near full scale.
+CLIPPING_MIN_FRACTION = 0.001
+CLIPPING_SAMPLE = 32000
 POSITION_EDGE_FRACTION = 0.2
 
 
@@ -117,6 +118,7 @@ class ClipAnalysis:
     stable_runs: List[StableRun]
     silence: SilenceProfile
     clipping_span: Optional[Tuple[float, float]]
+    clipped_fraction: float
 
     @property
     def dead_runs(self) -> List[DeadRun]:
@@ -308,9 +310,18 @@ def _clipping_span(
     return first / sample_rate, (last - first + 1) / sample_rate
 
 
+def _clipped_fraction(samples: array) -> float:
+    np = get_numpy()
+    values = np.abs(np.asarray(samples, dtype=np.int32))
+    return int(np.count_nonzero(values >= CLIPPING_SAMPLE)) / max(
+        len(values), 1
+    )
+
+
 def analyze_clip(turn: int, role: str, audio: Audio) -> ClipAnalysis:
     samples, sample_rate = decode_audio(audio)
     measurements = analyze_audio(audio)
+    clipped_fraction = _clipped_fraction(samples)
     frames = _tone_frames(samples, sample_rate)
     return ClipAnalysis(
         turn=turn,
@@ -322,9 +333,10 @@ def analyze_clip(turn: int, role: str, audio: Audio) -> ClipAnalysis:
         silence=_silence_profile(samples, sample_rate),
         clipping_span=(
             _clipping_span(samples, sample_rate)
-            if measurements.clipping_fraction > CLIPPING_MIN_FRACTION
+            if clipped_fraction > CLIPPING_MIN_FRACTION
             else None
         ),
+        clipped_fraction=clipped_fraction,
     )
 
 
@@ -506,7 +518,7 @@ def detect_audio_glitches(test_case: ConversationalTestCase) -> GlitchReport:
                     "clipping",
                     offset,
                     duration,
-                    fraction=round(analysis.measurements.clipping_fraction, 4),
+                    fraction=round(analysis.clipped_fraction, 4),
                 )
             )
 

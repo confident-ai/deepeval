@@ -1,4 +1,8 @@
-from typing import Optional
+from typing import List, Optional
+
+from deepeval.metrics.voice.audio_defects.dead_stream.dead_stream import (
+    dead_streams,
+)
 
 from deepeval.metrics.voice.utils.call_activity import (
     AGENT_PAUSE_SECONDS,
@@ -13,6 +17,7 @@ from deepeval.metrics.voice.utils.defects import (
     TURN_TIMESTAMPS,
     agent_glitch_events,
     agent_reply_measurements,
+    call_timeline,
     DefectShare,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
@@ -59,10 +64,58 @@ CALLER_AFTER_STOP_SECONDS = 0.2
 CALLER_SILENT_MAX_SECONDS = 0.2
 # Sound still going when the recording ends is Unexpected Call End's to judge.
 RECORDING_END_SECONDS = 0.05
+# A cut-off ends the reply. The agent going dead and then carrying on is a
+# hole in the reply, which is Dead Stream's to judge.
+REPLY_END_SECONDS = 0.05
+DEAD_STREAM_AFTER_STOP_SECONDS = 0.3
+# A reply whose text ends a sentence was said in full, however sharply its
+# last sound stops. The stamps around a stop can be this far off.
+SENTENCE_ENDS = (".", "?", "!", "…")
+CLOSING_MARKS = "\"'”’)]"
+STAMP_BEFORE_STOP_SECONDS = 0.5
+STAMP_AFTER_STOP_SECONDS = 1.5
+
+
+def _said_in_full(text: str) -> bool:
+    if not any(character.isalnum() for character in text):
+        return False
+    return text.strip().rstrip(CLOSING_MARKS).endswith(SENTENCE_ENDS)
+
+
+def _reply_text_at(
+    test_case: ConversationalTestCase, stopped_at: float
+) -> Optional[str]:
+    """The text of the agent reply whose audio the stop falls in."""
+    timeline, _, _ = call_timeline(test_case)
+    replies = [
+        entry
+        for entry in timeline
+        if entry.role == "assistant"
+        and entry.start_time - STAMP_BEFORE_STOP_SECONDS
+        <= stopped_at
+        <= entry.end_time + STAMP_AFTER_STOP_SECONDS
+    ]
+    if not replies:
+        return None
+    return test_case.turns[replies[-1].turn_index].content
+
+
 DEFECT_LABEL = "an abrupt cut-off"
 
 
-def _recording_share(recording: CallActivity) -> DefectShare:
+def _resumes_after(holes: List[VoiceEvent], stopped_at: float) -> bool:
+    return any(
+        hole.start_time is not None
+        and abs(hole.start_time - stopped_at) <= DEAD_STREAM_AFTER_STOP_SECONDS
+        for hole in holes
+    )
+
+
+def _recording_share(
+    recording: CallActivity,
+    holes: List[VoiceEvent],
+    test_case: ConversationalTestCase,
+) -> DefectShare:
     replies = stretches(recording.agent, AGENT_PAUSE_SECONDS)
     defects = []
     for reply in replies:
@@ -70,8 +123,10 @@ def _recording_share(recording: CallActivity) -> DefectShare:
             (
                 stop
                 for stop in recording.agent_stops
-                if reply.start < stop.at <= reply.end
+                if reply.end - REPLY_END_SECONDS <= stop.at <= reply.end
                 and stop.ends_abruptly
+                and not _resumes_after(holes, stop.at)
+                and not _said_in_full(_reply_text_at(test_case, stop.at) or "")
                 and stop.at < recording.duration - RECORDING_END_SECONDS
                 and sound_between(
                     recording.caller,
@@ -136,8 +191,9 @@ class AbruptCutoffMetric(BaseDefectMetric):
         recording = call_recording_activity(
             test_case, self.use_speech_detection
         )
+        holes = dead_streams(test_case, self.use_speech_detection)
         if recording is not None:
-            return _recording_share(recording)
+            return _recording_share(recording, holes, test_case)
         measurements, skipped = agent_reply_measurements(test_case)
         _, events, _ = agent_glitch_events(test_case)
         stream_cuts = {
@@ -147,11 +203,18 @@ class AbruptCutoffMetric(BaseDefectMetric):
             for event in events
             if event.type == "stream_cut"
         }
-        defects = [
+        cuts = [
             stream_cuts.get(turn, _cut_event(test_case, turn, reply))
             for turn, reply in measurements.items()
             if (turn in stream_cuts or reply.ends_abruptly)
             and not test_case.turns[turn].interrupted
+            and not _said_in_full(test_case.turns[turn].content)
+        ]
+        defects = [
+            cut
+            for cut in cuts
+            if cut.start_time is None
+            or not _resumes_after(holes, cut.start_time + CUT_EDGE_SECONDS)
         ]
         return DefectShare(
             list(measurements),

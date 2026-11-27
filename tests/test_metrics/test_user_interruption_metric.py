@@ -4,6 +4,7 @@ from deepeval.metrics import UserInterruptionMetric
 from deepeval.test_case import Turn
 from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 from tests.test_metrics.helpers import (
+    other_voice,
     CLEAN_GAPS,
     STAMPS_NOTE,
     measure,
@@ -69,7 +70,7 @@ def test_the_caller_talking_over_the_agent_on_a_recording(tmp_path):
         UserInterruptionMetric(use_speech_detection=False),
         tmp_path,
         agent=[(0.0, speech_like(4.0))],
-        caller=[(2.0, speech_like(3.0)), (6.0, speech_like(2.0))],
+        caller=[(2.0, other_voice(3.0)), (6.0, other_voice(2.0))],
     )
     assert metric.score == 0.5
     assert metric.score_breakdown["timing_source"] == "call_recording"
@@ -91,7 +92,7 @@ def test_a_caller_who_cuts_in_and_backs_off_made_a_false_start(tmp_path):
         UserInterruptionMetric(use_speech_detection=False),
         tmp_path,
         agent=[(0.0, speech_like(4.0))],
-        caller=[(1.5, speech_like(1.2))],
+        caller=[(1.5, speech_like(1.2, seed=7))],
     )
     assert metric.score == 0.0
     [event] = metric.score_breakdown["events"]
@@ -132,7 +133,7 @@ def test_a_caller_interruption_the_decision_model_dismisses_is_dropped(
         ),
         tmp_path,
         agent=[(0.0, speech_like(4.0))],
-        caller=[(2.0, speech_like(3.0)), (6.0, speech_like(2.0))],
+        caller=[(2.0, other_voice(3.0)), (6.0, other_voice(2.0))],
     )
     assert metric.score == 1.0
     assert metric.score_breakdown["dismissed_events"] == 1

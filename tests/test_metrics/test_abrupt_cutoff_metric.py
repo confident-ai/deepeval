@@ -136,3 +136,13 @@ def test_a_cutoff_the_decision_model_hears_as_a_clean_ending_is_dismissed(
     assert metric.score == 1.0
     assert metric.score_breakdown["dismissed_events"] == 1
     assert len(model.clips) == 1
+
+
+def test_a_reply_whose_text_ends_a_sentence_was_said_in_full():
+    turns = with_defect(1, lambda: cut_short(speech_like(3.0), 1.125))
+    turns[1] = turns[1].model_copy(
+        update={"content": "Is there anything else I can help you with?"}
+    )
+    metric = measure(AbruptCutoffMetric(), turns)
+    assert metric.score == 1.0
+    assert metric.score_breakdown["events"] == []

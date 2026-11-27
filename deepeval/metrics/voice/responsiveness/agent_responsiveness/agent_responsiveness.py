@@ -16,7 +16,11 @@ from deepeval.metrics.voice.responsiveness.silent_reply.silent_reply import (
 from deepeval.metrics.voice.responsiveness.unexpected_call_end.unexpected_call_end import (
     UnexpectedCallEndMetric,
 )
-from deepeval.models.base_model import DeepEvalBaseSystemOneModel
+from deepeval.models.base_model import (
+    DeepEvalBaseSTT,
+    DeepEvalBaseSystemOneModel,
+)
+from deepeval.models.speech_selection import initialize_stt_model
 
 
 class AgentResponsivenessMetric(BaseExchangeRollUpMetric):
@@ -31,6 +35,7 @@ class AgentResponsivenessMetric(BaseExchangeRollUpMetric):
         system_one_model: Optional[
             Union[str, DeepEvalBaseSystemOneModel]
         ] = None,
+        stt_model: Optional[Union[str, DeepEvalBaseSTT]] = None,
         flaky: bool = False,
     ):
         super().__init__(
@@ -42,13 +47,21 @@ class AgentResponsivenessMetric(BaseExchangeRollUpMetric):
         )
         self.use_speech_detection = use_speech_detection
         self.system_one_model = system_one_model
+        self.stt_model = (
+            stt_model
+            if stt_model is None or isinstance(stt_model, DeepEvalBaseSTT)
+            else initialize_stt_model(stt_model)
+        )
 
     def _parts(self) -> List[BaseDefectMetric]:
         return [
             FailedResponseMetric(
                 use_speech_detection=self.use_speech_detection
             ),
-            SilentReplyMetric(),
+            SilentReplyMetric(
+                use_speech_detection=self.use_speech_detection,
+                stt_model=self.stt_model,
+            ),
             UnexpectedCallEndMetric(),
             RepromptMetric(
                 use_speech_detection=self.use_speech_detection,

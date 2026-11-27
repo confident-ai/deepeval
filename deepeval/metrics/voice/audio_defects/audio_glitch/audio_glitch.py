@@ -17,6 +17,8 @@ from deepeval.metrics.voice.base_metric import (
     BaseRollUpMetric,
 )
 from deepeval.models import DeepEvalBaseLLM
+from deepeval.models.base_model import DeepEvalBaseSTT
+from deepeval.models.speech_selection import initialize_stt_model
 from deepeval.templates import make_template_class
 
 
@@ -37,6 +39,7 @@ class AudioGlitchMetric(BaseRollUpMetric):
         flaky: bool = False,
         evaluation_template: Type[AudioGlitchTemplate] = AudioGlitchTemplate,
         use_speech_detection: bool = True,
+        stt_model: Optional[Union[str, DeepEvalBaseSTT]] = None,
     ):
         super().__init__(
             threshold=threshold,
@@ -46,11 +49,19 @@ class AudioGlitchMetric(BaseRollUpMetric):
             flaky=flaky,
         )
         self.use_speech_detection = use_speech_detection
+        self.stt_model = (
+            stt_model
+            if stt_model is None or isinstance(stt_model, DeepEvalBaseSTT)
+            else initialize_stt_model(stt_model)
+        )
 
     def _parts(self) -> List[BaseDefectMetric]:
         return [
             HeldToneMetric(),
-            DeadStreamMetric(),
+            DeadStreamMetric(
+                use_speech_detection=self.use_speech_detection,
+                stt_model=self.stt_model,
+            ),
             AbruptCutoffMetric(use_speech_detection=self.use_speech_detection),
             AudioClippingMetric(),
         ]

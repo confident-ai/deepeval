@@ -29,7 +29,7 @@ def _echo_on_recording(tmp_path, *, caller, metric=None):
         caller=caller(reply),
         seconds=7.0,
     )
-    metric = metric or EchoMetric()
+    metric = metric or EchoMetric(use_speech_detection=False)
     metric.measure(
         ConversationalTestCase(turns=timed_call([0.5]), audio=recording(path)),
         _show_indicator=False,
@@ -41,18 +41,18 @@ def test_the_agent_heard_back_through_the_callers_speaker_is_an_echo(
     tmp_path,
 ):
     metric = _echo_on_recording(
-        tmp_path, caller=lambda reply: [(1.45, _scaled(reply, 0.2))]
+        tmp_path, caller=lambda reply: [(1.45, _scaled(reply, 0.7))]
     )
     assert metric.score == 0.0
     assert metric.score_breakdown["timing_source"] == "call_recording"
     [event] = metric.score_breakdown["events"]
     assert event["type"] == "echo"
     assert event["reply_start"] == pytest.approx(1.0, abs=0.05)
-    # The whole reply the echo was found on, not the echoed copy.
+    # Marked where the copy is heard, the delay after the agent said it.
     assert event["mark"] == "whole_reply"
-    assert event["start_time"] == pytest.approx(1.0, abs=0.05)
+    assert event["start_time"] == pytest.approx(1.45, abs=0.05)
     assert event["delay_seconds"] == pytest.approx(0.45, abs=0.01)
-    assert event["level_db"] == pytest.approx(-14.0, abs=1.5)
+    assert event["level_db"] == pytest.approx(-3.1, abs=1.5)
 
 
 @pytest.mark.parametrize(
@@ -61,9 +61,12 @@ def test_the_agent_heard_back_through_the_callers_speaker_is_an_echo(
         pytest.param(
             lambda reply: [(1.45, _scaled(reply, 0.005))], id="too_faint"
         ),
-        pytest.param(lambda reply: [(2.0, _scaled(reply, 0.2))], id="too_late"),
         pytest.param(
-            lambda reply: [(1.2, speech_like(3.0, base_hz=140.0, seed=3))],
+            lambda reply: [(1.45, _scaled(reply, 0.2))], id="barely_there"
+        ),
+        pytest.param(lambda reply: [(3.3, _scaled(reply, 0.7))], id="too_late"),
+        pytest.param(
+            lambda reply: [(1.1, speech_like(3.0, base_hz=140.0, seed=3))],
             id="the_caller_talking",
         ),
     ],
@@ -88,8 +91,12 @@ def test_an_echo_the_decision_model_cannot_hear_is_dismissed(tmp_path):
     model = FakeAudioDecisionModel(probability=0.3)
     metric = _echo_on_recording(
         tmp_path,
-        caller=lambda reply: [(1.45, _scaled(reply, 0.2))],
-        metric=EchoMetric(eval_mode="hybrid", audio_decision_model=model),
+        caller=lambda reply: [(1.45, _scaled(reply, 0.7))],
+        metric=EchoMetric(
+            use_speech_detection=False,
+            eval_mode="hybrid",
+            audio_decision_model=model,
+        ),
     )
     assert metric.score == 1.0
     assert metric.score_breakdown["dismissed_events"] == 1
@@ -107,10 +114,11 @@ def test_an_async_measure_with_a_decision_model_runs_off_the_loop(tmp_path):
     path = stereo_recording(
         tmp_path / "call.wav",
         agent=[(0.0, speech_like(0.5, seed=4)), (1.0, reply)],
-        caller=[(1.45, _scaled(reply, 0.2))],
+        caller=[(1.45, _scaled(reply, 0.7))],
         seconds=7.0,
     )
     metric = _ThreadRecordingEchoMetric(
+        use_speech_detection=False,
         eval_mode="hybrid",
         audio_decision_model=FakeAudioDecisionModel(probability=0.9),
     )
@@ -142,8 +150,9 @@ def test_an_openai_audio_model_that_says_no_dismisses_the_echo(
     )
     metric = _echo_on_recording(
         tmp_path,
-        caller=lambda reply: [(1.45, _scaled(reply, 0.2))],
+        caller=lambda reply: [(1.45, _scaled(reply, 0.7))],
         metric=EchoMetric(
+            use_speech_detection=False,
             eval_mode="hybrid",
             audio_decision_model=OpenAIAudioDecisionModel(api_key="k"),
         ),

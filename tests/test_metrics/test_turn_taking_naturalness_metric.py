@@ -4,6 +4,7 @@ from deepeval.metrics import TurnTakingNaturalnessMetric
 from deepeval.test_case import ConversationalTestCase
 from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 from tests.test_metrics.helpers import (
+    other_voice,
     recording,
     CLEAN_GAPS,
     measure,
@@ -40,7 +41,7 @@ def test_a_caller_cutting_in_counts_against_the_reply_cut_into(tmp_path):
         tmp_path / "call.wav",
         caller=[
             (0.0, speech_like(2.0)),
-            (4.0, speech_like(2.0, seed=1)),
+            (4.0, other_voice(2.0, seed=1)),
             (10.0, speech_like(2.0, seed=2)),
         ],
         agent=[
@@ -73,7 +74,7 @@ def test_the_decision_model_checks_the_interruption_parts(tmp_path):
         tmp_path / "call.wav",
         caller=[
             (0.0, speech_like(2.0)),
-            (4.0, speech_like(2.0, seed=1)),
+            (4.0, other_voice(2.0, seed=1)),
             (10.0, speech_like(2.0, seed=2)),
         ],
         agent=[

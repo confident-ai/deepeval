@@ -7,7 +7,10 @@ from tests.test_metrics.helpers import (
     measure_recording,
     speech_like,
     timed_call,
+    to_audio,
+    tone,
     undecodable,
+    zeros,
 )
 
 
@@ -20,6 +23,17 @@ def test_an_undecodable_greeting_is_still_timed():
         ).score
         == 0.0
     )
+
+
+def test_a_chime_before_the_greeting_is_the_first_response():
+    turns = timed_call(CLEAN_GAPS, greeting_at=2.0)
+    turns[0].audio = to_audio(
+        zeros(1.5) + tone(0.3, 440.0) + speech_like(0.2), start_time=2.0
+    )
+    [event] = measure(TimeToFirstResponseMetric(), turns).score_breakdown[
+        "events"
+    ]
+    assert event["first_response_seconds"] == pytest.approx(3.5, abs=0.05)
 
 
 def test_a_prompt_greeting_passes_time_to_first_response():
@@ -102,3 +116,4 @@ def test_a_caller_left_in_silence_before_saying_hello_waited_for_the_agent(
     assert "after the call connected" in metric.reason
     [event] = metric.score_breakdown["events"]
     assert event["first_response_seconds"] == pytest.approx(6.0, abs=0.05)
+    assert event["start_time"] == 0.0

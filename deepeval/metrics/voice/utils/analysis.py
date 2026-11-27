@@ -11,17 +11,19 @@ from typing import Any, List, Optional, Sequence, Tuple
 from deepeval.test_case import Audio
 from deepeval.voice.connectors import audio_utils
 
-DROPOUT_MAX_FRAMES = 10
+# Gaps from 150 ms to just under Dead Stream's 0.5 s: listeners did not hear
+# shorter gaps mid-word, or did not mind them.
+DROPOUT_MAX_FRAMES = 24
 DROPOUT_FLOOR_RATIO = 0.1
 MIN_PAUSE_FLOOR_RMS = 8.0
 # With no pause noise to compare against, a dropout is a near-zero run whose
 # edges stay near speech level; on real TTS, natural pauses fade to <= 0.012.
 DROPOUT_NEAR_ZERO_SAMPLE = 8
-# A lost packet is 20 ms; consonants like "p" and "t" leave 10-15 ms gaps.
-DROPOUT_MIN_MS = 20
+DROPOUT_MIN_MS = 150
 DROPOUT_EDGE_MS = 5
 DROPOUT_CONTEXT_MS = 60
 DROPOUT_EDGE_RATIO = 0.25
+DROPOUT_FRAME_SECONDS = 0.02
 CLIPPING_ABS_SAMPLE = 32760
 SPEECH_LEVEL_PERCENTILE = 0.9
 NOISE_LEVEL_PERCENTILE = 0.1
@@ -45,21 +47,48 @@ PITCH_SAMPLE_RATE = 8000
 PITCH_FRAME_MS = 40
 PITCH_MIN_HZ = 70.0
 PITCH_MAX_HZ = 500.0
-PITCH_YIN_THRESHOLD = 0.15
+# A period fitting within this of a frame's best fits about as well.
+PITCH_NEAR_BEST = 0.06
+PITCH_VOICED_THRESHOLD = 0.2
 # Frames closer than this belong to one stretch of continuous pitch.
 PITCH_CONTINUOUS_SEMITONES = 3.0
-# The tracker can lock onto the octave for a few frames at a time; a stretch
-# that short sitting an octave off its neighbours is folded back.
-PITCH_OCTAVE_MAX_FRAMES = 3
-PITCH_OCTAVE_TOLERANCE_SEMITONES = 3.0
 # 6 semitones in 40 ms is 2.5x the fastest pitch change a speaker can make
 # (Xu & Sun 2002).
 PITCH_JUMP_SEMITONES = 6.0
+# 200 ms of steady pitch on each side of a jump.
+PITCH_JUMP_STEADY_FRAMES = 5
+# A voice spends 5% of its time above the top of its usual range. Only a
+# jump landing a semitone over that is one a listener hears as a glitch;
+# inside the range it is how the voice normally moves.
+PITCH_RANGE_TOP_PERCENTILE = 0.95
+PITCH_JUMP_ABOVE_RANGE_SEMITONES = 1.0
+# A step up worth a second listen: held for 120 ms, measured from the 80 ms
+# before it, across a gap of at most 80 ms between sounds.
+PITCH_STEP_HELD_FRAMES = 3
+PITCH_STEP_BEFORE_FRAMES = 2
+PITCH_STEP_MAX_GAP_FRAMES = 2
+# Only a step landing in the top tenth of the voice's range is worth it:
+# lower down, a step is the voice moving about its usual pitch.
+PITCH_STEP_RANGE_PERCENTILE = 0.9
 PITCH_MIN_VOICED_SECONDS = 1.0
 PITCH_MIN_FRAMES = int(PITCH_MIN_VOICED_SECONDS * 1000 / PITCH_FRAME_MS)
+# A voice keeps returning to the low end of its pitch between the words it
+# stresses, so the low end moves far less from reply to reply than the
+# middle does. It takes 3 seconds of voiced speech to settle.
+PITCH_BASE_PERCENTILE = 0.1
+# A few creaky frames can drag the very lowest pitch down on their own, so
+# the low end is read a second time a little higher up.
+PITCH_BASE_CHECK_PERCENTILE = 0.2
+PITCH_BASE_MIN_VOICED_SECONDS = 3.0
+PITCH_BASE_MIN_FRAMES = int(
+    PITCH_BASE_MIN_VOICED_SECONDS * 1000 / PITCH_FRAME_MS
+)
 # Gaps under 200 ms are part of articulating words, not pauses.
 PAUSE_MIN_MS = 200
 SPEECH_SPAN_MIN_SECONDS = 2.0
+SYLLABLE_HOP_MS = 5
+SYLLABLE_SMOOTH_FRAMES = 7
+SYLLABLE_DIP_DB = 3.0
 # Clips this close are treated as touching, with no measurable gap.
 CONTIGUOUS_CLIP_TOLERANCE_SECONDS = 0.001
 
@@ -126,8 +155,16 @@ class AudioMeasurements:
     dropout_spans: List[Tuple[float, float]] = field(default_factory=list)
     loop_spans: List[Tuple[float, float]] = field(default_factory=list)
     pitch_jump_times: List[float] = field(default_factory=list)
+    # The pitch each jump lands on, and the pitch of every voiced frame.
+    pitch_jump_landings_hz: List[float] = field(default_factory=list)
+    voiced_pitches_hz: List[float] = field(default_factory=list)
+    pitch_base_hz: Optional[float] = None
+    pitch_base_check_hz: Optional[float] = None
+    pitch_step_times: List[float] = field(default_factory=list)
+    pitch_step_landings_hz: List[float] = field(default_factory=list)
     longest_pause_span: Optional[Tuple[float, float]] = None
     sound_end_seconds: Optional[float] = None
+    syllables_per_second: Optional[float] = None
 
 
 def clamp_score(value: float) -> float:
@@ -195,10 +232,14 @@ def _downsampled(samples: Sequence[int], sample_rate: int) -> Tuple[Any, float]:
     return values[:usable].reshape(-1, step).mean(axis=1), sample_rate / step
 
 
-def _yin_pitch_hz(frame: Any, rate: float) -> Optional[float]:
+def _pitch_lag_range(rate: float) -> Tuple[int, int]:
+    return max(2, int(rate / PITCH_MAX_HZ)), int(rate / PITCH_MIN_HZ)
+
+
+def _yin_curve(frame: Any, rate: float) -> Optional[Any]:
+    """YIN's normalised difference at each lag; low where the frame repeats."""
     np = get_numpy()
-    max_lag = int(rate / PITCH_MIN_HZ)
-    min_lag = max(2, int(rate / PITCH_MAX_HZ))
+    _, max_lag = _pitch_lag_range(rate)
     window = len(frame) - max_lag
     if window <= 0:
         return None
@@ -218,16 +259,24 @@ def _yin_pitch_hz(frame: Any, rate: float) -> Optional[float]:
     normalized[1:] = (
         difference[1:] * lags[1:] / np.maximum(np.cumsum(difference[1:]), 1e-9)
     )
-    below = np.nonzero(normalized[min_lag:max_lag] < PITCH_YIN_THRESHOLD)[0]
-    if below.size == 0:
-        return None
-    lag = min_lag + int(below[0])
-    while lag + 1 < max_lag and normalized[lag + 1] < normalized[lag]:
-        lag += 1
+    return normalized
+
+
+def _pitch_at_lag(normalized: Any, lag: int, rate: float) -> float:
     left, best, right = normalized[lag - 1 : lag + 2]
     curvature = left - 2 * best + right
     offset = 0.5 * (left - right) / curvature if curvature > 0 else 0.0
-    return float(rate / (lag + offset))
+    # At the edge of the reach the lag isn't a true dip and the fit runs off.
+    return float(rate / (lag + max(-1.0, min(1.0, offset))))
+
+
+def _yin_curves(samples: Sequence[int], sample_rate: int) -> Tuple[List, float]:
+    data, rate = _downsampled(samples, sample_rate)
+    width = int(rate * PITCH_FRAME_MS / 1000)
+    return [
+        _yin_curve(data[start : start + width], rate)
+        for start in range(0, len(data) - width + 1, width)
+    ], rate
 
 
 def _pitch_stretches(track: Sequence[Optional[float]]) -> List[Tuple[int, int]]:
@@ -250,52 +299,39 @@ def _pitch_stretches(track: Sequence[Optional[float]]) -> List[Tuple[int, int]]:
     return stretches
 
 
-def _without_octave_errors(
-    track: Sequence[Optional[float]],
-) -> List[Optional[float]]:
-    track = list(track)
-    # A second pass catches an error that sat next to another one.
-    for _ in range(2):
-        stretches = _pitch_stretches(track)
-        for position, (start, end) in enumerate(stretches):
-            if end - start > PITCH_OCTAVE_MAX_FRAMES:
-                continue
-            level = median(track[start:end])
-            neighbours = []
-            if position > 0 and stretches[position - 1][1] == start:
-                neighbours.append(track[start - 1])
-            if (
-                position + 1 < len(stretches)
-                and stretches[position + 1][0] == end
-            ):
-                neighbours.append(track[end])
-            offsets = [semitones(level, pitch) for pitch in neighbours]
-            if (
-                offsets
-                and all(
-                    abs(abs(offset) - 12.0) <= PITCH_OCTAVE_TOLERANCE_SEMITONES
-                    for offset in offsets
-                )
-                and len({offset > 0 for offset in offsets}) == 1
-            ):
-                factor = 0.5 if offsets[0] > 0 else 2.0
-                for index in range(start, end):
-                    track[index] *= factor
-    return track
+def _dip_lags(normalized: Any, rate: float) -> Any:
+    """Lags where the frame repeats better than at either neighbour."""
+    np = get_numpy()
+    min_lag, max_lag = _pitch_lag_range(rate)
+    reach = normalized[min_lag - 1 : max_lag + 1]
+    dips = (reach[1:-1] <= reach[:-2]) & (reach[1:-1] < reach[2:])
+    return min_lag + np.nonzero(dips)[0]
+
+
+def _pitch_lag(normalized: Any, rate: float) -> Optional[int]:
+    dips = _dip_lags(normalized, rate)
+    if dips.size == 0:
+        return None
+    best = float(normalized[dips].min())
+    if best >= PITCH_VOICED_THRESHOLD:
+        return None
+    # Any multiple of the true period fits as well as the true one, so the
+    # shortest period about as good as the best is the pitch.
+    return int(dips[normalized[dips] <= best + PITCH_NEAR_BEST][0])
 
 
 def pitch_track(
     samples: Sequence[int], sample_rate: int
 ) -> List[Optional[float]]:
     """Pitch of each 40 ms frame, None where it is unvoiced."""
-    data, rate = _downsampled(samples, sample_rate)
-    width = int(rate * PITCH_FRAME_MS / 1000)
-    return _without_octave_errors(
-        [
-            _yin_pitch_hz(data[start : start + width], rate)
-            for start in range(0, len(data) - width + 1, width)
-        ]
-    )
+    curves, rate = _yin_curves(samples, sample_rate)
+    track: List[Optional[float]] = []
+    for normalized in curves:
+        lag = None if normalized is None else _pitch_lag(normalized, rate)
+        track.append(
+            None if lag is None else _pitch_at_lag(normalized, lag, rate)
+        )
+    return track
 
 
 def count_pitch_jumps(track: Sequence[Optional[float]]) -> int:
@@ -303,9 +339,10 @@ def count_pitch_jumps(track: Sequence[Optional[float]]) -> int:
 
 
 def pitch_jump_frames(track: Sequence[Optional[float]]) -> List[int]:
-    """Frames where pitch steps 6+ semitones between two stretches of steady
-    pitch; a lone frame on either side is more likely a tracking slip than a
-    crack."""
+    """Frames where the voice steps to another pitch and stays there: steady
+    pitch for a while, then steady pitch 6+ semitones away from the very next
+    frame. A shorter stretch on either side is a slip of the tracker or one
+    syllable's own movement, not the voice breaking."""
     stretches = _pitch_stretches(track)
     return [
         next_start
@@ -313,11 +350,115 @@ def pitch_jump_frames(track: Sequence[Optional[float]]) -> List[int]:
             stretches, stretches[1:]
         )
         if end == next_start
-        and end - start >= 2
-        and next_end - next_start >= 2
-        and abs(semitones(track[next_start], track[end - 1]))
+        and end - start >= PITCH_JUMP_STEADY_FRAMES
+        and next_end - next_start >= PITCH_JUMP_STEADY_FRAMES
+        and abs(
+            semitones(
+                median(
+                    track[next_start : next_start + PITCH_JUMP_STEADY_FRAMES]
+                ),
+                median(track[end - PITCH_JUMP_STEADY_FRAMES : end]),
+            )
+        )
         >= PITCH_JUMP_SEMITONES
     ]
+
+
+def pitch_step_frames(track: Sequence[Optional[float]]) -> List[int]:
+    """Frames where the voice steps up 6+ semitones and holds there briefly.
+    Stressed words do this all the time, so these are only moments for an
+    audio decision model to listen to, not defects."""
+    steps = []
+    index = 1
+    while index < len(track):
+        landing = track[index : index + PITCH_STEP_HELD_FRAMES]
+        last = index - 1
+        while (
+            last >= 0
+            and track[last] is None
+            and index - last <= PITCH_STEP_MAX_GAP_FRAMES
+        ):
+            last -= 1
+        if (
+            last < 0
+            or track[last] is None
+            or len(landing) < PITCH_STEP_HELD_FRAMES
+            or None in landing
+        ):
+            index += 1
+            continue
+        before = [
+            pitch
+            for pitch in track[
+                max(0, last - PITCH_STEP_BEFORE_FRAMES + 1) : last + 1
+            ]
+            if pitch is not None
+        ]
+        level = median(landing)
+        if semitones(level, median(before)) >= PITCH_JUMP_SEMITONES and all(
+            abs(semitones(pitch, level)) < PITCH_CONTINUOUS_SEMITONES
+            for pitch in landing
+        ):
+            steps.append(index)
+            index += PITCH_STEP_HELD_FRAMES
+        else:
+            index += 1
+    return steps
+
+
+def syllable_rate(samples: Sequence[int], sample_rate: int) -> Optional[float]:
+    """Syllable beats per second of speaking time, read from the audio alone:
+    each rise of the loudness envelope that stands 3 dB above the dips on
+    both sides is one syllable (de Jong & Wempe 2009). None when there is
+    under `SPEECH_SPAN_MIN_SECONDS` of speaking to count over."""
+    np = get_numpy()
+    values = np.asarray(samples, dtype=np.float64)
+    hop = int(sample_rate * SYLLABLE_HOP_MS / 1000)
+    count = len(values) // hop if hop else 0
+    if count < SYLLABLE_SMOOTH_FRAMES:
+        return None
+    level = np.sqrt(
+        (values[: count * hop].reshape(count, hop) ** 2).mean(axis=1) + 1e-9
+    )
+    window = np.hanning(SYLLABLE_SMOOTH_FRAMES)
+    level = np.convolve(level, window / window.sum(), "same")
+    envelope = 20.0 * np.log10(np.maximum(level, 1.0))
+    floor = 20.0 * math.log10(audio_utils.DEFAULT_SILENCE_RMS)
+    speaking = envelope > floor
+    if not speaking.any():
+        return None
+    syllables = 0
+    low, high = float(envelope[0]), None
+    for value in envelope[1:].tolist():
+        if high is None:
+            if value < low:
+                low = value
+            elif value - low >= SYLLABLE_DIP_DB and value > floor:
+                high = value
+        elif value > high:
+            high = value
+        elif high - value >= SYLLABLE_DIP_DB:
+            syllables += 1
+            low, high = value, None
+    if high is not None:
+        syllables += 1
+    first = int(np.argmax(speaking))
+    last = len(speaking) - int(np.argmax(speaking[::-1]))
+    # Pauses are not speaking time: someone who stops to look something up
+    # is not talking slowly.
+    pause_frames = int(PAUSE_MIN_MS / SYLLABLE_HOP_MS)
+    paused = quiet = 0
+    for is_speaking in speaking[first:last].tolist():
+        if not is_speaking:
+            quiet += 1
+            continue
+        if quiet >= pause_frames:
+            paused += quiet
+        quiet = 0
+    seconds = (last - first - paused) * SYLLABLE_HOP_MS / 1000
+    if seconds < SPEECH_SPAN_MIN_SECONDS:
+        return None
+    return syllables / seconds
 
 
 def _centered(data: Sequence[int]) -> Any:
@@ -542,7 +683,7 @@ def _loops(
     return sorted(loops)
 
 
-def _percentile(values: Sequence[float], fraction: float) -> float:
+def percentile(values: Sequence[float], fraction: float) -> float:
     ordered = sorted(values)
     return ordered[int(fraction * (len(ordered) - 1))] if ordered else 0.0
 
@@ -555,8 +696,8 @@ def speech_and_noise_levels(frame_rms: Sequence[float]) -> Tuple[float, float]:
         value for value in levels if value >= audio_utils.DEFAULT_SILENCE_RMS
     ]
     return (
-        _percentile(voiced or levels, SPEECH_LEVEL_PERCENTILE),
-        _percentile(levels, NOISE_LEVEL_PERCENTILE),
+        percentile(voiced or levels, SPEECH_LEVEL_PERCENTILE),
+        percentile(levels, NOISE_LEVEL_PERCENTILE),
     )
 
 
@@ -573,9 +714,9 @@ def _snr_from_quiet_frames(frame_rms: Sequence[float]) -> float:
         for value in frame_rms
         if value > 0 and value < audio_utils.DEFAULT_SILENCE_RMS
     ]
-    speech_level = _percentile(voiced, 0.75)
+    speech_level = percentile(voiced, 0.75)
     noise_level = (
-        _percentile(quiet, 0.25) if quiet else max(1.0, speech_level / 100.0)
+        percentile(quiet, 0.25) if quiet else max(1.0, speech_level / 100.0)
     )
     if not speech_level:
         return 0.0
@@ -666,8 +807,21 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
             and min(frame_rms[start:index]) <= DROPOUT_FLOOR_RATIO * pause_floor
         ):
             dropout_spans.append((start * 0.02, length * 0.02))
+    hard_edged_gaps = _hard_edged_gaps(samples, sample_rate)
     if pause_floor < MIN_PAUSE_FLOOR_RMS:
-        dropout_spans = _hard_edged_gaps(samples, sample_rate)
+        dropout_spans = hard_edged_gaps
+    else:
+        # The closure before "p", "t" or "k" and the hiss of an "s" also dip
+        # under the pause noise, but they fade in and out; lost audio doesn't.
+        dropout_spans = [
+            (offset, duration)
+            for offset, duration in dropout_spans
+            if any(
+                gap_offset < offset + duration + DROPOUT_FRAME_SECONDS
+                and offset - DROPOUT_FRAME_SECONDS < gap_offset + gap_duration
+                for gap_offset, gap_duration in hard_edged_gaps
+            )
+        ]
 
     speech_level, noise_level = speech_and_noise_levels(frame_rms)
     if len(samples) / sample_rate >= NOISE_MIN_SECONDS:
@@ -683,6 +837,7 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
     values = np.asarray(samples).astype(np.int32)
     track = pitch_track(samples, sample_rate)
     jump_frames = pitch_jump_frames(track)
+    step_frames = pitch_step_frames(track)
     pitches = [pitch for pitch in track if pitch is not None]
     pitch_median = median(pitches) if pitches else None
     pitch_spread = (
@@ -755,8 +910,29 @@ def analyze_audio(audio: Audio) -> AudioMeasurements:
         pitch_jump_times=[
             frame * PITCH_FRAME_MS / 1000 for frame in jump_frames
         ],
+        pitch_jump_landings_hz=[
+            median(track[frame : frame + PITCH_JUMP_STEADY_FRAMES])
+            for frame in jump_frames
+        ],
+        voiced_pitches_hz=pitches,
+        pitch_step_times=[
+            frame * PITCH_FRAME_MS / 1000 for frame in step_frames
+        ],
+        pitch_step_landings_hz=[
+            median(track[frame : frame + PITCH_STEP_HELD_FRAMES])
+            for frame in step_frames
+        ],
+        pitch_base_hz=(
+            percentile(pitches, PITCH_BASE_PERCENTILE) if pitches else None
+        ),
+        pitch_base_check_hz=(
+            percentile(pitches, PITCH_BASE_CHECK_PERCENTILE)
+            if pitches
+            else None
+        ),
         longest_pause_span=(
             max(pause_spans, key=lambda span: span[1]) if pause_spans else None
         ),
         sound_end_seconds=stop[1],
+        syllables_per_second=syllable_rate(samples, sample_rate),
     )

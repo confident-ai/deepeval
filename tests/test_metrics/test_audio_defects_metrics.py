@@ -8,7 +8,8 @@ from deepeval.metrics import (
     DeadStreamMetric,
     HeldToneMetric,
 )
-from deepeval.test_case import Audio, Turn
+from deepeval.models.base_model import DeepEvalBaseSTT
+from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from tests.test_metrics.helpers import (
     RATE,
     STAMPS_NOTE,
@@ -19,16 +20,18 @@ from tests.test_metrics.helpers import (
     measure,
     speech_like,
     spoken_words,
+    stereo_recording,
     to_audio,
     tone,
     with_defect,
     zeros,
+    recording,
 )
 
 
 def dropout_clip():
-    clip = spoken_words()
-    clip[int(1.1 * RATE) : int(1.2 * RATE)] = zeros(0.1)
+    clip = spoken_words(word=0.5, rhythm=0.5)
+    clip[int(1.35 * RATE) : int(1.55 * RATE)] = zeros(0.2)
     return clip
 
 
@@ -155,4 +158,72 @@ def test_a_dead_stretch_mid_reply_is_a_dead_stream_not_a_cut_off():
 def test_a_dropout_is_described_in_milliseconds():
     metric = measure(AudioDropoutMetric(), with_defect(1, dropout_clip))
     (event,) = metric.score_breakdown["events"]
-    assert event["description"] == "Audio dropped out for 100 ms"
+    assert event["description"] == "Audio dropped out for 180 ms"
+
+
+class StubSTT(DeepEvalBaseSTT):
+    """Returns one scripted transcription per clip."""
+
+    def __init__(self, heard):
+        self.scripted = list(heard)
+        super().__init__(model="stub-stt")
+
+    def load_model(self):
+        return self
+
+    def transcribe(self, audio, **kwargs):
+        return self.scripted.pop(0), None
+
+    async def a_transcribe(self, audio, **kwargs):
+        return self.transcribe(audio, **kwargs)
+
+    def get_model_name(self):
+        return "stub-stt"
+
+
+def _dead_stretch_call(tmp_path):
+    reply = speech_like(1.0) + zeros(0.7) + speech_like(1.0, seed=5)
+    turns = with_defect(1, lambda: reply)
+    path = stereo_recording(
+        tmp_path / "call.wav", agent=[(turns[1].audio.start_time, reply)]
+    )
+    return ConversationalTestCase(turns=turns, audio=recording(path))
+
+
+def _dead_streams_heard(tmp_path, before, across):
+    metric = DeadStreamMetric(stt_model=StubSTT([before, across]))
+    metric.measure(_dead_stretch_call(tmp_path), _show_indicator=False)
+    return metric.score_breakdown["events"]
+
+
+def test_a_pause_after_a_finished_sentence_is_not_a_dead_stream(tmp_path):
+    assert (
+        _dead_streams_heard(
+            tmp_path,
+            "Let me check on that for you.",
+            "Let me check on that for you. Your order shipped today.",
+        )
+        == []
+    )
+
+
+@pytest.mark.parametrize(
+    "before,across",
+    [
+        (
+            "Tell me about a time you",
+            "Tell me about a time you encountered a problem.",
+        ),
+        (
+            "Or would you prefer...",
+            "Or would you prefer... a later time?",
+        ),
+    ],
+)
+def test_audio_dying_mid_sentence_is_a_dead_stream(tmp_path, before, across):
+    [event] = _dead_streams_heard(tmp_path, before, across)
+    assert event["type"] == "dead_stream"
+
+
+def test_a_hole_with_no_words_before_it_stays_a_dead_stream(tmp_path):
+    assert len(_dead_streams_heard(tmp_path, "", "")) == 1

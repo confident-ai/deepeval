@@ -4,6 +4,9 @@ from typing import List, Tuple
 # Differences the LLM judge is told are harmless are normalised away first,
 # so both modes agree on what counts as a misheard word.
 FILLER_WORDS = {"um", "uh", "er", "ah", "hmm", "mm"}
+# One or two words are too few to count errors over: a single slip, or a
+# transcriber guessing at a mumble, reads as half the line wrong.
+WORD_ERROR_MIN_WORDS = 3
 NUMBER_UNITS = {
     word: value
     for value, word in enumerate(
@@ -92,16 +95,47 @@ def _without_repeated_phrases(words: List[str]) -> List[str]:
     return words
 
 
+def _with_spellings_joined(words: List[str]) -> List[str]:
+    """Letters and digits spelled out one by one ("h m a 7 2") are one word."""
+    joined: List[str] = []
+    run: List[str] = []
+
+    def flush():
+        if sum(len(word) == 1 and word.isalpha() for word in run) >= 3:
+            joined.append("".join(run))
+        else:
+            joined.extend(run)
+        run.clear()
+
+    for word in words:
+        if (len(word) == 1 and word.isalpha()) or word.isdigit():
+            run.append(word)
+        else:
+            flush()
+            joined.append(word)
+    flush()
+    return joined
+
+
 def words_for_error_rate(text: str) -> List[str]:
     text = text.lower().replace("’", "'").replace("‘", "'")
     text = re.sub(r"(?<=\d),(?=\d)", "", text)
+    # "U.S." is the word "US".
+    text = re.sub(
+        r"\b(?:[a-z]\.){2,}", lambda match: match.group().replace(".", ""), text
+    )
+    # An address written out reads as spoken: "a@b.com" is "a at b dot com".
+    text = text.replace("@", " at ")
+    text = re.sub(r"(?<=[a-z0-9])\.(?=[a-z])", " dot ", text)
     text = re.sub(r"[^\w']+", " ", text)
     words = [
         word.strip("'")
         for word in text.split()
         if word.strip("'") and word.strip("'") not in FILLER_WORDS
     ]
-    return _without_repeated_phrases(_number_words_to_digits(words))
+    return _without_repeated_phrases(
+        _with_spellings_joined(_number_words_to_digits(words))
+    )
 
 
 def word_errors(spoken: str, transcribed: str) -> Tuple[int, int]:
@@ -109,6 +143,9 @@ def word_errors(spoken: str, transcribed: str) -> Tuple[int, int]:
     words spoken."""
     reference = words_for_error_rate(spoken)
     hypothesis = words_for_error_rate(transcribed)
+    # "home page" and "homepage" are the same words written two ways.
+    if "".join(reference) == "".join(hypothesis):
+        return 0, len(reference)
     previous = list(range(len(hypothesis) + 1))
     for row, spoken_word in enumerate(reference, start=1):
         current = [row]
@@ -122,3 +159,24 @@ def word_errors(spoken: str, transcribed: str) -> Tuple[int, int]:
             )
         previous = current
     return previous[-1], len(reference)
+
+
+def word_errors_within(transcribed: str, nearby: str) -> Tuple[int, int]:
+    """The fewest word errors of the transcript against any stretch of the
+    speech heard nearby, and the number of words in the transcript."""
+    hypothesis = words_for_error_rate(transcribed)
+    reference = words_for_error_rate(nearby)
+    # The transcript may start anywhere in the speech and stop anywhere.
+    previous = [0] * (len(reference) + 1)
+    for row, written_word in enumerate(hypothesis, start=1):
+        current = [row]
+        for column, heard_word in enumerate(reference, start=1):
+            current.append(
+                min(
+                    previous[column] + 1,
+                    current[column - 1] + 1,
+                    previous[column - 1] + (written_word != heard_word),
+                )
+            )
+        previous = current
+    return min(previous), len(hypothesis)

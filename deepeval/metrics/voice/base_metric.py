@@ -237,6 +237,9 @@ class BaseDefectMetric(BaseVoiceMetric):
             return share
         return confirm_defects(self, test_case, share)
 
+    def _event_question(self, event: VoiceEvent) -> Optional[str]:
+        return self.event_question
+
     def _event_clip(
         self,
         test_case: ConversationalTestCase,

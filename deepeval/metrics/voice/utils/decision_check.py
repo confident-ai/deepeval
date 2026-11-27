@@ -43,7 +43,6 @@ def confirm_defects(
     share: DefectShare,
 ) -> DefectShare:
     model = metric.audio_decision_model
-    question = NoulQuestion(instructions=metric.event_question)
     recording = read_call_recording(test_case.audio, test_case.agent_channel)
 
     def check(defect: VoiceEvent) -> Tuple[bool, float]:
@@ -53,6 +52,7 @@ def confirm_defects(
             clip = metric._event_clip(test_case, defect, recording)
             if clip is None:
                 return True, 0.0
+            question = NoulQuestion(instructions=metric._event_question(defect))
             answers, cost = model.decide(
                 clip, {EVENT_QUESTION_KEY: question}, EVENT_CLIP_CONTEXT
             )

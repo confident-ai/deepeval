@@ -13,7 +13,7 @@ TAIL = 0.25
 
 
 def speech_like(
-    seconds, *, base_hz=200.0, seed=0, noise=20, glide_hz=30.0
+    seconds, *, base_hz=200.0, seed=0, noise=20, glide_hz=30.0, rhythm=1.0
 ) -> array:
     """A voice-shaped signal: pitch gliding ±`glide_hz`, harmonics, syllables
     of sound and near-silence, and faint room noise so pauses are never
@@ -23,9 +23,9 @@ def speech_like(
     phase = 0.0
     for index in range(int(seconds * RATE)):
         t = index / RATE
-        hz = base_hz + glide_hz * math.sin(2 * math.pi * t / 1.0)
+        hz = base_hz + glide_hz * math.sin(2 * math.pi * rhythm * t / 1.0)
         phase += 2 * math.pi * hz / RATE
-        envelope = max(0.0, math.sin(math.pi * 4.0 * t)) ** 0.7
+        envelope = max(0.0, math.sin(math.pi * 4.0 * rhythm * t)) ** 0.7
         voice = (
             math.sin(phase)
             + 0.5 * math.sin(2 * phase)
@@ -83,6 +83,22 @@ def cracked_vowel(
     return out
 
 
+def leaping_speech(semitones, *, base_hz=230.0, syllable=0.3) -> array:
+    """Syllables that leap between the voice's pitch and `semitones` above
+    and below it."""
+    out = array("h")
+    for index, step in enumerate((0, 1, 0, -1, 1, 0, -1, 0, 1, -1)):
+        out.extend(
+            speech_like(
+                syllable,
+                base_hz=base_hz * 2 ** (step * semitones / 12),
+                glide_hz=0,
+                seed=index,
+            )
+        )
+    return out
+
+
 def tone(seconds, hz, *, amplitude=6000) -> array:
     out = array("h")
     count = int(seconds * RATE)
@@ -97,12 +113,27 @@ def tone(seconds, hz, *, amplitude=6000) -> array:
     return out
 
 
-def spoken_words(count=8, *, pause=0.1, noise=20) -> array:
+def spoken_words(
+    count=8, *, word=0.25, rhythm=1.0, pause=0.1, noise=20
+) -> array:
     rng = random.Random(count)
     out = array("h")
     for index in range(count):
-        out.extend(speech_like(0.25, seed=index, noise=noise))
+        out.extend(speech_like(word, seed=index, noise=noise, rhythm=rhythm))
         out.extend(int(rng.gauss(0, noise)) for _ in range(int(pause * RATE)))
+    return out
+
+
+def syllables(per_second, seconds, *, pause_after=None, pause=0.0) -> array:
+    """Evenly spaced bursts of sound, one per syllable, with an optional
+    silent stretch after `pause_after` seconds."""
+    beat = 1.0 / per_second
+    out = array("h")
+    for index in range(int(seconds * per_second)):
+        out.extend(tone(beat * 0.6, 220))
+        out.extend(zeros(beat * 0.4))
+        if pause_after is not None and index == int(pause_after * per_second):
+            out.extend(zeros(pause))
     return out
 
 
@@ -172,6 +203,12 @@ def with_gain(samples: array, gain) -> array:
     return array("h", [_saturate(sample * gain) for sample in samples])
 
 
+def with_quiet_tail(samples: array, db, *, seconds=1.0) -> array:
+    """The last `seconds` of the clip moved by `db`."""
+    split = len(samples) - int(seconds * RATE)
+    return samples[:split] + with_gain(samples[split:], 10 ** (db / 20))
+
+
 def faded(samples: array, db) -> array:
     """Level moves by `db` across the clip, evenly in dB: a fade when
     negative, a swell up to the original level when positive."""
@@ -203,21 +240,25 @@ def to_audio(samples: array, start_time=None) -> Audio:
     )
 
 
-def clean_turns(count=6):
+def clean_turns(count=6, *, seconds=3.0, rhythm=1.0):
     turns = []
     for index in range(count):
         role = "user" if index % 2 == 0 else "assistant"
         turns.append(
             Turn(
                 role=role,
-                content=f"Turn {index} spoken by the {role}.",
+                # Agent text is left unfinished so a cut-off reply's text
+                # never reads as said in full.
+                content=f"Turn {index} spoken by the {role}"
+                + ("." if role == "user" else ""),
                 audio=to_audio(
                     speech_like(
-                        3.0,
+                        seconds,
                         base_hz=200.0 if role == "user" else 230.0,
                         seed=index,
+                        rhythm=rhythm,
                     ),
-                    start_time=index * 3.5,
+                    start_time=index * (seconds + 0.5),
                 ),
             )
         )
@@ -258,7 +299,7 @@ def timed_call(gaps, *, greeting_at=None, line_seconds=2.0, reply_seconds=2.0):
         turns.append(
             Turn(
                 role="assistant",
-                content=f"Agent reply {index}.",
+                content=f"Agent reply {index}",
                 audio=to_audio(
                     speech_like(reply_seconds, base_hz=230.0, seed=index),
                     start_time=reply_start,
@@ -365,9 +406,26 @@ def agent_turn(content):
 def timed_turn(role, seconds, start_time, seed=0):
     return Turn(
         role=role,
-        content=f"{role} line.",
+        content=f"{role} line" + ("." if role == "user" else ""),
         audio=to_audio(speech_like(seconds, seed=seed), start_time=start_time),
     )
+
+
+def reprompted_turns(repeat="Hello? Can you hear me?", wait=4.0):
+    """A caller line left in silence for `wait` seconds, said again, and
+    answered: turn 2 is the line and turn 3 the repeat."""
+    again = 7.0 + wait
+    turns = [
+        timed_turn("user", 2.0, 0.0),
+        timed_turn("assistant", 2.0, 2.5, seed=1),
+        timed_turn("user", 2.0, 5.0, seed=2),
+        timed_turn("user", 1.0, again, seed=3),
+        timed_turn("assistant", 2.0, again + 1.5, seed=4),
+        timed_turn("user", 2.0, again + 4.0, seed=5),
+        timed_turn("assistant", 2.0, again + 6.5, seed=6),
+    ]
+    turns[3] = turns[3].model_copy(update={"content": repeat})
+    return turns
 
 
 PLACE_KEYS = (
@@ -399,6 +457,14 @@ def recording(path) -> Audio:
 def recorded_call(tmp_path, *, caller, agent):
     path = stereo_recording(tmp_path / "call.wav", caller=caller, agent=agent)
     return timed_call(CLEAN_GAPS), path
+
+
+def other_voice(seconds, *, seed=0, **kwargs) -> array:
+    """A second speaker: another pitch, rhythm and room noise, so it is not
+    a copy of `speech_like`'s voice."""
+    return speech_like(
+        seconds, base_hz=131.0, rhythm=0.83, seed=seed + 100, **kwargs
+    )
 
 
 def measure_recording(metric, tmp_path, *, caller, agent):
