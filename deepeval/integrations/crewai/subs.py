@@ -13,6 +13,11 @@ try:
     crewai_installed = True
 except ImportError:
     crewai_installed = False
+    # Fallbacks so the classes at the bottom of this module are still built
+    # without CrewAI. Using one then raises is_crewai_installed()'s ImportError
+    # instead of the package failing to import.
+    Crew = Agent = object
+    LLM = None
 
 
 def is_crewai_installed():
@@ -117,19 +122,18 @@ def with_staged_metrics(
     return staged
 
 
-if crewai_installed:
-    DeepEvalCrew = create_deepeval_class(
-        Crew, "DeepEvalCrew", None, ("kickoff", "akickoff")
-    )
-    DeepEvalAgent = create_deepeval_class(
-        Agent,
-        "DeepEvalAgent",
-        "agent",
-        (
-            "execute_task",
-            "aexecute_task",
-            "_execute_and_build_output",
-            "_execute_and_build_output_async",
-        ),
-    )
-    DeepEvalLLM = create_deepeval_llm(LLM)
+DeepEvalCrew = create_deepeval_class(
+    Crew, "DeepEvalCrew", None, ("kickoff", "akickoff")
+)
+DeepEvalAgent = create_deepeval_class(
+    Agent,
+    "DeepEvalAgent",
+    "agent",
+    (
+        "execute_task",
+        "aexecute_task",
+        "_execute_and_build_output",
+        "_execute_and_build_output_async",
+    ),
+)
+DeepEvalLLM = create_deepeval_llm(LLM)
