@@ -15,6 +15,7 @@ from time import perf_counter
 import functools
 import inspect
 import asyncio
+import sys
 import uuid
 from deepeval.test_case import MLLMImage
 from openai import OpenAI
@@ -1255,7 +1256,11 @@ def observe(
             setattr(gen_wrapper, "_is_deepeval_observed", True)
             return gen_wrapper
 
-        if asyncio.iscoroutinefunction(func):
+        # Before 3.12, inspect misses the _is_coroutine marker asgiref sets on
+        # sync_to_async callables; asyncio.iscoroutinefunction warns from 3.14.
+        if inspect.iscoroutinefunction(func) or (
+            sys.version_info < (3, 12) and asyncio.iscoroutinefunction(func)
+        ):
 
             @functools.wraps(func)
             async def async_wrapper(*args, **func_kwargs):
