@@ -768,7 +768,7 @@ class EvaluationDataset:
                         scenario=scenario,
                         turns=parsed_turns,
                         expected_outcome=expected_outcome,
-                        expected_tools=json_obj.get("expected_tools"),
+                        expected_tools=json_obj.get(expected_tools_key_name),
                         **persona_kwargs(
                             json_obj.get(persona_key_name), user_description
                         ),
@@ -906,7 +906,7 @@ class EvaluationDataset:
                         scenario=scenario,
                         turns=parsed_turns,
                         expected_outcome=expected_outcome,
-                        expected_tools=json_obj.get("expected_tools"),
+                        expected_tools=json_obj.get(expected_tools_key_name),
                         **persona_kwargs(
                             json_obj.get(persona_key_name), user_description
                         ),
