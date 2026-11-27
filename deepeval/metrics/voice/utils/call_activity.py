@@ -36,6 +36,7 @@ from deepeval.metrics.voice.utils.defects import (
     AGENT_OVERLAP_ALLOWANCE_SECONDS,
     CALL_RECORDING,
     TURN_TIMESTAMPS,
+    call_has_audio,
     call_timeline,
 )
 from deepeval.metrics.voice.utils.events import on_call
@@ -619,6 +620,110 @@ def call_activity(
     return call_recording_activity(
         test_case, use_speech_detection
     ) or turn_activity(test_case, use_speech_detection)
+
+
+def _reply_spans(activity: CallActivity) -> List[Span]:
+    """The agent's replies on a recording: its sound from when it starts
+    until the caller speaks in one of its silences, so the agent's own pauses
+    stay inside the reply and caller sound over it never splits one."""
+    replies: List[Span] = []
+    for span in activity.agent:
+        if replies and (
+            sound_between(activity.caller, replies[-1].end, span.start)
+            < CALLER_TALKING_MIN_SECONDS
+        ):
+            replies[-1] = Span(replies[-1].start, span.end)
+        else:
+            replies.append(span)
+    return replies
+
+
+def _recording_replies(
+    test_case: ConversationalTestCase, use_speech_detection: bool
+) -> Optional[List[Tuple[float, Audio]]]:
+    activity = call_recording_activity(test_case, use_speech_detection)
+    channels = read_call_recording(test_case.audio, test_case.agent_channel)
+    if activity is None or channels is None:
+        return None
+    _, agent_samples, sample_rate = channels
+    replies = []
+    for span in _reply_spans(activity):
+        clip = agent_samples[
+            int(span.start * sample_rate) : int(span.end * sample_rate)
+        ]
+        if len(clip) == 0:
+            continue
+        start = round(span.start, 2)
+        replies.append(
+            (
+                start,
+                Audio.from_bytes(
+                    audio_utils.pcm16_to_wav_bytes(
+                        clip.tobytes(), sample_rate, num_channels=1
+                    ),
+                    "audio/wav",
+                    sampleRate=sample_rate,
+                    encoding="wav",
+                    duration=len(clip) / sample_rate,
+                    start_time=start,
+                ),
+            )
+        )
+    return replies
+
+
+def recording_replies(
+    test_case: ConversationalTestCase, use_speech_detection: bool
+) -> Optional[List[Tuple[float, Audio]]]:
+    """Each agent reply heard on the stereo call recording, by where it
+    starts on the call, with its audio cut from the agent's channel. None
+    unless the test case has a readable stereo recording."""
+    wav = _recording_bytes(test_case.audio)
+    if wav is None:
+        return None
+    return _recording_cache.read(
+        wav,
+        ("replies", use_speech_detection, test_case.agent_channel),
+        lambda: _recording_replies(test_case, use_speech_detection),
+    )
+
+
+@dataclass(frozen=True)
+class AgentReplies:
+    """The agent replies a per-reply metric judges, keyed by turn when the
+    turns carry their own audio, or by where each reply starts on the call
+    when they were heard on a stereo call recording."""
+
+    audio: Dict[float, Audio]
+    event_key: str
+    timing_source: Optional[str]
+
+    @property
+    def by_turn(self) -> bool:
+        return self.event_key == EVENT_KEYS[TURN_TIMESTAMPS]
+
+    def key(self, reply: float) -> Dict[str, float]:
+        return {self.event_key: reply}
+
+
+def agent_replies(
+    test_case: ConversationalTestCase, use_speech_detection: bool = True
+) -> AgentReplies:
+    if not call_has_audio(test_case):
+        replies = recording_replies(test_case, use_speech_detection)
+        if replies is not None:
+            return AgentReplies(
+                dict(replies), EVENT_KEYS[CALL_RECORDING], CALL_RECORDING
+            )
+    return AgentReplies(
+        {
+            index: turn.audio
+            for index, turn in enumerate(test_case.turns)
+            if turn.role == "assistant" and turn.audio is not None
+        },
+        EVENT_KEYS[TURN_TIMESTAMPS],
+        None,
+    )
 
 
 def _speech_runs_across(

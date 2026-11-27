@@ -12,7 +12,10 @@ from deepeval.metrics.voice.utils.detectors import (
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
 from deepeval.test_case import ConversationalTestCase
-from deepeval.metrics.voice.utils.call_activity import call_end
+from deepeval.metrics.voice.utils.call_activity import (
+    call_end,
+    read_call_recording,
+)
 from deepeval.metrics.voice.utils.events import MOMENT, VoiceEvent, on_call
 
 # Written to the test case's metadata by ConversationSimulator.
@@ -64,7 +67,12 @@ def _unexpected_end_reason(test_case: ConversationalTestCase) -> Optional[str]:
 class UnexpectedCallEndMetric(BaseDefectMetric):
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
         defect_label = "an unexpected end"
-        if not call_has_audio(test_case):
+        recording = (
+            None
+            if call_has_audio(test_case)
+            else read_call_recording(test_case.audio, test_case.agent_channel)
+        )
+        if not call_has_audio(test_case) and recording is None:
             return DefectShare(
                 [],
                 [],
@@ -76,6 +84,9 @@ class UnexpectedCallEndMetric(BaseDefectMetric):
         last_turn = len(test_case.turns) - 1
         end_reason = _unexpected_end_reason(test_case)
         ended_at = call_end(test_case.turns)
+        if ended_at is None and recording is not None:
+            _, agent, sample_rate = recording
+            ended_at = len(agent) / sample_rate
         defects = (
             [
                 VoiceEvent(

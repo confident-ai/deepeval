@@ -5,6 +5,10 @@ from deepeval.metrics.voice.utils.defects import (
     DefectShare,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.metrics.voice.utils.call_activity import (
+    AgentReplies,
+    agent_replies,
+)
 from deepeval.config.voice_eval_mode import VoiceEvalModeName
 from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.test_case import ConversationalTestCase
@@ -49,6 +53,7 @@ class AbruptPitchJumpMetric(BaseDefectMetric):
         self._use_audio_decision_model(audio_decision_model, eval_mode)
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
+        replies = agent_replies(test_case)
         measurements, skipped = agent_reply_measurements(test_case)
         voiced = [
             pitch
@@ -60,7 +65,10 @@ class AbruptPitchJumpMetric(BaseDefectMetric):
         for turn, reply in measurements.items():
             if not reply.voiced_pitch_frames:
                 skipped.append(
-                    {"turn": turn, "error": "Reply has no voiced speech."}
+                    {
+                        **replies.key(turn),
+                        "error": "Reply has no voiced speech.",
+                    }
                 )
                 continue
             eligible_turns.append(turn)
@@ -70,7 +78,7 @@ class AbruptPitchJumpMetric(BaseDefectMetric):
                 # model, each step up into the top of the voice's range is a
                 # moment for it to hear.
                 defects.extend(
-                    self._jump(test_case, turn, at, "Pitch jumped abruptly")
+                    self._jump(replies, turn, at, "Pitch jumped abruptly")
                     for at, landing_hz in zip(
                         reply.pitch_step_times, reply.pitch_step_landings_hz
                     )
@@ -88,7 +96,7 @@ class AbruptPitchJumpMetric(BaseDefectMetric):
                     continue
                 defects.append(
                     self._jump(
-                        test_case,
+                        replies,
                         turn,
                         at,
                         "Pitch jumped abruptly to "
@@ -102,14 +110,16 @@ class AbruptPitchJumpMetric(BaseDefectMetric):
             defects,
             skipped,
             "an abrupt pitch jump",
+            event_key=replies.event_key,
+            timing_source=replies.timing_source,
             no_eligible_reason="No assistant reply had voiced speech to "
             "follow its pitch.",
         )
 
     @staticmethod
     def _jump(
-        test_case: ConversationalTestCase,
-        turn: int,
+        replies: AgentReplies,
+        turn: float,
         at: float,
         description: str,
         **measured,
@@ -117,12 +127,12 @@ class AbruptPitchJumpMetric(BaseDefectMetric):
         # The step sits between two 40 ms frames; mark both.
         return VoiceEvent(
             type="pitch_jump",
-            turn=turn,
+            **replies.key(turn),
             mark=MOMENT,
             description=description,
             **measured,
             **placed(
-                test_case.turns[turn].audio,
+                replies.audio[turn],
                 max(0.0, at - PITCH_FRAME_SECONDS),
                 2 * PITCH_FRAME_SECONDS,
             ),

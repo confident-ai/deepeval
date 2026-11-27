@@ -10,6 +10,7 @@ from deepeval.metrics.voice.utils.defects import (
     DefectShare,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.metrics.voice.utils.call_activity import agent_replies
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
@@ -41,16 +42,17 @@ class VolumeVarianceMetric(BaseDefectMetric):
         self.max_drift_db = max_drift_db
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
+        replies = agent_replies(test_case)
         measurements, skipped = agent_reply_measurements(test_case)
-        measurements = audible_replies(measurements, skipped)
+        measurements = audible_replies(measurements, skipped, replies.event_key)
         eligible_turns = []
         defects = []
         for turn in measurements:
-            drift = volume_drift_db(test_case.turns[turn].audio)
+            drift = volume_drift_db(replies.audio[turn])
             if drift is None:
                 skipped.append(
                     {
-                        "turn": turn,
+                        **replies.key(turn),
                         "error": f"Reply has under {VOLUME_MIN_WINDOWS} "
                         "seconds of speech to follow.",
                     }
@@ -61,7 +63,7 @@ class VolumeVarianceMetric(BaseDefectMetric):
                 defects.append(
                     VoiceEvent(
                         type="volume_drift",
-                        turn=turn,
+                        **replies.key(turn),
                         drift_db=round(drift, 1),
                         description="Volume "
                         f"{'faded' if drift < 0 else 'swelled'} "
@@ -73,6 +75,8 @@ class VolumeVarianceMetric(BaseDefectMetric):
             defects,
             skipped,
             f"a volume drift over {self.max_drift_db} dB",
+            event_key=replies.event_key,
+            timing_source=replies.timing_source,
             no_eligible_reason="No assistant reply was long enough to "
             "follow its volume.",
         )

@@ -8,6 +8,7 @@ from deepeval.metrics.voice.utils.defects import (
     spoken_replies,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.metrics.voice.utils.call_activity import agent_replies
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
@@ -37,15 +38,16 @@ class LoudnessConsistencyMetric(BaseDefectMetric):
         self.max_shift_db = max_shift_db
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
+        replies = agent_replies(test_case)
         measurements, skipped = agent_reply_measurements(test_case)
-        measurements = spoken_replies(measurements, skipped)
+        measurements = spoken_replies(measurements, skipped, replies.event_key)
         levels = {
             turn: reply.speech_dbfs for turn, reply in measurements.items()
         }
         defects = [
             VoiceEvent(
                 type="loudness_shift",
-                turn=turn,
+                **replies.key(turn),
                 speech_dbfs=round(levels[turn], 1),
                 shift_db=round(shift, 1),
                 description=f"Reply was {abs(shift):.0f} dB "
@@ -60,6 +62,8 @@ class LoudnessConsistencyMetric(BaseDefectMetric):
             skipped,
             f"a loudness over {self.max_shift_db} dB off the agent's "
             "typical loudness",
+            event_key=replies.event_key,
+            timing_source=replies.timing_source,
             no_eligible_reason=f"At least {MIN_COMPARED_REPLIES} decodable "
             "assistant replies are needed to compare their loudness.",
             min_eligible_turns=MIN_COMPARED_REPLIES,

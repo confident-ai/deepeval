@@ -12,6 +12,7 @@ from deepeval.metrics.voice.utils.defects import (
     shifts_from_typical,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.metrics.voice.utils.call_activity import agent_replies
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
@@ -42,6 +43,7 @@ class PitchConsistencyMetric(BaseDefectMetric):
         self.max_shift_semitones = max_shift_semitones
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
+        replies = agent_replies(test_case)
         measurements, skipped = agent_reply_measurements(test_case)
         levels = {}
         check_levels = {}
@@ -49,7 +51,7 @@ class PitchConsistencyMetric(BaseDefectMetric):
             if reply.voiced_pitch_frames < PITCH_BASE_MIN_FRAMES:
                 skipped.append(
                     {
-                        "turn": turn,
+                        **replies.key(turn),
                         "error": "Reply has under "
                         f"{PITCH_BASE_MIN_VOICED_SECONDS:g}s of voiced speech to "
                         "follow its pitch.",
@@ -72,7 +74,7 @@ class PitchConsistencyMetric(BaseDefectMetric):
         defects = [
             VoiceEvent(
                 type="pitch_shift",
-                turn=turn,
+                **replies.key(turn),
                 pitch_base_hz=round(measurements[turn].pitch_base_hz, 1),
                 shift_semitones=round(shift, 1),
                 description=f"Voice sat {abs(shift):.0f} semitones "
@@ -88,6 +90,8 @@ class PitchConsistencyMetric(BaseDefectMetric):
             skipped,
             f"a pitch over {self.max_shift_semitones} semitones off the "
             "agent's typical pitch",
+            event_key=replies.event_key,
+            timing_source=replies.timing_source,
             no_eligible_reason=f"At least {MIN_COMPARED_REPLIES} assistant "
             "replies with voiced speech are needed to compare their pitch.",
             min_eligible_turns=MIN_COMPARED_REPLIES,

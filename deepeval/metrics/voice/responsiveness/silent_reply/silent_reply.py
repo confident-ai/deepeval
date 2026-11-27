@@ -11,9 +11,9 @@ from deepeval.metrics.voice.utils.call_activity import (
     sound_between,
 )
 from deepeval.metrics.voice.utils.defects import (
-    NO_CALL_AUDIO_REASON,
     agent_reply_measurements,
     call_has_audio,
+    no_turn_audio_reason,
     DefectShare,
     is_inaudible,
 )
@@ -149,7 +149,7 @@ class SilentReplyMetric(BaseDefectMetric):
                 [],
                 [],
                 defect_label,
-                no_eligible_reason=NO_CALL_AUDIO_REASON,
+                no_eligible_reason=no_turn_audio_reason(test_case),
             )
         measurements, skipped = agent_reply_measurements(test_case)
         undecodable = {entry["turn"] for entry in skipped}

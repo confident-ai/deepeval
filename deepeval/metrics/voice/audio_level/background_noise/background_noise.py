@@ -7,6 +7,7 @@ from deepeval.metrics.voice.utils.defects import (
     audible_replies,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.metrics.voice.utils.call_activity import agent_replies
 from deepeval.config.voice_eval_mode import VoiceEvalModeName
 from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.test_case import ConversationalTestCase
@@ -44,15 +45,16 @@ class BackgroundNoiseMetric(BaseDefectMetric):
         self.min_snr_db = min_snr_db
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
+        replies = agent_replies(test_case)
         measurements, skipped = agent_reply_measurements(test_case)
-        measurements = audible_replies(measurements, skipped)
+        measurements = audible_replies(measurements, skipped, replies.event_key)
         eligible_turns = []
         defects = []
         for turn, reply in measurements.items():
             if reply.duration < NOISE_MIN_SECONDS:
                 skipped.append(
                     {
-                        "turn": turn,
+                        **replies.key(turn),
                         "error": f"Reply is under {NOISE_MIN_SECONDS:g} "
                         "seconds, too short to measure its noise.",
                     }
@@ -63,7 +65,7 @@ class BackgroundNoiseMetric(BaseDefectMetric):
                 defects.append(
                     VoiceEvent(
                         type="background_noise",
-                        turn=turn,
+                        **replies.key(turn),
                         estimated_snr_db=round(reply.estimated_snr_db, 1),
                         description="Background noise was high (SNR "
                         f"{reply.estimated_snr_db:.0f} dB)",
@@ -74,6 +76,8 @@ class BackgroundNoiseMetric(BaseDefectMetric):
             defects,
             skipped,
             f"background noise under {self.min_snr_db} dB signal-to-noise",
+            event_key=replies.event_key,
+            timing_source=replies.timing_source,
             no_eligible_reason="No assistant reply was long enough to "
             "measure its background noise.",
         )

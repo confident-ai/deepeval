@@ -3,7 +3,10 @@ single-defect metrics."""
 
 from typing import Dict, List, Optional
 
-from deepeval.metrics.voice.utils.call_activity import caller_lines
+from deepeval.metrics.voice.utils.call_activity import (
+    caller_lines,
+    recording_replies,
+)
 from deepeval.metrics.voice.utils.defects import agent_reply_measurements
 from deepeval.metrics.voice.utils.events import VoiceEvent
 from deepeval.test_case import ConversationalTestCase
@@ -35,6 +38,25 @@ def agent_turn_at(
     first_start, first_turn = starts[0]
     if first_start - seconds <= TURN_START_TOLERANCE_SECONDS:
         return first_turn
+    return None
+
+
+def recording_reply_at(
+    test_case: ConversationalTestCase,
+    seconds: float,
+    use_speech_detection: bool,
+) -> Optional[float]:
+    """The agent reply heard on the call recording that holds a moment, by
+    where it starts: the latest one that started by then."""
+    starts = [
+        start
+        for start, _ in recording_replies(test_case, use_speech_detection) or []
+    ]
+    started = [start for start in starts if start <= seconds]
+    if started:
+        return started[-1]
+    if starts and starts[0] - seconds <= TURN_START_TOLERANCE_SECONDS:
+        return starts[0]
     return None
 
 
@@ -76,7 +98,9 @@ def agent_audio_critical_events(
     _, skipped = agent_reply_measurements(test_case)
     return [
         VoiceEvent(
-            type="audio_undecodable", turn=entry["turn"], reason=entry["error"]
+            type="audio_undecodable",
+            reason=entry["error"],
+            **{key: value for key, value in entry.items() if key != "error"},
         )
         for entry in skipped
     ]

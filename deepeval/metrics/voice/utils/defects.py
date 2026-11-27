@@ -43,6 +43,14 @@ MIN_COMPARED_REPLIES = 3
 # of the caller's clip.
 AGENT_OVERLAP_ALLOWANCE_SECONDS = 0.5
 NO_CALL_AUDIO_REASON = "The call has no audio to evaluate."
+TURN_AUDIO_NEEDED_REASON = (
+    "This metric matches each transcript line to the audio of its own turn, "
+    "so it needs audio on each turn; a call recording alone is not enough."
+)
+STEREO_RECORDING_NEEDED_REASON = (
+    "The call recording is not a stereo WAV with the caller and the agent on "
+    "separate channels, and no turn has audio of its own."
+)
 INAUDIBLE_ERROR = "Reply has no audible sound to measure."
 # Where the timing metrics read who spoke when.
 CALL_RECORDING = "call_recording"
@@ -81,22 +89,24 @@ def _analyzed_once(
 
 
 def agent_reply_measurements(
-    test_case: ConversationalTestCase,
-) -> Tuple[Dict[int, AudioMeasurements], List[Dict]]:
-    def analyze() -> Tuple[Dict[int, AudioMeasurements], List[Dict]]:
-        measurements: Dict[int, AudioMeasurements] = {}
+    test_case: ConversationalTestCase, use_speech_detection: bool = True
+) -> Tuple[Dict[float, AudioMeasurements], List[Dict]]:
+    # call_activity imports this module, so a top-level import is circular.
+    from deepeval.metrics.voice.utils.call_activity import agent_replies
+
+    def analyze() -> Tuple[Dict[float, AudioMeasurements], List[Dict]]:
+        replies = agent_replies(test_case, use_speech_detection)
+        measurements: Dict[float, AudioMeasurements] = {}
         skipped: List[Dict] = []
-        for index, turn in enumerate(test_case.turns):
-            if turn.role != "assistant" or turn.audio is None:
-                continue
+        for reply, audio in replies.audio.items():
             try:
-                measurements[index] = analyze_audio(turn.audio)
+                measurements[reply] = analyze_audio(audio)
             except (TypeError, ValueError) as error:
-                skipped.append({"turn": index, "error": str(error)})
+                skipped.append({**replies.key(reply), "error": str(error)})
         return measurements, skipped
 
     measurements, skipped = _analyzed_once(
-        "agent_reply_measurements", test_case, analyze
+        f"agent_reply_measurements:{use_speech_detection}", test_case, analyze
     )
     return dict(measurements), [dict(entry) for entry in skipped]
 
@@ -112,20 +122,24 @@ def is_inaudible(reply: AudioMeasurements) -> bool:
 
 
 def audible_replies(
-    measurements: Dict[int, AudioMeasurements], skipped: List[Dict]
-) -> Dict[int, AudioMeasurements]:
+    measurements: Dict[float, AudioMeasurements],
+    skipped: List[Dict],
+    event_key: str = "turn",
+) -> Dict[float, AudioMeasurements]:
     replies = {}
     for turn, reply in measurements.items():
         if not is_inaudible(reply):
             replies[turn] = reply
         else:
-            skipped.append({"turn": turn, "error": INAUDIBLE_ERROR})
+            skipped.append({event_key: turn, "error": INAUDIBLE_ERROR})
     return replies
 
 
 def spoken_replies(
-    measurements: Dict[int, AudioMeasurements], skipped: List[Dict]
-) -> Dict[int, AudioMeasurements]:
+    measurements: Dict[float, AudioMeasurements],
+    skipped: List[Dict],
+    event_key: str = "turn",
+) -> Dict[float, AudioMeasurements]:
     """Replies with enough speech to judge its level. A stamped stretch the
     agent barely speaks in has a level, but not one worth comparing."""
     replies = {}
@@ -133,38 +147,50 @@ def spoken_replies(
         if reply.speech_span_seconds >= SPOKEN_REPLY_MIN_SECONDS:
             replies[turn] = reply
         else:
-            skipped.append({"turn": turn, "error": UNSPOKEN_ERROR})
+            skipped.append({event_key: turn, "error": UNSPOKEN_ERROR})
     return replies
 
 
 def agent_glitch_events(
-    test_case: ConversationalTestCase,
-) -> Tuple[List[int], List[VoiceEvent], List[Dict]]:
-    # audio_glitch imports this package, so a top-level import is circular.
+    test_case: ConversationalTestCase, use_speech_detection: bool = True
+) -> Tuple[List[float], List[VoiceEvent], List[Dict]]:
+    # audio_glitch and call_activity import this package, so top-level
+    # imports are circular.
     from deepeval.metrics.voice.audio_defects.audio_glitch.utils import (
         detect_audio_glitches,
+        detect_recording_reply_glitches,
     )
+    from deepeval.metrics.voice.utils.call_activity import agent_replies
 
-    report = _analyzed_once(
-        "detect_audio_glitches",
-        test_case,
-        lambda: detect_audio_glitches(test_case),
-    )
+    replies = agent_replies(test_case, use_speech_detection)
+    if replies.timing_source == CALL_RECORDING:
+        report = _analyzed_once(
+            f"detect_recording_reply_glitches:{use_speech_detection}",
+            test_case,
+            lambda: detect_recording_reply_glitches(replies),
+        )
+    else:
+        report = _analyzed_once(
+            "detect_audio_glitches",
+            test_case,
+            lambda: detect_audio_glitches(test_case),
+        )
+    key = replies.event_key
     agent_turns = [
-        index
-        for index in report.turns_with_audio
-        if test_case.turns[index].role == "assistant"
+        reply for reply in report.turns_with_audio if reply in replies.audio
     ]
     skipped = [
-        {"turn": event.turn, "error": event.reason}
+        {key: event.get(key), "error": event.reason}
         for event in report.events
-        if event.type == "audio_undecodable" and event.turn in agent_turns
+        if event.type == "audio_undecodable" and event.get(key) in agent_turns
     ]
-    undecodable = {entry["turn"] for entry in skipped}
+    undecodable = {entry[key] for entry in skipped}
     eligible_turns = [
-        index for index in agent_turns if index not in undecodable
+        reply for reply in agent_turns if reply not in undecodable
     ]
-    events = [event for event in report.events if event.turn in eligible_turns]
+    events = [
+        event for event in report.events if event.get(key) in eligible_turns
+    ]
     return eligible_turns, events, skipped
 
 
@@ -182,6 +208,12 @@ def untimed_call_reason(test_case: ConversationalTestCase) -> Optional[str]:
 
 def call_has_audio(test_case: ConversationalTestCase) -> bool:
     return any(turn.audio is not None for turn in test_case.turns)
+
+
+def no_turn_audio_reason(test_case: ConversationalTestCase) -> str:
+    if test_case.audio is None:
+        return NO_CALL_AUDIO_REASON
+    return TURN_AUDIO_NEEDED_REASON
 
 
 def call_timeline(

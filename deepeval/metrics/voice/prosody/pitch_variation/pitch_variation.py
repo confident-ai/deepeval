@@ -9,6 +9,7 @@ from deepeval.metrics.voice.utils.defects import (
     DefectShare,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.metrics.voice.utils.call_activity import agent_replies
 from deepeval.config.voice_eval_mode import VoiceEvalModeName
 from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.test_case import ConversationalTestCase
@@ -64,6 +65,7 @@ class PitchVariationMetric(BaseDefectMetric):
         self.max_spread_semitones = max_spread_semitones
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
+        replies = agent_replies(test_case)
         measurements, skipped = agent_reply_measurements(test_case)
         eligible_turns = []
         defects = []
@@ -71,7 +73,7 @@ class PitchVariationMetric(BaseDefectMetric):
             if reply.voiced_pitch_frames < PITCH_MIN_FRAMES:
                 skipped.append(
                     {
-                        "turn": turn,
+                        **replies.key(turn),
                         "error": "Reply has under "
                         f"{PITCH_MIN_VOICED_SECONDS:g}s of voiced speech to "
                         "follow its pitch.",
@@ -94,7 +96,7 @@ class PitchVariationMetric(BaseDefectMetric):
             defects.append(
                 VoiceEvent(
                     type=event_type,
-                    turn=turn,
+                    **replies.key(turn),
                     pitch_spread_semitones=round(
                         reply.pitch_spread_semitones, 1
                     ),
@@ -115,6 +117,8 @@ class PitchVariationMetric(BaseDefectMetric):
                 else f"pitch varying outside {self.min_spread_semitones} to "
                 f"{self.max_spread_semitones} semitones"
             ),
+            event_key=replies.event_key,
+            timing_source=replies.timing_source,
             no_eligible_reason="No assistant reply had enough voiced speech "
             "to follow its pitch.",
         )
