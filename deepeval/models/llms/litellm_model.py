@@ -356,11 +356,14 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
         from litellm import get_llm_provider
         from litellm.types.router import GenericLiteLLMParams
 
-        provider = get_llm_provider(
+        resolved = get_llm_provider(
             self.name,
             api_base=self.base_url,
             litellm_params=GenericLiteLLMParams(**self.kwargs),
         )
+        # get_llm_provider returns (model, custom_llm_provider, api_key, api_base);
+        # extract only the provider slug so resolved API keys are never exposed.
+        provider = resolved[1] if isinstance(resolved, tuple) else resolved
         return f"{self.name} ({provider})"
 
     def load_model(self, async_mode: bool = False):

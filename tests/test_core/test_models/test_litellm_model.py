@@ -233,3 +233,37 @@ def test_litellm_temperature_explicit_included(settings):
     assert model.temperature == 0.7
     params = model._completion_params([{"type": "text", "text": "hello"}])
     assert params["temperature"] == 0.7
+
+
+def test_litellm_model_name_excludes_api_key_from_provider_tuple(
+    monkeypatch, settings
+):
+    secret = "sk-fake-deepseek-secret-key"
+
+    def fake_get_llm_provider(model, api_base=None, litellm_params=None):
+        return (
+            "deepseek-chat",
+            "deepseek",
+            secret,
+            "https://api.deepseek.com/beta",
+        )
+
+    monkeypatch.setitem(
+        sys.modules,
+        "litellm",
+        types.SimpleNamespace(get_llm_provider=fake_get_llm_provider),
+    )
+    monkeypatch.setitem(
+        sys.modules,
+        "litellm.types.router",
+        types.SimpleNamespace(GenericLiteLLMParams=dict),
+    )
+
+    model = LiteLLMModel(
+        model="deepseek/deepseek-chat",
+        api_key="ctor-test-key",
+    )
+    name = model.get_model_name()
+
+    assert name == "deepseek/deepseek-chat (deepseek)"
+    assert secret not in name
