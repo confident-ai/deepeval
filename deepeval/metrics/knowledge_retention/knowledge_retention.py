@@ -1,36 +1,35 @@
-from typing import Optional, Union, List, Type
+from typing import List, Optional, Type, Union
 
-from deepeval.test_case import ConversationalTestCase, Turn, MultiTurnParams
-from deepeval.metrics import BaseConversationalMetric
-from deepeval.metrics.base_metric import Verdict, YES_NO
-from deepeval.metrics.utils import (
-    prepare_measure,
-    generate_qag_verdict,
-    a_generate_qag_verdict,
-    score_qag_verdicts,
-    construct_verbose_logs,
-    initialize_model,
-    initialize_system_one_model,
-    convert_turn_to_dict,
-    a_generate_with_schema_and_extract,
-    generate_with_schema_and_extract,
-    SystemOneBinarySpec,
-    SystemOneEvalSpec,
-    parse_questions,
-    run_system_one_eval,
-    a_run_system_one_eval,
-)
 from deepeval.config.eval_mode import EvalModeName, resolve_eval_mode
-from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
+from deepeval.metrics import BaseConversationalMetric
+from deepeval.metrics.base_metric import YES_NO, Verdict
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.metrics.knowledge_retention.schema import (
     Knowledge,
-    KnowledgeRetentionVerdict,
     KnowledgeRetentionScoreReason,
+    KnowledgeRetentionVerdict,
 )
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.metrics.utils import (
+    SystemOneBinarySpec,
+    SystemOneEvalSpec,
+    a_generate_qag_verdict,
+    a_generate_with_schema_and_extract,
+    a_run_system_one_eval,
+    construct_verbose_logs,
+    convert_turn_to_dict,
+    generate_qag_verdict,
+    generate_with_schema_and_extract,
+    initialize_model,
+    initialize_system_one_model,
+    parse_questions,
+    prepare_measure,
+    run_system_one_eval,
+    score_qag_verdicts,
+)
+from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSystemOneModel
 from deepeval.templates import make_template_class
-
+from deepeval.test_case import ConversationalTestCase, MultiTurnParams, Turn
+from deepeval.utils import get_or_create_event_loop, prettify_list
 
 KnowledgeRetentionTemplate = make_template_class("KnowledgeRetentionMetric")
 
@@ -99,7 +98,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
                 self.knowledges: List[Union[Knowledge, None]] = (
                     self._generate_knowledges(test_case.turns)
                 )
-                self.verdicts: List[KnowledgeRetentionVerdict] = (
+                self.verdicts: List[Optional[KnowledgeRetentionVerdict]] = (
                     self._generate_verdicts(
                         test_case.turns, test_case.multimodal
                     )
@@ -137,7 +136,7 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             self.knowledges: List[Union[Knowledge, None]] = (
                 await self._a_generate_knowledges(test_case.turns)
             )
-            self.verdicts: List[KnowledgeRetentionVerdict] = (
+            self.verdicts: List[Optional[KnowledgeRetentionVerdict]] = (
                 await self._a_generate_verdicts(
                     test_case.turns, test_case.multimodal
                 )
@@ -155,13 +154,13 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             )
             return self.score
 
-    async def _a_generate_reason(self) -> str:
+    async def _a_generate_reason(self) -> Optional[str]:
         if self.include_reason is False:
             return None
 
         attritions = []
         for verdict in self.verdicts:
-            if verdict.verdict == Verdict.YES:
+            if verdict is not None and verdict.verdict == Verdict.YES:
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -177,13 +176,13 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
             extract_json=lambda data: data["reason"],
         )
 
-    def _generate_reason(self) -> str:
+    def _generate_reason(self) -> Optional[str]:
         if self.include_reason is False:
             return None
 
         attritions = []
         for verdict in self.verdicts:
-            if verdict.verdict == Verdict.YES:
+            if verdict is not None and verdict.verdict == Verdict.YES:
                 attritions.append(verdict.reason)
 
         prompt: dict = self._get_prompt(
@@ -201,8 +200,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
     async def _a_generate_verdicts(
         self, turns: List[Turn], multimodal: bool
-    ) -> List[KnowledgeRetentionVerdict]:
-        verdicts: List[KnowledgeRetentionVerdict] = []
+    ) -> List[Optional[KnowledgeRetentionVerdict]]:
+        verdicts: List[Optional[KnowledgeRetentionVerdict]] = []
         for i in range(len(turns)):
             if turns[i].role != "assistant":
                 continue
@@ -234,8 +233,8 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
     def _generate_verdicts(
         self, turns: List[Turn], multimodal: bool
-    ) -> List[KnowledgeRetentionVerdict]:
-        verdicts: List[KnowledgeRetentionVerdict] = []
+    ) -> List[Optional[KnowledgeRetentionVerdict]]:
+        verdicts: List[Optional[KnowledgeRetentionVerdict]] = []
         for i in range(len(turns)):
             if turns[i].role != "assistant":
                 continue
@@ -355,6 +354,9 @@ class KnowledgeRetentionMetric(BaseConversationalMetric):
 
     def _calculate_score(self) -> float:
         # "yes" means the assistant forgot something, so "no" is the pass.
+        if self.verdicts and all(verdict is None for verdict in self.verdicts):
+            # An invalid judge response is not evidence of retention.
+            return 0.0
         return score_qag_verdicts(self, self.verdicts, passing=(Verdict.NO,))
 
     @property
