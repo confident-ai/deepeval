@@ -31,10 +31,11 @@ def model_callback(prompt: Prompt, golden) -> str:
 
 optimizer = PromptOptimizer(
     algorithm=SIMBA(),
-    model_callback=model_callback
+    model_callback=model_callback,
+    metrics=[AnswerRelevancyMetric()],
 )
 
-optimized_prompt = optimizer.optimize(prompt=prompt, goldens=goldens, metrics=[AnswerRelevancyMetric()])
+optimized_prompt = optimizer.optimize(prompt=prompt, goldens=goldens)
 ```
 
 Done ✅. You just used `SIMBA` to run a prompt optimization.
