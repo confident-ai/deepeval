@@ -54,7 +54,7 @@ evaluate(test_cases=test_cases, metrics=[metric])
 
 There is **ONE** optional parameter specific to the `LoudnessConsistencyMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `max_shift_db`: an integer for how far, in dB, a reply's loudness may sit from the agent's typical loudness. Must be greater than `0`. Defaulted to `5`.
+- [Optional] `max_shift_db`: an integer for how far, in dB, a reply's loudness may sit from the agent's typical loudness. Must be greater than `0`. Defaulted to `7`.
 
 ### As a standalone
 
@@ -100,7 +100,7 @@ Each reply that was clearly louder or quieter than usual shows up in `score_brea
 | `speech_dbfs` | The reply's speech level, in dBFS |
 | `shift_db` | How far that sits from the agent's typical level. Negative when quieter |
 
-Each event covers the whole reply, so `offset_seconds` is 0 and `duration_seconds` is the clip's length. Replies that are silent or can't be decoded are listed under `skipped`.
+Each event covers the whole reply, so `offset_seconds` is 0 and `duration_seconds` is the clip's length. Replies with under 1 second of speech, or that can't be decoded, are listed under `skipped`.
 
 Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
 
@@ -127,7 +127,10 @@ The `LoudnessConsistencyMetric` score is calculated according to the following e
   ]}
 />
 
-Every reply is scored, however long, except one with no audible sound at all, which [Silent Reply](/docs/metrics-silent-reply) reports instead.
+A reply is skipped when it:
+
+- has under 1 second from its first to its last speech, since a level read off a word or two isn't worth comparing, or
+- has no audible sound at all, which [Silent Reply](/docs/metrics-silent-reply) reports instead.
 
 At least **3** replies are needed to tell which one is off. With fewer, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
@@ -155,10 +158,10 @@ Each reply's speech level is the same one [Loudness](/docs/metrics-loudness) use
 | Check | Rule |
 | --- | --- |
 | Shift | The reply's speech level minus the typical level |
-| Off | The shift is more than `max_shift_db` (5 dB) either way |
+| Off | The shift is more than `max_shift_db` (7 dB) either way |
 
 :::note
-A 3 dB change is only just noticeable, and 5 dB is clearly noticeable.
+A 3 dB change is only just noticeable, and 5 dB is clearly noticeable. Past 7 dB, a reply sounds wrong next to the others.
 :::
 
 ### Example call

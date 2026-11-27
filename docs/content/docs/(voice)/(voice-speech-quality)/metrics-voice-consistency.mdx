@@ -78,13 +78,13 @@ Every reply that stood out shows up in `score_breakdown`, tagged with the part t
             "type": "pitch_shift",
             "turn": 5,
             "timing_source": "turn_timestamps",
-            "description": "Reply was 5 semitones higher than usual",
-            "pitch_median_hz": 308.7,
+            "description": "Voice sat 5 semitones higher than in the agent's other replies",
+            "pitch_base_hz": 272.1,
             "shift_semitones": 5.2,
             "metric": "Pitch Consistency",
             "offset_seconds": 0.0,
-            "duration_seconds": 3.0,
-            "start_time": 17.5,
+            "duration_seconds": 6.0,
+            "start_time": 18.0,
             "mark": "whole_reply",
         },
         {
@@ -96,8 +96,8 @@ Every reply that stood out shows up in `score_breakdown`, tagged with the part t
             "shift_db": 7.9,
             "metric": "Loudness Consistency",
             "offset_seconds": 0.0,
-            "duration_seconds": 3.0,
-            "start_time": 10.5,
+            "duration_seconds": 6.0,
+            "start_time": 10.0,
             "mark": "whole_reply",
         },
     ],
@@ -112,7 +112,7 @@ Every reply that stood out shows up in `score_breakdown`, tagged with the part t
 | Field | What it means |
 | --- | --- |
 | `metric` | The part that raised the event |
-| `pitch_median_hz` | Pitch shifts only. The reply's typical pitch, in Hz |
+| `pitch_base_hz` | Pitch shifts only. The reply's base pitch, the low end its voice keeps returning to, in Hz |
 | `shift_semitones` | Pitch shifts only. How far that is from the agent's typical reply. Positive is higher |
 | `speech_dbfs` | Loudness shifts only. How loud the reply's speech was |
 | `shift_db` | Loudness shifts only. How far that is from the agent's typical reply. Positive is louder |
@@ -137,8 +137,8 @@ Each agent turn with audio is one reply. Each part works out the agent's typical
 
 | Part | Flags a reply that is | Judges a reply with |
 | --- | --- | --- |
-| [Pitch Consistency](/docs/metrics-pitch-consistency) | over 4 semitones higher or lower than typical | 1 second of voiced speech or more |
-| [Loudness Consistency](/docs/metrics-loudness-consistency) | over 5 dB louder or quieter than typical | a clip that isn't silent |
+| [Pitch Consistency](/docs/metrics-pitch-consistency) | over 3 semitones higher or lower than typical, in its base pitch | 3 seconds of voiced speech or more |
+| [Loudness Consistency](/docs/metrics-loudness-consistency) | over 7 dB louder or quieter than typical | 1 second of speech or more |
 
 A part needs at least 3 replies it can measure to tell which one is off. With fewer, it's left out.
 
@@ -158,19 +158,19 @@ A flagged reply usually means something changed mid-call: a fallback voice after
 A call with four agent replies, where one reply is much louder and another much higher in pitch. Each row is one reply, how it compares with the agent's typical reply and whether it was flagged.
 
 <VoiceDiagram
-  duration={28}
+  duration={33}
   lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 3.5, end: 6.5, label: "turn 1" }, { start: 10.5, end: 13.5, label: "turn 3" }, { start: 17.5, end: 20.5, label: "turn 5" }, { start: 24.5, end: 27.5, label: "turn 7" }], sounds: [{ start: 3.6, end: 6.3, level: 0.45 }, { start: 10.6, end: 13.3, level: 1 }, { start: 17.6, end: 20.3, level: 0.45 }, { start: 24.6, end: 27.3, level: 0.45 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 2.0, end: 8.0, label: "turn 1" }, { start: 10.0, end: 16.0, label: "turn 3" }, { start: 18.0, end: 24.0, label: "turn 5" }, { start: 26.0, end: 32.0, label: "turn 7" }], sounds: [{ start: 2.1, end: 7.8, level: 0.45 }, { start: 10.1, end: 15.8, level: 1 }, { start: 18.1, end: 23.8, level: 0.45 }, { start: 26.1, end: 31.8, level: 0.45 }] },
   ]}
   marks={[
     { at: 5.0, lane: 0, tone: "ok", label: "clean" },
-    { at: 12.0, lane: 0, tone: "bad", label: "louder" },
-    { at: 19.0, lane: 0, tone: "bad", label: "higher pitch" },
-    { at: 26.0, lane: 0, tone: "ok", label: "clean" },
+    { at: 13.0, lane: 0, tone: "bad", label: "louder" },
+    { at: 21.0, lane: 0, tone: "bad", label: "higher pitch" },
+    { at: 29.0, lane: 0, tone: "ok", label: "clean" },
   ]}
   highlights={[
-    { start: 10.6, end: 13.3, lane: 0 },
-    { start: 17.6, end: 20.3, lane: 0 },
+    { start: 10.1, end: 15.8, lane: 0 },
+    { start: 18.1, end: 23.8, lane: 0 },
   ]}
 />
 

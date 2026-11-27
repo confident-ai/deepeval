@@ -14,7 +14,7 @@ beta: true
   referenceless={true}
 />
 
-The pitch variation metric checks whether your voice agent's pitch **moves naturally within a reply**: not a flat, robotic reading with no rise or fall, and not a voice swinging wildly up and down. It returns the share of agent replies whose pitch varies within range, between 0 and 1.
+The pitch variation metric checks whether your voice agent's pitch **moves naturally within a reply**, rather than a flat, robotic reading with no rise or fall. If you set an upper limit, it also flags a voice swinging wildly up and down. It returns the share of agent replies whose pitch varies within range, between 0 and 1.
 
 <AudioSample name="pitch-variation" />
 
@@ -48,16 +48,16 @@ simulator = ConversationSimulator(
 )
 test_cases = simulator.simulate([golden])
 
-metric = PitchVariationMetric(
-    threshold=0.8, min_spread_semitones=1, max_spread_semitones=6
-)
+metric = PitchVariationMetric(threshold=0.8, min_spread_semitones=1)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **TWO** optional parameters specific to the `PitchVariationMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+There are **FOUR** optional parameters specific to the `PitchVariationMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
 - [Optional] `min_spread_semitones`: an integer for the least pitch spread, in semitones, a reply may have before it counts as monotone. Must be 0 or more. Defaulted to `1`.
-- [Optional] `max_spread_semitones`: an integer for the most pitch spread, in semitones, a reply may have before it counts as erratic. Must be greater than `min_spread_semitones`. Defaulted to `6`.
+- [Optional] `max_spread_semitones`: an integer for the most pitch spread, in semitones, a reply may have before it counts as erratic. Must be greater than `min_spread_semitones`. Defaulted to `None`, which turns the erratic check off.
+- [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each flagged reply is [double-checked by an audio decision model](/docs/metrics-voice-introduction#second-check-with-an-audio-decision-model) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
+- [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
 
 A value outside these limits raises a `ValueError`.
 
@@ -76,12 +76,12 @@ See [Events](#events) for what `score_breakdown` contains.
 
 ## Events
 
-Each reply with too little or too much pitch movement shows up in `score_breakdown`. Here is what the [example call](#example-call) returns:
+Each reply with too little pitch movement, or too much when `max_spread_semitones` is set, shows up in `score_breakdown`. Here is what the [example call](#example-call) returns:
 
 ```python
 {
     "eligible_turns": 4,
-    "turns_with_events": 2,
+    "turns_with_events": 1,
     "events": [
         {
             "type": "monotone",
@@ -90,21 +90,10 @@ Each reply with too little or too much pitch movement shows up in `score_breakdo
             "description": "Reply sounded monotone",
             "pitch_spread_semitones": 0.1,
             "offset_seconds": 0.0,
-            "duration_seconds": 3.0,
-            "start_time": 7.0,
+            "duration_seconds": 5.0,
+            "start_time": 9.0,
             "mark": "whole_reply",
-        },
-        {
-            "type": "erratic",
-            "turn": 5,
-            "timing_source": "turn_timestamps",
-            "description": "Pitch varied erratically",
-            "pitch_spread_semitones": 9.6,
-            "offset_seconds": 0.0,
-            "duration_seconds": 3.0,
-            "start_time": 12.0,
-            "mark": "whole_reply",
-        },
+        }
     ],
     "skipped": [
         {
@@ -117,7 +106,7 @@ Each reply with too little or too much pitch movement shows up in `score_breakdo
 
 | Field | What it means |
 | --- | --- |
-| `type` | Monotone if the pitch barely moved, erratic if it swung too widely |
+| `type` | Monotone if the pitch barely moved, erratic if it swung more widely than `max_spread_semitones` (only when it is set) |
 | `pitch_spread_semitones` | How widely the reply's pitch moved, in semitones |
 
 Each event covers the whole reply: `offset_seconds` is 0 and `duration_seconds` is the clip's length. Replies with under 1 second of voiced speech, or audio that can't be decoded, are listed under `skipped`.
@@ -149,38 +138,51 @@ The metric reads per-turn audio, one agent clip at a time, or replies cut from s
 
 A reply is scored if it has at least 1 second of voiced speech. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz. Stretches that are near silent, or have no clear pitch (such as "s" or "f" sounds), are left out. What's left is the voiced speech.
 
+In each 40 ms, the tracker takes the shortest repeat period that fits about as well as the best one. Any multiple of the true period fits just as well, so this keeps it from reading an octave or more too low.
+
 ### Pitch spread criteria
 
 A reply's pitch spread is how far its 40 ms pitches typically sit from the reply's median pitch, in semitones. It is based on a median, so a single cracked word doesn't move it. Cracks are judged by [Abrupt Pitch Jump](/docs/metrics-abrupt-pitch-jump) instead.
 
 | Check | Rule |
 | --- | --- |
-| Monotone | Spread under `min_spread_semitones` (1 by default) |
-| Erratic | Spread over `max_spread_semitones` (6 by default) |
+| Monotone | Spread under `min_spread_semitones` (1 by default), on a reply whose clip runs at least 4 seconds |
+| Erratic | Spread over `max_spread_semitones`. Off by default |
 
-A pitch tracker can briefly lock onto the octave above or below the real pitch. Up to 120 ms sitting about an octave off the pitch around it is folded back first, so it doesn't widen the spread.
+A flat reply only sounds monotone once it runs a few seconds, so a shorter flat reply is counted but not flagged.
 
 If no agent reply has enough voiced speech, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
 :::note
-Adults reading aloud vary their pitch by about 2.2 semitones. The default of 1 is flatter than normal speech, and 6 is nearly three times the norm. Expressive TTS voices can run wider, so raise `max_spread_semitones` if a lively voice is flagged as erratic.
+Adults reading aloud vary their pitch by about 2.2 semitones, and the default of 1 is flatter than normal speech. Expressive voices range widely without sounding wrong, so there is no upper limit unless you set one. If you do, 6 is nearly three times the norm.
 :::
+
+### Second check
+
+In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), each flagged reply is double-checked before it counts. The audio decision model hears the **agent's** whole reply, from that turn's own clip, and is asked:
+
+> Does the speaker sound flat and monotone, like a robot reading?
+
+for a reply flagged as monotone, or:
+
+> Does the speaker's pitch swing up and down erratically, in a way that sounds unnatural?
+
+for a reply flagged as erratic. If the model judges "no" more likely than "yes", the reply is dismissed and doesn't count against the score.
 
 ### Example call
 
-A call with five agent replies: two sound natural, one is read flat, one swings wildly, and one is too short to judge. Each row is one agent reply and its pitch spread.
+A call with five agent replies: two sound natural, one is read flat, one swings wildly, and one is too short to judge. Each row is one agent reply and its pitch spread, with the default limits.
 
 <VoiceDiagram
-  duration={24}
+  duration={30}
   lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 2, end: 5, label: "turn 1" }, { start: 7, end: 10, label: "turn 3" }, { start: 12, end: 15, label: "turn 5" }, { start: 17, end: 20, label: "turn 7" }, { start: 22, end: 24, label: "turn 9" }], sounds: [{ start: 2.1, end: 4.8 }, { start: 7.0, end: 10.0, ending: "flat" }, { start: 12.1, end: 14.8 }, { start: 17.1, end: 19.8 }, { start: 22.05, end: 22.7 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 2, end: 7, label: "turn 1" }, { start: 9, end: 14, label: "turn 3" }, { start: 16, end: 19, label: "turn 5" }, { start: 21, end: 26, label: "turn 7" }, { start: 28, end: 30, label: "turn 9" }], sounds: [{ start: 2.1, end: 6.8 }, { start: 9.0, end: 14.0, ending: "flat" }, { start: 16.1, end: 18.8 }, { start: 21.1, end: 25.8 }, { start: 28.05, end: 28.7 }] },
   ]}
   highlights={[
-    { start: 7.0, end: 10.0, lane: 0 },
-    { start: 12.1, end: 14.8, lane: 0 },
+    { start: 9.0, end: 14.0, lane: 0 },
   ]}
   marks={[
-    { at: 22.4, lane: 0, tone: "skip", label: "skipped" },
+    { at: 28.4, lane: 0, tone: "skip", label: "skipped" },
   ]}
 />
 
@@ -188,10 +190,12 @@ A call with five agent replies: two sound natural, one is read flat, one swings 
 | --- | --- | --- |
 | 1 | 2.4 semitones | No |
 | 3 | 0.1 semitones | **Yes** (`monotone`) |
-| 5 | 9.6 semitones | **Yes** (`erratic`) |
+| 5 | 9.6 semitones | No (no upper limit set) |
 | 7 | 2.3 semitones | No |
 | 9 | Under 1 s of voiced speech | Skipped |
-| **4 replies** | | **2 flagged → 2/4 = 0.5** |
+| **4 replies** | | **1 flagged → 3/4 = 0.75** |
+
+With `max_spread_semitones=6`, turn 5 is also flagged as `erratic`, and the score drops to 2/4 = 0.5.
 
 ## FAQs
 
@@ -211,8 +215,10 @@ A call with five agent replies: two sound natural, one is read flat, one swings 
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio, so it
-          has no model or token cost.
+          Not by default. Detection is deterministic and runs locally over the
+          audio, so it has no model or token cost. In the{" "}
+          <code>"hybrid"</code> eval mode, each flagged reply is also checked by
+          an audio decision model, at one paid request per flagged reply.
         </>
       ),
     },

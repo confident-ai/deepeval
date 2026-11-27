@@ -14,7 +14,7 @@ beta: true
   referenceless={true}
 />
 
-The abrupt pitch jump metric checks whether your voice agent's voice **cracks or squeaks**: a sudden leap in pitch, faster than a human voice can move. It returns the share of agent replies without one, between 0 and 1.
+The abrupt pitch jump metric checks whether your voice agent's voice **cracks or squeaks**: a sudden leap up in pitch, faster than a human voice can move, to above the voice's usual range. It returns the share of agent replies without one, between 0 and 1.
 
 <AudioSample name="abrupt-pitch-jump" />
 
@@ -52,7 +52,12 @@ metric = AbruptPitchJumpMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-The `AbruptPitchJumpMetric` takes only the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics). The jump limit is fixed, since a crack is a defect rather than a matter of taste.
+There are **TWO** optional parameters specific to the `AbruptPitchJumpMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, the metric flags more possible jumps, and each is [double-checked by an audio decision model](/docs/metrics-voice-introduction#second-check-with-an-audio-decision-model) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
+- [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
+
+The jump limit is fixed, since a crack is a defect rather than a matter of taste.
 
 ### As a standalone
 
@@ -84,18 +89,9 @@ Each pitch jump shows up in `score_breakdown` as its own event. Here is what the
             "start_time": 7.96,
             "mark": "moment",
             "timing_source": "turn_timestamps",
-            "description": "Pitch jumped abruptly",
-        },
-        {
-            "type": "pitch_jump",
-            "turn": 3,
-            "offset_seconds": 1.16,
-            "duration_seconds": 0.08,
-            "start_time": 8.16,
-            "mark": "moment",
-            "timing_source": "turn_timestamps",
-            "description": "Pitch jumped abruptly",
-        },
+            "description": "Pitch jumped abruptly to 4 semitones above the voice's usual range",
+            "pitch_hz": 317.8,
+        }
     ],
     "skipped": [{"turn": 9, "error": "Reply has no voiced speech."}],
 }
@@ -105,8 +101,9 @@ Each pitch jump shows up in `score_breakdown` as its own event. Here is what the
 | --- | --- |
 | `offset_seconds` | Where the jump is, in seconds from the start of the turn's clip: the 40 ms just before the step |
 | `duration_seconds` | Always 0.08: the 40 ms either side of the step |
+| `pitch_hz` | The pitch the jump lands on, in Hz. Not set in `"hybrid"` mode |
 
-A crack that goes up and comes back down is two events. Replies with no voiced speech, or audio that can't be decoded, are listed under `skipped`.
+A crack that goes up and comes back down is one event, since only the step up lands above the voice's range. Replies with no voiced speech, or audio that can't be decoded, are listed under `skipped`.
 
 Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
 
@@ -133,7 +130,7 @@ The metric reads per-turn audio, one agent clip at a time, or replies cut from s
   ]}
 />
 
-A reply is scored if any of it is voiced. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz. Stretches that are near silent, or have no clear pitch (such as "s" or "f" sounds), are left out.
+A reply is scored if any of it is voiced. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz. Stretches that are near silent, or have no clear pitch (such as "s" or "f" sounds), are left out. In each 40 ms, the tracker takes the shortest repeat period that fits about as well as the best one, since any multiple of the true period fits just as well and would read an octave or more too low.
 
 ### Pitch jump criteria
 
@@ -147,31 +144,49 @@ A reply is scored if any of it is voiced. The metric tracks the pitch of every 4
   ]}
   marks={[
     { at: 1.2, lane: 0, tone: "bad", label: "jump up" },
-    { at: 1.9, lane: 0, tone: "bad", label: "jump down" },
+    { at: 1.9, lane: 0, tone: "ok", label: "back down" },
   ]}
 />
 
-A jump is a step in pitch from one 40 ms frame straight to the next:
+A jump is a step in pitch from one 40 ms frame straight to the next, between two steady stretches:
 
 | Check | Rule |
 | --- | --- |
-| Step size | 6 semitones or more |
-| Steady before | At least 2 frames (80 ms), each within 3 semitones of the one before |
-| Steady after | At least 2 frames, the same way |
-| No gap | The two frames are back to back, with no unvoiced frame between |
+| Steady before | At least 5 frames (200 ms), each within 3 semitones of the one before |
+| Steady after | At least 5 frames, the same way |
+| No gap | The two stretches are back to back, with no unvoiced frame between |
+| Step size | 6 semitones or more, between the median of the last 5 frames before and the first 5 frames after |
+| Above the range | The first 5 frames after land at least 1 semitone above the 95th percentile of the agent's voiced pitch across the call |
 
-That is 150 semitones a second, about 2.5 times the fastest pitch change a speaker can make on purpose, so normal intonation never reaches it.
+A 6 semitone step in 40 ms is 150 semitones a second, about 2.5 times the fastest pitch change a speaker can make on purpose, so normal intonation never reaches it.
 
-Two tracking slips are not counted:
+Two kinds of step are not counted:
 
-- **Octave slips.** Up to 120 ms sitting about an octave off the pitch around it is folded back first, since pitch trackers often lock onto the octave for a moment.
-- **Lone frames.** A step next to a single isolated frame is ignored, since a frame at the edge of a sound is often misread.
+- **Short stretches.** A stretch under 200 ms on either side is a slip of the tracker or one syllable's own movement, not the voice breaking.
+- **Steps inside the voice's range.** A voice spends 5% of its time above the top of its usual range. A step that lands inside it, including any step down, is how the voice normally moves.
 
 If no agent reply has voiced speech, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
+### Second check
+
+A stressed word steps up just like a glitch does, and only a listener can tell them apart. So in the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), the metric doesn't use the rules above. It flags every step up that could be a crack, and has the audio decision model confirm each one. A step up is flagged when:
+
+| Check | Rule |
+| --- | --- |
+| Step size | 6 semitones or more up, from the median of the 80 ms before |
+| Held | The next 3 frames (120 ms) are voiced and stay within 3 semitones of their median |
+| Gap | At most 80 ms of unvoiced frames between the two |
+| Range | The 3 frames land at or above the 90th percentile of the agent's voiced pitch across the call |
+
+The audio decision model hears about 5 seconds of the agent's audio around each step and is asked:
+
+> Does the speaker's voice suddenly jump to a different pitch, as if it glitched or cracked?
+
+If the model judges "no" more likely than "yes", the step is dismissed and doesn't count against the score.
+
 ### Example call
 
-A call with five agent replies: one cracks for 200 ms, one has a brief octave slip, and one is silent. Each row is one agent reply and whether it had a jump.
+A call with five agent replies: one cracks for 200 ms, one slips up an octave for only 100 ms, and one is silent. Each row is one agent reply and whether it had a jump.
 
 <VoiceDiagram
   duration={24}
@@ -182,8 +197,8 @@ A call with five agent replies: one cracks for 200 ms, one has a brief octave sl
     { start: 8.0, end: 8.2, lane: 0 },
   ]}
   marks={[
-    { at: 8.0, lane: 0, tone: "bad", label: "2 jumps" },
-    { at: 13.0, lane: 0, tone: "ok", label: "clean: octave slip" },
+    { at: 8.0, lane: 0, tone: "bad", label: "jump" },
+    { at: 13.0, lane: 0, tone: "ok", label: "clean: too brief" },
     { at: 23, lane: 0, tone: "skip", label: "skipped" },
   ]}
 />
@@ -191,8 +206,8 @@ A call with five agent replies: one cracks for 200 ms, one has a brief octave sl
 | Agent turn | What happens | Jump? |
 | --- | --- | --- |
 | 1 | Normal speech | No |
-| 3 | Pitch leaps 8 semitones at 1.0 s, back down at 1.2 s | **Yes** (2 events) |
-| 5 | Pitch slips up an octave for 100 ms | No |
+| 3 | Pitch leaps 8 semitones at 1.0 s, to 4 semitones above the voice's range, and back down at 1.2 s | **Yes** (1 event) |
+| 5 | Pitch slips up an octave for 100 ms, under the 200 ms a jump needs | No |
 | 7 | Steady held vowel | No |
 | 9 | Silence, no voiced speech | Skipped |
 | **4 replies** | | **1 with a jump → 3/4 = 0.75** |
@@ -213,12 +228,14 @@ A call with five agent replies: one cracks for 200 ms, one has a brief octave sl
       ),
     },
     {
-      question: "Can it miss a crack of exactly one octave?",
+      question: "Can it miss a short crack?",
       answer: (
         <>
-          Yes. A crack of about an octave that lasts 120 ms or less looks like
-          a tracking slip and is not counted. Longer ones, and jumps of any
-          other size, are.
+          Yes. A crack that holds for under 200 ms, or lands inside the range
+          the voice uses elsewhere in the call, is not counted. In the{" "}
+          <code>"hybrid"</code> eval mode, steps held for at least 120 ms that land in
+          the top tenth of the voice's range are sent to the audio decision
+          model, so it can catch shorter cracks.
         </>
       ),
     },
@@ -226,8 +243,10 @@ A call with five agent replies: one cracks for 200 ms, one has a brief octave sl
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio, so it
-          has no model or token cost.
+          Not by default. Detection is deterministic and runs locally over the
+          audio, so it has no model or token cost. In the{" "}
+          <code>"hybrid"</code> eval mode, each possible jump is also checked by
+          an audio decision model, at one paid request per jump.
         </>
       ),
     },

@@ -135,8 +135,8 @@ Each agent turn with audio is one reply. These four parts judge it, each with it
 
 | Part | Flags a reply that | Judges a reply with |
 | --- | --- | --- |
-| [Background Noise](/docs/metrics-background-noise) | has speech under 20 dB above the noise | a clip of 2 seconds or more that isn't silent |
-| [Loudness](/docs/metrics-loudness) | has speech under −32 or over −6 dBFS | a clip that isn't silent |
+| [Background Noise](/docs/metrics-background-noise) | has speech under 18 dB above the noise | a clip of 2 seconds or more that isn't silent |
+| [Loudness](/docs/metrics-loudness) | has speech under −32 or over −10 dBFS | 1 second of speech or more |
 | [Audio Clipping](/docs/metrics-audio-clipping) | is distorted from being too loud | audio that decodes |
 | [Audio Dropout](/docs/metrics-audio-dropout) | cuts out for a moment mid-speech | audio that decodes |
 

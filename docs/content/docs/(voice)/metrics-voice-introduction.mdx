@@ -43,7 +43,7 @@ Voice metrics score the **audio** of a call, not just its transcript. Most are d
 </Tab>
 <Tab value="Prosody">
 
-- [Pitch Variation](/docs/metrics-pitch-variation): a flat, robotic reading, or a voice swinging wildly
+- [Pitch Variation](/docs/metrics-pitch-variation): a flat, robotic reading, or a voice swinging wildly if you set a limit for it
 - [Abrupt Pitch Jump](/docs/metrics-abrupt-pitch-jump): a voice that cracks or squeaks
 - [Pitch Consistency](/docs/metrics-pitch-consistency): a voice clearly deeper or higher in one reply
 - [Speaking Rate](/docs/metrics-speaking-rate): rushing or dragging
@@ -193,12 +193,15 @@ In hybrid mode, the model hears the audio around each problem and answers one ye
 - [Abrupt Cut-off](/docs/metrics-abrupt-cut-off#second-check), hearing the agent: "Does the speaker's voice cut off abruptly, mid-word or mid-sentence?"
 - [Echo](/docs/metrics-echo#second-check), hearing the caller: "Can the AI agent's own voice be heard echoed back on this caller's line?"
 - [Background Noise](/docs/metrics-background-noise#second-check), hearing the agent: "Is there distracting background noise behind the speaker?"
+- [Pitch Variation](/docs/metrics-pitch-variation#second-check), hearing the agent: "Does the speaker sound flat and monotone, like a robot reading?"
+- [Abrupt Pitch Jump](/docs/metrics-abrupt-pitch-jump#second-check), hearing the agent: "Does the speaker's voice suddenly jump to a different pitch, as if it glitched or cracked?" In this mode it also flags more possible jumps for the model to hear.
+- [Speaking Rate](/docs/metrics-speaking-rate#second-check), hearing the agent: "Is the speaker talking unnaturally slowly?" or "Is the speaker talking unnaturally fast?" In this mode it also flags replies close to a limit for the model to hear.
 - [Agent Interruption](/docs/metrics-agent-interruption#second-check), hearing the caller: "Is a person speaking in this clip, rather than only background noise, breathing or silence?"
 - [User Interruption](/docs/metrics-user-interruption#second-check), hearing the caller: "Is a person speaking in this clip, rather than only background noise, breathing or silence?"
 
-[Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) passes the setting to its interruption parts. Roll-ups that include Background Noise, such as [Voice Naturalness](/docs/metrics-voice-naturalness) and [Speech Intelligibility](/docs/metrics-speech-intelligibility), don't take `eval_mode` themselves, but follow `DEEPEVAL_VOICE_EVAL_MODE` for that part. Other voice metrics ignore it.
+[Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) passes the setting to its interruption parts. Roll-ups that include Background Noise, Speaking Rate or Pitch Variation, such as [Voice Naturalness](/docs/metrics-voice-naturalness) and [Speech Intelligibility](/docs/metrics-speech-intelligibility), don't take `eval_mode` themselves, but follow `DEEPEVAL_VOICE_EVAL_MODE` for those parts. Other voice metrics ignore it.
 
-- **Dismissed.** If the model judges the problem more likely not real than real, it doesn't count against the score and is left out of `events`. `dismissed_events` in the breakdown, and the reason, say how many were dismissed.
+- **Dismissed.** If the model judges the problem more likely not real than real (a yes probability under 0.5), it doesn't count against the score and is left out of `events`. `dismissed_events` in the breakdown, and the reason, say how many were dismissed.
 - **Kept.** If no clip can be cut, or the model fails, the problem stays and a warning is logged.
 - **Models.** `HumeDecisionModel()` (reads `HUME_API_KEY`) is used unless you pass `audio_decision_model`. `OpenAIAudioDecisionModel()` with `gpt-audio` or `gpt-audio-mini` (reads `OPENAI_API_KEY`) also works. A missing key fails when the metric is created.
 

@@ -77,7 +77,7 @@ test_case = ConversationalTestCase(
         ),
         Turn(
             role="user",
-            content="",
+            content="Yes, January works for me.",
             audio=Audio(url="./turn-1.wav", start_time=18.4),
         ),
     ]
@@ -91,7 +91,7 @@ There are **SEVEN** optional parameters specific to the `TranscriptionAccuracyMe
 - [Optional] `system_one_model`: the Jev model to use, as a string or a `DeepEvalBaseSystemOneModel`. Only used in the `"hybrid"` and `"system_one"` eval modes. Defaulted to <DefaultSystemOneModel />.
 - [Optional] `eval_mode`: `"llm"`, `"hybrid"` or `"system_one"`, choosing who judges, as in [Eval modes](#eval-modes). Defaulted to the configured [eval mode](/docs/evaluation-eval-modes) (`"llm"` unless set).
 - [Optional] `use_llm`: a boolean which when set to `False`, counts misheard words instead of asking a judge, as in [Without an LLM](#without-an-llm). Passing `model`, `system_one_model` or `eval_mode` with it raises a `ValueError`. Defaulted to `True`.
-- [Optional] `max_word_error_percent`: the most words in a line, in percent, that may be misheard before the line fails. Only accepted with `use_llm=False`, and must be 0 or more, or a `ValueError` is raised. Defaulted to `20`.
+- [Optional] `max_word_error_percent`: the most words in a line, in percent, that may be misheard before the line fails. Only accepted with `use_llm=False`, and must be 0 or more, or a `ValueError` is raised. Defaulted to `20`, which the `"hybrid"` eval mode also uses for its first pass.
 - [Optional] `compare_against`: `"content"` to check the agent's `provider_transcript` against the caller's `content`, or `"audio"` to check the call's transcript against each turn's re-transcribed `audio`. Defaulted to `"content"`.
 - [Optional] `stt_model`: the speech-to-text model that re-transcribes each clip, as a string or a `DeepEvalBaseSTT`. Only accepted with `compare_against="audio"`, or a `ValueError` is raised. Defaulted to the configured [STT provider](/integrations/stt/openai), which is OpenAI's `gpt-4o-transcribe` unless set.
 
@@ -145,12 +145,12 @@ The judge writes each verdict's reason, so the wording changes from run to run.
 | `verdict` | `"yes"` if the exchange was heard faithfully, `"no"` if not |
 | `reason` | Why, quoting what was said and what was heard |
 
-In the `"hybrid"` eval mode each verdict's reason is written by the metric instead, such as "The caller said 'Siobhan Kavanagh here.' but the agent heard 'Siobhan Cavanaugh here.'. (P(yes)=0.08)". In the `"system_one"` eval mode there are no verdicts: `score_breakdown` lists Jev's answer to each [question](#eval-modes).
+In the `"hybrid"` eval mode each verdict's reason is written by the metric instead. A line Jev judged reads like "The caller said 'Siobhan Kavanagh here.' but the agent heard 'Siobhan Cavanaugh here.'. (P(yes)=0.08)". A line the word count passed keeps the word count's reason, as in the other tab. In the `"system_one"` eval mode there are no verdicts: `score_breakdown` lists Jev's answer to each [question](#eval-modes).
 
 </Tab>
 <Tab value="Without an LLM">
 
-Each verdict's reason gives its line's word count, and `score_breakdown` adds them up:
+Each verdict's reason gives its line's word count, and `score_breakdown` adds them up. A line with fewer than 3 spoken words gets no verdict, so its place in the list is `None`:
 
 ```python
 [
@@ -162,10 +162,7 @@ Each verdict's reason gives its line's word count, and `score_breakdown` adds th
         "verdict": "yes",
         "reason": "The agent heard 'Um, I can start in two weeks, on the fifteenth.' faithfully. (1 of 9 words wrong, 11%)",
     },
-    {
-        "verdict": "yes",
-        "reason": "The agent heard 'Around ninety five thousand.' faithfully. (0 of 2 words wrong, 0%)",
-    },
+    None,
     {
         "verdict": "yes",
         "reason": "The agent heard \"I can't do Mondays though.\" faithfully. (1 of 5 words wrong, 20%)",
@@ -175,8 +172,8 @@ Each verdict's reason gives its line's word count, and `score_breakdown` adds th
 
 ```python
 {
-    "word_error_percent": 15.8,
-    "lines": 4,
+    "word_error_percent": 17.6,
+    "lines": 3,
     "lines_over_limit": 1,
 }
 ```
@@ -184,10 +181,10 @@ Each verdict's reason gives its line's word count, and `score_breakdown` adds th
 | Field | What it means |
 | --- | --- |
 | `word_error_percent` | The share of all spoken words that were misheard, across the call. `None` when no line had spoken words |
-| `lines` | How many lines were scored |
+| `lines` | How many lines got a verdict |
 | `lines_over_limit` | How many of them had more than `max_word_error_percent` of their words misheard |
 
-The reason is written from the same numbers: "1 of 4 lines had over 20% of words misheard; 15.8% of words were misheard overall."
+The reason is written from the same numbers: "1 of 3 lines had over 20% of words misheard; 17.6% of words were misheard overall."
 
 </Tab>
 </Tabs>
@@ -247,7 +244,7 @@ Each turn with `audio`, caller or agent, is one exchange. The clip is re-transcr
 | Agent | What it meant to say: `metadata["intended_content"]` if a duplex simulation recorded one, otherwise its `content` |
 | Caller | Its own `provider_transcript`, else the next agent turn's `provider_transcript` if this turn is the caller's whole line, else its `content` |
 
-For the agent, `content` must be the text sent to text-to-speech, not a transcription of the agent's audio, or agent-side noise can never fail. Turns without a clip are left out.
+For the agent, `content` must be the text sent to text-to-speech, not a transcription of the agent's audio, or agent-side noise can never fail. Turns without a clip are left out, and so are turns whose text is blank: a missing transcript has no words to compare.
 
 </Tab>
 </Tabs>
@@ -280,7 +277,7 @@ It does count these, because they change what the agent was told:
 
 With `compare_against="audio"`, two rules sharpen:
 
-- An empty or near-empty transcript while the clip has the person making any sound, such as thinking out loud or a false start, is an error. The agent treated speech as silence.
+- A near-empty transcript while the clip has the person making any sound, such as thinking out loud or a false start, is an error. The agent treated speech as silence. A blank transcript isn't judged, since the turn is left out.
 - Speech or noise in the clip that the transcript doesn't account for is an error. On an agent turn, that's garbled words or noise after the sentence it meant to say.
 
 A name spelled differently but pronounced the same, as in "Karthik" and "Kartik", isn't an error here, since a recording carries sound, not spelling. A failed verdict gives the clip's `start_time`, so the moment can be found in the recording.
@@ -290,7 +287,7 @@ A name spelled differently but pronounced the same, as in "Karthik" and "Kartik"
 | Eval mode | Who gives each verdict | Score |
 | --- | --- | --- |
 | `"llm"` (default) | The LLM judge, from one prompt over all exchanges | Share of `"yes"` verdicts |
-| `"hybrid"` | Jev, one yes/no question per exchange: P(yes) of 0.5 or more is `"yes"`. If Jev fails, the LLM decides instead | Share of `"yes"` verdicts |
+| `"hybrid"` | Word counting first, as in [Without an LLM](#without-an-llm). A line it passes stays passed, and a line under 3 words gets no verdict. Only the lines over the limit go to Jev, one yes/no question each: P(yes) of 0.5 or more is `"yes"`. If Jev fails, the LLM decides instead | Share of `"yes"` verdicts |
 | `"system_one"` | No verdicts. Jev judges the whole call in one request | Weighted mean of Jev's answers |
 
 In the `"system_one"` eval mode, Jev is sent the exchanges and asked three questions:
@@ -318,11 +315,21 @@ With `use_llm=False`, no judge decides. Each exchange is a line, scored by its w
 | Line passes | At most `max_word_error_percent` of its words misheard, 20% by default |
 | Not counted as errors | Capitals, punctuation, curly or straight apostrophes, the fillers "um", "uh", "er", "ah", "hmm" and "mm", and a phrase of two or more words said twice in a row |
 | Numbers | Number words become digits first, so "one hundred and five" matches "105", "1,000" matches "1000" and "five five five" matches "555" |
-| Left out | A line with no spoken words after the above. If every line is left out, the score is 1 |
+| Spelled out | A run of letters and digits read one by one, with at least 3 single letters, is one word, so "h m a 7 2" matches "hma72". Dotted letters are one word too, so "U.S." matches "US" |
+| Addresses | "@" reads as "at", and a "." between a letter or digit and a letter reads as "dot", so "hma72@gmail.com" matches "h m a 7 2 at gmail dot com" |
+| Joined words | Words that only differ in spacing match, so "home page" and "homepage" have no errors |
+| Left out | A line with fewer than 3 spoken words after the above gets no verdict, since one slip, or a transcriber guessing at a mumble, would read as half the line wrong. If every line is left out, the score is 1 |
+
+With `compare_against="audio"`, turn timestamps are often a few seconds off, so a line's words can sit just outside its own clip. A line over the limit is heard again before it fails:
+
+- With stereo full call audio, the speaker's own channel, from 5 seconds before the clip to 5 seconds after it, is re-transcribed by `stt_model`.
+- Without it, what the same speaker was heard saying in this turn and the turns just before and after it stands in.
+
+If the line's transcript is found in that wider speech within the limit, the line passes, and its reason says "The transcript's words were heard just outside the turn's timestamps." The `"hybrid"` eval mode does the same in its word-counting pass.
 
 Every other difference is one misheard word, whether it's a dropped "the" or a wrong surname. "fifteenth" and "15th" don't match, since only plain number words are read. Use the LLM judge when only meaning-changing errors should fail.
 
-With `compare_against="content"` this makes no model call at all. With `compare_against="audio"` the clips are still re-transcribed, so only the speech-to-text is billed.
+With `compare_against="content"` this makes no model call at all. With `compare_against="audio"` the clips are still re-transcribed, and each line over the limit is re-transcribed once more from the call recording, so only the speech-to-text is billed.
 
 :::note
 With the LLM judge, a verdict that isn't `"yes"` or `"no"` is dropped. If none are left, the score is 1.
@@ -355,11 +362,11 @@ A recruiting call where the agent mishears a surname and loses a "not". Each row
 | --- | --- | --- | --- |
 | Siobhan Kavanagh here. | Siobhan Cavanaugh here. | **No** (wrong surname) | 1 of 3, 33%: **fails** |
 | Um, I can start in two weeks, on the fifteenth. | I can start in two weeks, on the 15th. | Yes | 1 of 9, 11%: passes |
-| Around ninety five thousand. | Around 95,000. | Yes | 0 of 2: passes |
+| Around ninety five thousand. | Around 95,000. | Yes | 2 words: no verdict |
 | I can't do Mondays though. | I can do Mondays though. | **No** (negation lost) | 1 of 5, 20%: passes |
-| **4 exchanges** | | **2 misheard → 2/4 = 0.5** | **1 over 20% → 3/4 = 0.75** |
+| **4 exchanges** | | **2 misheard → 2/4 = 0.5** | **1 over 20% → 2/3 = 0.67** |
 
-Turn 0 is the agent's greeting with no caller line before it, so it isn't an exchange. Word counting misses the lost "not", which is why the LLM judge is the default.
+Turn 0 is the agent's greeting with no caller line before it, so it isn't an exchange. Word counting misses the lost "not", which is why the LLM judge is the default. In the `"hybrid"` eval mode, only the surname line is over the limit and goes to Jev, so the lost "not" is missed there too.
 
 ## FAQs
 

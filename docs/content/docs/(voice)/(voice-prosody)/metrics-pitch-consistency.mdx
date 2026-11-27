@@ -48,13 +48,13 @@ simulator = ConversationSimulator(
 )
 test_cases = simulator.simulate([golden])
 
-metric = PitchConsistencyMetric(threshold=0.8, max_shift_semitones=4)
+metric = PitchConsistencyMetric(threshold=0.8, max_shift_semitones=3)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
 There is **ONE** optional parameter specific to the `PitchConsistencyMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
-- [Optional] `max_shift_semitones`: an integer for how far, in semitones, a reply's pitch may sit from the agent's typical pitch. Must be greater than 0, or a `ValueError` is raised. Defaulted to `4`.
+- [Optional] `max_shift_semitones`: an integer for how far, in semitones, a reply's base pitch may sit from the agent's typical base pitch. Must be greater than 0, or a `ValueError` is raised. Defaulted to `3`.
 
 ### As a standalone
 
@@ -82,31 +82,31 @@ Each reply whose pitch drifted too far shows up in `score_breakdown`. Here is wh
             "type": "pitch_shift",
             "turn": 3,
             "timing_source": "turn_timestamps",
-            "description": "Reply was 4 semitones lower than usual",
-            "pitch_median_hz": 178.4,
+            "description": "Voice sat 4 semitones lower than in the agent's other replies",
+            "pitch_base_hz": 157.3,
             "shift_semitones": -4.3,
             "offset_seconds": 0.0,
-            "duration_seconds": 3.0,
-            "start_time": 7.0,
+            "duration_seconds": 6.0,
+            "start_time": 10.0,
             "mark": "whole_reply",
         },
         {
             "type": "pitch_shift",
             "turn": 7,
             "timing_source": "turn_timestamps",
-            "description": "Reply was 5 semitones higher than usual",
-            "pitch_median_hz": 298.7,
+            "description": "Voice sat 5 semitones higher than in the agent's other replies",
+            "pitch_base_hz": 262.1,
             "shift_semitones": 4.6,
             "offset_seconds": 0.0,
-            "duration_seconds": 3.0,
-            "start_time": 17.0,
+            "duration_seconds": 6.0,
+            "start_time": 26.0,
             "mark": "whole_reply",
         },
     ],
     "skipped": [
         {
             "turn": 11,
-            "error": "Reply has under 1s of voiced speech to follow its pitch.",
+            "error": "Reply has under 3s of voiced speech to follow its pitch.",
         }
     ],
 }
@@ -114,10 +114,10 @@ Each reply whose pitch drifted too far shows up in `score_breakdown`. Here is wh
 
 | Field | What it means |
 | --- | --- |
-| `pitch_median_hz` | The reply's median pitch, in Hz |
-| `shift_semitones` | How far that sits from the agent's typical pitch, in semitones. Negative when deeper |
+| `pitch_base_hz` | The reply's base pitch, in Hz: the low end its voice keeps returning to |
+| `shift_semitones` | How far that sits from the agent's typical base pitch, in semitones. Negative when deeper |
 
-Each event covers the whole reply: `offset_seconds` is 0 and `duration_seconds` is the clip's length. The `description` rounds the shift to a whole number. Replies with under 1 second of voiced speech, or audio that can't be decoded, are listed under `skipped`.
+Each event covers the whole reply: `offset_seconds` is 0 and `duration_seconds` is the clip's length. The `description` rounds the shift to a whole number. Replies with under 3 seconds of voiced speech, or audio that can't be decoded, are listed under `skipped`.
 
 Every event also has the [fields all voice events share](/docs/metrics-voice-introduction#events), such as `mark` and `description`.
 
@@ -134,62 +134,67 @@ The metric reads per-turn audio, one agent clip at a time, or replies cut from s
 ### Which replies are scored
 
 <VoiceDiagram
-  duration={14}
+  duration={21}
   lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 3.5, label: "turn 1" }, { start: 4.5, end: 7.5, label: "turn 3" }, { start: 8.5, end: 11.5, label: "turn 5" }, { start: 12.4, end: 14, label: "turn 7" }], sounds: [{ start: 0.6, end: 3.3 }, { start: 4.6, end: 7.3 }, { start: 8.6, end: 11.3 }, { start: 12.55, end: 13.2 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 0.5, end: 5.5, label: "turn 1" }, { start: 6.5, end: 11.5, label: "turn 3" }, { start: 12.5, end: 17.5, label: "turn 5" }, { start: 18.5, end: 20.5, label: "turn 7" }], sounds: [{ start: 0.6, end: 5.3 }, { start: 6.6, end: 11.3 }, { start: 12.6, end: 17.3 }, { start: 18.6, end: 20.2 }] },
   ]}
   brackets={[
-    { start: 0.5, end: 3.5, lane: 0, label: "reply 1" },
-    { start: 4.5, end: 7.5, lane: 0, label: "reply 2" },
-    { start: 8.5, end: 11.5, lane: 0, label: "reply 3" },
-    { start: 12.4, end: 14, lane: 0, tone: "skip", label: "too short" },
+    { start: 0.5, end: 5.5, lane: 0, label: "reply 1" },
+    { start: 6.5, end: 11.5, lane: 0, label: "reply 2" },
+    { start: 12.5, end: 17.5, lane: 0, label: "reply 3" },
+    { start: 18.5, end: 20.5, lane: 0, tone: "skip", label: "too short" },
   ]}
 />
 
-A reply is scored if it has at least 1 second of voiced speech. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz, and leaves out stretches that are near silent or have no clear pitch. A reply's pitch is the median of what's left.
+A reply is scored if it has at least 3 seconds of voiced speech, since its base pitch takes that long to settle. The metric tracks the pitch of every 40 ms of the clip, between 70 and 500 Hz, and leaves out stretches that are near silent or have no clear pitch. In each 40 ms, it takes the shortest repeat period that fits about as well as the best one, since any multiple of the true period fits just as well and would read an octave or more too low.
 
 It takes at least **3** replies to tell which one is off. With fewer, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
 ### Pitch shift criteria
 
-The agent's typical pitch is the median across all counted replies. A median means one odd reply is flagged on its own, rather than pulling the typical pitch towards it and making the others look off too.
+Each reply is judged on its base pitch: the low end its voice keeps returning to between the words it stresses. The low end moves far less from reply to reply than the middle does, so a reply full of stressed words doesn't look like a different voice.
+
+The agent's typical base pitch is the median across all counted replies. A median means one odd reply is flagged on its own, rather than pulling the typical pitch towards it and making the others look off too.
 
 | Check | Rule |
 | --- | --- |
-| Pitch shift | More than `max_shift_semitones` (4 by default) above or below the typical pitch |
+| Base pitch | The 10th percentile of the reply's tracked pitch |
+| Second reading | The 20th percentile, read the same way, since a few creaky frames can drag the very lowest pitch down on their own |
+| Shift | How far each reading sits from the typical one. When both move the same way, the shift is the smaller of the two. Otherwise it is 0 |
+| Pitch shift | The shift is more than `max_shift_semitones` (3 by default) above or below |
 
-Before taking each median, up to 120 ms sitting about an octave off the pitch around it is folded back, since pitch trackers often lock onto the octave for a moment.
+A few creaky frames move one reading. A changed voice moves both.
 
 :::note
-The default of 4 semitones comes from 't Hart (1981): differences under about 3 semitones don't matter to listeners in conversation, and some can't tell differences under 4 apart.
+On real calls, a reply's base pitch stays within 3 semitones of the agent's other replies in all but about 1 reply in 1,000.
 :::
 
 ### Example call
 
-A call with six agent replies: most sit near 230 Hz, one is clearly deeper, one clearly higher, and one is too short to judge. Each row is one agent reply, its median pitch and how far that is from the typical 228.7 Hz.
+A call with six agent replies: most have a base pitch near 200 Hz, one is clearly deeper, one clearly higher, and one is too short to judge. Each row is one agent reply, its base pitch and how far that is from the typical 201.5 Hz.
 
 <VoiceDiagram
-  duration={29}
+  duration={44}
   lanes={[
-    { label: "Agent", role: "agent", clips: [{ start: 2, end: 5, label: "turn 1" }, { start: 7, end: 10, label: "turn 3" }, { start: 12, end: 15, label: "turn 5" }, { start: 17, end: 20, label: "turn 7" }, { start: 22, end: 25, label: "turn 9" }, { start: 27, end: 29, label: "turn 11" }], sounds: [{ start: 2.1, end: 4.8 }, { start: 7.1, end: 9.8 }, { start: 12.1, end: 14.8 }, { start: 17.1, end: 19.8 }, { start: 22.1, end: 24.8 }, { start: 27.05, end: 27.7 }] },
+    { label: "Agent", role: "agent", clips: [{ start: 2, end: 8, label: "turn 1" }, { start: 10, end: 16, label: "turn 3" }, { start: 18, end: 24, label: "turn 5" }, { start: 26, end: 32, label: "turn 7" }, { start: 34, end: 40, label: "turn 9" }, { start: 42, end: 44, label: "turn 11" }], sounds: [{ start: 2.1, end: 7.8 }, { start: 10.1, end: 15.8 }, { start: 18.1, end: 23.8 }, { start: 26.1, end: 31.8 }, { start: 34.1, end: 39.8 }, { start: 42.05, end: 43.8 }] },
   ]}
   highlights={[
-    { start: 7.1, end: 9.8, lane: 0 },
-    { start: 17.1, end: 19.8, lane: 0 },
+    { start: 10.1, end: 15.8, lane: 0 },
+    { start: 26.1, end: 31.8, lane: 0 },
   ]}
   marks={[
-    { at: 27.4, lane: 0, tone: "skip", label: "skipped" },
+    { at: 42.9, lane: 0, tone: "skip", label: "skipped" },
   ]}
 />
 
-| Agent turn | Median pitch | Shift | Flagged? |
+| Agent turn | Base pitch | Shift | Flagged? |
 | --- | --- | --- | --- |
-| 1 | 228.7 Hz | 0 semitones | No |
-| 3 | 178.4 Hz | −4.3 semitones | **Yes** |
-| 5 | 238.6 Hz | +0.7 semitones | No |
-| 7 | 298.7 Hz | +4.6 semitones | **Yes** |
-| 9 | 223.6 Hz | −0.4 semitones | No |
-| 11 | Under 1 s of voiced speech | | Skipped |
+| 1 | 201.5 Hz | 0 semitones | No |
+| 3 | 157.3 Hz | −4.3 semitones | **Yes** |
+| 5 | 209.5 Hz | +0.7 semitones | No |
+| 7 | 262.1 Hz | +4.6 semitones | **Yes** |
+| 9 | 196.7 Hz | −0.4 semitones | No |
+| 11 | Under 3 s of voiced speech | | Skipped |
 | **5 replies** | | | **2 flagged → 3/5 = 0.6** |
 
 ## FAQs
