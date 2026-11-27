@@ -144,7 +144,7 @@ def _apply_review_results(
             )
         )
     kept_classifications.sort(
-        key=lambda c: -1.0 if c.confidence is None else -c.confidence
+        key=lambda c: 1.0 if c.confidence is None else -c.confidence
     )
     classifier.classifications = kept_classifications
     top_classification = (

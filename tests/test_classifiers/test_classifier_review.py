@@ -27,6 +27,8 @@ class ReviewingModel(ReplyModel):
             prompt.split("Label:\n", 1)[1].split("\n\nContent:", 1)[0]
         )
         confidence = self.confidences[label["name"]]
+        if isinstance(confidence, Exception):
+            raise confidence
         if confidence is None:
             return "not json"
         return {
@@ -140,6 +142,26 @@ def test_unreadable_review_drops_only_that_label(async_mode):
     classifier.classify(CASE, _show_indicator=False)
     assert [c.label for c in classifier.classifications] == ["pricing"]
     assert classifier.error is None
+
+
+@pytest.mark.parametrize("async_mode", [True, False])
+def test_unreviewed_label_ranks_after_reviewed_ones(async_mode):
+    classifier = Classifier(
+        name="topic",
+        labels=LABELS,
+        model=ReviewingModel(
+            BOTH, {"pricing": 0.95, "cancellation": TimeoutError("timed out")}
+        ),
+        multi_label=True,
+        review_config=ReviewConfig(),
+        async_mode=async_mode,
+    )
+    classifier.classify(CASE, _show_indicator=False)
+    assert [(c.label, c.confidence) for c in classifier.classifications] == [
+        ("pricing", 0.95),
+        ("cancellation", None),
+    ]
+    assert classifier.label == "pricing"
 
 
 def test_review_sees_label_description_passages_and_content():
