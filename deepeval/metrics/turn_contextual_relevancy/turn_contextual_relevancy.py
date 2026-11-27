@@ -38,6 +38,9 @@ from deepeval.metrics.turn_contextual_relevancy.schema import (
     InteractionContextualRelevancyScore,
 )
 from deepeval.templates import make_template_class
+from deepeval.metrics.retrieval_context_display import (
+    retrieval_context_to_strings,
+)
 
 
 def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
@@ -236,7 +239,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 user_content += f"\n{turn.content} "
             else:
                 if turn.retrieval_context is not None:
-                    retrieval_context.extend(turn.retrieval_context)
+                    retrieval_context.extend(
+                        retrieval_context_to_strings(turn.retrieval_context)
+                    )
 
         verdicts = await self._a_generate_verdicts(
             user_content, retrieval_context, multimodal
@@ -266,7 +271,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 user_content += f"\n{turn.content} "
             else:
                 if turn.retrieval_context is not None:
-                    retrieval_context.extend(turn.retrieval_context)
+                    retrieval_context.extend(
+                        retrieval_context_to_strings(turn.retrieval_context)
+                    )
 
         verdicts = self._generate_verdicts(
             user_content, retrieval_context, multimodal

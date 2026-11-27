@@ -38,6 +38,9 @@ from deepeval.metrics.turn_faithfulness.schema import (
     InteractionFaithfulnessScore,
 )
 from deepeval.templates import make_template_class
+from deepeval.metrics.retrieval_context_display import (
+    retrieval_context_to_strings,
+)
 
 
 def _turn_faithfulness_limit_description(
@@ -220,7 +223,9 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             else:
                 assistant_content += f"\n{turn.content}"
                 if turn.retrieval_context is not None:
-                    retrieval_context.extend(turn.retrieval_context)
+                    retrieval_context.extend(
+                        retrieval_context_to_strings(turn.retrieval_context)
+                    )
 
         truths = await self._a_generate_truths(retrieval_context, multimodal)
         claims = await self._a_generate_claims(
@@ -255,7 +260,9 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
             else:
                 assistant_content += f"\n{turn.content}"
                 if turn.retrieval_context is not None:
-                    retrieval_context.extend(turn.retrieval_context)
+                    retrieval_context.extend(
+                        retrieval_context_to_strings(turn.retrieval_context)
+                    )
 
         truths = self._generate_truths(retrieval_context, multimodal)
         claims = self._generate_claims(
