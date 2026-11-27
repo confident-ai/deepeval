@@ -108,7 +108,7 @@ There are **EIGHT** optional parameters when creating a `ConversationToolCorrect
 </Switch>
 
 - [Optional] `threshold`: a number representing the minimum passing threshold. Can also be set to <Term py="None" ts="null"/> to run the metric in [score-only mode](/docs/metrics-introduction#metric-thresholds). Defaulted to `0.5`.
-- [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: a list of `ToolCallParams` to compare besides the tool name, `ToolCallParams.INPUT_PARAMETERS` and/or `ToolCallParams.OUTPUT`. Defaulted to an empty list.
+- [Optional] <Term py="evaluation_params" ts="evaluationParams"/>: a list of `ToolCallParams` to compare besides the tool name, `ToolCallParams.INPUT_PARAMETERS` and/or `ToolCallParams.OUTPUT`. An expected tool that leaves one of these unset isn't compared on it. Defaulted to an empty list.
 - [Optional] <Term py="should_consider_ordering" ts="shouldConsiderOrdering"/>: a boolean which when set to <Term py="True" ts="true"/>, requires the expected tools to be called in order. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="should_exact_match" ts="shouldExactMatch"/>: a boolean which when set to <Term py="True" ts="true"/>, requires the tools called to exactly match the expected tools. Defaulted to <Term py="False" ts="false"/>.
 - [Optional] <Term py="include_reason" ts="includeReason"/>: a boolean which when set to <Term py="True" ts="true"/>, will include a reason for its evaluation score. Defaulted to <Term py="True" ts="true"/>.
@@ -153,11 +153,11 @@ console.log(metric.score, metric.reason);
 
 The **conversation tool correctness metric** score is calculated using the following steps:
 
-1. Group the expected tools into checks: one for each turn that has pinned tools, and one for the unpinned tools. A pinned turn is compared with its own tool calls, and the unpinned tools are compared with the tool calls of every other assistant turn.
+1. Group the expected tools into checks: one for each turn that has pinned tools, and one for the unpinned tools. A pinned turn is compared with its own tool calls. The unpinned tools are compared with every assistant turn's tool calls, except the call each pinned tool matched on its turn, so one call can't count for both.
 
 2. Score each check with the [tool correctness](/docs/metrics-tool-correctness#how-is-it-calculated) equation:
 
-<Equation formula="\text{Check Score} = \frac{\text{Number of Correctly Used Tools (or Correct Input Parameters/Outputs)}}{\text{Total Number of Tools Called}}" />
+<Equation formula="\text{Check Score} = \frac{\text{Number of Correctly Used Tools (or Correct Input Parameters/Outputs)}}{\text{Total Number of Expected Tools}}" />
 
 3. Average the check scores:
 
