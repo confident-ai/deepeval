@@ -253,3 +253,74 @@ def test_display_option_passing_all_hidden_shows_all_failed_note():
 
     assert "failing_case" not in text
     assert "All 1 test case failed — no passing test cases to display." in text
+
+
+def test_export_to_markdown_escapes_pipes_and_crlf(tmp_path: Path):
+    import re
+    from deepeval.test_run.api import Classification
+
+    def split_md_row(line: str) -> list[str]:
+        inner = line.strip()[1:-1]
+        return [cell.strip() for cell in re.split(r"(?<!\\)\|", inner)]
+
+    tr = EvalTestResult(
+        name="pipe_case",
+        success=True,
+        input="in",
+        actual_output="out",
+        conversational=False,
+        metrics_data=[
+            MetricData(
+                name="A | B Metric",
+                score=1.0,
+                threshold=0.5,
+                reason="part1 | part2\r\nline2",
+                success=True,
+                strictMode=False,
+                evaluationModel=None,
+                error=None,
+                evaluationCost=None,
+                verboseLogs=None,
+            )
+        ],
+        classifications=[
+            Classification(
+                name="Cls | 1",
+                label="L | 1",
+                expected_label="L | 1",
+                reason="why | detail\r\nnext",
+                success=True,
+                error=None,
+            )
+        ],
+        turns=None,
+    )
+
+    report = EvaluationConsoleReport([tr])
+    report.export_to_markdown(
+        output_dir=str(tmp_path), evaluation_name="md_test"
+    )
+    md_files = list(tmp_path.glob("md_test_*.md"))
+    assert len(md_files) == 1
+    lines = md_files[0].read_text(encoding="utf-8").splitlines()
+
+    metric_rows = [l for l in lines if "A \\| B Metric" in l]
+    assert len(metric_rows) == 2  # Metrics table + Aggregate Metrics table
+    assert len(split_md_row(metric_rows[0])) == 5
+    assert "part1 \\| part2 <br> line2" in split_md_row(metric_rows[0])[4]
+    assert "\r" not in metric_rows[0]
+
+    agg_metric_cells = split_md_row(metric_rows[1])
+    assert len(agg_metric_cells) == 4
+    assert agg_metric_cells[2] == r"100.00% \| passed=1 \| failed=0"
+    assert agg_metric_cells[3] == "1"
+
+    cls_rows = [l for l in lines if "Cls \\| 1" in l]
+    assert len(cls_rows) == 2  # Classifiers table + Aggregate Classifiers table
+    assert len(split_md_row(cls_rows[0])) == 5
+    assert "why \\| detail <br> next" in split_md_row(cls_rows[0])[4]
+    agg_cls_cells = split_md_row(cls_rows[1])
+    assert len(agg_cls_cells) == 5
+    assert agg_cls_cells[1] == r"L \| 1=1"
+    assert agg_cls_cells[2] == r"100.00% \| passed=1 \| failed=0"
+    assert agg_cls_cells[4] == "1"

@@ -122,6 +122,17 @@ def _format_classifier_pass_rate(agg: dict) -> str:
     return f"{rate} | passed={agg['passes']} | failed={agg['fails']}"
 
 
+def _escape_md_cell(value: object) -> str:
+    """Escape pipes and normalize line breaks for single-row Markdown table cells."""
+    return (
+        str(value)
+        .replace("|", "\\|")
+        .replace("\r\n", " <br> ")
+        .replace("\r", " <br> ")
+        .replace("\n", " <br> ")
+    )
+
+
 def _format_pass_rate(agg: dict) -> str:
     """Format pass rate with pass/fail counts, each with its flaky sub-count."""
     verdicts = agg["passes"] + agg["fails"]
@@ -530,11 +541,9 @@ class EvaluationConsoleReport:
                         if m.threshold is not None
                         else "N/A"
                     )
-                    reason_str = str(m.reason or m.error or "N/A").replace(
-                        "\n", " <br> "
-                    )
+                    reason_str = _escape_md_cell(m.reason or m.error or "N/A")
                     md.append(
-                        f"| {m_icon} | **{m.name}** | {score_str} | {thresh_str} | {reason_str} |"
+                        f"| {m_icon} | **{_escape_md_cell(m.name)}** | {score_str} | {thresh_str} | {reason_str} |"
                     )
 
             if case.classifications:
@@ -542,17 +551,15 @@ class EvaluationConsoleReport:
                 md.append("| Status | Classifier | Label | Expected | Reason |")
                 md.append("|:---:|:---|:---:|:---:|:---|")
                 for c in case.classifications:
-                    reason_str = str(c.reason or c.error or "N/A").replace(
-                        "\n", " <br> "
-                    )
-                    label_str = _classification_label(c)
-                    expected_str = (
-                        str(c.expected_label)
+                    reason_str = _escape_md_cell(c.reason or c.error or "N/A")
+                    label_str = _escape_md_cell(_classification_label(c))
+                    expected_str = _escape_md_cell(
+                        c.expected_label
                         if c.expected_label is not None
                         else "N/A"
                     )
                     md.append(
-                        f"| {_classification_status(c, rich=False)} | **{c.name}** | {label_str} | {expected_str} | {reason_str} |"
+                        f"| {_classification_status(c, rich=False)} | **{_escape_md_cell(c.name)}** | {label_str} | {expected_str} | {reason_str} |"
                     )
 
             md.append("\n---\n")
@@ -601,9 +608,9 @@ class EvaluationConsoleReport:
                     if agg["score_count"] > 0
                     else "N/A"
                 )
-                pass_rate = _format_pass_rate(agg)
+                pass_rate = _escape_md_cell(_format_pass_rate(agg))
                 md.append(
-                    f"| **{metric_name}** | {avg_score} | {pass_rate} | {agg['total']} |"
+                    f"| **{_escape_md_cell(metric_name)}** | {avg_score} | {pass_rate} | {agg['total']} |"
                 )
 
             md.append("\n---\n")
@@ -615,7 +622,7 @@ class EvaluationConsoleReport:
             md.append("|:---|:---|:---:|:---:|:---:|")
             for name, agg in classifier_aggregates.items():
                 md.append(
-                    f"| **{name}** | {_format_label_distribution(agg['labels'])} | {_format_classifier_pass_rate(agg)} | {agg['errors']} | {agg['total']} |"
+                    f"| **{_escape_md_cell(name)}** | {_escape_md_cell(_format_label_distribution(agg['labels']))} | {_escape_md_cell(_format_classifier_pass_rate(agg))} | {agg['errors']} | {agg['total']} |"
                 )
             md.append("\n---\n")
 
