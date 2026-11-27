@@ -174,3 +174,46 @@ def test_kimi_calculate_cost_with_zero_tokens(monkeypatch):
     model.model_data.output_price = 0.008
     cost = model.calculate_cost(input_tokens=0, output_tokens=0)
     assert cost == 0.0
+
+
+########################################
+# Missing registry pricing regressions #
+########################################
+
+
+def test_kimi_model_constructs_when_registry_entry_has_no_pricing(
+    monkeypatch,
+):
+    """
+    kimi-k2-base ships in the registry without input/output prices, so the
+    model must still construct and simply report an unknown cost.
+    """
+    monkeypatch.setenv("MOONSHOT_API_KEY", "test-key")
+    monkeypatch.setenv("MOONSHOT_MODEL_NAME", "moonshot-v1-8k")
+    reset_settings(reload_dotenv=False)
+
+    _stub_openai_clients(monkeypatch)
+
+    model = KimiModel(model="kimi-k2-base")
+
+    assert model.model_data.input_price is None
+    assert model.model_data.output_price is None
+    assert model.calculate_cost(input_tokens=250, output_tokens=100) is None
+
+
+def test_kimi_model_constructs_for_model_absent_from_registry(monkeypatch):
+    """
+    A model id with no registry entry falls back to the default model data,
+    which carries no pricing either, so construction must not raise.
+    """
+    monkeypatch.setenv("MOONSHOT_API_KEY", "test-key")
+    monkeypatch.setenv("MOONSHOT_MODEL_NAME", "moonshot-v1-8k")
+    reset_settings(reload_dotenv=False)
+
+    _stub_openai_clients(monkeypatch)
+
+    model = KimiModel(model="moonshot-v1-256k")
+
+    assert model.model_data.input_price is None
+    assert model.model_data.output_price is None
+    assert model.calculate_cost(input_tokens=250, output_tokens=100) is None
