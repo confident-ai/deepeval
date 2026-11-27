@@ -8,6 +8,7 @@ from tests.test_metrics.helpers import (
     measure,
     set_audio,
 )
+from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 
 
 @pytest.mark.parametrize("semitones", [7, 12])
@@ -69,3 +70,32 @@ def test_pitch_variation_limits_are_configurable():
         PitchVariationMetric(min_spread_semitones=6, max_spread_semitones=6)
     with pytest.raises(ValueError):
         PitchVariationMetric(min_spread_semitones=-1)
+
+
+def test_a_monotone_reply_is_asked_whether_it_sounds_flat():
+    model = FakeAudioDecisionModel(probability=0.9)
+    turns = edit_reply(1, set_audio(agent_speech(5.0, glide_hz=0)))
+    measure(
+        PitchVariationMetric(eval_mode="hybrid", audio_decision_model=model),
+        turns,
+    )
+    assert model.questions == [
+        "Does the speaker sound flat and monotone, like a robot reading?"
+    ]
+
+
+def test_an_erratic_reply_is_asked_whether_its_pitch_swings_erratically():
+    model = FakeAudioDecisionModel(probability=0.9)
+    turns = edit_reply(1, set_audio(leaping_speech(7)))
+    measure(
+        PitchVariationMetric(
+            max_spread_semitones=6,
+            eval_mode="hybrid",
+            audio_decision_model=model,
+        ),
+        turns,
+    )
+    assert model.questions == [
+        "Does the speaker's pitch swing up and down erratically, in a way "
+        "that sounds unnatural?"
+    ]

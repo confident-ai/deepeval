@@ -16,12 +16,14 @@ from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
 MONOTONE_MIN_SECONDS = 4.0
+EVENT_QUESTIONS = {
+    "monotone": "Does the speaker sound flat and monotone, like a robot reading?",
+    "erratic": "Does the speaker's pitch swing up and down erratically, in a way that sounds unnatural?",
+}
 
 
 class PitchVariationMetric(BaseDefectMetric):
-    event_question = (
-        "Does the speaker sound flat and monotone, like a robot reading?"
-    )
+    event_question = EVENT_QUESTIONS["monotone"]
     event_speaker = "assistant"
 
     # Adults vary their pitch by about 2.2 semitones (pitch sigma); under 1
@@ -116,6 +118,9 @@ class PitchVariationMetric(BaseDefectMetric):
             no_eligible_reason="No assistant reply had enough voiced speech "
             "to follow its pitch.",
         )
+
+    def _event_question(self, event: VoiceEvent) -> Optional[str]:
+        return EVENT_QUESTIONS[event.type]
 
     @property
     def __name__(self):
