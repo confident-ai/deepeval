@@ -121,6 +121,7 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                 self.score = self._calculate_score(
                     primitives_accuracy_scores, args_accuracy_scores
                 )
+                self.success = self.is_successful()
                 self.reason = self._generate_reason(
                     primitives_accuracy_scores, args_accuracy_scores
                 )
@@ -132,7 +133,6 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                     (args_score.score, args_score.reason)
                     for args_score in args_accuracy_scores
                 ]
-                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -178,7 +178,8 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
             self.score = self._calculate_score(
                 primitives_accuracy_scores, args_accuracy_scores
             )
-            self.reason = self._generate_reason(
+            self.success = self.is_successful()
+            self.reason = await self._a_generate_reason(
                 primitives_accuracy_scores, args_accuracy_scores
             )
             self.tools_scores_reasons_list = [
@@ -189,7 +190,6 @@ class MultiTurnMCPUseMetric(BaseConversationalMetric):
                 (args_score.score, args_score.reason)
                 for args_score in args_accuracy_scores
             ]
-            self.success = self.is_successful()
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
