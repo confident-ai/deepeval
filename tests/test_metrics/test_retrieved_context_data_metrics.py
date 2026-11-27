@@ -4,8 +4,8 @@
 ``LLMTestCase.retrieval_context`` and ``Turn.retrieval_context`` are typed
 ``List[Union[str, RetrievedContextData]]``, but FaithfulnessMetric,
 ContextualRelevancyMetric, TurnFaithfulnessMetric and
-TurnContextualRelevancyMetric joined or split the items as plain strings and crashed with ``TypeError`` before calling the
-judge. These run offline with a canned judge.
+TurnContextualRelevancyMetric joined or split the items as plain strings and
+crashed with ``TypeError`` before calling the judge. These run offline with a canned judge.
 """
 
 import json
