@@ -128,15 +128,15 @@ test_case = ConversationalTestCase(
   ]}
 />
 
-Both channels share one clock, so metrics that time the call, such as [Response Latency](/docs/metrics-response-latency) and the interruption metrics, see exactly when each side spoke and when they talked over each other. Metrics that judge how a reply sounds, such as pitch and loudness, score each reply on its own: each speaker's turns are matched in order to the replies heard on their channel, and each reply is cut out from 0.15 seconds before its sound to 0.15 seconds after, as the boxes above show. If a channel has more replies than turns, the closest replies are joined until the counts match.
+Both channels share one clock, so metrics that time the call, such as [Response Latency](/docs/metrics-response-latency) and the interruption metrics, see exactly when each side spoke and when they talked over each other. Metrics that judge how a reply sounds, such as pitch and loudness, score each agent reply on its own, cut from the agent's channel. A reply runs from the agent's first sound until the caller speaks in one of the agent's silences, so a pause the agent takes mid-reply stays inside it, and an "mm-hm" from the caller over the agent never splits it. Their events say where the reply starts on the call, in `reply_start`.
 
-For a recording with the agent on the left channel, set `agent_channel="left"`. A mono recording can't be used, since there's no way to tell the two voices apart, and logs a warning saying so.
+For a recording with the agent on the left channel, set `agent_channel="left"`. A mono recording can't be used, since there's no way to tell the two voices apart. With no per-turn audio either, voice metrics are skipped and say so.
 
 ### What Counts as a Reply
 
 How a metric counts the agent's replies depends on what it measures:
 
-- **Metrics that judge how a reply sounds**, such as pitch, loudness and clipping, score each agent turn's audio as one reply, whether it was cut from the recording or came as the turn's own clip. Audio that can't be decoded is skipped.
+- **Metrics that judge how a reply sounds**, such as pitch, loudness and clipping, score each agent turn's own clip as one reply. When no turn has audio, they score each reply heard on the agent's channel instead, [as above](#call-audio). Audio that can't be decoded is skipped.
 - **Metrics that time the call**, such as [Response Latency](/docs/metrics-response-latency), the interruption metrics and [Abrupt Cut-off](/docs/metrics-abrupt-cut-off), count a reply each time the agent starts speaking after at least 1 second of its own silence. A pause under 1 second doesn't start a new one. They count from the sound rather than the transcript, since a transcriber can split one reply across several turns.
 
 <VoiceDiagram
@@ -154,7 +154,7 @@ Only the agent's replies are scored, unless a metric's page says otherwise. Some
 
 ### Per-Turn Audio
 
-If your platform gives each turn its own clip, put it in `audio` on the `Turn`, placed on the call's clock by `Audio.start_time`. Metrics that judge how a reply sounds then use those clips instead of cutting the recording, which skips the turn matching above. Without a call recording, the timing metrics use them too, by listening for the speech inside each clip. [Echo](/docs/metrics-echo) needs the stereo recording, and [Transcription Accuracy](/docs/metrics-transcription-accuracy) needs per-turn audio. `timing_source` in the results says which was used: `"call_recording"` or `"turn_timestamps"`.
+If your platform gives each turn its own clip, put it in `audio` on the `Turn`, placed on the call's clock by `Audio.start_time`. Metrics that judge how a reply sounds then use those clips instead of the replies heard on the recording. Without a call recording, the timing metrics use them too, by listening for the speech inside each clip. [Echo](/docs/metrics-echo) needs the stereo recording. [Failed Response](/docs/metrics-failed-response), [Reprompt](/docs/metrics-reprompt), [Silent Reply](/docs/metrics-silent-reply) and [Transcription Accuracy](/docs/metrics-transcription-accuracy) need per-turn audio, since they match each transcript line to its own audio. `timing_source` in the results says which was used: `"call_recording"` or `"turn_timestamps"`.
 
 ## Speech Detection
 
@@ -173,7 +173,7 @@ Metrics that need to know when someone is talking take `use_speech_detection`, o
   ]}
 />
 
-So background noise, bangs and hold music aren't mistaken for someone talking. It applies to both full call audio and per-turn audio, on the metrics that take it. Background voices, such as a TV, are still speech and still count. It needs `pip install onnxruntime`.
+So background noise, bangs and hold music aren't mistaken for someone talking. It applies to both full call audio and per-turn audio, on the metrics that take it. On full call audio with no per-turn audio, the metrics that judge how a reply sounds use it too, to hear where the caller speaks and so where each agent reply ends. Background voices, such as a TV, are still speech and still count. It needs `pip install onnxruntime`.
 
 ## Choose Who Judges With Eval Modes
 
@@ -294,6 +294,12 @@ Events found in per-turn audio also name the turn:
 | `turn` | Which turn it's in, counting from 0 |
 | `role` | Whose turn it is, on metrics that report it |
 | `offset_seconds` | Where it starts, in seconds from the start of that turn's clip |
+
+Events about a reply heard on the call recording name the reply by where it starts instead:
+
+| Field | What it means |
+| --- | --- |
+| `reply_start` | Where the reply starts, in seconds from the start of the call |
 
 For per-turn audio, the call-clock timing is only as accurate as the turns' `Audio.start_time`. Each metric's page lists the extra fields its own events carry.
 

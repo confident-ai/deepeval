@@ -22,7 +22,9 @@ The loudness consistency metric checks whether your voice agent **keeps the same
 
 To use the `LoudnessConsistencyMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
 
-- `audio` on at least three of the agent's turns
+- `audio` on at least three of the agent's turns, or on the test case as a stereo recording of the whole call\*
+
+\* Full call audio has to be stereo, with the caller and agent on separate channels, and is only used when no turn has audio. Each agent reply is then [heard on the agent's channel](/docs/metrics-voice-introduction#call-audio), from its first sound until the caller speaks.
 
 ## Usage
 

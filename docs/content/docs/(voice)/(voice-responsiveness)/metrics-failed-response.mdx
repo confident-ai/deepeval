@@ -25,6 +25,8 @@ To use the `FailedResponseMetric`, you'll have to provide a [`ConversationalTest
 - `content` on each turn, to tell which caller lines needed a reply
 - `audio` on the turns, with `Audio.start_time` set so caller turns can be placed on the call's clock
 
+A stereo recording on the test case isn't enough on its own: the metric matches each transcript line to its turn's audio, so without per-turn audio it's skipped and says why.
+
 ## Usage
 
 The `FailedResponseMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):

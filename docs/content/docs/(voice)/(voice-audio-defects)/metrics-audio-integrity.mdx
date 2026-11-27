@@ -22,9 +22,11 @@ This is a pipeline health check, not a quality judgment. It catches the failures
 
 ## Required Arguments
 
-To use the `AudioIntegrityMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns, and `content` on them so a reply with no audio can be counted.
+To use the `AudioIntegrityMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with `audio` on the agent's turns, or on the test case as a stereo recording of the whole call\*, and `content` on them so a reply with no audio can be counted.
 
-Stereo `audio` on the test case is also used, but only by the cut-off and silent reply parts. See [Full call audio](#call-audio) below.
+With per-turn audio, stereo `audio` on the test case is also used, but only by the cut-off and silent reply parts. See [Full call audio](#call-audio) below.
+
+\* Full call audio has to be stereo, with the caller and agent on separate channels, and is only used when no turn has audio. Each agent reply is then [heard on the agent's channel](/docs/metrics-voice-introduction#call-audio), from its first sound until the caller speaks.
 
 ## Usage
 

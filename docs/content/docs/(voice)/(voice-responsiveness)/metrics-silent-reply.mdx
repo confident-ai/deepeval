@@ -27,6 +27,8 @@ To use the `SilentReplyMetric`, you'll have to provide a [`ConversationalTestCas
 
 The metric judges each agent reply [on its own](/docs/metrics-voice-introduction#call-audio). The caller's side of the call is only used to tell whether the caller was talking, and by the `stt_model` check.
 
+A stereo recording on the test case isn't enough on its own: the metric matches each transcript line to its turn's audio, so without per-turn audio it's skipped and says why.
+
 ## Usage
 
 The `SilentReplyMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
