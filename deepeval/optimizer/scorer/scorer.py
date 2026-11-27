@@ -290,6 +290,8 @@ class Scorer(BaseScorer):
         actual: str,
     ) -> Union[LLMTestCase, ConversationalTestCase]:
         """Convert a golden + actual output into a test case for metrics."""
+        # Candidate outputs must not become inputs for later prompt candidates.
+        golden = copy.copy(golden)
         if isinstance(golden, Golden):
             golden.actual_output = actual
             return convert_goldens_to_test_cases([golden])[0]
@@ -381,7 +383,7 @@ class Scorer(BaseScorer):
             expected_str = golden.expected_output or "None provided"
         else:
             input_str = "\n".join(
-                [t.content for t in golden.turns if t.role == "user"]
+                [t.content for t in (golden.turns or []) if t.role == "user"]
             )
             expected_str = golden.expected_outcome or "None provided"
 
