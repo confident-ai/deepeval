@@ -128,11 +128,11 @@ def test_customer_chatbot(test_case: LLMTestCase):
 
 
 # You should aim to make these values dynamic
-@deepeval.log_hyperparameters(model="gpt-4", prompt_template="...")
+@deepeval.log_hyperparameters
 def hyperparameters():
-    # Return a dict to log additional hyperparameters.
-    # You can also return an empty dict {} if there's no additional parameters to log
     return {
+        "model": "gpt-4",
+        "prompt template": "...",
         "temperature": 1,
         "chunk size": 500
     }

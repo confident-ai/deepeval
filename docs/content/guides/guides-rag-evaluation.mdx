@@ -448,9 +448,11 @@ import deepeval
 
 ...
 
-@deepeval.log_hyperparameters(model="gpt-4", prompt_template="...")
+@deepeval.log_hyperparameters
 def custom_parameters():
     return {
+        "model": "gpt-4",
+        "prompt template": "...",
         "embedding model": "text-embedding-3-large",
         "chunk size": 1000,
         "k": 5,
