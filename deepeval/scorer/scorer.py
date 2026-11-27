@@ -1,10 +1,81 @@
 from typing import Union, List, Optional, Any
 import textwrap
+import unicodedata
 
 from deepeval.metrics.utils import trimAndLoadJson
 from deepeval.utils import normalize_text
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.benchmarks.schema import NumberSchema
+
+
+def _is_cjk_char(ch: str) -> bool:
+    """Han ideographs and Japanese kana, which are written without spaces between words."""
+    cp = ord(ch)
+    return (
+        0x3040 <= cp <= 0x30FF  # Hiragana, Katakana
+        or 0x31F0 <= cp <= 0x31FF  # Katakana Phonetic Extensions
+        or 0x3400 <= cp <= 0x4DBF  # CJK Unified Ideographs Extension A
+        or 0x4E00 <= cp <= 0x9FFF  # CJK Unified Ideographs
+        or 0xF900 <= cp <= 0xFAFF  # CJK Compatibility Ideographs
+        or 0xFF66 <= cp <= 0xFF9F  # Halfwidth Katakana
+        or 0x20000 <= cp <= 0x3134F  # CJK Unified Ideographs Extensions B-G
+    )
+
+
+_JOINERS = "\u200c\u200d"  # zero width non-joiner, zero width joiner
+
+
+class _UnicodeRougeTokenizer:
+    """Tokenizer for `rouge_score` that keeps words in every script.
+
+    `rouge_score`'s default tokenizer replaces everything outside `[a-z0-9]` with spaces, so text in
+    Devanagari, Arabic, Cyrillic, CJK, ... produces no tokens at all (identical texts score 0, and texts
+    that share only an embedded English word score 1). This tokenizer normalizes text to NFC, treats
+    letters, combining marks and digits of any script (plus ZWNJ/ZWJ inside a word) as word characters,
+    splits CJK into single characters, and applies the Porter stemmer only to ASCII words. For ASCII-only
+    text the tokens are identical to the default tokenizer's.
+    """
+
+    def __init__(self, use_stemmer: bool = True):
+        from nltk.stem import porter
+
+        self._stemmer = porter.PorterStemmer() if use_stemmer else None
+
+    def tokenize(self, text: str) -> List[str]:
+        tokens: List[str] = []
+        word: List[str] = []
+
+        def flush():
+            if word:
+                tokens.append("".join(word))
+                word.clear()
+
+        # NFC so that composed and decomposed spellings of the same text ("café", "cafe\u0301") match.
+        for ch in unicodedata.normalize("NFC", text.lower()):
+            if ch in _JOINERS:
+                # ZWNJ/ZWJ shape how letters join (Persian, Indic scripts) and do not end a word.
+                if word:
+                    word.append(ch)
+            elif unicodedata.category(ch)[0] not in "LMN":
+                flush()
+            elif _is_cjk_char(ch):
+                flush()
+                tokens.append(ch)
+            else:
+                word.append(ch)
+        flush()
+
+        if self._stemmer:
+            # Same rule as rouge_score: only stem (ASCII) words longer than 3 characters.
+            tokens = [
+                (
+                    self._stemmer.stem(t)
+                    if len(t) > 3 and t.isascii() and t.isalnum()
+                    else t
+                )
+                for t in tokens
+            ]
+        return tokens
 
 
 # TODO: More scores are to be added
@@ -44,7 +115,9 @@ class Scorer:
             "rouge2",
             "rougeL",
         ], "score_type can be either rouge1, rouge2 or rougeL"
-        scorer = rouge_scorer.RougeScorer([score_type], use_stemmer=True)
+        scorer = rouge_scorer.RougeScorer(
+            [score_type], tokenizer=_UnicodeRougeTokenizer(use_stemmer=True)
+        )
         scores = scorer.score(target, prediction)
         return scores[score_type].fmeasure
 
