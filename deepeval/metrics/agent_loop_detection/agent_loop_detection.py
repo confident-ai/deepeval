@@ -1,6 +1,6 @@
 import json
 from difflib import SequenceMatcher
-from typing import Optional, List, Tuple, Dict
+from typing import Optional, List, Tuple, Dict, Literal
 
 from deepeval.test_case import LLMTestCase, SingleTurnParams
 from deepeval.metrics import BaseMetric
@@ -97,6 +97,22 @@ class AgentLoopDetectionMetric(BaseMetric):
       be misleading.  A future LLM-as-judge stagnation mode could be added
       behind a feature flag if semantic comparison proves necessary.
 
+    Aggregation modes
+    ~~~~~~~~~~~~~~~~~
+    The ``aggregation`` parameter controls how the three sub-scores are
+    combined into the final loop score:
+
+    * ``"weighted_mean"`` *(default, backward-compatible)* — weighted
+      average of the enabled sub-scores (repetition 0.40, stagnation
+      0.35, cycles 0.25).
+    * ``"critical_override"`` — same weighted average, but any enabled
+      sub-score of 0.0 (severe evidence) forces the final score to 0.0
+      so hard failure evidence is never averaged away.  Stricter than
+      the default.
+    * ``"min"`` — the final score is the minimum of the enabled
+      sub-scores (1.0 if no checks are enabled).  The strictest mode:
+      any degradation is treated at full severity.
+
     Limitations
     ~~~~~~~~~~~
     * **Cycle detection** relies on ``type:name:input_hash`` identity.
@@ -129,7 +145,16 @@ class AgentLoopDetectionMetric(BaseMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         flaky: bool = False,
+        aggregation: Literal[
+            "weighted_mean", "critical_override", "min"
+        ] = "weighted_mean",
     ):
+        if aggregation not in ("weighted_mean", "critical_override", "min"):
+            raise ValueError(
+                f"Unknown aggregation mode: {aggregation!r}. "
+                "Expected one of 'weighted_mean', 'critical_override', or "
+                "'min'."
+            )
         self.threshold = 1 if strict_mode else threshold
         self.repetition_threshold = repetition_threshold
         self.similarity_threshold = similarity_threshold
@@ -144,6 +169,7 @@ class AgentLoopDetectionMetric(BaseMetric):
         self.strict_mode = strict_mode
         self.verbose_mode = verbose_mode
         self.flaky = flaky
+        self.aggregation = aggregation
         self.requires_trace = True
 
     def measure(
@@ -251,11 +277,36 @@ class AgentLoopDetectionMetric(BaseMetric):
         self.success = self.is_successful()
 
         reasons = []
-        if self.check_tool_repetition and rep_score < 1.0:
+        critical_reason = None
+        if self.aggregation == "critical_override":
+            for enabled, sub_score, sub_reason in (
+                (self.check_tool_repetition, rep_score, rep_reason),
+                (self.check_reasoning_stagnation, stag_score, stag_reason),
+                (self.check_call_graph_cycles, cycle_score, cycle_reason),
+            ):
+                if enabled and sub_score == 0.0:
+                    critical_reason = sub_reason
+                    break
+
+        if critical_reason is not None:
+            reasons.append(f"Critical loop failure: {critical_reason}")
+        if (
+            self.check_tool_repetition
+            and rep_score < 1.0
+            and (rep_reason != critical_reason)
+        ):
             reasons.append(rep_reason)
-        if self.check_reasoning_stagnation and stag_score < 1.0:
+        if (
+            self.check_reasoning_stagnation
+            and stag_score < 1.0
+            and (stag_reason != critical_reason)
+        ):
             reasons.append(stag_reason)
-        if self.check_call_graph_cycles and cycle_score < 1.0:
+        if (
+            self.check_call_graph_cycles
+            and cycle_score < 1.0
+            and (cycle_reason != critical_reason)
+        ):
             reasons.append(cycle_reason)
 
         if self.score == 1.0:
@@ -271,7 +322,7 @@ class AgentLoopDetectionMetric(BaseMetric):
                 f"Tool Repetition Score: {rep_score} ({rep_reason})",
                 f"Reasoning Stagnation Score: {stag_score} ({stag_reason})",
                 f"Call Graph Cycles Score: {cycle_score} ({cycle_reason})",
-                f"Combined Loop Score: {self.score}",
+                f"Combined Loop Score ({self.aggregation}): {self.score}",
                 f"Final Reason: {self.reason}",
             ],
         )
@@ -530,23 +581,37 @@ class AgentLoopDetectionMetric(BaseMetric):
     def _combine_scores(
         self, rep_score: float, stag_score: float, cycle_score: float
     ) -> float:
+        enabled_scores = []
         weights = 0.0
         total = 0.0
 
         if self.check_tool_repetition:
+            enabled_scores.append(rep_score)
             weights += 0.40
             total += rep_score * 0.40
         if self.check_reasoning_stagnation:
+            enabled_scores.append(stag_score)
             weights += 0.35
             total += stag_score * 0.35
         if self.check_call_graph_cycles:
+            enabled_scores.append(cycle_score)
             weights += 0.25
             total += cycle_score * 0.25
 
         if weights == 0.0:
             return 1.0
 
-        return total / weights
+        if self.aggregation == "min":
+            return min(enabled_scores)
+
+        weighted_mean = total / weights
+
+        if self.aggregation == "critical_override":
+            if any(score == 0.0 for score in enabled_scores):
+                return 0.0
+            return weighted_mean
+
+        return weighted_mean
 
     @property
     def __name__(self):

@@ -8,7 +8,6 @@ import pytest
 from deepeval.test_case import LLMTestCase
 from deepeval.metrics.agent_loop_detection import AgentLoopDetectionMetric
 
-
 # ---------------------------------------------------------------------------
 # Trace / test-case builder helpers
 # ---------------------------------------------------------------------------
@@ -370,3 +369,155 @@ def test_reordered_stagnation_detected():
 
     # SequenceMatcher should push the similarity above 0.75
     assert metric.score_breakdown["reasoning_stagnation"] < 1.0
+
+
+# ---------------------------------------------------------------------------
+# Aggregation mode tests
+# ---------------------------------------------------------------------------
+
+
+def _make_repetition_trace(count: int) -> dict:
+    """A trace with `count` identical tool calls and clean LLM reasoning."""
+    return _make_agent_span(
+        "looping_agent",
+        [
+            _make_llm_span(
+                "I will search the web for the current weather conditions "
+                "in Paris France today. After that I will summarize the "
+                "forecast for the user in a short and helpful paragraph."
+            ),
+            *[
+                _make_tool_span("search_web", {"query": "Paris weather"})
+                for _ in range(count)
+            ],
+        ],
+    )
+
+
+def test_critical_override_zeroes_on_severe_repetition():
+    """Six identical calls (rep=0.0) but otherwise clean -> forced 0.0."""
+    metric = AgentLoopDetectionMetric(aggregation="critical_override")
+    tc = _make_test_case(_make_repetition_trace(6))
+    metric._calculate_metric(tc)
+
+    assert metric.score_breakdown["tool_repetition"] == 0.0
+    assert metric.score == 0.0
+    assert metric.success is False
+    assert "Critical loop failure" in metric.reason
+
+
+def test_critical_override_keeps_weighted_mean_without_severe_evidence():
+    """Three identical calls (rep=0.5) -> plain weighted mean, not zeroed."""
+    metric = AgentLoopDetectionMetric(aggregation="critical_override")
+    tc = _make_test_case(_make_repetition_trace(3))
+    metric._calculate_metric(tc)
+
+    assert metric.score_breakdown["tool_repetition"] == 0.5
+    assert metric.score == pytest.approx(0.80)
+    assert metric.success is True
+
+
+def test_min_mode_zeroes_on_severe_repetition():
+    """Same severe trace as critical_override -> min mode also gives 0.0."""
+    metric = AgentLoopDetectionMetric(aggregation="min")
+    tc = _make_test_case(_make_repetition_trace(6))
+    metric._calculate_metric(tc)
+
+    assert metric.score == 0.0
+    assert metric.success is False
+
+
+def test_min_mode_returns_minimum_subscore():
+    """Mixed 0.5 / 1.0 sub-scores -> min mode returns 0.5."""
+    trace = _make_agent_span(
+        "agent",
+        [
+            _make_tool_span("search_web", {"query": "Paris weather"}),
+            _make_tool_span("search_web", {"query": "Paris weather"}),
+            _make_tool_span("search_web", {"query": "Paris weather"}),
+        ],
+    )
+    metric = AgentLoopDetectionMetric(
+        aggregation="min",
+        check_reasoning_stagnation=False,
+        check_call_graph_cycles=False,
+    )
+    tc = _make_test_case(trace)
+    metric._calculate_metric(tc)
+
+    assert metric.score == 0.5
+
+
+def test_weighted_mean_default_not_zeroed_on_severe_repetition():
+    """Default mode: the same 6x trace is averaged, not overridden.
+
+    This documents the backward-compatible behavior: 0.0 * 0.40 + 1.0 *
+    0.35 + 1.0 * 0.25 = 0.60, which passes with the default threshold.
+    """
+    metric = AgentLoopDetectionMetric()
+    tc = _make_test_case(_make_repetition_trace(6))
+    metric._calculate_metric(tc)
+
+    assert metric.score == pytest.approx(0.60)
+    assert metric.success is True
+
+
+def test_critical_override_zeroes_on_cycle():
+    """A call-graph cycle (0.0) with clean rep/stag -> forced 0.0."""
+    # Build a genuinely recursive trace: root agent -> child agent with
+    # the same type:name:input label on the same ancestry path.
+    inner = _make_agent_span("recursive_agent", [])
+    inner["children"] = [_make_agent_span("recursive_agent", [])]
+    trace = _make_agent_span("recursive_agent", [inner])
+    metric = AgentLoopDetectionMetric(
+        aggregation="critical_override",
+        check_tool_repetition=False,
+        check_reasoning_stagnation=False,
+    )
+    tc = _make_test_case(trace)
+    metric._calculate_metric(tc)
+
+    assert metric.score_breakdown["call_graph_cycles"] == 0.0
+    assert metric.score == 0.0
+    assert metric.success is False
+
+
+def test_all_checks_disabled_returns_one_in_every_mode():
+    """No enabled checks -> 1.0 regardless of aggregation mode."""
+    trace = _make_agent_span("agent", [_make_tool_span("search", {"q": "x"})])
+    for aggregation in ("weighted_mean", "critical_override", "min"):
+        metric = AgentLoopDetectionMetric(
+            aggregation=aggregation,
+            check_tool_repetition=False,
+            check_reasoning_stagnation=False,
+            check_call_graph_cycles=False,
+        )
+        tc = _make_test_case(trace)
+        metric._calculate_metric(tc)
+        assert metric.score == 1.0, aggregation
+        assert metric.success is True
+
+
+def test_invalid_aggregation_raises_value_error():
+    """Unknown aggregation strings are rejected at construction time."""
+    with pytest.raises(ValueError):
+        AgentLoopDetectionMetric(aggregation="geometric_mean")
+
+
+def test_strict_mode_still_zeroes_with_aggregation_modes():
+    """Strict mode sets threshold=1, so any score < 1.0 is zeroed — both
+    for the backward-compatible weighted mean and for critical_override's
+    forced zero."""
+    trace = _make_repetition_trace(6)
+
+    strict_weighted = AgentLoopDetectionMetric(strict_mode=True)
+    strict_weighted._calculate_metric(_make_test_case(trace))
+    assert strict_weighted.score == 0.0
+    assert strict_weighted.success is False
+
+    strict_critical = AgentLoopDetectionMetric(
+        strict_mode=True, aggregation="critical_override"
+    )
+    strict_critical._calculate_metric(_make_test_case(trace))
+    assert strict_critical.score == 0.0
+    assert strict_critical.success is False
