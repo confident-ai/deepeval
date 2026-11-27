@@ -1,10 +1,14 @@
 """LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
-from typing import Dict, Optional, List, Tuple, Union, Type
+from typing import Any, Dict, Optional, List, Tuple, Union, Type
 from rich.progress import Progress
 
+from deepeval.errors import DeepEvalError
 from deepeval.metrics import BaseArenaMetric
-from deepeval.metrics.arena_g_eval.utils import format_arena_test_case
+from deepeval.metrics.arena_g_eval.utils import (
+    format_arena_test_case,
+    resolve_masked_winner,
+)
 from deepeval.test_case import (
     SingleTurnParams,
     ArenaTestCase,
@@ -72,6 +76,7 @@ class ArenaGEval(BaseArenaMetric):
         _progress: Optional[Progress] = None,
         _pbar_id: Optional[int] = None,
     ) -> str:
+        self.error = None
         check_arena_test_case_params(
             test_case,
             self.evaluation_params,
@@ -103,7 +108,9 @@ class ArenaGEval(BaseArenaMetric):
                 )
                 if _progress:
                     update_pbar(_progress, _pbar_id)
-                self.winner = dummy_to_real_names[masked_winner]
+                self.winner = self._resolve_winner(
+                    masked_winner, dummy_to_real_names
+                )
                 self.reason = self._generate_rewritten_reason(
                     masked_reason, dummy_to_real_names
                 )
@@ -129,6 +136,7 @@ class ArenaGEval(BaseArenaMetric):
         _progress: Optional[Progress] = None,
         _pbar_id: Optional[int] = None,
     ) -> str:
+        self.error = None
         check_arena_test_case_params(
             test_case,
             self.evaluation_params,
@@ -155,7 +163,9 @@ class ArenaGEval(BaseArenaMetric):
             )
             if _progress:
                 update_pbar(_progress, _pbar_id)
-            self.winner = dummy_to_real_names[masked_winner]
+            self.winner = self._resolve_winner(
+                masked_winner, dummy_to_real_names
+            )
             self.reason = await self._a_generate_rewritten_reason(
                 masked_reason, dummy_to_real_names
             )
@@ -243,7 +253,7 @@ class ArenaGEval(BaseArenaMetric):
                 dummy_to_real_names,
             ),
             extract_json=lambda data: (
-                data["winner"],
+                data.get("winner"),
                 data["reason"],
                 dummy_to_real_names,
             ),
@@ -275,7 +285,7 @@ class ArenaGEval(BaseArenaMetric):
                 dummy_to_real_names,
             ),
             extract_json=lambda data: (
-                data["winner"],
+                data.get("winner"),
                 data["reason"],
                 dummy_to_real_names,
             ),
@@ -317,6 +327,16 @@ class ArenaGEval(BaseArenaMetric):
             extract_schema=lambda s: s.rewritten_reason,
             extract_json=lambda data: data["rewritten_reason"],
         )
+
+    def _resolve_winner(
+        self, masked_winner: Any, dummy_to_real_names: Dict[str, str]
+    ) -> str:
+        try:
+            return resolve_masked_winner(masked_winner, dummy_to_real_names)
+        except DeepEvalError as e:
+            self.error = str(e)
+            self.success = False
+            raise
 
     def is_successful(self) -> bool:
         if self.error is not None:

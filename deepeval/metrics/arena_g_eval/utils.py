@@ -1,8 +1,10 @@
 from dataclasses import dataclass
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 import json
 import random
+import string
 
+from deepeval.errors import DeepEvalError
 from deepeval.test_case import (
     SingleTurnParams,
     ToolCall,
@@ -127,6 +129,41 @@ def format_arena_test_case(
         dummy_to_real_names=dummy_to_real_names,
     )
     return formatted_test_case, dummy_to_real_names
+
+
+def _normalize_contestant_name(name: str) -> str:
+    return name.strip(string.whitespace + string.punctuation).casefold()
+
+
+def resolve_masked_winner(
+    masked_winner: Any, dummy_to_real_names: Dict[str, str]
+) -> str:
+    """Map the judge's `winner` answer back to the real contestant name.
+
+    The judge is only asked, not forced, to return one of the masked names
+    verbatim, so harmless drift is tolerated: letter case and surrounding
+    whitespace, quotes, punctuation or `$` wrappers. Anything that still does
+    not identify exactly one contestant (a tie, a sentence, a non-string
+    value) raises a `DeepEvalError` instead of being guessed.
+    """
+    if isinstance(masked_winner, str):
+        if masked_winner in dummy_to_real_names:
+            return dummy_to_real_names[masked_winner]
+
+        normalized_winner = _normalize_contestant_name(masked_winner)
+        matches = [
+            real_name
+            for dummy_name, real_name in dummy_to_real_names.items()
+            if _normalize_contestant_name(dummy_name) == normalized_winner
+        ]
+        if len(matches) == 1:
+            return matches[0]
+
+    raise DeepEvalError(
+        f"ArenaGEval could not resolve a winner: the judge returned "
+        f"{masked_winner!r}, which does not match exactly one of the masked "
+        f"contestant names it was given ({list(dummy_to_real_names)})."
+    )
 
 
 def construct_formatted_llm_test_case(
