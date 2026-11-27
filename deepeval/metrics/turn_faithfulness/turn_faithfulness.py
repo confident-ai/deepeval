@@ -591,7 +591,8 @@ class TurnFaithfulnessMetric(BaseConversationalMetric):
         total_score = 0
         for score in scores:
             total_score += score.score
-        return total_score / number_of_scores
+        score = total_score / number_of_scores
+        return 0 if self.strict_mode and score < self.threshold else score
 
     @property
     def __name__(self):
