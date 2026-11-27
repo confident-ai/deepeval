@@ -35,11 +35,14 @@ from deepeval.metrics.voice.utils.analysis import (
 from deepeval.metrics.voice.utils.defects import (
     AGENT_OVERLAP_ALLOWANCE_SECONDS,
     CALL_RECORDING,
+    CALL_RECORDING_UNREADABLE_REASON,
+    STEREO_RECORDING_NEEDED_REASON,
     TURN_TIMESTAMPS,
+    DefectShare,
     call_has_audio,
     call_timeline,
 )
-from deepeval.metrics.voice.utils.events import on_call
+from deepeval.metrics.voice.utils.events import VoiceEvent, on_call
 from deepeval.metrics.voice.utils.speech_detection import speech_frames
 from deepeval.test_case import Audio, ConversationalTestCase, Turn
 from deepeval.voice.connectors import audio_utils
@@ -697,24 +700,55 @@ class AgentReplies:
     audio: Dict[float, Audio]
     event_key: str
     timing_source: Optional[str]
+    unreadable_reason: Optional[str] = None
 
     @property
     def by_turn(self) -> bool:
         return self.event_key == EVENT_KEYS[TURN_TIMESTAMPS]
 
-    def key(self, reply: float) -> Dict[str, float]:
-        return {self.event_key: reply}
+    def key(self, reply_key: float) -> Dict[str, float]:
+        return {self.event_key: reply_key}
+
+    def share(
+        self,
+        eligible_turns: Sequence[float],
+        defects: List[VoiceEvent],
+        skipped: List[Dict],
+        defect_label: str,
+        **options: Any,
+    ) -> DefectShare:
+        if self.unreadable_reason is not None:
+            options["no_eligible_reason"] = self.unreadable_reason
+        return DefectShare(
+            eligible_turns,
+            defects,
+            skipped,
+            defect_label,
+            event_key=self.event_key,
+            timing_source=self.timing_source,
+            **options,
+        )
 
 
 def agent_replies(
     test_case: ConversationalTestCase, use_speech_detection: bool = True
 ) -> AgentReplies:
-    if not call_has_audio(test_case):
+    if not call_has_audio(test_case) and test_case.audio is not None:
         replies = recording_replies(test_case, use_speech_detection)
         if replies is not None:
             return AgentReplies(
                 dict(replies), EVENT_KEYS[CALL_RECORDING], CALL_RECORDING
             )
+        return AgentReplies(
+            {},
+            EVENT_KEYS[TURN_TIMESTAMPS],
+            None,
+            (
+                CALL_RECORDING_UNREADABLE_REASON
+                if _recording_bytes(test_case.audio) is None
+                else STEREO_RECORDING_NEEDED_REASON
+            ),
+        )
     return AgentReplies(
         {
             index: turn.audio

@@ -65,8 +65,10 @@ class PitchVariationMetric(BaseDefectMetric):
         self.max_spread_semitones = max_spread_semitones
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        replies = agent_replies(test_case)
-        measurements, skipped = agent_reply_measurements(test_case)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        measurements, skipped = agent_reply_measurements(
+            test_case, self.use_speech_detection
+        )
         eligible_turns = []
         defects = []
         for turn, reply in measurements.items():
@@ -107,7 +109,7 @@ class PitchVariationMetric(BaseDefectMetric):
                     ),
                 )
             )
-        return DefectShare(
+        return replies.share(
             eligible_turns,
             defects,
             skipped,
@@ -117,8 +119,6 @@ class PitchVariationMetric(BaseDefectMetric):
                 else f"pitch varying outside {self.min_spread_semitones} to "
                 f"{self.max_spread_semitones} semitones"
             ),
-            event_key=replies.event_key,
-            timing_source=replies.timing_source,
             no_eligible_reason="No assistant reply had enough voiced speech "
             "to follow its pitch.",
         )

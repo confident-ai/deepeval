@@ -166,13 +166,11 @@ class DeadStreamMetric(BaseDefectMetric):
             for event in dead_streams(test_case, self.use_speech_detection)
             if not self._after_a_finished_sentence(test_case, event)
         ]
-        return DefectShare(
+        return replies.share(
             eligible_turns,
             defects,
             skipped,
             "a dead stream",
-            event_key=replies.event_key,
-            timing_source=replies.timing_source,
         )
 
     @property

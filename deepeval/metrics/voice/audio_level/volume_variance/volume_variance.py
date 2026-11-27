@@ -42,8 +42,10 @@ class VolumeVarianceMetric(BaseDefectMetric):
         self.max_drift_db = max_drift_db
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        replies = agent_replies(test_case)
-        measurements, skipped = agent_reply_measurements(test_case)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        measurements, skipped = agent_reply_measurements(
+            test_case, self.use_speech_detection
+        )
         measurements = audible_replies(measurements, skipped, replies.event_key)
         eligible_turns = []
         defects = []
@@ -70,13 +72,11 @@ class VolumeVarianceMetric(BaseDefectMetric):
                         f"{abs(drift):.0f} dB during the reply",
                     )
                 )
-        return DefectShare(
+        return replies.share(
             eligible_turns,
             defects,
             skipped,
             f"a volume drift over {self.max_drift_db} dB",
-            event_key=replies.event_key,
-            timing_source=replies.timing_source,
             no_eligible_reason="No assistant reply was long enough to "
             "follow its volume.",
         )

@@ -51,6 +51,9 @@ STEREO_RECORDING_NEEDED_REASON = (
     "The call recording is not a stereo WAV with the caller and the agent on "
     "separate channels, and no turn has audio of its own."
 )
+CALL_RECORDING_UNREADABLE_REASON = (
+    "The call recording could not be read, and no turn has audio of its own."
+)
 INAUDIBLE_ERROR = "Reply has no audible sound to measure."
 # Where the timing metrics read who spoke when.
 CALL_RECORDING = "call_recording"
@@ -98,11 +101,11 @@ def agent_reply_measurements(
         replies = agent_replies(test_case, use_speech_detection)
         measurements: Dict[float, AudioMeasurements] = {}
         skipped: List[Dict] = []
-        for reply, audio in replies.audio.items():
+        for reply_key, audio in replies.audio.items():
             try:
-                measurements[reply] = analyze_audio(audio)
+                measurements[reply_key] = analyze_audio(audio)
             except (TypeError, ValueError) as error:
-                skipped.append({**replies.key(reply), "error": str(error)})
+                skipped.append({**replies.key(reply_key), "error": str(error)})
         return measurements, skipped
 
     measurements, skipped = _analyzed_once(
@@ -176,22 +179,29 @@ def agent_glitch_events(
             lambda: detect_audio_glitches(test_case),
         )
     key = replies.event_key
-    agent_turns = [
-        reply for reply in report.turns_with_audio if reply in replies.audio
+    agent_reply_keys = [
+        reply_key
+        for reply_key in report.turns_with_audio
+        if reply_key in replies.audio
     ]
     skipped = [
         {key: event.get(key), "error": event.reason}
         for event in report.events
-        if event.type == "audio_undecodable" and event.get(key) in agent_turns
+        if event.type == "audio_undecodable"
+        and event.get(key) in agent_reply_keys
     ]
     undecodable = {entry[key] for entry in skipped}
-    eligible_turns = [
-        reply for reply in agent_turns if reply not in undecodable
+    eligible_reply_keys = [
+        reply_key
+        for reply_key in agent_reply_keys
+        if reply_key not in undecodable
     ]
     events = [
-        event for event in report.events if event.get(key) in eligible_turns
+        event
+        for event in report.events
+        if event.get(key) in eligible_reply_keys
     ]
-    return eligible_turns, events, skipped
+    return eligible_reply_keys, events, skipped
 
 
 def untimed_call_reason(test_case: ConversationalTestCase) -> Optional[str]:

@@ -40,8 +40,10 @@ class PausesMetric(BaseDefectMetric):
         self.max_pause_percent = max_pause_percent
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        replies = agent_replies(test_case)
-        measurements, skipped = agent_reply_measurements(test_case)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        measurements, skipped = agent_reply_measurements(
+            test_case, self.use_speech_detection
+        )
         eligible_turns = []
         defects = []
         for turn, reply in measurements.items():
@@ -79,14 +81,12 @@ class PausesMetric(BaseDefectMetric):
                         f"{reply.pause_fraction * 100:.0f}% silence",
                     )
                 )
-        return DefectShare(
+        return replies.share(
             eligible_turns,
             defects,
             skipped,
             f"a pause over {self.max_pause_ms} ms or over "
             f"{self.max_pause_percent}% silence",
-            event_key=replies.event_key,
-            timing_source=replies.timing_source,
             no_eligible_reason="No assistant reply had enough speech to "
             "measure its pauses.",
         )

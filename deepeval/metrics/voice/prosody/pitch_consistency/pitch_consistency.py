@@ -43,8 +43,10 @@ class PitchConsistencyMetric(BaseDefectMetric):
         self.max_shift_semitones = max_shift_semitones
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        replies = agent_replies(test_case)
-        measurements, skipped = agent_reply_measurements(test_case)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        measurements, skipped = agent_reply_measurements(
+            test_case, self.use_speech_detection
+        )
         levels = {}
         check_levels = {}
         for turn, reply in measurements.items():
@@ -84,14 +86,12 @@ class PitchConsistencyMetric(BaseDefectMetric):
             for turn, shift in shifts.items()
             if abs(shift) > self.max_shift_semitones
         ]
-        return DefectShare(
+        return replies.share(
             list(levels),
             defects,
             skipped,
             f"a pitch over {self.max_shift_semitones} semitones off the "
             "agent's typical pitch",
-            event_key=replies.event_key,
-            timing_source=replies.timing_source,
             no_eligible_reason=f"At least {MIN_COMPARED_REPLIES} assistant "
             "replies with voiced speech are needed to compare their pitch.",
             min_eligible_turns=MIN_COMPARED_REPLIES,

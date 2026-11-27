@@ -38,8 +38,10 @@ class LoudnessConsistencyMetric(BaseDefectMetric):
         self.max_shift_db = max_shift_db
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        replies = agent_replies(test_case)
-        measurements, skipped = agent_reply_measurements(test_case)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        measurements, skipped = agent_reply_measurements(
+            test_case, self.use_speech_detection
+        )
         measurements = spoken_replies(measurements, skipped, replies.event_key)
         levels = {
             turn: reply.speech_dbfs for turn, reply in measurements.items()
@@ -56,14 +58,12 @@ class LoudnessConsistencyMetric(BaseDefectMetric):
             for turn, shift in shifts_from_typical(levels).items()
             if abs(shift) > self.max_shift_db
         ]
-        return DefectShare(
+        return replies.share(
             list(levels),
             defects,
             skipped,
             f"a loudness over {self.max_shift_db} dB off the agent's "
             "typical loudness",
-            event_key=replies.event_key,
-            timing_source=replies.timing_source,
             no_eligible_reason=f"At least {MIN_COMPARED_REPLIES} decodable "
             "assistant replies are needed to compare their loudness.",
             min_eligible_turns=MIN_COMPARED_REPLIES,

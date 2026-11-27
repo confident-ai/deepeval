@@ -90,12 +90,12 @@ def exchange_of(
 
 
 def agent_audio_critical_events(
-    test_case: ConversationalTestCase,
+    test_case: ConversationalTestCase, use_speech_detection: bool
 ) -> List[VoiceEvent]:
     """A call with no agent turns, or agent audio that cannot be decoded."""
     if not any(turn.role == "assistant" for turn in test_case.turns):
         return [VoiceEvent(type="assistant_turn_missing")]
-    _, skipped = agent_reply_measurements(test_case)
+    _, skipped = agent_reply_measurements(test_case, use_speech_detection)
     return [
         VoiceEvent(
             type="audio_undecodable",

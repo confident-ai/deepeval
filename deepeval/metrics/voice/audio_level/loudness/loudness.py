@@ -40,8 +40,10 @@ class LoudnessMetric(BaseDefectMetric):
         self.max_dbfs = max_dbfs
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        replies = agent_replies(test_case)
-        measurements, skipped = agent_reply_measurements(test_case)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        measurements, skipped = agent_reply_measurements(
+            test_case, self.use_speech_detection
+        )
         measurements = spoken_replies(measurements, skipped, replies.event_key)
         defects = []
         for turn, reply in measurements.items():
@@ -60,13 +62,11 @@ class LoudnessMetric(BaseDefectMetric):
                     f"({reply.speech_dbfs:.0f} dBFS)",
                 )
             )
-        return DefectShare(
+        return replies.share(
             list(measurements),
             defects,
             skipped,
             f"speech outside {self.min_dbfs} to {self.max_dbfs} dBFS",
-            event_key=replies.event_key,
-            timing_source=replies.timing_source,
         )
 
     @property

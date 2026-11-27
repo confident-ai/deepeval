@@ -20,12 +20,10 @@ from deepeval.metrics.voice.utils.analysis import decode_audio
 from deepeval.metrics.voice.utils.call_activity import (
     EVENT_KEYS,
     agent_replies,
-    read_call_recording,
 )
 from deepeval.metrics.voice.utils.defects import (
     AGENT_REPLIES,
     CALL_RECORDING,
-    STEREO_RECORDING_NEEDED_REASON,
     STOPPED_AT_SECONDS,
     TURN_TIMESTAMPS,
     TURN_TIMESTAMPS_NOTE,
@@ -79,7 +77,7 @@ def _format_breakdown(breakdown: Dict) -> str:
 
 
 def _reply_audio(
-    event: Dict, test_case: ConversationalTestCase
+    event: Dict, test_case: ConversationalTestCase, use_speech_detection: bool
 ) -> Optional[Audio]:
     turn = event.get("turn")
     if turn is not None:
@@ -92,11 +90,15 @@ def _reply_audio(
     reply_start = event.get(EVENT_KEYS[CALL_RECORDING])
     if reply_start is None:
         return None
-    replies = agent_replies(test_case)
+    replies = agent_replies(test_case, use_speech_detection)
     return None if replies.by_turn else replies.audio.get(reply_start)
 
 
-def _place_reply_events(breakdown: Dict, test_case: ConversationalTestCase):
+def _place_reply_events(
+    breakdown: Dict,
+    test_case: ConversationalTestCase,
+    use_speech_detection: bool,
+):
     """An event about a whole reply, such as its loudness or pitch, spans
     that reply's audio; give it the reply's place when the metric gave none."""
     events = breakdown.get("events") if isinstance(breakdown, dict) else None
@@ -108,7 +110,7 @@ def _place_reply_events(breakdown: Dict, test_case: ConversationalTestCase):
             or "start_time" in event
         ):
             continue
-        audio = _reply_audio(event, test_case)
+        audio = _reply_audio(event, test_case, use_speech_detection)
         if audio is None:
             continue
         try:
@@ -142,6 +144,7 @@ def _default_audio_decision_model() -> DeepEvalBaseAudioDecisionModel:
 class BaseVoiceMetric(BaseConversationalMetric):
     _required_test_case_params: List[MultiTurnParams] = []
     audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None
+    use_speech_detection: bool = True
 
     def __init__(
         self,
@@ -208,15 +211,7 @@ class BaseVoiceMetric(BaseConversationalMetric):
         self.error = None
         self.evaluation_cost = None
         score, reason, breakdown = self._evaluate(test_case)
-        _place_reply_events(breakdown, test_case)
-        if (
-            score is None
-            and test_case.audio is not None
-            and not call_has_audio(test_case)
-            and read_call_recording(test_case.audio, test_case.agent_channel)
-            is None
-        ):
-            reason = STEREO_RECORDING_NEEDED_REASON
+        _place_reply_events(breakdown, test_case, self.use_speech_detection)
         if (
             score is not None
             and self.strict_mode
@@ -328,7 +323,7 @@ class BaseRollUpMetric(BaseVoiceMetric):
             return recording_reply_at(
                 test_case,
                 moment,
-                getattr(self, "use_speech_detection", True),
+                self.use_speech_detection,
             )
         return agent_turn_at(test_case, moment)
 
@@ -360,6 +355,7 @@ class BaseRollUpMetric(BaseVoiceMetric):
         timing_source = None
         dismissed = 0
         for part in self._parts():
+            part.use_speech_detection = self.use_speech_detection
             name = part.__name__
             share = part.confirmed_defect_share(part_test_case)
             dismissed += share.dismissed
@@ -453,7 +449,6 @@ class BaseExchangeRollUpMetric(BaseRollUpMetric):
     """Rolls up per exchange: a caller line and the agent's reply to it."""
 
     counted = EXCHANGES
-    use_speech_detection: bool
     _line_start_of_turn: Dict[int, int]
 
     def _prepare(self, test_case: ConversationalTestCase) -> None:
@@ -468,7 +463,7 @@ class BaseExchangeRollUpMetric(BaseRollUpMetric):
         share: DefectShare,
         key: float,
         defect: Optional[VoiceEvent] = None,
-    ) -> Optional[int]:
+    ) -> Optional[float]:
         turn = super()._roll_up_key(test_case, part, share, key, defect)
         if turn is None or not call_has_audio(test_case):
             return turn

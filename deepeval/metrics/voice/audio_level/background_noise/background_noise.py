@@ -45,8 +45,10 @@ class BackgroundNoiseMetric(BaseDefectMetric):
         self.min_snr_db = min_snr_db
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        replies = agent_replies(test_case)
-        measurements, skipped = agent_reply_measurements(test_case)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        measurements, skipped = agent_reply_measurements(
+            test_case, self.use_speech_detection
+        )
         measurements = audible_replies(measurements, skipped, replies.event_key)
         eligible_turns = []
         defects = []
@@ -71,13 +73,11 @@ class BackgroundNoiseMetric(BaseDefectMetric):
                         f"{reply.estimated_snr_db:.0f} dB)",
                     )
                 )
-        return DefectShare(
+        return replies.share(
             eligible_turns,
             defects,
             skipped,
             f"background noise under {self.min_snr_db} dB signal-to-noise",
-            event_key=replies.event_key,
-            timing_source=replies.timing_source,
             no_eligible_reason="No assistant reply was long enough to "
             "measure its background noise.",
         )

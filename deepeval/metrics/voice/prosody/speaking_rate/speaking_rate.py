@@ -74,8 +74,10 @@ class SpeakingRateMetric(BaseDefectMetric):
         self.max_syllables_per_second = max_syllables_per_second
 
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        replies = agent_replies(test_case)
-        measurements, skipped = agent_reply_measurements(test_case)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        measurements, skipped = agent_reply_measurements(
+            test_case, self.use_speech_detection
+        )
         margin = (
             SECOND_CHECK_MARGIN if self.audio_decision_model is not None else 0
         )
@@ -120,14 +122,12 @@ class SpeakingRateMetric(BaseDefectMetric):
                     f"({rate:.1f} syllables a second)",
                 )
             )
-        return DefectShare(
+        return replies.share(
             eligible_turns,
             defects,
             skipped,
             f"a speaking rate outside {self.min_syllables_per_second:g} to "
             f"{self.max_syllables_per_second:g} syllables a second",
-            event_key=replies.event_key,
-            timing_source=replies.timing_source,
             no_eligible_reason="No assistant reply had enough speech to "
             "measure its speaking rate.",
         )

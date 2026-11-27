@@ -9,20 +9,20 @@ from deepeval.test_case import ConversationalTestCase
 
 class AudioClippingMetric(BaseDefectMetric):
     def defect_share(self, test_case: ConversationalTestCase) -> DefectShare:
-        replies = agent_replies(test_case)
-        eligible_turns, events, skipped = agent_glitch_events(test_case)
+        replies = agent_replies(test_case, self.use_speech_detection)
+        eligible_turns, events, skipped = agent_glitch_events(
+            test_case, self.use_speech_detection
+        )
         defects = [
             event.model_copy(update={"description": "Audio was clipped"})
             for event in events
             if event.type == "clipping"
         ]
-        return DefectShare(
+        return replies.share(
             eligible_turns,
             defects,
             skipped,
             "clipped audio",
-            event_key=replies.event_key,
-            timing_source=replies.timing_source,
         )
 
     @property

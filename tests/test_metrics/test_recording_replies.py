@@ -5,6 +5,7 @@ from deepeval.metrics.voice import (
     AgentResponsivenessMetric,
     AudioClippingMetric,
     AudioDropoutMetric,
+    AudioGlitchMetric,
     AudioLoopMetric,
     BackgroundNoiseMetric,
     DeadStreamMetric,
@@ -30,6 +31,7 @@ from deepeval.metrics.voice.utils.call_activity import (
     recording_replies,
 )
 from deepeval.metrics.voice.utils.defects import (
+    CALL_RECORDING_UNREADABLE_REASON,
     STEREO_RECORDING_NEEDED_REASON,
     TURN_AUDIO_NEEDED_REASON,
 )
@@ -315,21 +317,53 @@ def test_metrics_that_match_lines_to_audio_skip_a_recording_alone(
     assert metric.reason == TURN_AUDIO_NEEDED_REASON
 
 
-def test_a_mono_recording_alone_says_it_needs_stereo(tmp_path):
+def _mono_call(tmp_path):
     path = tmp_path / "mono.wav"
     path.write_bytes(
         audio_utils.pcm16_to_wav_bytes(
             agent_speech(3.0).tobytes(), RATE, num_channels=1
         )
     )
+    return ConversationalTestCase(turns=TRANSCRIPT, audio=recording(path))
 
-    metric = _measure(
-        LoudnessMetric(),
-        ConversationalTestCase(turns=TRANSCRIPT, audio=recording(path)),
-    )
+
+def test_a_mono_recording_alone_says_it_needs_stereo(tmp_path):
+    metric = _measure(LoudnessMetric(), _mono_call(tmp_path))
 
     assert metric.score is None
     assert metric.reason == STEREO_RECORDING_NEEDED_REASON
+
+
+def test_a_mono_recording_keeps_the_reason_of_metrics_that_need_turn_audio(
+    tmp_path,
+):
+    metric = _measure(FailedResponseMetric(), _mono_call(tmp_path))
+
+    assert metric.reason == TURN_AUDIO_NEEDED_REASON
+
+
+def test_a_recording_that_cannot_be_read_says_so(tmp_path, monkeypatch):
+    monkeypatch.setattr(activity_module, "_recording_bytes", lambda audio: None)
+
+    metric = _measure(LoudnessMetric(), _call(tmp_path))
+
+    assert metric.score is None
+    assert metric.reason == CALL_RECORDING_UNREADABLE_REASON
+
+
+def test_a_roll_up_without_speech_detection_never_runs_it(
+    tmp_path, monkeypatch
+):
+    def unavailable(samples, sample_rate):
+        raise ImportError("onnxruntime is not installed")
+
+    monkeypatch.setattr(speech_detection, "speech_probabilities", unavailable)
+
+    metric = _measure(
+        AudioGlitchMetric(use_speech_detection=False), _call(tmp_path)
+    )
+
+    assert metric.score is not None
 
 
 def test_a_roll_up_counts_each_recording_reply_once(tmp_path):
@@ -367,6 +401,7 @@ def test_an_unexpected_end_is_placed_where_the_recording_ends(tmp_path):
 
     (event,) = metric.score_breakdown["events"]
     assert metric.score == 0.0
+    assert event["reply_start"] == pytest.approx(REPLY_STARTS[-1], abs=0.05)
     assert event["start_time"] == pytest.approx(15.0, abs=0.6)
 
 
