@@ -1,0 +1,92 @@
+---
+id: metrics-position-consistency
+title: Position Consistency
+sidebar_label: Position Consistency
+languages: [python]
+---
+
+<MetricTagsDisplayer community={true} singleTurn={true} custom={true} />
+
+The position consistency metric checks whether an arena judge picks the same winner when only the order of the contestants changes. LLM judges often prefer whichever answer they see first (or last), so a single [`ArenaGEval`](/docs/metrics-arena-g-eval) verdict can depend on where each contestant happened to be shown. This metric runs the comparison once per ordering and reports how often the judge agrees with itself.
+
+:::info
+The `PositionConsistencyMetric` is a **community metric**, contributed and maintained by the `deepeval` community. Community metrics are not exported from `deepeval.metrics`; import them explicitly from `deepeval.metrics.community` instead.
+:::
+
+## Required Arguments
+
+The `PositionConsistencyMetric` takes an [`ArenaTestCase`](/docs/evaluation-arena-test-cases) with at least two contestants. Each contestant's `LLMTestCase` needs the parameters listed in `evaluation_params`.
+
+## Usage
+
+```python
+from deepeval.metrics.community import PositionConsistencyMetric
+from deepeval.test_case import (
+    ArenaTestCase,
+    Contestant,
+    LLMTestCase,
+    SingleTurnParams,
+)
+
+test_case = ArenaTestCase(
+    contestants=[
+        Contestant(
+            name="prompt-v1",
+            test_case=LLMTestCase(
+                input="What is the capital of France?",
+                actual_output="Paris.",
+            ),
+        ),
+        Contestant(
+            name="prompt-v2",
+            test_case=LLMTestCase(
+                input="What is the capital of France?",
+                actual_output="The capital of France is Paris, on the Seine.",
+            ),
+        ),
+    ]
+)
+
+metric = PositionConsistencyMetric(
+    name="Helpfulness",
+    criteria="Choose the answer that best addresses the question.",
+    evaluation_params=[SingleTurnParams.INPUT, SingleTurnParams.ACTUAL_OUTPUT],
+)
+
+metric.measure(test_case)
+print(metric.winner, metric.score, metric.first_position_win_rate)
+print(metric.reason)
+```
+
+There are three mandatory and six optional parameters when creating a `PositionConsistencyMetric`:
+
+- `name`: name of the metric.
+- `evaluation_params`: a list of type `SingleTurnParams`. Include only the parameters that are relevant for evaluation.
+- [Optional] `criteria`: a description outlining the specific evaluation aspects for each test case.
+- [Optional] `evaluation_steps`: a list of strings outlining the exact steps the LLM should take for evaluation. If `evaluation_steps` is not provided, they are generated from `criteria`. You can only provide either `evaluation_steps` OR `criteria`, and not both.
+- [Optional] `threshold`: the minimum share of orderings that must agree with the majority winner for the metric to pass. Defaulted to `1.0`, meaning every ordering must pick the same winner.
+- [Optional] `model`: a string specifying which of OpenAI's GPT models to use, OR [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
+- [Optional] `async_mode`: a boolean which when set to `True`, runs the orderings concurrently. Defaulted to `True`.
+- [Optional] `verbose_mode`: a boolean which when set to `True`, prints the winner for each ordering to the console. Defaulted to `False`.
+- [Optional] `evaluation_template`: a template class to customize the prompts. Uses the same template as `ArenaGEval`.
+
+After `measure()`, the metric exposes:
+
+| Attribute | Description |
+| --- | --- |
+| `winner` | The contestant picked in most orderings |
+| `score` | Share of orderings that picked `winner`, from `1 / n` to `1.0` |
+| `first_position_win_rate` | Share of orderings won by the contestant shown first |
+| `winners_by_order` | The order shown and the winner, for each run |
+| `reason` | Which orderings disagreed, if any |
+
+## How Is It Calculated?
+
+1. Evaluation steps are generated from `criteria` (or taken from `evaluation_steps`), exactly as in `ArenaGEval`.
+2. Contestant names are masked with placeholder names. The masking stays the same for every ordering, so position is the only thing that changes between runs.
+3. The judge is asked to pick a winner once per **cyclic rotation** of the contestants. With two contestants that is A-B and B-A. With `n` contestants it is `n` runs, and every contestant is shown first exactly once.
+4. The majority winner is the contestant picked most often. If two contestants tie, the one that won earliest wins the tie.
+
+<Equation formula="\text{Position Consistency} = \frac{\text{Orderings that picked the majority winner}}{\text{Total orderings}}" />
+
+A judge that only looks at the answers scores `1.0`. A judge that always picks the first contestant scores `1 / n` and has a `first_position_win_rate` of `1.0`. Averaging `first_position_win_rate` over a dataset is a quick way to check a judge model for position bias before relying on its verdicts.
