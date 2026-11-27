@@ -35,6 +35,9 @@ from deepeval.metrics.faithfulness.schema import (
     Claims,
 )
 from deepeval.templates import make_template_class
+from deepeval.metrics.retrieval_context_display import (
+    retrieval_context_to_strings,
+)
 
 
 def _faithfulness_truths_limit_phrase(extraction_limit: Optional[int]) -> str:
@@ -135,7 +138,9 @@ class FaithfulnessMetric(BaseMetric):
                 if run_system_one_eval(self, test_case):
                     return self.score
 
-                retrieval_context = test_case.retrieval_context
+                retrieval_context = retrieval_context_to_strings(
+                    test_case.retrieval_context
+                )
                 actual_output = test_case.actual_output
 
                 self.truths = self._generate_truths(
@@ -176,7 +181,9 @@ class FaithfulnessMetric(BaseMetric):
             if await a_run_system_one_eval(self, test_case):
                 return self.score
 
-            retrieval_context = test_case.retrieval_context
+            retrieval_context = retrieval_context_to_strings(
+                test_case.retrieval_context
+            )
             actual_output = test_case.actual_output
 
             self.truths, self.claims = await asyncio.gather(

@@ -38,6 +38,9 @@ from deepeval.metrics.contextual_relevancy.schema import (
     ContextualRelevancyScoreReason,
 )
 from deepeval.templates import make_template_class
+from deepeval.metrics.retrieval_context_display import (
+    retrieval_context_to_strings,
+)
 
 
 def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
@@ -152,7 +155,9 @@ class ContextualRelevancyMetric(BaseMetric):
                     return self.score
 
                 input = test_case.input
-                retrieval_context = test_case.retrieval_context
+                retrieval_context = retrieval_context_to_strings(
+                    test_case.retrieval_context
+                )
 
                 self.verdicts_list: List[ContextualRelevancyVerdicts] = [
                     (self._generate_verdicts(input, context, multimodal))
@@ -191,7 +196,9 @@ class ContextualRelevancyMetric(BaseMetric):
                 return self.score
 
             input = test_case.input
-            retrieval_context = test_case.retrieval_context
+            retrieval_context = retrieval_context_to_strings(
+                test_case.retrieval_context
+            )
 
             self.verdicts_list: List[ContextualRelevancyVerdicts] = (
                 await asyncio.gather(
