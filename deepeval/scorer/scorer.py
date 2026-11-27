@@ -156,15 +156,17 @@ class Scorer:
         """
         try:
             from bert_score import BERTScorer
-        except ModuleNotFoundError as e:
-            print(
-                "Please install bert_score module. Command: pip install bert-score"
-            )
+        except ImportError as e:
+            raise ImportError(
+                "BERTScore requires bert-score. Install it with `pip install bert-score`."
+            ) from e
 
         try:
             import torch
-        except ModuleNotFoundError as e:
-            print("Please install torch module. Command: pip install torch")
+        except ImportError as e:
+            raise ImportError(
+                "BERTScore requires torch. Install it with `pip install torch`."
+            ) from e
 
         if torch.cuda.is_available():
             device = "cuda"
