@@ -428,3 +428,27 @@ def get_score_range(rubric: Optional[List[Rubric]]) -> Tuple[int, int]:
         return (0, 10)
 
     return rubric[0].score_range[0], rubric[-1].score_range[1]
+
+
+def clamp_g_eval_score(
+    raw_score: Union[int, float],
+    *,
+    score_range: Tuple[int, int] = (0, 10),
+    strict_mode: bool = False,
+) -> Tuple[Union[int, float], Optional[str]]:
+    """Clamp a raw judge score to ``score_range`` (or ``[0, 1]`` in strict mode)
+    and rescale to ``[0, 1]``."""
+    lo, hi = (0, 1) if strict_mode else score_range
+    numeric = float(raw_score)
+    clamped = min(max(numeric, float(lo)), float(hi))
+    note = (
+        f"Score normalized: raw judge score {raw_score} clamped to [{lo}, {hi}]"
+        if clamped != numeric
+        else None
+    )
+    if strict_mode:
+        return int(clamped), note
+    span = hi - lo
+    if span == 0:
+        return (1.0 if clamped >= hi else 0.0), note
+    return (clamped - lo) / span, note
