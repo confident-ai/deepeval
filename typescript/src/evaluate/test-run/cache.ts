@@ -29,6 +29,8 @@ interface MetricConfiguration {
   evaluationParams?: string[] | null;
   rubric?: unknown[] | null;
   expectedSchema?: Record<string, unknown> | null;
+  pattern?: string | null;
+  ignoreCase?: boolean | null;
 }
 
 /** Read off a metric without importing the metric classes into the cache. */
@@ -38,6 +40,8 @@ interface MetricDefinition {
   evaluationParams?: string[];
   rubric?: unknown[];
   expectedSchema?: ZodType;
+  pattern?: string;
+  ignoreCase?: boolean;
 }
 
 interface CachedMetric {
@@ -121,6 +125,8 @@ function metricConfiguration(metric: BaseMetricCore): MetricConfiguration {
     expectedSchema: definition.expectedSchema
       ? toJsonSchema(definition.expectedSchema)
       : null,
+    pattern: definition.pattern ?? null,
+    ignoreCase: definition.ignoreCase ?? null,
   };
 }
 
@@ -143,7 +149,9 @@ function sameConfiguration(
     sameValue(a.evaluationSteps, b.evaluationSteps) &&
     sameValue(a.evaluationParams, b.evaluationParams) &&
     sameValue(a.rubric, b.rubric) &&
-    sameValue(a.expectedSchema, b.expectedSchema)
+    sameValue(a.expectedSchema, b.expectedSchema) &&
+    sameValue(a.pattern, b.pattern) &&
+    sameValue(a.ignoreCase, b.ignoreCase)
   );
 }
 
