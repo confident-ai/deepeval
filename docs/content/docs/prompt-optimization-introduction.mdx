@@ -84,14 +84,14 @@ async def model_callback(prompt_text: str):
 optimizer = PromptOptimizer(metrics=[AnswerRelevancyMetric()], model_callback=model_callback)
 ```
 
-There are **TWO** required parameters and **FIVE** optional parameters when creating a `PromptOptimizer`:
+There are **TWO** required parameters and **FOUR** optional parameters when creating a `PromptOptimizer`:
 
 - `metrics`: list of `deepeval` metrics used for scoring and feedback.
 - `model_callback`: a callback that wraps around your LLM app.
+- [Optional] `optimizer_model`: a string specifying which of OpenAI's GPT models to use for scoring feedback and rewriting prompts, **OR** [any custom LLM model](/docs/metrics-introduction#using-a-custom-llm) of type `DeepEvalBaseLLM`. Defaulted to <DefaultLLMModel />.
 - [Optional] `algorithm`: an instance of the optimization algorithm to be used. Defaulted to `GEPA()`.
 - [Optional] `async_config`: an instance of type `AsyncConfig` that allows you to [customize the degree of concurrency](something) during optimization. Defaulted to the default `AsyncConfig` values.
 - [Optional] `display_config`: an instance of type `DisplayConfig` that allows you to [customize what is displayed](something) in the console during optimization. Defaulted to the default `DisplayConfig` values.
-- [Optional] `mutation_config`: `MutationConfig` controlling which message is rewritten in LIST-style prompts.
 
 :::info
 If you want full control over algorithm-specific settings (for example, GEPA's `iterations`, minibatch sizing, or tie-breaking), construct a `GEPA` instance with custom parameters and pass it via the `algorithm` argument. The [GEPA page](/docs/prompt-optimization-gepa) covers those fields in detail.
@@ -163,10 +163,10 @@ As with many methods in `deepeval`, the `optimize()` method offers an async `a_o
 ```python
 import asyncio
 
-def async main():
-    await optimizer.a_optimize()
+async def main():
+    return await optimizer.a_optimize(prompt=prompt, goldens=goldens)
 
-asyncio.run(main)
+optimized_prompt = asyncio.run(main())
 ```
 
 This allows you to run prompt optimizations concurrently without blocking the main thread.
@@ -226,21 +226,6 @@ There are **TWO** optional parameters when creating an `DisplayConfig`:
 - [Optional] `show_indicator`: boolean that controls whether a CLI progress indicator is shown while optimization runs. Defaulted to `True`.
 - [Optional] `announce_ties`: boolean that prints a one-line message when GEPA detects a tie between prompt configurations. Defaulted to `False`.
 
-### Mutation Configs
-
-```python
-from deepeval.optimizer import PromptOptimizer
-from deepeval.optimizer.configs import MutationConfig
-
-optimizer = PromptOptimizer(mutation_config=MutationConfig())
-```
-
-There are **THREE** optional parameters when creating a `MutationConfig`:
-
-- [Optional] `target_type`: `MutationTargetType` indicating which message in a LIST-style prompt is eligible for mutation. Options are `"random"`, or `"fixed_index"`. Defaulted to `"random"`.
-- [Optional] `target_role`: string role filter. When set, only messages with this role (case insensitive) are considered as mutation targets. Defaulted to `None`.
-- [Optional] `target_index`: zero-based index used when `target_type` is `"fixed_index"`. Defaulted to `0`.
-
 These configs let you fine-tune how optimization behaves without changing your metrics or callback. You can start with the defaults and only override the specific fields you need for your use case.
 
 ## FAQs
@@ -267,9 +252,9 @@ These configs let you fine-tune how optimization behaves without changing your m
           There are two required parameters: <code>metrics</code>, a list of
           DeepEval metrics used for scoring and feedback, and{" "}
           <code>model_callback</code>, a callback that wraps your LLM app. The
-          optional parameters are <code>algorithm</code>,{" "}
-          <code>async_config</code>, <code>display_config</code>, and{" "}
-          <code>mutation_config</code>.
+          optional parameters are <code>optimizer_model</code>,{" "}
+          <code>algorithm</code>, <code>async_config</code>, and{" "}
+          <code>display_config</code>.
         </>
       ),
     },
