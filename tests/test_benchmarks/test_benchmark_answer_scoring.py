@@ -60,6 +60,20 @@ def test_drop_delimiter_is_not_a_character_that_occurs_in_answers():
 
 
 # --------------------------------------------------------------------------- #
+# Scorer: a bare target string is one answer, not an iterable of characters
+# --------------------------------------------------------------------------- #
+
+
+def test_quasi_contains_treats_bare_string_target_as_one_answer():
+    assert Scorer.quasi_contains_score("cat", "cat") == 1
+    assert Scorer.quasi_contains_score("cat", "c") == 0
+
+
+def test_quasi_contains_list_targets_keep_existing_behavior():
+    assert Scorer.quasi_contains_score(["cat", "dog"], "dog") == 1
+
+
+# --------------------------------------------------------------------------- #
 # BigBenchHard: the batch path must not corrupt schema-constrained answers
 # --------------------------------------------------------------------------- #
 
