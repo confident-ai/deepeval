@@ -3,8 +3,8 @@
 
 ``LLMTestCase.retrieval_context`` and ``Turn.retrieval_context`` are typed
 ``List[Union[str, RetrievedContextData]]``, but FaithfulnessMetric,
-ContextualRelevancyMetric and TurnFaithfulnessMetric joined or split the
-items as plain strings and crashed with ``TypeError`` before calling the
+ContextualRelevancyMetric, TurnFaithfulnessMetric and
+TurnContextualRelevancyMetric joined or split the items as plain strings and crashed with ``TypeError`` before calling the
 judge. These run offline with a canned judge.
 """
 
@@ -15,6 +15,7 @@ import pytest
 from deepeval.metrics import (
     ContextualRelevancyMetric,
     FaithfulnessMetric,
+    TurnContextualRelevancyMetric,
     TurnFaithfulnessMetric,
 )
 from deepeval.metrics.retrieval_context_display import (
@@ -71,11 +72,12 @@ def test_single_turn_metrics_accept_retrieved_context_data(
 
 
 @pytest.mark.parametrize("async_mode", [False, True])
-def test_turn_faithfulness_accepts_retrieved_context_data(async_mode):
+@pytest.mark.parametrize(
+    "metric_class", [TurnFaithfulnessMetric, TurnContextualRelevancyMetric]
+)
+def test_turn_metrics_accept_retrieved_context_data(metric_class, async_mode):
     llm = CannedLLM(CANNED_REPLY)
-    metric = TurnFaithfulnessMetric(
-        model=llm, eval_mode="llm", async_mode=async_mode
-    )
+    metric = metric_class(model=llm, eval_mode="llm", async_mode=async_mode)
 
     metric.measure(
         ConversationalTestCase(

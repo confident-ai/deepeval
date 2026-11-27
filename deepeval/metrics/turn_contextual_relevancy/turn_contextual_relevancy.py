@@ -38,18 +38,19 @@ from deepeval.metrics.turn_contextual_relevancy.schema import (
     InteractionContextualRelevancyScore,
 )
 from deepeval.templates import make_template_class
+from deepeval.metrics.retrieval_context_display import (
+    retrieval_context_to_strings,
+)
 
 
 def _contextual_relevancy_verdict_kwargs(multimodal: bool) -> Dict[str, str]:
     context_type = "context (image or string)" if multimodal else "context"
     statement_or_image = "statement or image" if multimodal else "statement"
     if multimodal:
-        extraction_instructions = textwrap.dedent(
-            """
+        extraction_instructions = textwrap.dedent("""
             If the context is textual, you should first extract the statements found in the context if the context, which are high level information found in the context, before deciding on a verdict and optionally a reason for each statement.
             If the context is an image, `statement` should be a description of the image. Do not assume any information not visibly available.
-            """
-        ).strip()
+            """).strip()
         empty_context_instruction = ""
     else:
         extraction_instructions = (
@@ -236,7 +237,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 user_content += f"\n{turn.content} "
             else:
                 if turn.retrieval_context is not None:
-                    retrieval_context.extend(turn.retrieval_context)
+                    retrieval_context.extend(
+                        retrieval_context_to_strings(turn.retrieval_context)
+                    )
 
         verdicts = await self._a_generate_verdicts(
             user_content, retrieval_context, multimodal
@@ -266,7 +269,9 @@ class TurnContextualRelevancyMetric(BaseConversationalMetric):
                 user_content += f"\n{turn.content} "
             else:
                 if turn.retrieval_context is not None:
-                    retrieval_context.extend(turn.retrieval_context)
+                    retrieval_context.extend(
+                        retrieval_context_to_strings(turn.retrieval_context)
+                    )
 
         verdicts = self._generate_verdicts(
             user_content, retrieval_context, multimodal
