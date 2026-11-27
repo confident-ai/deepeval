@@ -4,7 +4,6 @@ import os
 import shutil
 import pyfiglet
 import typer
-import webbrowser
 from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 from pydantic import SecretStr, ValidationError
@@ -41,6 +40,7 @@ from deepeval.test_run.test_run import (
 )
 from deepeval.confident.api import get_confident_api_key, set_confident_api_key
 from deepeval.cli.dotenv_handler import DotenvHandler
+from deepeval.utils import open_browser
 
 StrOrEnum = Union[str, "Enum"]
 PROD = "https://cloud.confident-ai.com"
@@ -202,7 +202,7 @@ def upload_and_open_link(_span: Optional[LoginSpan] = None):
             print(
                 f"🔑 You'll need to get an API key at [link={login_url}]{login_url}[/link] to view your results (free)"
             )
-            webbrowser.open(login_url)
+            open_browser(login_url)
             while True:
                 confident_api_key = input("🔐 Enter your API Key: ").strip()
                 if confident_api_key:

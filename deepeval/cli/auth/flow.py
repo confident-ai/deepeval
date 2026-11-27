@@ -44,7 +44,6 @@ Flow:
 
 import sys
 import time
-import webbrowser
 from typing import Any, Dict, List, Optional, Sequence, Tuple, Union
 
 import requests
@@ -63,6 +62,7 @@ from deepeval.cli.auth.api import (
 from deepeval.cli.utils import with_utm
 from deepeval.confident.api import get_base_api_url
 from deepeval.telemetry import set_logged_in_with
+from deepeval.utils import open_browser
 
 CREATE_PAIRING_ENDPOINT = "/cli/auth/sessions"
 PAIRING_TOKEN_ENDPOINT = "/cli/auth/sessions/token"
@@ -406,11 +406,11 @@ def browser_pairing_login() -> Optional[CliAuthorization]:
         content="login_pair_fallback_link",
     )
 
-    print("\n🌐 Opening your browser — confirm this pairing code there:")
+    print("\n🌐 Confirm this pairing code in your browser:")
     print(f"\n    [bold green]{pairing.user_code}[/bold green]\n")
-    webbrowser.open(login_url)
+    open_browser(login_url)
     print(
-        f"[dim]Browser didn't open? Use [link={fallback_url}]{fallback_url}[/link][/dim]"
+        f"[dim]Pairing link: [link={fallback_url}]{fallback_url}[/link][/dim]"
     )
     print(
         "[dim]Waiting for the browser... "

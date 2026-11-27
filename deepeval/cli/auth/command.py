@@ -1,7 +1,6 @@
 """`deepeval login` / `deepeval logout` Typer commands."""
 
 import re
-import webbrowser
 from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
@@ -44,7 +43,7 @@ from deepeval.telemetry import (
     capture_login_event,
 )
 from deepeval.test_run.test_run import LATEST_TEST_RUN_FILE_PATH
-from deepeval.utils import delete_file_if_exists
+from deepeval.utils import delete_file_if_exists, open_browser
 
 LOGIN_HELP = (
     "Log in to Confident AI. Opens the platform for authentication, then "
@@ -157,12 +156,10 @@ def _open_platform_and_prompt_api_key() -> str:
     platform_url = with_utm(
         PROD, medium="cli", content="login_api_key_browser_open"
     )
-    print("\n🌐 Opening Confident AI in your browser...")
-    webbrowser.open(platform_url)
     print(
-        "(open this link if your browser did not open: "
-        f"[link={platform_url}]{platform_url}[/link])"
+        f"\n🌐 Get your API key at [link={platform_url}]{platform_url}[/link]"
     )
+    open_browser(platform_url)
     return _prompt_paste_api_key()
 
 
