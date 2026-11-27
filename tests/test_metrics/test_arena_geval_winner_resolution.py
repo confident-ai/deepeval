@@ -69,11 +69,13 @@ def _masked_name_of(prompt: str, actual_output: str) -> str:
 
 class _WinnerJudge(DeepEvalBaseLLM):
     """Picks the contestant that said WINNING_OUTPUT, then applies `mutate`
-    to the masked name before answering."""
+    to the masked name before answering. With `omit_winner`, the reply has
+    no `winner` field at all."""
 
-    def __init__(self, mutate, as_schema=False):
+    def __init__(self, mutate, as_schema=False, omit_winner=False):
         self.mutate = mutate
         self.as_schema = as_schema
+        self.omit_winner = omit_winner
 
     def load_model(self, *args, **kwargs):
         return None
@@ -86,6 +88,8 @@ class _WinnerJudge(DeepEvalBaseLLM):
         if schema.__name__ == "Winner":
             masked_name = _masked_name_of(prompt, WINNING_OUTPUT)
             answer = {"winner": self.mutate(masked_name), "reason": "stub"}
+            if self.omit_winner:
+                del answer["winner"]
         else:
             answer = answers[schema.__name__]
         return schema(**answer) if self.as_schema else json.dumps(answer)
@@ -97,18 +101,23 @@ class _WinnerJudge(DeepEvalBaseLLM):
         return "winner-judge"
 
 
-def _measure(mutate, async_mode, as_schema=False):
-    metric = ArenaGEval(
+def _metric(mutate, async_mode, as_schema=False, omit_winner=False):
+    return ArenaGEval(
         name="Friendly",
         criteria="Which reply is friendlier?",
         evaluation_params=[
             SingleTurnParams.INPUT,
             SingleTurnParams.ACTUAL_OUTPUT,
         ],
-        model=_WinnerJudge(mutate, as_schema=as_schema),
+        model=_WinnerJudge(
+            mutate, as_schema=as_schema, omit_winner=omit_winner
+        ),
         async_mode=async_mode,
     )
-    test_case = ArenaTestCase(
+
+
+def _arena():
+    return ArenaTestCase(
         contestants=[
             Contestant(
                 name=WINNING_CONTESTANT,
@@ -120,7 +129,11 @@ def _measure(mutate, async_mode, as_schema=False):
             ),
         ]
     )
-    return metric.measure(test_case, _show_indicator=False)
+
+
+def _measure(mutate, async_mode, as_schema=False):
+    metric = _metric(mutate, async_mode, as_schema)
+    return metric.measure(_arena(), _show_indicator=False)
 
 
 @pytest.mark.parametrize("async_mode", [False, True])
@@ -150,3 +163,37 @@ def test_measure_raises_deepeval_error_on_unresolvable_winner(
 ):
     with pytest.raises(DeepEvalError, match="could not resolve a winner"):
         _measure(mutate, async_mode)
+
+
+@pytest.mark.parametrize("async_mode", [False, True])
+def test_measure_raises_deepeval_error_when_winner_field_is_missing(
+    async_mode,
+):
+    metric = _metric(lambda name: name, async_mode, omit_winner=True)
+
+    with pytest.raises(DeepEvalError, match="could not resolve a winner"):
+        metric.measure(_arena(), _show_indicator=False)
+
+
+@pytest.mark.parametrize("async_mode", [False, True])
+def test_unresolvable_winner_is_recorded_on_the_metric(async_mode):
+    metric = _metric(lambda name: "Tie", async_mode)
+
+    with pytest.raises(DeepEvalError) as exc_info:
+        metric.measure(_arena(), _show_indicator=False)
+
+    assert metric.error == str(exc_info.value)
+    assert metric.is_successful() is False
+
+
+@pytest.mark.parametrize("async_mode", [False, True])
+def test_successful_run_clears_the_error_of_a_previous_run(async_mode):
+    metric = _metric(lambda name: "Tie", async_mode)
+    with pytest.raises(DeepEvalError):
+        metric.measure(_arena(), _show_indicator=False)
+
+    metric.model.mutate = lambda name: name
+
+    assert metric.measure(_arena(), _show_indicator=False) == WINNING_CONTESTANT
+    assert metric.error is None
+    assert metric.is_successful() is True
