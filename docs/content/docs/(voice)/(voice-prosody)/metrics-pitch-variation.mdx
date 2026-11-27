@@ -163,7 +163,11 @@ In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-wit
 
 > Does the speaker sound flat and monotone, like a robot reading?
 
-If the model judges "no" more likely than "yes", the reply is dismissed and doesn't count against the score.
+for a reply flagged as monotone, or:
+
+> Does the speaker's pitch swing up and down erratically, in a way that sounds unnatural?
+
+for a reply flagged as erratic. If the model judges "no" more likely than "yes", the reply is dismissed and doesn't count against the score.
 
 ### Example call
 
