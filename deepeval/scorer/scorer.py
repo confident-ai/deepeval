@@ -138,6 +138,7 @@ class Scorer:
 
         Args:
             references (Union[str, List[str]]): A single reference sentence or a list of reference sentences.
+                When the counts differ, each prediction is scored against the full reference set.
             predictions (Union[str, List[str]]): A single prediction sentence or a list of prediction sentences.
             model (Optional[str], optional): The name of the BERT model to be used for scoring. Defaults to "microsoft/deberta-large-mnli".
             lang (Optional[str], optional): The language code of the text, e.g., "en" for English. Defaults to "en".
@@ -191,7 +192,7 @@ class Scorer:
             and not isinstance(references[0], list)
         ):
             if len(predictions) != len(references):
-                references = [references]
+                references = [references] * len(predictions)
 
         precision, recall, f1 = bert_scorer.score(
             cands=predictions, refs=references
