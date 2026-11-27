@@ -83,6 +83,22 @@ def cracked_vowel(
     return out
 
 
+def leaping_speech(semitones, *, base_hz=230.0, syllable=0.3) -> array:
+    """Syllables that leap between the voice's pitch and `semitones` above
+    and below it."""
+    out = array("h")
+    for index, step in enumerate((0, 1, 0, -1, 1, 0, -1, 0, 1, -1)):
+        out.extend(
+            speech_like(
+                syllable,
+                base_hz=base_hz * 2 ** (step * semitones / 12),
+                glide_hz=0,
+                seed=index,
+            )
+        )
+    return out
+
+
 def tone(seconds, hz, *, amplitude=6000) -> array:
     out = array("h")
     count = int(seconds * RATE)
@@ -105,6 +121,19 @@ def spoken_words(
     for index in range(count):
         out.extend(speech_like(word, seed=index, noise=noise, rhythm=rhythm))
         out.extend(int(rng.gauss(0, noise)) for _ in range(int(pause * RATE)))
+    return out
+
+
+def syllables(per_second, seconds, *, pause_after=None, pause=0.0) -> array:
+    """Evenly spaced bursts of sound, one per syllable, with an optional
+    silent stretch after `pause_after` seconds."""
+    beat = 1.0 / per_second
+    out = array("h")
+    for index in range(int(seconds * per_second)):
+        out.extend(tone(beat * 0.6, 220))
+        out.extend(zeros(beat * 0.4))
+        if pause_after is not None and index == int(pause_after * per_second):
+            out.extend(zeros(pause))
     return out
 
 
@@ -174,6 +203,12 @@ def with_gain(samples: array, gain) -> array:
     return array("h", [_saturate(sample * gain) for sample in samples])
 
 
+def with_quiet_tail(samples: array, db, *, seconds=1.0) -> array:
+    """The last `seconds` of the clip moved by `db`."""
+    split = len(samples) - int(seconds * RATE)
+    return samples[:split] + with_gain(samples[split:], 10 ** (db / 20))
+
+
 def faded(samples: array, db) -> array:
     """Level moves by `db` across the clip, evenly in dB: a fade when
     negative, a swell up to the original level when positive."""
@@ -205,7 +240,7 @@ def to_audio(samples: array, start_time=None) -> Audio:
     )
 
 
-def clean_turns(count=6):
+def clean_turns(count=6, *, seconds=3.0, rhythm=1.0):
     turns = []
     for index in range(count):
         role = "user" if index % 2 == 0 else "assistant"
@@ -218,11 +253,12 @@ def clean_turns(count=6):
                 + ("." if role == "user" else ""),
                 audio=to_audio(
                     speech_like(
-                        3.0,
+                        seconds,
                         base_hz=200.0 if role == "user" else 230.0,
                         seed=index,
+                        rhythm=rhythm,
                     ),
-                    start_time=index * 3.5,
+                    start_time=index * (seconds + 0.5),
                 ),
             )
         )

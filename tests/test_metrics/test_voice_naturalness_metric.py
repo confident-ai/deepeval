@@ -9,10 +9,8 @@ from tests.test_metrics.helpers import (
 
 
 def test_two_issues_on_one_reply_count_once():
-    turns = with_reply_audio(
-        3, speech_like(1.0) + clipped(0.5) + speech_like(1.0)
-    )
-    turns[3].content = " ".join(["word"] * 30)
+    slow = speech_like(2.0, rhythm=1.5)
+    turns = with_reply_audio(3, slow + clipped(0.5) + slow)
     metric = measure(VoiceNaturalnessMetric(), turns)
     assert metric.score_breakdown["turns_with_events"] == 1
     assert metric.reason == (

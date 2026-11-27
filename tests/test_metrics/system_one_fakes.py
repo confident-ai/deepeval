@@ -67,7 +67,8 @@ class FakeSystemOneModel(DeepEvalBaseSystemOneModel):
 
 class FakeAudioDecisionModel(DeepEvalBaseAudioDecisionModel):
     """Answers every yes/no question with ``probability`` and keeps the clips
-    it heard; raises ``error`` instead when one is given."""
+    it heard and the questions it was asked; raises ``error`` instead when one is given.
+    """
 
     def __init__(
         self,
@@ -80,6 +81,7 @@ class FakeAudioDecisionModel(DeepEvalBaseAudioDecisionModel):
         self.cost = cost
         self.error = error
         self.clips: List[bytes] = []
+        self.questions: List[str] = []
 
     def load_model(self, *args, **kwargs):
         return None
@@ -89,6 +91,9 @@ class FakeAudioDecisionModel(DeepEvalBaseAudioDecisionModel):
 
     def decide(self, audio, questions, context=None):
         self.clips.append(audio)
+        self.questions.extend(
+            question.instructions for question in questions.values()
+        )
         if self.error is not None:
             raise self.error
         return (

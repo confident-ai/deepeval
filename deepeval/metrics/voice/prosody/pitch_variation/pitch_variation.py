@@ -9,13 +9,25 @@ from deepeval.metrics.voice.utils.defects import (
     DefectShare,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.config.voice_eval_mode import VoiceEvalModeName
+from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent
 
 
+MONOTONE_MIN_SECONDS = 4.0
+
+
 class PitchVariationMetric(BaseDefectMetric):
-    # Adults vary their pitch by about 2.2 semitones (pitch sigma): 1 is
-    # flatter than normal speech, 6 nearly three times the norm.
+    event_question = (
+        "Does the speaker sound flat and monotone, like a robot reading?"
+    )
+    event_speaker = "assistant"
+
+    # Adults vary their pitch by about 2.2 semitones (pitch sigma); under 1
+    # is flatter than normal speech. A flat reply only sounds monotone once
+    # it runs a few seconds. Expressive voices range widely without sounding
+    # wrong, so there is no upper limit unless one is set.
     def __init__(
         self,
         *,
@@ -24,12 +36,17 @@ class PitchVariationMetric(BaseDefectMetric):
         strict_mode: bool = False,
         verbose_mode: bool = False,
         min_spread_semitones: int = 1,
-        max_spread_semitones: int = 6,
+        max_spread_semitones: Optional[int] = None,
+        audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None,
+        eval_mode: Optional[VoiceEvalModeName] = None,
         flaky: bool = False,
     ):
         if min_spread_semitones < 0:
             raise ValueError("min_spread_semitones must be 0 or more.")
-        if min_spread_semitones >= max_spread_semitones:
+        if (
+            max_spread_semitones is not None
+            and min_spread_semitones >= max_spread_semitones
+        ):
             raise ValueError(
                 "min_spread_semitones must be lower than max_spread_semitones."
             )
@@ -40,6 +57,7 @@ class PitchVariationMetric(BaseDefectMetric):
             verbose_mode=verbose_mode,
             flaky=flaky,
         )
+        self._use_audio_decision_model(audio_decision_model, eval_mode)
         self.min_spread_semitones = min_spread_semitones
         self.max_spread_semitones = max_spread_semitones
 
@@ -59,9 +77,15 @@ class PitchVariationMetric(BaseDefectMetric):
                 )
                 continue
             eligible_turns.append(turn)
-            if reply.pitch_spread_semitones < self.min_spread_semitones:
+            if (
+                reply.pitch_spread_semitones < self.min_spread_semitones
+                and reply.duration >= MONOTONE_MIN_SECONDS
+            ):
                 event_type = "monotone"
-            elif reply.pitch_spread_semitones > self.max_spread_semitones:
+            elif (
+                self.max_spread_semitones is not None
+                and reply.pitch_spread_semitones > self.max_spread_semitones
+            ):
                 event_type = "erratic"
             else:
                 continue
@@ -83,8 +107,12 @@ class PitchVariationMetric(BaseDefectMetric):
             eligible_turns,
             defects,
             skipped,
-            f"pitch varying outside {self.min_spread_semitones} to "
-            f"{self.max_spread_semitones} semitones",
+            (
+                f"pitch varying under {self.min_spread_semitones} semitones"
+                if self.max_spread_semitones is None
+                else f"pitch varying outside {self.min_spread_semitones} to "
+                f"{self.max_spread_semitones} semitones"
+            ),
             no_eligible_reason="No assistant reply had enough voiced speech "
             "to follow its pitch.",
         )

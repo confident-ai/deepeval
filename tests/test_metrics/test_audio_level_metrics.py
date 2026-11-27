@@ -7,40 +7,48 @@ from deepeval.metrics import (
     SilentReplyMetric,
     VolumeVarianceMetric,
 )
-from deepeval.test_case import Audio, Turn
+from deepeval.test_case import Turn
 from tests.test_metrics.helpers import (
     agent_speech,
     clean_turns,
     clipped,
+    edit_reply,
     faded,
     measure,
+    set_audio,
     speech_like,
     to_audio,
     with_gain,
     with_noise,
     with_reply_audio,
+    undecodable,
     zeros,
 )
+
+
+def call():
+    """Replies long enough to follow their volume."""
+    return clean_turns(seconds=6.0)
 
 
 LEVEL_ISSUES = [
     (
         BackgroundNoiseMetric,
-        "background noise under 20 dB signal-to-noise",
+        "background noise under 18 dB signal-to-noise",
         "background_noise",
         lambda: with_noise(agent_speech(), -30),
     ),
     (
         LoudnessMetric,
-        "speech outside -32 to -6 dBFS",
+        "speech outside -32 to -10 dBFS",
         "too_quiet",
         lambda: with_gain(agent_speech(), 0.15),
     ),
     (
         VolumeVarianceMetric,
-        "a volume drift over 10 dB",
+        "a volume drift over 15 dB",
         "volume_drift",
-        lambda: faded(agent_speech(), -20),
+        lambda: faded(agent_speech(8.0), -20),
     ),
 ]
 
@@ -50,7 +58,7 @@ METRICS = [metric_class for metric_class, _, _, _ in LEVEL_ISSUES]
 
 @pytest.mark.parametrize("metric_class,label,_,__", LEVEL_ISSUES)
 def test_a_clean_call_scores_one(metric_class, label, _, __):
-    metric = measure(metric_class(), clean_turns())
+    metric = measure(metric_class(), call())
     assert metric.score == 1.0
     assert metric.reason == f"No agent reply had {label}."
     assert metric.score_breakdown["eligible_turns"] == 3
@@ -61,7 +69,7 @@ def test_a_clean_call_scores_one(metric_class, label, _, __):
 def test_score_is_the_share_of_agent_replies_without_the_issue(
     metric_class, label, event_type, build
 ):
-    metric = measure(metric_class(), with_reply_audio(1, build()))
+    metric = measure(metric_class(), edit_reply(1, set_audio(build()), call()))
     assert metric.score == pytest.approx(2 / 3)
     assert metric.reason == f"1 of 3 agent replies had {label}."
     [event] = metric.score_breakdown["events"]
@@ -75,7 +83,7 @@ def test_score_is_the_share_of_agent_replies_without_the_issue(
 
 @pytest.mark.parametrize("metric_class,_,__,build", LEVEL_ISSUES)
 def test_the_callers_audio_is_ignored(metric_class, _, __, build):
-    metric = measure(metric_class(), with_reply_audio(0, build()))
+    metric = measure(metric_class(), edit_reply(0, set_audio(build()), call()))
     assert metric.score == 1.0
 
 
@@ -92,8 +100,8 @@ def test_a_call_without_agent_audio_is_skipped(metric_class):
 
 @pytest.mark.parametrize("metric_class", METRICS)
 def test_undecodable_agent_audio_is_skipped_not_failed(metric_class):
-    turns = clean_turns()
-    turns[1].audio = Audio.from_bytes(b"not-a-wav", "audio/wav", start_time=3.5)
+    turns = call()
+    undecodable(turns[1])
     metric = measure(metric_class(), turns)
     assert metric.score == 1.0
     assert metric.score_breakdown["eligible_turns"] == 2
@@ -101,15 +109,17 @@ def test_undecodable_agent_audio_is_skipped_not_failed(metric_class):
 
 
 @pytest.mark.parametrize(
-    "metric_class", [BackgroundNoiseMetric, LoudnessMetric]
+    "metric_class,error",
+    [
+        (BackgroundNoiseMetric, "Reply has no audible sound to measure."),
+        (LoudnessMetric, "Reply has under 1 second of speech."),
+    ],
 )
-def test_an_inaudible_reply_is_left_to_silent_reply(metric_class):
+def test_an_inaudible_reply_is_left_to_silent_reply(metric_class, error):
     turns = with_reply_audio(1, zeros(3.0))
     metric = measure(metric_class(), turns)
     assert metric.score == 1.0
-    assert metric.score_breakdown["skipped"] == [
-        {"turn": 1, "error": "Reply has no audible sound to measure."}
-    ]
+    assert metric.score_breakdown["skipped"] == [{"turn": 1, "error": error}]
     assert measure(SilentReplyMetric(), turns).score == pytest.approx(2 / 3)
 
 

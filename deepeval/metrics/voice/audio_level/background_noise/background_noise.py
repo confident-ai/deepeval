@@ -17,7 +17,8 @@ class BackgroundNoiseMetric(BaseDefectMetric):
     event_question = "Is there distracting background noise behind the speaker?"
     event_speaker = "assistant"
 
-    # 5 dB above the +15 dB speech-to-noise minimum for intelligible speech.
+    # 3 dB above the +15 dB speech-to-noise minimum for intelligible speech.
+    # Clean phone lines read 19 dB and up.
     def __init__(
         self,
         *,
@@ -25,7 +26,7 @@ class BackgroundNoiseMetric(BaseDefectMetric):
         include_reason: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        min_snr_db: int = 20,
+        min_snr_db: int = 18,
         audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None,
         eval_mode: Optional[VoiceEvalModeName] = None,
         flaky: bool = False,

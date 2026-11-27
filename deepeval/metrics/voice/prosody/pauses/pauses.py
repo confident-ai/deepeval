@@ -11,8 +11,8 @@ from deepeval.metrics.voice.utils.events import VoiceEvent, placed
 
 
 class PausesMetric(BaseDefectMetric):
-    # Long pauses in spontaneous speech cluster near 1.5 s; over 50% means
-    # more silence than speech.
+    # A pause under 4 s reads as the agent thinking; over 50% means more
+    # silence than speech.
     def __init__(
         self,
         *,
@@ -20,7 +20,7 @@ class PausesMetric(BaseDefectMetric):
         include_reason: bool = True,
         strict_mode: bool = False,
         verbose_mode: bool = False,
-        max_pause_ms: int = 2000,
+        max_pause_ms: int = 4000,
         max_pause_percent: int = 50,
         flaky: bool = False,
     ):

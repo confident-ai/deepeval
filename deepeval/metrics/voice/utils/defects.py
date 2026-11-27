@@ -27,6 +27,7 @@ from deepeval.metrics.voice.utils.events import (
 from deepeval.metrics.voice.utils.analysis import (
     AudioMeasurements,
     analyze_audio,
+    decode_audio,
 )
 from deepeval.test_case import ConversationalTestCase
 from deepeval.voice.timeline import AudioTimelineEntry, build_audio_timeline
@@ -100,6 +101,12 @@ def agent_reply_measurements(
     return dict(measurements), [dict(entry) for entry in skipped]
 
 
+SPOKEN_REPLY_MIN_SECONDS = 1.0
+UNSPOKEN_ERROR = (
+    f"Reply has under {SPOKEN_REPLY_MIN_SECONDS:g} second of speech."
+)
+
+
 def is_inaudible(reply: AudioMeasurements) -> bool:
     return reply.silence_fraction >= 1.0
 
@@ -113,6 +120,20 @@ def audible_replies(
             replies[turn] = reply
         else:
             skipped.append({"turn": turn, "error": INAUDIBLE_ERROR})
+    return replies
+
+
+def spoken_replies(
+    measurements: Dict[int, AudioMeasurements], skipped: List[Dict]
+) -> Dict[int, AudioMeasurements]:
+    """Replies with enough speech to judge its level. A stamped stretch the
+    agent barely speaks in has a level, but not one worth comparing."""
+    replies = {}
+    for turn, reply in measurements.items():
+        if reply.speech_span_seconds >= SPOKEN_REPLY_MIN_SECONDS:
+            replies[turn] = reply
+        else:
+            skipped.append({"turn": turn, "error": UNSPOKEN_ERROR})
     return replies
 
 
