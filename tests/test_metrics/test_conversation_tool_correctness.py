@@ -8,6 +8,7 @@ from deepeval.test_case import (
     ConversationalTestCase,
     ToolCall,
     ToolCallParams,
+    ToolCallType,
     Turn,
 )
 
@@ -293,3 +294,27 @@ def test_pinned_tool_uses_the_call_that_matches_its_input_parameters():
     )
     assert score == 0.5
     assert [c["score"] for c in metric.check_scores] == [0, 1]
+
+
+def test_pinned_call_removal_is_by_position_not_by_equality():
+    # `ToolCall.__eq__` ignores `type`, so a FUNCTION call and an MCP call
+    # with the same name and payload compare equal even though
+    # `_ToolCallScorer` requires the types to match. Only the MCP call
+    # satisfies the pinned expectation, so removing it by value would leave
+    # the MCP call in the "Any turn" pool and fail the unpinned FUNCTION
+    # expectation that the FUNCTION call actually met.
+    function_call = ToolCall(name="lookup", type=ToolCallType.FUNCTION)
+    mcp_call = ToolCall(name="lookup", type=ToolCallType.MCP)
+    metric = ConversationToolCorrectnessMetric()
+    score = metric.measure(
+        _conversation(
+            [function_call, mcp_call],
+            expected_tools=[
+                ToolCall(name="lookup", type=ToolCallType.MCP, turn=1),
+                ToolCall(name="lookup", type=ToolCallType.FUNCTION),
+            ],
+        ),
+        _show_indicator=False,
+    )
+    assert score == 1
+    assert [c["score"] for c in metric.check_scores] == [1, 1]

@@ -156,13 +156,23 @@ class ConversationToolCorrectnessMetric(BaseConversationalMetric):
                 continue
             calls = list(turn.tools_called or [])
             for expected in pinned.get(index, []):
-                best = max(
-                    calls,
-                    key=lambda call: scorer._match_score(expected, call),
-                    default=None,
-                )
-                if best is not None and scorer._match_score(expected, best) > 0:
-                    calls.remove(best)
+                # Detach the call this pinned tool consumed *by position*.
+                # `ToolCall.__eq__` compares name, input parameters and output
+                # only, so it ignores `type` (and `turn`): `calls.remove(best)`
+                # would drop the first call that compares equal instead of the
+                # one that actually matched. With a FUNCTION call and an MCP
+                # call of the same name and payload, that left the pinned MCP
+                # call in the pool and failed an unpinned FUNCTION expectation
+                # that the FUNCTION call met.
+                best_index: Optional[int] = None
+                best_score = 0.0
+                for position, call in enumerate(calls):
+                    score = scorer._match_score(expected, call)
+                    if score > best_score:
+                        best_score = score
+                        best_index = position
+                if best_index is not None:
+                    del calls[best_index]
             left.extend(calls)
         return left
 
