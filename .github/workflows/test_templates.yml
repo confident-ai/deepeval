@@ -42,14 +42,9 @@ jobs:
       - name: Install pytest
         run: pip install pytest
 
-      - name: Sync metrics templates
+      - name: Check compiled templates for every feature
         run: >
           pytest -vv -rA
-          tests/test_templates/test_metric_templates.py::test_metrics_templates_json_is_up_to_date
-          tests/test_templates/test_metric_templates.py::test_metrics_templates_json_is_valid_and_nonempty
-
-      - name: Sync simulator templates
-        run: >
-          pytest -vv -rA
-          tests/test_templates/test_metric_templates.py::test_simulator_templates_json_is_up_to_date
+          tests/test_templates/test_metric_templates.py::test_templates_json_is_up_to_date
+          tests/test_templates/test_metric_templates.py::test_templates_json_is_valid_and_nonempty
           tests/test_templates/test_metric_templates.py::test_simulator_interrupt_templates_present
