@@ -5,6 +5,7 @@ from deepeval.metrics.utils import (
     prepare_measure,
     construct_verbose_logs,
     get_unit_interactions,
+    split_user_turns,
     initialize_model,
     initialize_system_one_model,
     a_generate_with_schema_and_extract,
@@ -385,12 +386,10 @@ class ToolUseMetric(BaseConversationalMetric):
             assistant_messages = ""
             tools_called = []
             tools_used = False
-            for turn in unit_interaction:
-                if turn.role == "user":
-                    user_messages += f"{turn.content} \n"
-                else:
-                    break
-            for turn in unit_interaction[1:]:
+            user_turns, later_turns = split_user_turns(unit_interaction)
+            for turn in user_turns:
+                user_messages += f"{turn.content} \n"
+            for turn in later_turns:
                 if turn.role == "assistant":
                     assistant_messages += f"{turn.content} \n"
                     if turn.tools_called:

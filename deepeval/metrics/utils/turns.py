@@ -1,4 +1,4 @@
-from typing import Dict, List, Optional, Union
+from typing import Dict, List, Optional, Tuple, Union
 
 from deepeval.test_case import (
     LLMTestCase,
@@ -87,3 +87,26 @@ def get_unit_interactions(turns: List[Turn]) -> List[List[Turn]]:
         units.append(current)
 
     return units
+
+
+def split_user_turns(
+    unit_interaction: List[Turn],
+) -> Tuple[List[Turn], List[Turn]]:
+    """Split a unit interaction into its user request and the turns after it.
+
+    Assistant turns before the first user turn (for example a greeting when the
+    assistant speaks first) are skipped. Returns the first contiguous block of
+    user turns and every turn that follows that block.
+
+    Expects one unit from get_unit_interactions, not a whole conversation.
+    Returns ([], []) when there is no user turn.
+    """
+    start = 0
+    while (
+        start < len(unit_interaction) and unit_interaction[start].role != "user"
+    ):
+        start += 1
+    end = start
+    while end < len(unit_interaction) and unit_interaction[end].role == "user":
+        end += 1
+    return unit_interaction[start:end], unit_interaction[end:]

@@ -5,6 +5,7 @@ from deepeval.metrics.utils import (
     prepare_measure,
     construct_verbose_logs,
     get_unit_interactions,
+    split_user_turns,
     print_tools_called,
     initialize_model,
     initialize_system_one_model,
@@ -211,15 +212,13 @@ class GoalAccuracyMetric(BaseConversationalMetric):
     ) -> List[GoalSteps]:
         goal_and_steps_taken = []
         for unit_interaction in unit_interactions:
+            user_turns, later_turns = split_user_turns(unit_interaction)
             user_messages = "User messages: \n"
-            for turn in unit_interaction:
-                if turn.role == "user":
-                    user_messages += turn.content + "\n"
-                else:
-                    break
+            for turn in user_turns:
+                user_messages += turn.content + "\n"
             new_goal_steps = GoalSteps(user_goal=user_messages, steps_taken=[])
             assistant_messages = "Assistant messages: \n"
-            for turn in unit_interaction[1:]:
+            for turn in later_turns:
                 if turn.role == "assistant":
                     assistant_messages += f"{turn.content} \n"
                     if turn.tools_called:
