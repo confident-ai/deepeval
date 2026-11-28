@@ -20,8 +20,10 @@ const TOOL_NAMES = [
 
 function judge(): ScriptedLLM {
   return new ScriptedLLM((prompt: string) =>
+    // One verdict per judged tool call, like a real judge; the score
+    // denominator counts missing verdicts against the metric.
     prompt.includes("Tool Calls:")
-      ? { verdicts: [{ verdict: "yes" }] }
+      ? { verdicts: judgedTools(prompt).map(() => ({ verdict: "yes" })) }
       : { reason: "Arguments fit the input." },
   );
 }
