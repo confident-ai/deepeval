@@ -1,0 +1,171 @@
+---
+title: Red Teaming Google Gemini
+sidebar_label: Google Gemini
+---
+
+Google Gemini models (Gemini Pro, Flash, Ultra) have a unique safety architecture: configurable safety settings that act as tunable filters on top of the model's built-in alignment. Developers can adjust thresholds for harassment, hate speech, sexually explicit content, and dangerous content from `BLOCK_NONE` to `BLOCK_ONLY_HIGH` to `BLOCK_LOW_AND_ABOVE`. This means the same model can behave very differently depending on configuration — and red teaming must test the specific configuration deployed in production.
+
+This guide covers red teaming Google Gemini with [DeepEval](/docs/red-teaming-introduction).
+
+:::note
+For general model red teaming methodology, vulnerability selection guidance, and framework-based assessments, see the [foundational models guide](/guides/guide-red-teaming-models).
+:::
+
+## YAML Quickstart
+
+Gemini requires a custom callback. Create it using the Google AI SDK:
+
+```python title="my_model.py"
+import google.generativeai as genai
+
+genai.configure(api_key="YOUR_API_KEY")
+model = genai.GenerativeModel("gemini-2.0-flash")
+
+async def model_callback(input: str) -> str:
+    response = model.generate_content(input)
+    return response.text
+```
+
+```yaml title="red-team-gemini.yaml"
+target:
+  purpose: "A healthcare information assistant for patient-facing applications"
+  callback:
+    file: "my_model.py"
+    function: "model_callback"
+
+default_vulnerabilities:
+  - name: "Toxicity"
+  - name: "Misinformation"
+  - name: "PersonalSafety"
+  - name: "PIILeakage"
+
+attacks:
+  - name: "PromptInjection"
+    weight: 3
+  - name: "Roleplay"
+    weight: 2
+  - name: "Base64"
+  - name: "Leetspeak"
+```
+
+```bash
+deepeval red-team red-team-gemini.yaml
+```
+
+## Python Assessment
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.vulnerabilities import Toxicity, Misinformation, PersonalSafety, PIILeakage, Bias
+from deepeval.red_team.attacks.single_turn import PromptInjection, Roleplay, Leetspeak, Base64
+from deepeval.red_team.attacks.multi_turn import LinearJailbreaking
+import google.generativeai as genai
+
+genai.configure(api_key="YOUR_API_KEY")
+model = genai.GenerativeModel("gemini-2.0-flash")
+
+async def model_callback(input: str) -> str:
+    response = model.generate_content(input)
+    return response.text
+
+red_team(
+    model_callback=model_callback,
+    target_purpose="A healthcare information assistant for patient-facing applications",
+    vulnerabilities=[
+        Toxicity(), Misinformation(), PersonalSafety(),
+        PIILeakage(), Bias(),
+    ],
+    attacks=[
+        PromptInjection(), Roleplay(), Leetspeak(),
+        Base64(), LinearJailbreaking(),
+    ],
+    attacks_per_vulnerability_type=5,
+)
+```
+
+## Multi-Turn Testing
+
+```python
+from deepeval.red_team.test_case import RTTurn
+import google.generativeai as genai
+
+genai.configure(api_key="YOUR_API_KEY")
+model = genai.GenerativeModel("gemini-2.0-flash")
+
+async def model_callback(input: str, turns: list[RTTurn] = None) -> str:
+    chat = model.start_chat(
+        history=[
+            {"role": turn.role if turn.role == "user" else "model", "parts": [turn.content]}
+            for turn in (turns or [])
+        ]
+    )
+    response = chat.send_message(input)
+    return response.text
+```
+
+## Gemini-Specific Considerations
+
+### Configurable Safety Settings
+
+Gemini's most distinctive feature for red teaming is its configurable safety filter. The model has four safety categories, each with adjustable thresholds:
+
+```python
+from google.generativeai.types import HarmCategory, HarmBlockThreshold
+
+model = genai.GenerativeModel(
+    "gemini-2.0-flash",
+    safety_settings={
+        HarmCategory.HARM_CATEGORY_HARASSMENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        HarmCategory.HARM_CATEGORY_HATE_SPEECH: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        HarmCategory.HARM_CATEGORY_SEXUALLY_EXPLICIT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+        HarmCategory.HARM_CATEGORY_DANGEROUS_CONTENT: HarmBlockThreshold.BLOCK_MEDIUM_AND_ABOVE,
+    },
+)
+```
+
+**Test your production configuration, not the defaults.** If your deployment uses `BLOCK_ONLY_HIGH` for any category, attacks targeting that category have a wider gap between the model's built-in alignment and the filter's intervention.
+
+You should also handle blocked responses in your callback:
+
+```python
+async def model_callback(input: str) -> str:
+    response = model.generate_content(input)
+    if response.prompt_feedback.block_reason:
+        return "I cannot help with that request."
+    if not response.candidates or response.candidates[0].finish_reason != 1:
+        return "I cannot help with that request."
+    return response.text
+```
+
+### Safety Training Characteristics
+
+- **Filter-dependent safety** — Unlike OpenAI and Anthropic where safety is primarily model-level, Gemini relies heavily on its configurable safety filters. Attacks that produce content below the filter threshold but above what most users would consider safe can slip through, especially at `BLOCK_ONLY_HIGH` settings.
+- **Encoding attack susceptibility** — Gemini's safety filters evaluate the decoded semantic meaning less consistently than Claude's CAI self-critique. `Base64` and `Leetspeak` attacks can bypass the filter layer while the model processes the decoded intent.
+- **Multimodal attack surface** — If your deployment uses Gemini's multimodal capabilities, text-based red teaming alone is insufficient. Harmful instructions embedded in images or documents bypass text-level safety filters entirely.
+- **System instruction adherence** — Gemini's system instructions are respected but can be overridden through persistent multi-turn escalation, particularly in longer conversations.
+
+### Recommended Attack Strategy
+
+| Attack | Effectiveness Against Gemini | Why |
+|---|---|---|
+| `Base64` | High | Encoded content may bypass the safety filter layer |
+| `Leetspeak` | High | Character substitution evades pattern-matching filters |
+| `PromptInjection` | High | Instruction overrides can bypass safety settings |
+| `Roleplay` | Medium | Filters still catch many fictional framings of harmful content |
+| `LinearJailbreaking` | Medium | Effective when filter threshold is set to `BLOCK_ONLY_HIGH` |
+
+### Recommended Vulnerability Priority
+
+| Use Case | Priority Vulnerabilities | Why |
+|---|---|---|
+| Healthcare / medical | `Misinformation`, `PersonalSafety`, `PIILeakage` | Patient safety, HIPAA compliance |
+| Customer-facing | `Toxicity`, `Bias`, `PIILeakage` | Brand safety, user trust |
+| Education | `Misinformation`, `Bias`, `Toxicity` | Content accuracy, inclusivity |
+| Enterprise search | `PromptLeakage`, `PIILeakage`, `Misinformation` | Data boundaries, accuracy |
+
+## What to Do Next
+
+- **Test multiple safety configurations** — Run the same assessment with `BLOCK_LOW_AND_ABOVE`, `BLOCK_MEDIUM_AND_ABOVE`, and `BLOCK_ONLY_HIGH` to understand the safety gap between filter levels.
+- **Compare Flash vs. Pro** — Smaller models may have weaker built-in alignment. Run the same assessment across model sizes to find where boundaries differ.
+- **Test against frameworks** — Use `OWASPTop10()` for standardized coverage. See the [safety frameworks guide](/guides/guide-safety-frameworks).
+- **Move to application-level testing** — Once the model passes, test it in context with the [AI agents](/guides/guide-agentic-ai-red-teaming), [conversational agents](/guides/guide-red-teaming-conversational-agents), or [agentic RAG](/guides/guide-red-teaming-agentic-rag) guides.

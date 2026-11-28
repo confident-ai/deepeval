@@ -1,6 +1,58 @@
 {
   "images": [
     {
+      "file": "agentic-red-teaming-overview.webp",
+      "title": "The agentic red teaming loop",
+      "alt": "An objective made of a task, scenario and criteria goes to a red teaming agent, which sends adaptive prompts to the target LLM. A judge scores every criterion on each reply; when all criteria are met the run reports a breach, otherwise the agent adapts and tries again.",
+      "width": 2136,
+      "height": 1854
+    },
+    {
+      "file": "agentic-red-teaming-parallel.webp",
+      "title": "A parallel agentic red teaming run",
+      "alt": "After a recon conversation, the orchestration agent spawns one sub-agent per unmet criterion to attack in parallel. The first sub-agent to meet its criterion wins the round and the siblings stop; the next round continues the winner's conversation on the remaining criteria, until all are met or the turns run out.",
+      "width": 2136,
+      "height": 2976
+    },
+    {
+      "file": "agentic-red-teaming-sequential.webp",
+      "title": "A sequential agentic red teaming run",
+      "alt": "The sequential agent opens by probing all criteria, then a judge scores every criterion each turn. It focuses on one criterion at a time and escalates to a strategy when progress stalls, ending once every criterion is met (the model is breached) or the turn budget is spent (the model defended).",
+      "width": 2136,
+      "height": 2601
+    },
+    {
+      "file": "attack-budgets.webp",
+      "title": "The three attacker budgets, and where DeepEval covers them",
+      "alt": "Three groups. Samples, or how many tries: Best-of-N, covered in DeepEval today by encoding attacks such as Leetspeak, CharacterStream and ROT13 and by raising attacks per vulnerability type. Shots, or how much context: many-shot jailbreaking, partly covered by ContextFlooding. Turns, or how long a conversation: Crescendo and multi-turn human red teaming, covered by CrescendoJailbreaking, LinearJailbreaking and TreeJailbreaking.",
+      "width": 2136,
+      "height": 1995
+    },
+    {
+      "file": "attack-evaluation.svg",
+      "title": "Attack evaluation",
+      "alt": "Enhanced attacks are sent to the target LLM, each response is graded by a scorer, and the scores are combined into the final results",
+      "width": 884,
+      "height": 147,
+      "source": {
+        "urls": [
+          "https://confident-bucket.s3.amazonaws.com/red_teaming_evaluation.svg"
+        ]
+      }
+    },
+    {
+      "file": "attack-synthesis.svg",
+      "title": "Attack synthesis",
+      "alt": "The attack synthesizer generates baseline attacks and enhances each one into an enhanced attack",
+      "width": 621,
+      "height": 143,
+      "source": {
+        "urls": [
+          "https://confident-bucket.s3.amazonaws.com/red_teaming_synthesis.svg"
+        ]
+      }
+    },
+    {
       "file": "iteration-loop.svg",
       "title": "Red-teaming iteration loop before deployment",
       "alt": "Development loop of fine-tuning or prompting, adding filters and guardrails, and scanning, which then feeds deployment and monitoring",
@@ -13,6 +65,49 @@
       }
     },
     {
+      "file": "model-vs-system-weakness.svg",
+      "title": "Where model and system weaknesses occur",
+      "alt": "A bad actor sends input through guardrails into an LLM system of prompt template, model, embedding model, vector database and tools; the model is marked as where model weakness occurs and the whole system as where system weakness occurs",
+      "width": 2481,
+      "height": 1883,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.amazonaws.com/model-vs-system-weakness.svg"
+        ]
+      }
+    },
+    {
+      "file": "multi-turn-customization.webp",
+      "title": "Multi-turn attack customization",
+      "alt": "A one-shot enhancement such as roleplay or prompt injection is passed into a multi-turn progression, which can run multiple progressions",
+      "width": 2400,
+      "height": 674,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/guides:multi-turn-customization.png"
+        ]
+      }
+    },
+    {
+      "file": "multi-turn-test-case.webp",
+      "title": "How a multi-turn test case is created",
+      "alt": "A vulnerability seeds a baseline attack, the attacker and target LLM exchange turns, and the conversation is stored as turns on the red-teaming test case, ready for evaluation",
+      "width": 2400,
+      "height": 801,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/docs:red-teaming-test-case-turns.png"
+        ]
+      }
+    },
+    {
+      "file": "per-prompt-vs-aggregate.webp",
+      "title": "Each request snaps; the benchmark crawls",
+      "alt": "Three dashed curves show individual requests with per-attempt success probabilities of 3%, 0.3% and 0.03%; each rises from near 0% to near 100% over about two orders of magnitude of attempts. The solid curve averages five such requests and climbs smoothly and steadily across five orders of magnitude.",
+      "width": 2136,
+      "height": 1518
+    },
+    {
       "file": "red-teamer-workflow.svg",
       "title": "Red-teaming workflow in DeepEval",
       "alt": "Red-teaming flow: define a target LLM, initialize the RedTeamer, scan and interpret results, then iterate with fine-tuning or prompting",
@@ -21,6 +116,54 @@
       "source": {
         "urls": [
           "https://deepeval-docs.s3.amazonaws.com/red_teaming_deepeval.svg"
+        ]
+      }
+    },
+    {
+      "file": "risk-assessment-structure.webp",
+      "title": "Structure of a risk assessment",
+      "alt": "A risk assessment holds an overview with the red-teaming overview, vulnerability type results and attack method results, plus every test case",
+      "width": 2000,
+      "height": 1130,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/docs:red-teaming-risk-assessment.png"
+        ]
+      }
+    },
+    {
+      "file": "single-turn-customization.webp",
+      "title": "Single-turn attack customization",
+      "alt": "Multiple enhancements are chained from a one-shot enhancement such as roleplay or prompt injection into an encoding-based enhancement",
+      "width": 2400,
+      "height": 674,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/guides:single-turn-customization.png"
+        ]
+      }
+    },
+    {
+      "file": "test-case-anatomy.webp",
+      "title": "Anatomy of a red-teaming test case",
+      "alt": "A red-teaming test case holds the vulnerability, vulnerability type, input, actual output and turns; the red-teaming metric evaluates it into a score, reason and error",
+      "width": 2400,
+      "height": 893,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/docs:red-teaming-test-case.png"
+        ]
+      }
+    },
+    {
+      "file": "test-case-creation.webp",
+      "title": "How a red-teaming test case is created",
+      "alt": "A vulnerability seeds a baseline attack, the attacker enhances it, the target LLM responds, and the result is stored as a red-teaming test case",
+      "width": 2400,
+      "height": 418,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/docs:red-teaming-process.png"
         ]
       }
     },

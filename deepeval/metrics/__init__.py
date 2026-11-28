@@ -26,10 +26,10 @@ from .contextual_recall.contextual_recall import ContextualRecallMetric
 from .contextual_relevancy.contextual_relevancy import ContextualRelevancyMetric
 from .contextual_precision.contextual_precision import ContextualPrecisionMetric
 from .knowledge_retention.knowledge_retention import KnowledgeRetentionMetric
-from .transcription_accuracy.transcription_accuracy import (
+from .voice.speech_quality.transcription_accuracy.transcription_accuracy import (
     TranscriptionAccuracyMetric,
 )
-from .audio_glitch.audio_glitch import AudioGlitchMetric
+from .voice.audio_defects.audio_glitch.audio_glitch import AudioGlitchMetric
 from .tool_correctness.tool_correctness import ToolCorrectnessMetric
 from .tool_permission.tool_permission import ToolPermissionMetric
 from .json_correctness.json_correctness import JsonCorrectnessMetric
@@ -80,13 +80,38 @@ from .multimodal_metrics import (
     ImageReferenceMetric,
 )
 from .voice import (
+    AbruptCutoffMetric,
+    AbruptPitchJumpMetric,
+    AgentInterruptionMetric,
     AgentResponsivenessMetric,
+    AudioClippingMetric,
+    AudioDropoutMetric,
     AudioIntegrityMetric,
+    AudioLoopMetric,
+    BackgroundNoiseMetric,
+    DeadStreamMetric,
+    EchoMetric,
+    FailedResponseMetric,
+    HeldToneMetric,
+    LoudnessConsistencyMetric,
+    LoudnessMetric,
+    PausesMetric,
+    PitchConsistencyMetric,
+    PitchVariationMetric,
+    RepromptMetric,
+    ResponseDelayConsistencyMetric,
+    ResponseLatencyMetric,
+    SilentReplyMetric,
+    SpeakingRateMetric,
     SpeechIntelligibilityMetric,
+    TimeToFirstResponseMetric,
     TurnTakingNaturalnessMetric,
+    UnexpectedCallEndMetric,
+    UserInterruptionMetric,
     VoiceConsistencyMetric,
     VoiceNaturalnessMetric,
     VoiceReliabilityMetric,
+    VolumeVarianceMetric,
 )
 
 __all__ = [
@@ -169,4 +194,29 @@ __all__ = [
     "AgentResponsivenessMetric",
     "AudioIntegrityMetric",
     "VoiceReliabilityMetric",
+    "AudioDropoutMetric",
+    "AudioClippingMetric",
+    "AudioLoopMetric",
+    "AbruptCutoffMetric",
+    "HeldToneMetric",
+    "DeadStreamMetric",
+    "EchoMetric",
+    "BackgroundNoiseMetric",
+    "LoudnessMetric",
+    "VolumeVarianceMetric",
+    "PitchVariationMetric",
+    "AbruptPitchJumpMetric",
+    "PitchConsistencyMetric",
+    "LoudnessConsistencyMetric",
+    "SpeakingRateMetric",
+    "PausesMetric",
+    "ResponseLatencyMetric",
+    "ResponseDelayConsistencyMetric",
+    "TimeToFirstResponseMetric",
+    "AgentInterruptionMetric",
+    "UserInterruptionMetric",
+    "FailedResponseMetric",
+    "RepromptMetric",
+    "SilentReplyMetric",
+    "UnexpectedCallEndMetric",
 ]

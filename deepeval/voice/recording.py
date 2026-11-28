@@ -34,6 +34,12 @@ class CallRecorder:
         self._finished: Optional[str] = None
         self._discarded = False
 
+    def start(self, at: float) -> None:
+        """Puts time zero at `at` (the call connecting) unless audio was
+        already taped."""
+        if self._origin is None:
+            self._origin = at
+
     def add(
         self, channel: str, pcm: bytes, sample_rate: int, at: float
     ) -> None:

@@ -37,6 +37,7 @@ from deepeval.cli.auth import LOGIN_HELP, login_command, logout_command
 from deepeval.cli.diagnose import diagnose_command
 from deepeval.cli.generate.command import generate_command
 from deepeval.cli.inspect import inspect_command
+from deepeval.cli.red_team.command import RED_TEAM_HELP, red_team_command
 from deepeval.cli.setup import (
     SETUP_CONTEXT_SETTINGS,
     SETUP_HELP,
@@ -61,6 +62,7 @@ app.add_typer(test_app, name="test")
 app.command(name="generate")(generate_command)
 app.command(name="inspect")(inspect_command)
 app.command(name="diagnose")(diagnose_command)
+app.command(name="red-team", help=RED_TEAM_HELP)(red_team_command)
 app.command(name="login", help=LOGIN_HELP)(login_command)
 app.command(name="logout")(logout_command)
 app.command(
@@ -87,6 +89,11 @@ class EvalModes(Enum):
     LLM = "llm"
     HYBRID = "hybrid"
     SYSTEM_ONE = "system_one"
+
+
+class VoiceEvalModes(Enum):
+    DETERMINISTIC = "deterministic"
+    HYBRID = "hybrid"
 
 
 def version_callback(value: Optional[bool] = None) -> None:
@@ -315,6 +322,59 @@ def set_eval_mode_command(
         success_msg = (
             ":white_check_mark: Eval mode is now `llm` (the default): the "
             "LLM runs every metric end to end."
+        )
+
+    _handle_save_result(
+        handled=handled,
+        path=path,
+        updates=updates,
+        save=save,
+        quiet=quiet,
+        success_msg=success_msg,
+    )
+
+
+@app.command(name="set-voice-eval-mode")
+def set_voice_eval_mode_command(
+    mode: VoiceEvalModes = typer.Argument(
+        ...,
+        case_sensitive=False,
+        help="How voice metrics decide: 'deterministic' (default, no model "
+        "calls) or 'hybrid' (an audio decision model double-checks each "
+        "flagged event).",
+    ),
+    save: Optional[str] = typer.Option(
+        None,
+        "-s",
+        "--save",
+        help="Persist CLI parameters as environment variables in a dotenv file. "
+        "Usage: --save=dotenv[:path] (default: .env.local)",
+    ),
+    quiet: bool = typer.Option(
+        False,
+        "-q",
+        "--quiet",
+        help="Suppress printing to the terminal (useful for CI).",
+    ),
+):
+    """Choose how voice metrics decide (sets DEEPEVAL_VOICE_EVAL_MODE)."""
+    settings = get_settings()
+    with settings.edit(save=save) as edit_ctx:
+        settings.DEEPEVAL_VOICE_EVAL_MODE = mode.value
+
+    handled, path, updates = edit_ctx.result
+
+    if mode == VoiceEvalModes.HYBRID:
+        success_msg = (
+            ":test_tube: Voice eval mode is now `hybrid`: an audio decision "
+            "model (Hume by default) double-checks each event a voice metric "
+            "flags. Make sure HUME_API_KEY is set; run `deepeval "
+            "set-voice-eval-mode deterministic` to switch back."
+        )
+    else:
+        success_msg = (
+            ":white_check_mark: Voice eval mode is now `deterministic` (the "
+            "default): voice metrics call no model."
         )
 
     _handle_save_result(

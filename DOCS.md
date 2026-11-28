@@ -6,7 +6,7 @@ Pointers only: where each code change on this branch needs a docs section, and w
 
 - **Setup Voice Mode**: new `VoiceConfig(record_call=True)` option. Records the whole call, off by default.
 - **What A Voice Simulation Produces**:
-  - `ConversationalTestCase.call_recording_path`: a stereo WAV of the entire call (caller on the left channel, agent on the right), placed by wall-clock time so overlaps and silences are real, not stitched from turn clips. Written to disk as `deepeval-call-recording.wav` when `output_dir` is set.
+  - `ConversationalTestCase.audio`: a stereo WAV of the entire call (caller on the left channel, agent on the right), placed by wall-clock time so overlaps and silences are real, not stitched from turn clips. Written to disk as `deepeval-call-recording.wav` when `output_dir` is set.
   - One `INFO` log line per conversation from `deepeval.simulator`: average and worst reply time for the agent and for the caller. Mention it as the way to read latency.
 - **How It Works**: on a full-duplex connector (LiveKit rooms, SIP calls) the caller now always listens while it speaks, whether or not the persona interrupts. The speak-then-listen exchange is only used by connectors that cannot carry both voices at once (callback). Consequence worth stating: nothing the agent says while the caller talks or thinks is lost anymore.
 - **FAQs**: barge turns made by an interrupting persona count against `max_user_simulations`.

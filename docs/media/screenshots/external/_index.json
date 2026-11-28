@@ -1,0 +1,28 @@
+{
+  "images": [
+    {
+      "file": "chatgpt-dan-jailbreak.webp",
+      "title": "The DAN jailbreak in ChatGPT",
+      "alt": "A ChatGPT conversation where the user asks it to pretend to be DAN, and it answers once normally and once as DAN, which makes up the current date and time",
+      "width": 728,
+      "height": 650,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.amazonaws.com/jailbreaking-dan-example.png"
+        ]
+      }
+    },
+    {
+      "file": "gemini-image-bias.webp",
+      "title": "Gemini's biased image generation",
+      "alt": "Images Gemini generated for a viking, a pope and a Founding Father of America that depict historically inaccurate people",
+      "width": 2400,
+      "height": 1384,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.amazonaws.com/bias-gemini.png"
+        ]
+      }
+    }
+  ]
+}

@@ -27,6 +27,7 @@ const COLUMNS: FooterColumn[] = [
         href: "/docs/prompt-optimization-introduction",
       },
       { label: "Benchmarks", href: "/docs/benchmarks-introduction" },
+      { label: "Red Teaming", href: "/docs/red-teaming-introduction" },
     ],
   },
   {
@@ -52,7 +53,6 @@ const COLUMNS: FooterColumn[] = [
     links: [
       { label: "Integrations", href: "/integrations" },
       { label: "Confident AI", href: "https://www.confident-ai.com" },
-      { label: "DeepTeam", href: "https://trydeepteam.com" },
     ],
   },
 ];

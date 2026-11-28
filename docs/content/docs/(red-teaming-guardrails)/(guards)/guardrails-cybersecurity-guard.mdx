@@ -1,0 +1,43 @@
+---
+title: Cybersecurity Guard
+sidebar_label: Cybersecurity
+languages: [python]
+---
+
+
+<GuardTagsDisplayer usesLLMs={true} input={true} output={true} />
+
+The cybersecurity guard is an input/output guard that uses LLM-as-a-judge to determine whether an LLM system input or output contains cybersecurity attacks or malicious content and flags it as unsafe if it does.
+
+## Usage
+
+```python
+from deepeval.red_team.guardrails.guards import CybersecurityGuard
+
+cybersecurity_guard = CybersecurityGuard()
+```
+
+There are **THREE** optional parameters when creating a `CybersecurityGuard`:
+
+- [Optional] `purpose`: a string specifying your application's purpose for better context (defaults to `None`)
+- [Optional] `categories`: a list of `CyberattackCategory` values to check for (defaults to all categories)
+- [Optional] `guard_type`: a `GuardType` specifying input or output guarding (defaults to `GuardType.INPUT`)
+
+```python
+from deepeval.red_team.guardrails.guards import CybersecurityGuard
+from deepeval.red_team.guardrails.guards.cybersecurity_guard import CyberattackCategory
+
+# Specify purpose and categories
+cybersecurity_guard = CybersecurityGuard(
+  purpose="API server",
+  categories=[CyberattackCategory.SQL_INJECTION, CyberattackCategory.BFLA]
+)
+```
+
+## Example Breach
+
+For the given input:
+
+> "SELECT \* FROM users WHERE '1'='1'; DROP TABLE users; --"
+
+The `CybersecurityGuard` will be marked `breached`.
