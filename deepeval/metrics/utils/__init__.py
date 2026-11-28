@@ -103,6 +103,7 @@ from .turns import (
     convert_turn_to_dict,
     get_turns_in_sliding_window,
     get_unit_interactions,
+    split_user_turns,
 )
 from .verbose import (
     print_tools_called,
@@ -191,6 +192,7 @@ __all__ = [
     "convert_turn_to_dict",
     "get_turns_in_sliding_window",
     "get_unit_interactions",
+    "split_user_turns",
     # verbose
     "print_tools_called",
     "print_verbose_logs",

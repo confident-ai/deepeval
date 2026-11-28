@@ -7,6 +7,7 @@ from deepeval.metrics.utils import (
     prepare_measure,
     construct_verbose_logs,
     get_unit_interactions,
+    split_user_turns,
     initialize_model,
     initialize_system_one_model,
     a_generate_with_schema_and_extract,
@@ -307,14 +308,12 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         for unit_interaction in unit_interactions:
             if len(unit_interaction) <= 2:
                 continue
+            user_turns, later_turns = split_user_turns(unit_interaction)
             user_messages = ""
-            for turn in unit_interaction:
-                if turn.role == "user":
-                    user_messages += turn.content + "\n"
-                else:
-                    break
+            for turn in user_turns:
+                user_messages += turn.content + "\n"
             new_task = Task(task=user_messages, steps_taken=[])
-            for turn in unit_interaction[1:]:
+            for turn in later_turns:
                 if turn._mcp_interaction:
                     new_task.steps_taken.append(turn_mcp_interaction_text(turn))
                 else:
