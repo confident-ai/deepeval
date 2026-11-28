@@ -28,10 +28,22 @@ from deepeval.test_case import ArenaTestCase, SingleTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
 
 
-def _rotations(names: List[str]) -> List[List[str]]:
-    """Cyclic rotations of ``names``: every contestant appears once in each
-    position. Two contestants give A-B and B-A."""
-    return [names[i:] + names[:i] for i in range(len(names))]
+def _orderings(names: List[str]) -> List[List[str]]:
+    """Orderings that balance both position and pairwise order.
+
+    Cyclic rotations put every contestant once in each position. For three or
+    more contestants they do not balance pairs (with A, B, C, A comes before B
+    in two rotations out of three), so the rotations of the reversed list are
+    added: reversing an ordering flips the relative order of every pair. Two
+    contestants give A-B and B-A; three give all six permutations.
+    """
+    rotations = [names[i:] + names[:i] for i in range(len(names))]
+    if len(names) <= 2:
+        return rotations
+    reversed_names = names[::-1]
+    return rotations + [
+        reversed_names[i:] + reversed_names[:i] for i in range(len(names))
+    ]
 
 
 def _render_contestants(
@@ -56,13 +68,22 @@ class PositionConsistencyMetric(BaseArenaMetric):
     """Checks whether an arena judge picks the same winner when only the order
     of the contestants changes.
 
-    The judge is asked once per ordering (cyclic rotations, so every contestant
-    is shown once in each position). Contestant names are masked the same way
-    ``ArenaGEval`` masks them, and the masking is kept fixed across orderings so
-    position is the only thing that changes.
+    The judge is asked once per ordering, or ``repeats`` times per ordering.
+    The orderings are the cyclic rotations of the contestants plus, for three or
+    more, the rotations of the reversed list, so every contestant appears
+    equally often in each position and every pair appears equally often in each
+    relative order. Contestant names are masked the same way ``ArenaGEval``
+    masks them, the masking is kept fixed across orderings, and contestants are
+    rendered in the chosen order (not shuffled), so position is the only thing
+    that changes.
 
-    ``score`` is the fraction of orderings that agree with the majority winner.
-    ``first_position_win_rate`` is how often the contestant shown first won.
+    ``score`` is the share of judge calls that agree with the most common
+    winner. ``winner`` is that contestant, or ``None`` when several are tied
+    for most wins. ``first_position_win_rate`` is how often the contestant
+    shown first won; with no position bias it is about ``1 / n`` for ``n``
+    contestants. With ``repeats`` > 1, ``repeat_consistency`` is the average
+    share of repeats of the same ordering that agree with each other: low
+    values point to judge sampling noise rather than position bias.
     """
 
     def __init__(
@@ -76,10 +97,14 @@ class PositionConsistencyMetric(BaseArenaMetric):
         async_mode: bool = True,
         verbose_mode: bool = False,
         evaluation_template: Type[ArenaGEvalTemplate] = ArenaGEvalTemplate,
+        repeats: int = 1,
     ):
         validate_criteria_and_evaluation_steps(criteria, evaluation_steps)
         if not 0 <= threshold <= 1:
             raise ValueError("threshold must be between 0 and 1.")
+        if repeats < 1:
+            raise ValueError("repeats must be at least 1.")
+        self.repeats = repeats
         self.name = name
         self.evaluation_params = evaluation_params
         self.criteria = criteria
@@ -98,6 +123,7 @@ class PositionConsistencyMetric(BaseArenaMetric):
         self.score: Optional[float] = None
         self.winner: Optional[str] = None
         self.first_position_win_rate: Optional[float] = None
+        self.repeat_consistency: Optional[float] = None
         self.winners_by_order: List[Dict[str, object]] = []
         self.success: Optional[bool] = None
 
@@ -107,7 +133,7 @@ class PositionConsistencyMetric(BaseArenaMetric):
         _show_indicator: bool = True,
         *args,
         **kwargs,
-    ) -> str:
+    ) -> Optional[str]:
         self._prepare(test_case)
         with metric_progress_indicator(self, _show_indicator=_show_indicator):
             if self.async_mode:
@@ -134,7 +160,7 @@ class PositionConsistencyMetric(BaseArenaMetric):
         _show_indicator: bool = True,
         *args,
         **kwargs,
-    ) -> str:
+    ) -> Optional[str]:
         self._prepare(test_case)
         with metric_progress_indicator(
             self, async_mode=True, _show_indicator=_show_indicator
@@ -186,7 +212,10 @@ class PositionConsistencyMetric(BaseArenaMetric):
             self.evaluation_params, test_case
         )
         names = [contestant.name for contestant in test_case.contestants]
-        return formatted, dummy_to_real, _rotations(names)
+        orders = [
+            order for order in _orderings(names) for _ in range(self.repeats)
+        ]
+        return formatted, dummy_to_real, orders
 
     def _winner_prompt(
         self,
@@ -285,9 +314,15 @@ class PositionConsistencyMetric(BaseArenaMetric):
     def _finalize(self, orders: List[List[str]], winners: List[str]) -> None:
         counts = Counter(winners)
         top = max(counts.values())
-        # On a tie, prefer the contestant that won earliest in the run order.
-        self.winner = next(w for w in winners if counts[w] == top)
+        leaders = [name for name, count in counts.items() if count == top]
+        # No majority (e.g. a 1-1 split between two contestants): no winner.
+        self.winner = leaders[0] if len(leaders) == 1 else None
         self.score = top / len(winners)
+        self.repeat_consistency = (
+            self._repeat_consistency(orders, winners)
+            if self.repeats > 1
+            else None
+        )
         self.first_position_win_rate = sum(
             1 for order, winner in zip(orders, winners) if winner == order[0]
         ) / len(winners)
@@ -311,13 +346,43 @@ class PositionConsistencyMetric(BaseArenaMetric):
             ],
         )
 
+    def _repeat_consistency(
+        self, orders: List[List[str]], winners: List[str]
+    ) -> float:
+        groups: Dict[tuple, List[str]] = {}
+        for order, winner in zip(orders, winners):
+            groups.setdefault(tuple(order), []).append(winner)
+        shares = [
+            max(Counter(group).values()) / len(group)
+            for group in groups.values()
+        ]
+        return sum(shares) / len(shares)
+
     def _build_reason(self, orders: List[List[str]], winners: List[str]) -> str:
-        agree = sum(1 for w in winners if w == self.winner)
         total = len(winners)
+        noise = (
+            f" Repeats of the same ordering agreed {self.repeat_consistency:.0%}"
+            " of the time."
+            if self.repeat_consistency is not None
+            else ""
+        )
+        if self.winner is None:
+            counts = Counter(winners)
+            tally = ", ".join(
+                f"{name} {count}" for name, count in counts.items()
+            )
+            return (
+                f"No contestant won a majority of the {total} judge calls ({tally}), "
+                "so the outcome depends on the order the contestants were shown in. "
+                f"The contestant shown first won {self.first_position_win_rate:.0%} "
+                f"of the time.{noise}"
+            )
+        agree = sum(1 for w in winners if w == self.winner)
         if agree == total:
             return (
-                f"The judge picked {self.winner} in all {total} orderings, so the "
+                f"The judge picked {self.winner} in all {total} judge calls, so the "
                 "result does not depend on the order the contestants were shown in."
+                f"{noise}"
             )
         flips = "; ".join(
             f"{' > '.join(order)} -> {winner}"
@@ -325,7 +390,7 @@ class PositionConsistencyMetric(BaseArenaMetric):
             if winner != self.winner
         )
         return (
-            f"The judge picked {self.winner} in {agree} of {total} orderings. "
-            f"Other orderings gave a different winner ({flips}). The contestant "
-            f"shown first won {self.first_position_win_rate:.0%} of the time."
+            f"The judge picked {self.winner} in {agree} of {total} judge calls. "
+            f"Other calls gave a different winner ({flips}). The contestant "
+            f"shown first won {self.first_position_win_rate:.0%} of the time.{noise}"
         )

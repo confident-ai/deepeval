@@ -107,7 +107,7 @@ def test_consistent_judge_scores_one(async_mode):
     assert metric.score == 1.0
     assert metric.is_successful()
     assert metric.first_position_win_rate == 0.5
-    assert "all 2 orderings" in metric.reason
+    assert "all 2 judge calls" in metric.reason
 
 
 @pytest.mark.parametrize("async_mode", [False, True])
@@ -121,15 +121,18 @@ def test_position_biased_judge_is_flagged(async_mode):
         async_mode=async_mode,
     )
 
-    metric.measure(arena("4 GOOD", "5"))
+    winner = metric.measure(arena("4 GOOD", "5"))
 
+    # A 1-1 split is a tie: there is no winner to report.
+    assert winner is None
+    assert metric.winner is None
     assert metric.score == 0.5
     assert not metric.is_successful()
     assert metric.first_position_win_rate == 1.0
-    assert "1 of 2 orderings" in metric.reason
+    assert "No contestant won a majority" in metric.reason
 
 
-def test_every_contestant_is_shown_first_once():
+def test_every_position_and_pair_order_is_balanced():
     judge = FirstShownJudge()
     metric = PositionConsistencyMetric(
         name="Correctness",
@@ -141,16 +144,39 @@ def test_every_contestant_is_shown_first_once():
 
     metric.measure(arena("4 GOOD", "5", "22"))
 
-    prompts = winner_prompts(judge)
-    assert len(prompts) == 3
-    first_shown = [next(iter(shown_contestants(p))) for p in prompts]
-    assert len(set(first_shown)) == 3
+    orders = [row["order"] for row in metric.winners_by_order]
+    # Three contestants: rotations plus reversed rotations = all 6 orderings.
+    assert len(winner_prompts(judge)) == 6
+    assert len({tuple(order) for order in orders}) == 6
+    for position in range(3):
+        shown_here = [order[position] for order in orders]
+        assert all(shown_here.count(name) == 2 for name in set(shown_here))
+    names = ["model-0", "model-1", "model-2"]
+    for a in names:
+        for b in names:
+            if a != b:
+                before = sum(o.index(a) < o.index(b) for o in orders)
+                assert before == 3
     assert metric.score == pytest.approx(1 / 3)
-    assert {row["winner"] for row in metric.winners_by_order} == {
-        "model-0",
-        "model-1",
-        "model-2",
-    }
+    assert metric.winner is None
+
+
+def test_two_contestants_use_both_orders_only():
+    judge = QualityJudge()
+    metric = PositionConsistencyMetric(
+        name="Correctness",
+        evaluation_params=PARAMS,
+        evaluation_steps=STEPS,
+        model=judge,
+        async_mode=False,
+    )
+
+    metric.measure(arena("4 GOOD", "5"))
+
+    assert [row["order"] for row in metric.winners_by_order] == [
+        ["model-0", "model-1"],
+        ["model-1", "model-0"],
+    ]
 
 
 def test_masking_is_fixed_across_orderings_and_hides_real_names():
@@ -223,4 +249,74 @@ def test_invalid_threshold_rejected():
             evaluation_steps=STEPS,
             model=QualityJudge(),
             threshold=1.5,
+        )
+
+
+class AlternatingJudge(FakeJudge):
+    """Picks the first contestant shown, then the last, then the first..."""
+
+    def pick(self, contestants):
+        calls = len([p for p in self.prompts if "Contestants:" in p])
+        names = list(contestants)
+        return names[0] if calls % 2 else names[-1]
+
+
+@pytest.mark.parametrize("async_mode", [False, True])
+def test_repeats_measure_judge_noise(async_mode):
+    judge = QualityJudge()
+    metric = PositionConsistencyMetric(
+        name="Correctness",
+        evaluation_params=PARAMS,
+        evaluation_steps=STEPS,
+        model=judge,
+        repeats=3,
+        async_mode=async_mode,
+    )
+
+    metric.measure(arena("4 GOOD", "5"))
+
+    assert len(winner_prompts(judge)) == 6
+    assert metric.score == 1.0
+    assert metric.repeat_consistency == 1.0
+    assert "agreed 100%" in metric.reason
+
+
+def test_noisy_judge_has_low_repeat_consistency():
+    metric = PositionConsistencyMetric(
+        name="Correctness",
+        evaluation_params=PARAMS,
+        evaluation_steps=STEPS,
+        model=AlternatingJudge(),
+        repeats=2,
+        async_mode=False,
+    )
+
+    metric.measure(arena("4 GOOD", "5"))
+
+    assert metric.repeat_consistency == 0.5
+
+
+def test_repeat_consistency_is_none_without_repeats():
+    metric = PositionConsistencyMetric(
+        name="Correctness",
+        evaluation_params=PARAMS,
+        evaluation_steps=STEPS,
+        model=QualityJudge(),
+        async_mode=False,
+    )
+
+    metric.measure(arena("4 GOOD", "5"))
+
+    assert metric.repeat_consistency is None
+    assert "Repeats" not in metric.reason
+
+
+def test_invalid_repeats_rejected():
+    with pytest.raises(ValueError, match="repeats"):
+        PositionConsistencyMetric(
+            name="Correctness",
+            evaluation_params=PARAMS,
+            evaluation_steps=STEPS,
+            model=QualityJudge(),
+            repeats=0,
         )
