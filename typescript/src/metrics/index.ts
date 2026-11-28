@@ -76,6 +76,11 @@ export {
   type ToolUseTemplateOverride,
 } from "@/metrics/tool-use";
 export {
+  ConversationToolCorrectnessMetric,
+  type ConversationToolCorrectnessMetricOptions,
+  type ToolCheckScore,
+} from "@/metrics/conversation-tool-correctness";
+export {
   TaskCompletionMetric,
   type TaskCompletionMetricOptions,
   type TaskCompletionTemplateOverride,

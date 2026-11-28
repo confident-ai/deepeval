@@ -176,6 +176,18 @@ def test_wired_metric_keeps_system_one():
     assert effective_eval_mode(metric) is EvalMode.SYSTEM_ONE
 
 
+@pytest.mark.parametrize("configured", [None, "system_one", "hybrid"])
+def test_voice_metric_eval_mode_is_not_read_as_a_jev_mode(
+    monkeypatch, configured
+):
+    from deepeval.metrics import AbruptCutoffMetric
+
+    if configured is not None:
+        monkeypatch.setenv("DEEPEVAL_EVAL_MODE", configured)
+    metric = AbruptCutoffMetric(use_speech_detection=False)
+    assert effective_eval_mode(metric) is EvalMode.LLM
+
+
 ###############################################
 # Trace sent to Jev
 ###############################################

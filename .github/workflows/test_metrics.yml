@@ -62,10 +62,10 @@ jobs:
         run: poetry install --no-interaction --only main
 
       #----------------------------------------------
-      #    Install Pillow for PIL, mcp[cli] and numpy
+      #    Install Pillow for PIL, mcp[cli], numpy and onnxruntime
       #----------------------------------------------
       - name: Install metric dependencies
-        run: poetry run pip install Pillow mcp["cli"] numpy
+        run: poetry run pip install Pillow mcp["cli"] numpy onnxruntime
 
       #----------------------------------------------
       #              run test suite

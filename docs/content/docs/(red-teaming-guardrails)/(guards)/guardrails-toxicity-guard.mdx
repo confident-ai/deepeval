@@ -1,0 +1,27 @@
+---
+title: Toxicity Guard
+sidebar_label: Toxicity
+languages: [python]
+---
+
+
+
+<GuardTagsDisplayer usesLLMs={true} output={true} />
+
+The toxicity guard is an output guard that uses LLM-as-a-judge to determine whether an LLM system output contains a toxic language and flags it as unsafe if it does.
+
+## Usage
+
+```python
+from deepeval.red_team.guardrails.guards import ToxicityGuard
+
+toxicity_guard = ToxicityGuard()
+```
+
+## Example Breach
+
+For the given output:
+
+> "You're an absolute idiot and everyone thinks you're worthless."
+
+The `ToxicityGuard` will be marked `breached`.

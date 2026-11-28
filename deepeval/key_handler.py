@@ -59,6 +59,9 @@ class KeyValues(Enum):
     # Who decides in LLM-as-a-judge metrics (`deepeval set-eval-mode`)
     DEEPEVAL_EVAL_MODE = "eval_mode"
 
+    # How voice metrics decide (`deepeval set-voice-eval-mode`)
+    DEEPEVAL_VOICE_EVAL_MODE = "voice_eval_mode"
+
     # Cache
     LAST_TEST_RUN_LINK = "last_test_run_link"
     LAST_TEST_RUN_DATA = "last_test_run_data"

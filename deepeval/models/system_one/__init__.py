@@ -16,10 +16,16 @@ from deepeval.models.system_one.limits import (
 )
 from deepeval.models.system_one.typesafe_model import TypeSafeModel
 from deepeval.models.system_one.openai_model import OpenAIDecisionModel
+from deepeval.models.system_one.hume_model import HumeDecisionModel
+from deepeval.models.system_one.openai_audio_model import (
+    OpenAIAudioDecisionModel,
+)
 
 __all__ = [
     "TypeSafeModel",
     "OpenAIDecisionModel",
+    "HumeDecisionModel",
+    "OpenAIAudioDecisionModel",
     "SystemOneContextLimitError",
     "check_context_budget",
     "context_limits",

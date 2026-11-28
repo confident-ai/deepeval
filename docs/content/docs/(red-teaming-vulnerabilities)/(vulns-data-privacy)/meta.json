@@ -1,0 +1,7 @@
+{
+  "title": "Data Privacy",
+  "pages": [
+    "red-teaming-vulnerabilities-pii-leakage",
+    "red-teaming-vulnerabilities-prompt-leakage"
+  ]
+}

@@ -7,6 +7,7 @@ import {
   blog,
 } from 'collections/server';
 import { loader, type PageTreeTransformer } from 'fumadocs-core/source';
+import type * as PageTree from 'fumadocs-core/page-tree';
 import { lucideIconsPlugin } from 'fumadocs-core/source/lucide-icons';
 import { withBetaMark } from '@/components/beta-mark';
 import { contentRouteFor, docsImageRoute, blogImageRoute } from './shared';
@@ -69,13 +70,59 @@ function isBetaPage(data: unknown): boolean {
 }
 
 /**
+ * A sidebar section is beta when its separator in `meta.json` ends with this
+ * marker, e.g. `"---[ShieldAlert]Red Teaming [beta]---"`. Every page under it
+ * gets the page-header BETA badge (see `getBetaSectionUrls`).
+ */
+const BETA_SECTION_MARKER = ' [beta]';
+
+type BetaSeparator = { beta?: boolean };
+
+/**
+ * URLs of pages that sit under a beta separator, top level of the tree only.
+ * Folders count wholesale, index page included.
+ */
+export function getBetaSectionUrls(tree: PageTree.Root): Set<string> {
+  const urls = new Set<string>();
+  const collect = (node: PageTree.Node) => {
+    if (node.type === 'page') urls.add(node.url);
+    if (node.type === 'folder') {
+      if (node.index) urls.add(node.index.url);
+      node.children.forEach(collect);
+    }
+  };
+  let inBetaSection = false;
+  for (const node of tree.children) {
+    if (node.type === 'separator') {
+      inBetaSection = (node as BetaSeparator).beta === true;
+    } else if (inBetaSection) {
+      collect(node);
+    }
+  }
+  return urls;
+}
+
+/**
  * Append a β mark to sidebar labels for pages (and folders whose index is)
- * marked `beta: true`. Kept in `name` so the notebook layout's styled
+ * marked `beta: true`, and to section separators marked with
+ * `BETA_SECTION_MARKER`. Kept in `name` so the notebook layout's styled
  * sidebar renderer stays intact; breadcrumbs strip it via `PlainBreadcrumb`.
  * Schema only allows the literal `true`; omission means not-beta.
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const betaTransformer: PageTreeTransformer<any> = {
+  separator(node) {
+    if (
+      typeof node.name === 'string' &&
+      node.name.endsWith(BETA_SECTION_MARKER)
+    ) {
+      node.name = withBetaMark(
+        node.name.slice(0, -BETA_SECTION_MARKER.length),
+      );
+      (node as BetaSeparator).beta = true;
+    }
+    return node;
+  },
   file(node) {
     const ref = node.$ref;
     if (!ref) return node;

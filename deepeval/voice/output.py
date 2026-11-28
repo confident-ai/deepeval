@@ -2,7 +2,6 @@
 
 import os
 import logging
-import shutil
 from typing import Any, List, Optional
 
 from deepeval.test_case import ConversationalTestCase, Turn
@@ -79,13 +78,11 @@ def save_conversation_audio(
     _write_turn_files(test_case.turns, folder)
     if combine_audio_files:
         _write_combined_file(test_case.turns, folder, run_label)
-    if test_case.call_recording_path and os.path.exists(
-        test_case.call_recording_path
-    ):
-        shutil.copyfile(
-            test_case.call_recording_path,
-            os.path.join(folder, "deepeval-call-recording.wav"),
-        )
+    if test_case.audio is not None:
+        with open(
+            os.path.join(folder, "deepeval-call-recording.wav"), "wb"
+        ) as f:
+            f.write(test_case.audio.get_bytes())
 
 
 def _write_turn_files(turns: List[Turn], folder: str) -> None:

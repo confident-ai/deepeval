@@ -186,3 +186,5 @@ voice_qa/
 
 # Local Claude Code instructions
 CLAUDE.md
+
+.claude/

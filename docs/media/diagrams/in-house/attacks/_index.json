@@ -1,0 +1,266 @@
+{
+  "images": [
+    {
+      "file": "bad-likert-judge-example.webp",
+      "title": "Bad Likert Judge example",
+      "alt": "Example Bad Likert Judge conversation where the attacker frames a harmful request as a scoring rubric and the target LLM ends up producing a dangerous response",
+      "width": 1892,
+      "height": 1420,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/attacks:bad-likert-judge-example.png"
+        ]
+      }
+    },
+    {
+      "file": "bad-likert-judge.webp",
+      "title": "Bad Likert Judge workflow",
+      "alt": "A vulnerability seeds a baseline attack, the attacker asks the target to act as a Likert-scale judge, and the highest-scoring example is refined into the final attack",
+      "width": 2400,
+      "height": 664,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/attacks:bad-likert-judge.png"
+        ]
+      }
+    },
+    {
+      "file": "bon-asr-by-attempts.webp",
+      "title": "Attack success keeps climbing with every order of magnitude of attempts",
+      "alt": "Best-of-N attack success rate against the number of attempts, from 50 to 10,000 on a log scale, for six models. Every model climbs steadily: GPT-4o goes from 42% at 50 attempts to 89% at 10,000; Claude 3.5 Sonnet from 34% to 78%; Gemini 1.5 Pro from 8% to 50%.",
+      "width": 2136,
+      "height": 1605
+    },
+    {
+      "file": "bon-composition.webp",
+      "title": "Combining budgets moves the whole curve",
+      "alt": "Final attack success rate for Best-of-N alone versus Best-of-N combined with a prefix jailbreak: GPT-4o text from 86% to 97%, Claude 3.5 Sonnet vision from 32% to 70%, Gemini 1.5 Pro audio from 59% to 87%.",
+      "width": 2136,
+      "height": 987
+    },
+    {
+      "file": "bon-forecast-vs-observed.webp",
+      "title": "Forecast versus observed attack success at 10,000 attempts",
+      "alt": "For six models, the attack success rate forecast at 10,000 attempts from a power law fitted on 1,000 attempts or fewer, next to the observed rate. The two are within 1.6 percentage points for every model: GPT-4o 87.1% forecast versus 88.7% observed, Gemini 1.5 Pro 50.3% versus 49.7%.",
+      "width": 2136,
+      "height": 1380
+    },
+    {
+      "file": "bon-loop.webp",
+      "title": "The Best-of-N jailbreaking loop",
+      "alt": "A harmful request is randomly augmented, sent to the target model, and graded by a harm classifier. If the response is harmful, or the attempt budget N is spent, the loop stops. Otherwise it draws a new random augmentation and tries again.",
+      "width": 2136,
+      "height": 1953
+    },
+    {
+      "file": "bon-resample-reliability.webp",
+      "title": "How often a successful jailbreak works again",
+      "alt": "When a successful Best-of-N jailbreak is resent unchanged, it succeeds again only 15% to 52% of the time. At temperature 1: Claude 3.5 Sonnet 46%, Claude 3 Opus 44.7%, GPT-4o 24.3%, GPT-4o-mini 26.4%, Gemini 1.5 Flash 15.5%, Gemini 1.5 Pro 14.9%. At temperature 0 the rates are slightly higher.",
+      "width": 2136,
+      "height": 1713
+    },
+    {
+      "file": "bon-sonnet-forecast.webp",
+      "title": "Five data points, one equation, ten times the budget",
+      "alt": "The power law fitted to Claude 3.5 Sonnet's Best-of-N results at 1,000 attempts or fewer, extended to 10,000 attempts. It forecasts 78.3% at 10,000 attempts; the observed value is 78%.",
+      "width": 2136,
+      "height": 1368
+    },
+    {
+      "file": "contextual-chain-example.webp",
+      "title": "Contextual chain attack example",
+      "alt": "A red teamer asks Gemini 2.5 Pro which academic fields have high female and male enrollment and what that implies, and it suggests gender-based aptitude differences",
+      "width": 2400,
+      "height": 1200,
+      "source": {
+        "urls": [
+          "content/blog/images/contextual-chains.png"
+        ]
+      }
+    },
+    {
+      "file": "crescendo-jailbreaking-example.webp",
+      "title": "Crescendo jailbreaking example",
+      "alt": "Example crescendo conversation that starts with a safe question about stereotypes and escalates turn by turn until the target LLM gives a dangerous response",
+      "width": 1892,
+      "height": 1246,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/attacks:crescendo-jailbreaking-example.png"
+        ]
+      }
+    },
+    {
+      "file": "crescendo-jailbreaking.webp",
+      "title": "Crescendo jailbreaking workflow",
+      "alt": "A vulnerability seeds a baseline attack, the attacker escalates it across turns, and the attacker backtracks whenever the target LLM refuses",
+      "width": 2400,
+      "height": 379,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/attacks:crescendo-jailbreaking.png"
+        ]
+      }
+    },
+    {
+      "file": "crescendo-sequence.webp",
+      "title": "How a Crescendo attack escalates",
+      "alt": "An attacker asks a harmless related question, then asks the model to expand on its own answer, escalating a step at a time. When the model refuses, the attacker backtracks and rephrases, and the model complies by building on its own earlier answers.",
+      "width": 2136,
+      "height": 1506
+    },
+    {
+      "file": "crescendo-vs-baselines.webp",
+      "title": "Average attack success: Crescendo versus single-turn baselines",
+      "alt": "Average attack success rate on 50 AdvBench tasks. Crescendo: 56.2% on GPT-4 and 82.6% on Gemini Pro. PAIR: 40% and 33%. Many-shot: 37% and 35.4%.",
+      "width": 2136,
+      "height": 1353
+    },
+    {
+      "file": "dialogue-enhancement.svg",
+      "title": "Dialogue-based attack enhancement",
+      "alt": "An attacker and the target LLM go back and forth, with the attacker rewriting its prompt as a fictional car-safety scenario until the target explains how to hotwire a car",
+      "width": 1029,
+      "height": 429,
+      "source": {
+        "urls": [
+          "https://confident-bucket.s3.amazonaws.com/attack_enhancements_dialogue.svg"
+        ]
+      }
+    },
+    {
+      "file": "encoding-enhancement.svg",
+      "title": "Encoding-based attack enhancement",
+      "alt": "Letters of the alphabet mapped to their ROT13 counterparts, turning the word CAR into PNE",
+      "width": 837,
+      "height": 175,
+      "source": {
+        "urls": [
+          "https://confident-bucket.s3.amazonaws.com/attack_enhancements_encoding.svg"
+        ]
+      }
+    },
+    {
+      "file": "linear-jailbreaking-example.webp",
+      "title": "Linear jailbreaking example",
+      "alt": "Example linear jailbreaking conversation where each attacker turn refines the previous prompt until the target LLM gives a dangerous response",
+      "width": 1892,
+      "height": 1360,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/attacks:linear-jailbreaking-example.png"
+        ]
+      }
+    },
+    {
+      "file": "linear-jailbreaking.webp",
+      "title": "Linear jailbreaking workflow",
+      "alt": "A vulnerability seeds a baseline attack, the attacker sends it to the target LLM, a judge scores the response, and the attacker refines the attack using that feedback",
+      "width": 2400,
+      "height": 459,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/attacks:linear-jailbreaking-intro.png"
+        ]
+      }
+    },
+    {
+      "file": "mhj-human-vs-automated.webp",
+      "title": "Defenses that hold against single-turn automation fall to multi-turn humans",
+      "alt": "Attack success rate on HarmBench against four defenses on Llama-3-8B. Circuit breakers (RR): 8.3% for the best automated single-turn attack versus 51.7% for human multi-turn red teamers. LAT: 10% versus 75.4%. DERTA: 68.3% versus 87.9%. Cygnet: 0% versus 70.4%.",
+      "width": 2136,
+      "height": 1533
+    },
+    {
+      "file": "msj-intercept-vs-slope.webp",
+      "title": "Training moves the line up, not flatter",
+      "alt": "Two lines of log negative log-likelihood of a harmful answer against log2 of the number of shots. Before safety training, the line crosses the jailbreak threshold at 32 shots. After more safety training, the line starts higher but has the same slope, so it crosses the threshold at 128 shots: four times the shots, but it still crosses.",
+      "width": 2136,
+      "height": 1446
+    },
+    {
+      "file": "one-shot-enhancement.svg",
+      "title": "One-shot attack enhancement",
+      "alt": "An attacker LLM rewrites a refused request to hotwire a car into a roleplay prompt, retrying until it passes a refusal check",
+      "width": 884,
+      "height": 242,
+      "source": {
+        "urls": [
+          "https://confident-bucket.s3.amazonaws.com/attack_enhancements_one_shot.svg"
+        ]
+      }
+    },
+    {
+      "file": "roleplay-replay-example.webp",
+      "title": "Roleplay replay attack example",
+      "alt": "A red teamer asks Gemini 2.5 Pro, roleplaying as an old-fashioned grandmother, for marriage advice, and it replies with a stereotyped answer",
+      "width": 2400,
+      "height": 1051,
+      "source": {
+        "urls": [
+          "content/blog/images/roleplay-replay.png"
+        ]
+      }
+    },
+    {
+      "file": "sequential-jailbreaking-example.webp",
+      "title": "Sequential jailbreaking example",
+      "alt": "Example multi-turn conversation where the attacker builds up a harmful request across turns until the target LLM gives a dangerous response",
+      "width": 1892,
+      "height": 1420,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/attacks:sequential-jailbreaking-example.png"
+        ]
+      }
+    },
+    {
+      "file": "sequential-jailbreaking.webp",
+      "title": "Sequential jailbreaking workflow",
+      "alt": "A vulnerability seeds a baseline attack, the attacker wraps it in a sequential template such as a dialogue, question bank or game, and sends it to the target LLM",
+      "width": 2400,
+      "height": 647,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/attacks:sequential-jailbreaking.png"
+        ]
+      }
+    },
+    {
+      "file": "tree-jailbreaking-example.webp",
+      "title": "Tree jailbreaking example",
+      "alt": "Example tree jailbreaking run where the attacker expands several branches against the target LLM and follows the most promising ones",
+      "width": 1728,
+      "height": 1316,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/attacks:tree-jailbreaking-example.png"
+        ]
+      }
+    },
+    {
+      "file": "tree-jailbreaking-overview.webp",
+      "title": "Tree jailbreaking overview",
+      "alt": "A vulnerability seeds a baseline attack that branches into a tree of attack variations, keeping successful branches and pruning failed ones",
+      "width": 1892,
+      "height": 1076,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/attacks:tree-jailbreaking-intro.png"
+        ]
+      }
+    },
+    {
+      "file": "tree-jailbreaking.webp",
+      "title": "Tree jailbreaking workflow",
+      "alt": "Each node of the attack tree is enhanced by the attacker and sent to the target LLM, and its children are pruned or expanded based on the response",
+      "width": 1712,
+      "height": 1374,
+      "source": {
+        "urls": [
+          "https://deepteam-docs.s3.us-east-1.amazonaws.com/attacks:tree-jailbreaking.png"
+        ]
+      }
+    }
+  ]
+}

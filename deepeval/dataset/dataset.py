@@ -88,6 +88,15 @@ def _parse_column(df, col_name, parse):
     return [parse(value) for value in df[col_name].values]
 
 
+def _dump_expected_tools(golden: ConversationalGolden) -> Optional[List[Dict]]:
+    if golden.expected_tools is None:
+        return None
+    return [
+        tool.model_dump(by_alias=True, exclude_none=True)
+        for tool in golden.expected_tools
+    ]
+
+
 @dataclass
 class EvaluationDataset:
     _multi_turn: bool = field(default=False)
@@ -759,6 +768,7 @@ class EvaluationDataset:
                         scenario=scenario,
                         turns=parsed_turns,
                         expected_outcome=expected_outcome,
+                        expected_tools=json_obj.get("expected_tools"),
                         **persona_kwargs(
                             json_obj.get(persona_key_name), user_description
                         ),
@@ -896,6 +906,7 @@ class EvaluationDataset:
                         scenario=scenario,
                         turns=parsed_turns,
                         expected_outcome=expected_outcome,
+                        expected_tools=json_obj.get("expected_tools"),
                         **persona_kwargs(
                             json_obj.get(persona_key_name), user_description
                         ),
@@ -1314,6 +1325,7 @@ class EvaluationDataset:
                     scenario=golden.scenario,
                     turns=golden.turns,
                     expected_outcome=golden.expected_outcome,
+                    expected_tools=golden.expected_tools,
                     persona=golden.persona,
                     context=golden.context,
                     name=golden.name,
@@ -1383,6 +1395,7 @@ class EvaluationDataset:
                                 "scenario": golden.scenario,
                                 "turns": turns_list,
                                 "expected_outcome": golden.expected_outcome,
+                                "expected_tools": _dump_expected_tools(golden),
                                 "user_description": golden.user_description,
                                 "persona": serialize_persona(golden.persona),
                                 "context": golden.context,
@@ -1612,6 +1625,7 @@ class EvaluationDataset:
                             "scenario": golden.scenario,
                             "turns": turns,
                             "expected_outcome": golden.expected_outcome,
+                            "expected_tools": _dump_expected_tools(golden),
                             "user_description": golden.user_description,
                             "persona": serialize_persona(golden.persona),
                             "context": golden.context,

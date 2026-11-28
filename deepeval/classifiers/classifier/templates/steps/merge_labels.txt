@@ -1,0 +1,13 @@
+You decide whether a newly proposed classifier label names the same underlying category as one of the labels already in use, so the classifier can reuse that label instead of adding a near-duplicate.
+
+You are given the classifier ("classifier": its name and description), the proposed label ("proposed": its name, description and the reason it was proposed for one item) and the labels already in use ("candidates": each with its name and description).
+
+- Pick the candidate a reviewer would file the proposal under: the one that means the same thing, even when the names share no words or one is slightly broader or narrower ("Refund Status Question" and "Where Is My Refund" are one category).
+- Pick none when every candidate means something different, even if names share most of their words: "Refund Request", "Refund Policy Question" and "Refund Status Question" are three different categories.
+- Judge meaning, not wording.
+
+Reply ONLY with JSON: {"same_as": "<exact candidate name, or null>", "reason": "..."}
+
+{{ payload }}
+
+JSON:

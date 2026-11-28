@@ -133,9 +133,12 @@ class ToolCorrectnessMetric(BaseMetric):
                 self.score = (
                     0 if self.strict_mode and score < self.threshold else score
                 )
-                tool_calling_reason = self._generate_reason()
-                self.reason = self._construct_final_reason(
-                    tool_calling_reason, tool_selection_score.reason
+                self.reason = (
+                    self._construct_final_reason(
+                        self._generate_reason(), tool_selection_score.reason
+                    )
+                    if self.include_reason
+                    else None
                 )
                 self.success = self.is_successful()
 
@@ -219,9 +222,12 @@ class ToolCorrectnessMetric(BaseMetric):
             self.score = (
                 0 if self.strict_mode and score < self.threshold else score
             )
-            tool_calling_reason = self._generate_reason()
-            self.reason = self._construct_final_reason(
-                tool_calling_reason, tool_selection_score.reason
+            self.reason = (
+                self._construct_final_reason(
+                    self._generate_reason(), tool_selection_score.reason
+                )
+                if self.include_reason
+                else None
             )
             self.success = self.is_successful()
 
@@ -278,18 +284,14 @@ class ToolCorrectnessMetric(BaseMetric):
     ##################################################
 
     def _generate_reason(self):
-        tools_called_names = [
-            tool_called.name for tool_called in self.tools_called
-        ]
-        expected_tools_names = [
-            expected_tool.name for expected_tool in self.expected_tools
-        ]
-
-        type_mismatches = self._get_type_mismatches()
+        expected_names = [tool.name for tool in self.expected_tools]
+        called_names = [tool.name for tool in self.tools_called]
+        summary = f"expected {expected_names}, called {called_names}"
 
         if self.should_exact_match:
+            type_mismatches = self._get_type_mismatches()
             return (
-                f"{'Exact match' if self._calculate_exact_match_score() else 'Not an exact match'}: expected {expected_tools_names}, called {tools_called_names}."
+                f"{'Exact match' if self._calculate_exact_match_score() else 'Not an exact match'}: {summary}."
                 + (
                     f" Tool type mismatches: {type_mismatches}."
                     if type_mismatches
@@ -297,47 +299,97 @@ class ToolCorrectnessMetric(BaseMetric):
                 )
                 + " See details above."
             )
+        if self._calculate_score() == 1:
+            if self.should_consider_ordering:
+                return f"Correct ordering: all expected tools {expected_names} were called in the correct order."
+            return f"All expected tools {expected_names} were called (order not considered)."
 
-        elif self.should_consider_ordering:
-            lcs, weighted_length = self._compute_weighted_lcs()
-            if (
-                len(self.tools_called) == len(self.expected_tools)
-                and len(self.expected_tools) == 0
-            ):
-                score = 1.0
-            elif len(self.expected_tools) == 0:
-                score = 0.0
-            else:
-                score = weighted_length / len(self.expected_tools)
-            missing = set(expected_tools_names) - set(tools_called_names)
-            out_of_order = set(expected_tools_names) - set(
-                [tool.name for tool in lcs]
+        issues = self._issues() or ["tools did not fully match"]
+        label = (
+            "Incorrect tool usage"
+            if self.should_consider_ordering
+            else "Incomplete tool usage"
+        )
+        return (
+            f"{label}: {'; '.join(issues)}; {summary}. See more details above."
+        )
+
+    def _issues(self) -> List[str]:
+        missing, wrong_inputs, wrong_outputs, matched = [], [], [], []
+        unpaired = list(self.tools_called)
+        for expected_tool in self.expected_tools:
+            same_name = [t for t in unpaired if t.name == expected_tool.name]
+            if not same_name:
+                missing.append(expected_tool.name)
+                continue
+            call = max(
+                same_name, key=lambda t: self._match_score(expected_tool, t)
             )
-            if score == 1:
-                return f"Correct ordering: all expected tools {expected_tools_names} were called in the correct order."
-            else:
-                issues = []
-                if missing:
-                    issues.append(f"missing tools {list(missing)}")
-                if out_of_order:
-                    issues.append(f"out-of-order tools {list(out_of_order)}")
-                if type_mismatches:
-                    issues.append(f"tool type mismatches {type_mismatches}")
-                return f"Incorrect tool usage: {' and '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
-        else:
-            used_expected = set(self.tools_called).intersection(
-                set(self.expected_tools)
+            unpaired.remove(call)
+            if self._input_parameters_score(expected_tool, call) < 1:
+                wrong_inputs.append(expected_tool.name)
+            if not self._output_matches(expected_tool, call):
+                wrong_outputs.append(expected_tool.name)
+            if self._match_score(expected_tool, call) == 1:
+                matched.append(expected_tool.name)
+
+        out_of_order = []
+        if self.should_consider_ordering:
+            in_order = [tool.name for tool in self._compute_weighted_lcs()[0]]
+            for name in matched:
+                if name in in_order:
+                    in_order.remove(name)
+                else:
+                    out_of_order.append(name)
+
+        issues = []
+        for label, names in [
+            ("missing tools", missing),
+            ("out-of-order tools", out_of_order),
+            ("different input parameters for", wrong_inputs),
+            ("different output for", wrong_outputs),
+            ("tool type mismatches", self._get_type_mismatches()),
+        ]:
+            if names:
+                issues.append(f"{label} {names}")
+        if not self.expected_tools and self.tools_called:
+            called_names = [tool.name for tool in self.tools_called]
+            issues.append(
+                f"no tools were expected, but {called_names} were called"
             )
-            missing = set(self.expected_tools) - used_expected
-            if self._calculate_non_exact_match_score() == 1:
-                return f"All expected tools {expected_tools_names} were called (order not considered)."
-            else:
-                issues = []
-                if missing or not type_mismatches:
-                    issues.append(f"missing tools {list(missing)}")
-                if type_mismatches:
-                    issues.append(f"tool type mismatches {type_mismatches}")
-                return f"Incomplete tool usage: {'; '.join(issues)}; expected {expected_tools_names}, called {tools_called_names}. See more details above."
+        return issues
+
+    def _match_score(
+        self, expected_tool: ToolCall, called_tool: ToolCall
+    ) -> float:
+        if (
+            expected_tool.name != called_tool.name
+            or expected_tool.type != called_tool.type
+            or not self._output_matches(expected_tool, called_tool)
+        ):
+            return 0.0
+        return self._input_parameters_score(expected_tool, called_tool)
+
+    def _input_parameters_score(
+        self, expected_tool: ToolCall, called_tool: ToolCall
+    ) -> float:
+        if (
+            ToolCallParams.INPUT_PARAMETERS not in self.evaluation_params
+            or expected_tool.input_parameters is None
+        ):
+            return 1.0
+        return self._compare_dicts(
+            expected_tool.input_parameters, called_tool.input_parameters or {}
+        )
+
+    def _output_matches(
+        self, expected_tool: ToolCall, called_tool: ToolCall
+    ) -> bool:
+        return (
+            ToolCallParams.OUTPUT not in self.evaluation_params
+            or expected_tool.output is None
+            or expected_tool.output == called_tool.output
+        )
 
     def _get_type_mismatches(self) -> List[str]:
         mismatches = []
@@ -498,55 +550,29 @@ class ToolCorrectnessMetric(BaseMetric):
             and len(self.expected_tools) == 0
         ):
             return 1.0
-        for i in range(len(self.tools_called)):
-            if self.tools_called[i].name != self.expected_tools[i].name:
-                return 0.0
-            if self.tools_called[i].type != self.expected_tools[i].type:
-                return 0.0
-            if ToolCallParams.INPUT_PARAMETERS in self.evaluation_params:
-                if (
-                    self.tools_called[i].input_parameters
-                    != self.expected_tools[i].input_parameters
-                ):
-                    return 0.0
-            if ToolCallParams.OUTPUT in self.evaluation_params:
-                if self.tools_called[i].output != self.expected_tools[i].output:
-                    return 0.0
-        return 1.0
+        return float(
+            all(
+                self._match_score(expected_tool, called_tool) == 1
+                for expected_tool, called_tool in zip(
+                    self.expected_tools, self.tools_called
+                )
+            )
+        )
 
     # Non exact matching score
     def _calculate_non_exact_match_score(self) -> float:
         total_score = 0.0
-        matched_called_tools = set()
+        used = set()
         for expected_tool in self.expected_tools:
-            best_score = 0.0
-            for called_tool in self.tools_called:
-                if called_tool in matched_called_tools:
-                    continue
-                if (
-                    expected_tool.name == called_tool.name
-                    and expected_tool.type == called_tool.type
-                ):
-                    match_score = 1.0
-                    if (
-                        ToolCallParams.INPUT_PARAMETERS
-                        in self.evaluation_params
-                    ):
-                        match_score *= self._compare_dicts(
-                            expected_tool.input_parameters,
-                            called_tool.input_parameters,
-                        )
-                    if (
-                        ToolCallParams.OUTPUT in self.evaluation_params
-                        and expected_tool.output != called_tool.output
-                    ):
-                        match_score = 0.0
-                    if match_score > best_score:
-                        best_score = match_score
-                        best_called_tool = called_tool
+            scores = [
+                (self._match_score(expected_tool, called_tool), index)
+                for index, called_tool in enumerate(self.tools_called)
+                if index not in used
+            ]
+            best_score, best_index = max(scores, default=(0.0, None))
             if best_score > 0:
                 total_score += best_score
-                matched_called_tools.add(best_called_tool)
+                used.add(best_index)
         return (
             1.0
             if not self.expected_tools and not self.tools_called
@@ -567,23 +593,7 @@ class ToolCorrectnessMetric(BaseMetric):
                     self.expected_tools[i - 1],
                     self.tools_called[j - 1],
                 )
-                if (
-                    expected_tool.name != called_tool.name
-                    or expected_tool.type != called_tool.type
-                ):
-                    dp[i][j] = max(dp[i - 1][j], dp[i][j - 1])
-                    continue
-                score = 1.0
-                if ToolCallParams.INPUT_PARAMETERS in self.evaluation_params:
-                    score *= self._compare_dicts(
-                        expected_tool.input_parameters,
-                        called_tool.input_parameters,
-                    )
-                if (
-                    ToolCallParams.OUTPUT in self.evaluation_params
-                    and expected_tool.output != called_tool.output
-                ):
-                    score = 0.0
+                score = self._match_score(expected_tool, called_tool)
                 dp[i][j] = max(
                     dp[i - 1][j],
                     dp[i][j - 1],

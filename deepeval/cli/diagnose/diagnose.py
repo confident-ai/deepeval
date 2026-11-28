@@ -91,6 +91,7 @@ _RELEVANT_MARKERS = (
     "DEEPEVAL_LOCAL_STORE",
     "DEEPEVAL_SQLITE_INCLUDE_ROW_JSON",
     "DEEPEVAL_EVAL_MODE",
+    "DEEPEVAL_VOICE_EVAL_MODE",
     "DEEPEVAL_VOICE_FOLDER",
     "DEEPEVAL_TTS_MODEL",
     "DEEPEVAL_STT_MODEL",
@@ -471,10 +472,19 @@ def _local_storage_section() -> Dict[str, Any]:
 def _eval_mode_section() -> Dict[str, Any]:
     """Which eval mode is in effect, always shown (even on defaults)."""
     from deepeval.config.eval_mode import EVAL_MODE_ENV_VAR, resolve_eval_mode
+    from deepeval.config.voice_eval_mode import (
+        VOICE_EVAL_MODE_ENV_VAR,
+        resolve_voice_eval_mode,
+    )
 
     return {
         "eval_mode": resolve_eval_mode().value,
         "eval_mode_source": resolve_setting_source(EVAL_MODE_ENV_VAR)
+        or "built-in default",
+        "voice_eval_mode": resolve_voice_eval_mode().value,
+        "voice_eval_mode_source": resolve_setting_source(
+            VOICE_EVAL_MODE_ENV_VAR
+        )
         or "built-in default",
     }
 
@@ -579,6 +589,11 @@ def diagnose_command(
         "Eval mode",
         f"[bold]{eval_mode['eval_mode']}[/bold] "
         f"[dim]({eval_mode['eval_mode_source']})[/dim]",
+    )
+    table.add_row(
+        "Voice eval mode",
+        f"[bold]{eval_mode['voice_eval_mode']}[/bold] "
+        f"[dim]({eval_mode['voice_eval_mode_source']})[/dim]",
     )
     console.print(table)
     console.print(
