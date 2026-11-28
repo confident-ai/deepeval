@@ -1907,11 +1907,10 @@ class Synthesizer:
             ValueError: If file_type is invalid, no synthetic goldens exist,
             or file_name contains periods.
         """
-        if str(file_type).lower() not in valid_file_types:
+        normalized_file_type = str(file_type).lower()
+        if normalized_file_type not in valid_file_types:
             raise ValueError(
-                "Invalid file type. Available file types to save as: , ".join(
-                    type for type in valid_file_types
-                )
+                f"Invalid file type. Available file types to save as: {', '.join(valid_file_types)}"
             )
 
         if file_name and "." in file_name:
@@ -1932,12 +1931,12 @@ class Synthesizer:
         base_name = file_name or datetime.datetime.now().strftime(
             "%Y%m%d_%H%M%S"
         )
-        new_filename = f"{base_name}.{file_type}"
+        new_filename = f"{base_name}.{normalized_file_type}"
 
         os.makedirs(directory, exist_ok=True)
 
         full_file_path = os.path.join(directory, new_filename)
-        if file_type == "json":
+        if normalized_file_type == "json":
             with open(full_file_path, "w", encoding="utf-8") as file:
                 if (
                     self.synthetic_goldens is not None
@@ -1966,7 +1965,7 @@ class Synthesizer:
                         for golden in self.synthetic_conversational_goldens
                     ]
                 json.dump(json_data, file, indent=4, ensure_ascii=False)
-        elif file_type == "csv":
+        elif normalized_file_type == "csv":
             with open(
                 full_file_path, "w", newline="", encoding="utf-8"
             ) as file:
@@ -2014,7 +2013,7 @@ class Synthesizer:
                                 ),
                             ]
                         )
-        elif file_type == "jsonl":
+        elif normalized_file_type == "jsonl":
             with open(full_file_path, "w", encoding="utf-8") as file:
                 if (
                     self.synthetic_goldens is not None
