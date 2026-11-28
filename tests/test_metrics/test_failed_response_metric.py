@@ -1,14 +1,17 @@
 import pytest
 
 from deepeval.metrics import FailedResponseMetric
-from deepeval.test_case import Turn
+from deepeval.test_case import ConversationalTestCase, Turn
 from tests.test_metrics.helpers import (
     caller_turn,
     clean_turns,
     measure,
+    recording,
+    stereo_recording,
     timed_turn,
     without_place,
 )
+from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 
 
 def test_a_question_left_at_the_end_of_the_call_fails():
@@ -70,3 +73,23 @@ def test_every_caller_line_after_the_last_reply_fails():
         6,
         7,
     ]
+
+
+@pytest.mark.parametrize("probability,score", [(0.3, 1.0), (0.9, 0.75)])
+def test_the_decision_model_hears_the_agent_side_of_an_unanswered_line(
+    tmp_path, probability, score
+):
+    turns = clean_turns() + [timed_turn("user", 2.0, 21.0)]
+    path = stereo_recording(tmp_path / "call.wav", seconds=26.0)
+    model = FakeAudioDecisionModel(probability=probability)
+    metric = FailedResponseMetric(
+        use_speech_detection=False,
+        eval_mode="hybrid",
+        audio_decision_model=model,
+    )
+    metric.measure(
+        ConversationalTestCase(turns=turns, audio=recording(path)),
+        _show_indicator=False,
+    )
+    assert metric.score == score
+    assert model.questions == [FailedResponseMetric.event_question]

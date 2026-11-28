@@ -27,6 +27,7 @@ from tests.test_metrics.helpers import (
     zeros,
     recording,
 )
+from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 
 
 def dropout_clip():
@@ -227,3 +228,26 @@ def test_audio_dying_mid_sentence_is_a_dead_stream(tmp_path, before, across):
 
 def test_a_hole_with_no_words_before_it_stays_a_dead_stream(tmp_path):
     assert len(_dead_streams_heard(tmp_path, "", "")) == 1
+
+
+@pytest.mark.parametrize(
+    "metric_class,build_clip",
+    [
+        (AudioDropoutMetric, dropout_clip),
+        (
+            DeadStreamMetric,
+            lambda: speech_like(1.0) + zeros(0.7) + speech_like(1.0, seed=5),
+        ),
+    ],
+)
+def test_a_defect_the_decision_model_cannot_hear_is_dismissed(
+    metric_class, build_clip
+):
+    model = FakeAudioDecisionModel(probability=0.3)
+    metric = measure(
+        metric_class(eval_mode="hybrid", audio_decision_model=model),
+        with_defect(1, build_clip),
+    )
+    assert metric.score == 1.0
+    assert metric.score_breakdown["dismissed_events"] == 1
+    assert model.questions == [metric_class.event_question]
