@@ -27,6 +27,12 @@ To use the `CitationFaithfulnessMetric`, you'll have to provide the following ar
 
 The `retrieval_context` passages are numbered (`[1]`, `[2]`, ...) before being shown to the judge, and the `[N]` markers in `actual_output` refer to those passage numbers.
 
+If an answer cites a passage number outside this range, the metric returns `0.0` with a reason naming the invalid marker without calling the judge. For citations within the range, the judge still checks whether each passage supports its claim.
+
+The range check leaves neutral case citations such as `[2026] KEHC 11082 (KLR)`, `[2019] UKSC 5`, and `[2024] EWCA Civ 355` to the judge. It recognizes a bracketed four-digit year followed on the same line by an uppercase court code, an optional alphabetic division, and a numeric case number. This only avoids treating the year as a passage number; it does not establish that the case exists or supports the answer. Other out-of-range markers in the same answer still cause a deterministic failure.
+
+This is a limited format heuristic, not a complete legal-citation parser. A bare `[2019]` is still checked as a passage number. Other legal citation formats and combined markers such as `[1, 7]` or `[1-3]` are not specially parsed; combined markers continue to be evaluated by the judge.
+
 ## Usage
 
 <include cwd>snippets/metrics/set-eval-mode.mdx</include>
