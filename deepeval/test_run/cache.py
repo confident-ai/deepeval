@@ -1,3 +1,4 @@
+import dataclasses
 from deepeval.dataset.expectations import expectation_evidence
 import logging
 import sys
@@ -68,6 +69,10 @@ class CachedMetricData(BaseModel):
     metric_configuration: MetricConfiguration
 
 
+def _config_dict(config: Any) -> Optional[Dict[str, Any]]:
+    return None if config is None else dataclasses.asdict(config)
+
+
 class CachedLabel(BaseModel):
     name: str
     description: Optional[str] = None
@@ -78,10 +83,12 @@ class ClassifierConfiguration(BaseModel):
     evaluation_model: Optional[str] = None
     include_reason: bool = True
     allow_none: bool = False
+    options: Optional[Dict[str, Any]] = None
 
 
 class CachedClassification(BaseModel):
     classification: Classification
+    classifications: List[Classification] = Field(default_factory=list)
     classifier_configuration: ClassifierConfiguration
 
 
@@ -433,6 +440,8 @@ class Cache:
         cached row are stale by design and must be recomputed by the caller."""
         if not cached_test_case:
             return None
+        if classifier.label_discovery_config is not None:
+            return None
         configuration = Cache.create_classifier_configuration(classifier)
         for cached in cached_test_case.cached_classifications:
             if (
@@ -455,7 +464,41 @@ class Cache:
             evaluation_model=classifier.evaluation_model,
             include_reason=classifier.include_reason,
             allow_none=getattr(classifier, "allow_none", False),
+            options=Cache._classifier_options(classifier),
         )
+
+    @staticmethod
+    def _classifier_options(
+        classifier: "BaseClassifier",
+    ) -> Optional[Dict[str, Any]]:
+        from deepeval.classifiers.classifier.steps.truncate import (
+            MAX_CONTENT_CHARS,
+        )
+
+        template_name = getattr(
+            getattr(classifier, "classification_template", None),
+            "__name__",
+            None,
+        )
+        options = {
+            "multi_label": classifier.multi_label or None,
+            "max_content_chars": (
+                None
+                if classifier.max_content_chars == MAX_CONTENT_CHARS
+                else classifier.max_content_chars
+            ),
+            "evidence_config": _config_dict(classifier.evidence_config),
+            "review_config": _config_dict(classifier.review_config),
+            "description": classifier.description,
+            "template": (
+                None if template_name == "ClassifierTemplate" else template_name
+            ),
+            "agent_profile": _config_dict(classifier.agent_profile),
+        }
+        options = {
+            key: value for key, value in options.items() if value is not None
+        }
+        return options or None
 
     @staticmethod
     def _serialize_rubric(rubric: Any) -> Optional[List[Dict[str, Any]]]:

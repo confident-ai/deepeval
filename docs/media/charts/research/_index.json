@@ -1,0 +1,88 @@
+{
+  "images": [
+    {
+      "file": "alignment-training-breach-rates.webp",
+      "title": "Breach rates by alignment training intensity",
+      "alt": "Bar chart of breach rates for lightly and intensively aligned models: lightly aligned models are breached more by simple attacks like Base64, leetspeak and multilingual, while intensively aligned models are breached more by roleplay, prompt probing and tree jailbreaking",
+      "width": 2400,
+      "height": 1362,
+      "source": {
+        "urls": [
+          "content/blog/images/ai_safety_paradox_main_plot.png"
+        ]
+      }
+    },
+    {
+      "file": "claude-roleplay-vs-prompt-injection.webp",
+      "title": "Claude 4 Opus: roleplay versus prompt injection",
+      "alt": "Line chart of Claude 4 Opus breach rates as attacks per vulnerability class increase, comparing baseline prompt injection with roleplay attacks for bias, toxicity and unauthorized access",
+      "width": 2400,
+      "height": 1593,
+      "source": {
+        "urls": [
+          "content/blog/images/attack-comparison-chart.png"
+        ]
+      }
+    },
+    {
+      "file": "gemini-bypass-by-vulnerability.webp",
+      "title": "Gemini 2.5 Pro bypass rates by vulnerability",
+      "alt": "Bar chart of linear jailbreaking bypass success rates against Gemini 2.5 Pro per vulnerability category, highest for competition at 75% and excessive agency at 66.7%",
+      "width": 2400,
+      "height": 1792,
+      "source": {
+        "urls": [
+          "content/blog/images/image_1.png"
+        ]
+      }
+    },
+    {
+      "file": "gemini-few-shot-impact.webp",
+      "title": "Few-shot prompting impact on Gemini 2.5 Pro",
+      "alt": "Charts showing bypass rates rising as the number of vulnerability-specific few-shot examples grows, from 35.2% with one example to 76.3% with 64",
+      "width": 2400,
+      "height": 928,
+      "source": {
+        "urls": [
+          "content/blog/images/image_2.png"
+        ]
+      }
+    },
+    {
+      "file": "jailbreak-attack-rankings.webp",
+      "title": "Breach rate by jailbreaking method",
+      "alt": "Bar chart of average breach rate per attack method: crescendo 80.0%, linear 68.1% and tree 63.4%",
+      "width": 2400,
+      "height": 1040,
+      "source": {
+        "urls": [
+          "content/blog/images/attack_rankings.png"
+        ]
+      }
+    },
+    {
+      "file": "jailbreak-model-radar.webp",
+      "title": "Model performance across attack methods",
+      "alt": "Radar chart of breach rates for linear, tree and crescendo attacks across claude-3-7-sonnet, claude-opus-4, gemini-2.0-flash, gemini-2.5-flash, gpt-4.1 and o4-mini",
+      "width": 2400,
+      "height": 1666,
+      "source": {
+        "urls": [
+          "content/blog/images/model_attack_radar.png"
+        ]
+      }
+    },
+    {
+      "file": "jailbreak-model-resilience.webp",
+      "title": "Model resilience against multi-turn attacks",
+      "alt": "Bar chart of average breach rate per model, lowest for gemini-2.5-flash at 38.9% and highest for gpt-4.1 and o4-mini at 50.0%",
+      "width": 2400,
+      "height": 1622,
+      "source": {
+        "urls": [
+          "content/blog/images/model_resilience.png"
+        ]
+      }
+    }
+  ]
+}

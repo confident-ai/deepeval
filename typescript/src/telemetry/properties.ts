@@ -65,6 +65,10 @@ export enum Prop {
   BENCHMARK_NUM_TASKS = "benchmark.num_tasks",
   // conversation simulator
   NUM_CONVERSATIONS = "simulator.num_conversations",
+  // red teaming
+  RT_VULNERABILITIES = "red_teaming.vulnerabilities",
+  RT_ATTACKS = "red_teaming.attacks",
+  RT_FRAMEWORK = "red_teaming.framework",
 }
 
 /** Which SDK emitted the event. An absent value means Python. */
@@ -220,6 +224,10 @@ export interface EventProperties {
   benchmarkNumTasks?: number;
   // conversation simulator
   numConversations?: number;
+  // red teaming
+  rtVulnerabilities?: string[];
+  rtAttacks?: string[];
+  rtFramework?: string;
 }
 
 export const FIELD_TO_PROP: Record<keyof EventProperties, Prop> = {
@@ -267,6 +275,9 @@ export const FIELD_TO_PROP: Record<keyof EventProperties, Prop> = {
   benchmarkName: Prop.BENCHMARK_NAME,
   benchmarkNumTasks: Prop.BENCHMARK_NUM_TASKS,
   numConversations: Prop.NUM_CONVERSATIONS,
+  rtVulnerabilities: Prop.RT_VULNERABILITIES,
+  rtAttacks: Prop.RT_ATTACKS,
+  rtFramework: Prop.RT_FRAMEWORK,
 };
 
 /** Drop absent fields and rewrite the rest onto their wire keys. */

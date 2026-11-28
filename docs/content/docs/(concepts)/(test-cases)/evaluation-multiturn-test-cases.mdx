@@ -12,6 +12,7 @@ A **multi-turn test case** is a blueprint provided by `deepeval` to unit test a 
 - `turns`
 - [Optional] `scenario`
 - [Optional] `expected_outcome`
+- [Optional] <Term py="expected_tools" ts="expectedTools"/>
 - [Optional] `context`
 - [Optional] `chatbot_role`
 - [Optional] `expectations`
@@ -229,6 +230,42 @@ const testCase = new ConversationalTestCase({
 
 </Switch>
 
+### Expected Tools
+
+The <Term py="expected_tools" ts="expectedTools"/> parameter is an **optional** list of `ToolCall`s the assistant should call during the conversation, used by the [conversation tool correctness metric](/docs/metrics-conversation-tool-correctness).
+
+<Switch>
+
+<Case id="python">
+
+```python
+from deepeval.test_case import Turn, ConversationalTestCase, ToolCall
+
+test_case = ConversationalTestCase(
+    scenario="User wants to book a flight to Tokyo.",
+    expected_tools=[ToolCall(name="search_flights"), ToolCall(name="book_flight")],
+    turns=[Turn(...)]
+)
+```
+
+</Case>
+
+<Case id="typescript">
+
+```typescript
+import { Turn, ConversationalTestCase, ToolCall } from "deepeval/test-case";
+
+const testCase = new ConversationalTestCase({
+  scenario: "User wants to book a flight to Tokyo.",
+  expectedTools: [new ToolCall({ name: "search_flights" }), new ToolCall({ name: "book_flight" })],
+  turns: [new Turn({ role: "user", content: "..." })],
+});
+```
+
+</Case>
+
+</Switch>
+
 ### Expectations
 
 <Switch>
@@ -398,7 +435,7 @@ A single-turn `LLMTestCase` also contains `context`.
 
 ### Expected Labels
 
-The `expected_labels` parameter is an **optional** `Dict[str, str]` that maps a [classifier](/docs/classifiers-introduction)'s `name` to the label this conversation should receive. A classifier only passes or fails a test case when its name appears here; otherwise its classification is recorded but does not affect the test case's status. Metrics never read this parameter.
+The `expected_labels` parameter is an **optional** `Dict[str, Union[str, List[str]]]` that maps a [classifier](/docs/classifiers-introduction)'s `name` to the label (or, for a `multi_label` classifier, the list of labels) this conversation should receive. A classifier only passes or fails a test case when its name appears here; otherwise its classification is recorded but does not affect the test case's status. Metrics never read this parameter.
 
 ```python
 from deepeval.test_case import Turn, ConversationalTestCase
@@ -406,11 +443,14 @@ from deepeval.test_case import Turn, ConversationalTestCase
 test_case = ConversationalTestCase(
     scenario="User asks to cancel a subscription.",
     turns=[Turn(...)],
-    expected_labels={"resolution": "resolved"},
+    expected_labels={
+        "resolution": "resolved",
+        "issues": ["Asked For Account Twice", "Cancellation Not Confirmed"],
+    },
 )
 ```
 
-Each value must be one of the labels declared on the classifier with that name, otherwise `evaluate()` raises a `ValueError` before any judge call. A key that matches no classifier in the run is ignored with a warning.
+A list is for a multi-label classifier, such as `issues` here, and passes only when exactly those labels are assigned. Each value must be one of the labels declared on the classifier with that name, otherwise `evaluate()` raises a `ValueError` before any judge call. A key that matches no classifier in the run is ignored with a warning.
 
 </Only>
 

@@ -1,0 +1,22 @@
+# Red teaming models (separate from target)
+models:
+  simulator: gpt-3.5-turbo-0125
+  evaluation: gpt-4o
+
+# Target system configuration
+target:
+  purpose: "A helpful AI assistant for customer support"
+  model: gpt-3.5-turbo
+
+# System configuration
+system_config:
+  max_concurrent: 10
+  run_async: false
+  ignore_errors: false
+
+default_vulnerabilities:
+  - name: "Bias"
+    types: ["race"]
+
+attacks:
+  - name: "Roleplay"

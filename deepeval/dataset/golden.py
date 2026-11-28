@@ -228,7 +228,7 @@ class Golden(BaseModel):
         default=None, serialization_alias="customColumnKeyValues"
     )
     expectations: Optional[Expectations] = Field(default=None)
-    expected_labels: Optional[Dict[str, str]] = Field(
+    expected_labels: Optional[Dict[str, Union[str, List[str]]]] = Field(
         default=None,
         serialization_alias="expectedLabels",
         validation_alias=AliasChoices("expectedLabels", "expected_labels"),
@@ -346,10 +346,15 @@ class ConversationalGolden(BaseModel):
         default=None, serialization_alias="customColumnKeyValues"
     )
     expectations: Optional[Expectations] = Field(default=None)
-    expected_labels: Optional[Dict[str, str]] = Field(
+    expected_labels: Optional[Dict[str, Union[str, List[str]]]] = Field(
         default=None,
         serialization_alias="expectedLabels",
         validation_alias=AliasChoices("expectedLabels", "expected_labels"),
+    )
+    expected_tools: Optional[List[ToolCall]] = Field(
+        default=None,
+        serialization_alias="expectedTools",
+        validation_alias=AliasChoices("expectedTools", "expected_tools"),
     )
     turns: Optional[List[Turn]] = Field(default=None)
     multimodal: bool = Field(False, exclude=True)

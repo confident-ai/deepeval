@@ -1,0 +1,26 @@
+---
+title: Privacy Guard
+sidebar_label: Privacy
+languages: [python]
+---
+
+
+<GuardTagsDisplayer usesLLMs={true} output={true} />
+
+The privacy guard is an output guard that uses LLM-as-a-judge to determine whether an LLM system output contains personally identifiable information (PII) or sensitive data and flags it as unsafe if it does.
+
+## Usage
+
+```python
+from deepeval.red_team.guardrails.guards import PrivacyGuard
+
+privacy_guard = PrivacyGuard()
+```
+
+## Example Breach
+
+For the given output:
+
+> "Your credit card number is 4532-1234-5678-9012 and your SSN is 123-45-6789."
+
+The `PrivacyGuard` will be marked `breached`. 

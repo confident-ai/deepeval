@@ -1084,6 +1084,7 @@ _POLICY_BY_SLUG: dict[str, Optional[ErrorPolicy]] = {
     PS.CARTESIA.value: SPEECH_ERROR_POLICY,
     PS.DEEPGRAM.value: SPEECH_ERROR_POLICY,
     PS.ELEVENLABS.value: SPEECH_ERROR_POLICY,
+    PS.HUME.value: SPEECH_ERROR_POLICY,
 }
 
 
@@ -1112,6 +1113,7 @@ _STATIC_PRED_BY_SLUG: dict[str, Optional[Callable[[Exception], bool]]] = {
     PS.CARTESIA.value: _opt_pred(SPEECH_ERROR_POLICY),
     PS.DEEPGRAM.value: _opt_pred(SPEECH_ERROR_POLICY),
     PS.ELEVENLABS.value: _opt_pred(SPEECH_ERROR_POLICY),
+    PS.HUME.value: _opt_pred(SPEECH_ERROR_POLICY),
 }
 
 

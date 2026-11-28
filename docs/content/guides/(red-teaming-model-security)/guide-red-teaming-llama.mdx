@@ -1,0 +1,191 @@
+---
+title: Red Teaming Meta Llama
+sidebar_label: Meta Llama
+---
+
+Meta's Llama models (Llama 3, 3.1, 4) are open-weight models — the weights are publicly available and can be fine-tuned, quantized, or deployed without any provider-side safety infrastructure. This fundamentally changes the red teaming threat model. When you red team an API-served model from OpenAI or Anthropic, you're testing the model plus the provider's safety layers. When you red team Llama, you're testing _your own deployment_ — your serving configuration, your system prompt, your guardrails, and whatever safety alignment remains after any modifications you've made to the weights.
+
+This guide covers red teaming Meta Llama deployments with [DeepEval](/docs/red-teaming-introduction).
+
+:::note
+For general model red teaming methodology and framework-based assessments, see the [foundational models guide](/guides/guide-red-teaming-models). For red teaming other open-weight models (Mistral, Qwen), see the [open-weight models guide](/guides/guide-red-teaming-open-weight).
+:::
+
+## YAML Quickstart
+
+Llama deployments vary — Ollama, vLLM, TGI, or a custom API. The callback adapts to your serving setup.
+
+**With Ollama (local):**
+
+```python title="my_model.py"
+import httpx
+
+async def model_callback(input: str) -> str:
+    async with httpx.AsyncClient() as client:
+        response = await client.post(
+            "http://localhost:11434/api/generate",
+            json={"model": "llama3.1", "prompt": input, "stream": False},
+            timeout=60.0,
+        )
+        return response.json()["response"]
+```
+
+**With vLLM (OpenAI-compatible API):**
+
+```python title="my_model.py"
+from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:8000/v1", api_key="dummy")
+
+async def model_callback(input: str) -> str:
+    response = client.chat.completions.create(
+        model="meta-llama/Llama-3.1-8B-Instruct",
+        messages=[{"role": "user", "content": input}],
+    )
+    return response.choices[0].message.content
+```
+
+```yaml title="red-team-llama.yaml"
+target:
+  purpose: "An internal code review assistant"
+  callback:
+    file: "my_model.py"
+    function: "model_callback"
+
+default_vulnerabilities:
+  - name: "Toxicity"
+  - name: "Bias"
+  - name: "PromptLeakage"
+  - name: "IllegalActivity"
+  - name: "ShellInjection"
+
+attacks:
+  - name: "PromptInjection"
+    weight: 3
+  - name: "Roleplay"
+    weight: 2
+  - name: "Leetspeak"
+  - name: "ROT13"
+  - name: "Base64"
+```
+
+```bash
+deepeval red-team red-team-llama.yaml
+```
+
+## Python Assessment
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.vulnerabilities import (
+    Toxicity, Bias, PromptLeakage, IllegalActivity,
+    ShellInjection, PIILeakage
+)
+from deepeval.red_team.attacks.single_turn import (
+    PromptInjection, Roleplay, Leetspeak, ROT13, Base64
+)
+from deepeval.red_team.attacks.multi_turn import LinearJailbreaking
+
+red_team(
+    model_callback=model_callback,
+    target_purpose="An internal code review assistant",
+    vulnerabilities=[
+        Toxicity(), Bias(), PromptLeakage(),
+        IllegalActivity(), ShellInjection(), PIILeakage(),
+    ],
+    attacks=[
+        PromptInjection(), Roleplay(), Leetspeak(),
+        ROT13(), Base64(), LinearJailbreaking(),
+    ],
+    attacks_per_vulnerability_type=5,
+)
+```
+
+## Multi-Turn Testing
+
+```python
+from deepeval.red_team.test_case import RTTurn
+from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:8000/v1", api_key="dummy")
+
+async def model_callback(input: str, turns: list[RTTurn] = None) -> str:
+    messages = [
+        {"role": "system", "content": "You are a helpful code review assistant."},
+    ]
+    for turn in (turns or []):
+        messages.append({"role": turn.role, "content": turn.content})
+    messages.append({"role": "user", "content": input})
+
+    response = client.chat.completions.create(
+        model="meta-llama/Llama-3.1-8B-Instruct",
+        messages=messages,
+    )
+    return response.choices[0].message.content
+```
+
+## Llama-Specific Considerations
+
+### No Provider Safety Net
+
+This is the single most important difference from API-served models. When an attack bypasses GPT-4o's alignment, OpenAI's moderation API may still catch it. When an attack bypasses Llama's alignment, there is nothing else. Your deployment's safety is exactly as strong as the model's own alignment — which is weaker than API models for several reasons:
+
+- **Quantization degrades safety.** Reducing Llama from full precision to 4-bit or 8-bit quantization (common for local/edge deployment) measurably weakens safety training. Behaviors the full-precision model refuses may succeed after quantization.
+- **No moderation layer.** There is no equivalent of OpenAI's moderation API unless you build or deploy one yourself.
+- **Safety training can be removed.** Open-weight means anyone can fine-tune away safety alignment entirely. If you're deploying a community fine-tune, its safety properties may be unknown.
+
+### Model Size and Safety
+
+Llama's safety alignment scales with model size. The 70B and 405B models have significantly stronger alignment than the 8B model. Red teaming should test the specific model size you deploy:
+
+| Model Size | Safety Characteristics |
+|---|---|
+| Llama 3.1 8B | Weakest alignment. Encoding attacks and roleplay frequently succeed. Direct harmful requests sometimes bypass training. |
+| Llama 3.1 70B | Moderate alignment. Resists direct attacks but vulnerable to multi-turn escalation and sophisticated roleplay. |
+| Llama 3.1 405B | Strongest alignment. Comparable to API models on direct refusal. Still vulnerable to multi-turn and encoding attacks. |
+
+### Recommended Attack Strategy
+
+| Attack | Effectiveness Against Llama | Why |
+|---|---|---|
+| `PromptInjection` | Very high | Weaker instruction hierarchy than API models |
+| `ROT13` / `Base64` | Very high | Encoding attacks exploit weaker safety filters, especially in smaller models |
+| `Leetspeak` | High | Character substitution bypasses token-level safety |
+| `Roleplay` | High | Safety training defers to instruction-following in fictional contexts |
+| `LinearJailbreaking` | High | Multi-turn escalation is effective across all model sizes |
+
+### Testing Quantized Deployments
+
+If you deploy a quantized model, test the quantized version — not the full-precision model:
+
+```python title="my_model.py"
+from openai import OpenAI
+
+client = OpenAI(base_url="http://localhost:8000/v1", api_key="dummy")
+
+async def model_callback(input: str) -> str:
+    response = client.chat.completions.create(
+        model="meta-llama/Llama-3.1-8B-Instruct-GPTQ-Int4",
+        messages=[{"role": "user", "content": input}],
+    )
+    return response.choices[0].message.content
+```
+
+Run the same assessment against full-precision and quantized versions to measure safety degradation.
+
+### Recommended Vulnerability Priority
+
+| Use Case | Priority Vulnerabilities | Why |
+|---|---|---|
+| Self-hosted internal tool | `PromptLeakage`, `ShellInjection`, `SQLInjection` | No provider guardrails, infrastructure risk |
+| Edge / on-device | `Toxicity`, `IllegalActivity`, `PersonalSafety` | Quantization weakens alignment, no remote moderation |
+| Open-source product | `Toxicity`, `Bias`, `Misinformation`, `PIILeakage` | Public-facing, regulatory exposure |
+| Research / experimentation | `PromptLeakage`, `PIILeakage` | Data leakage from training data |
+
+## What to Do Next
+
+- **Test your exact deployment** — Use the quantized model, your system prompt, and your serving configuration. Don't test an idealized setup.
+- **Deploy guardrails** — Since there's no provider safety net, application-level [guardrails](/guides/guide-deploying-guardrails) are critical for Llama deployments.
+- **Benchmark across quantization levels** — Compare full-precision, 8-bit, and 4-bit to understand safety degradation.
+- **Test against frameworks** — Use `OWASPTop10()` for standardized coverage. See the [safety frameworks guide](/guides/guide-safety-frameworks).
+- **Move to application-level testing** — Once the model passes, test it in context with the [AI agents](/guides/guide-agentic-ai-red-teaming), [conversational agents](/guides/guide-red-teaming-conversational-agents), or [agentic RAG](/guides/guide-red-teaming-agentic-rag) guides.

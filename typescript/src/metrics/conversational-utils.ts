@@ -37,6 +37,14 @@ export function checkConversationalTestCaseParams(
     );
   }
   if (
+    requiredParams.includes(MultiTurnParams.EXPECTED_TOOLS) &&
+    testCase.expectedTools == null
+  ) {
+    fail(
+      `'expected_tools' in a conversational test case cannot be empty for the '${metric.name}' metric.`,
+    );
+  }
+  if (
     requiredParams.includes(MultiTurnParams.SCENARIO) &&
     testCase.scenario == null
   ) {

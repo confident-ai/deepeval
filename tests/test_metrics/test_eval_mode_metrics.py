@@ -246,10 +246,10 @@ class CannedSTT(DeepEvalBaseSTT):
         return self
 
     def transcribe(self, audio, **kwargs):
-        return "uh oh wait", None
+        return "oh wait hold on please", None
 
     async def a_transcribe(self, audio, **kwargs):
-        return "uh oh wait", None
+        return "oh wait hold on please", None
 
     def get_model_name(self):
         return "echo-stt"
@@ -407,6 +407,9 @@ class Case:
     check_state: Optional[Callable[[Dict[str, Any]], None]] = None
     # False when the Jev reason is one part of a composite reason
     reason_is_jev: bool = True
+    # score when Jev is down under hybrid, where it differs from llm_score
+    # because only some decisions go to a model
+    hybrid_fallback_score: Optional[float] = None
 
     def llm(self) -> RoutingLLM:
         return RoutingLLM(self.routes, self.default_reply)
@@ -490,6 +493,8 @@ CASES = [
             )
         ],
         llm_score=0.0,
+        # Only the misheard name goes to a model; the other line passes.
+        hybrid_fallback_score=0.5,
     ),
     Case(
         "TranscriptionAccuracyAudio",
@@ -777,7 +782,11 @@ async def test_hybrid_falls_back_to_llm_when_jev_fails(case: Case, is_async):
     score = await measure(metric, case.test_case(), is_async)
     assert model.calls
     assert llm.was_sent(case.decision_key)
-    assert score == pytest.approx(case.llm_score)
+    assert score == pytest.approx(
+        case.llm_score
+        if case.hybrid_fallback_score is None
+        else case.hybrid_fallback_score
+    )
     assert "down" in metric.system_one_fallback_reason
 
 

@@ -28,7 +28,7 @@ This means:
 
 We care about the usability of DeepEval and wake up everyday thinking about how we can make either the codebase or documentation better to help our users do LLM evaluation better. In fact, everytime someone asks a question in [DeepEval's discord](https://discord.gg/a3K9c8GRGt), we always try to respond with not just an answer but a relevant link to the documentation that they can read more on. If there is no such relevant link that we can provide users, that means our documentation needs improving.
 
-In terms of the codebase, a recent example is we actually broke away DeepEval's red teaming (safety testing) features into a whole now package, called DeepTeam, which took around a month of work, just so users that primarily need LLM red teaming can work in that repo instead.
+In terms of the codebase, a recent example is we reworked DeepEval's red teaming (safety testing) features end to end, which took around a month of work, just so users that primarily need LLM red teaming get a focused experience.
 
 ### 3. We have a vibrant community
 
@@ -59,7 +59,7 @@ Ragas metrics, like DeepEval's, only score the test cases someone thought to wri
 
 **Use DeepEval on its own** for fast, code-first local evaluation, regression testing, and CI gates. Add Confident AI once the app is in production and you want failing traces to decide what you test next. For enterprise teams, [Confident AI](https://www.confident-ai.com) is one system for AI quality: evals, monitoring, human annotation, and [voice-native observability](https://www.confident-ai.com/products/voice-ai).
 
-DeepEval also pairs with **DeepTeam**, our open-source red teaming framework.
+DeepEval also covers **red teaming**, with 40+ vulnerabilities and 10+ adversarial attacks for safety and security testing.
 
 ## Comparing DeepEval and Ragas
 
@@ -97,7 +97,7 @@ If you look at the table below, you'll see that DeepEval's synthesizer is very f
 
 ### Red teaming
 
-We even built a second open-source package dedicated for red teaming within DeepEval's ecosystem, just so you don't have to worry about switching frameworks as you scale to safety testing.
+Red teaming is built into DeepEval, so you don't have to worry about switching frameworks as you scale to safety testing.
 
 Ragas offers no red teaming at all.
 
@@ -105,7 +105,7 @@ Ragas offers no red teaming at all.
 
 We want users to stay in DeepEval's ecosystem even for LLM red teaming, because this allows us to provide you the same experience you get from DeepEval, even for LLM safety and security testing.
 
-Checkout [DeepTeam's documentation](https://www.trydeepteam.com/docs/getting-started), which powers DeepEval's red teaming capabilities, for more detail.
+Checkout DeepEval's [red teaming documentation](/docs/red-teaming-introduction) for more detail.
 
 ### Benchmarks
 

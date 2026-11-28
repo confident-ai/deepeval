@@ -1687,7 +1687,7 @@ class Synthesizer:
     ) -> BaseModel:
         if is_native_model(model):
             res, cost = model.generate(prompt, schema)
-            if self.synthesis_cost is not None:
+            if self.synthesis_cost is not None and cost is not None:
                 self.synthesis_cost += cost
             return res
         else:
@@ -1713,7 +1713,7 @@ class Synthesizer:
     ) -> BaseModel:
         if is_native_model(model):
             res, cost = await model.a_generate(prompt, schema)
-            if self.synthesis_cost is not None:
+            if self.synthesis_cost is not None and cost is not None:
                 self.synthesis_cost += cost
             return res
         else:
@@ -1734,7 +1734,7 @@ class Synthesizer:
     def _generate(self, prompt: str) -> str:
         if self.using_native_model:
             res, cost = self.model.generate(prompt)
-            if self.synthesis_cost is not None:
+            if self.synthesis_cost is not None and cost is not None:
                 self.synthesis_cost += cost
             return res
         else:
@@ -1748,7 +1748,7 @@ class Synthesizer:
     async def _a_generate(self, prompt: str) -> str:
         if self.using_native_model:
             res, cost = await self.model.a_generate(prompt)
-            if self.synthesis_cost is not None:
+            if self.synthesis_cost is not None and cost is not None:
                 self.synthesis_cost += cost
             return res
         else:

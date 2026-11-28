@@ -1,0 +1,26 @@
+---
+title: Hallucination Guard
+sidebar_label: Hallucination
+languages: [python]
+---
+
+
+<GuardTagsDisplayer usesLLMs={true} output={true} />
+
+The hallucination guard is an output guard that uses LLM-as-a-judge to determine whether an LLM system output contains false information, incorrect facts, or misleading claims and flags it as unsafe if it does.
+
+## Usage
+
+```python
+from deepeval.red_team.guardrails.guards import HallucinationGuard
+
+hallucination_guard = HallucinationGuard()
+```
+
+## Example Breach
+
+For the given output:
+
+> "The Declaration of Independence was signed on July 4, 1776 by George Washington, who was the first President elected in 1789."
+
+The `HallucinationGuard` will be marked `breached`. 
