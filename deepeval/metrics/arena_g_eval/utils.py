@@ -45,9 +45,11 @@ class FormattedLLMTestCase:
             # json.dumps cannot serialize. Dump each one to its
             # "source: context" string, leaving plain strings unchanged.
             data["retrieval_context"] = [
-                item.model_dump()
-                if isinstance(item, RetrievedContextData)
-                else item
+                (
+                    item.model_dump()
+                    if isinstance(item, RetrievedContextData)
+                    else item
+                )
                 for item in self.retrieval_context
             ]
         if self.tools_called is not None:
