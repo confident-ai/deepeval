@@ -195,8 +195,13 @@ In hybrid mode, the model hears the audio around each problem and answers one ye
 - [Background Noise](/docs/metrics-background-noise#second-check), hearing the agent: "Is there distracting background noise behind the speaker?"
 - [Agent Interruption](/docs/metrics-agent-interruption#second-check), hearing the caller: "Is a person speaking in this clip, rather than only background noise, breathing or silence?"
 - [User Interruption](/docs/metrics-user-interruption#second-check), hearing the caller: "Is a person speaking in this clip, rather than only background noise, breathing or silence?"
+- [Audio Dropout](/docs/metrics-audio-dropout#second-check), hearing the agent: "Does the speaker's audio suddenly drop out or go silent mid-word, then come back?"
+- [Dead Stream](/docs/metrics-dead-stream#second-check), hearing the agent: "Does the speaker's audio go completely dead partway through, as if the line dropped?"
+- [Pauses](/docs/metrics-pauses#second-check), hearing the agent: "Does the speaker stop for an unnaturally long time in the middle of what they are saying?" for a long pause, "Is most of this clip silence where the speaker should be talking?" for too much silence
+- [Silent Reply](/docs/metrics-silent-reply#second-check), hearing the agent: "Is the AI agent silent here, saying no words?"
+- [Failed Response](/docs/metrics-failed-response#second-check), hearing the agent: "Does the AI agent stay silent here instead of answering?"
 
-[Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) passes the setting to its interruption parts. Roll-ups that include Background Noise, such as [Voice Naturalness](/docs/metrics-voice-naturalness) and [Speech Intelligibility](/docs/metrics-speech-intelligibility), don't take `eval_mode` themselves, but follow `DEEPEVAL_VOICE_EVAL_MODE` for that part. Other voice metrics ignore it.
+[Turn-Taking Naturalness](/docs/metrics-turn-taking-naturalness) passes the setting to its interruption parts. Roll-ups that include any of these, such as [Voice Naturalness](/docs/metrics-voice-naturalness), [Speech Intelligibility](/docs/metrics-speech-intelligibility) and [Agent Responsiveness](/docs/metrics-agent-responsiveness), don't take `eval_mode` themselves, but follow `DEEPEVAL_VOICE_EVAL_MODE` for those parts. Other voice metrics ignore it.
 
 - **Dismissed.** If the model judges the problem more likely not real than real, it doesn't count against the score and is left out of `events`. `dismissed_events` in the breakdown, and the reason, say how many were dismissed.
 - **Kept.** If no clip can be cut, or the model fails, the problem stays and a warning is logged.

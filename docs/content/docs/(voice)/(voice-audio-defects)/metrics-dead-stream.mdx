@@ -54,10 +54,12 @@ metric = DeadStreamMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **TWO** optional parameters specific to the `DeadStreamMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+There are **FOUR** optional parameters specific to the `DeadStreamMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
 - [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so background noise isn't mistaken for the caller speaking during a dead stretch. Defaulted to `True`.
 - [Optional] `stt_model`: the speech-to-text model that transcribes the agent's audio around each dead stretch, as a string or a `DeepEvalBaseSTT`. When set, a dead stretch after a finished sentence isn't counted, as in [Dead stream criteria](#dead-stream-criteria). Only used with stereo full call audio and clips that have an `Audio.start_time`. Defaulted to `None`, which skips that check.
+- [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each dead stretch is [double-checked by an audio decision model](#second-check) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
+- [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
 
 ### As a standalone
 
@@ -150,6 +152,14 @@ Exceptions:
 
 If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
+### Second check
+
+In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), each dead stretch is double-checked before it counts. The audio decision model hears about 5 seconds of the **agent's** side of the call around it and is asked:
+
+> Does the speaker's audio go completely dead partway through, as if the line dropped?
+
+If the model judges "no" more likely than "yes", the dead stretch is dismissed and doesn't count against the score.
+
 ### Example call
 
 A call where the agent's stream goes dead mid-reply once, and drops at the end of another reply before picking back up. Each row is one agent reply and whether it counts as a dead stream.
@@ -210,8 +220,10 @@ A call where the agent's stream goes dead mid-reply once, and drops at the end o
           Not by default. Detection is deterministic and runs locally over the
           audio, so it has no model or token cost. With an{" "}
           <code>stt_model</code>, the agent's audio around each dead stretch is
-          transcribed, at up to two requests per stretch. The cost is added to{" "}
-          <code>evaluation_cost</code>.
+          transcribed, at up to two requests per stretch. In the{" "}
+          <code>"hybrid"</code> eval mode, each dead stretch is also checked by
+          an audio decision model, at one paid request per stretch. The cost is
+          added to <code>evaluation_cost</code>.
         </>
       ),
     },

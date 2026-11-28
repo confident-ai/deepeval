@@ -54,7 +54,10 @@ metric = AudioDropoutMetric(threshold=0.8)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-The `AudioDropoutMetric` has no optional parameters of its own. It takes only the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics).
+There are **TWO** optional parameters specific to the `AudioDropoutMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+
+- [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each dropout is [double-checked by an audio decision model](#second-check) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
+- [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
 
 ### As a standalone
 
@@ -138,6 +141,14 @@ In both cases:
 
 If there's nothing to count, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
+### Second check
+
+In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), each dropout is double-checked before it counts. The audio decision model hears about 5 seconds of the **agent's** side of the call around it and is asked:
+
+> Does the speaker's audio suddenly drop out or go silent mid-word, then come back?
+
+If the model judges "no" more likely than "yes", the dropout is dismissed and doesn't count against the score.
+
 ### Example call
 
 A call where the agent's audio drops out in one of four replies. Each row is one agent reply and whether it had a dropout.
@@ -193,8 +204,10 @@ A call where the agent's audio drops out in one of four replies. Each row is one
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio, so it
-          has no model or token cost.
+          Not by default. Detection is deterministic and runs locally over the
+          audio, so it has no model or token cost. In the{" "}
+          <code>"hybrid"</code> eval mode, each dropout is also checked by an
+          audio decision model, at one paid request per dropout.
         </>
       ),
     },

@@ -57,10 +57,12 @@ metric = SilentReplyMetric(threshold=1.0)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **TWO** optional parameters specific to the `SilentReplyMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+There are **FOUR** optional parameters specific to the `SilentReplyMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
 - [Optional] `use_speech_detection`: a boolean which when set to `True`, only counts the caller as talking when [speech is detected](/docs/metrics-voice-introduction#speech-detection), so background noise isn't mistaken for the caller speaking over a silent reply. Defaulted to `True`.
 - [Optional] `stt_model`: the speech-to-text model that listens around each silent reply for its words, as a string or a `DeepEvalBaseSTT`. When set, a silent reply whose words are heard nearby isn't counted, as in [Silence criteria](#silence-criteria). Only used with stereo full call audio and clips that have an `Audio.start_time`. Defaulted to `None`, which skips that check.
+- [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each silent reply is [double-checked by an audio decision model](#second-check) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
+- [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
 
 ### As a standalone
 
@@ -176,6 +178,14 @@ A reply is silent when:
 
 A reply that goes quiet only partway through is [Dead Stream](/docs/metrics-dead-stream)'s to report. The level metrics, such as [Loudness](/docs/metrics-loudness), skip inaudible replies and leave them to this metric. If no turn has audio, or no agent turn has text, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
+### Second check
+
+In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), each silent reply is double-checked before it counts. The audio decision model hears the **agent's** whole reply (at least 5 seconds of it) and is asked:
+
+> Is the AI agent silent here, saying no words?
+
+If the model judges "no" more likely than "yes", the silent reply is dismissed and doesn't count against the score.
+
 ### Example call
 
 A short call where one reply was never played and another was played as silence. Each row is one agent reply and whether the caller could hear it.
@@ -230,8 +240,10 @@ A short call where one reply was never played and another was played as silence.
           Not by default. Detection is deterministic and runs locally over the
           audio, so it has no model or token cost. With an{" "}
           <code>stt_model</code>, the call around each silent reply is
-          transcribed, at one request per silent reply. The cost is added to{" "}
-          <code>evaluation_cost</code>.
+          transcribed, at one request per silent reply. In the{" "}
+          <code>"hybrid"</code> eval mode, each silent reply is also checked by
+          an audio decision model, at one paid request per silent reply. The
+          cost is added to <code>evaluation_cost</code>.
         </>
       ),
     },
