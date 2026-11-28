@@ -114,12 +114,12 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                     for task in self.tasks
                 ]
                 self.score = self._calculate_score(self.task_scores)
+                self.success = self.is_successful()
                 self.reason = self._generate_reason(self.task_scores)
                 self.scores_reasons_list = [
                     (task_score.score, task_score.reason)
                     for task_score in self.task_scores
                 ]
-                self.success = self.is_successful()
                 self.verbose_logs = construct_verbose_logs(
                     self,
                     steps=[
@@ -161,8 +161,8 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
                 for task_score in self.task_scores
             ]
             self.score = self._calculate_score(self.task_scores)
-            self.reason = self._generate_reason(self.task_scores)
             self.success = self.is_successful()
+            self.reason = await self._a_generate_reason(self.task_scores)
             self.verbose_logs = construct_verbose_logs(
                 self,
                 steps=[
