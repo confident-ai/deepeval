@@ -18,6 +18,7 @@ from deepeval.metrics.utils import (
 )
 from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.multimodal_metrics.image_editing.schema import ReasonScore
+from deepeval.metrics.multimodal_metrics.utils import clamp_image_scores
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.templates import make_template_class
 
@@ -214,8 +215,11 @@ class ImageEditingMetric(BaseMetric):
             metric=self,
             prompt=f"{prompt} {images}",
             schema_cls=ReasonScore,
-            extract_schema=lambda s: (s.score, s.reasoning),
-            extract_json=lambda data: (data["score"], data["reasoning"]),
+            extract_schema=lambda s: (clamp_image_scores(s.score), s.reasoning),
+            extract_json=lambda data: (
+                clamp_image_scores(data["score"]),
+                data["reasoning"],
+            ),
         )
 
     def _evaluate_semantic_consistency(
@@ -236,8 +240,11 @@ class ImageEditingMetric(BaseMetric):
             metric=self,
             prompt=f"{prompt} {images}",
             schema_cls=ReasonScore,
-            extract_schema=lambda s: (s.score, s.reasoning),
-            extract_json=lambda data: (data["score"], data["reasoning"]),
+            extract_schema=lambda s: (clamp_image_scores(s.score), s.reasoning),
+            extract_json=lambda data: (
+                clamp_image_scores(data["score"]),
+                data["reasoning"],
+            ),
         )
 
     async def _a_evaluate_perceptual_quality(
@@ -253,8 +260,11 @@ class ImageEditingMetric(BaseMetric):
             metric=self,
             prompt=f"{prompt} {images}",
             schema_cls=ReasonScore,
-            extract_schema=lambda s: (s.score, s.reasoning),
-            extract_json=lambda data: (data["score"], data["reasoning"]),
+            extract_schema=lambda s: (clamp_image_scores(s.score), s.reasoning),
+            extract_json=lambda data: (
+                clamp_image_scores(data["score"]),
+                data["reasoning"],
+            ),
         )
 
     def _evaluate_perceptual_quality(
@@ -270,13 +280,16 @@ class ImageEditingMetric(BaseMetric):
             metric=self,
             prompt=f"{prompt} {images}",
             schema_cls=ReasonScore,
-            extract_schema=lambda s: (s.score, s.reasoning),
-            extract_json=lambda data: (data["score"], data["reasoning"]),
+            extract_schema=lambda s: (clamp_image_scores(s.score), s.reasoning),
+            extract_json=lambda data: (
+                clamp_image_scores(data["score"]),
+                data["reasoning"],
+            ),
         )
 
     def _calculate_score(self) -> float:
-        min_SC_score = min(self.SC_scores)
-        min_PQ_score = min(self.PQ_scores)
+        min_SC_score = min(clamp_image_scores(self.SC_scores))
+        min_PQ_score = min(clamp_image_scores(self.PQ_scores))
         return math.sqrt(min_SC_score * min_PQ_score) / 10
 
     def _generate_reason(

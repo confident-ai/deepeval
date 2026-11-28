@@ -14,6 +14,7 @@ from deepeval.models import DeepEvalBaseLLM
 from deepeval.metrics.multimodal_metrics.image_helpfulness.schema import (
     ReasonScore,
 )
+from deepeval.metrics.multimodal_metrics.utils import clamp_image_score
 from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.utils import (
     get_or_create_event_loop,
@@ -106,7 +107,7 @@ class ImageHelpfulnessMetric(BaseMetric):
                     score, reason = self.evaluate_image_helpfulness(
                         image, context_above, context_below
                     )
-                    score = score / 10
+                    score = clamp_image_score(score) / 10
                     self.contexts_above.append(context_above)
                     self.contexts_below.append(context_below)
                     self.scores.append(score)
@@ -222,7 +223,7 @@ class ImageHelpfulnessMetric(BaseMetric):
             results = await asyncio.gather(*tasks)
 
             for score, reason in results:
-                score = score / 10
+                score = clamp_image_score(score) / 10
                 self.scores.append(score)
                 self.reasons.append(reason)
 
