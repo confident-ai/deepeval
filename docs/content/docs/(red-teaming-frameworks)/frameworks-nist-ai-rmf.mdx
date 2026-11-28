@@ -1,0 +1,284 @@
+---
+title: NIST AI RMF
+sidebar_label: NIST AI RMF
+languages: [python]
+---
+
+
+The **NIST AI Risk Management Framework (AI RMF)** is a structured methodology from the U.S. National Institute of Standards and Technology that guides organizations in identifying, evaluating, and mitigating risks in artificial intelligence systems.
+It promotes **trustworthy AI** by focusing on governance, measurement, and continuous risk tracking across the AI lifecycle.
+
+DeepEval's implementation of NIST focuses on the **Measure** function — the part of the framework responsible for **testing, evaluation, and assurance** of AI behavior and risk controls.
+
+## Overview
+
+DeepEval's **NIST AI RMF module** automates red teaming and risk validation against NIST's measurement categories.
+It evaluates your LLM or AI system for reliability, fairness, robustness, security, privacy, and resilience using a standardized testing approach.
+
+The framework is divided into four categories of measures:
+
+| Measure Category | Description                                                                                  |
+| ---------------- | -------------------------------------------------------------------------------------------- |
+| **Measure 1**    | Define and apply appropriate testing and metrics for AI risk evaluation                      |
+| **Measure 2**    | Evaluate the AI system for trustworthiness, safety, security, fairness, and misuse potential |
+| **Measure 3**    | Establish mechanisms for identifying, tracking, and managing emerging risks                  |
+| **Measure 4**    | Measure and correlate AI risk impacts with business and performance outcomes                 |
+
+
+## Using the NIST Framework in DeepEval
+
+You can run a full NIST-based red team assessment in DeepEval using:
+
+```python
+from deepeval.red_team import red_team
+from deepeval.red_team.frameworks import NIST
+from somewhere import your_model_callback
+
+risk_assessment = red_team(
+    model_callback=your_model_callback,
+    framework=NIST(categories=["measure_1"])
+)
+```
+
+The `NIST` framework accepts **ONE** optional parameter:
+
+- [Optional] `categories`: A list of strings that represent the `NIST` measure you want to test your AI application on:
+    - `measure_1`: defines and applies appropriate testing and metrics for AI risk evaluation
+    - `measure_2`: evaluates the AI system for trustworthiness, safety, security, fairness, and misuse potential
+    - `measure_3`: establishes mechanisms for identifying, tracking, and managing emerging risks
+    - `measure_4`: measures and correlates AI risk impacts with business and performance outcomes
+
+## Measure Categories and Testing Coverage
+
+DeepEval operationalizes NIST's **Measure** function through four major categories that map to the subfunctions (M.1-M.4) in the [NIST AI Risk Management Framework (AI RMF 1.0)](https://www.nist.gov/itl/ai-risk-management-framework).
+Each category corresponds to a distinct aspect of AI risk measurement, evaluation, monitoring, and feedback.
+
+### Measure 1 — Risk Measurement and Metrics
+
+**(NIST Subfunctions: M.1.1-M.1.3)**
+
+**Goal:** Identify, apply, and continuously improve appropriate methods and metrics for assessing AI risks.
+
+DeepEval's Measure 1 implementation focuses on **measurable risk discovery** and **evaluation setup** — ensuring that test methods, metrics, and expert review processes are in place and auditable.
+
+It reflects NIST's expectations that:
+
+- AI risk metrics are **selected and documented** based on significance and feasibility (M.1.1).
+- The **appropriateness of metrics** and **effectiveness of existing controls** are regularly reassessed (M.1.2).
+- **Independent experts** or **non-developers** periodically review measurement validity (M.1.3).
+
+DeepEval tests:
+
+- Intellectual property and data integrity safeguards
+- Role-based access control (RBAC) and privilege management
+- Exposure of debugging or administrative interfaces
+
+**Example vulnerabilities tested**
+
+- `IntellectualProperty`
+- `RBAC`
+- `DebugAccess`
+
+**Example attacks**
+
+- `PromptProbing`
+- `GrayBox`
+- `Roleplay` (Compliance Officer persona)
+
+```python
+from deepeval.red_team.frameworks import NIST
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+nist = NIST(categories=["measure_1"])
+attacks = nist.attacks
+vulnerabilities = nist.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+risk_assessment = red_team(
+    model_callback=your_model_callback,
+    vulnerabilities=vulnerabilities,
+    attacks=attacks
+)
+```
+
+These tests ensure your AI system's evaluation methods are **structured, reviewable, and aligned with NIST's expectations for auditable risk measurement**.
+
+### Measure 2 — Trustworthiness and Safety Evaluation
+
+**(NIST Subfunctions: M.2.1-M.2.13)**
+
+**Goal:** Evaluate and validate AI systems for **trustworthy characteristics** such as safety, fairness, security, robustness, privacy, and reliability — under real-world conditions.
+
+This is the most comprehensive of the Measure categories.
+DeepEval automates testing aligned with NIST's subfunctions covering:
+
+- **Evaluation documentation** and reproducibility (M.2.1-M.2.3)
+- **Operational monitoring** of deployed systems (M.2.4)
+- **Validation and reliability** of AI performance (M.2.5)
+- **Safety, robustness, and fail-safe design** (M.2.6-M.2.7)
+- **Transparency, accountability, and explainability** (M.2.8-M.2.9)
+- **Privacy, fairness, and bias** evaluation (M.2.10-M.2.11)
+- **Environmental and sustainability considerations** (M.2.12)
+- **Effectiveness of evaluation and measurement processes** (M.2.13)
+
+DeepEval performs extensive testing across:
+
+- **Bias, fairness, and ethics**
+- **Safety and personal protection**
+- **Data leakage, privacy, and prompt exposure**
+- **Robustness and adversarial misuse**
+- **Security vulnerabilities** (SSRF, SQL Injection, Shell Injection, etc.)
+- **Content safety** (toxicity, graphic or harmful material)
+
+**Example vulnerabilities**
+
+- `Bias`, `Fairness`, `Ethics`, `Toxicity`
+- `PromptLeakage`, `PIILeakage`
+- `Robustness`, `ExcessiveAgency`
+- `SQLInjection`, `ShellInjection`, `SSRF`
+- `ChildProtection`, `PersonalSafety`, `IllegalActivity`
+
+**Example attacks**
+
+- `PromptInjection`, `CrescendoJailbreaking`, `SequentialJailbreak`
+- `Leetspeak`, `ROT13`, `Base64`, `Multilingual`
+- `Roleplay` (Security Researcher persona)
+
+```python
+from deepeval.red_team.frameworks import NIST
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+nist = NIST(categories=["measure_2"])
+attacks = nist.attacks
+vulnerabilities = nist.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+risk_assessment = red_team(
+    model_callback=your_model_callback,
+    vulnerabilities=vulnerabilities,
+    attacks=attacks
+)
+```
+
+This category enforces **systemic testing of AI trustworthiness**, ensuring continuous validation across fairness, safety, privacy, robustness, and ethical boundaries.
+
+### Measure 3 — Risk Tracking and Monitoring
+
+**(NIST Subfunctions: M.3.1-M.3.3)**
+
+**Goal:** Establish continuous monitoring mechanisms to track **identified, unanticipated, and emerging AI risks** throughout system operation.
+
+DeepEval automates ongoing assessments consistent with NIST's expectations that:
+
+- Mechanisms and personnel are in place to **track existing and emergent risks** (M.3.1).
+- Risk tracking extends to areas where **quantitative measurement is difficult** (M.3.2).
+- **Feedback loops** from users and affected communities are integrated into evaluation metrics (M.3.3).
+
+DeepEval evaluates whether your system can:
+
+- Detect privilege or access bypasses over time
+- Track drift, misuse, or emergent vulnerabilities
+- Capture user and operational feedback for remediation
+
+**Example vulnerabilities**
+
+- `Competition` (e.g., discreditation, market manipulation)
+- `BFLA`, `BOLA` (authorization and object access controls)
+
+**Example attacks**
+
+- `PromptProbing`, `GrayBox`, `PromptInjection`
+- `Roleplay` (Monitoring Engineer persona)
+
+```python
+from deepeval.red_team.frameworks import NIST
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+nist = NIST(categories=["measure_3"])
+attacks = nist.attacks
+vulnerabilities = nist.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+risk_assessment = red_team(
+    model_callback=your_model_callback,
+    vulnerabilities=vulnerabilities,
+    attacks=attacks
+)
+```
+
+This measure reinforces NIST's principle of **adaptive oversight**, ensuring AI systems remain accountable and safe after deployment-
+
+### Measure 4 — Impact and Transparency Assessment
+
+**(NIST Subfunctions: M.4.1-M.4.3)**
+
+**Goal:** Connect AI risk measurements to **business outcomes, stakeholder transparency, and lifecycle performance**.
+
+DeepEval's Measure 4 tests assess whether feedback mechanisms and transparency reporting accurately reflect operational trustworthiness, as defined by NIST:
+
+- Measurement methods are **context-aware and documented** (M.4.1)
+- Measurement results are **validated by domain experts and AI actors** (M.4.2)
+- **Performance changes and stakeholder feedback** are incorporated into continuous improvement (M.4.3)
+
+DeepEval evaluates:
+
+- Transparency and reporting effectiveness
+- Accuracy of performance monitoring
+- Feedback integration and risk communication
+
+**Example vulnerability**
+
+- `CustomVulnerability` (Transparency Assessment)
+
+**Example attacks**
+
+- `PromptProbing`, `BadLikertJudge`
+- `Roleplay` (End User persona)
+
+```python
+from deepeval.red_team.frameworks import NIST
+from deepeval.red_team import red_team
+from somewhere import your_model_callback
+
+nist = NIST(categories=["measure_4"])
+attacks = nist.attacks
+vulnerabilities = nist.vulnerabilities
+
+# Modify attributes for your specific testing context if needed
+risk_assessment = red_team(
+    model_callback=your_model_callback,
+    vulnerabilities=vulnerabilities,
+    attacks=attacks
+)
+```
+
+This category ensures AI systems not only measure risks effectively but also **close the feedback loop** by aligning transparency, accountability, and business value.
+
+
+## Best Practices
+
+1. **Document testing procedures** — NIST emphasizes transparency and auditability.
+2. **Conduct evaluations regularly** to maintain continuous assurance.
+3. **Simulate real deployment conditions** for realistic risk detection.
+4. **Combine automation with human review** — automation finds exposure, humans interpret implications.
+5. **Track evolving risks** using DeepEval's analytics tools.
+6. **Engage stakeholders** to contextualize and prioritize mitigation actions.
+
+## Limitations and Human Oversight
+
+While DeepEval automates much of NIST-compliant testing, organizational participation remains essential for:
+
+- Environmental and sustainability assessments
+- Governance and stakeholder consultations
+- Broader policy and accountability structures
+
+Automated testing forms one component of a **comprehensive AI assurance process** — combining measurement, management, and governance.
+
+## Learn More
+
+- [NIST AI RMF Official Resource](https://www.nist.gov/itl/ai-risk-management-framework)
+- [NIST AI RMF Playbook](https://pages.nist.gov/AIRMF/)
+- [NIST AI RMF Crosswalk](https://airc.nist.gov/AI_RMF_Knowledge_Base/Crosswalks)

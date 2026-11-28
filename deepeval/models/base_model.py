@@ -1,3 +1,4 @@
+import asyncio
 from abc import ABC, abstractmethod
 from typing import (
     Any,
@@ -261,6 +262,40 @@ class DeepEvalBaseSystemOneModel(ABC):
     ) -> Tuple[Dict[str, "ScoreAnswer"], Optional[float]]:
         answers, cost = await self.a_decide(state, questions)
         return answers.scores, cost
+
+
+class DeepEvalBaseAudioDecisionModel(ABC):
+    """A model that answers yes/no and pick-one questions about a recording,
+    with probabilities instead of generated text."""
+
+    def __init__(self, model: Optional[str] = None, *args, **kwargs):
+        self.name = parse_model_name(model)
+        self.model = self.load_model()
+
+    @abstractmethod
+    def load_model(self, *args, **kwargs) -> Any:
+        pass
+
+    @abstractmethod
+    def decide(
+        self,
+        audio: bytes,
+        questions: Dict[str, Union["NoulQuestion", "ChoiceQuestion"]],
+        context: Optional[str] = None,
+    ) -> Tuple["SystemOneAnswers", Optional[float]]:
+        pass
+
+    async def a_decide(
+        self,
+        audio: bytes,
+        questions: Dict[str, Union["NoulQuestion", "ChoiceQuestion"]],
+        context: Optional[str] = None,
+    ) -> Tuple["SystemOneAnswers", Optional[float]]:
+        return await asyncio.to_thread(self.decide, audio, questions, context)
+
+    @abstractmethod
+    def get_model_name(self, *args, **kwargs) -> str:
+        return self.name
 
 
 class DeepEvalBaseTTS(ABC):

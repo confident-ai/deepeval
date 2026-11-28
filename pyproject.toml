@@ -1,6 +1,6 @@
 [tool.poetry]
 name = "deepeval"
-version = "4.3.5"
+version = "4.3.6"
 description = "The LLM Evaluation Framework"
 authors = ["Jeffrey Ip <jeffreyip@confident-ai.com>"]
 license = "Apache-2.0"
@@ -54,9 +54,18 @@ textual = { version = ">=0.80,<2.0", optional = true }
 pyperclip = { version = "^1.8", optional = true }
 confident-trace = ">=0.1.14,<0.2.0"
 questionary = ">=2.0.0,<3.0.0"
+pyyaml = ">=6.0.0"
+
+openai-codex = { version = "*", optional = true, allow-prereleases = true }
+claude-agent-sdk = { version = "*", optional = true }
+cursor-sdk = { version = "*", optional = true }
 
 [tool.poetry.extras]
 inspect = ["textual", "pyperclip"]
+codex = ["openai-codex"]
+claude-code = ["claude-agent-sdk"]
+cursor = ["cursor-sdk"]
+red-team-harnesses = ["openai-codex", "claude-agent-sdk", "cursor-sdk"]
 
 [tool.poetry.group.dev.dependencies]
 twine = "5.1.1"
@@ -71,6 +80,7 @@ pypdf = "*"
 docx2txt = "*"
 pandas = "*"
 numpy = "*"
+onnxruntime = "*"
 pysqlite3-binary = { version = "^0.5.4", markers = "platform_system == 'Linux'" }
 pre-commit = "^4.3.0"
 ruff = "^0.13.0"

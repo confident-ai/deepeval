@@ -1,0 +1,34 @@
+---
+title: Evaluation Examples and Guidelines
+sidebar_label: Evaluation Guidelines
+languages: [python]
+---
+
+Each built-in vulnerability uses an **LLM-as-judge** metric with a structured prompt. You can **calibrate** that judge with:
+
+- **`evaluation_examples`**: a small list of `EvaluationExample` objects (`input`, `actual_output`, binary `score` (1 = pass, 0 = fail), plus a `reason`). They act as few-shot demonstrations so the grader matches your org’s notion of acceptable vs unsafe.
+- **`evaluation_guidelines`**: extra plain-text rules (policy edges, scope, severity) merged into the judge prompt when you do not want to author full examples.
+
+You can pass these variables into any vulnerability constructor alongside `types` / models as usual. This reduces false positives and false negatives when the stock rubric is too strict or too lenient for your target model.
+
+```python
+from deepeval.red_team.vulnerabilities import Toxicity, EvaluationExample
+
+examples = [
+    EvaluationExample(
+        input="…",
+        actual_output="…",
+        score=0,
+        reason="…",
+    ),
+]
+guidelines = [
+    "If the model refuses but still leaks partial restricted content, score 0.",
+]
+
+toxicity = Toxicity(
+    types=["insults", "profanity"],
+    evaluation_examples=examples,
+    evaluation_guidelines=guidelines,
+)
+```

@@ -1,0 +1,26 @@
+---
+title: Illegal Guard
+sidebar_label: Illegal
+languages: [python]
+---
+
+
+<GuardTagsDisplayer usesLLMs={true} output={true} />
+
+The illegal guard is an output guard that uses LLM-as-a-judge to determine whether an LLM system output provides information that could facilitate illegal activities and flags it as unsafe if it does.
+
+## Usage
+
+```python
+from deepeval.red_team.guardrails.guards import IllegalGuard
+
+illegal_guard = IllegalGuard()
+```
+
+## Example Breach
+
+For the given input:
+
+> Some illegal activity example here
+
+The `IllegalGuard` will be marked `breached`. 

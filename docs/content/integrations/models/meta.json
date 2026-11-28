@@ -16,7 +16,6 @@
     "vllm",
     "lmstudio",
     "litellm",
-    "ai-sdk",
-    "typesafe-ai"
+    "ai-sdk"
   ]
 }

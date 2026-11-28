@@ -647,8 +647,7 @@ version = "2.0.0"
 description = "Foreign Function Interface for Python calling C code."
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
-markers = "platform_python_implementation != \"PyPy\""
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "cffi-2.0.0-cp310-cp310-macosx_10_13_x86_64.whl", hash = "sha256:0cf2d91ecc3fcc0625c2c530fe004f82c110405f101548512cce44322fa8ac44"},
     {file = "cffi-2.0.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:f73b96c41e3b2adedc34a7356e64c8eb96e03a3782b535e043a986276ce12a49"},
@@ -735,6 +734,7 @@ files = [
     {file = "cffi-2.0.0-cp39-cp39-win_amd64.whl", hash = "sha256:b882b3df248017dba09d6b16defe9b5c407fe32fc7c65a9c69798e6175601be9"},
     {file = "cffi-2.0.0.tar.gz", hash = "sha256:44d1b5909021139fe36001ae048dbdde8214afa20200eda0f64c068cac5d5529"},
 ]
+markers = {main = "(extra == \"claude-code\" or extra == \"red-team-harnesses\") and platform_python_implementation != \"PyPy\"", dev = "platform_python_implementation != \"PyPy\"", integrations = "platform_python_implementation != \"PyPy\""}
 
 [package.dependencies]
 pycparser = {version = "*", markers = "implementation_name != \"PyPy\""}
@@ -925,6 +925,35 @@ uvicorn = {version = ">=0.18.3", extras = ["standard"]}
 dev = ["chroma-hnswlib (==0.7.6)", "fastapi (>=0.115.9)", "opentelemetry-instrumentation-fastapi (>=0.41b0)"]
 
 [[package]]
+name = "claude-agent-sdk"
+version = "0.2.188"
+description = "Python SDK for Claude Code"
+optional = true
+python-versions = ">=3.10"
+groups = ["main"]
+markers = "extra == \"claude-code\" or extra == \"red-team-harnesses\""
+files = [
+    {file = "claude_agent_sdk-0.2.188-py3-none-macosx_11_0_arm64.whl", hash = "sha256:065ad1fca7275cea50b628f35ce4ebd96cf5d237c1b6a8db2fdc8796757da31e"},
+    {file = "claude_agent_sdk-0.2.188-py3-none-macosx_11_0_x86_64.whl", hash = "sha256:eda2e0229705831ace802800d54614cf4db234843c4a5274e90cc4e94e93ba34"},
+    {file = "claude_agent_sdk-0.2.188-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:8e21bb2f7d3c1cd08a019df2899bbb39be6c986e25d3c951023d0540e37a7820"},
+    {file = "claude_agent_sdk-0.2.188-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:00a6ee72f8d7eb3b027ba8883ecd32108106ecf46068cb632c4401be465c9364"},
+    {file = "claude_agent_sdk-0.2.188-py3-none-win_amd64.whl", hash = "sha256:48de5deefa6b45f6e81c122db9adf221715f691419ead530b0dce87d78c78c9b"},
+    {file = "claude_agent_sdk-0.2.188.tar.gz", hash = "sha256:0937793651dcde582f83adf81f0e89a7209bcf2684b8a193326903fd1c743ffc"},
+]
+
+[package.dependencies]
+anyio = ">=4.0.0"
+jsonschema = ">=4.20.0"
+mcp = ">=1.23.0,<3.0.0"
+sniffio = ">=1.0.0"
+typing-extensions = {version = ">=4.0.0", markers = "python_version < \"3.11\""}
+
+[package.extras]
+dev = ["anyio[trio] (>=4.0.0)", "mypy (>=1.0.0)", "pytest (>=7.0.0)", "pytest-cov (>=4.0.0)", "ruff (>=0.1.0)"]
+examples = ["asyncpg (>=0.27.0)", "boto3 (>=1.28.0)", "fakeredis (>=2.20.0)", "moto[s3] (>=5.0.0)", "redis (>=4.2.0)"]
+otel = ["opentelemetry-api (>=1.20.0)"]
+
+[[package]]
 name = "click"
 version = "8.3.1"
 description = "Composable command line interface toolkit"
@@ -1064,7 +1093,7 @@ version = "46.0.5"
 description = "cryptography is a package which provides cryptographic recipes and primitives to Python developers."
 optional = false
 python-versions = "!=3.9.0,!=3.9.1,>=3.8"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "cryptography-46.0.5-cp311-abi3-macosx_10_9_universal2.whl", hash = "sha256:351695ada9ea9618b3500b490ad54c739860883df6c1f555e088eaf25b1bbaad"},
     {file = "cryptography-46.0.5-cp311-abi3-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:c18ff11e86df2e28854939acde2d003f7984f721eba450b56a200ad90eeb0e6b"},
@@ -1116,6 +1145,7 @@ files = [
     {file = "cryptography-46.0.5-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:8456928655f856c6e1533ff59d5be76578a7157224dbd9ce6872f25055ab9ab7"},
     {file = "cryptography-46.0.5.tar.gz", hash = "sha256:abace499247268e3757271b2f1e244b36b06f8515cf27c4d49468fc9eb16e93d"},
 ]
+markers = {main = "extra == \"claude-code\" or extra == \"red-team-harnesses\""}
 
 [package.dependencies]
 cffi = {version = ">=2.0.0", markers = "python_full_version >= \"3.9.0\" and platform_python_implementation != \"PyPy\""}
@@ -1130,6 +1160,29 @@ sdist = ["build (>=1.0.0)"]
 ssh = ["bcrypt (>=3.1.5)"]
 test = ["certifi (>=2024)", "cryptography-vectors (==46.0.5)", "pretend (>=0.7)", "pytest (>=7.4.0)", "pytest-benchmark (>=4.0)", "pytest-cov (>=2.10.1)", "pytest-xdist (>=3.5.0)"]
 test-randomorder = ["pytest-randomly"]
+
+[[package]]
+name = "cursor-sdk"
+version = "1.4.2"
+description = "Python client for the Cursor SDK bridge."
+optional = true
+python-versions = ">=3.10"
+groups = ["main"]
+markers = "extra == \"cursor\" or extra == \"red-team-harnesses\""
+files = [
+    {file = "cursor_sdk-1.4.2-py3-none-macosx_11_0_arm64.whl", hash = "sha256:6b76fcdbbb9fbec1871590f3eec56428c13389073e16339c714edec499dc8ab1"},
+    {file = "cursor_sdk-1.4.2-py3-none-macosx_11_0_x86_64.whl", hash = "sha256:c86ae14becc90f3ff0b6338eb8adb11c26a821c9801454f462a046b223a4d9a3"},
+    {file = "cursor_sdk-1.4.2-py3-none-manylinux2014_aarch64.manylinux_2_17_aarch64.whl", hash = "sha256:a53eb306037f8f0475d227df06fe0632df9e6b27c5a6c0ace8ee7fc80667b7f0"},
+    {file = "cursor_sdk-1.4.2-py3-none-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:722d666e6f4bcd9f5ec0760720b1374a61547fe53cabe85937a92bff02078c35"},
+    {file = "cursor_sdk-1.4.2-py3-none-win_amd64.whl", hash = "sha256:8ac98ac236ee8583e1cbb3434a12e27ab25a17dc63e48dc4878d2e24970d692f"},
+    {file = "cursor_sdk-1.4.2.tar.gz", hash = "sha256:98a17d96a079344597be6ca924fa6b7a30ee175e873ba53fbc1c67ae7c7a27c4"},
+]
+
+[package.dependencies]
+httpx = ">=0.27,<1"
+
+[package.extras]
+test = ["packaging (>=24)", "pytest (>=8)", "pytest-asyncio (>=0.23)"]
 
 [[package]]
 name = "dataclasses-json"
@@ -2849,11 +2902,12 @@ version = "0.4.3"
 description = "Consume Server-Sent Event (SSE) messages with HTTPX."
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "httpx_sse-0.4.3-py3-none-any.whl", hash = "sha256:0ac1c9fe3c0afad2e0ebb25a934a59f4c7823b60792691f779fad2c5568830fc"},
     {file = "httpx_sse-0.4.3.tar.gz", hash = "sha256:9b1ed0127459a66014aec3c56bebd93da3c1bc8bb6618c8082039a44889a755d"},
 ]
+markers = {main = "extra == \"claude-code\" or extra == \"red-team-harnesses\""}
 
 [[package]]
 name = "huggingface-hub"
@@ -3565,11 +3619,12 @@ version = "4.26.0"
 description = "An implementation of JSON Schema validation for Python"
 optional = false
 python-versions = ">=3.10"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "jsonschema-4.26.0-py3-none-any.whl", hash = "sha256:d489f15263b8d200f8387e64b4c3a75f06629559fb73deb8fdfb525f2dab50ce"},
     {file = "jsonschema-4.26.0.tar.gz", hash = "sha256:0c26707e2efad8aa1bfc5b7ce170f3fccc2e4918ff85989ba9ffa9facb2be326"},
 ]
+markers = {main = "extra == \"claude-code\" or extra == \"red-team-harnesses\""}
 
 [package.dependencies]
 attrs = ">=22.2.0"
@@ -3587,11 +3642,12 @@ version = "2025.9.1"
 description = "The JSON Schema meta-schemas and vocabularies, exposed as a Registry"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "jsonschema_specifications-2025.9.1-py3-none-any.whl", hash = "sha256:98802fee3a11ee76ecaca44429fda8a41bff98b00a0f2838151b113f210cc6fe"},
     {file = "jsonschema_specifications-2025.9.1.tar.gz", hash = "sha256:b540987f239e745613c7a9176f3edb72b832a4ac465cf02712288397832b5e8d"},
 ]
+markers = {main = "extra == \"claude-code\" or extra == \"red-team-harnesses\""}
 
 [package.dependencies]
 referencing = ">=0.31.0"
@@ -4426,11 +4482,12 @@ version = "1.26.0"
 description = "Model Context Protocol SDK"
 optional = false
 python-versions = ">=3.10"
-groups = ["integrations"]
+groups = ["main", "integrations"]
 files = [
     {file = "mcp-1.26.0-py3-none-any.whl", hash = "sha256:904a21c33c25aa98ddbeb47273033c435e595bbacfdb177f4bd87f6dceebe1ca"},
     {file = "mcp-1.26.0.tar.gz", hash = "sha256:db6e2ef491eecc1a0d93711a76f28dec2e05999f93afd48795da1c1137142c66"},
 ]
+markers = {main = "extra == \"claude-code\" or extra == \"red-team-harnesses\""}
 
 [package.dependencies]
 anyio = ">=4.5"
@@ -5262,6 +5319,42 @@ redis = ["redis (>=6.4.0)"]
 sqlalchemy = ["asyncpg (>=0.29.0)", "sqlalchemy (>=2.0)"]
 viz = ["graphviz (>=0.17)"]
 voice = ["numpy (>=2.2.0,<3) ; python_version >= \"3.10\"", "websockets (>=15.0,<16)"]
+
+[[package]]
+name = "openai-codex"
+version = "0.147.0"
+description = "Python SDK for Codex"
+optional = true
+python-versions = ">=3.10"
+groups = ["main"]
+markers = "extra == \"codex\" or extra == \"red-team-harnesses\""
+files = [
+    {file = "openai_codex-0.147.0-py3-none-any.whl", hash = "sha256:ab2e0b3a41dba5a62be8561397cf3e7913afb53b5372ad881002a6f0b77e6a0a"},
+    {file = "openai_codex-0.147.0.tar.gz", hash = "sha256:e0ab4ea3ac44585a98a80df11e220519fec4641d508d830d2c1d656ce471e2ed"},
+]
+
+[package.dependencies]
+openai-codex-cli-bin = "0.147.0"
+pydantic = ">=2.12"
+
+[[package]]
+name = "openai-codex-cli-bin"
+version = "0.147.0"
+description = "Pinned Codex CLI runtime for the Python SDK"
+optional = true
+python-versions = ">=3.10"
+groups = ["main"]
+markers = "extra == \"codex\" or extra == \"red-team-harnesses\""
+files = [
+    {file = "openai_codex_cli_bin-0.147.0-py3-none-macosx_10_9_x86_64.whl", hash = "sha256:19c3a72a0eac6706bb5023088ab7eb31d8cfc06bf7860250b5c5b90f4505489b"},
+    {file = "openai_codex_cli_bin-0.147.0-py3-none-macosx_11_0_arm64.whl", hash = "sha256:b851943fffc48aa7c5c130b6a34be09964833d2785546eda96d749427c6e24f2"},
+    {file = "openai_codex_cli_bin-0.147.0-py3-none-manylinux_2_17_aarch64.whl", hash = "sha256:aab3e27ce07cd7bc7a78708efa40375b28e89f586851c495ef55aa6cb6806d11"},
+    {file = "openai_codex_cli_bin-0.147.0-py3-none-manylinux_2_17_x86_64.whl", hash = "sha256:cb3907d633cda87c4b68b47ff4979e6054c02a08c41b15aa2e9a689558a61074"},
+    {file = "openai_codex_cli_bin-0.147.0-py3-none-musllinux_1_1_aarch64.whl", hash = "sha256:ea0bfdee98164fc7d589eea5623aff06c8f8f2ba3f9bc550297429db45ea68f7"},
+    {file = "openai_codex_cli_bin-0.147.0-py3-none-musllinux_1_1_x86_64.whl", hash = "sha256:a9be23f46326494b7ebf4bd98cbe985542f5ad076355f3b0fb636a984df56816"},
+    {file = "openai_codex_cli_bin-0.147.0-py3-none-win_amd64.whl", hash = "sha256:1a403ff803ae27e078189a0fd24687f32d43c46f152e50cdbe3eddc9e302f697"},
+    {file = "openai_codex_cli_bin-0.147.0-py3-none-win_arm64.whl", hash = "sha256:be0c8b9e34b067151d0964a24e9f4b8b48ea516448a08ef2636f357ebdc877b7"},
+]
 
 [[package]]
 name = "openinference-instrumentation"
@@ -6720,12 +6813,12 @@ version = "3.0"
 description = "C parser in Python"
 optional = false
 python-versions = ">=3.10"
-groups = ["dev", "integrations"]
-markers = "implementation_name != \"PyPy\" and platform_python_implementation != \"PyPy\""
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "pycparser-3.0-py3-none-any.whl", hash = "sha256:b727414169a36b7d524c1c3e31839a521725078d7b2ff038656844266160a992"},
     {file = "pycparser-3.0.tar.gz", hash = "sha256:600f49d217304a5902ac3c37e1281c9fe94e4d0489de643a9504c5cdfdfc6b29"},
 ]
+markers = {main = "(extra == \"claude-code\" or extra == \"red-team-harnesses\") and implementation_name != \"PyPy\" and platform_python_implementation != \"PyPy\"", dev = "implementation_name != \"PyPy\" and platform_python_implementation != \"PyPy\"", integrations = "implementation_name != \"PyPy\" and platform_python_implementation != \"PyPy\""}
 
 [[package]]
 name = "pydantic"
@@ -7015,11 +7108,12 @@ version = "2.11.0"
 description = "JSON Web Token implementation in Python"
 optional = false
 python-versions = ">=3.9"
-groups = ["integrations"]
+groups = ["main", "integrations"]
 files = [
     {file = "pyjwt-2.11.0-py3-none-any.whl", hash = "sha256:94a6bde30eb5c8e04fee991062b534071fd1439ef58d2adc9ccb823e7bcd0469"},
     {file = "pyjwt-2.11.0.tar.gz", hash = "sha256:35f95c1f0fbe5d5ba6e43f00271c275f7a1a4db1dab27bf708073b75318ea623"},
 ]
+markers = {main = "extra == \"claude-code\" or extra == \"red-team-harnesses\""}
 
 [package.dependencies]
 cryptography = {version = ">=3.4.0", optional = true, markers = "extra == \"crypto\""}
@@ -7332,11 +7426,12 @@ version = "0.0.22"
 description = "A streaming multipart parser for Python"
 optional = false
 python-versions = ">=3.10"
-groups = ["integrations"]
+groups = ["main", "integrations"]
 files = [
     {file = "python_multipart-0.0.22-py3-none-any.whl", hash = "sha256:2b2cd894c83d21bf49d702499531c7bafd057d730c201782048f7945d82de155"},
     {file = "python_multipart-0.0.22.tar.gz", hash = "sha256:7340bef99a7e0032613f56dc36027b959fd3b30a787ed62d310e951f7c3a3a58"},
 ]
+markers = {main = "extra == \"claude-code\" or extra == \"red-team-harnesses\""}
 
 [[package]]
 name = "pytokens"
@@ -7452,7 +7547,7 @@ files = [
     {file = "pywin32-311-cp39-cp39-win_amd64.whl", hash = "sha256:e0c4cfb0621281fe40387df582097fd796e80430597cb9944f0ae70447bacd91"},
     {file = "pywin32-311-cp39-cp39-win_arm64.whl", hash = "sha256:62ea666235135fee79bb154e695f3ff67370afefd71bd7fea7512fc70ef31e3d"},
 ]
-markers = {main = "platform_system == \"Windows\"", integrations = "sys_platform == \"win32\""}
+markers = {main = "sys_platform == \"win32\" and (extra == \"claude-code\" or extra == \"red-team-harnesses\") or platform_system == \"Windows\"", integrations = "sys_platform == \"win32\""}
 
 [[package]]
 name = "pywin32-ctypes"
@@ -7473,7 +7568,7 @@ version = "6.0.3"
 description = "YAML parser and emitter for Python"
 optional = false
 python-versions = ">=3.8"
-groups = ["dev", "integrations", "langchain"]
+groups = ["main", "dev", "integrations", "langchain"]
 files = [
     {file = "PyYAML-6.0.3-cp38-cp38-macosx_10_13_x86_64.whl", hash = "sha256:c2514fceb77bc5e7a2f7adfaa1feb2fb311607c9cb518dbc378688ec73d8292f"},
     {file = "PyYAML-6.0.3-cp38-cp38-manylinux2014_aarch64.manylinux_2_17_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:9c57bb8c96f6d1808c030b1687b9b5fb476abaa47f0db9c0101f5e9f394e97f4"},
@@ -7591,11 +7686,12 @@ version = "0.36.2"
 description = "JSON Referencing + Python"
 optional = false
 python-versions = ">=3.9"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "referencing-0.36.2-py3-none-any.whl", hash = "sha256:e8699adbbf8b5c7de96d8ffa0eb5c158b3beafce084968e2ea8bb08c6794dcd0"},
     {file = "referencing-0.36.2.tar.gz", hash = "sha256:df2e89862cd09deabbdba16944cc3f10feb6b3e6f18e902f7cc25609a34775aa"},
 ]
+markers = {main = "extra == \"claude-code\" or extra == \"red-team-harnesses\""}
 
 [package.dependencies]
 attrs = ">=22.2.0"
@@ -7841,7 +7937,7 @@ version = "0.30.0"
 description = "Python bindings to Rust's persistent data structures (rpds)"
 optional = false
 python-versions = ">=3.10"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "rpds_py-0.30.0-cp310-cp310-macosx_10_12_x86_64.whl", hash = "sha256:679ae98e00c0e8d68a7fda324e16b90fd5260945b45d3b824c892cec9eea3288"},
     {file = "rpds_py-0.30.0-cp310-cp310-macosx_11_0_arm64.whl", hash = "sha256:4cc2206b76b4f576934f0ed374b10d7ca5f457858b157ca52064bdfc26b9fc00"},
@@ -7959,6 +8055,7 @@ files = [
     {file = "rpds_py-0.30.0-pp311-pypy311_pp73-musllinux_1_2_x86_64.whl", hash = "sha256:ac37f9f516c51e5753f27dfdef11a88330f04de2d564be3991384b2f3535d02e"},
     {file = "rpds_py-0.30.0.tar.gz", hash = "sha256:dd8ff7cf90014af0c0f787eea34794ebf6415242ee1d6fa91eaba725cc441e84"},
 ]
+markers = {main = "extra == \"claude-code\" or extra == \"red-team-harnesses\""}
 
 [[package]]
 name = "rsa"
@@ -8234,11 +8331,12 @@ version = "3.2.0"
 description = "SSE plugin for Starlette"
 optional = false
 python-versions = ">=3.9"
-groups = ["integrations"]
+groups = ["main", "integrations"]
 files = [
     {file = "sse_starlette-3.2.0-py3-none-any.whl", hash = "sha256:5876954bd51920fc2cd51baee47a080eb88a37b5b784e615abb0b283f801cdbf"},
     {file = "sse_starlette-3.2.0.tar.gz", hash = "sha256:8127594edfb51abe44eac9c49e59b0b01f1039d0c7461c6fd91d4e03b70da422"},
 ]
+markers = {main = "extra == \"claude-code\" or extra == \"red-team-harnesses\""}
 
 [package.dependencies]
 anyio = ">=4.7.0"
@@ -8277,11 +8375,12 @@ version = "0.52.1"
 description = "The little ASGI library that shines."
 optional = false
 python-versions = ">=3.10"
-groups = ["integrations"]
+groups = ["main", "integrations"]
 files = [
     {file = "starlette-0.52.1-py3-none-any.whl", hash = "sha256:0029d43eb3d273bc4f83a08720b4912ea4b071087a3b48db01b7c839f7954d74"},
     {file = "starlette-0.52.1.tar.gz", hash = "sha256:834edd1b0a23167694292e94f597773bc3f89f362be6effee198165a35d62933"},
 ]
+markers = {main = "extra == \"claude-code\" or extra == \"red-team-harnesses\""}
 
 [package.dependencies]
 anyio = ">=3.6.2,<5"
@@ -8874,12 +8973,12 @@ version = "0.40.0"
 description = "The lightning-fast ASGI server."
 optional = false
 python-versions = ">=3.10"
-groups = ["dev", "integrations"]
+groups = ["main", "dev", "integrations"]
 files = [
     {file = "uvicorn-0.40.0-py3-none-any.whl", hash = "sha256:c6c8f55bc8bf13eb6fa9ff87ad62308bbbc33d0b67f84293151efe87e0d5f2ee"},
     {file = "uvicorn-0.40.0.tar.gz", hash = "sha256:839676675e87e73694518b5574fd0f24c9d97b46bea16df7b8c05ea1a51071ea"},
 ]
-markers = {integrations = "python_version < \"3.15\" or sys_platform != \"emscripten\""}
+markers = {main = "sys_platform != \"emscripten\" and (extra == \"claude-code\" or extra == \"red-team-harnesses\")", integrations = "python_version < \"3.15\" or sys_platform != \"emscripten\""}
 
 [package.dependencies]
 click = ">=7.0"
@@ -9800,9 +9899,13 @@ files = [
 cffi = ["cffi (>=1.17,<2.0) ; platform_python_implementation != \"PyPy\" and python_version < \"3.14\"", "cffi (>=2.0.0b0) ; platform_python_implementation != \"PyPy\" and python_version >= \"3.14\""]
 
 [extras]
+claude-code = ["claude-agent-sdk"]
+codex = ["openai-codex"]
+cursor = ["cursor-sdk"]
 inspect = ["pyperclip", "textual"]
+red-team-harnesses = ["claude-agent-sdk", "cursor-sdk", "openai-codex"]
 
 [metadata]
 lock-version = "2.1"
 python-versions = ">=3.10, <4.0"
-content-hash = "74fca21fcdd3cd0af42e06bb2ef40ee36a58e863b1caed9238e7558ae6daec30"
+content-hash = "ee4de5f3bbe4d11a263befff45723d4ae0143bb30aa23350097630ed0cb9f238"

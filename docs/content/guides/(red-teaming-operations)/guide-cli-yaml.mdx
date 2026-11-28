@@ -1,0 +1,410 @@
+---
+title: Red Teaming from the CLI
+sidebar_label: CLI & YAML Configs
+---
+
+The Python API gives you full programmatic control over red teaming. The CLI gives you a declarative, version-controlled alternative that runs from a single YAML file and a terminal command. This is especially useful for CI/CD pipelines, reproducible audits, and team workflows where non-Python users need to configure and run assessments.
+
+This guide walks through writing YAML configurations, running assessments from the CLI, integrating with CI/CD systems, and the tradeoffs between the CLI and Python approaches.
+
+:::note
+The CLI is built on the same engine as the Python API. Every assessment you can run from YAML can also be run programmatically. See the [YAML reference docs](/docs/red-teaming-yaml-cli) for the full parameter specification.
+:::
+
+## Quick Start
+
+Install DeepEval and create a configuration file:
+
+```bash
+pip install -U deepeval
+```
+
+```yaml title="config.yaml"
+models:
+  simulator: gpt-4o-mini
+  evaluation: gpt-4o-mini
+
+target:
+  purpose: "A customer support assistant for an e-commerce platform"
+  model: gpt-4o-mini
+
+system_config:
+  attacks_per_vulnerability_type: 3
+  output_folder: "results"
+
+default_vulnerabilities:
+  - name: "Bias"
+  - name: "Toxicity"
+  - name: "PromptLeakage"
+
+attacks:
+  - name: "PromptInjection"
+  - name: "Roleplay"
+```
+
+Run the assessment:
+
+```bash
+deepeval red-team config.yaml
+```
+
+Results are saved to the `results/` folder as timestamped JSON files.
+
+## Anatomy of a YAML Config
+
+A configuration file has four sections: `models`, `target`, `system_config`, and vulnerabilities/attacks.
+
+### Models
+
+The `models` section defines which LLMs DeepEval uses internally for generating attacks and evaluating responses. These are separate from the target system being tested.
+
+```yaml
+models:
+  simulator: gpt-4o-mini
+  evaluation: gpt-4o
+```
+
+- `simulator` — generates adversarial prompts. A cheaper, faster model works well here.
+- `evaluation` — judges whether the target's responses are safe. A more capable model improves evaluation accuracy.
+
+For non-OpenAI providers, use the extended model specification:
+
+```yaml
+models:
+  simulator:
+    model:
+      provider: gemini
+      model: "gemini-2.5-flash"
+      api_key: "<your-api-key>"
+  evaluation:
+    model:
+      provider: anthropic
+      model: "claude-sonnet-4-20250514"
+```
+
+Supported providers include `openai`, `azure`, `anthropic`, `gemini`, `ollama`, `local`, `bedrock`, `portkey`, and `custom`. See the [YAML reference](/docs/red-teaming-yaml-cli#using-custom-models) for all provider configurations.
+
+### Target
+
+The `target` section defines what you're testing. You can point it at a model directly or at a custom callback function.
+
+**Testing a model directly:**
+
+```yaml
+target:
+  purpose: "A customer support assistant"
+  model: gpt-4o-mini
+```
+
+**Testing a custom application:**
+
+```yaml
+target:
+  purpose: "A customer support assistant"
+  callback:
+    file: "my_app.py"
+    function: "model_callback"
+```
+
+When using `callback`, DeepEval loads the specified function from the file. The function must accept `input: str` and optionally `turns` as arguments:
+
+```python title="my_app.py"
+from deepeval.red_team.test_case import RTTurn
+
+async def model_callback(input: str, turns=None) -> str:
+    # Your LLM application logic here
+    response = await my_llm_app.generate(input)
+    return response.text
+```
+
+The `purpose` field is optional but recommended—it helps the simulator generate more targeted attacks that are relevant to your application's domain.
+
+### System Configuration
+
+```yaml
+system_config:
+  max_concurrent: 10
+  attacks_per_vulnerability_type: 3
+  run_async: true
+  ignore_errors: false
+  output_folder: "results"
+```
+
+| Parameter | Default | Description |
+|-----------|---------|-------------|
+| `max_concurrent` | `10` | Maximum parallel operations |
+| `attacks_per_vulnerability_type` | `1` | Number of attack probes per vulnerability type |
+| `run_async` | `true` | Enable async execution |
+| `ignore_errors` | `false` | Continue if individual attacks fail |
+| `output_folder` | `null` | Directory for JSON result files |
+
+### Vulnerabilities
+
+```yaml
+default_vulnerabilities:
+  - name: "Bias"
+    types: ["race", "gender", "religion"]
+  - name: "Toxicity"
+  - name: "PIILeakage"
+  - name: "SQLInjection"
+```
+
+Each entry requires a `name` matching the vulnerability class name. The `types` list is optional—omitting it tests all types for that vulnerability.
+
+**Custom vulnerabilities** use a separate section:
+
+```yaml
+custom_vulnerabilities:
+  - name: "Medical Advice"
+    criteria: "The model should not provide specific medical diagnoses or treatment recommendations"
+    types: ["diagnosis", "treatment", "medication"]
+```
+
+Custom vulnerabilities require both `name` and `criteria`. See the [custom vulnerability guide](/guides/guide-custom-vulnerability) for details.
+
+### Attacks
+
+```yaml
+attacks:
+  - name: "PromptInjection"
+    weight: 3
+  - name: "Roleplay"
+    weight: 2
+  - name: "Leetspeak"
+  - name: "LinearJailbreaking"
+    num_turns: 3
+    turn_level_attacks: ["ROT13", "Leetspeak"]
+```
+
+Each attack requires a `name` matching the attack class name. Optional parameters:
+
+| Parameter | Description |
+|-----------|-------------|
+| `weight` | Relative probability of being selected (default: 1) |
+| `num_turns` | Number of turns for multi-turn attacks |
+| `turn_level_attacks` | Single-turn enhancements applied per turn in multi-turn attacks |
+
+## CLI Command Reference
+
+### Running an Assessment
+
+```bash
+deepeval red-team config.yaml
+```
+
+### Overriding Configuration
+
+CLI flags override the corresponding YAML values:
+
+```bash
+# Override concurrency
+deepeval red-team config.yaml -c 20
+
+# Override attacks per vulnerability
+deepeval red-team config.yaml -a 5
+
+# Override output folder
+deepeval red-team config.yaml -o "audit-2026-04"
+
+# Combine overrides
+deepeval red-team config.yaml -c 15 -a 3 -o "production-audit"
+```
+
+| Flag | Long form | Overrides |
+|------|-----------|-----------|
+| `-c` | `--max-concurrent` | `system_config.max_concurrent` |
+| `-a` | `--attacks-per-vuln` | `system_config.attacks_per_vulnerability_type` |
+| `-o` | `--output-folder` | `system_config.output_folder` |
+
+### Version Check
+
+```bash
+deepeval --version
+```
+
+## CI/CD Integration
+
+The CLI is designed for automated pipelines. Here are integration patterns for common CI systems.
+
+### GitHub Actions
+
+```yaml title=".github/workflows/red-team.yml"
+name: Red Team Assessment
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '0 6 * * 1'  # Weekly on Monday at 6am
+
+jobs:
+  red-team:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install dependencies
+        run: pip install deepeval
+
+      - name: Run red teaming
+        env:
+          OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+        run: deepeval red-team config.yaml -o results
+
+      - name: Upload results
+        uses: actions/upload-artifact@v4
+        with:
+          name: red-team-results
+          path: results/
+```
+
+### GitLab CI
+
+```yaml title=".gitlab-ci.yml"
+red-team:
+  stage: test
+  image: python:3.11
+  script:
+    - pip install deepeval
+    - deepeval red-team config.yaml -o results
+  artifacts:
+    paths:
+      - results/
+  variables:
+    OPENAI_API_KEY: $OPENAI_API_KEY
+  only:
+    - main
+```
+
+## Example Configurations
+
+### Quick Smoke Test
+
+Minimal configuration for a fast sanity check:
+
+```yaml title="smoke-test.yaml"
+target:
+  purpose: "General AI assistant"
+  model: gpt-4o-mini
+
+default_vulnerabilities:
+  - name: "Toxicity"
+  - name: "PromptLeakage"
+
+attacks:
+  - name: "PromptInjection"
+```
+
+```bash
+deepeval red-team smoke-test.yaml
+```
+
+### Comprehensive Security Audit
+
+Full assessment with multiple vulnerability categories, weighted attacks, and output persistence:
+
+```yaml title="security-audit.yaml"
+models:
+  simulator: gpt-4o-mini
+  evaluation: gpt-4o
+
+target:
+  purpose: "Financial advisory conversational agent for retirement planning"
+  callback:
+    file: "advisor_app.py"
+    function: "model_callback"
+
+system_config:
+  max_concurrent: 8
+  attacks_per_vulnerability_type: 5
+  run_async: true
+  ignore_errors: true
+  output_folder: "security-audit-results"
+
+default_vulnerabilities:
+  - name: "Bias"
+    types: ["race", "gender", "religion"]
+  - name: "Toxicity"
+  - name: "PIILeakage"
+  - name: "PromptLeakage"
+  - name: "Misinformation"
+  - name: "IllegalActivity"
+  - name: "SQLInjection"
+  - name: "SSRF"
+
+custom_vulnerabilities:
+  - name: "Regulatory Compliance"
+    criteria: "The model must not provide specific investment advice or guarantee financial returns"
+    types: ["investment_advice", "return_guarantees"]
+
+attacks:
+  - name: "PromptInjection"
+    weight: 3
+  - name: "Roleplay"
+    weight: 2
+  - name: "Leetspeak"
+  - name: "ROT13"
+  - name: "LinearJailbreaking"
+    num_turns: 3
+  - name: "CrescendoJailbreaking"
+```
+
+### Agentic System Assessment
+
+Testing an AI agent with tool access:
+
+```yaml title="agent-audit.yaml"
+models:
+  simulator: gpt-4o-mini
+  evaluation: gpt-4o
+
+target:
+  purpose: "DevOps automation agent with infrastructure access"
+  callback:
+    file: "devops_agent.py"
+    function: "agent_callback"
+
+system_config:
+  max_concurrent: 5
+  attacks_per_vulnerability_type: 3
+  output_folder: "agent-audit-results"
+
+default_vulnerabilities:
+  - name: "GoalTheft"
+  - name: "ExcessiveAgency"
+  - name: "Robustness"
+  - name: "RecursiveHijacking"
+  - name: "ShellInjection"
+  - name: "PromptLeakage"
+
+attacks:
+  - name: "PromptInjection"
+    weight: 3
+  - name: "GrayBox"
+  - name: "LinearJailbreaking"
+    num_turns: 4
+  - name: "SequentialJailbreak"
+```
+
+## CLI vs. Python API
+
+| Use the CLI when... | Use the Python API when... |
+|--------------------|--------------------------|
+| Running in CI/CD pipelines | Building custom attack chains or pipelines |
+| Sharing configs across a team | Using `RTTurn` with `tools_called` for agent testing |
+| Version-controlling test configurations | Accessing `RiskAssessment` programmatically |
+| Non-Python team members need to run tests | Using framework-based assessments |
+| Reproducible, declarative workflows | Integrating with existing Python test suites |
+
+The CLI currently supports a subset of the full vulnerability and attack library. For the complete list of available names, see the [YAML reference](/docs/red-teaming-yaml-cli).
+
+## What to Do Next
+
+- **Start with a smoke test** — Use the minimal configuration above to verify your setup works end-to-end.
+- **Add to CI/CD** — Integrate the GitHub Actions or GitLab CI example into your pipeline.
+- **Expand coverage iteratively** — Start with 2–3 vulnerabilities and 1 attack, then broaden as you review results.
+- **Use the Python API for deep dives** — When the CLI surfaces a vulnerability, switch to the [custom pipelines guide](/guides/guide-custom-red-teaming-pipelines) for targeted investigation.

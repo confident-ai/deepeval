@@ -45,3 +45,26 @@ OPENAI_DECISION_MODELS_DATA = ModelDataRegistry(
         "gpt-6-luna": _gpt_6_luna,
     }
 )
+
+DEFAULT_HUME_DECISION_MODEL = "audio-decisions"
+
+# Hume bills input tokens only.
+_HUME_AUDIO_DECISIONS_INPUT_PRICE = 0.47 / 1e6
+
+HUME_MAX_QUESTIONS = 20
+HUME_MAX_CHOICES = 20
+
+
+def _hume_audio_decisions() -> DeepEvalModelData:
+    return DeepEvalModelData(
+        input_price=_HUME_AUDIO_DECISIONS_INPUT_PRICE, output_price=0.0
+    )
+
+
+HUME_DECISION_MODELS_DATA = ModelDataRegistry(
+    {
+        "audio-decisions": _hume_audio_decisions,
+    }
+)
+
+DEFAULT_OPENAI_AUDIO_DECISION_MODEL = "gpt-audio"

@@ -90,4 +90,4 @@ The `RequiredDisclosureClassifier` is a **one-shot LLM-as-a-judge**: a single ca
 
 Under the `decision_model` [eval mode](/docs/evaluation-eval-modes), a decision model (Jev from TypeSafe AI, or OpenAI's decision model) decides the label as one choice over the labels above, using each label's description as its boundary. The reason is built from the decision model's per-label probabilities and confidence. No LLM is used, and decision model errors are raised.
 
-`decision_model` needs `TYPESAFE_API_KEY` set and the [SDK installed](/integrations/models/typesafe-ai#setting-up-your-api-key).
+`decision_model` needs `TYPESAFE_API_KEY` set and the [SDK installed](/integrations/decision-models/typesafe-ai#setting-up-your-api-key).

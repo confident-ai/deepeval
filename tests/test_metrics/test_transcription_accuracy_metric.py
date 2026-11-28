@@ -10,17 +10,21 @@ import pytest
 
 from deepeval.metrics import TranscriptionAccuracyMetric
 from deepeval.errors import MissingTestCaseParamsError
-from deepeval.metrics.transcription_accuracy.schema import (
+from deepeval.metrics.voice.speech_quality.transcription_accuracy.schema import (
     TranscriptionAccuracyScoreReason,
     TranscriptionAccuracyVerdict,
     Verdicts,
 )
 from deepeval.metrics.base_metric import Verdict
-from deepeval.metrics.transcription_accuracy.transcription_accuracy import (
+from deepeval.metrics.voice.speech_quality.transcription_accuracy.transcription_accuracy import (
     VERBATIM_TRANSCRIPTION_PROMPT,
     _verdict_for_audio_exchange,
     get_audio_exchanges,
     get_transcribed_exchanges,
+)
+from deepeval.metrics.voice.speech_quality.transcription_accuracy.utils import (
+    word_errors,
+    words_for_error_rate,
 )
 from deepeval.models import DeepEvalBaseLLM, DeepEvalBaseSTT, OpenAISTTModel
 from deepeval.test_case import (
@@ -30,6 +34,12 @@ from deepeval.test_case import (
     Turn,
 )
 from deepeval.voice.connectors import audio_utils
+from tests.test_metrics.helpers import recording, stereo_recording
+from tests.test_metrics.system_one_fakes import (
+    ExplodingSystemOneModel,
+    FakeSystemOneModel,
+    noul_answers,
+)
 
 
 class ScriptedJudge(DeepEvalBaseLLM):
@@ -463,10 +473,16 @@ def test_turns_without_audio_are_skipped_in_audio_mode():
     assert [exchange["turn"] for _, exchange in pairs] == [1, 2]
 
 
-def test_an_empty_transcript_with_audio_is_still_judged():
-    pairs = get_audio_exchanges([Turn(role="user", content="", audio=_clip())])
+@pytest.mark.parametrize("transcript", ["", "  "])
+def test_a_blank_transcript_with_audio_is_skipped(transcript):
+    pairs = get_audio_exchanges(
+        [
+            Turn(role="user", content=transcript, audio=_clip()),
+            Turn(role="assistant", content="clip", audio=_clip()),
+        ]
+    )
 
-    assert [exchange["transcribed"] for _, exchange in pairs] == [""]
+    assert [exchange["turn"] for _, exchange in pairs] == [1]
 
 
 def test_audio_mode_refuses_a_conversation_with_no_audio():
@@ -500,7 +516,7 @@ def test_audio_mode_does_not_need_a_provider_transcript():
 def test_the_score_is_the_share_of_turns_accounted_for():
     metric, _, stt = _measure_audio(
         [
-            Turn(role="user", content="", audio=_clip()),
+            Turn(role="user", content="hello there", audio=_clip()),
             Turn(role="assistant", content="Hello.", audio=_clip()),
             Turn(role="user", content="bye", audio=_clip()),
         ],
@@ -514,7 +530,7 @@ def test_the_score_is_the_share_of_turns_accounted_for():
 
 def test_the_judge_is_shown_what_was_heard_and_when():
     _, judge, _ = _measure_audio(
-        [Turn(role="user", content="", audio=_clip(start_time=42.3))],
+        [Turn(role="user", content="hi", audio=_clip(start_time=42.3))],
         ["no"],
         ["uh oh wait"],
     )
@@ -629,3 +645,409 @@ def test_whisper_is_not_asked_to_transcribe_verbatim(monkeypatch):
     )
 
     assert "prompt" not in metric.stt_model.transcription_kwargs
+
+
+# ----------------------------------------------------------- without an llm
+
+
+def _heard(*pairs):
+    turns = []
+    for spoken, transcribed in pairs:
+        turns.append(Turn(role="user", content=spoken))
+        turns.append(
+            Turn(
+                role="assistant",
+                content="Okay.",
+                provider_transcript=transcribed,
+            )
+        )
+    return turns
+
+
+def _measure_without_llm(turns, **metric_kwargs):
+    metric = TranscriptionAccuracyMetric(
+        use_llm=False,
+        async_mode=metric_kwargs.pop("async_mode", False),
+        **metric_kwargs,
+    )
+    metric.measure(ConversationalTestCase(turns=turns))
+    return metric
+
+
+@pytest.mark.parametrize(
+    "spoken,transcribed",
+    [
+        ("I can start in fifteen years", "I can start in 15 years"),
+        ("Yes, please.", "Yes, please. yes please"),
+        ("Um, I need, uh, a refund", "I need a refund"),
+        ("I’d like two hundred and five", "I'd like 205"),
+        ("Call five five five one two three four", "call 555-1234"),
+        ("I moved to the U.S. last year", "I moved to the US last year"),
+        ("Open the home page now", "open the homepage now"),
+        (
+            "My email is jsmith42@gmail.com, thanks",
+            "My email is J, S, M, I, T, H, 4, 2 at Gmail dot com, thanks",
+        ),
+        ("The code is A B C one two", "the code is abc12"),
+    ],
+)
+def test_harmless_differences_are_not_misheard_words(spoken, transcribed):
+    assert word_errors(spoken, transcribed) == (
+        0,
+        len(words_for_error_rate(spoken)),
+    )
+
+
+def test_a_wrong_number_is_one_misheard_word():
+    assert word_errors(
+        "I can start in fifteen days", "I can start in fifty days"
+    ) == (
+        1,
+        6,
+    )
+
+
+def test_a_wrong_letter_in_a_spelled_word_is_one_misheard_word():
+    assert word_errors(
+        "it is j s m i t h at gmail dot com", "it is jsmyth@gmail.com"
+    ) == (1, 7)
+
+
+def test_an_empty_transcript_misses_every_word():
+    assert word_errors("hello there", "") == (2, 2)
+
+
+def test_without_an_llm_the_score_is_the_share_of_lines_within_the_limit():
+    metric = _measure_without_llm(
+        _heard(
+            ("Send fifteen boxes please", "send fifty boxes please"),
+            ("Please send it to Toronto", "please send it to Toronto"),
+        )
+    )
+
+    assert metric.score == 0.5
+    assert metric.score_breakdown == {
+        "word_error_percent": 11.1,
+        "lines": 2,
+        "lines_over_limit": 1,
+    }
+    assert metric.reason == (
+        "1 of 2 lines had over 20% of words misheard; 11.1% of words were "
+        "misheard overall."
+    )
+    assert "1 of 4 words wrong, 25%" in metric.verdicts[0].reason
+
+
+def test_a_line_of_two_words_is_not_judged():
+    metric = _measure_without_llm(
+        _heard(
+            ("Yes please", "guest lease"),
+            ("Please send it to Toronto", "please send it to Toronto"),
+        )
+    )
+
+    assert metric.score == 1.0
+    assert metric.verdicts[0] is None
+    assert metric.score_breakdown == {
+        "word_error_percent": 0.0,
+        "lines": 1,
+        "lines_over_limit": 0,
+    }
+
+
+def test_a_line_of_three_words_is_judged():
+    metric = _measure_without_llm(_heard(("Yes please Tom", "guest lease Tom")))
+
+    assert metric.score == 0.0
+    assert metric.score_breakdown["lines"] == 1
+    assert "2 of 3 words wrong" in metric.verdicts[0].reason
+
+
+def test_the_word_error_limit_can_be_changed():
+    turns = _heard(("I can start in fifteen days", "I can start in fifty days"))
+
+    assert _measure_without_llm(turns).score == 1.0
+    assert _measure_without_llm(turns, max_word_error_percent=10).score == 0.0
+
+
+def test_strict_mode_applies_without_an_llm():
+    metric = _measure_without_llm(
+        _heard(
+            ("Send it to Toronto", "send it to Toronto"),
+            ("My name is Siobhan", "my name is a car"),
+        ),
+        strict_mode=True,
+    )
+
+    assert metric.score == 0
+
+
+def test_without_an_llm_no_model_is_built(monkeypatch):
+    monkeypatch.delenv("OPENAI_API_KEY", raising=False)
+
+    metric = TranscriptionAccuracyMetric(use_llm=False)
+
+    assert metric.model is None
+    assert metric.evaluation_model is None
+    assert metric.max_word_error_percent == 20
+
+
+def test_async_without_an_llm_matches_sync():
+    turns = _heard(("Send it to Toronto", "send it to Toronto"))
+
+    assert _measure_without_llm(turns, async_mode=True).score == 1.0
+
+
+@pytest.mark.parametrize(
+    "kwargs",
+    [
+        {"use_llm": False, "model": "gpt-4o"},
+        {"use_llm": False, "eval_mode": "llm"},
+        {"max_word_error_percent": 10},
+        {"use_llm": False, "max_word_error_percent": -1},
+    ],
+)
+def test_settings_that_do_not_apply_are_refused(kwargs):
+    with pytest.raises(ValueError):
+        TranscriptionAccuracyMetric(**kwargs)
+
+
+def test_audio_mode_without_an_llm_counts_words_in_each_clip():
+    stt = StubSTT(["I need fifteen boxes", "Sure, fifteen boxes."])
+    metric = TranscriptionAccuracyMetric(
+        use_llm=False, compare_against="audio", stt_model=stt, async_mode=False
+    )
+    metric.measure(
+        ConversationalTestCase(
+            turns=[
+                Turn(
+                    role="user",
+                    content="I need fifteen boxes",
+                    provider_transcript="I need fifty boxes",
+                    audio=_clip(start_time=0.0),
+                ),
+                Turn(
+                    role="assistant",
+                    content="Sure, fifteen boxes.",
+                    audio=_clip(start_time=1.0),
+                ),
+            ]
+        )
+    )
+
+    assert metric.score == 0.5
+    assert metric.score_breakdown["word_error_percent"] == 14.3
+    assert "The caller was heard saying 'I need fifteen boxes'" in (
+        metric.verdicts[0].reason
+    )
+
+
+def test_a_call_with_nothing_to_compare_raises_instead_of_passing():
+    turns = [
+        Turn(role="assistant", content="Hi, how can I help?"),
+        Turn(
+            role="user",
+            content="I need a refund.",
+            provider_transcript="I need a refund.",
+        ),
+        Turn(role="assistant", content="Sure."),
+    ]
+    with pytest.raises(MissingTestCaseParamsError, match="nothing"):
+        _measure_without_llm(turns)
+
+
+# ------------------------------------------------------------------- hybrid
+
+
+VERDICT_PROMPT_START = "You are judging how accurately a voice agent"
+
+
+def _mixed_lines():
+    """One line over the word-error limit, one within it, one too short."""
+    return _heard(
+        ("Ship it to Reykjavik tomorrow", "ship it to wreck a bike tomorrow"),
+        ("Bill my Zanzibar office", "bill my Zanzibar office"),
+        ("Yes please", "guest lease"),
+    )
+
+
+def _measure_hybrid(turns, system_one_model, **metric_kwargs):
+    judge = ScriptedJudge(["no"])
+    metric = TranscriptionAccuracyMetric(
+        model=judge,
+        system_one_model=system_one_model,
+        eval_mode="hybrid",
+        async_mode=metric_kwargs.pop("async_mode", False),
+        **metric_kwargs,
+    )
+    metric.measure(ConversationalTestCase(turns=turns))
+    return metric, judge
+
+
+@pytest.mark.parametrize("is_async", [False, True])
+@pytest.mark.parametrize("probability,score", [(0.1, 0.5), (0.9, 1.0)])
+def test_under_hybrid_only_the_line_over_the_limit_reaches_the_decision_model(
+    probability, score, is_async
+):
+    decision_model = FakeSystemOneModel(answer_fn=noul_answers(probability))
+
+    metric, judge = _measure_hybrid(
+        _mixed_lines(), decision_model, async_mode=is_async
+    )
+
+    [(state, questions)] = decision_model.calls
+    assert [exchange["spoken"] for exchange in state["exchanges"]] == [
+        "Ship it to Reykjavik tomorrow"
+    ]
+    assert len(questions) == 1
+    assert not any(VERDICT_PROMPT_START in prompt for prompt in judge.prompts)
+    assert metric.score == score
+    assert metric.verdicts[1].verdict == Verdict.YES
+    assert "0 of 4 words wrong" in metric.verdicts[1].reason
+    assert metric.verdicts[2] is None
+
+
+def test_under_hybrid_lines_within_the_limit_reach_no_model():
+    decision_model = FakeSystemOneModel(answer_fn=noul_answers(0.1))
+
+    metric, judge = _measure_hybrid(
+        _heard(
+            ("Bill my Zanzibar office", "bill my Zanzibar office"),
+            ("Please send it to Toronto", "please send it to Toronto"),
+        ),
+        decision_model,
+    )
+
+    assert decision_model.calls == []
+    assert not any(VERDICT_PROMPT_START in prompt for prompt in judge.prompts)
+    assert metric.score == 1.0
+
+
+def test_under_hybrid_the_fallback_judge_sees_only_the_line_over_the_limit():
+    metric, judge = _measure_hybrid(
+        _mixed_lines(), ExplodingSystemOneModel(ConnectionError("down"))
+    )
+
+    verdict_prompt = judge.prompts[0]
+    assert VERDICT_PROMPT_START in verdict_prompt
+    assert "Reykjavik" in verdict_prompt
+    assert "Zanzibar" not in verdict_prompt
+    assert "guest lease" not in verdict_prompt
+    assert metric.score == 0.5
+    assert "down" in metric.system_one_fallback_reason
+
+
+def test_outside_hybrid_the_judge_sees_every_line():
+    metric, judge = _measure(
+        _mixed_lines(), ["no", "yes", "yes"], eval_mode="llm"
+    )
+
+    verdict_prompt = judge.prompts[0]
+    assert VERDICT_PROMPT_START in verdict_prompt
+    assert "Reykjavik" in verdict_prompt
+    assert "Zanzibar" in verdict_prompt
+    assert "guest lease" in verdict_prompt
+    assert metric.score == pytest.approx(2 / 3)
+
+
+def _agent_lines(*lines, heard, audio=None):
+    """Agent turns with a clip each, a caller turn without audio between
+    them, and what the STT hears in each agent clip."""
+    turns = []
+    for index, transcript in enumerate(lines):
+        turns.append(Turn(role="user", content="Okay."))
+        turns.append(
+            Turn(
+                role="assistant",
+                content=transcript,
+                audio=_clip(start_time=10.0 * index, seconds=2.0),
+            )
+        )
+    stt = StubSTT(heard)
+    metric = TranscriptionAccuracyMetric(
+        use_llm=False, compare_against="audio", stt_model=stt, async_mode=False
+    )
+    metric.measure(ConversationalTestCase(turns=turns, audio=audio))
+    return metric, stt
+
+
+def test_words_heard_in_the_next_turn_are_a_timing_slip_not_an_error():
+    metric, stt = _agent_lines(
+        "Can you share an example of your work",
+        "Thanks for that answer",
+        heard=[
+            "Can you share",
+            "an example of your work. Thanks for that answer",
+        ],
+    )
+    assert metric.score == 1.0
+    assert metric.verdicts[0].reason.startswith(
+        "The transcript's words were heard just outside the turn's timestamps."
+    )
+    assert len(stt.clips) == 2
+
+
+def test_words_heard_nowhere_nearby_are_still_an_error():
+    metric, _ = _agent_lines(
+        "Can you share an example of your work",
+        "Thanks for that answer",
+        heard=["Can you share", "Thanks for that answer"],
+    )
+    assert metric.score == 0.5
+    assert "was heard saying 'Can you share'" in metric.verdicts[0].reason
+
+
+def test_a_line_over_the_limit_is_heard_again_on_the_call_recording(tmp_path):
+    path = stereo_recording(tmp_path / "call.wav", seconds=30.0)
+    metric, stt = _agent_lines(
+        "Can you share an example of your work",
+        "Thanks for that answer",
+        heard=[
+            "Can you share",
+            "Thanks for that answer",
+            "Okay. Can you share an example of your work?",
+        ],
+        audio=recording(path),
+    )
+    assert metric.score == 1.0
+    # The line's own 2 seconds, with 5 more on each side that the call has.
+    assert stt.clips[2].duration == pytest.approx(7.0, abs=0.05)
+
+
+def test_a_line_within_the_limit_is_not_heard_again(tmp_path):
+    path = stereo_recording(tmp_path / "call.wav", seconds=30.0)
+    _, stt = _agent_lines(
+        "Thanks for that answer",
+        heard=["Thanks for that answer"],
+        audio=recording(path),
+    )
+    assert len(stt.clips) == 1
+
+
+def test_under_hybrid_a_timing_slip_reaches_no_model():
+    turns = []
+    for index, transcript in enumerate(
+        ["Can you share an example of your work", "Thanks for that answer"]
+    ):
+        turns.append(Turn(role="user", content="Okay."))
+        turns.append(
+            Turn(
+                role="assistant",
+                content=transcript,
+                audio=_clip(start_time=10.0 * index, seconds=2.0),
+            )
+        )
+    system_one = FakeSystemOneModel(answer_fn=noul_answers(0.1))
+    metric = TranscriptionAccuracyMetric(
+        eval_mode="hybrid",
+        system_one_model=system_one,
+        compare_against="audio",
+        stt_model=StubSTT(
+            ["Can you share", "an example of your work. Thanks for that answer"]
+        ),
+        model=ScriptedJudge([]),
+        async_mode=False,
+    )
+    metric.measure(ConversationalTestCase(turns=turns))
+    assert metric.score == 1.0
+    assert system_one.calls == []
