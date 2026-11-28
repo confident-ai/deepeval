@@ -6,11 +6,21 @@ from deepeval.metrics.voice.utils.defects import (
     DefectShare,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
+from deepeval.config.voice_eval_mode import VoiceEvalModeName
+from deepeval.models.base_model import DeepEvalBaseAudioDecisionModel
 from deepeval.test_case import ConversationalTestCase
 from deepeval.metrics.voice.utils.events import VoiceEvent, placed
 
+EVENT_QUESTIONS = {
+    "long_pause": "Does the speaker stop for an unnaturally long time in the middle of what they are saying?",
+    "too_much_silence": "Is most of this clip silence where the speaker should be talking?",
+}
+
 
 class PausesMetric(BaseDefectMetric):
+    event_question = EVENT_QUESTIONS["long_pause"]
+    event_speaker = "assistant"
+
     # A pause under 4 s reads as the agent thinking; over 50% means more
     # silence than speech.
     def __init__(
@@ -22,6 +32,8 @@ class PausesMetric(BaseDefectMetric):
         verbose_mode: bool = False,
         max_pause_ms: int = 4000,
         max_pause_percent: int = 50,
+        audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None,
+        eval_mode: Optional[VoiceEvalModeName] = None,
         flaky: bool = False,
     ):
         if max_pause_ms <= 0:
@@ -35,6 +47,7 @@ class PausesMetric(BaseDefectMetric):
             verbose_mode=verbose_mode,
             flaky=flaky,
         )
+        self._use_audio_decision_model(audio_decision_model, eval_mode)
         self.max_pause_ms = max_pause_ms
         self.max_pause_percent = max_pause_percent
 
@@ -86,6 +99,9 @@ class PausesMetric(BaseDefectMetric):
             no_eligible_reason="No assistant reply had enough speech to "
             "measure its pauses.",
         )
+
+    def _event_question(self, event: VoiceEvent) -> Optional[str]:
+        return EVENT_QUESTIONS[event.type]
 
     @property
     def __name__(self):

@@ -12,6 +12,7 @@ from tests.test_metrics.helpers import (
     zeros,
     recording,
 )
+from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 
 
 def test_a_reply_with_text_but_no_audio_is_silent():
@@ -108,3 +109,16 @@ def test_common_words_heard_nearby_do_not_count_as_the_reply(tmp_path):
     heard = "on the call you said to the store your friday was"
     [event] = _silent_reply_events(tmp_path, REPLY, heard)
     assert event["turn"] == 3
+
+
+def test_a_silent_reply_the_decision_model_hears_speech_in_is_dismissed():
+    turns = clean_turns()
+    turns[3].audio = to_audio(zeros(2.0), start_time=turns[3].audio.start_time)
+    model = FakeAudioDecisionModel(probability=0.3)
+    metric = measure(
+        SilentReplyMetric(eval_mode="hybrid", audio_decision_model=model),
+        turns,
+    )
+    assert metric.score == 1.0
+    assert metric.score_breakdown["dismissed_events"] == 1
+    assert model.questions == [SilentReplyMetric.event_question]

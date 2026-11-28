@@ -1,6 +1,7 @@
 import pytest
 
 from deepeval.metrics import PausesMetric
+from deepeval.metrics.voice.prosody.pauses.pauses import EVENT_QUESTIONS
 from tests.test_metrics.helpers import (
     agent_speech,
     edit_reply,
@@ -9,6 +10,7 @@ from tests.test_metrics.helpers import (
     with_noise,
     with_pause,
 )
+from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 
 
 def test_silence_before_the_reply_is_not_a_pause():
@@ -67,3 +69,33 @@ def test_a_reply_too_short_for_pauses_is_skipped():
     metric = measure(PausesMetric(), turns)
     assert metric.score == 1.0
     assert [entry["turn"] for entry in metric.score_breakdown["skipped"]] == [1]
+
+
+def _gappy_speech():
+    gappy = agent_speech()
+    for at in (0.6, 1.4, 2.2):
+        gappy = with_pause(gappy, at, 0.6)
+    return gappy
+
+
+@pytest.mark.parametrize(
+    "event_type,speech",
+    [
+        (
+            "long_pause",
+            lambda: with_pause(agent_speech(6.0, rhythm=2.5), 1.5, 5.0),
+        ),
+        ("too_much_silence", _gappy_speech),
+    ],
+)
+def test_a_pause_the_decision_model_cannot_hear_is_dismissed(
+    event_type, speech
+):
+    model = FakeAudioDecisionModel(probability=0.3)
+    metric = measure(
+        PausesMetric(eval_mode="hybrid", audio_decision_model=model),
+        edit_reply(1, set_audio(speech())),
+    )
+    assert metric.score == 1.0
+    assert metric.score_breakdown["dismissed_events"] == 1
+    assert model.questions == [EVENT_QUESTIONS[event_type]]

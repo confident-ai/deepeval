@@ -8,8 +8,13 @@ from deepeval.errors import DeepEvalError
 from deepeval.metrics import (
     AbruptCutoffMetric,
     AgentInterruptionMetric,
+    AudioDropoutMetric,
     BackgroundNoiseMetric,
+    DeadStreamMetric,
     EchoMetric,
+    FailedResponseMetric,
+    PausesMetric,
+    SilentReplyMetric,
     TurnTakingNaturalnessMetric,
     UserInterruptionMetric,
 )
@@ -19,8 +24,13 @@ from tests.test_metrics.system_one_fakes import FakeAudioDecisionModel
 AUDIO_CHECK_METRICS = [
     AbruptCutoffMetric,
     AgentInterruptionMetric,
+    AudioDropoutMetric,
     BackgroundNoiseMetric,
+    DeadStreamMetric,
     EchoMetric,
+    FailedResponseMetric,
+    PausesMetric,
+    SilentReplyMetric,
     TurnTakingNaturalnessMetric,
     UserInterruptionMetric,
 ]

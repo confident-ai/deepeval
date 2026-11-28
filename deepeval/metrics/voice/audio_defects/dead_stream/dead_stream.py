@@ -15,7 +15,11 @@ from deepeval.metrics.voice.utils.defects import (
     DefectShare,
 )
 from deepeval.metrics.voice.base_metric import BaseDefectMetric
-from deepeval.models.base_model import DeepEvalBaseSTT
+from deepeval.config.voice_eval_mode import VoiceEvalModeName
+from deepeval.models.base_model import (
+    DeepEvalBaseAudioDecisionModel,
+    DeepEvalBaseSTT,
+)
 from deepeval.models.speech_selection import initialize_stt_model
 from deepeval.test_case import Audio, ConversationalTestCase
 from deepeval.voice.connectors.audio_utils import pcm16_to_wav_bytes
@@ -69,6 +73,9 @@ def _ends_a_sentence(word: str) -> bool:
 
 
 class DeadStreamMetric(BaseDefectMetric):
+    event_question = "Does the speaker's audio go completely dead partway through, as if the line dropped?"
+    event_speaker = "assistant"
+
     def __init__(
         self,
         *,
@@ -78,6 +85,8 @@ class DeadStreamMetric(BaseDefectMetric):
         verbose_mode: bool = False,
         use_speech_detection: bool = True,
         stt_model: Optional[Union[str, DeepEvalBaseSTT]] = None,
+        audio_decision_model: Optional[DeepEvalBaseAudioDecisionModel] = None,
+        eval_mode: Optional[VoiceEvalModeName] = None,
         flaky: bool = False,
     ):
         super().__init__(
@@ -87,6 +96,7 @@ class DeadStreamMetric(BaseDefectMetric):
             verbose_mode=verbose_mode,
             flaky=flaky,
         )
+        self._use_audio_decision_model(audio_decision_model, eval_mode)
         self.use_speech_detection = use_speech_detection
         self.stt_model = (
             stt_model
