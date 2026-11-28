@@ -25,12 +25,12 @@ from deepeval.metrics.indicator import metric_progress_indicator
 from deepeval.test_case import ConversationalTestCase, MultiTurnParams
 from deepeval.utils import get_or_create_event_loop, prettify_list
 from deepeval.metrics.mcp.utils import (
+    NO_TASKS_REASON,
     task_steps_taken_text,
     turn_mcp_interaction_text,
 )
 from deepeval.metrics.mcp.schema import Task, TaskScore, Reason
 from deepeval.templates import make_template_class
-
 
 MCPTaskCompletionTemplate = make_template_class("MCPTaskCompletionMetric")
 
@@ -177,6 +177,8 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
     def _generate_reason(self, task_scores: List[TaskScore]) -> Optional[str]:
         if not self.include_reason:
             return None
+        if len(task_scores) == 0:
+            return NO_TASKS_REASON
 
         reasons = []
         for task_score in task_scores:
@@ -201,6 +203,8 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
     ) -> Optional[str]:
         if not self.include_reason:
             return None
+        if len(task_scores) == 0:
+            return NO_TASKS_REASON
 
         reasons = []
         for task_score in task_scores:
@@ -305,8 +309,6 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
     def _get_tasks(self, unit_interactions: List) -> List[Task]:
         tasks = []
         for unit_interaction in unit_interactions:
-            if len(unit_interaction) <= 2:
-                continue
             user_messages = ""
             for turn in unit_interaction:
                 if turn.role == "user":
@@ -325,9 +327,9 @@ class MCPTaskCompletionMetric(BaseConversationalMetric):
         return tasks
 
     def _calculate_score(self, scores: List[TaskScore]) -> float:
-        score_divisor = len(scores) if len(scores) > 0 else 1
-        total_score = sum(score.score for score in scores)
-        score = total_score / score_divisor
+        if len(scores) == 0:
+            return 1
+        score = sum(score.score for score in scores) / len(scores)
         return 0 if self.strict_mode and score < self.threshold else score
 
     @property
