@@ -152,6 +152,8 @@ class TestRunCacheManager:
             return None
 
         cached_test_run = self.get_cached_test_run()
+        if cached_test_run is None:
+            return None
         cache_dict = {
             SingleTurnParams.INPUT.value: test_case.input,
             SingleTurnParams.ACTUAL_OUTPUT.value: test_case.actual_output,
@@ -209,6 +211,8 @@ class TestRunCacheManager:
             cache_dict["expectation_evidence"] = expectation_evidence(test_case)
         test_case_cache_key = serialize(cache_dict)
         cached_test_run = self.get_cached_test_run(from_temp=to_temp)
+        if cached_test_run is None:
+            return
         cached_test_run.test_cases_lookup_map[test_case_cache_key] = (
             new_cache_test_case
         )
@@ -230,6 +234,8 @@ class TestRunCacheManager:
             return
 
         if to_temp:
+            if self.temp_cached_test_run is None:
+                return
             try:
                 with portalocker.Lock(
                     self.temp_cache_file_name, mode="w"
@@ -243,6 +249,8 @@ class TestRunCacheManager:
                     file=sys.stderr,
                 )
         else:
+            if self.cached_test_run is None:
+                return
             try:
                 with portalocker.Lock(self.cache_file_name, mode="w") as file:
                     self.cached_test_run = self.cached_test_run.save(file)
@@ -337,10 +345,12 @@ class TestRunCacheManager:
             delete_file_if_exists(self.temp_cache_file_name)
             return
 
-        self.get_cached_test_run(from_temp=True)
+        temp_cached_test_run = self.get_cached_test_run(from_temp=True)
         try:
+            if temp_cached_test_run is None:
+                return
             with portalocker.Lock(self.cache_file_name, mode="w") as file:
-                self.temp_cached_test_run = self.temp_cached_test_run.save(file)
+                self.temp_cached_test_run = temp_cached_test_run.save(file)
         except Exception as e:
             print(
                 f"In wrap_up_cached_test_run, Error saving test run to disk, {e}",
