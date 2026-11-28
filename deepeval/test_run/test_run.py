@@ -4,10 +4,7 @@ import json
 from pathlib import Path
 from pydantic import BaseModel, Field
 from typing import Any, Optional, List, Dict, Union, Tuple
-import sys
 from rich.table import Table
-from rich.console import Console
-from rich import print
 
 
 from deepeval.metrics import BaseMetric
@@ -31,6 +28,8 @@ from deepeval.utils import (
     shorten,
     format_turn,
     len_short,
+    make_console,
+    print,
 )
 from deepeval.test_run.cache import global_test_run_cache_manager
 from deepeval.telemetry import (
@@ -47,15 +46,24 @@ from deepeval.prompt import (
 from rich.panel import Panel
 from rich.columns import Columns
 
+
+def _warn(message: str) -> None:
+    """Print a diagnostic warning to stderr exactly as written.
+
+    ``rich.print`` soft-wraps to the console width (80 columns when stderr
+    is not a terminal), which splits paths and exception messages
+    mid-phrase (e.g. ``disk\nI/O error``). Warnings are diagnostics, so they
+    are written without wrapping or cropping.
+    """
+    make_console(stderr=True).print(message, soft_wrap=True)
+
+
 portalocker = None
 if not is_read_only_env():
     try:
         import portalocker
     except Exception as e:
-        print(
-            f"Warning: failed to import portalocker: {e}",
-            file=sys.stderr,
-        )
+        _warn(f"Warning: failed to import portalocker: {e}")
 else:
     print(
         "Warning: DeepEval is configured for read only environment. Test runs will not be written to disk."
@@ -68,7 +76,7 @@ LATEST_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_test_run.json"
 LATEST_FULL_TEST_RUN_FILE_PATH = f"{HIDDEN_DIR}/.latest_run_full.json"
 LATEST_TEST_RUN_DATA_KEY = "testRunData"
 LATEST_TEST_RUN_LINK_KEY = "testRunLink"
-console = Console()
+console = make_console()
 
 
 class TestRunResultDisplay(Enum):
@@ -567,10 +575,7 @@ class TestRunManager:
                 json.JSONDecodeError,
                 portalocker.exceptions.LockException,
             ) as e:
-                print(
-                    f"Warning: Could not load test run from disk: {e}",
-                    file=sys.stderr,
-                )
+                _warn(f"Warning: Could not load test run from disk: {e}")
 
         return self.test_run
 
@@ -652,10 +657,7 @@ class TestRunManager:
                 json.JSONDecodeError,
                 portalocker.exceptions.LockException,
             ) as e:
-                print(
-                    f"Warning: Could not update test run on disk: {e}",
-                    file=sys.stderr,
-                )
+                _warn(f"Warning: Could not update test run on disk: {e}")
                 if self.test_run is None:
                     # guarantee a valid in-memory run so the update can proceed.
                     # never destroy in-memory state on I/O failure.
@@ -1178,10 +1180,7 @@ class TestRunManager:
             self.last_saved_path = path
             print(f"Test run saved at {path}")
         except Exception as e:
-            print(
-                f"Warning: failed to save test run to {target_dir}: {e}",
-                file=sys.stderr,
-            )
+            _warn(f"Warning: failed to save test run to {target_dir}: {e}")
 
     def _save_test_run_to_sqlite(self):
         """SQLite branch of `save_test_run_locally`.
@@ -1203,10 +1202,7 @@ class TestRunManager:
         try:
             run_id = sqlite_store.write_test_run(self.test_run, db_path)
         except Exception as e:
-            print(
-                f"Warning: failed to save test run to {db_path}: {e}",
-                file=sys.stderr,
-            )
+            _warn(f"Warning: failed to save test run to {db_path}: {e}")
             return
 
         self.last_saved_path = db_path
@@ -1232,10 +1228,9 @@ class TestRunManager:
                 confident_test_run_id,
             )
         except Exception as e:
-            print(
+            _warn(
                 f"Warning: could not record Confident AI test run id in "
-                f"{self.last_saved_path}: {e}",
-                file=sys.stderr,
+                f"{self.last_saved_path}: {e}"
             )
 
     def wrap_up_test_run(

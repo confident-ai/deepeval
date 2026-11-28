@@ -28,7 +28,7 @@ import sys
 from pathlib import Path
 from typing import TYPE_CHECKING
 
-from rich.console import Console
+from deepeval.utils import make_console
 
 if TYPE_CHECKING:
     from deepeval.evaluate.configs import DisplayConfig
@@ -61,7 +61,7 @@ def maybe_offer_inspect_tui(
     # as `<db>#<run_id>` (see `deepeval.sqlite_store.format_source`).
     run_id = getattr(test_run_manager, "last_saved_run_id", None)
     source = f"{saved_path}#{run_id}" if run_id is not None else str(saved_path)
-    console = Console()
+    console = make_console()
 
     try:
         answer = (

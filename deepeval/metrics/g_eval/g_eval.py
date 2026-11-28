@@ -2,7 +2,6 @@
 
 import asyncio
 from functools import partial
-from rich.console import Console
 from typing import Dict, Optional, List, Tuple, Union, Type
 from deepeval.errors import MissingTestCaseParamsError
 from deepeval.metrics import BaseMetric
@@ -12,6 +11,7 @@ from deepeval.test_case import (
 )
 from deepeval.utils import (
     get_or_create_event_loop,
+    make_console,
     prettify_list,
     serialize_to_json,
 )
@@ -415,7 +415,7 @@ class GEval(BaseMetric):
 
         metric_id = data.get("id")
         self.metric_id = metric_id
-        console = Console()
+        console = make_console()
 
         if metric_id:
             console.print(
@@ -463,7 +463,7 @@ class GEval(BaseMetric):
 
         metric_id = data.id
         self.metric_id = metric_id
-        console = Console()
+        console = make_console()
         if metric_id:
             console.print(
                 f"[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric '{self.name}' [GEval] pulled successfully"

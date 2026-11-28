@@ -1,4 +1,5 @@
 import copy
+import builtins
 import os
 import json
 import time
@@ -11,6 +12,7 @@ import nest_asyncio
 import uuid
 import math
 import logging
+import sys
 
 from contextvars import ContextVar
 from enum import Enum
@@ -330,11 +332,10 @@ def login(api_key: str):
     elif len(api_key) == 0:
         raise ValueError("Unable to login, please provide a non-empty api key.")
 
-    from rich import print
     from deepeval.confident.api import set_confident_api_key
 
     set_confident_api_key(api_key)
-    print(
+    custom_console.print(
         "🎉🥳 Congratulations! You've successfully logged in! :raising_hands: "
     )
 
@@ -482,7 +483,7 @@ def delete_file_if_exists(file_path):
         if os.path.exists(file_path):
             os.remove(file_path)
     except Exception as e:
-        print(f"An error occurred: {e}")
+        builtins.print(f"An error occurred: {e}")
 
 
 def softmax(x):
@@ -715,7 +716,7 @@ def wait_free_gpu(gb_needed):
 
 def select_freer_gpu():
     freer_gpu = str(get_freer_gpu())
-    print("Will use GPU: %s" % (freer_gpu))
+    builtins.print("Will use GPU: %s" % (freer_gpu))
 
     s = get_settings()
     with s.edit(persist=False):
@@ -873,7 +874,119 @@ my_theme = Theme(
         "progress.elapsed": "#5703ff",
     }
 )
-custom_console = Console(theme=my_theme)
+
+
+class _NullStream:
+    """Stand-in for a ``sys.stdout``/``sys.stderr`` that is ``None``.
+
+    Windowed interpreters (``pythonw``, ``--noconsole`` builds) set
+    ``sys.stdout`` and ``sys.stderr`` to ``None``. Rich writes to the console
+    file and then calls ``flush()`` on it, so the proxy needs a stream it can
+    call methods on: this one discards everything written to it.
+    """
+
+    encoding = "utf-8"
+    errors = "replace"
+
+    def write(self, text: str) -> int:
+        return len(text)
+
+    def flush(self) -> None:
+        return None
+
+    def close(self) -> None:
+        return None
+
+    def isatty(self) -> bool:
+        return False
+
+    def writable(self) -> bool:
+        return True
+
+    def readable(self) -> bool:
+        return False
+
+
+_null_stream = _NullStream()
+
+
+class _EncodingSafeStream:
+    """File-like proxy for ``sys.stdout``/``sys.stderr`` used by DeepEval's
+    Rich consoles.
+
+    When output is redirected on Windows, the stream encoding is the ANSI
+    code page (e.g. cp1252, cp949), which cannot represent the emoji that
+    DeepEval prints. Instead of raising ``UnicodeEncodeError``, characters
+    the stream cannot encode are replaced (e.g. with ``?``).
+
+    When the stream is ``None`` (``pythonw``, ``--noconsole`` builds) all
+    output goes to :class:`_NullStream` instead of failing on attribute
+    access.
+
+    The target stream is looked up on every call, so ``redirect_stdout`` and
+    pytest's capture keep working, and the global stream is never
+    reconfigured.
+    """
+
+    def __init__(self, name: str):
+        self._name = name
+
+    @property
+    def _stream(self):
+        stream = getattr(sys, self._name, None)
+        # While a live display runs, Rich replaces sys.stdout/stderr with a
+        # FileProxy. Unwrap it here, the same way Rich does, so writes keep
+        # going through this proxy instead of bypassing it.
+        stream = getattr(stream, "rich_proxied_file", stream)
+        return _null_stream if stream is None else stream
+
+    def write(self, text: str) -> int:
+        stream = self._stream
+        encoding = getattr(stream, "encoding", None)
+        if encoding:
+            try:
+                text.encode(encoding)
+            except UnicodeEncodeError:
+                text = text.encode(encoding, errors="replace").decode(encoding)
+            except LookupError:
+                pass
+        return stream.write(text)
+
+    def flush(self) -> None:
+        self._stream.flush()
+
+    def isatty(self) -> bool:
+        return bool(self._stream.isatty())
+
+    def __getattr__(self, name: str):
+        return getattr(self._stream, name)
+
+
+def make_console(*, stderr: bool = False, **kwargs) -> Console:
+    """Create a Rich ``Console`` that writes to stdout (or stderr) without
+    crashing when the stream's encoding cannot represent some characters, or
+    when the stream is ``None`` (e.g. ``pythonw``)."""
+    return Console(
+        file=_EncodingSafeStream("stderr" if stderr else "stdout"), **kwargs
+    )
+
+
+custom_console = make_console(theme=my_theme)
+
+
+def print(*args, **kwargs) -> None:
+    """Encoding-safe stand-in for ``rich.print``.
+
+    Modules use it as ``from deepeval.utils import print``, so ``print(...)``
+    keeps rendering markup and highlighting the way ``rich.print`` did, while
+    the output goes through DeepEval's own console instead of Rich's global
+    one (which raises ``UnicodeEncodeError`` on legacy-encoded streams).
+
+    This module's own raw diagnostics use ``builtins.print`` so that a
+    message containing markup-like text (e.g. ``[/bold]``) can never raise
+    ``MarkupError``.
+    """
+    custom_console.print(*args, **kwargs)
 
 
 def format_error_text(

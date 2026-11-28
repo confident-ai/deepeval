@@ -11,7 +11,6 @@ from pydantic import SecretStr, ValidationError
 from pydantic.fields import FieldInfo
 from enum import Enum
 from pathlib import Path
-from rich import print
 from typing import (
     Any,
     Dict,
@@ -22,6 +21,7 @@ from typing import (
     get_origin,
     Union,
 )
+from deepeval.utils import print
 from deepeval.config.settings import Settings, get_settings
 from deepeval.telemetry import (
     LoginOutcome,

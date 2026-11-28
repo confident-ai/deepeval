@@ -2,7 +2,6 @@ import pytest
 import os
 import uuid
 from contextlib import AbstractContextManager
-from rich import print
 from typing import Optional, Any
 from deepeval.constants import (
     PYTEST_RUN_TEST_NAME,
@@ -14,7 +13,7 @@ from deepeval.telemetry import (
     capture_evaluation_run,
 )
 from deepeval.test_run import global_test_run_manager
-from deepeval.utils import get_is_running_deepeval
+from deepeval.utils import get_is_running_deepeval, print
 
 
 def pytest_addoption(parser):

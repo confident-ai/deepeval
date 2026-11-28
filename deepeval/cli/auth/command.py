@@ -6,7 +6,6 @@ from typing import Dict, List, Optional, Union
 from uuid import uuid4
 
 import typer
-from rich import print
 
 from deepeval.cli.auth.api import (
     CliMultiSelectQuestion,
@@ -44,7 +43,7 @@ from deepeval.telemetry import (
     capture_login_event,
 )
 from deepeval.test_run.test_run import LATEST_TEST_RUN_FILE_PATH
-from deepeval.utils import delete_file_if_exists
+from deepeval.utils import delete_file_if_exists, print
 
 LOGIN_HELP = (
     "Log in to Confident AI. Opens the platform for authentication, then "

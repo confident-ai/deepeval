@@ -2,20 +2,23 @@ from typing import List, Optional, Union, Tuple, Dict, Literal
 from rich.progress import (
     Progress,
 )
-from rich.console import Console, Theme
+from rich.console import Theme
 from pydantic import BaseModel
 from itertools import chain
 import datetime
 import asyncio
 import random
 import json
-from rich import print
 import tqdm
 import csv
 import os
 from contextlib import nullcontext
 
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import (
+    get_or_create_event_loop,
+    make_console,
+    print,
+)
 from deepeval.synthesizer.chunking.context_generator import ContextGenerator
 from deepeval.metrics.utils import (
     is_native_model,
@@ -105,7 +108,7 @@ conversational_prompt_evolution_map = {
 }
 
 my_theme = Theme({"progress.elapsed": "cyan"})
-custom_console = Console(theme=my_theme)
+custom_console = make_console(theme=my_theme)
 
 
 class ContextWithSources(BaseModel):

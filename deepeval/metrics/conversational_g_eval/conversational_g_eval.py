@@ -1,7 +1,6 @@
 """A slightly modified tailored version of the LLM evaluated metric based on the GEval framework: https://arxiv.org/pdf/2303.16634.pdf"""
 
 from typing import Optional, List, Tuple, Union, Type
-from rich.console import Console
 from deepeval.metrics import BaseConversationalMetric
 from deepeval.metrics.g_eval.utils import (
     MetricPullResponse,
@@ -22,7 +21,11 @@ from deepeval.test_case import (
     MultiTurnParams,
     ConversationalTestCase,
 )
-from deepeval.utils import get_or_create_event_loop, prettify_list
+from deepeval.utils import (
+    get_or_create_event_loop,
+    make_console,
+    prettify_list,
+)
 from deepeval.metrics.utils import (
     check_conversational_test_case_params,
     construct_verbose_logs,
@@ -379,7 +382,7 @@ class ConversationalGEval(BaseConversationalMetric):
 
         metric_id = data.get("id")
         self.metric_id = metric_id
-        console = Console()
+        console = make_console()
 
         if metric_id:
             console.print(
@@ -424,7 +427,7 @@ class ConversationalGEval(BaseConversationalMetric):
 
         metric_id = data.id
         self.metric_id = metric_id
-        console = Console()
+        console = make_console()
         if metric_id:
             console.print(
                 f"[rgb(5,245,141)]✓[/rgb(5,245,141)] Metric '{self.name}' [Conversational GEval] pulled successfully"

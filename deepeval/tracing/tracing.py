@@ -20,7 +20,6 @@ from deepeval.test_case import MLLMImage
 from openai import OpenAI
 from opentelemetry import context as otel_context
 from opentelemetry.trace import Status, StatusCode
-from rich.console import Console
 from rich.progress import Progress
 
 from deepeval.config.settings import get_settings
@@ -64,7 +63,7 @@ from deepeval.tracing.utils import (
     validate_environment,
     validate_sampling_rate,
 )
-from deepeval.utils import dataclass_to_dict
+from deepeval.utils import dataclass_to_dict, make_console
 from deepeval.tracing.internal import confident_trace_setup
 from deepeval.tracing.otel.attributes import ConfidentAttr
 from deepeval.tracing.context import (
@@ -450,7 +449,7 @@ class TraceManager:
         environment: Optional[str] = None,
     ):
         if get_settings().CONFIDENT_TRACE_VERBOSE and not self.is_evaluating:
-            console = Console()
+            console = make_console()
             message_prefix = "[dim][Confident AI Trace Log][/dim]"
             if trace_worker_status == TraceWorkerStatus.SUCCESS:
                 message = f"[green]{message}[/green]"

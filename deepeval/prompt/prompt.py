@@ -6,12 +6,15 @@ import os
 from enum import Enum
 from typing import Optional, List, Dict, Type, Literal
 from rich.progress import Progress, SpinnerColumn, TextColumn, BarColumn
-from rich.console import Console
 from pydantic import BaseModel, ValidationError
 import asyncio
 import threading
 
-from deepeval.utils import make_model_config, is_read_only_env
+from deepeval.utils import (
+    is_read_only_env,
+    make_console,
+    make_model_config,
+)
 
 from deepeval.prompt.api import (
     PromptHttpResponse,
@@ -746,7 +749,7 @@ class Prompt:
             self._version = version
             self._hash = hash
             if _verbose:
-                console = Console()
+                console = make_console()
                 console.print(
                     f"✅ New Prompt version successfully created: {version}"
                 )
@@ -820,7 +823,7 @@ class Prompt:
             self.tools = tools or self.tools
             self.type = PromptType.TEXT if text_template else PromptType.LIST
             if _verbose:
-                console = Console()
+                console = make_console()
                 console.print(
                     "✅ Prompt successfully pushed to Confident AI! View at "
                     f"[link={link}]{link}[/link]"
@@ -911,7 +914,7 @@ class Prompt:
         self.branch = branch
 
         if _verbose:
-            console = Console()
+            console = make_console()
             console.print(
                 f"✅ Prompt branch '{branch}' successfully created! View at "
                 f"[link={link}]{link}[/link]"
@@ -954,7 +957,7 @@ class Prompt:
             self.branch = name
 
         if _verbose:
-            console = Console()
+            console = make_console()
             console.print(
                 f"✅ Successfully renamed branch '{branch_to_update}' to '{name}'."
             )
@@ -984,7 +987,7 @@ class Prompt:
             self.branch = "main"
 
         if _verbose:
-            console = Console()
+            console = make_console()
             console.print(
                 f"✅ Successfully deleted branch '{branch_to_delete}'."
             )

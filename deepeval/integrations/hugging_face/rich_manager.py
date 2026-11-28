@@ -4,7 +4,7 @@ from rich.live import Live
 from rich.text import Text
 from rich.table import Table
 from rich.columns import Columns
-from rich.console import Console
+from deepeval.utils import make_console
 from rich.progress import Progress, BarColumn, SpinnerColumn, TextColumn
 
 
@@ -19,7 +19,7 @@ class RichManager:
         """
         self.show_table = show_table
         self.total_train_epochs = total_train_epochs
-        self.console = Console()
+        self.console = make_console()
         self.live = Live(auto_refresh=True, console=self.console)
         self.train_bar_started = False
 

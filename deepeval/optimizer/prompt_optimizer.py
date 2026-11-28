@@ -1,4 +1,3 @@
-import sys
 from contextlib import contextmanager
 from typing import (
     List,
@@ -6,7 +5,6 @@ from typing import (
     Tuple,
     Union,
 )
-from rich.console import Console
 from rich.progress import (
     Progress,
     SpinnerColumn,
@@ -35,7 +33,7 @@ from deepeval.optimizer.configs import (
     AsyncConfig,
 )
 from deepeval.prompt.prompt import Prompt
-from deepeval.utils import get_or_create_event_loop
+from deepeval.utils import get_or_create_event_loop, make_console
 from deepeval.optimizer.algorithms import (
     GEPA,
     MIPROV2,
@@ -152,7 +150,7 @@ class PromptOptimizer:
         self.algorithm.step_callback = self._on_step
 
     def _print_summary_table(self) -> None:
-        console = Console(file=sys.stderr)
+        console = make_console(stderr=True)
 
         if hasattr(self.algorithm, "generate_summary_table"):
             renderables = self.algorithm.generate_summary_table(
