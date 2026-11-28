@@ -58,7 +58,7 @@ print(metric.winner, metric.score, metric.first_position_win_rate)
 print(metric.reason)
 ```
 
-There are three mandatory and six optional parameters when creating a `PositionConsistencyMetric`:
+There are two mandatory and eight optional parameters when creating a `PositionConsistencyMetric`:
 
 - `name`: name of the metric.
 - `evaluation_params`: a list of type `SingleTurnParams`. Include only the parameters that are relevant for evaluation.
@@ -69,24 +69,26 @@ There are three mandatory and six optional parameters when creating a `PositionC
 - [Optional] `async_mode`: a boolean which when set to `True`, runs the orderings concurrently. Defaulted to `True`.
 - [Optional] `verbose_mode`: a boolean which when set to `True`, prints the winner for each ordering to the console. Defaulted to `False`.
 - [Optional] `evaluation_template`: a template class to customize the prompts. Uses the same template as `ArenaGEval`.
+- [Optional] `repeats`: how many times to ask the judge for each ordering. Defaulted to `1`. Set it above `1` to measure how much the judge disagrees with itself on identical prompts, so order effects can be told apart from sampling noise.
 
 After `measure()`, the metric exposes:
 
 | Attribute | Description |
 | --- | --- |
-| `winner` | The contestant picked in most orderings |
-| `score` | Share of orderings that picked `winner`, from `1 / n` to `1.0` |
-| `first_position_win_rate` | Share of orderings won by the contestant shown first |
-| `winners_by_order` | The order shown and the winner, for each run |
-| `reason` | Which orderings disagreed, if any |
+| `winner` | The contestant picked most often, or `None` when several contestants tie for most wins |
+| `score` | Share of judge calls that picked the most common winner, from `1 / n` to `1.0` |
+| `first_position_win_rate` | Share of judge calls won by the contestant shown first. About `1 / n` for a judge with no position bias |
+| `repeat_consistency` | With `repeats` above `1`, the average share of repeats of the same ordering that agree. `None` otherwise |
+| `winners_by_order` | The order shown and the winner, for each judge call |
+| `reason` | Which calls disagreed, if any |
 
 ## How Is It Calculated?
 
 1. Evaluation steps are generated from `criteria` (or taken from `evaluation_steps`), exactly as in `ArenaGEval`.
-2. Contestant names are masked with placeholder names. The masking stays the same for every ordering, so position is the only thing that changes between runs.
-3. The judge is asked to pick a winner once per **cyclic rotation** of the contestants. With two contestants that is A-B and B-A. With `n` contestants it is `n` runs, and every contestant is shown first exactly once.
-4. The majority winner is the contestant picked most often. If two contestants tie, the one that won earliest wins the tie.
+2. Contestant names are masked with placeholder names. The masking stays the same for every ordering, and contestants are shown in the chosen order rather than shuffled, so position is the only thing that changes between runs.
+3. The judge is asked to pick a winner for each ordering (`repeats` times per ordering). With two contestants the orderings are A-B and B-A. With three or more they are the **cyclic rotations** of the contestants plus the rotations of the reversed list, so every contestant appears equally often in each position and every pair appears equally often in each relative order. For three contestants that is all six orderings.
+4. The winner is the contestant picked most often. If several contestants tie for most wins, there is no winner and `winner` is `None`.
 
-<Equation formula="\text{Position Consistency} = \frac{\text{Orderings that picked the majority winner}}{\text{Total orderings}}" />
+<Equation formula="\text{Position Consistency} = \frac{\text{Judge calls that picked the most common winner}}{\text{Total judge calls}}" />
 
-A judge that only looks at the answers scores `1.0`. A judge that always picks the first contestant scores `1 / n` and has a `first_position_win_rate` of `1.0`. Averaging `first_position_win_rate` over a dataset is a quick way to check a judge model for position bias before relying on its verdicts.
+A judge that only looks at the answers scores `1.0`. A judge that always picks the first contestant scores `1 / n`, has no winner and has a `first_position_win_rate` of `1.0`. Averaging `first_position_win_rate` over a dataset is a quick way to check a judge model for position bias before relying on its verdicts.
