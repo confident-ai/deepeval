@@ -594,11 +594,7 @@ class EvaluationDataset:
             tools_called_col_name,
             lambda value: parse_tools(value, tools_called_col_delimiter),
         )
-        expected_tools = _parse_column(
-            df,
-            expected_tools_col_name,
-            lambda value: parse_tools(value, expected_tools_col_delimiter),
-        )
+        expected_tools_cells = get_column_data(df, expected_tools_col_name)
         token_costs = get_column_data(df, token_cost_col_name)
         input_token_counts = get_column_data(df, input_token_count_col_name)
         output_token_counts = get_column_data(df, output_token_count_col_name)
@@ -662,7 +658,7 @@ class EvaluationDataset:
             contexts,
             retrieval_contexts,
             tools_called,
-            expected_tools,
+            expected_tools_cells,
             token_costs,
             input_token_counts,
             output_token_counts,
@@ -684,6 +680,11 @@ class EvaluationDataset:
                         scenario=scenario,
                         turns=parsed_turns,
                         expected_outcome=expected_outcome,
+                        expected_tools=(
+                            trimAndLoadJson(expected_tools)
+                            if expected_tools
+                            else None
+                        ),
                         user_description=user_description,
                         context=context,
                         comments=comments,
@@ -702,7 +703,13 @@ class EvaluationDataset:
                         context=context,
                         retrieval_context=retrieval_context,
                         tools_called=tools_called,
-                        expected_tools=expected_tools,
+                        expected_tools=(
+                            parse_tools(
+                                expected_tools, expected_tools_col_delimiter
+                            )
+                            if expected_tools_col_name in df.columns
+                            else None
+                        ),
                         token_cost=token_cost,
                         input_token_count=input_token_count,
                         output_token_count=output_token_count,
@@ -1482,6 +1489,7 @@ class EvaluationDataset:
                             "additional_metadata",
                             "custom_column_key_values",
                             "expectations",
+                            "expected_tools",
                         ]
                     )
                     for golden in goldens:
@@ -1520,6 +1528,11 @@ class EvaluationDataset:
                                 (
                                     golden.expectations.model_dump_json()
                                     if golden.expectations is not None
+                                    else None
+                                ),
+                                (
+                                    json.dumps(_dump_expected_tools(golden))
+                                    if golden.expected_tools is not None
                                     else None
                                 ),
                             ]

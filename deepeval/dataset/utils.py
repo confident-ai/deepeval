@@ -184,6 +184,7 @@ def convert_convo_test_cases_to_convo_goldens(
             "scenario": test_case.scenario,
             "turns": test_case.turns,
             "expected_outcome": test_case.expected_outcome,
+            "expected_tools": test_case.expected_tools,
             # A test case only keeps the flattened text, so rebuild a minimal
             # persona rather than tripping the `user_description` deprecation.
             "persona": (
