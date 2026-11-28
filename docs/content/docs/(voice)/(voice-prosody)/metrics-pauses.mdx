@@ -22,7 +22,9 @@ The pauses metric checks whether your voice agent **pauses naturally while it sp
 
 To use the `PausesMetric`, you'll have to provide a [`ConversationalTestCase`](/docs/evaluation-multiturn-test-cases) with:
 
-- `audio` on the agent's turns, one clip per reply
+- `audio` on the agent's turns, one clip per reply, or on the test case as a stereo recording of the whole call\*
+
+\* Full call audio has to be stereo, with the caller and agent on separate channels, and is only used when no turn has audio. Each agent reply is then [heard on the agent's channel](/docs/metrics-voice-introduction#call-audio), from its first sound until the caller speaks.
 
 ## Usage
 
@@ -52,10 +54,12 @@ metric = PausesMetric(threshold=0.8, max_pause_ms=2000, max_pause_percent=50)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There are **TWO** optional parameters specific to the `PausesMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+There are **FOUR** optional parameters specific to the `PausesMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
 - [Optional] `max_pause_ms`: an integer for the longest pause, in milliseconds, allowed inside a reply. Must be greater than 0. Defaulted to `2000`.
 - [Optional] `max_pause_percent`: an integer for the largest share of a reply's speech span, in percent, that may be pauses. Must be from 1 to 100. Defaulted to `50`.
+- [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each flagged reply is [double-checked by an audio decision model](#second-check) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
+- [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
 
 A value outside these limits raises a `ValueError`.
 
@@ -176,6 +180,15 @@ If no agent reply has enough speech, the metric is [skipped](/docs/metrics-voice
 Long pauses in spontaneous speech cluster around 1.5 seconds (Campione & Véronis, 2002), and conversation tends to treat about one second of silence as the standard maximum (Jefferson, 1989). The default of 2 seconds sits above both. The default of 50% flags a reply with more silence than speech.
 :::
 
+### Second check
+
+In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), each flagged reply is double-checked before it counts. The audio decision model hears about 5 seconds of the **agent's** side of the call around it and is asked:
+
+- A long pause: "Does the speaker stop for an unnaturally long time in the middle of what they are saying?"
+- Too much silence: "Is most of this clip silence where the speaker should be talking?"
+
+If the model judges "no" more likely than "yes", the reply is dismissed and doesn't count against the score.
+
 ### Example call
 
 A call with five agent replies: one stops for almost 3 seconds mid-reply, one is broken up by many shorter pauses, and one is too short to judge. Each row is one agent reply, its longest pause and how much of it was pauses.
@@ -225,8 +238,10 @@ Turn 3 is over both limits, but it is flagged once, as a long pause.
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. Detection is deterministic and runs locally over the audio, so it
-          has no model or token cost.
+          Not by default. Detection is deterministic and runs locally over the
+          audio, so it has no model or token cost. In the{" "}
+          <code>"hybrid"</code> eval mode, each flagged reply is also checked by
+          an audio decision model, at one paid request per flagged reply.
         </>
       ),
     },

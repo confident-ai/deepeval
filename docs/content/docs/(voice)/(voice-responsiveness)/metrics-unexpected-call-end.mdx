@@ -24,9 +24,11 @@ To use the `UnexpectedCallEndMetric`, you'll have to provide a [`ConversationalT
 
 - `content` on each turn, to tell whether the call wrapped up
 - `metadata` saying how the call ended, as the [`ConversationSimulator`](/docs/conversation-simulator-voice-mode) records it under `"Stop reason"`, or as your platform records it under `"end_reason"`
-- `audio` on at least one turn, so it is a voice call
+- `audio` on at least one turn, or on the test case as a stereo recording of the whole call\*, so it is a voice call
 
 The metric only uses the call's audio to place where the call ended.
+
+\* Full call audio has to be stereo, with the caller and agent on separate channels, and is only used when no turn has audio. Each agent reply is then [heard on the agent's channel](/docs/metrics-voice-introduction#call-audio), from its first sound until the caller speaks.
 
 ## Usage
 

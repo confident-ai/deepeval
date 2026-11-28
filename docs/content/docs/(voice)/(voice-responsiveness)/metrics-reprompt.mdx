@@ -24,6 +24,8 @@ To use the `RepromptMetric`, you'll have to provide a [`ConversationalTestCase`]
 - `content` on each turn, which the decision model reads
 - `audio` on the turns, with `Audio.start_time` set so the wait before a repeat can be measured. A line whose wait can't be measured is never flagged
 
+A stereo recording on the test case isn't enough on its own: the metric matches each transcript line to its turn's audio, so without per-turn audio it's skipped and says why.
+
 ## Usage
 
 The `RepromptMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):

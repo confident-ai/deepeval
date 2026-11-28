@@ -25,6 +25,8 @@ To use the `FailedResponseMetric`, you'll have to provide a [`ConversationalTest
 - `content` on each turn, to tell which caller lines needed a reply
 - `audio` on the turns, with `Audio.start_time` set so caller turns can be placed on the call's clock
 
+A stereo recording on the test case isn't enough on its own: the metric matches each transcript line to its turn's audio, so without per-turn audio it's skipped and says why.
+
 ## Usage
 
 The `FailedResponseMetric()` can be used for [end-to-end](/docs/evaluation-end-to-end-multi-turn) evaluation of voice calls, such as ones produced by the [`ConversationSimulator` in voice mode](/docs/conversation-simulator-voice-mode):
@@ -53,9 +55,11 @@ metric = FailedResponseMetric(threshold=1.0)
 evaluate(test_cases=test_cases, metrics=[metric])
 ```
 
-There is **ONE** optional parameter specific to the `FailedResponseMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
+There are **THREE** optional parameters specific to the `FailedResponseMetric`, on top of the [common voice metric parameters](/docs/metrics-voice-introduction#using-voice-metrics):
 
 - [Optional] `use_speech_detection`: a boolean which when set to `True`, finds where the speech is inside each turn's clip with [speech detection](/docs/metrics-voice-introduction#speech-detection), so silence or noise at a clip's edges isn't counted as speaking. It decides which caller turns join into one line, and where the silence after a line starts. Defaulted to `True`.
+- [Optional] `eval_mode`: `"deterministic"` or `"hybrid"`. In `"hybrid"`, each unanswered caller line is [double-checked by an audio decision model](#second-check) before it counts. Defaulted to the configured voice eval mode (`"deterministic"` unless set).
+- [Optional] `audio_decision_model`: the model that does the second check in `"hybrid"` mode. Defaulted to `HumeDecisionModel()`.
 
 ### As a standalone
 
@@ -169,6 +173,14 @@ Several caller lines in a row share the agent's next reply, so if the call ends 
 
 A reply only has to exist. Whether it could be heard is [Silent Reply](/docs/metrics-silent-reply)'s job, and how long it took is [Response Latency](/docs/metrics-response-latency)'s. If no turn has audio, or no caller line needed a reply, the metric is [skipped](/docs/metrics-voice-introduction#when-a-metric-is-skipped).
 
+### Second check
+
+In the [hybrid eval mode](/docs/metrics-voice-introduction#choose-who-judges-with-eval-modes), each unanswered caller line is double-checked before it counts. The audio decision model hears about 5 seconds of the **agent's** side of the call around it and is asked:
+
+> Does the AI agent stay silent here instead of answering?
+
+If the model judges "no" more likely than "yes", the line is dismissed and doesn't count against the score. Without stereo full call audio there's usually no agent audio around the line to hear, so the line stays.
+
 ### Example call
 
 A caller asks about an order, but the agent sends one empty reply and the call ends before its last answer. Each row is one caller line and whether the agent answered it.
@@ -229,8 +241,10 @@ A caller asks about an order, but the agent sends one empty reply and the call e
       question: "Does this metric call an LLM or an external speech model?",
       answer: (
         <>
-          No. It reads the order of the turns, their text and the timing of
-          their audio, so it has no model or token cost. With{" "}
+          Not by default. It reads the order of the turns, their text and the
+          timing of their audio, so it has no model or token cost. In the{" "}
+          <code>"hybrid"</code> eval mode, each unanswered line is also checked
+          by an audio decision model, at one paid request per line. With{" "}
           <code>use_speech_detection</code> on, the small Silero VAD model runs
           locally over each clip.
         </>
