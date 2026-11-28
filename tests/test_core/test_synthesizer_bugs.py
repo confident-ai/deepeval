@@ -569,6 +569,50 @@ class TestRewriteScenariosPreservesSources:
         assert filtered[0].used_source_files == ["a.txt", "b.txt"]
         assert scores == [1.0]
 
+
+class TestSaveAsFileType:
+    @pytest.mark.parametrize("file_type", ["JSON", "CSV", "JSONL"])
+    def test_save_as_accepts_case_insensitive_file_type(
+        self, tmp_path, file_type
+    ):
+        from pathlib import Path
+        from deepeval.dataset.golden import Golden
+
+        synth = _make_synthesizer()
+        synth.synthetic_goldens = [
+            Golden(
+                input="What is 2+2?",
+                actual_output="4",
+                expected_output="4",
+                context=["math"],
+            )
+        ]
+
+        saved_path = synth.save_as(
+            file_type=file_type,
+            directory=str(tmp_path),
+            file_name="out",
+            quiet=True,
+        )
+        path = Path(saved_path)
+        assert path.exists()
+        assert path.suffix == f".{file_type.lower()}"
+        assert "What is 2+2?" in path.read_text(encoding="utf-8")
+
+    def test_save_as_invalid_file_type_error_message(self, tmp_path):
+        from deepeval.dataset.golden import Golden
+
+        synth = _make_synthesizer()
+        synth.synthetic_goldens = [Golden(input="q")]
+
+        with pytest.raises(ValueError) as exc_info:
+            synth.save_as(file_type="xml", directory=str(tmp_path), quiet=True)
+
+        assert (
+            str(exc_info.value)
+            == "Invalid file type. Available file types to save as: csv, json, jsonl"
+        )
+
     @pytest.mark.asyncio
     async def test_async_rewrite_keeps_used_source_files(self):
         from deepeval.synthesizer.schema import ConversationalScenario
@@ -588,3 +632,47 @@ class TestRewriteScenariosPreservesSources:
 
         assert filtered[0].used_source_files == ["a.txt", "b.txt"]
         assert scores == [1.0]
+
+
+class TestSaveAsFileType:
+    @pytest.mark.parametrize("file_type", ["JSON", "CSV", "JSONL"])
+    def test_save_as_accepts_case_insensitive_file_type(
+        self, tmp_path, file_type
+    ):
+        from pathlib import Path
+        from deepeval.dataset.golden import Golden
+
+        synth = _make_synthesizer()
+        synth.synthetic_goldens = [
+            Golden(
+                input="What is 2+2?",
+                actual_output="4",
+                expected_output="4",
+                context=["math"],
+            )
+        ]
+
+        saved_path = synth.save_as(
+            file_type=file_type,
+            directory=str(tmp_path),
+            file_name="out",
+            quiet=True,
+        )
+        path = Path(saved_path)
+        assert path.exists()
+        assert path.suffix == f".{file_type.lower()}"
+        assert "What is 2+2?" in path.read_text(encoding="utf-8")
+
+    def test_save_as_invalid_file_type_error_message(self, tmp_path):
+        from deepeval.dataset.golden import Golden
+
+        synth = _make_synthesizer()
+        synth.synthetic_goldens = [Golden(input="q")]
+
+        with pytest.raises(ValueError) as exc_info:
+            synth.save_as(file_type="xml", directory=str(tmp_path), quiet=True)
+
+        assert (
+            str(exc_info.value)
+            == "Invalid file type. Available file types to save as: csv, json, jsonl"
+        )
