@@ -356,7 +356,7 @@ class LiteLLMModel(DeepEvalBaseGatewayModel):
         from litellm import get_llm_provider
         from litellm.types.router import GenericLiteLLMParams
 
-        provider = get_llm_provider(
+        _, provider, _, _ = get_llm_provider(
             self.name,
             api_base=self.base_url,
             litellm_params=GenericLiteLLMParams(**self.kwargs),
